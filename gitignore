@@ -1,0 +1,17 @@
+# Place backups (large binary files)
+BackUP_Files/*.rbxl
+BackUP_Files/*.rbxlx
+BackUP_Files/*.rbxm
+BackUP_Files/*.rbxmx
+
+# Rojo build output
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+.vscode/
+sourcemap.json
