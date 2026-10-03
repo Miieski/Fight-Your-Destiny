@@ -1,0 +1,359 @@
+=====================================================================
+ FIGHT YOUR DESTINY - WEAPON SYSTEM DOCUMENT
+ 8 categories x 12 weapons = 96 weapons (one per category per zone)
+=====================================================================
+
+---------------------------------------------------------------------
+ 1. CORE RULES
+---------------------------------------------------------------------
+- There are 8 weapon categories. Each category has exactly 12 weapons,
+  one for each zone. So every zone has 8 weapons of its own (96 total).
+- Every weapon belongs to ONE zone. A weapon's zone sets its base
+  damage, so a Legendary weapon from the Void is far stronger than a
+  Legendary weapon from the Plains.
+- Weapons are bought in the SHOP. The weapon is chosen by the player but
+  its RARITY is RANDOM at purchase.
+- Damage is proportional to rarity (rarity multiplier).
+- A weapon used inside its OWN zone gets a Zone Boost, also proportional
+  to its rarity.
+- A weapon with a rarity is a unique item in the inventory:
+  { weaponId, rarity, level }. The player can own several copies of the
+  same weapon with different rarities.
+
+DAMAGE FORMULA (per hit, calculated on the server)
+    Damage = ZoneBase x CategoryMult x RarityMult
+             x (1 + ZoneBoost if the player is in the weapon's home zone)
+             x (1 + other bonuses: rebirth, upgrades, boosts)
+
+    ZoneBase = 10 x 10^(zone - 1)
+    (zone 1 = 10, zone 2 = 100, ... zone 12 = 1 trillion)
+
+---------------------------------------------------------------------
+ 2. CATEGORIES
+---------------------------------------------------------------------
+Category multipliers are tuned so the DPS of all categories is similar;
+the difference is in HOW they play (reach, area, speed, safety).
+
+ # | Category          | Dmg mult | Hits/sec | Range | Playstyle
+---+-------------------+----------+----------+-------+------------------------------
+ 1 | Sword             |   1.0    |   1.0    |   6   | Balanced. Sweeping arc, hits
+   |                   |          |          |       | up to 3 enemies.
+ 2 | Spear             |   1.2    |   0.9    |  10   | Long reach. Thrust pierces
+   |                   |          |          |       | up to 4 enemies in a line.
+ 3 | Heavy (axe/hammer)|   2.5    |   0.4    |   6   | Slow, huge hits. Small area
+   |                   |          |          |       | slam and a short stagger.
+ 4 | Dagger            |   0.4    |   2.5    |   4   | Very fast. +20% crit chance
+   |                   |          |          |       | (crit = x2 damage).
+ 5 | Gauntlet (fists)  |   0.6    |   1.8    |   5   | 3-hit combo; the 3rd hit
+   |                   |          |          |       | does x2 damage.
+ 6 | Ranged (bow/gun)  |   0.8    |   1.2    |  60   | Safe, single target
+   |                   |          |          |       | projectile.
+ 7 | Magic (staff)     |   0.8    |   1.0    |  35   | Area damage in a small radius
+   |                   |          |          |       | around the target.
+ 8 | Whip & Chain      |   0.9    |   1.1    |  12   | Wide frontal sweep that hits
+   |                   |          |          |       | everything in the cone.
+
+Approximate DPS per hit-rate (Common, relative to Sword = 10 in zone 1):
+    Sword 10 | Spear 10.8 | Heavy 10 | Dagger 10 (+crits) | Gauntlet 10.8
+    Ranged 9.6 | Magic 8 (but area) | Whip 9.9 (but wide)
+
+Ranged and Magic have slightly lower single-target DPS because they are
+safer and have range or area.
+
+IDEAS FOR FUTURE CATEGORIES (not included yet)
+    - Scythe: very wide arc, lifesteal.
+    - Shield + one-handed weapon: blocks damage.
+    - Throwing weapons: boomerangs, chakrams that return.
+    - Instruments: buff allies or damage in a cone (good for co-op).
+    - Pets/summons as an extra slot.
+
+---------------------------------------------------------------------
+ 3. RARITY
+---------------------------------------------------------------------
+ Tier | Rarity    | Damage mult | Zone Boost | Element proc | Shop odds
+------+-----------+-------------+------------+--------------+-----------
+  1   | Common    |    x1.0     |    +5%     |     5%       |  50.00%
+  2   | Uncommon  |    x1.5     |   +10%     |     8%       |  28.00%
+  3   | Rare      |    x2.2     |   +15%     |    11%       |  13.00%
+  4   | Epic      |    x3.5     |   +25%     |    14%       |   6.00%
+  5   | Legendary |    x5.5     |   +40%     |    17%       |   2.20%
+  6 | Mythic      |    x9.0     |   +60%     |    20%       |   0.70%
+  7 | Divine      |   x15.0     |   +85%     |    23%       |   0.09%
+  8 | Secret      |   x25.0     |  +120%     |    26%       |   0.01%
+
+(Shop odds add up to 100%.) Colors suggestion: Common gray, Uncommon
+green, Rare blue, Epic purple, Legendary gold, Mythic red, Divine white
+with glow, Secret animated rainbow/black.
+
+---------------------------------------------------------------------
+ 4. ZONE BOOST (home-zone bonus)
+---------------------------------------------------------------------
+- When the player fights inside the weapon's own zone (any of its 4
+  sub-zones, including the boss room), the weapon gets a damage bonus
+  equal to its Zone Boost (table in section 3).
+- Example: a Legendary Volcano Hammer used in the Volcano deals +40%.
+  The same hammer used in Hell gets no bonus.
+- The higher the rarity, the bigger the boost, so rare weapons shine
+  most in their home zone, and fighting a boss with its zone weapon is
+  always a good choice.
+- The UI shows a "Zone Boost active" icon on the weapon when it applies.
+
+ZONE ELEMENT (optional flavor; works in every zone)
+- Each zone gives its weapons an elemental effect. The chance to
+  trigger on a hit equals the "Element proc" value of the rarity.
+
+ Zone | Element    | Effect on proc
+------+------------+--------------------------------------------------
+  1   | Nature     | Entangle: slows the enemy for 2s
+  2   | Sand       | Blind: enemy attacks miss more for 3s
+  3   | Poison     | Damage over time for 4s
+  4   | Frost      | Slows, then freezes briefly at max stacks
+  5   | Curse      | Enemy takes +15% damage for 4s
+  6   | Burn       | Damage over time for 4s
+  7   | Hellfire   | Strong burn (bigger damage over time)
+  8   | Holy       | Burst of extra damage and a small heal for you
+  9   | Soul Drain | Lifesteal on the hit
+ 10   | Tidal      | Knockback and a short stun
+ 11   | Shock      | Chain lightning to 2 nearby enemies
+ 12   | Gravity    | Pulls nearby enemies together and a void burst
+
+---------------------------------------------------------------------
+ 5. SHOP
+---------------------------------------------------------------------
+- The shop has one tab per unlocked zone, with the 8 weapons of that
+  zone. Zones that are locked show their weapons grayed out.
+- Buying a weapon: the player pays the zone price in COINS and receives
+  that weapon with a RANDOM rarity (odds in section 3), rolled on the
+  SERVER. Show a short reveal animation (shaking box, flash, rarity name).
+- Price depends on the zone only (the player is not paying for a
+  specific rarity):
+
+    Zone | Price (coins)       Zone | Price (coins)
+    -----+-------------------  -----+-------------------
+     1   |       1K              7  |        1B
+     2   |      10K              8  |       10B
+     3   |     100K              9  |      100B
+     4   |       1M             10  |        1T
+     5   |      10M             11  |       10T
+     6   |     100M             12  |      100T
+
+  (Price = 1,000 x 10^(zone-1), about 25 kills of sub-zone 2 enemies.)
+
+- Optional features (recommended):
+    * Reroll with DIAMONDS: re-roll the rarity of a weapon the player owns
+      (keeps the same weapon). Cost: 5 + 2 x zone diamonds. The new rarity
+      replaces the old one (the player must confirm).
+    * Pity timer: after 30 purchases without an Epic or better, the next
+      purchase is guaranteed Epic or better. After 100, guaranteed
+      Legendary or better. Reset the counter when it triggers.
+    * Salvage: sell unwanted weapons for coins (value = 50% of the zone
+      price x rarity tier).
+    * Lock: protect a favorite weapon from being salvaged.
+- Enemy loot: when an enemy drops a weapon (see enemy_database.txt), it
+  is the zone's weapon of that type with the rarity fixed by the loot
+  table (not random).
+
+---------------------------------------------------------------------
+ 6. WEAPON LIST (Common damage per hit, base)
+---------------------------------------------------------------------
+Damage shown is for a COMMON weapon. Multiply by the rarity multiplier
+(section 3) and apply the Zone Boost when in the home zone.
+
+Reference table for a zone's base damage:
+    Zone | Sword | Spear | Heavy | Dagger | Gauntlet | Ranged | Magic | Whip
+    -----+-------+-------+-------+--------+----------+--------+-------+------
+     1   |  10   |  12   |  25   |   4    |    6     |   8    |   8   |   9
+     2   | 100   | 120   | 250   |  40    |   60     |  80    |  80   |  90
+     3   |  1K   | 1.2K  | 2.5K  | 400    |  600     | 800    | 800   | 900
+     4   | 10K   | 12K   | 25K   |  4K    |   6K     |  8K    |  8K   |  9K
+     5   |100K   |120K   |250K   | 40K    |  60K     | 80K    | 80K   | 90K
+     6   |  1M   | 1.2M  | 2.5M  | 400K   | 600K     | 800K   | 800K  | 900K
+     7   | 10M   | 12M   | 25M   |  4M    |   6M     |  8M    |  8M   |  9M
+     8   |100M   |120M   |250M   | 40M    |  60M     | 80M    | 80M   | 90M
+     9   |  1B   | 1.2B  | 2.5B  | 400M   | 600M     | 800M   | 800M  | 900M
+    10   | 10B   | 12B   | 25B   |  4B    |   6B     |  8B    |  8B   |  9B
+    11   |100B   |120B   |250B   | 40B    |  60B     | 80B    | 80B   | 90B
+    12   |  1T   | 1.2T  | 2.5T  | 400B   | 600B     | 800B   | 800B  | 900B
+
+Names (category order: Sword, Spear, Heavy, Dagger, Gauntlet, Ranged,
+Magic, Whip & Chain):
+
+ZONE 1 - PLAINS (element: Nature)
+  Sword      | Iron Shortsword
+  Spear      | Hunter's Spear
+  Heavy      | Stone Hammer
+  Dagger     | Hunter's Knife
+  Gauntlet   | Leather Knuckles
+  Ranged     | Hunting Bow
+  Magic      | Apprentice Staff
+  Whip       | Vine Whip
+
+ZONE 2 - DESERT (element: Sand)
+  Sword      | Sand Scimitar
+  Spear      | Nomad Pike
+  Heavy      | Obelisk Hammer
+  Dagger     | Scorpion Dagger
+  Gauntlet   | Desert Wraps
+  Ranged     | Desert Recurve Bow
+  Magic      | Sandstorm Staff
+  Whip       | Scarab Whip
+
+ZONE 3 - JUNGLE (element: Poison)
+  Sword      | Jungle Machete
+  Spear      | Tribal Spear
+  Heavy      | Totem Club
+  Dagger     | Venom Fang
+  Gauntlet   | Jaguar Claws
+  Ranged     | Poison Blowgun
+  Magic      | Shaman Totem Staff
+  Whip       | Liana Whip
+
+ZONE 4 - TUNDRA (element: Frost)
+  Sword      | Frostbrand Blade
+  Spear      | Icicle Lance
+  Heavy      | Glacier Axe
+  Dagger     | Ice Shard Dagger
+  Gauntlet   | Frost Knuckles
+  Ranged     | Frostbite Crossbow
+  Magic      | Blizzard Staff
+  Whip       | Frozen Chain
+
+ZONE 5 - CURSED SWAMP (element: Curse)
+  Sword      | Rotwood Sword
+  Spear      | Witch Hunter Spear
+  Heavy      | Swamp Maul
+  Dagger     | Toad Tooth Dagger
+  Gauntlet   | Mud Fists
+  Ranged     | Plague Bow
+  Magic      | Cauldron Staff
+  Whip       | Leech Whip
+
+ZONE 6 - VOLCANO (element: Burn)
+  Sword      | Magma Blade
+  Spear      | Obsidian Spear
+  Heavy      | Lava Hammer
+  Dagger     | Ember Dagger
+  Gauntlet   | Magma Gauntlets
+  Ranged     | Flame Bow
+  Magic      | Eruption Staff
+  Whip       | Lava Chain
+
+ZONE 7 - HELL (element: Hellfire)
+  Sword      | Demon Blade
+  Spear      | Infernal Halberd
+  Heavy      | Doom Axe
+  Dagger     | Imp Claw Dagger
+  Gauntlet   | Demon Fists
+  Ranged     | Soulfire Crossbow
+  Magic      | Infernal Tome Staff
+  Whip       | Soul Chain
+
+ZONE 8 - HEAVEN (element: Holy)
+  Sword      | Radiant Longsword
+  Spear      | Celestial Lance
+  Heavy      | Judgment Hammer
+  Dagger     | Feather Dagger
+  Gauntlet   | Angelic Gauntlets
+  Ranged     | Dawn Bow
+  Magic      | Seraph Staff
+  Whip       | Radiant Whip
+
+ZONE 9 - REALM OF THE DEAD (element: Soul Drain)
+  Sword      | Deathbringer Sword
+  Spear      | Grave Pike
+  Heavy      | Gravedigger's Maul
+  Dagger     | Ghoul Fang
+  Gauntlet   | Bone Knuckles
+  Ranged     | Bone Crossbow
+  Magic      | Lich Staff
+  Whip       | Spine Whip
+
+ZONE 10 - ABYSS (element: Tidal)
+  Sword      | Tidal Sword
+  Spear      | Deepsea Trident
+  Heavy      | Kraken Anchor
+  Dagger     | Angler Dagger
+  Gauntlet   | Pearl Gauntlets
+  Ranged     | Harpoon Gun
+  Magic      | Tidecaller Staff
+  Whip       | Tentacle Whip
+
+ZONE 11 - MECHANICAL CITY (element: Shock)
+  Sword      | Plasma Sword
+  Spear      | Electro Lance
+  Heavy      | Hydraulic Hammer
+  Dagger     | Nano Dagger
+  Gauntlet   | Power Gauntlets
+  Ranged     | Pulse Rifle
+  Magic      | Tesla Coil Staff
+  Whip       | Electro Whip
+
+ZONE 12 - THE VOID (element: Gravity)
+  Sword      | Voidforged Blade
+  Spear      | Void Piercer
+  Heavy      | Void Maul
+  Dagger     | Rift Dagger
+  Gauntlet   | Singularity Gauntlets
+  Ranged     | Starfall Bow
+  Magic      | Void Staff
+  Whip       | Rift Chain
+
+---------------------------------------------------------------------
+ 7. WORKED EXAMPLES
+---------------------------------------------------------------------
+Legendary Iron Shortsword (Plains Sword), used in the Plains:
+    10 x 1.0 x 5.5 x 1.40 = 77 damage per hit
+
+Legendary Voidforged Blade (Void Sword), used in the Void:
+    1T x 1.0 x 5.5 x 1.40 = 7.7 trillion damage per hit
+
+Same Legendary rarity, but the Void sword is 100 billion times
+stronger because of the zone.
+
+Common Lava Hammer (Volcano Heavy), used in the Volcano:
+    1M x 2.5 x 1.0 x 1.05 = 2.625M per hit at 0.4 hits/sec
+Secret Lava Hammer in the Volcano:
+    1M x 2.5 x 25 x 2.20 = 137.5M per hit
+
+Secret weapon from Zone 1 vs a Common weapon from Zone 2:
+    Zone 1 Secret Sword in Plains: 10 x 25 x 2.20 = 550
+    Zone 2 Common Sword in Desert: 100 x 1.05 = 105
+The Zone 1 Secret weapon is still stronger early on, but it is a very
+rare item. Once the Desert enemies (800+ HP) are met, the player needs
+a Desert weapon for good results. This is the intended progression.
+
+---------------------------------------------------------------------
+ 8. IMPLEMENTATION NOTES
+---------------------------------------------------------------------
+CONFIG MODULES (keep every number in config, never hard-coded)
+    Config/WeaponCategories.luau   category multipliers, speed, range, special
+    Config/WeaponRarities.luau     multipliers, zone boost, proc chance, odds
+    Config/Weapons.luau            96 entries: id, name, category, zone, model
+    Config/Zones.luau              zone base damage, element, shop price
+
+INVENTORY ENTRY
+    { id = "plains_sword", rarity = 5, level = 0, locked = false }
+
+SERVER RESPONSIBILITIES
+    - Roll the rarity on the server with a weighted random function.
+    - Validate the purchase (coins, zone unlocked) before rolling.
+    - Compute damage with the shared formula; the client may show the
+      same numbers but never decides them.
+    - Check the attack cooldown and range on the server.
+    - Apply the Zone Boost by comparing the player's current zone with
+      the weapon's zone.
+
+CLIENT RESPONSIBILITIES
+    - Shop UI, reveal animation, inventory, equip, "Zone Boost" icon.
+    - Attack animations and VFX (VFX plugin, Toolbox, Blender if needed);
+      one attack animation set per CATEGORY is enough (8 sets), and each
+      weapon model reuses its category animations.
+    - Tool models: reuse a mesh per category and change color, size and
+      particles per zone. Rarity can add glow, aura and trail.
+
+ASSET PLAN (to avoid making 96 unique models by hand)
+    - 8 base animation sets (one per category).
+    - 12 zone color/material themes applied to the base meshes.
+    - 8 rarity glow/aura levels.
+    - Unique custom models only for the Secret rarity or for the first
+      weapons the players see.

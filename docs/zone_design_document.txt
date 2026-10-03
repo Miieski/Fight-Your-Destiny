@@ -1,0 +1,465 @@
+=====================================================================
+ NPC COMBAT GAME - ZONE DESIGN DOCUMENT
+ 12 zones x 4 sub-zones. Sub-zone 4 is always the boss room.
+=====================================================================
+
+---------------------------------------------------------------------
+ 1. GENERAL RULES FOR EVERY ZONE
+---------------------------------------------------------------------
+STRUCTURE
+- Each zone = 4 sub-zones, played in order. The next sub-zone is locked
+  behind a gate (door, barrier, bridge, portal) that the player opens by
+  paying coins.
+- Sub-zone 4 is the boss room: 2 normal enemies, 2 mini-bosses, then the
+  boss. The boss spawns only after BOTH mini-bosses are dead.
+- After the boss dies, a Rebirth portal/altar appears in the boss room.
+- Each zone has its own theme, color palette, lighting, skybox and music,
+  so players instantly know where they are.
+
+SUB-ZONE LAYOUT (reuse this template)
+- Entrance / safe spot: no enemies, a spawn point, and the gate back.
+- Combat area: an open arena where enemies respawn. Wide enough for
+  multiple players, with few obstacles so melee combat feels good.
+- 3 enemy spawn groups (one per enemy type), spaced apart, so enemy types
+  do not mix too much.
+- Exit gate: clearly visible and highly readable (glowing, with the price
+  shown on a sign above it).
+- Landmark: one large recognizable structure to give identity.
+
+SIZE GUIDE (studs)
+- Sub-zones 1-3: about 250 x 250 each.
+- Boss room: a circular arena, about 150 studs in diameter, with 2
+  small side areas where the mini-bosses wait.
+
+DIFFICULTY FEEL (visual)
+- Zones get darker, more dramatic and more detailed as the player
+  progresses. Early zones are bright and friendly; late zones are
+  intimidating.
+- Inside a zone, each sub-zone should look slightly more dangerous than
+  the previous one.
+
+PERFORMANCE
+- Use simple parts and few unions. Use Streaming Enabled.
+- Only keep NPCs active in a sub-zone where a player is present.
+- Use the same assets with different colors across zones to save time.
+
+BOSS ROOM TEMPLATE
+- Circular or square arena with a closed door behind the player.
+- Door locks when the fight starts, and unlocks when everyone dies or the
+  boss is defeated.
+- Two mini-boss alcoves on opposite sides (statues, cages, nests...).
+- Boss intro: a small cinematic (camera shake, roar, name banner).
+- Health bar at the top of the screen for the boss.
+- Reward chest or altar + Rebirth portal appear after the boss is dead.
+
+=====================================================================
+ ZONE 1: PLAINS (Minecraft Overworld style)
+=====================================================================
+Mood: calm, bright, friendly. The tutorial zone.
+Palette: fresh greens, sandy yellow, sky blue, stone gray.
+Lighting: sunny daytime, soft shadows, light fog in the distance.
+Music: relaxed orchestral/acoustic.
+
+Sub-zone 1 - Plains
+  Rolling grass hills with a few trees, flowers and small rocks.
+  A wooden fence and a small farm house at the entrance. A dirt path
+  leads to the gate (a wooden gate with a sign).
+  Landmark: windmill on a hill.
+
+Sub-zone 2 - Beach
+  Sand, shallow turquoise water, palm trees, rocks and a wrecked boat.
+  Wooden docks and crates on the shore. Seagull nests on rocks.
+  Landmark: half-sunk pirate ship.
+  Gate: a rope bridge or a stone arch between two cliffs.
+
+Sub-zone 3 - Forest
+  Dense oak and pine trees, tall grass, mushrooms, fallen logs and
+  hunter camps. Light beams (sun rays) between the trees. Spider webs
+  between trunks near the exit.
+  Landmark: huge ancient tree in the middle.
+  Gate: a large mossy stone door that leads into a mountain.
+
+Sub-zone 4 - Cave (BOSS ROOM)
+  A mine tunnel with rails, torches, wooden supports and glowing ore.
+  The tunnel opens into a huge cavern with stone pillars.
+  Mini-boss alcoves: one troll den (bones, a huge club), one spider
+  nest with crystals and webs.
+  Boss arena: round stone platform with an ancient Golem statue that
+  awakens (moss, cracks, glowing runes on its chest).
+  Boss: Golem.
+
+=====================================================================
+ ZONE 2: DESERT
+=====================================================================
+Mood: hot, dry, adventurous.
+Palette: sand yellow, orange, terracotta red, turquoise water accent.
+Lighting: strong sun, warm tint, heat haze, long hard shadows.
+Music: percussion, Middle-Eastern flute.
+
+Sub-zone 1 - Dunes
+  Big sand dunes with wind ripples, cacti, dead trees and animal skulls.
+  Small tents of lost travelers. Light sand particles blowing.
+  Landmark: tall rock arch.
+
+Sub-zone 2 - Oasis
+  A palm-tree lake in the middle, with an abandoned village around it:
+  clay houses, market stalls, clay jars, torn carpets.
+  Landmark: stone well and a ruined fountain.
+
+Sub-zone 3 - Canyon
+  Tall red cliffs, narrow paths, stone bridges, cave entrances in
+  walls, and rock formations. Sandstone ruins on the ledges.
+  Landmark: giant stone bridge across the canyon.
+  Gate: a huge sandstone door carved with hieroglyphs.
+
+Sub-zone 4 - Pyramid (BOSS ROOM)
+  Interior with hieroglyph walls, torches, golden decor, trap tiles
+  (visual only) and statues of jackal-headed guards.
+  Mini-boss alcoves: Anubis Guard (jackal statue room) and Sandstorm
+  Djinn (floating lamp with a swirling sand vortex).
+  Boss arena: a golden throne chamber with a big sarcophagus in the
+  center that opens.
+  Boss: Cursed Pharaoh.
+
+=====================================================================
+ ZONE 3: JUNGLE
+=====================================================================
+Mood: humid, dense, mysterious.
+Palette: deep greens, brown, gold accents, bright flower colors.
+Lighting: filtered light, green tint, mist near the ground.
+Music: tribal drums, birds, insects.
+
+Sub-zone 1 - Jungle Edge
+  Thick vegetation, big leaves, vines, wooden totems at the entrance.
+  Narrow dirt paths. Many bushes to hide enemies.
+  Landmark: giant tree with a tribal sign.
+
+Sub-zone 2 - River
+  A winding river with small waterfalls, rope and wooden bridges,
+  stepping stones and a floating dock. Lilies and bamboo.
+  Landmark: huge waterfall.
+
+Sub-zone 3 - Lost Temple
+  Mossy stone ruins covered by roots, broken stairs, carved faces and
+  arrow-trap walls (visual). Torches and glowing glyphs.
+  Landmark: stepped temple pyramid in the jungle.
+  Gate: temple door with a face carving that opens its mouth.
+
+Sub-zone 4 - Temple Heart (BOSS ROOM)
+  Inside the temple: golden altar, stone pillars, hanging vines, pools
+  of water and floor glyphs that glow on hit.
+  Mini-boss alcoves: Elder Jaguar (cave-like den) and Tribal Warlord
+  (war camp with banners and skulls).
+  Boss arena: circular stone ring with a giant golden idol.
+  Boss: Ancestral Gorilla.
+
+=====================================================================
+ ZONE 4: TUNDRA
+=====================================================================
+Mood: cold, harsh, quiet and beautiful.
+Palette: white, ice blue, pale purple, dark pine green.
+Lighting: pale low sun, blue shadows, snowfall particles, aurora at
+  night in the skybox.
+Music: wind, soft choir, cold synth.
+
+Sub-zone 1 - Snowy Plains
+  Snow fields, snow-covered pine trees, frozen bushes, a broken
+  wooden cabin, snowmen scattered around.
+  Landmark: lone dead tree with ice hanging from it.
+
+Sub-zone 2 - Frozen Lake
+  A huge frozen lake with cracks in the ice, ice-fishing holes and
+  small ice caves around the shore. Floating ice chunks.
+  Landmark: shipwreck frozen in the ice.
+
+Sub-zone 3 - Mountain
+  Steep icy paths, rock walls, snow bridges and ledges, wooden
+  scaffolds. Strong wind and snow gusts.
+  Landmark: peak with a giant ice cave entrance.
+  Gate: an ice gate that melts when opened.
+
+Sub-zone 4 - Ice Citadel (BOSS ROOM)
+  Crystal-clear ice walls, blue torches, frozen statues of knights,
+  icicles and a frosty floor with sparkles.
+  Mini-boss alcoves: Frost Wolf Alpha (ice den with bones) and Ice
+  Knight Captain (armory with frozen weapons).
+  Boss arena: throne room with a giant ice throne.
+  Boss: Frost King.
+
+=====================================================================
+ ZONE 5: CURSED SWAMP
+=====================================================================
+Mood: creepy, wet, magical.
+Palette: murky green, dark brown, purple magic, yellow firefly light.
+Lighting: low light, thick green fog, glowing plants, fireflies.
+Music: croaks, low drones, eerie whispers.
+
+Sub-zone 1 - Marsh
+  Shallow stagnant water, reeds, floating lily pads, wooden walkways
+  and mud paths. Bubbling pools.
+  Landmark: giant half-sunk tree trunk.
+
+Sub-zone 2 - Dead Forest
+  Twisted bare trees with faces in the bark, dark mist, glowing
+  mushrooms and wisps floating around. Crows on branches.
+  Landmark: huge dead tree with an old swing.
+
+Sub-zone 3 - Witch Village
+  Crooked cabins on stilts connected by wooden bridges, hanging
+  lanterns, potion barrels, scarecrows and cauldrons.
+  Landmark: tall crooked witch tower.
+  Gate: a large wooden door with a skull knocker.
+
+Sub-zone 4 - Giant Cauldron (BOSS ROOM)
+  A big circular pit with a gigantic bubbling cauldron in the center,
+  green steam, floating books and potion bottles.
+  Mini-boss alcoves: Giant Toad Shaman (toad shrine with totems) and
+  Rotting Treant (rotten tree corner with glowing sap).
+  Boss arena: ring of stone around the cauldron.
+  Boss: Swamp Witch.
+
+=====================================================================
+ ZONE 6: VOLCANO
+=====================================================================
+Mood: hot, aggressive, industrial.
+Palette: black rock, orange lava, red glow, ash gray.
+Lighting: orange glow, ash particles, red haze, lava light on walls.
+Music: deep drums, metallic hits, rumbling.
+
+Sub-zone 1 - Volcano Foot
+  Black volcanic rock, ash fields, dead trees, steam vents and small
+  lava cracks in the ground. Abandoned miner camp.
+  Landmark: giant volcano visible in the background.
+
+Sub-zone 2 - Magma Mine
+  Tunnels with rails, minecarts, wooden supports, lava veins in the
+  walls and glowing red crystals. Dwarven forges.
+  Landmark: huge mining elevator and a big furnace.
+
+Sub-zone 3 - Lava River
+  Platforms of basalt over rivers of lava, stone bridges, lava falls
+  and floating rocks. Heat distortion.
+  Landmark: giant lava waterfall.
+  Gate: obsidian door with glowing red cracks.
+
+Sub-zone 4 - Crater (BOSS ROOM)
+  Inside the volcano crater: a circular platform surrounded by lava
+  with a lava lake below, erupting sparks and falling embers.
+  Mini-boss alcoves: Magma Brute (forge with an anvil) and Lava Serpent
+  (lava pool nest).
+  Boss arena: obsidian ring. A giant stone titan rises from the lava.
+  Boss: Magma Titan.
+
+=====================================================================
+ ZONE 7: HELL (Minecraft Nether style)
+=====================================================================
+Mood: oppressive, dramatic, dark.
+Palette: red, black, deep orange, purple accents.
+Lighting: red sky, dark fog, lava glow, floating embers.
+Music: dark choir, heavy bass, screams in the distance.
+
+Sub-zone 1 - Hellish Plains with Lava Lake
+  Cracked red-black ground, lava lakes with obsidian islands, bone
+  trees and dead plants. Bridges of stone over lava.
+  Landmark: giant skull rock in the middle of the lava lake.
+
+Sub-zone 2 - Hell City
+  Dark streets, spiked buildings, demon banners, burning braziers,
+  cages hanging above and dark arches. Looks like a ruined gothic city.
+  Landmark: a tall burning tower in the center.
+
+Sub-zone 3 - Hell Castle Entrance
+  Huge gates with demon statues, spikes, a drawbridge over lava,
+  guard towers and chains. Fire torches on walls.
+  Landmark: giant castle with two demon horns.
+  Gate: castle door that opens with chains.
+
+Sub-zone 4 - Hell Throne Room (BOSS ROOM)
+  A massive hall with lava rivers on the sides, pillars with faces,
+  hanging chains, and a red carpet leading to a giant throne.
+  Mini-boss alcoves: Hellhound Alpha (kennel with bones) and Infernal
+  Executioner (execution platform with an axe and chains).
+  Boss arena: circular platform around the throne.
+  Boss: Supreme Demon.
+
+=====================================================================
+ ZONE 8: HEAVEN (Minecraft Aether style)
+=====================================================================
+Mood: majestic, peaceful but powerful. The opposite of Hell.
+Palette: white, gold, light blue, soft pink.
+Lighting: bright glowing light, god rays, floating light particles.
+Music: choir, harps, orchestral swell.
+
+Sub-zone 1 - Sky Island
+  Floating grass islands with golden-white trees, waterfalls falling
+  into the void, glowing flowers and small floating rocks.
+  Landmark: huge floating tree of light.
+
+Sub-zone 2 - Cloud Bridge
+  Bridges of clouds and light connecting islands, stone arches,
+  floating platforms, wind effects and passing thunder clouds.
+  Landmark: giant golden arch in the sky.
+
+Sub-zone 3 - Heaven Castle Entrance
+  White marble stairs, golden gates, statues of angels, banners,
+  fountains and floating lanterns.
+  Landmark: huge castle with golden towers.
+  Gate: golden gate opening with light beams.
+
+Sub-zone 4 - Heaven Throne Room (BOSS ROOM)
+  Grand white and gold hall with tall columns, stained glass, a
+  crystal floor showing the clouds below, and a luminous throne.
+  Mini-boss alcoves: Seraph Knight (armory with golden armor) and
+  Storm Griffin Lord (nest with storm clouds and lightning).
+  Boss arena: circular platform with a halo above.
+  Boss: Supreme Angel.
+
+=====================================================================
+ ZONE 9: REALM OF THE DEAD
+=====================================================================
+Mood: haunted, gothic, sad.
+Palette: gray, bone white, dark blue, ghostly green.
+Lighting: moonlit night, fog, green ghost lights, thunder flashes.
+Music: slow organ, whispers, distant bells.
+
+Sub-zone 1 - Graveyard
+  Tombstones, crypts, iron fences, dead trees, open graves, crows
+  and thick ground fog.
+  Landmark: large crypt with a gothic gate.
+
+Sub-zone 2 - Catacombs
+  Narrow tunnels full of skulls and bones, candles, stone coffins,
+  spiderwebs and tight rooms. Underground, dim and claustrophobic.
+  Landmark: huge ossuary room with a bone chandelier.
+
+Sub-zone 3 - Haunted Cathedral
+  Ruined gothic cathedral, broken stained glass, floating candles,
+  an old organ, collapsed pews and ghostly light beams.
+  Landmark: giant cathedral nave with a broken ceiling.
+  Gate: a huge sealed door with chains and a skull lock.
+
+Sub-zone 4 - Royal Sarcophagus Room (BOSS ROOM)
+  A royal crypt with stone coffins in the walls, a long carpet, tall
+  black pillars with green flames and a huge central sarcophagus.
+  Mini-boss alcoves: Skeleton General (war banners, armor stands) and
+  Banshee Queen (hanging cages and mirrors).
+  Boss arena: round platform around the sarcophagus.
+  Boss: Lich King.
+
+=====================================================================
+ ZONE 10: ABYSS (ocean)
+=====================================================================
+Mood: beautiful at first, then terrifying and deep.
+Palette: turquoise, deep blue, black, neon accents (cyan, pink).
+Lighting: underwater caustics, fog and bubbles, fading light with
+  depth, glowing creatures.
+Music: muffled, deep, atmospheric, sonar pings.
+
+Sub-zone 1 - Coral Reef
+  Colorful coral, sea plants, fish swarms, sand floor and bright
+  light rays from the surface.
+  Landmark: giant coral arch.
+
+Sub-zone 2 - Shipwreck
+  Broken ships, chests, anchors, ropes, barrels and rusted cannons.
+  Darker water and seaweed.
+  Landmark: giant sunken galleon.
+
+Sub-zone 3 - Abyssal Trench
+  A deep dark canyon with glowing creatures, bioluminescent plants,
+  strong current effects and giant bones on the floor.
+  Landmark: giant skeleton of a sea monster.
+  Gate: giant clam door with a glowing pearl.
+
+Sub-zone 4 - Sunken Palace (BOSS ROOM)
+  An ancient Atlantis-like palace with golden domes, coral-covered
+  columns, tridents and a large circular hall.
+  Mini-boss alcoves: Kraken Spawn (tentacle-filled cave) and Triton
+  Captain (guard post with a trident rack).
+  Boss arena: round platform; the Leviathan emerges from the dark
+  ocean around the palace.
+  Boss: Leviathan.
+  Tip: if swimming mechanics are too complex, make the zone "air
+  bubbles / dry" (an underwater dome look) with walking gameplay.
+
+=====================================================================
+ ZONE 11: MECHANICAL CITY
+=====================================================================
+Mood: cold, industrial, sci-fi.
+Palette: steel gray, neon cyan and orange, black, warning yellow.
+Lighting: artificial lights, neon strips, sparks, steam, red alarms.
+Music: electronic, industrial beats.
+
+Sub-zone 1 - Abandoned Factory
+  Conveyor belts, giant gears, pipes, crates, broken machines and
+  hanging cables. Rusty metal floors and dim yellow lights.
+  Landmark: giant assembly line machine.
+
+Sub-zone 2 - Industrial Sewers
+  Large pipes, toxic green sludge channels, steam vents, metal
+  walkways and valves.
+  Landmark: giant pipe junction with a waterfall of sludge.
+
+Sub-zone 3 - Control Center
+  Screens on the walls, laser grids, server racks, glass panels and
+  security gates. Blue/cyan lights.
+  Landmark: big central hologram map.
+  Gate: security door with a keypad and a red laser.
+
+Sub-zone 4 - Reactor Core (BOSS ROOM)
+  A huge round reactor chamber with a glowing core in the center,
+  metal catwalks, energy pillars and warning signs.
+  Mini-boss alcoves: War Mech (hangar with a weapons rack) and
+  Sentinel Prime (charging station with energy tubes).
+  Boss arena: metal platform around the reactor.
+  Boss: Colossal Robot.
+
+=====================================================================
+ ZONE 12: THE VOID (Minecraft End style)
+=====================================================================
+Mood: final, mysterious, epic.
+Palette: black, deep purple, magenta glow, pale cream/gray stone.
+Lighting: dark starfield skybox, purple glow, floating particles.
+Music: slow, huge, ambient, with a distant choir.
+
+Sub-zone 1 - Void Island
+  Floating islands of obsidian and pale stone, surrounded by endless
+  void. Tall obsidian pillars. Purple particles rising.
+  Landmark: giant floating pillar with a crystal on top.
+
+Sub-zone 2 - Crystal Forest
+  Trees made of purple crystal, dark ground, glowing plants and
+  floating crystal shards. Soft chiming sounds.
+  Landmark: giant crystal tree.
+
+Sub-zone 3 - Voyagers' City
+  Ruins of an ancient city: broken towers, floating bridges, stairs
+  that lead nowhere, statues and lanterns of purple light.
+  Landmark: huge broken tower floating in the void.
+  Gate: a portal ring that activates with a rift effect.
+
+Sub-zone 4 - Heart of the Void (BOSS ROOM)
+  A circular arena with obsidian pillars topped by crystals, a ring
+  of floating stones and a swirling void in the sky.
+  Mini-boss alcoves: Void Reaper (dark altar with a scythe) and
+  Crystal Warden (crystal cage with runes).
+  Boss arena: wide platform with a central dragon altar.
+  Boss: Void Dragon (final boss).
+
+=====================================================================
+ TRANSITIONS & HUB (suggestions)
+=====================================================================
+- A central HUB (spawn): shop, weapon seller, diamond/Robux shop,
+  rebirth altar, pets/eggs, and a portal to each unlocked zone.
+- Zone portals appear in the hub as large themed doorways; locked
+  zones are grayed out and show the required rebirth count.
+- Each zone's first sub-zone has a return-to-hub teleporter in the
+  safe spot.
+- Every boss room has a one-way entrance until the fight ends.
+
+=====================================================================
+ BUILD ORDER REMINDER
+=====================================================================
+Build and test 1 full zone (Plains) first. Then reuse the same
+sub-zone template, gates, spawners and boss room for the other zones,
+changing only the visuals, enemies and config values.

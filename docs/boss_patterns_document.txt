@@ -1,0 +1,461 @@
+=====================================================================
+ NPC COMBAT GAME - BOSS PATTERN & ANIMATION DOCUMENT
+ 12 bosses | at least 3 attack patterns each | enrage phase at 50% HP
+=====================================================================
+
+---------------------------------------------------------------------
+ 1. HOW BOSS FIGHTS WORK (applies to every boss)
+---------------------------------------------------------------------
+BOSS STATE MACHINE (run on the SERVER)
+    Intro -> Idle/Chase -> Choose Pattern -> Telegraph -> Execute
+          -> Recover -> (back to Choose Pattern)
+    At 50% HP: Enrage transition (short roar/animation, then patterns
+    get faster, bigger or doubled).
+    On death: death animation, rewards, Rebirth altar appears.
+
+RULES
+- Every pattern has a TELEGRAPH (a warning the player can read) of 1.0 to
+  1.5 seconds before damage. No instant unavoidable damage.
+- Never use the same pattern twice in a row. Pick randomly among the
+  patterns that are off cooldown.
+- Pattern damage is expressed as a multiplier of the boss's DMG value
+  from enemy_database.txt (example: x1.5 = 1.5 times the boss DMG).
+- Damage, hit detection, cooldowns and HP are all calculated on the
+  SERVER. The client only plays visuals and sounds.
+- Telegraph zones: red flat shapes on the ground (circle, line, cone,
+  ring). They fill up over the telegraph time, then the attack lands.
+- Boss rooms are multiplayer: patterns can target a random player, the
+  closest player, or the whole arena.
+- Add a short "stagger" window after the biggest pattern so players have
+  a reward for dodging (the boss takes x1.25 damage for 2 seconds).
+
+MINI-BOSSES (2 per boss room)
+- Each mini-boss uses 1 to 2 simple patterns (a charge and a slam, for
+  example), reusing the boss's visual theme at a smaller scale.
+
+ENRAGE PHASE (50% HP) - general options
+- Cooldowns -25%, telegraph -0.2s, or pattern gets a second wave.
+- A glowing eye/aura color change so players notice the phase shift.
+
+---------------------------------------------------------------------
+ 2. TOOLS & WORKFLOW FOR BUILDING THE FIGHTS
+---------------------------------------------------------------------
+A) ROBLOX STUDIO (core)
+   - Animation Editor (built-in): for rigged bosses, create idle, walk,
+     telegraph poses and attack animations. Add Animation Events (markers)
+     at the exact "hit" frame, then fire gameplay from those events.
+   - Explorer/ServerStorage: each boss is one Model with a Humanoid or
+     AnimationController, plus a ModuleScript holding its patterns.
+
+B) VFX PLUGIN (particles, beams, trails)
+   - Use a VFX / particle plugin for Roblox Studio (for example Roblox's
+     Particle Editor or a VFX plugin from the Creator Store) to design
+     and preview effects without guessing property values.
+   - Typical VFX per pattern: ParticleEmitters (dust, sparks, embers),
+     Beams (lasers, light columns), Trails (weapon swings, projectiles),
+     Attachments, PointLights, and screen effects (camera shake, color
+     correction flash).
+   - Save every effect as a Model in ReplicatedStorage/VFX, named
+     [Boss]_[Pattern]_[Part] (for example Golem_Slam_Shockwave), and play
+     it with a small helper module (Emit, Enable, Destroy after time).
+   - The server tells clients "play this VFX here" through a RemoteEvent;
+     the clients create and show it. This keeps the server light.
+
+C) TOOLBOX (Creator Store)
+   - Use the Toolbox to find base assets: rocks, trees, statues, sounds,
+     skyboxes, ready particle sets, animation packs.
+   - SAFETY: free models can contain hidden or malicious scripts. Always
+     open the model, delete ALL unknown scripts, and check for
+     require() calls and obfuscated code before using it.
+   - Check the license and the asset's creator; prefer well-known
+     creators and assets with many favorites.
+
+D) BLENDER (only if needed)
+   - Use Blender for things the Toolbox does not have: a custom boss body,
+     unique weapons, a special arena prop, or custom rigs and animations.
+   - Keep meshes low-poly (Roblox budget: aim for under ~10-20k
+     triangles per boss mesh, split into parts if needed) and use a
+     single texture where possible.
+   - Pipeline: model -> UV unwrap -> texture -> rig (armature) -> animate
+     -> export FBX -> import into Studio (3D Importer / Avatar Importer
+     for rigged characters) -> test the animation in the Animation Editor.
+   - Alternatively, build bosses from Roblox parts + Motor6D joints and
+     animate them with the Animation Editor; this is faster for simple
+     bosses like the Golem or the Colossal Robot.
+
+E) SUB-AGENTS (split the work)
+   - Work boss by boss using sub-agents: one sub-agent per boss, each
+     with the same brief (this document + enemy_database.txt + a common
+     template ModuleScript).
+   - Each sub-agent delivers: the boss ModuleScript (state machine and
+     patterns), a list of VFX names it expects in ReplicatedStorage/VFX,
+     a list of animation names/markers it expects, and test notes.
+   - A separate "reviewer" sub-agent checks every module against the
+     rules in section 1 (telegraphs, server-side damage, cooldowns).
+   - Keep one shared template module (BossBase) so every boss behaves
+     the same way; sub-agents only fill in the patterns.
+   - A human (you) stays in charge of the final feel: you review the
+     visuals in Studio, tune timing and balance, and approve.
+
+F) SUGGESTED PIPELINE PER BOSS
+   1. Get or build the model (Toolbox, Blender, or Roblox parts).
+   2. Rig it (Motor6D) and make idle / walk / death animations.
+   3. For each pattern: telegraph animation + attack animation + VFX.
+   4. Write the pattern in the boss ModuleScript.
+   5. Test alone, then with 2-4 players, then tune numbers.
+   6. Add sounds, camera shake and the intro cinematic.
+
+PATTERN DESCRIPTION FORMAT USED BELOW
+    Name | Target | Telegraph | Damage | Counterplay | VFX & animation
+
+=====================================================================
+ BOSS 1: GOLEM (Plains) - heavy and slow, teaches dodging
+=====================================================================
+Fight style: slow, powerful hits with long telegraphs.
+
+Pattern 1 - Ground Slam
+  Target: area around the Golem.
+  Telegraph: 1.3s red circle (radius 18) under the Golem; it raises both
+  fists.
+  Damage: x1.5 | Counterplay: step out of the circle or jump.
+  VFX & anim: fists-up wind-up animation, dust ring, camera shake,
+  ground crack decals.
+
+Pattern 2 - Boulder Throw
+  Target: random player(s), up to 3 boulders.
+  Telegraph: 1.0s red circles appear where boulders will land.
+  Damage: x1.0 each | Counterplay: leave the marked circles.
+  VFX & anim: Golem rips a rock from the ground (pull animation),
+  projectile arc with a trail, impact debris particles.
+
+Pattern 3 - Rubble Guardians
+  Target: summons helpers.
+  Telegraph: 1.5s, rocks rise around the arena edge.
+  Damage: minions deal x0.4; they have 3% of the boss's HP each.
+  Counterplay: kill the minions or keep moving.
+  VFX & anim: stomp animation, rocks assembling into small golems.
+
+Enrage (50%): chest runes glow red; Ground Slam creates a second ring
+a moment after the first.
+
+=====================================================================
+ BOSS 2: CURSED PHARAOH (Desert) - sand and curses
+=====================================================================
+Pattern 1 - Scarab Swarm
+  Target: cone toward the nearest player.
+  Telegraph: 1.0s red cone (60 degrees, 40 studs).
+  Damage: x1.0 | Counterplay: move out of the cone.
+  VFX & anim: sarcophagus-style arm raise, scarab particles/meshes
+  flying in a wave.
+
+Pattern 2 - Curse Beam
+  Target: a line toward a random player.
+  Telegraph: 1.5s thin red line that widens.
+  Damage: x1.8 | Counterplay: dodge sideways; hide behind a pillar.
+  VFX & anim: staff charge glow, Beam with a bright core, sand burst at
+  the end point.
+
+Pattern 3 - Sand Pillars
+  Target: positions under each player.
+  Telegraph: 1.2s sand swirl circles under players.
+  Damage: x1.2 | Counterplay: keep moving, do not stay still.
+  VFX & anim: ground-pound animation, vertical sand columns erupting
+  in sequence.
+
+Enrage (50%): summons two mummies at the arena corners; Sand Pillars
+fire twice.
+
+=====================================================================
+ BOSS 3: ANCESTRAL GORILLA (Jungle) - brutal and agile
+=====================================================================
+Pattern 1 - Chest Pound Shockwave
+  Target: arena-wide expanding rings.
+  Telegraph: 1.0s chest-pound animation with 2 beats.
+  Damage: x1.0 per ring | Counterplay: jump over each ring.
+  VFX & anim: ring mesh expanding on the ground, leaves flying, shake.
+
+Pattern 2 - Leap Smash
+  Target: a random player's position.
+  Telegraph: 1.4s circle marker where it will land.
+  Damage: x1.8 | Counterplay: leave the circle before impact.
+  VFX & anim: crouch, jump arc, big dust impact, short stun on the boss.
+
+Pattern 3 - Vine Charge
+  Target: straight-line rush across the arena.
+  Telegraph: 1.2s long red lane.
+  Damage: x1.5; stuns the boss if it hits a wall (free damage window).
+  Counterplay: step out of the lane and bait the boss into the wall.
+  VFX & anim: foot-scrape animation, speed lines, vine trail.
+
+Enrage (50%): Gorilla gains glowing golden eyes; Leap Smash chains two
+jumps.
+
+=====================================================================
+ BOSS 4: FROST KING (Tundra) - control and area denial
+=====================================================================
+Pattern 1 - Ice Spike Line
+  Target: line toward a random player.
+  Telegraph: 1.2s frost lines on the floor.
+  Damage: x1.4 | Counterplay: sidestep the line.
+  VFX & anim: sword slam into the ground, spikes erupting one after the
+  other along the line.
+
+Pattern 2 - Blizzard Zone
+  Target: large part of the arena (half circle).
+  Telegraph: 1.5s blue fog zone fading in.
+  Damage: x0.3 per second plus slow | Counterplay: stay near the warm
+  braziers (safe spots) during the blizzard.
+  VFX & anim: arms-wide animation, heavy snow particles, wind sound.
+
+Pattern 3 - Frozen Prison
+  Target: one random player.
+  Telegraph: 1.0s frost aura around the target.
+  Damage: x0.8 and the target is frozen for 3s; allies can break the ice
+  by hitting it. Counterplay: team up or dodge the aura.
+  VFX & anim: staff raise, ice block mesh around the player.
+
+Enrage (50%): Blizzard Zone covers the whole arena except two warm spots.
+
+=====================================================================
+ BOSS 5: SWAMP WITCH (Cursed Swamp) - zoning and curses
+=====================================================================
+Pattern 1 - Poison Cauldron Pools
+  Target: 4-6 spots around the arena.
+  Telegraph: 1.2s green bubbles on the floor.
+  Damage: x0.4 per second while standing inside; pools last 8s.
+  Counterplay: stay out of green pools; the arena slowly fills up.
+  VFX & anim: stirring animation, green droplets arcing into the floor,
+  bubbling puddle particles.
+
+Pattern 2 - Toad Curse
+  Target: one random player.
+  Telegraph: 1.0s purple rune above the player's head.
+  Damage: x0.5; the player is slowed and cannot attack for 3s.
+  Counterplay: move out of the line of fire; a teammate can cleanse by
+  hitting the rune (optional mechanic).
+  VFX & anim: wand point, purple projectile, frog puff-of-smoke effect.
+
+Pattern 3 - Broom Dash
+  Target: dash across the arena through the nearest player.
+  Telegraph: 1.2s red lane and the witch hovers on the broom.
+  Damage: x1.6 | Counterplay: step out of the lane.
+  VFX & anim: broom hop, trail, leaves/sparkles behind her.
+
+Enrage (50%): Spirit orbs orbit the witch and shoot homing bolts
+(x0.6) at random players every 5s.
+
+=====================================================================
+ BOSS 6: MAGMA TITAN (Volcano) - arena changes
+=====================================================================
+Pattern 1 - Molten Fist Combo
+  Target: nearest player.
+  Telegraph: 3 quick wind-ups (0.8s each), the final one is bigger.
+  Damage: x0.8, x0.8, x1.8 | Counterplay: back away after hit 2.
+  VFX & anim: 3-hit punch animation, lava splashes, cracked ground.
+
+Pattern 2 - Meteor Rain
+  Target: random spots all around the arena.
+  Telegraph: 1.2s red circles and falling shadow.
+  Damage: x1.2 per meteor | Counterplay: keep moving.
+  VFX & anim: roar with arms raised, flaming meteors with trails,
+  ember explosions.
+
+Pattern 3 - Lava Floor
+  Target: arena-wide; floor turns to lava except safe platforms.
+  Telegraph: 2.0s floor glows orange; platforms light up white.
+  Damage: x0.6 per second while on lava | Counterplay: stand on a
+  platform; platforms are limited, so players must share.
+  VFX & anim: stomp, glowing cracks spreading, lava bubble particles.
+
+Enrage (50%): safe platforms shrink; Meteor Rain falls faster.
+
+=====================================================================
+ BOSS 7: SUPREME DEMON (Hell) - fast and aggressive
+=====================================================================
+Pattern 1 - Hellfire Wave
+  Target: cone toward the nearest player.
+  Telegraph: 1.0s red cone (90 degrees).
+  Damage: x1.4 | Counterplay: leave the cone, or jump behind the boss.
+  VFX & anim: sword swipe, red-black flame wave, ember particles.
+
+Pattern 2 - Soul Chains
+  Target: 2-3 random players.
+  Telegraph: 1.3s chains appear from the ground toward targets.
+  Damage: x0.9; players are pulled toward the boss.
+  Counterplay: break the chain by dashing/hitting it, or move away fast.
+  VFX & anim: arm thrust, Beam-based chain, red glow at pull point.
+
+Pattern 3 - Demon Blink
+  Target: teleports behind a random player and slashes.
+  Telegraph: 0.8s shadow circle where it will reappear.
+  Damage: x1.7 | Counterplay: leave the shadow circle.
+  VFX & anim: dissolve into black smoke, reappear with a flash, slash arc.
+
+Pattern 4 (optional, enrage) - Imp Summon
+  Summons 4 imps (x0.3 damage, low HP) at the edges of the arena.
+
+=====================================================================
+ BOSS 8: SUPREME ANGEL (Heaven) - beautiful and deadly
+=====================================================================
+Pattern 1 - Holy Beams
+  Target: vertical light columns under random players.
+  Telegraph: 1.2s golden circles.
+  Damage: x1.5 | Counterplay: leave the circle.
+  VFX & anim: wings spread, light columns with bright Beams and sparkles.
+
+Pattern 2 - Wing Gust
+  Target: a cone of wind in front of the angel.
+  Telegraph: 1.0s wings pulled back.
+  Damage: x0.7 plus strong knockback (watch the platform edge!).
+  Counterplay: move behind the angel, or block/dash through.
+  VFX & anim: big flap animation, wind lines, feathers flying.
+
+Pattern 3 - Halo Judgment
+  Target: whole arena, with safe zones.
+  Telegraph: 2.0s a giant halo forms; 3-4 safe circles glow.
+  Damage: x2.5 outside safe zones | Counterplay: stand in a safe zone.
+  VFX & anim: the angel rises, halo growing, white flash, screen shake.
+
+Enrage (50%): spawns 3 small sentinels that heal the angel unless
+killed quickly.
+
+=====================================================================
+ BOSS 9: LICH KING (Realm of the Dead) - necromancy and debuffs
+=====================================================================
+Pattern 1 - Soul Drain
+  Target: one random player (beam).
+  Telegraph: 1.2s green line to the target.
+  Damage: x0.8 per second; heals the boss slightly.
+  Counterplay: break line of sight behind a pillar, or kill the
+  soul-orb on the beam.
+  VFX & anim: staff point, green Beam, souls flowing along the beam.
+
+Pattern 2 - Raise the Dead
+  Target: summons 4-6 skeletons from the ground.
+  Telegraph: 1.5s bone hands appear from the floor.
+  Damage: skeletons x0.4 | Counterplay: kill them quickly.
+  VFX & anim: staff slam, green circle rune, skeleton rising animation.
+
+Pattern 3 - Death Mark
+  Target: one or two players.
+  Telegraph: skull marker above head; explodes after 3s.
+  Damage: x2.0 in a radius of 15 around the marked player.
+  Counterplay: marked players run away from teammates.
+  VFX & anim: skull icon (BillboardGui), countdown tick sound, big
+  green explosion.
+
+Enrage (50%): Bone Prison: bone walls rise to split the arena into
+lanes for 6 seconds.
+
+=====================================================================
+ BOSS 10: LEVIATHAN (Abyss) - waves and control
+=====================================================================
+Pattern 1 - Tidal Wave
+  Target: sweeping wave across the arena.
+  Telegraph: 1.5s water rising and a clear safe gap on the side.
+  Damage: x1.6 plus knockback | Counterplay: jump onto the high ledge or
+  use the safe gap.
+  VFX & anim: Leviathan rears up, huge wave mesh moving, foam particles.
+
+Pattern 2 - Tentacle Slam
+  Target: 3-4 spots on the platform.
+  Telegraph: 1.2s ripples then circle markers.
+  Damage: x1.4 each | Counterplay: leave the circles.
+  VFX & anim: tentacles bursting out of the floor and slamming down,
+  water splash.
+
+Pattern 3 - Whirlpool
+  Target: center of the arena pulls players inward.
+  Telegraph: 1.5s swirling water.
+  Damage: x0.5 per second at the center | Counterplay: move away from the
+  center; use dash or jump to resist the pull.
+  VFX & anim: rotating water mesh, spiral particles, deep sound.
+
+Enrage (50%): adds a Water Spout beam sweeping across the arena
+(x1.2, 1.5s telegraph).
+
+=====================================================================
+ BOSS 11: COLOSSAL ROBOT (Mechanical City) - ranged and tech
+=====================================================================
+Pattern 1 - Laser Sweep
+  Target: rotating laser from the core across the arena.
+  Telegraph: 1.5s thin red line that rotates slowly.
+  Damage: x1.5 | Counterplay: jump over the beam or run in the opposite
+  direction of the rotation.
+  VFX & anim: chest opens, Beam laser, sparks at impact point.
+
+Pattern 2 - Rocket Barrage
+  Target: 5-8 random markers on the ground.
+  Telegraph: 1.2s red circles with missile shadows.
+  Damage: x1.0 each | Counterplay: keep moving.
+  VFX & anim: shoulder missile launchers open, smoke trails, explosions.
+
+Pattern 3 - Overload Pulse
+  Target: ring pulse around the robot.
+  Telegraph: 2.0s electricity gathering, electrical sparks, warning
+  alarm sound.
+  Damage: x2.0 within the ring; players beyond the ring are safe.
+  Counterplay: run far from the robot, or jump on the last pulse.
+  VFX & anim: stomp, blue shockwave ring, lightning arcs.
+
+Enrage (50%): deploys 2 combat drones that shoot (x0.3); the pulse
+fires twice.
+
+=====================================================================
+ BOSS 12: VOID DRAGON (The Void) - final boss, 4 patterns
+=====================================================================
+Pattern 1 - Void Breath
+  Target: sweeping cone across the arena.
+  Telegraph: 1.5s purple glow in the mouth and a wide red cone.
+  Damage: x2.0 | Counterplay: move behind the dragon's head or leave the
+  cone.
+  VFX & anim: head rises, mouth glow, big purple Beam/particle cone,
+  screen distortion.
+
+Pattern 2 - Gravity Rift
+  Target: black hole forms in the arena and pulls players in.
+  Telegraph: 1.5s small rift opens, pulling dust.
+  Damage: x0.6 per second near the center; x2.5 explosion at the end.
+  Counterplay: run away to the edge, then leave before the explosion.
+  VFX & anim: wing flap, spiral particles, bending light effect.
+
+Pattern 3 - Crystal Rain
+  Target: crystals falling at random spots.
+  Telegraph: 1.2s red circles with falling shadows.
+  Damage: x1.2 each | Counterplay: keep moving, stay out of circles.
+  VFX & anim: roar toward the sky, crystal projectiles, shattering
+  shards on impact.
+
+Pattern 4 - Void Collapse (enrage only)
+  Target: arena platforms vanish in sections.
+  Telegraph: 2.0s platform sections turn purple and crack.
+  Damage: falling into the void = respawn at the room entrance with a
+  short penalty (no instant death for balance, or x3.0 damage).
+  Counterplay: move to the glowing safe sections.
+  VFX & anim: tail slam, cracks spreading across the platform,
+  platform pieces falling into the void.
+
+=====================================================================
+ 3. QUICK CHECKLIST PER BOSS
+=====================================================================
+[ ] Model built or sourced (Toolbox / Blender / parts) and cleaned of
+    unknown scripts.
+[ ] Rig and animations: idle, walk, death, intro, telegraph + attack for
+    each pattern, enrage transition.
+[ ] Animation Events (markers) added at hit frames.
+[ ] VFX saved in ReplicatedStorage/VFX with consistent names.
+[ ] BossBase module used, with patterns added in the boss's own module.
+[ ] All damage and cooldowns on the server.
+[ ] Telegraphs of at least 1 second for every damaging attack.
+[ ] Tested with 1 player and with 4 players.
+[ ] Numbers tuned (damage multipliers, cooldowns, minion HP).
+[ ] Sounds, camera shake, intro banner, boss health bar added.
+[ ] Rewards (COINS, loot, DIAMONDS) and Rebirth altar tested.
+
+=====================================================================
+ 4. SUGGESTED ORDER
+=====================================================================
+1. Build the BossBase module and the Golem (Boss 1) fully.
+2. Reuse the same structure for Bosses 2-12, one sub-agent per boss.
+3. Release the first version with 3 zones (Plains, Desert, Jungle).
+4. Add the other bosses in later updates.

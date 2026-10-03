@@ -1,0 +1,479 @@
+=====================================================================
+ NPC COMBAT GAME - ENEMY, MINI-BOSS & BOSS DATABASE
+ 12 zones x 4 sub-zones | 3 enemies per sub-zone (2 in sub-zone 4)
+ Sub-zone 4 = boss room: 2 normal enemies + 2 mini-bosses + 1 boss
+=====================================================================
+
+---------------------------------------------------------------------
+ 1. HOW THE NUMBERS WORK
+---------------------------------------------------------------------
+Base value of a sub-zone:
+    B = 100 x 10^(zone - 1) x 2^(subzone - 1)
+
+Normal enemies:
+    Enemy A (light)    HP = 0.8 x B
+    Enemy B (standard) HP = 1.0 x B
+    Enemy C (heavy)    HP = 1.2 x B
+    (In sub-zone 4 only B and C exist, plus the mini-bosses and boss)
+    DMG per hit = 5% of HP
+    COINS (base reward) = 20% of HP
+
+Mini-bosses (2 per boss room, based on B of sub-zone 4):
+    Mini-boss 1: HP = 5 x B  | DMG = 6% of HP | COINS = 30% of HP
+    Mini-boss 2: HP = 7 x B  | DMG = 6% of HP | COINS = 30% of HP
+
+Boss:
+    HP = 25 x B | DMG = 7% of HP | COINS = 40% of HP
+
+Notes:
+- DMG is the damage of one normal hit. The player's max HP and weapon
+  damage should follow the same curve (upgrades, levels, rebirth bonus),
+  otherwise late zones are impossible.
+- COINS are BASE rewards, before rebirth multipliers, game passes and boosts.
+- Number suffixes: K = 1,000 | M = 1,000,000 | B = 1,000,000,000
+                   T = 10^12 | Qa = 10^15
+
+---------------------------------------------------------------------
+ 2. LOOT SYSTEM
+---------------------------------------------------------------------
+Every enemy has ONE possible loot item.
+
+DROP CHANCE (per kill)
+    Normal enemies : 2%   (identical for ALL normal enemies)
+    Mini-bosses    : 4%
+    Bosses         : 6%
+
+RARITY TIERS
+    1 Common | 2 Uncommon | 3 Rare | 4 Epic
+    5 Legendary | 6 Mythic | 7 Divine | 8 Secret
+
+The stronger the enemy, the rarer the loot. With b = ceil(zone / 2):
+    Sub-zones 1-2 loot rarity = tier b
+    Sub-zones 3-4 loot rarity = tier b + 1
+    Mini-boss loot rarity     = tier b + 2
+    Boss loot rarity          = tier b + 3 (max tier 8 = Secret)
+
+Loot types: Corpse, Egg (pet egg), Weapon, Armor, Material, Trophy.
+Suggestion: item stats scale with the zone, so a Rare item from the
+Volcano is stronger than a Rare item from the Plains.
+
+Rarity per zone summary:
+    Zones 1-2   : Common / Uncommon  | Mini-boss Rare      | Boss Epic
+    Zones 3-4   : Uncommon / Rare    | Mini-boss Epic      | Boss Legendary
+    Zones 5-6   : Rare / Epic        | Mini-boss Legendary | Boss Mythic
+    Zones 7-8   : Epic / Legendary   | Mini-boss Mythic    | Boss Divine
+    Zones 9-10  : Legendary / Mythic | Mini-boss Divine    | Boss Secret
+    Zones 11-12 : Mythic / Divine    | Mini-boss Secret    | Boss Secret
+
+Line format:
+    Name | HP | DMG | COINS | LOOT: item (type)
+
+---------------------------------------------------------------------
+ 3. DIAMONDS (premium currency)
+---------------------------------------------------------------------
+Diamonds are a second currency, separate from COINS. They can be:
+    - dropped by mini-bosses and bosses ONLY (normal enemies never drop them)
+    - bought with Robux (Developer Products)
+
+Because they can be bought, they are kept RARE and grow slowly:
+the amounts do NOT multiply by 10 per zone like coins do.
+
+DROP CHANCE (per kill, rolled separately from the loot item roll)
+    Mini-boss 1 : 15%
+    Mini-boss 2 : 15%
+    Boss        : 40%
+
+AMOUNT DROPPED (zone number = z)
+    Mini-boss 1 : 2 + z   diamonds
+    Mini-boss 2 : 3 + z   diamonds
+    Boss        : 10 + 3z diamonds
+
+    Zone | Zone name          | Mini-boss 1 | Mini-boss 2 | Boss
+    -----+--------------------+-------------+-------------+------
+     1   | Plains             |      3      |      4      |  13
+     2   | Desert             |      4      |      5      |  16
+     3   | Jungle             |      5      |      6      |  19
+     4   | Tundra             |      6      |      7      |  22
+     5   | Cursed Swamp       |      7      |      8      |  25
+     6   | Volcano            |      8      |      9      |  28
+     7   | Hell               |      9      |     10      |  31
+     8   | Heaven             |     10      |     11      |  34
+     9   | Realm of the Dead  |     11      |     12      |  37
+    10   | Abyss              |     12      |     13      |  40
+    11   | Mechanical City    |     13      |     14      |  43
+    12   | The Void           |     14      |     15      |  46
+
+Expected diamonds per full boss-room clear in zone z:
+    0.15 x (2+z) + 0.15 x (3+z) + 0.40 x (10+3z)  =  4.75 + 1.5z
+    (about 6 in zone 1, about 23 in zone 12)
+
+Rebirth / luck boosts may increase the DROP CHANCE slightly, but should
+never multiply the AMOUNT, so purchased diamonds keep their value.
+
+SUGGESTED ROBUX PACKS (placeholder prices, adjust after playtesting)
+    Pack      | Diamonds | Price
+    ----------+----------+---------
+    Small     |    50    |   49 R$
+    Medium    |   150    |  129 R$
+    Large     |   400    |  319 R$
+    Huge      |  1000    |  749 R$
+
+IMPLEMENTATION NOTES
+    - Store diamonds in the player's DataStore next to coins.
+    - Grant purchased diamonds only on the server, in ProcessReceipt.
+    - Roll the diamond drop on the server when the boss/mini-boss dies.
+
+=====================================================================
+ ZONE 1: PLAINS
+=====================================================================
+
+--- Sub-zone 1: Plains (loot rarity: COMMON) ---
+Boar              | HP 80    | DMG 4   | COINS 16  | LOOT: Boar Corpse (Corpse)
+Wild Wolf         | HP 100   | DMG 5   | COINS 20  | LOOT: Wolf Pup Egg (Egg)
+Field Bandit      | HP 120   | DMG 6   | COINS 24  | LOOT: Rusty Sword (Weapon)
+
+--- Sub-zone 2: Beach (loot rarity: COMMON) ---
+Giant Crab        | HP 160   | DMG 8   | COINS 32  | LOOT: Crab Shell Shield (Armor)
+Shipwrecked Pirate| HP 200   | DMG 10  | COINS 40  | LOOT: Cracked Cutlass (Weapon)
+Aggressive Seagull| HP 240   | DMG 12  | COINS 48  | LOOT: Seagull Egg (Egg)
+
+--- Sub-zone 3: Forest (loot rarity: UNCOMMON) ---
+Brown Bear        | HP 320   | DMG 16  | COINS 64  | LOOT: Bear Corpse (Corpse)
+Forest Archer     | HP 400   | DMG 20  | COINS 80  | LOOT: Hunter's Shortbow (Weapon)
+Giant Spider      | HP 480   | DMG 24  | COINS 96  | LOOT: Spider Egg (Egg)
+
+--- Sub-zone 4: Cave / BOSS ROOM (loot rarity: UNCOMMON) ---
+Bat               | HP 800   | DMG 40  | COINS 160 | LOOT: Bat Wing Cape (Armor)
+Miner Skeleton    | HP 960   | DMG 48  | COINS 192 | LOOT: Miner's Pickaxe (Weapon)
+MINI-BOSS 1: Cave Troll
+                  | HP 4K    | DMG 240 | COINS 1.2K| LOOT: Troll Club (Weapon, Rare)
+MINI-BOSS 2: Crystal Spider Matriarch
+                  | HP 5.6K  | DMG 336 | COINS 1.68K| LOOT: Crystal Spider Egg (Egg, Rare)
+BOSS: Golem       | HP 20K   | DMG 1.4K| COINS 8K  | LOOT: Golem Core Gauntlets (Weapon, Epic)
+
+=====================================================================
+ ZONE 2: DESERT
+=====================================================================
+
+--- Sub-zone 1: Dunes (loot rarity: COMMON) ---
+Scorpion          | HP 800   | DMG 40  | COINS 160 | LOOT: Scorpion Stinger (Weapon)
+Sand Snake        | HP 1K    | DMG 50  | COINS 200 | LOOT: Sand Snake Egg (Egg)
+Vulture           | HP 1.2K  | DMG 60  | COINS 240 | LOOT: Vulture Corpse (Corpse)
+
+--- Sub-zone 2: Oasis (loot rarity: COMMON) ---
+Jackal            | HP 1.6K  | DMG 80  | COINS 320 | LOOT: Jackal Pelt Cloak (Armor)
+Desert Crocodile  | HP 2K    | DMG 100 | COINS 400 | LOOT: Crocodile Egg (Egg)
+Nomad Bandit      | HP 2.4K  | DMG 120 | COINS 480 | LOOT: Curved Scimitar (Weapon)
+
+--- Sub-zone 3: Canyon (loot rarity: UNCOMMON) ---
+Sandstone Golem   | HP 3.2K  | DMG 160 | COINS 640 | LOOT: Sandstone Fist (Weapon)
+Royal Eagle       | HP 4K    | DMG 200 | COINS 800 | LOOT: Eagle Egg (Egg)
+Cliff Bandit      | HP 4.8K  | DMG 240 | COINS 960 | LOOT: Bandit's Dagger Set (Weapon)
+
+--- Sub-zone 4: Pyramid / BOSS ROOM (loot rarity: UNCOMMON) ---
+Mummy             | HP 8K    | DMG 400 | COINS 1.6K| LOOT: Mummy Wrappings (Armor)
+Giant Scarab      | HP 9.6K  | DMG 480 | COINS 1.92K| LOOT: Scarab Egg (Egg)
+MINI-BOSS 1: Anubis Guard
+                  | HP 40K   | DMG 2.4K| COINS 12K | LOOT: Anubis Spear (Weapon, Rare)
+MINI-BOSS 2: Sandstorm Djinn
+                  | HP 56K   | DMG 3.36K| COINS 16.8K| LOOT: Djinn Lamp (Trophy, Rare)
+BOSS: Cursed Pharaoh
+                  | HP 200K  | DMG 14K | COINS 80K | LOOT: Pharaoh's Scepter (Weapon, Epic)
+
+=====================================================================
+ ZONE 3: JUNGLE
+=====================================================================
+
+--- Sub-zone 1: Jungle Edge (loot rarity: UNCOMMON) ---
+Monkey            | HP 8K    | DMG 400 | COINS 1.6K| LOOT: Monkey Tail Whip (Weapon)
+Green Snake       | HP 10K   | DMG 500 | COINS 2K  | LOOT: Green Snake Egg (Egg)
+Venomous Spider   | HP 12K   | DMG 600 | COINS 2.4K| LOOT: Venom Fang Dagger (Weapon)
+
+--- Sub-zone 2: River (loot rarity: UNCOMMON) ---
+Piranha           | HP 16K   | DMG 800 | COINS 3.2K| LOOT: Piranha Jaw Blade (Weapon)
+Toxic Frog        | HP 20K   | DMG 1K  | COINS 4K  | LOOT: Toxic Frog Egg (Egg)
+Tribal Warrior    | HP 24K   | DMG 1.2K| COINS 4.8K| LOOT: Tribal Spear (Weapon)
+
+--- Sub-zone 3: Lost Temple (loot rarity: RARE) ---
+Jaguar            | HP 32K   | DMG 1.6K| COINS 6.4K| LOOT: Jaguar Corpse (Corpse)
+Animated Statue   | HP 40K   | DMG 2K  | COINS 8K  | LOOT: Statue Fragment (Material)
+Tribal Archer     | HP 48K   | DMG 2.4K| COINS 9.6K| LOOT: Poison Blowgun (Weapon)
+
+--- Sub-zone 4: Temple Heart / BOSS ROOM (loot rarity: RARE) ---
+Shaman            | HP 80K   | DMG 4K  | COINS 16K | LOOT: Shaman Totem (Trophy)
+Temple Guard      | HP 96K   | DMG 4.8K| COINS 19.2K| LOOT: Temple Guard Shield (Armor)
+MINI-BOSS 1: Elder Jaguar
+                  | HP 400K  | DMG 24K | COINS 120K| LOOT: Elder Jaguar Egg (Egg, Epic)
+MINI-BOSS 2: Tribal Warlord
+                  | HP 560K  | DMG 33.6K| COINS 168K| LOOT: Warlord War Axe (Weapon, Epic)
+BOSS: Ancestral Gorilla
+                  | HP 2M    | DMG 140K| COINS 800K| LOOT: Ancestral Gorilla Egg (Egg, Legendary)
+
+=====================================================================
+ ZONE 4: TUNDRA
+=====================================================================
+
+--- Sub-zone 1: Snowy Plains (loot rarity: UNCOMMON) ---
+White Wolf        | HP 80K   | DMG 4K  | COINS 16K | LOOT: White Wolf Egg (Egg)
+Arctic Fox        | HP 100K  | DMG 5K  | COINS 20K | LOOT: Arctic Fox Pelt (Armor)
+Cursed Snowman    | HP 120K  | DMG 6K  | COINS 24K | LOOT: Cursed Snowman Corpse (Corpse)
+
+--- Sub-zone 2: Frozen Lake (loot rarity: UNCOMMON) ---
+Ice Spirit        | HP 160K  | DMG 8K  | COINS 32K | LOOT: Ice Spirit Shard (Material)
+Polar Bear        | HP 200K  | DMG 10K | COINS 40K | LOOT: Polar Bear Egg (Egg)
+Swordfish         | HP 240K  | DMG 12K | COINS 48K | LOOT: Frozen Swordfish (Weapon)
+
+--- Sub-zone 3: Mountain (loot rarity: RARE) ---
+Yeti              | HP 320K  | DMG 16K | COINS 64K | LOOT: Yeti Corpse (Corpse)
+Furious Ibex      | HP 400K  | DMG 20K | COINS 80K | LOOT: Ibex Horn Spear (Weapon)
+Ice Eagle         | HP 480K  | DMG 24K | COINS 96K | LOOT: Ice Eagle Egg (Egg)
+
+--- Sub-zone 4: Ice Citadel / BOSS ROOM (loot rarity: RARE) ---
+Ice Knight        | HP 800K  | DMG 40K | COINS 160K| LOOT: Frostforged Blade (Weapon)
+Frost Golem       | HP 960K  | DMG 48K | COINS 192K| LOOT: Frost Golem Core (Material)
+MINI-BOSS 1: Frost Wolf Alpha
+                  | HP 4M    | DMG 240K| COINS 1.2M| LOOT: Alpha Frost Wolf Egg (Egg, Epic)
+MINI-BOSS 2: Ice Knight Captain
+                  | HP 5.6M  | DMG 336K| COINS 1.68M| LOOT: Captain's Ice Shield (Armor, Epic)
+BOSS: Frost King  | HP 20M   | DMG 1.4M| COINS 8M  | LOOT: Crown of Frost (Armor, Legendary)
+
+=====================================================================
+ ZONE 5: CURSED SWAMP
+=====================================================================
+
+--- Sub-zone 1: Marsh (loot rarity: RARE) ---
+Giant Frog        | HP 800K  | DMG 40K | COINS 160K| LOOT: Giant Frog Egg (Egg)
+Leech             | HP 1M    | DMG 50K | COINS 200K| LOOT: Leech Corpse (Corpse)
+Giant Mosquito    | HP 1.2M  | DMG 60K | COINS 240K| LOOT: Mosquito Stinger (Weapon)
+
+--- Sub-zone 2: Dead Forest (loot rarity: RARE) ---
+Living Tree       | HP 1.6M  | DMG 80K | COINS 320K| LOOT: Living Wood Staff (Weapon)
+Will-o'-Wisp      | HP 2M    | DMG 100K| COINS 400K| LOOT: Wisp Lantern (Trophy)
+Crow              | HP 2.4M  | DMG 120K| COINS 480K| LOOT: Crow Egg (Egg)
+
+--- Sub-zone 3: Witch Village (loot rarity: EPIC) ---
+Witch Apprentice  | HP 3.2M  | DMG 160K| COINS 640K| LOOT: Apprentice Wand (Weapon)
+Black Cat         | HP 4M    | DMG 200K| COINS 800K| LOOT: Black Cat Egg (Egg)
+Scarecrow         | HP 4.8M  | DMG 240K| COINS 960K| LOOT: Scarecrow Hat (Armor)
+
+--- Sub-zone 4: Giant Cauldron / BOSS ROOM (loot rarity: EPIC) ---
+Sorcerer Toad     | HP 8M    | DMG 400K| COINS 1.6M| LOOT: Sorcerer Toad Egg (Egg)
+Mud Golem         | HP 9.6M  | DMG 480K| COINS 1.92M| LOOT: Mud Golem Core (Material)
+MINI-BOSS 1: Giant Toad Shaman
+                  | HP 40M   | DMG 2.4M| COINS 12M | LOOT: Shaman's Bog Staff (Weapon, Legendary)
+MINI-BOSS 2: Rotting Treant
+                  | HP 56M   | DMG 3.36M| COINS 16.8M| LOOT: Rotting Treant Egg (Egg, Legendary)
+BOSS: Swamp Witch | HP 200M  | DMG 14M | COINS 80M | LOOT: Witch's Hex Staff (Weapon, Mythic)
+
+=====================================================================
+ ZONE 6: VOLCANO
+=====================================================================
+
+--- Sub-zone 1: Volcano Foot (loot rarity: RARE) ---
+Ash Lizard        | HP 8M    | DMG 400K| COINS 1.6M| LOOT: Ash Lizard Egg (Egg)
+Fire Bat          | HP 10M   | DMG 500K| COINS 2M  | LOOT: Fire Bat Wing Cape (Armor)
+Charred Miner     | HP 12M   | DMG 600K| COINS 2.4M| LOOT: Charred Pickaxe (Weapon)
+
+--- Sub-zone 2: Magma Mine (loot rarity: RARE) ---
+Magma Dwarf       | HP 16M   | DMG 800K| COINS 3.2M| LOOT: Magma Dwarf Hammer (Weapon)
+Basalt Golem      | HP 20M   | DMG 1M  | COINS 4M  | LOOT: Basalt Golem Core (Material)
+Rock Worm         | HP 24M   | DMG 1.2M| COINS 4.8M| LOOT: Rock Worm Egg (Egg)
+
+--- Sub-zone 3: Lava River (loot rarity: EPIC) ---
+Salamander        | HP 32M   | DMG 1.6M| COINS 6.4M| LOOT: Salamander Egg (Egg)
+Flame Spirit      | HP 40M   | DMG 2M  | COINS 8M  | LOOT: Flame Spirit Essence (Material)
+Lava Crab         | HP 48M   | DMG 2.4M| COINS 9.6M| LOOT: Lava Crab Shell Armor (Armor)
+
+--- Sub-zone 4: Crater / BOSS ROOM (loot rarity: EPIC) ---
+Fire Elemental    | HP 80M   | DMG 4M  | COINS 16M | LOOT: Fire Elemental Core (Material)
+Obsidian Guardian | HP 96M   | DMG 4.8M| COINS 19.2M| LOOT: Obsidian Shield (Armor)
+MINI-BOSS 1: Magma Brute
+                  | HP 400M  | DMG 24M | COINS 120M| LOOT: Magma Brute Maul (Weapon, Legendary)
+MINI-BOSS 2: Lava Serpent
+                  | HP 560M  | DMG 33.6M| COINS 168M| LOOT: Lava Serpent Egg (Egg, Legendary)
+BOSS: Magma Titan | HP 2B    | DMG 140M| COINS 800M| LOOT: Titan's Molten Greatsword (Weapon, Mythic)
+
+=====================================================================
+ ZONE 7: HELL
+=====================================================================
+
+--- Sub-zone 1: Hellish Plains with Lava Lake (loot rarity: EPIC) ---
+Imp               | HP 80M   | DMG 4M  | COINS 16M | LOOT: Imp Egg (Egg)
+Hellhound         | HP 100M  | DMG 5M  | COINS 20M | LOOT: Hellhound Corpse (Corpse)
+Scorched Zombie   | HP 120M  | DMG 6M  | COINS 24M | LOOT: Charred Bone Club (Weapon)
+
+--- Sub-zone 2: Hell City (loot rarity: EPIC) ---
+Demon Guard       | HP 160M  | DMG 8M  | COINS 32M | LOOT: Demon Guard Halberd (Weapon)
+Succubus          | HP 200M  | DMG 10M | COINS 40M | LOOT: Succubus Egg (Egg)
+Burning Skeleton  | HP 240M  | DMG 12M | COINS 48M | LOOT: Burning Skull Helm (Armor)
+
+--- Sub-zone 3: Hell Castle Entrance (loot rarity: LEGENDARY) ---
+Infernal Knight   | HP 320M  | DMG 16M | COINS 64M | LOOT: Infernal Plate Armor (Armor)
+Gargoyle          | HP 400M  | DMG 20M | COINS 80M | LOOT: Gargoyle Egg (Egg)
+Demon Archer      | HP 480M  | DMG 24M | COINS 96M | LOOT: Hellfire Bow (Weapon)
+
+--- Sub-zone 4: Hell Throne Room / BOSS ROOM (loot rarity: LEGENDARY) ---
+Elite Infernal Guard
+                  | HP 800M  | DMG 40M | COINS 160M| LOOT: Elite Guard Greatsword (Weapon)
+Demonic Mage      | HP 960M  | DMG 48M | COINS 192M| LOOT: Demonic Tome (Trophy)
+MINI-BOSS 1: Hellhound Alpha
+                  | HP 4B    | DMG 240M| COINS 1.2B| LOOT: Hellhound Alpha Egg (Egg, Mythic)
+MINI-BOSS 2: Infernal Executioner
+                  | HP 5.6B  | DMG 336M| COINS 1.68B| LOOT: Executioner's Axe (Weapon, Mythic)
+BOSS: Supreme Demon
+                  | HP 20B   | DMG 1.4B| COINS 8B  | LOOT: Supreme Demon's Soul Blade (Weapon, Divine)
+
+=====================================================================
+ ZONE 8: HEAVEN
+=====================================================================
+
+--- Sub-zone 1: Sky Island (loot rarity: EPIC) ---
+Glowing Bird      | HP 800M  | DMG 40M | COINS 160M| LOOT: Glowing Bird Egg (Egg)
+Wind Spirit       | HP 1B    | DMG 50M | COINS 200M| LOOT: Wind Spirit Feather (Material)
+Celestial Deer    | HP 1.2B  | DMG 60M | COINS 240M| LOOT: Celestial Deer Antlers (Trophy)
+
+--- Sub-zone 2: Cloud Bridge (loot rarity: EPIC) ---
+Storm Cloud       | HP 1.6B  | DMG 80M | COINS 320M| LOOT: Storm Cloud Essence (Material)
+Guardian Cherub   | HP 2B    | DMG 100M| COINS 400M| LOOT: Cherub Egg (Egg)
+Griffin           | HP 2.4B  | DMG 120M| COINS 480M| LOOT: Griffin Feather Cape (Armor)
+
+--- Sub-zone 3: Heaven Castle Entrance (loot rarity: LEGENDARY) ---
+Celestial Soldier | HP 3.2B  | DMG 160M| COINS 640M| LOOT: Celestial Spear (Weapon)
+Winged Archer     | HP 4B    | DMG 200M| COINS 800M| LOOT: Wing Bow (Weapon)
+Sacred Statue     | HP 4.8B  | DMG 240M| COINS 960M| LOOT: Sacred Statue Shard (Material)
+
+--- Sub-zone 4: Heaven Throne Room / BOSS ROOM (loot rarity: LEGENDARY) ---
+Celestial Paladin | HP 8B    | DMG 400M| COINS 1.6B| LOOT: Paladin's Radiant Shield (Armor)
+Light Priest      | HP 9.6B  | DMG 480M| COINS 1.92B| LOOT: Priest's Holy Staff (Weapon)
+MINI-BOSS 1: Seraph Knight
+                  | HP 40B   | DMG 2.4B| COINS 12B | LOOT: Seraph Blade (Weapon, Mythic)
+MINI-BOSS 2: Storm Griffin Lord
+                  | HP 56B   | DMG 3.36B| COINS 16.8B| LOOT: Storm Griffin Egg (Egg, Mythic)
+BOSS: Supreme Angel
+                  | HP 200B  | DMG 14B | COINS 80B | LOOT: Supreme Angel's Halo (Armor, Divine)
+
+=====================================================================
+ ZONE 9: REALM OF THE DEAD
+=====================================================================
+
+--- Sub-zone 1: Graveyard (loot rarity: LEGENDARY) ---
+Zombie            | HP 8B    | DMG 400M| COINS 1.6B| LOOT: Zombie Corpse (Corpse)
+Ghost             | HP 10B   | DMG 500M| COINS 2B  | LOOT: Ghost Essence (Material)
+Ghoul             | HP 12B   | DMG 600M| COINS 2.4B| LOOT: Ghoul Egg (Egg)
+
+--- Sub-zone 2: Catacombs (loot rarity: LEGENDARY) ---
+Skeleton Warrior  | HP 16B   | DMG 800M| COINS 3.2B| LOOT: Bone Blade (Weapon)
+Bone Rat          | HP 20B   | DMG 1B  | COINS 4B  | LOOT: Bone Rat Egg (Egg)
+Novice Necromancer| HP 24B   | DMG 1.2B| COINS 4.8B| LOOT: Novice Necromancer Staff (Weapon)
+
+--- Sub-zone 3: Haunted Cathedral (loot rarity: MYTHIC) ---
+Haunted Monk      | HP 32B   | DMG 1.6B| COINS 6.4B| LOOT: Haunted Rosary (Trophy)
+Wailing Spectre   | HP 40B   | DMG 2B  | COINS 8B  | LOOT: Spectre Veil (Armor)
+Cursed Gargoyle   | HP 48B   | DMG 2.4B| COINS 9.6B| LOOT: Cursed Gargoyle Egg (Egg)
+
+--- Sub-zone 4: Royal Sarcophagus Room / BOSS ROOM (loot rarity: MYTHIC) ---
+Undead Knight     | HP 80B   | DMG 4B  | COINS 16B | LOOT: Undead Knight Armor (Armor)
+Royal Skeleton Guard
+                  | HP 96B   | DMG 4.8B| COINS 19.2B| LOOT: Royal Guard Spear (Weapon)
+MINI-BOSS 1: Skeleton General
+                  | HP 400B  | DMG 24B | COINS 120B| LOOT: General's Cursed Sword (Weapon, Divine)
+MINI-BOSS 2: Banshee Queen
+                  | HP 560B  | DMG 33.6B| COINS 168B| LOOT: Banshee Queen Egg (Egg, Divine)
+BOSS: Lich King   | HP 2T    | DMG 140B| COINS 800B| LOOT: Lich King's Phylactery (Trophy, Secret)
+
+=====================================================================
+ ZONE 10: ABYSS
+=====================================================================
+
+--- Sub-zone 1: Coral Reef (loot rarity: LEGENDARY) ---
+Jellyfish         | HP 80B   | DMG 4B  | COINS 16B | LOOT: Jellyfish Egg (Egg)
+Reef Shark        | HP 100B  | DMG 5B  | COINS 20B | LOOT: Shark Tooth Sword (Weapon)
+Moray Eel         | HP 120B  | DMG 6B  | COINS 24B | LOOT: Moray Eel Corpse (Corpse)
+
+--- Sub-zone 2: Shipwreck (loot rarity: LEGENDARY) ---
+Drowned Pirate    | HP 160B  | DMG 8B  | COINS 32B | LOOT: Drowned Pirate Cutlass (Weapon)
+Octopus           | HP 200B  | DMG 10B | COINS 40B | LOOT: Octopus Egg (Egg)
+Armor Crab        | HP 240B  | DMG 12B | COINS 48B | LOOT: Armor Crab Shell Plate (Armor)
+
+--- Sub-zone 3: Abyssal Trench (loot rarity: MYTHIC) ---
+Lanternfish       | HP 320B  | DMG 16B | COINS 64B | LOOT: Lanternfish Lantern (Trophy)
+Giant Squid       | HP 400B  | DMG 20B | COINS 80B | LOOT: Giant Squid Egg (Egg)
+Electric Eel      | HP 480B  | DMG 24B | COINS 96B | LOOT: Electric Eel Whip (Weapon)
+
+--- Sub-zone 4: Sunken Palace / BOSS ROOM (loot rarity: MYTHIC) ---
+Triton Guard      | HP 800B  | DMG 40B | COINS 160B| LOOT: Triton Trident (Weapon)
+Corrupted Siren   | HP 960B  | DMG 48B | COINS 192B| LOOT: Siren's Pearl (Trophy)
+MINI-BOSS 1: Kraken Spawn
+                  | HP 4T    | DMG 240B| COINS 1.2T| LOOT: Kraken Spawn Egg (Egg, Divine)
+MINI-BOSS 2: Triton Captain
+                  | HP 5.6T  | DMG 336B| COINS 1.68T| LOOT: Captain's Coral Crown (Armor, Divine)
+BOSS: Leviathan   | HP 20T   | DMG 1.4T| COINS 8T  | LOOT: Leviathan Egg (Egg, Secret)
+
+=====================================================================
+ ZONE 11: MECHANICAL CITY
+=====================================================================
+
+--- Sub-zone 1: Abandoned Factory (loot rarity: MYTHIC) ---
+Drone             | HP 800B  | DMG 40B | COINS 160B| LOOT: Drone Core (Material)
+Assembly Robot    | HP 1T    | DMG 50B | COINS 200B| LOOT: Assembly Arm Blade (Weapon)
+Mechanical Rat    | HP 1.2T  | DMG 60B | COINS 240B| LOOT: Mechanical Rat Egg (Egg)
+
+--- Sub-zone 2: Industrial Sewers (loot rarity: MYTHIC) ---
+Cleaner Robot     | HP 1.6T  | DMG 80B | COINS 320B| LOOT: Cleaner Robot Plating (Armor)
+Mechanical Spider | HP 2T    | DMG 100B| COINS 400B| LOOT: Mechanical Spider Egg (Egg)
+Toxic Slime       | HP 2.4T  | DMG 120B| COINS 480B| LOOT: Toxic Slime Jar (Material)
+
+--- Sub-zone 3: Control Center (loot rarity: DIVINE) ---
+Laser Turret      | HP 3.2T  | DMG 160B| COINS 640B| LOOT: Laser Turret Cannon (Weapon)
+Guardian Robot    | HP 4T    | DMG 200B| COINS 800B| LOOT: Guardian Robot Shield (Armor)
+Combat Drone      | HP 4.8T  | DMG 240B| COINS 960B| LOOT: Combat Drone Egg (Egg)
+
+--- Sub-zone 4: Reactor Core / BOSS ROOM (loot rarity: DIVINE) ---
+Soldier Robot     | HP 8T    | DMG 400B| COINS 1.6T| LOOT: Soldier Robot Rifle (Weapon)
+Steel Golem       | HP 9.6T  | DMG 480B| COINS 1.92T| LOOT: Steel Golem Core (Material)
+MINI-BOSS 1: War Mech
+                  | HP 40T   | DMG 2.4T| COINS 12T | LOOT: War Mech Cannon Arm (Weapon, Secret)
+MINI-BOSS 2: Sentinel Prime
+                  | HP 56T   | DMG 3.36T| COINS 16.8T| LOOT: Sentinel Prime Egg (Egg, Secret)
+BOSS: Colossal Robot
+                  | HP 200T  | DMG 14T | COINS 80T | LOOT: Colossus Reactor Core (Trophy, Secret)
+
+=====================================================================
+ ZONE 12: THE VOID
+=====================================================================
+
+--- Sub-zone 1: Void Island (loot rarity: MYTHIC) ---
+Wandering Shadow  | HP 8T    | DMG 400B| COINS 1.6T| LOOT: Shadow Essence (Material)
+Void Stalker      | HP 10T   | DMG 500B| COINS 2T  | LOOT: Void Stalker Egg (Egg)
+Obsidian Sentinel | HP 12T   | DMG 600B| COINS 2.4T| LOOT: Obsidian Sentinel Blade (Weapon)
+
+--- Sub-zone 2: Crystal Forest (loot rarity: MYTHIC) ---
+Crystal Golem     | HP 16T   | DMG 800B| COINS 3.2T| LOOT: Crystal Golem Core (Material)
+Spectral Butterfly| HP 20T   | DMG 1T  | COINS 4T  | LOOT: Spectral Butterfly Egg (Egg)
+Void Spirit       | HP 24T   | DMG 1.2T| COINS 4.8T| LOOT: Void Spirit Cloak (Armor)
+
+--- Sub-zone 3: Voyagers' City (loot rarity: DIVINE) ---
+Lost Voyager      | HP 32T   | DMG 1.6T| COINS 6.4T| LOOT: Voyager's Compass (Trophy)
+Phantom Archer    | HP 40T   | DMG 2T  | COINS 8T  | LOOT: Phantom Bow (Weapon)
+Fallen Guardian   | HP 48T   | DMG 2.4T| COINS 9.6T| LOOT: Fallen Guardian Armor (Armor)
+
+--- Sub-zone 4: Heart of the Void / BOSS ROOM (loot rarity: DIVINE) ---
+Void Knight       | HP 80T   | DMG 4T  | COINS 16T | LOOT: Void Knight Blade (Weapon)
+Void Mage         | HP 96T   | DMG 4.8T| COINS 19.2T| LOOT: Void Mage Staff (Weapon)
+MINI-BOSS 1: Void Reaper
+                  | HP 400T  | DMG 24T | COINS 120T| LOOT: Reaper's Scythe (Weapon, Secret)
+MINI-BOSS 2: Crystal Warden
+                  | HP 560T  | DMG 33.6T| COINS 168T| LOOT: Crystal Warden Egg (Egg, Secret)
+BOSS: Void Dragon | HP 2Qa   | DMG 140T| COINS 800T| LOOT: Void Dragon Egg (Egg, Secret)
+
+=====================================================================
+ TOTALS
+=====================================================================
+132 normal enemies (11 per zone)
+24 mini-bosses (2 per boss room)
+12 bosses
+168 unique loot items
+36 diamond sources (24 mini-bosses + 12 bosses); see section 3
+
+ BOSS ROOM SUGGESTION: the two mini-bosses guard the room and must both
+ be defeated before the boss spawns. Reset the room if all players die.
