@@ -56,7 +56,7 @@ src/ReplicatedStorage/GameSystem/            shared config (zones, enemies, boss
 src/ServerScriptService/GameSystem/          combat, enemy spawner, bosses, economy, rebirth, DataStore
 src/StarterPlayer/StarterPlayerScripts/GameClient/   HUD, VFX, shop/inventory UI, boss health bar
 docs/                                        design documents (see above)
-backup/                                      place backups (*.rbxl is gitignored)
+BackUP_Files/                                place backups (gitignored, kept locally)
 default.project.json                         Rojo mapping (only the three src branches)
 ```
 
@@ -89,7 +89,7 @@ models in `ServerStorage` live **only in the place file**. The owner saves from 
    Rojo pushes disk -> Studio and overwrites what it maps. There is **no pull**: a change
    made directly in Studio must be copied back into `src/` by hand, or it is lost on the
    next connect. Workspace, Lighting, Terrain and ServerStorage are NOT mapped.
-2. **Backups:** before big changes, save `File -> Save to File As -> backup/FightYourDestiny_<date>.rbxl`.
+2. **Backups:** before big changes, save `File -> Save to File As -> BackUP_Files/FightYourDestiny_<date>.rbxl` (see section 3b: backup before ANY change).
    These are gitignored (large); copy them to a cloud drive or external disk.
 3. **Toolbox assets:** free models can contain hidden scripts (including purchase prompts and
    backdoors). Right after inserting any Toolbox asset:
@@ -111,6 +111,23 @@ models in `ServerStorage` live **only in the place file**. The owner saves from 
   current enemy, force a boss pattern.
 * Studio has no real DataStore data unless API access is on; do not assume saves work in Studio
   without testing them.
+
+## 3b. MANDATORY RULES: backup first, GitHub last
+
+1. **Before making ANY change (even a small one), make a backup and put it in the folder
+   `BackUP_Files/`** at the root of the project:
+   * Place backup: `File -> Save to File As... -> BackUP_Files/FightYourDestiny_<YYYY-MM-DD_HHMM>.rbxl`.
+   * If the Studio MCP / SerializationService is available, also serialize the Workspace map and
+     the assets into `.rbxm` files in `BackUP_Files/`.
+   * Never overwrite an older backup; every backup has its own dated name.
+   * If you cannot create the backup yourself, ask the owner to save the place first and
+     wait for confirmation before changing anything.
+2. **At the end of the work, ALL modifications (scripts, configs, docs) must be committed and
+   pushed to GitHub: https://github.com/Miieski/Fight-Your-Destiny (branch `main`).**
+   Use short clear commit messages, push, and tell the owner the result.
+3. `BackUP_Files/` is gitignored (the files are large), so the backups stay on the owner's
+   computer. Remind the owner to copy them to a cloud drive or an external disk.
+4. If the backup step or the push fails, say so plainly and do not continue as if it worked.
 
 ## 4. Sub-agents (the owner explicitly wants them used)
 

@@ -88,14 +88,15 @@ ServerStorage/
 Scripts and docs only. The world itself (Workspace geometry, Terrain, Lighting, `ServerStorage` enemy/boss models, VFX, animations) lives in the place file. Player data (coins, diamonds, rebirths, loot) lives in Roblox DataStores, not in Git. For a full backup, save the place from Studio:
 
 ```
-File -> Save to File As... -> backup/FightYourDestiny_<date>.rbxl
+File -> Save to File As... -> BackUP_Files/FightYourDestiny_<date>.rbxl
 ```
 
-`backup/*.rbxl` and `backup/*.rbxlx` are gitignored. Copy these backups to a cloud drive or an external disk.
+`BackUP_Files/*.rbxl` and `BackUP_Files/*.rbxlx` are gitignored. Copy these backups to a cloud drive or an external disk.
 
 ## Workflow
 
 1. Edit scripts in VS Code (or any editor) inside `src/`.
 2. Run `rojo serve` and connect from Studio to test.
 3. Commit small and often: `git add -A && git commit -m "..." && git push`.
-4. Before big changes in Studio, save a dated `.rbxl` backup.
+4. **Before ANY change**, save a dated backup in `BackUP_Files/`. At the end of the work, push
+   everything to https://github.com/Miieski/Fight-Your-Destiny.

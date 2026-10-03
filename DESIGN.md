@@ -482,6 +482,12 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
 
 ## 14. Tooling & rules
 
+* **BACKUP FIRST:** before making ANY change, make a backup and put it in the `BackUP_Files/`
+  folder (`File -> Save to File As -> BackUP_Files/FightYourDestiny_<YYYY-MM-DD_HHMM>.rbxl`,
+  plus `.rbxm` serializations when possible). Never overwrite an old backup. `BackUP_Files/` is
+  gitignored, so remind the owner to copy it to a cloud drive or external disk.
+* **GITHUB LAST:** at the end of the work, ALL modifications (scripts, configs, docs) must be
+  committed and pushed to https://github.com/Miieski/Fight-Your-Destiny (`main`).
 * **Rojo** syncs `src/` into Studio (disk -> Studio only). Changes made in Studio must be copied
   back by hand. Workspace, Lighting, Terrain and ServerStorage models are not mapped.
 * Repo: https://github.com/Miieski/Fight-Your-Destiny (scripts and docs only).
