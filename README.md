@@ -1,5 +1,4 @@
-
-# Fight-Your-Destiny!# 
+# Fight Your Destiny
 
 Source for the Roblox place **Fight Your Destiny** (placeId `106749213017380`).
 
@@ -37,6 +36,7 @@ Rojo pushes disk -> Studio and overwrites what it maps. There is no pull: a chan
 | `docs/enemy_database.txt` | HP, damage, coin rewards, loot and diamond drops for every enemy, mini-boss and boss |
 | `docs/zone_design_document.txt` | Look and layout of the 12 zones and 48 sub-zones |
 | `docs/boss_patterns_document.txt` | Attack patterns, telegraphs and VFX notes for the 12 bosses |
+| `docs/weapon_system_document.txt` | 96 weapons (8 categories x 12 zones), rarity, zone boost, shop |
 
 The numbers in `enemy_database.txt` are the source of truth for the config modules in `src/ReplicatedStorage/GameSystem/`.
 
