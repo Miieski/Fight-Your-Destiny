@@ -15,3 +15,8 @@ BackUP_Files/*.rbxmx
 Thumbs.db
 .vscode/
 sourcemap.json
+
+# Tooling caches
+__pycache__/
+*.pyc
+*.blend1

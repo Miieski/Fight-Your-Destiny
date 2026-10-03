@@ -1,0 +1,31 @@
+{
+	"name": "FightYourDestiny",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"$ignoreUnknownInstances": true,
+			"GameSystem": {
+				"$path": "src/ReplicatedStorage/GameSystem"
+			}
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"$ignoreUnknownInstances": true,
+			"GameSystem": {
+				"$path": "src/ServerScriptService/GameSystem"
+			}
+		},
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"$ignoreUnknownInstances": true,
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"$ignoreUnknownInstances": true,
+				"GameClient": {
+					"$path": "src/StarterPlayer/StarterPlayerScripts/GameClient"
+				}
+			}
+		}
+	}
+}
