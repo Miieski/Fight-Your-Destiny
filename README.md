@@ -33,6 +33,7 @@ Rojo pushes disk -> Studio and overwrites what it maps. There is no pull: a chan
 
 | File | Content |
 |---|---|
+| `DESIGN.md` | Design contract: rules, systems, ids, data model (wins over older docs) |
 | `docs/enemy_database.txt` | HP, damage, coin rewards, loot and diamond drops for every enemy, mini-boss and boss |
 | `docs/zone_design_document.txt` | Look and layout of the 12 zones and 48 sub-zones |
 | `docs/boss_patterns_document.txt` | Attack patterns, telegraphs and VFX notes for the 12 bosses |
