@@ -58,10 +58,8 @@ local function refresh()
 end
 
 function GateController:Start()
-	State.Changed:Connect(function(key)
-		if key == "SubZones" then
-			refresh()
-		end
+	State.changed("SubZones", function()
+		refresh()
 	end)
 	while true do
 		refresh()

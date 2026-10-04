@@ -1,0 +1,172 @@
+=====================================================================
+ FIGHT YOUR DESTINY - GAMEPLAY PHASE, STEP 1: HUD & UI BRIEF
+=====================================================================
+The world-building pass is done (or paused). From now on, FOCUS ON GAMEPLAY and start
+with the UI. Do not build enemy/boss models or touch the maps in this step.
+
+READ FIRST: DESIGN.md (sections 1, 2, 3, 8, 10, 11), HANDOFF.md section 3b.
+
+MANDATORY RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl; never overwrite an old one).
+2. AT THE END: commit and push everything to
+   https://github.com/Miieski/Fight-Your-Destiny (main), then update HANDOFF.md.
+3. Server authoritative: the UI only displays state and sends requests.
+4. All numbers/ids come from Config modules, never hard-coded in UI scripts.
+5. Mobile first: every element must be usable by touch.
+
+---------------------------------------------------------------------
+ 1. SCOPE OF THIS STEP
+---------------------------------------------------------------------
+Build, in this order:
+ A. UI Kit (wood fantasy theme) - the reusable pieces.
+ B. Minimal plumbing so the UI has real data: Net.luau, State.luau, a minimal DataService
+    (profile defaults, Gold, Diamonds, Settings, replication), and a debug/admin command set
+    to fake data while testing.
+ C. The HUD (the 8 elements below).
+ D. Notification system.
+ E. Menu bar + empty window shells for every menu button.
+ F. Settings window - FULLY functional (volume sliders etc.).
+Out of scope now: combat, enemies, shops' real content, pets logic, quests logic.
+
+---------------------------------------------------------------------
+ 2. A. UI KIT (src/.../GameClient/UI/Kit/)
+---------------------------------------------------------------------
+Theme (see DESIGN.md section 1):
+ - Panel: dark brown wood gradient (#4A3020 -> #33200F), 3-5 px gold border (#E8B44A -> #B07A22),
+   small gem accents in the corners, UICorner 4-8 px, inner dark inset for content.
+ - Buttons: primary = gold bevel (dark brown text), secondary = steel gray, danger = red with
+   gold border, disabled = desaturated. 3D feel: darker base frame 3-4 px under the face;
+   press = face down 2 px + scale 0.96 (0.08 s tween).
+ - Fonts: titles/buttons Enum.Font.Fantasy (or GrenzeGotisch if available), body/numbers
+   GothamMedium or BuilderSans; dark UIStroke 1.5-2 px on text.
+ - Rarity colors: Common #C4CEDA, Uncommon #5BDC6E, Rare #3C96FF, Epic #AA50FF, Legendary #FFAA1E,
+   Mythic #FF3C6E, Divine = animated white/cyan/pink/gold gradient, Secret = animated rainbow
+   with dark core. Gold #FFC93C, Diamonds #5FD4FF, HP red #D93B3B.
+Kit modules: Theme, Panel, Button, IconButton, Bar (segmented), Slot (item slot with rarity
+border/glow), Tabs, Slider, Toggle, Badge (red notification dot with count), Toast, Window
+(manager: open/close, dim backdrop, pop animation scale 0.9 -> 1 Back Out 0.2 s, X button top-right),
+Icons (placeholder shapes now; real icons later, ids in Icons.luau).
+UIScale rules: scale by viewport; min touch target 44 x 44 px; respect GuiService inset and
+safe area; windows use at most 90% of the screen on phones; no hover-only information.
+Hide the default CoreGui Health bar and Backpack hotbar (StarterGui:SetCoreGuiEnabled).
+
+---------------------------------------------------------------------
+ 3. B. PLUMBING (so the UI is real, not fake)
+---------------------------------------------------------------------
+ - Net.luau (one module for all remotes): Net.request(action, ...) client->server (server handler
+   with Net.handle(action, fn, minInterval)), Net.fire / Net.on for events. Add the events:
+   "Data" (profile patches), "Notify" (server->client toast).
+ - State.luau (client mirror of the profile) with `State.get(key)` and `State.changed(key, fn)`.
+ - DataService (minimal): profile table from DESIGN.md section 11 with defaults, Gold, Diamonds,
+   Settings, session-safe DataStore (UpdateAsync, autosave 90 s, save on leave and BindToClose;
+   memory fallback in Studio without API access, one warn).
+ - Request "SetSetting"(key, value): server validates key/type and writes profile.Settings.
+ - AdminService (owner only, UserId in Config/Admins.luau): `Net.request("Admin", cmd, ...)` with
+   commands: setGold, setDiamonds, notify(kind, text, rarity), setZone(zoneId, subZoneId),
+   equipWeaponFake(zoneId, rarity), equipPetFake(slot, rarity), damageSelf(n), setBadge(id, n).
+   Used only to test the UI before the real systems exist.
+
+---------------------------------------------------------------------
+ 4. C. THE HUD (8 elements)
+---------------------------------------------------------------------
+Layout guide (landscape). Keep clear of Roblox's top-left menu/chat icons, the mobile joystick
+(bottom-left) and the mobile action buttons (bottom-right).
+
+1) PLAYER HEALTH BAR - top-left, below the Roblox menu icons.
+   Red segmented bar (#D93B3B) in a wood frame, exact numbers "current / max" (formatted with
+   K/M/B/T/Qa). Smooth tween on change; a lighter trailing segment shows recent damage; pulse
+   and red vignette when HP < 25%. Reads Humanoid.Health / MaxHealth.
+
+2) GOLD & DIAMONDS - top-right (or under the health bar on small phones).
+   Icon + short-formatted amount for each. Small animation on change: count-up tween (0.4 s),
+   pop scale 1.15, floating "+N" in green / "-N" in red. Diamonds are tappable (opens Shop,
+   Diamonds tab). On death, show the Gold loss in red.
+
+3) ZONE & SUB-ZONE - top-center.
+   Wooden banner: "Zone 1 - Plains" and "Sub-zone 2: Beach". When entering a new sub-zone, show a
+   large title card for 2 s. Read from player attributes CurrentZone / CurrentSubZone (set by
+   ZoneService later; settable via the admin command now).
+   ZONE BOOST BADGE: glowing "Zone Boost Active" badge when the equipped weapon's zone equals the
+   current zone; also show how many equipped armor pieces match (for example "Weapon + 2/3 Armor").
+   Hidden when nothing matches. Tooltip/tap shows the bonus percentage.
+
+4) EQUIPPED WEAPON - bottom-center (above the mobile attack button area on phones).
+   Slot with icon (ViewportFrame of the weapon model or a generated icon), weapon name, border and
+   name colored by rarity. Tap opens Inventory (Weapons tab). Empty state: "No weapon" + prompt.
+
+5) EQUIPPED PETS - next to the weapon slot: 3 slots.
+   Rarity-colored borders; empty slots show a "+" and open the Pets window on tap.
+
+6) MENU BUTTONS - left side column on PC; collapsible menu button on mobile.
+   Buttons, in this order:
+   Inventory | Training | Shop | Rebirth Shop | Pets | Index | Quests | Team | Settings
+   - "Shop" opens ONE window with two tabs: "Weapons" (pay Gold) and "Diamonds" (spend diamonds:
+     rarity reroll, premium eggs, Gold boosts, skins). Robux diamond PACKS are bought only at the
+     Diamond Shop in the hub; the Diamonds tab shows a "Get diamonds" button that explains this
+     (and offers to teleport to the hub).
+   - Each button has an icon, a label (hidden on small screens, icon only), and a Badge slot.
+   - For now each window except Settings is an EMPTY SHELL: correct title, frame, X button, tabs
+     (where defined) and a "Coming soon" placeholder inside.
+
+7) NOTIFICATIONS - see section 5.
+
+8) RED BADGES - on the menu buttons, with a count. Driven by a BadgeRegistry:
+   Badge ids: Inventory (new loot), Quests (claimable), Index (claimable), Pets (new pet),
+   Rebirth Shop (unspent credits), Shop (new reward/daily), Settings (never). Each badge id maps to
+   a function reading State; values come from State later and from the admin `setBadge` now.
+
+---------------------------------------------------------------------
+ 5. D. NOTIFICATIONS
+---------------------------------------------------------------------
+API (client): Notifier.push({ Kind = "loot" | "reward" | "error" | "info" | "death",
+                              Text = string, Icon = id?, Rarity = number? })
+Server -> client: Net event "Notify" with the same table.
+Behavior: toast stack at top-center below the zone banner; max 4 visible; each lasts 3 s; a queue
+for extras; identical messages merge ("Obtained Rare Wolf Pup Egg x2"); slide-in/out tween;
+rarity glow and a special sound for Epic and above; error toasts are red with a short shake.
+Required messages: loot obtained, reward claimed, "Not enough Gold" (and not enough diamonds),
+and the death penalty "You lost 35% of your Gold: -N" (Kind = "death").
+Sounds (Sfx module): UIClick, UIOpen, UIClose, Purchase, Denied, RarityReveal, RarityLegendary.
+
+---------------------------------------------------------------------
+ 6. F. SETTINGS WINDOW (fully functional now)
+---------------------------------------------------------------------
+Sections:
+ AUDIO (sliders 0-100%, saved to profile.Settings, applied immediately with SoundGroups):
+   Master Volume | Music Volume | Player FX Volume | Enemy & Boss FX Volume | UI Volume |
+   Ambient Volume
+   (Sound hierarchy: Master group parents Music, PlayerFX, EnemyFX, UI, Ambient. Every sound in
+   the game is routed to one of these groups through the Sfx module.)
+ DISPLAY: Low FX toggle (reduces particles), Damage Numbers on/off, Screen Shake on/off (+ intensity
+   slider), UI Scale slider (0.8-1.2), Show Boss Telegraphs high-contrast option.
+ CONTROLS: camera zoom default slider, Auto-Attack toggle (greyed out unless the pass is owned),
+   mobile button layout editor (move/resize attack, roll, block buttons; Reset button).
+ ACCOUNT/OTHER: Redeem Code box (stub), Reset UI layout.
+Every control saves with Net.request("SetSetting", key, value) (debounced) and applies locally
+first so the change feels instant.
+
+---------------------------------------------------------------------
+ 7. ACCEPTANCE CHECKS (do all before reporting)
+---------------------------------------------------------------------
+ - Test at 1920x1080, 1280x720, and the Studio emulator for a phone and a tablet (landscape).
+   Take screenshots of each and look at them yourself.
+ - Nothing overlaps the Roblox top-left icons, the joystick, the jump/action buttons.
+ - All touch targets >= 44 px; text readable on a small phone; no horizontal overflow.
+ - Every number uses Format (K, M, B, T, Qa); no raw 1e+15 anywhere.
+ - Gold/Diamond animations work; the health bar reacts to damageSelf; notifications queue and
+   merge correctly; badges show/hide; Zone Boost badge toggles with setZone + equipWeaponFake.
+ - Settings sliders change the volume live and persist after leaving and rejoining (if API Services
+   is enabled in Studio).
+ - No errors or warnings in the Output; no per-frame allocations in the HUD; tweens are cleaned up.
+
+---------------------------------------------------------------------
+ 8. AFTER THIS STEP (do NOT start without the owner's go)
+---------------------------------------------------------------------
+Report with screenshots, then wait. Planned gameplay order after UI approval:
+ 1. CombatService (attack, roll, block) + placeholder dummy enemy
+ 2. EnemyService (spawns, AI, damage tracking) + Gold rewards
+ 3. Training window + StatsService
+ 4. ZoneService (gates, prices, teleports, death respawn)
+ 5. Weapon shop + inventory + armor
+ 6. Boss arenas + BossBase + Golem
+ 7. Rebirth, then loot / pets / eggs, then quests, rewards, leaderboards

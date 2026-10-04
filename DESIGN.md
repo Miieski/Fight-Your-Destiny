@@ -423,7 +423,10 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Quests = { Day = 0, List = {} },
   Codes = {},
   Skins = {}, EquippedSkin = nil,
-  Settings = { Music = true, Sfx = true, LowFx = false, ButtonLayout = {} },
+  Settings = {},                       -- keys, types, ranges and defaults: Config/Settings.luau
+                                       -- (6 volumes 0-100, LowFx, DamageNumbers, ScreenShake,
+                                       -- ShakeIntensity, UiScale 0.8-1.2, HighContrastTelegraphs,
+                                       -- CameraZoom, AutoAttack, ButtonLayout = { [Attack|Roll|Block] = { X, Y, Size } })
   Stats_Lifetime = { TotalGold = 0, TotalDamage = 0, BossKills = 0, EnemyKills = 0, PlaySeconds = 0 },
   PityCounter = 0,                     -- weapon shop pity
   LastOnline = 0,

@@ -14,7 +14,7 @@ local lastAttack: { [Player]: number } = {}
 local rng = Random.new()
 
 function CombatService:Init()
-	Net.event("Attack").OnServerEvent:Connect(function(player: Player)
+	Net.handle("Attack", function(player: Player)
 		local now = os.clock()
 		if now - (lastAttack[player] or 0) < Playtest.AttackCooldown * 0.9 then
 			return
@@ -23,7 +23,7 @@ function CombatService:Init()
 		local character = player.Character
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 		local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
-		local zone = Zones.ById[player:GetAttribute("ZoneId") or ""]
+		local zone = Zones.ById[player:GetAttribute("CurrentZone") or ""]
 		if not (humanoid and humanoid.Health > 0 and root and zone) then
 			return
 		end
@@ -47,7 +47,7 @@ function CombatService:Init()
 			local damage = base * (if crit then Playtest.CritMultiplier else 1)
 			local hitPosition = state.model:GetPivot().Position + Vector3.new(0, 3 + state.radius, 0)
 			EnemyService:Damage(player, state, damage)
-			Net.event("Hit"):FireClient(player, hitPosition, damage, crit)
+			Net.fire(player, "Hit", hitPosition, damage, crit)
 		end
 	end)
 	game:GetService("Players").PlayerRemoving:Connect(function(player)

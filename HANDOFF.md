@@ -149,7 +149,58 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-05 (00:00). THE WORLD IS COMPLETE: Hub + all 12 zones are built, validated and
+**Updated 2026-10-05 (00:40). GAMEPLAY PHASE, STEP 1 (UI) IS DONE AND WAITING FOR THE OWNER'S
+REVIEW. Brief: `docs/ui_hud_brief.txt`. Do NOT start CombatService (step 2 of the brief's section 8)
+until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p, phone, tablet).**
+
+What was built (all in `src/`, mirrored from Studio):
+* **Plumbing.** `GameSystem/Net.luau`: one RemoteFunction `Request` and one RemoteEvent `Send`
+  dispatched to `Net.handle(action, fn, minInterval)` handlers (per-player rate limit ->
+  `false, "Too fast"`; unknown -> `false, "Unknown action"`; handler error -> `false, "Server error"`
+  + warn); server -> client events `Net.EVENTS = { "Data", "Notify", "Hit" }` with
+  `Net.fire / fireAll / on`. A second copy of Net (command bar) reuses the live remotes.
+  `DataService`: profile from `Config/Profile.luau` (DESIGN section 11), session-locked UpdateAsync,
+  autosave 90 s, save on leave + BindToClose; without API access it falls back to memory with ONE
+  warn. Requests `GetProfile` and `SetSetting(key, value)` (validated by `Config/Settings.validate`).
+  Client `State.luau`: `get`, `changed`, `observe`, `waitReady`. `AdminService` handles
+  `Net.request("Admin", cmd, ...)` (setGold, addGold, setDiamonds, addDiamonds, notify, setZone,
+  unlockAll, equipWeaponFake, equipArmorFake, equipPetFake, clearEquipment, damageSelf, heal, setBadge).
+  `RewardService` is a stub (`RedeemCode` -> "Codes are not available yet").
+* **New configs:** `Config/Rarities, Weapons (96), Economy, Products, Settings, Profile, Audio, UI`.
+* **UI Kit** (`GameClient/UI/Kit/`): Theme (colors, fonts, screen scaling), Panel, Button, IconButton,
+  Bar, Slot, Tabs, Slider, Toggle, Badge, Toast, Window, Icons (placeholder shapes; put image ids in
+  `Icons.Assets`), Screens.
+* **HUD** (`GameClient/UI/`): HealthBar (+ low-HP vignette, hides CoreGui Health/Backpack), Currencies
+  (count-up, pop, +/- float; Diamonds pill opens Shop > Diamonds), ZoneBanner (+ 2 s title card +
+  Zone Boost badge "Weapon + n/3 Armor"), Equipment (weapon + 3 pet slots), MenuBar (9 buttons with
+  badges; left column on PC, 2 columns on tablets or when one column does not fit, Menu popup on
+  phones), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
+  diamonds" confirm -> GoToHub), Pages/SettingsPage (Audio, Display, Controls, Other), AdminPanel
+  (crown button / F2: Money, Teleport, UI Test tabs).
+* **Controllers:** SettingsController (applies locally, saves debounced via SetSetting; volumes go to
+  the SoundGroups Master > Music/PlayerFX/EnemyFX/UI/Ambient), ControlsController (CAS binds + touch
+  Attack/Roll/Block buttons + layout editor), FxController (LowFx, screen shake).
+
+Scaling rule: every ScreenGui comes from `Theme.screen()`; its `Root` is in design units with a
+UIScale `s = clamp(safeHeight/660, 0.6, 1.4) * UiScale` (min 0.8 on touch); compact (phone) layout
+when the design height is under 520. UITextSizeConstraint sizes are screen pixels, so always create
+them with `Theme.limit(label, max, min)` (it rescales them with the UI).
+
+Tested 2026-10-05 in Studio Play (device simulator: HD 1080, HD 720, iPhone 17 Pro and iPad 10th gen,
+landscape): no HUD overlaps (checked by code and by eye), touch targets >= 44 px, Format everywhere
+(1.23Qa, 2.5B, 12.5K), gold/diamond animations, health bar + vignette with damageSelf, toast queue +
+merge, badges, Zone Boost on/off, all 9 window shells, Settings (Master slider -> SoundGroup 0.4 live
+and stored on the server; toggles; UI Scale live; layout editor Bigger + Done saved), Get diamonds ->
+Hub. Output clean except the expected API Services warnings. NOT tested: persistence across rejoin
+(API Services is off in Studio), real touch gestures (dragging the touch buttons; the simulator was
+driven with GuiService.SelectedObject + Enter), gamepad.
+
+MCP testing tips learned: `execute_luau` gets FRESH copies of ModuleScripts (State/Window/Notifier
+state is not visible from it; read the GUI instances instead, or fire events from the Server
+datamodel); `user_mouse_input` x/y are GUI coordinates (top-bar inset excluded) and clicks do not
+reach GUI under the touch simulator; `screen_capture` can show a frame a few seconds old.
+
+**Earlier (00:00). THE WORLD IS COMPLETE: Hub + all 12 zones are built, validated and
 checked in Play, each with its kit catalog (`docs/ASSET_KIT_*.md`), lighting presets and a boss
 arena in `ServerStorage.BossArenas` (12 arenas). Zone 12 (Void) was the last: 11,728 parts + arena
 1,578; its arena floor is 8 pie sections (`FloorSections/Section1..8`) over an invisible `SafetyNet`

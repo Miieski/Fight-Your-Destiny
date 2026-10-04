@@ -10,6 +10,8 @@ local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
+local Economy = require(ReplicatedStorage.GameSystem.Config.Economy)
+local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local DataService = require(script.Parent.DataService)
 local EnemyService = require(script.Parent.EnemyService)
 
@@ -24,8 +26,9 @@ local lastTeleport: { [Player]: number } = {}
 local arenas: { [Player]: Arena } = {}
 local usedSlots: { [number]: boolean } = {}
 
+-- kind: "info" | "reward" | "error" | "loot" | "death" (see GameClient/UI/Notifier)
 local function notify(player: Player, text: string, kind: string?)
-	Net.event("Notify"):FireClient(player, text, kind or "info")
+	Net.fire(player, "Notify", { Kind = kind or "info", Text = text })
 end
 
 local function rootOf(player: Player): BasePart?
@@ -75,9 +78,9 @@ local function isUnlocked(player: Player, subZone: SubZone): boolean
 end
 
 local function setLocation(player: Player, zoneId: string, subZoneId: string)
-	if player:GetAttribute("SubZoneId") ~= subZoneId then
-		player:SetAttribute("ZoneId", zoneId)
-		player:SetAttribute("SubZoneId", subZoneId)
+	if player:GetAttribute("CurrentSubZone") ~= subZoneId then
+		player:SetAttribute("CurrentZone", zoneId)
+		player:SetAttribute("CurrentSubZone", subZoneId)
 		DataService:Set(player, "CurrentZone", zoneId)
 	end
 end
@@ -98,7 +101,7 @@ function ZoneService:TeleportTo(player: Player, zoneId: string, n: number): bool
 	local subZone = byId[Zones.subZoneId(zoneId, n)]
 	if not (subZone and hasGround(subZone.entrance.Position)) then
 		local zone = Zones.ById[zoneId]
-		notify(player, `{if zone then zone.Name else zoneId} is not built yet`, "bad")
+		notify(player, `{if zone then zone.Name else zoneId} is not built yet`, "error")
 		return false
 	end
 	ZoneService:LeaveArena(player, true)
@@ -116,7 +119,7 @@ function ZoneService:EnterZone(player: Player, zoneId: string)
 	else
 		lastTeleport[player] = os.clock()
 		local zone = Zones.ById[zoneId]
-		notify(player, `{if zone then zone.Name else zoneId} is not built yet`, "bad")
+		notify(player, `{if zone then zone.Name else zoneId} is not built yet`, "error")
 	end
 end
 
@@ -131,19 +134,19 @@ local function tryUnlock(player: Player, subZone: SubZone)
 		return
 	end
 	if subZone.n > 2 and not profile.SubZones[Zones.subZoneId(subZone.zoneId, subZone.n - 1)] then
-		notify(player, "Open the previous gate first", "bad")
+		notify(player, "Open the previous gate first", "error")
 		return
 	end
 	local price = if Playtest.FreeGates then 0 else Zones.subZonePrice(subZone.zoneId, subZone.n)
 	if profile.Gold < price then
-		notify(player, `Not enough Gold: {Format.number(price)} needed`, "bad")
+		notify(player, `Not enough Gold: {Format.number(price)} needed`, "error")
 		return
 	end
 	DataService:AddGold(player, -price)
 	local unlocked = table.clone(profile.SubZones)
 	unlocked[subZone.id] = true
 	DataService:Set(player, "SubZones", unlocked)
-	notify(player, `{Zones.ById[subZone.zoneId].SubZones[subZone.n]} unlocked!`, "good")
+	notify(player, `{Zones.ById[subZone.zoneId].SubZones[subZone.n]} unlocked!`, "reward")
 end
 
 function ZoneService:LeaveArena(player: Player, stay: boolean?)
@@ -170,7 +173,7 @@ function ZoneService:EnterArena(player: Player, zoneId: string)
 	local template = ServerStorage.BossArenas:FindFirstChild(zoneId)
 	if not (template and template:IsA("Model") and template.PrimaryPart) then
 		lastTeleport[player] = os.clock()
-		notify(player, "The boss arena is not built yet", "bad")
+		notify(player, "The boss arena is not built yet", "error")
 		return
 	end
 	local slot = 1
@@ -205,7 +208,7 @@ function ZoneService:EnterArena(player: Player, zoneId: string)
 	end
 
 	EnemyService:StartArena(key, model, zoneId, function()
-		notify(player, `{Zones.ById[zoneId].Boss} defeated!`, "good")
+		notify(player, `{Zones.ById[zoneId].Boss} defeated!`, "reward")
 		task.delay(Playtest.ArenaCleanupSeconds, function()
 			if arenas[player] and arenas[player].model == model then
 				ZoneService:LeaveArena(player)
@@ -281,14 +284,30 @@ function ZoneService:Init()
 	end
 	hookWorld()
 
+	-- "Get diamonds" in the Shop offers a trip to the hub's Diamond Shop.
+	Net.handle("GoToHub", function(player: Player)
+		ZoneService:ToHub(player)
+		return true
+	end, 2)
+
 	local function onPlayer(player: Player)
-		player:SetAttribute("ZoneId", "Hub")
-		player:SetAttribute("SubZoneId", "Hub")
+		player:SetAttribute("CurrentZone", "Hub")
+		player:SetAttribute("CurrentSubZone", "Hub")
 		player.CharacterAdded:Connect(function(character)
 			local humanoid = character:WaitForChild("Humanoid", 10) :: Humanoid?
 			if humanoid then
 				humanoid.Died:Connect(function()
 					ZoneService:LeaveArena(player)
+					-- Death penalty (DESIGN.md section 2): lose a share of the Gold.
+					local profile = DataService:Get(player)
+					local loss = if profile then math.floor(profile.Gold * Economy.DeathGoldLoss) else 0
+					if loss > 0 then
+						DataService:AddGold(player, -loss)
+						Net.fire(player, "Notify", {
+							Kind = "death",
+							Text = string.format(UIConfig.Text.DeathGold, math.floor(Economy.DeathGoldLoss * 100 + 0.5), Format.number(loss)),
+						})
+					end
 				end)
 			end
 			-- Respawn at the start of the current sub-zone (DESIGN.md section 2, Death).
@@ -340,7 +359,7 @@ function ZoneService:Start()
 					end
 					if canTeleport(player) then
 						teleport(player, byId[Zones.subZoneId(found.zoneId, n)].entrance.CFrame)
-						notify(player, "This area is still locked", "bad")
+						notify(player, "This area is still locked", "error")
 					end
 				elseif Vector3.new(position.X, 0, position.Z).Magnitude < Playtest.HubRadius then
 					setLocation(player, "Hub", "Hub")

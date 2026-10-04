@@ -45,6 +45,7 @@ local function play(channel: string, source: Sound?)
 		sound.Looped = true
 		local volume = sound.Volume
 		sound.Volume = 0
+		sound.SoundGroup = Sfx.group(if channel == "Music" then "Music" else "Ambient")
 		sound.Parent = SoundService
 		sound:Play()
 		TweenService:Create(sound, FADE, { Volume = volume }):Play()
@@ -55,8 +56,8 @@ end
 function AudioController:Start()
 	local player = Players.LocalPlayer
 	local function update()
-		local zoneId = player:GetAttribute("ZoneId") or "Hub"
-		local subZoneId = player:GetAttribute("SubZoneId") or "Hub"
+		local zoneId = player:GetAttribute("CurrentZone") or "Hub"
+		local subZoneId = player:GetAttribute("CurrentSubZone") or "Hub"
 		if zoneId == "Hub" then
 			play("Music", pick({ "Music_Hub", "MusicHub" }))
 			play("Ambience", pick({ "Ambience_Hub" }))
@@ -65,11 +66,11 @@ function AudioController:Start()
 			play("Ambience", pick({ "Ambience_" .. subZoneId, "Ambience_" .. zoneId }))
 		end
 	end
-	player:GetAttributeChangedSignal("SubZoneId"):Connect(update)
+	player:GetAttributeChangedSignal("CurrentSubZone"):Connect(update)
 	update()
-	local lastZone = player:GetAttribute("ZoneId")
-	player:GetAttributeChangedSignal("ZoneId"):Connect(function()
-		local zoneId = player:GetAttribute("ZoneId")
+	local lastZone = player:GetAttribute("CurrentZone")
+	player:GetAttributeChangedSignal("CurrentZone"):Connect(function()
+		local zoneId = player:GetAttribute("CurrentZone")
 		if zoneId ~= lastZone then
 			lastZone = zoneId
 			Sfx.play("PortalEnter")

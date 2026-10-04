@@ -1,251 +1,215 @@
 --!strict
--- Admin panel (DESIGN.md section 13), money commands only for now. Opened with F2 or the ADMIN
--- button. It is only built for players flagged IsAdmin by the server, and the server re-checks
--- every command, so this UI grants nothing by itself.
+-- Owner tools (DESIGN.md section 13): money, teleports and the UI test commands of
+-- docs/ui_hud_brief.txt (notify, equip fakes, damage, badges). Opened with F2 or the crown button,
+-- built only when the server flags IsAdmin; the server re-checks every command.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Admins = require(ReplicatedStorage.GameSystem.Config.Admins)
+local Economy = require(ReplicatedStorage.GameSystem.Config.Economy)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
-local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
+local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
+local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
+local Notifier = require(script.Parent.Notifier)
+local Kit = script.Parent.Kit
+local Button = require(Kit.Button)
+local IconButton = require(Kit.IconButton)
+local Screens = require(Kit.Screens)
+local Theme = require(Kit.Theme)
+local Window = require(Kit.Window)
 
-local AdminPanel = { Priority = 20 }
+local AdminPanel = { Priority = 13 }
 
-local WOOD = Color3.fromRGB(74, 48, 32)
-local WOOD_DARK = Color3.fromRGB(51, 32, 15)
-local GOLD = Color3.fromRGB(255, 201, 60)
-local GOLD_BORDER = Color3.fromRGB(232, 180, 74)
-local DIAMOND = Color3.fromRGB(95, 212, 255)
-local STEEL = Color3.fromRGB(150, 156, 168)
-local DANGER = Color3.fromRGB(217, 59, 59)
-local INK = Color3.fromRGB(40, 24, 12)
-local BASE_HEIGHT = 720
-local COLUMN = 440 -- money and world on the left, teleports on the right
-local WINDOW = Vector2.new(COLUMN * 2, 412)
-local MARGIN, GAP, ROW = 18, 6, 44
-local OPEN_TWEEN = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local CELL = Vector2.new(150, 56)
+local TOP = { Normal = 72, Compact = 10 }
 
-local function round(parent: Instance, radius: number)
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius)
-	corner.Parent = parent
-end
-
-local function outline(parent: Instance, color: Color3, thickness: number)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = color
-	stroke.Thickness = thickness
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Parent = parent
-end
-
-local function text(parent: Instance, className: string, props: { [string]: any }): any
-	local item = Instance.new(className) :: any
-	item.Font = Enum.Font.Fantasy
-	item.TextSize = 20
-	item.TextColor3 = Color3.new(1, 1, 1)
-	for key, value in pairs(props) do
-		item[key] = value
+local function send(command: string, ...: any)
+	local ok, message = Net.request("Admin", command, ...)
+	if message then
+		Notifier.push({ Kind = if ok then "info" else "error", Text = "Admin: " .. tostring(message) })
 	end
-	item.Parent = parent
-	return item
 end
 
-local function button(parent: Instance, label: string, color: Color3, x: number, y: number, width: number, onClick: () -> ()): TextButton
-	local item = text(parent, "TextButton", {
-		Name = label, Text = label, BackgroundColor3 = color, TextColor3 = INK,
-		Position = UDim2.fromOffset(x, y), Size = UDim2.fromOffset(width, ROW),
-	}) :: TextButton
-	round(item, 6)
-	outline(item, INK, 2)
-	item.Activated:Connect(function()
-		Sfx.play("UIClick")
-		onClick()
-	end)
-	return item
+local function currentZone(): string
+	local zoneId = Players.LocalPlayer:GetAttribute("CurrentZone")
+	return if Zones.ById[zoneId or ""] then zoneId else "Plains"
 end
 
--- One currency block: title, preset "+amount" buttons, "Set 0", and a custom amount box.
-local function section(parent: Instance, y: number, title: string, color: Color3, addCommand: string, setCommand: string, presets: { number })
-	text(parent, "TextLabel", {
-		Text = title, TextColor3 = color, BackgroundTransparency = 1, TextXAlignment = Enum.TextXAlignment.Left,
-		Position = UDim2.fromOffset(MARGIN, y), Size = UDim2.fromOffset(200, 24),
-	})
-	local function send(command: string, amount: number)
-		Net.event("Admin"):FireServer(command, amount)
-	end
-	local inner = COLUMN - MARGIN * 2
-	local count = #presets + 1
-	local width = math.floor((inner - GAP * (count - 1)) / count)
-	local top = y + 28
-	for i, amount in ipairs(presets) do
-		button(parent, "+" .. Format.number(amount), color, MARGIN + (i - 1) * (width + GAP), top, width, function()
-			send(addCommand, amount)
-		end)
-	end
-	button(parent, "Set 0", DANGER, MARGIN + (count - 1) * (width + GAP), top, width, function()
-		send(setCommand, 0)
-	end).TextColor3 = Color3.new(1, 1, 1)
+local sectionCount = 0
+local function section(page: Instance, title: string, cell: Vector2?): Frame
+	sectionCount += 1
+	Theme.text({ Font = "Title", Text = title, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, 0, 0, 32), LayoutOrder = sectionCount * 2 - 1, Parent = page })
+	local grid = Instance.new("Frame")
+	grid.Name = title
+	grid.BackgroundTransparency = 1
+	grid.Size = UDim2.new(1, 0, 0, 0)
+	grid.AutomaticSize = Enum.AutomaticSize.Y
+	grid.LayoutOrder = sectionCount * 2
+	local layout = Instance.new("UIGridLayout")
+	layout.CellSize = UDim2.fromOffset((cell or CELL).X, (cell or CELL).Y)
+	layout.CellPadding = UDim2.fromOffset(8, 8)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = grid
+	grid.Parent = page
+	return grid
+end
 
-	local boxWidth = inner - 2 * (86 + GAP)
-	local box = text(parent, "TextBox", {
-		Text = "", PlaceholderText = "Amount (2500, 2.5M, 1T...)", ClearTextOnFocus = false,
-		BackgroundColor3 = WOOD_DARK, PlaceholderColor3 = STEEL,
-		Position = UDim2.fromOffset(MARGIN, top + ROW + GAP), Size = UDim2.fromOffset(boxWidth, ROW),
-	}) :: TextBox
-	round(box, 6)
-	outline(box, GOLD_BORDER, 2)
-	local function custom(command: string)
-		local amount = Format.parse(box.Text)
-		if amount and amount <= Admins.MaxAmount then
-			send(command, amount)
-		else
-			Sfx.play("Denied")
-			box.Text = ""
+local function button(parent: Instance, text: string, style: string?, onClick: () -> ())
+	return Button.new({ Text = text, Style = style or "secondary", TextSize = 20, Size = UDim2.fromScale(1, 1), Parent = parent, OnClick = onClick })
+end
+
+local function amountBox(parent: Instance): TextBox
+	local box = Instance.new("TextBox")
+	box.Name = "Amount"
+	box.Text = ""
+	box.PlaceholderText = "2500, 2.5M, 1T..."
+	box.ClearTextOnFocus = false
+	box.BackgroundColor3 = Theme.Colors.WoodLine
+	box.TextColor3 = Theme.Colors.Text
+	box.PlaceholderColor3 = Theme.Colors.TextDim
+	box.FontFace = Theme.Fonts.Body
+	box.TextScaled = true
+	Theme.limit(box, 20)
+	Theme.corner(box, 6)
+	Theme.stroke(box, Theme.Colors.GoldDark, 2)
+	box.Parent = parent
+	return box
+end
+
+local function moneyPage(page: Instance)
+	for _, money in ipairs({ { "Gold", "Gold", { 1e3, 1e6, 1e9, 1e12 } }, { "Diamonds", "Diamonds", { 10, 100, 1000 } } }) do
+		local name, suffix, presets = money[1], money[2], money[3]
+		local grid = section(page, name)
+		for _, value in ipairs(presets) do
+			button(grid, "+" .. Format.number(value), "primary", function()
+				send("add" .. suffix, value)
+			end)
 		end
+		button(grid, "Set 0", "danger", function()
+			send("set" .. suffix, 0)
+		end)
+		local box = amountBox(grid)
+		local function custom(command: string)
+			local value = Format.parse(box.Text)
+			if value and value <= Admins.MaxAmount then
+				send(command .. suffix, value)
+			else
+				Notifier.push({ Kind = "error", Text = "Enter an amount like 2500, 2.5M or 1T" })
+			end
+		end
+		button(grid, "Add", "primary", function() custom("add") end)
+		button(grid, "Set", "secondary", function() custom("set") end)
 	end
-	button(parent, "Add", color, MARGIN + boxWidth + GAP, top + ROW + GAP, 86, function()
-		custom(addCommand)
-	end)
-	button(parent, "Set", STEEL, MARGIN + boxWidth + GAP + 86 + GAP, top + ROW + GAP, 86, function()
-		custom(setCommand)
-	end)
 end
 
-local function build(player: Player)
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "AdminPanel"
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 50
-	local scale = Instance.new("UIScale")
-	scale.Parent = gui
-	local camera = workspace.CurrentCamera
-	local function rescale()
-		scale.Scale = math.clamp(camera.ViewportSize.Y / BASE_HEIGHT, 0.6, 1.5)
-	end
-	camera:GetPropertyChangedSignal("ViewportSize"):Connect(rescale)
-	rescale()
-
-	local backdrop = Instance.new("TextButton")
-	backdrop.Name = "Backdrop"
-	backdrop.Text = ""
-	backdrop.AutoButtonColor = false
-	backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
-	backdrop.BackgroundTransparency = 0.5
-	backdrop.Position = UDim2.fromScale(-1, -1)
-	backdrop.Size = UDim2.fromScale(4, 4)
-	backdrop.Visible = false
-	backdrop.Parent = gui
-
-	local window = Instance.new("Frame")
-	window.Name = "Window"
-	window.AnchorPoint = Vector2.new(0.5, 0.5)
-	window.Position = UDim2.fromScale(0.5, 0.5)
-	window.Size = UDim2.fromOffset(WINDOW.X, WINDOW.Y)
-	window.BackgroundColor3 = WOOD
-	window.Visible = false
-	window.Active = true
-	round(window, 8)
-	outline(window, GOLD_BORDER, 4)
-	local pop = Instance.new("UIScale")
-	pop.Parent = window
-	window.Parent = gui
-
-	text(window, "TextLabel", {
-		Text = "Admin", TextSize = 26, TextColor3 = GOLD, BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(MARGIN, 10), Size = UDim2.fromOffset(300, 32), TextXAlignment = Enum.TextXAlignment.Left,
-	})
-	section(window, 52, "Gold", GOLD, "AddGold", "SetGold", Admins.GoldButtons)
-	section(window, 192, "Diamonds", DIAMOND, "AddDiamonds", "SetDiamonds", Admins.DiamondButtons)
-	text(window, "TextLabel", {
-		Text = "World", BackgroundTransparency = 1, TextXAlignment = Enum.TextXAlignment.Left,
-		Position = UDim2.fromOffset(MARGIN, 322), Size = UDim2.fromOffset(200, 24),
-	})
-	button(window, "Unlock all gates", STEEL, MARGIN, 350, COLUMN - MARGIN * 2, function()
-		Net.event("Admin"):FireServer("UnlockAll", 0)
-	end)
-
-	-- Teleport column: pick a sub-zone (or the boss arena), then press a zone.
-	local left = COLUMN + MARGIN
-	local inner = COLUMN - MARGIN * 2
-	text(window, "TextLabel", {
-		Text = "Teleport to", BackgroundTransparency = 1, TextXAlignment = Enum.TextXAlignment.Left,
-		Position = UDim2.fromOffset(left, 52), Size = UDim2.fromOffset(200, 24),
-	})
-	local choices = { "1", "2", "3", "4", "Boss" } -- sub-zone 1..4, or the zone's boss arena
+local function teleportPage(page: Instance)
 	local target = 1
-	local choiceButtons: { TextButton } = {}
-	local choiceWidth = math.floor((inner - GAP * (#choices - 1)) / #choices)
-	local function choose(index: number)
-		target = index
-		for i, item in ipairs(choiceButtons) do
-			item.BackgroundColor3 = if i == index then GOLD else STEEL
-		end
-	end
-	for i, label in ipairs(choices) do
-		choiceButtons[i] = button(window, label, STEEL, left + (i - 1) * (choiceWidth + GAP), 80, choiceWidth, function()
-			choose(i)
+	local picker = section(page, "Where in the zone", Vector2.new(100, 56))
+	local choices = {}
+	for index, label in ipairs({ "1", "2", "3", "4", "Boss" }) do
+		choices[index] = button(picker, label, "secondary", function()
+			target = index
+			for i, choice in ipairs(choices) do
+				choice:SetStyle(if i == index then "primary" else "secondary")
+			end
 		end)
-		choiceButtons[i].Name = "Sub" .. label
 	end
-	choose(1)
-	local columns = 3
-	local zoneWidth = math.floor((inner - GAP * (columns - 1)) / columns)
-	for i, zone in ipairs(Zones.List) do
-		local column, row = (i - 1) % columns, math.floor((i - 1) / columns)
-		local item = button(window, zone.Name, STEEL, left + column * (zoneWidth + GAP), 130 + row * (ROW + GAP), zoneWidth, function()
-			Net.event("Admin"):FireServer("Teleport", target, zone.Id)
+	choices[1]:SetStyle("primary")
+	local zones = section(page, "Zones")
+	for _, zone in ipairs(Zones.List) do
+		button(zones, zone.Name, "wood", function()
+			send("setZone", zone.Id, target)
 		end)
-		item.Name = "Zone" .. zone.Id
-		item.TextScaled = true
-		local limit = Instance.new("UITextSizeConstraint")
-		limit.MaxTextSize = 18
-		limit.Parent = item
 	end
-	button(window, "Hub", GOLD, left, 130 + 4 * (ROW + GAP), inner, function()
-		Net.event("Admin"):FireServer("Teleport", 0, "Hub")
-	end)
+	local world = section(page, "World")
+	button(world, "Hub", "primary", function() send("setZone", "Hub") end)
+	button(world, "Unlock all gates", "secondary", function() send("unlockAll") end)
+end
 
-	local open = false
-	local function setOpen(value: boolean)
-		open = value
-		backdrop.Visible = value
-		window.Visible = value
-		if value then
-			Sfx.play("UIOpen")
-			pop.Scale = 0.9
-			TweenService:Create(pop, OPEN_TWEEN, { Scale = 1 }):Play()
-		else
-			Sfx.play("UIClose")
-		end
+local function testPage(page: Instance)
+	local notes = section(page, "Notifications")
+	local tests = {
+		{ "Loot: Rare", { "loot", "Obtained Rare Wolf Pup Egg", 3 } },
+		{ "Loot: Legendary", { "loot", "Obtained Legendary Golem Core Gauntlets", 5 } },
+		{ "Loot: Divine", { "loot", "Obtained Divine Supreme Angel's Halo", 7 } },
+		{ "Loot: Secret", { "loot", "Obtained Secret Void Dragon Egg", 8 } },
+		{ "Reward", { "reward", "Daily reward claimed: +500 Gold" } },
+		{ "No Gold", { "error", "Not enough Gold: 3,125 needed" } },
+		{ "No Diamonds", { "error", "Not enough Diamonds: 50 needed" } },
+		{ "Info", { "info", "Welcome to Fight Your Destiny!" } },
+	}
+	for _, test in ipairs(tests) do
+		button(notes, test[1], "secondary", function()
+			send("notify", table.unpack(test[2]))
+		end)
 	end
-	backdrop.Activated:Connect(function()
-		setOpen(false)
-	end)
-	local close = button(window, "X", DANGER, WINDOW.X - MARGIN - ROW, 8, ROW, function()
-		setOpen(false)
-	end)
-	close.TextColor3 = Color3.new(1, 1, 1)
+	button(notes, "Die (penalty)", "danger", function() send("damageSelf", 1e9) end)
 
-	local toggle = text(gui, "TextButton", {
-		Name = "Toggle", Text = "ADMIN", TextSize = 18, TextColor3 = INK, BackgroundColor3 = GOLD,
-		Position = UDim2.fromOffset(12, 124), Size = UDim2.fromOffset(96, ROW),
-	}) :: TextButton
-	round(toggle, 6)
-	outline(toggle, INK, 2)
-	toggle.Activated:Connect(function()
-		setOpen(not open)
-	end)
-	UserInputService.InputBegan:Connect(function(input)
-		if input.KeyCode == Enum.KeyCode.F2 then
-			setOpen(not open)
+	local health = section(page, "Health")
+	button(health, "Damage 10", "secondary", function() send("damageSelf", 10) end)
+	button(health, "Damage 40", "secondary", function() send("damageSelf", 40) end)
+	button(health, "Heal", "primary", function() send("heal") end)
+
+	local gear = section(page, "Equipment (current zone)", Vector2.new(110, 56))
+	local categoryIndex = 0
+	for _, rarity in ipairs(Rarities.List) do
+		button(gear, rarity.Name, "secondary", function()
+			categoryIndex = categoryIndex % #Weapons.Categories + 1
+			send("equipWeaponFake", currentZone(), rarity.Tier, Weapons.Categories[categoryIndex].Id)
+		end)
+	end
+	for _, slot in ipairs(Economy.ArmorSlots) do
+		button(gear, slot, "secondary", function()
+			send("equipArmorFake", slot, currentZone(), math.random(1, #Rarities.List))
+		end)
+	end
+	for index = 1, Economy.PetSlots do
+		button(gear, "Pet " .. index, "secondary", function()
+			send("equipPetFake", index, math.random(1, #Rarities.List))
+		end)
+	end
+	button(gear, "Clear", "danger", function() send("clearEquipment") end)
+
+	local badges = section(page, "Badges")
+	local counts: { [string]: number } = {}
+	for _, id in ipairs(UIConfig.BadgeIds) do
+		button(badges, id .. " +1", "secondary", function()
+			counts[id] = (counts[id] or 0) + 1
+			send("setBadge", id, counts[id])
+		end)
+	end
+	button(badges, "Clear badges", "danger", function()
+		for _, id in ipairs(UIConfig.BadgeIds) do
+			counts[id] = 0
+			send("setBadge", id, 0)
 		end
 	end)
-	gui.Parent = player:WaitForChild("PlayerGui")
+end
+
+local function build()
+	local def = UIConfig.Windows.Admin
+	Window.define("Admin", { Title = def.Title, Tabs = def.Tabs, Size = def.Size, Build = function(ctx)
+		moneyPage(ctx.Pages.Money)
+		teleportPage(ctx.Pages.Teleport)
+		testPage(ctx.Pages["UI Test"])
+	end })
+	local crown = IconButton.new({ Name = "AdminToggle", Icon = "Admin", Label = "Admin", Size = Vector2.new(Theme.TOUCH, Theme.TOUCH), ShowLabel = false, AnchorPoint = Vector2.new(1, 0), Parent = Screens.hud(), OnClick = function()
+		Window.toggle("Admin")
+	end })
+	local function layout()
+		crown.Instance.Position = UDim2.new(1, -12, 0, if Theme.isCompact() then TOP.Compact else TOP.Normal)
+	end
+	layout()
+	Theme.Changed:Connect(layout)
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if not processed and input.KeyCode == Enum.KeyCode.F2 then
+			Window.toggle("Admin")
+		end
+	end)
 end
 
 function AdminPanel:Start()
@@ -254,7 +218,7 @@ function AdminPanel:Start()
 		player:GetAttributeChangedSignal("IsAdmin"):Wait()
 	end
 	if player:GetAttribute("IsAdmin") then
-		build(player)
+		build()
 	end
 end
 

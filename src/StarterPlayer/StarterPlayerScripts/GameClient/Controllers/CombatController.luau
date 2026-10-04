@@ -1,7 +1,6 @@
 --!strict
 -- PLACEHOLDER combat input: hold the attack input to swing at the test cooldown. The server
 -- decides hits and damage; this only sends the request and shows damage numbers.
-local ContextActionService = game:GetService("ContextActionService")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -11,9 +10,11 @@ local Net = require(ReplicatedStorage.GameSystem.Net)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 
+local Controls = require(script.Parent.ControlsController)
+local Settings = require(script.Parent.SettingsController)
+
 local CombatController = {}
 
-local ACTION = "Attack"
 local NUMBER_TIME = 0.7
 local holding = false
 local rng = Random.new()
@@ -61,30 +62,27 @@ local function damageNumber(position: Vector3, amount: number, crit: boolean)
 end
 
 function CombatController:Start()
-	Net.event("Hit").OnClientEvent:Connect(function(position: Vector3, amount: number, crit: boolean)
-		damageNumber(position, amount, crit)
+	Net.on("Hit", function(position: Vector3, amount: number, crit: boolean)
+		if Settings.get("DamageNumbers") ~= false then
+			damageNumber(position, amount, crit)
+		end
 		Sfx.play(if crit then "Crit" else "Hit", position)
 		burst(if crit then "Crit_Spark" else "Hit_Spark", position - Vector3.new(0, 1.5, 0))
 	end)
-	ContextActionService:BindAction(ACTION, function(_, inputState)
-		if inputState == Enum.UserInputState.Begin then
-			if not holding then
-				holding = true
-				task.spawn(function()
-					while holding do
-						Net.event("Attack"):FireServer()
-						Sfx.play("SwordSwing")
-						task.wait(Playtest.AttackCooldown)
-					end
-				end)
-			end
-		elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+	Controls.Attack:Connect(function(down: boolean)
+		if down and not holding then
+			holding = true
+			task.spawn(function()
+				while holding do
+					Net.send("Attack")
+					Sfx.play("SwordSwing")
+					task.wait(Playtest.AttackCooldown)
+				end
+			end)
+		elseif not down then
 			holding = false
 		end
-		return Enum.ContextActionResult.Pass
-	end, true, Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2)
-	ContextActionService:SetTitle(ACTION, "Attack")
-	ContextActionService:SetPosition(ACTION, UDim2.new(1, -120, 1, -160))
+	end)
 end
 
 return CombatController

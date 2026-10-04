@@ -59,12 +59,12 @@ end
 function LightingController:Start()
 	local player = Players.LocalPlayer
 	local function update()
-		local preset = find(player:GetAttribute("ZoneId") or "Hub", player:GetAttribute("SubZoneId") or "Hub")
+		local preset = find(player:GetAttribute("CurrentZone") or "Hub", player:GetAttribute("CurrentSubZone") or "Hub")
 		if preset then
 			apply(preset)
 		end
 	end
-	player:GetAttributeChangedSignal("SubZoneId"):Connect(update)
+	player:GetAttributeChangedSignal("CurrentSubZone"):Connect(update)
 	update()
 end
 
