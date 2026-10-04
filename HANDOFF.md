@@ -149,7 +149,13 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (19:10). Hub + zones 1-8 are built, validated (0 FAIL lines, 69,177 zone parts)
+**Updated 2026-10-04 (19:50). Zone 9 (Realm of the Dead, id `Dead`) is built (9,851 parts + arena
+1,062), validated and checked in Play (Graveyard, Ossuary hall, boss arena: readable; Dead_3 and
+Dead_4 not seen in Play). The owner said GO for zones 9-12 on 2026-10-04: remaining order is
+Abyss, Mechanical, Void, one builder at a time, each followed by a Play check, this file, a backup
+and a push. Catalog: `docs/ASSET_KIT_DEAD.md`.**
+
+Earlier (19:10): Hub + zones 1-8 are built, validated (0 FAIL lines, 69,177 zone parts)
 and walked in Play. Zones 6-8 (Volcano, Hell, Heaven) were walked on 2026-10-04 evening with the
 admin teleport buttons: Volcano 1-3 + arena, Hell 1, 2, 4 + arena, Heaven 1, 3, 4 + arena all read
 well in Play (no glare in Heaven, Hell dark but readable). NOT seen in Play: Volcano_4 itself,
