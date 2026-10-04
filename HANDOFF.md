@@ -149,7 +149,12 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (19:50). Zone 9 (Realm of the Dead, id `Dead`) is built (9,851 parts + arena
+**Updated 2026-10-04 (20:20). Zone 10 (Abyss) is built (10,854 parts + arena 611), validated and
+checked in Play (Coral Reef, Abyssal Trench, boss arena: readable; Abyss_2 and Abyss_4 not seen in
+Play). It is a DRY underwater zone: players walk, there is no water volume (per the zone doc's tip).
+Remaining: Mechanical, then Void. Catalog: `docs/ASSET_KIT_ABYSS.md`.**
+
+**Earlier (19:50). Zone 9 (Realm of the Dead, id `Dead`) is built (9,851 parts + arena
 1,062), validated and checked in Play (Graveyard, Ossuary hall, boss arena: readable; Dead_3 and
 Dead_4 not seen in Play). The owner said GO for zones 9-12 on 2026-10-04: remaining order is
 Abyss, Mechanical, Void, one builder at a time, each followed by a Play check, this file, a backup

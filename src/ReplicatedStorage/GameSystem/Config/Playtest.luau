@@ -31,6 +31,6 @@ return {
 		Plains = rgb(110, 200, 80), Desert = rgb(240, 170, 80), Jungle = rgb(40, 150, 110),
 		Tundra = rgb(96, 104, 224), Swamp = rgb(150, 90, 200), Volcano = rgb(255, 110, 40),
 		Hell = rgb(236, 226, 204), Heaven = rgb(70, 130, 235), Dead = rgb(120, 220, 180),
-		Abyss = rgb(60, 140, 230), Mechanical = rgb(140, 150, 165), Void = rgb(210, 70, 230),
+		Abyss = rgb(255, 120, 90), Mechanical = rgb(255, 212, 40), Void = rgb(210, 70, 230),
 	},
 }
