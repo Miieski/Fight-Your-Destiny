@@ -1,6 +1,7 @@
 --!strict
--- HUD 6 + 8: menu buttons with red badges. On PC and tablets the grid sits on the left under the
--- health bar, MenuGrid.Columns wide and filled row by row (8 buttons -> 4 rows). Entries marked Apart
+-- HUD 6 + 8: menu buttons with red badges, in a grid MenuGrid.Columns wide filled row by row
+-- (8 buttons -> 4 rows). On PC the tiles are bigger (PcTile) and the grid sits at the vertical middle
+-- of the left edge; on tablets it sits under the health bar. Entries marked Apart
 -- in Config/UI Menu (Settings) are separate icon buttons right of the health bar. On phones the grid
 -- lives in a pop-up opened by a single Menu button, with the Apart buttons beside that button.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,6 +24,8 @@ local TOP = { Normal = 72, Compact = 66 } -- below the health bar
 local POPUP_PADDING = 12
 
 local column: Frame
+local columnGrid: UIGridLayout
+local gridCount = 0
 local popup: Frame
 local popupGrid: Frame
 local toggle: any
@@ -38,12 +41,12 @@ local function updateToggleBadge()
 	toggle.Badge:Set(total)
 end
 
-local function gridSize(count: number): Vector2
+local function gridSize(count: number, tile: number, gap: number): Vector2
 	local rows = math.ceil(count / GRID.Columns)
-	return Vector2.new(GRID.Columns * GRID.Tile + (GRID.Columns - 1) * GRID.Gap, rows * GRID.Tile + (rows - 1) * GRID.Gap)
+	return Vector2.new(GRID.Columns * tile + (GRID.Columns - 1) * gap, rows * tile + (rows - 1) * gap)
 end
 
-local function addGridLayout(parent: Instance)
+local function addGridLayout(parent: Instance): UIGridLayout
 	local grid = Instance.new("UIGridLayout")
 	grid.CellSize = UDim2.fromOffset(GRID.Tile, GRID.Tile)
 	grid.CellPadding = UDim2.fromOffset(GRID.Gap, GRID.Gap)
@@ -51,6 +54,7 @@ local function addGridLayout(parent: Instance)
 	grid.FillDirectionMaxCells = GRID.Columns
 	grid.SortOrder = Enum.SortOrder.LayoutOrder
 	grid.Parent = parent
+	return grid
 end
 
 local function layout()
@@ -64,7 +68,16 @@ local function layout()
 		tile.Instance.Parent = if compact then popupGrid else column
 		tile:SetLabelVisible(not compact)
 	end
-	column.Position = UDim2.fromOffset(MARGIN, TOP.Normal)
+	local pc = not Theme.isTouch()
+	local tile = if pc then GRID.PcTile else GRID.Tile
+	local gap = if pc then GRID.PcGap else GRID.Gap
+	local size = gridSize(gridCount, tile, gap)
+	columnGrid.CellSize = UDim2.fromOffset(tile, tile)
+	columnGrid.CellPadding = UDim2.fromOffset(gap, gap)
+	column.Size = UDim2.fromOffset(size.X, size.Y)
+	-- PC: vertical middle of the left edge, never above the spot under the health bar
+	local top = if pc then math.max(TOP.Normal, math.floor((Theme.size().Y - size.Y) / 2)) else TOP.Normal
+	column.Position = UDim2.fromOffset(MARGIN, top)
 	toggle.Instance.Position = UDim2.fromOffset(MARGIN, TOP.Compact)
 	-- Apart buttons: right of the health bar (centered on it), or right of the Menu button on phones
 	local health = UIConfig.Hud.Health
@@ -79,19 +92,17 @@ end
 
 function MenuBar:Start()
 	local root = Screens.hud()
-	local gridCount = 0
 	for _, entry in ipairs(UIConfig.Menu) do
 		if not entry.Apart then
 			gridCount += 1
 		end
 	end
-	local size = gridSize(gridCount)
+	local size = gridSize(gridCount, GRID.Tile, GRID.Gap) -- the phone pop-up; the side grid is sized in layout()
 
 	column = Instance.new("Frame")
 	column.Name = "Menu"
 	column.BackgroundTransparency = 1
-	column.Size = UDim2.fromOffset(size.X, size.Y)
-	addGridLayout(column)
+	columnGrid = addGridLayout(column)
 	column.Parent = root
 
 	popup = Panel.new({ Name = "MenuPopup", Size = UDim2.fromOffset(size.X + 2 * POPUP_PADDING, size.Y + 2 * POPUP_PADDING), Parent = root })

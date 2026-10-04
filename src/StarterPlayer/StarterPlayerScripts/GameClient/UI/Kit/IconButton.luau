@@ -37,7 +37,7 @@ function IconButton.new(props: { [string]: any }): IconButton
 		Name = "Caption",
 		Font = "Button",
 		Text = props.Label or "",
-		TextSize = 15,
+		TextSize = 20,
 		Color = Theme.Colors.Gold,
 		Size = UDim2.new(1, -4, 0.26, 0),
 		Position = UDim2.new(0.5, 0, 1, -2),

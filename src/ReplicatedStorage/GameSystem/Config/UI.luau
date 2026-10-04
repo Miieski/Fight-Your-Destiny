@@ -14,7 +14,7 @@ UI.TOUCH = 56
 -- Apart entries are separate icon buttons next to the health bar (next to the Menu button on phones).
 UI.Menu = {
 	{ Id = "Inventory", Label = "Inventory", Icon = "Inventory" },
-	{ Id = "Training", Label = "Training", Icon = "Training" },
+	{ Id = "Stats", Label = "Stats", Icon = "Stats" },
 	{ Id = "Shop", Label = "Shop", Icon = "Shop" },
 	{ Id = "RebirthShop", Label = "Rebirth Shop", Icon = "RebirthShop" },
 	{ Id = "Pets", Label = "Pets", Icon = "Pets" },
@@ -23,12 +23,15 @@ UI.Menu = {
 	{ Id = "Team", Label = "Team", Icon = "Team" },
 	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
 }
-UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5 } -- 8 buttons -> 4 rows
+-- 8 buttons -> 4 rows. On PC (no touch) the grid uses PcTile / PcGap and sits at the vertical middle
+-- of the left edge; tablets keep Tile / Gap under the health bar; phones use the Menu pop-up.
+UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5, PcTile = 80, PcGap = 6 }
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
 UI.Windows = {
 	Inventory = { Title = "Inventory", Tabs = { "Weapons", "Armor", "Eggs", "Trophies" } },
-	Training = { Title = "Training" },
+	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
+	Stats = { Title = "Stats", Intro = "Your RPG stats will live here: HP, Attack, Defense, Speed, Crit and the derived stats." },
 	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" } },
 	RebirthShop = { Title = "Rebirth Shop" },
 	Pets = { Title = "Pets" },

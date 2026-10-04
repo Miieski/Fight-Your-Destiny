@@ -134,7 +134,10 @@ big, semi-transparent and movable in settings (position + size).
 | Crit Chance | `Crit` | 5% | chance for x2 damage |
 | Gold Gain | `GoldGain` | +0% | % bonus to Gold earned |
 
-### Upgrade menu ("Training")
+### Stats window (was "Training"; renamed by the owner on 2026-10-05)
+* The **Stats** window holds the whole RPG system: the stats above (HP, Attack, Defense, Speed,
+  Crit, Gold Gain), their upgrades, and the derived stats (final HP with armor, damage per hit,
+  damage reduction, crit, Zone Boost, rebirth multiplier...).
 * Opened from the HUD and from a trainer NPC in the hub. Each stat is bought with **Gold**
   level by level (max 100 levels each).
 * Cost: `100 x 10^(zone - 1) x 1.15^level`, where `zone` is the highest zone the player has
@@ -382,7 +385,7 @@ src/StarterPlayer/StarterPlayerScripts/GameClient/
 `DataService` (profile, DataStore, session lock, autosave 90 s) - `StatsService` (derived stats) -
 `CombatService` (player attacks, roll, block, validation) - `EnemyService` (spawn, AI, damage
 tracking, drops) - `BossService` (arenas, groups, patterns, rewards) - `ZoneService` (unlocks,
-gates, teleports, death respawn) - `ShopService` (weapons, training, premium eggs, rerolls) -
+gates, teleports, death respawn) - `ShopService` (weapons, stat upgrades, premium eggs, rerolls) -
 `LootService` (drops, trophies) - `PetService` - `ArmorService` - `RebirthService` -
 `RewardService` (daily, playtime, quests, codes, boosts, AFK/offline) - `LeaderboardService` -
 `TeamService` - `MarketService` (Robux products) - `TutorialService` - `AdminService`.

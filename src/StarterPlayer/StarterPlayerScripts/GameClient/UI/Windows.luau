@@ -14,8 +14,11 @@ local Window = require(Kit.Window)
 
 local Windows = { Priority = 4 }
 
-local function placeholders(ctx: any)
+local function placeholders(ctx: any, intro: string?)
 	for _, page in pairs(ctx.Pages) do
+		if intro then
+			Theme.text({ Text = intro, TextSize = 22, Wrapped = true, Size = UDim2.new(1, 0, 0, 56), LayoutOrder = 1, Parent = page })
+		end
 		Window.placeholder(page)
 	end
 end
@@ -47,7 +50,9 @@ local BUILDERS = {
 function Windows:Init()
 	for id, def in pairs(UIConfig.Windows) do
 		if id ~= "Admin" then
-			Window.define(id, { Title = def.Title, Tabs = def.Tabs, Size = def.Size, Build = BUILDERS[id] or placeholders })
+			Window.define(id, { Title = def.Title, Tabs = def.Tabs, Size = def.Size, Build = BUILDERS[id] or function(ctx)
+				placeholders(ctx, def.Intro)
+			end })
 		end
 	end
 end

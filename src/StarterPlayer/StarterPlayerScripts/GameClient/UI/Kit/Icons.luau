@@ -8,7 +8,7 @@ local rgb = Color3.fromRGB
 local Icons = {}
 
 Icons.Assets = {
-	Inventory = "", Training = "", Shop = "", RebirthShop = "", Pets = "", Index = "", Quests = "",
+	Inventory = "", Training = "", Stats = "", Shop = "", RebirthShop = "", Pets = "", Index = "", Quests = "",
 	Team = "", Settings = "", Gold = "", Diamond = "", Heart = "", Plus = "", Close = "", Menu = "",
 	Sword = "", Spear = "", Heavy = "", Dagger = "", Gauntlet = "", Ranged = "", Magic = "", Whip = "",
 	Pet = "", Egg = "", Armor = "", Info = "", Warning = "", Skull = "", Gift = "", Admin = "", Boost = "",
@@ -41,6 +41,7 @@ local SHAPES: { [string]: { { any } } } = {
 	Whip = { { 0.3, 0.78, 0.09, 0.3, "Leather", 30, 0.3 }, { 0.42, 0.55, 0.07, 0.34, "WoodDark", -20, 0.3 }, { 0.6, 0.4, 0.06, 0.3, "WoodDark", 40, 0.3 }, { 0.75, 0.22, 0.05, 0.26, "WoodDark", -10, 0.3 } },
 	Inventory = { { 0.5, 0.62, 0.72, 0.6, "Leather", 0, 0.35 }, { 0.5, 0.3, 0.34, 0.16, "Leather", 0, 0.2 }, { 0.5, 0.38, 0.42, 0.08, "Gold", 0, 0.3 }, { 0.5, 0.64, 0.16, 0.16, "Gold", 0, 0.5 } },
 	Training = { { 0.5, 0.5, 0.72, 0.1, "Steel", 0, 0.3 }, { 0.26, 0.5, 0.14, 0.52, "Dark", 0, 0.2 }, { 0.74, 0.5, 0.14, 0.52, "Dark", 0, 0.2 }, { 0.13, 0.5, 0.1, 0.34, "Steel", 0, 0.2 }, { 0.87, 0.5, 0.1, 0.34, "Steel", 0, 0.2 } },
+	Stats = { { 0.27, 0.66, 0.16, 0.36, "Green", 0, 0.15 }, { 0.5, 0.56, 0.16, 0.56, "Blue", 0, 0.15 }, { 0.73, 0.46, 0.16, 0.76, "Red", 0, 0.15 }, { 0.5, 0.87, 0.86, 0.07, "Gold", 0, 0.3 } },
 	Shop = { { 0.5, 0.76, 0.62, 0.14, "GoldDark", 0, 0.3 }, { 0.5, 0.62, 0.62, 0.14, "Gold", 0, 0.3 }, { 0.5, 0.48, 0.62, 0.14, "GoldDark", 0, 0.3 }, { 0.64, 0.28, 0.34, 0.34, "Gold", 0, 0.5 } },
 	RebirthShop = { { 0.5, 0.5, 0.6, 0.6, "Purple", 0, 0.08 }, { 0.5, 0.5, 0.6, 0.6, "Purple", 45, 0.08 }, { 0.5, 0.5, 0.32, 0.32, "Gold", 0, 0.5 } },
 	Pets = PAW,

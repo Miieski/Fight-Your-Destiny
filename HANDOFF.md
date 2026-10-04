@@ -153,6 +153,11 @@ Work boss by boss and system by system with sub-agents:
 REVIEW. Brief: `docs/ui_hud_brief.txt`. Do NOT start CombatService (step 2 of the brief's section 8)
 until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p, phone, tablet).**
 
+**Owner decision 2026-10-05: the "Training" menu button and window are now "Stats". The Stats window
+will hold the WHOLE RPG system (HP, Attack, Defense, Speed, Crit, Gold Gain, their upgrades and the
+derived stats); see DESIGN.md section 3. Step 3 of the brief's plan is therefore "Stats window +
+StatsService". For now the Stats window is a shell with an intro line (`Config/UI Windows.Stats`).**
+
 What was built (all in `src/`, mirrored from Studio):
 * **Plumbing.** `GameSystem/Net.luau`: one RemoteFunction `Request` and one RemoteEvent `Send`
   dispatched to `Net.handle(action, fn, minInterval)` handlers (per-player rate limit ->
@@ -181,7 +186,9 @@ What was built (all in `src/`, mirrored from Studio):
   01:00, after a reference photo: 8 buttons in a 2-wide x 4-tall grid filled row by row on PC and
   tablets; Settings is `Apart = true` in `Config/UI Menu` and shows as a gear right of the health bar
   (health bar now 270 wide, `Config/UI Hud.Health`); phones keep the Menu pop-up, now the same 2 x 4
-  grid, with the gear beside the Menu button; screenshots 18-20), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
+  grid, with the gear beside the Menu button; screenshots 18-20. Owner, 01:10: on PC (no touch) the
+  tiles are 40% bigger (`MenuGrid.PcTile` 80) and the grid sits at the vertical middle of the left
+  edge; tablets unchanged; screenshots 21-23), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
   diamonds" confirm -> GoToHub), Pages/SettingsPage (Audio, Display, Controls, Other), AdminPanel
   (crown button / F2: Money, Teleport, UI Test tabs).
 * **Controllers:** SettingsController (applies locally, saves debounced via SetSetting; volumes go to
