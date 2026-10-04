@@ -149,7 +149,14 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (20:20). Zone 10 (Abyss) is built (10,854 parts + arena 611), validated and
+**Updated 2026-10-04 (22:55). Zone 11 (Mechanical City, id `Mechanical`) is built (4,756 parts +
+arena 643), validated and checked in Play (all 4 sub-zones + arena readable; sub-zones 2-4 are
+light on parts but clean, more dressing optional). The owner changed Claude and GitHub accounts
+on 2026-10-04: pushes still go through the Miieski credential (fallback account: KodElse); the
+Roblox_Studio MCP had to be re-added to the session. Remaining: zone 12 (Void).
+Catalog: `docs/ASSET_KIT_MECHANICAL.md`.**
+
+**Earlier (20:20). Zone 10 (Abyss) is built (10,854 parts + arena 611), validated and
 checked in Play (Coral Reef, Abyssal Trench, boss arena: readable; Abyss_2 and Abyss_4 not seen in
 Play). It is a DRY underwater zone: players walk, there is no water volume (per the zone doc's tip).
 Remaining: Mechanical, then Void. Catalog: `docs/ASSET_KIT_ABYSS.md`.**
