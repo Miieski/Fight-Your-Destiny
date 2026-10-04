@@ -1,7 +1,9 @@
 --!strict
--- HUD 2: Gold and Diamonds. Count-up tween, pop and a floating "+N" (green) / "-N" (red) on every
--- change (so the death penalty shows its Gold loss in red). Tapping Diamonds opens Shop > Diamonds.
--- Top-right on large screens, under the health bar on phones.
+-- HUD 2: Gold and Diamonds, stacked at the top-right (order and sizes in Config/UI Currencies).
+-- Each bar: a big round icon over the left end of a dark wooden pill, the amount in white with a
+-- dark stroke (it shrinks to fit), and a "+" end cap; tapping the bar opens the Shop on its tab
+-- (Diamonds tab for Diamonds). Every change counts up with a pop and a floating "+N" (green) /
+-- "-N" (red) left of the bar, so the death penalty shows its Gold loss in red.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
@@ -11,20 +13,36 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local State = require(script.Parent.Parent.State)
 local Kit = script.Parent.Kit
 local Icons = require(Kit.Icons)
-local Panel = require(Kit.Panel)
 local Screens = require(Kit.Screens)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 
 local Currencies = { Priority = 10 }
 
-local WIDTH = { Gold = 176, Diamonds = 144 }
-local COMPACT_WIDTH = { Gold = 140, Diamonds = 118 }
-local GAP = 8
+local CONFIG: { [string]: any } = UIConfig.Currencies :: any
+local MARGIN = 12 -- from the right edge of the screen
+local ICON_OVERLAP = 0.42 -- the pill starts this fraction of the icon size from the bar's left edge
+local TRACK_INSET = 0.3 -- the dark track starts under the icon, this fraction of the icon size into the pill
+local PLUS_AREA = 40 -- light end cap of the pill that holds the "+"
+local FLOAT_WIDTH = 140
+local FLOAT_RISE = 18
+local WHITE = Color3.new(1, 1, 1)
 
-type Pill = { frame: Frame, label: TextLabel, value: NumberValue, pop: UIScale, target: number?, color: Color3, tween: Tween? }
+type Pill = {
+	row: Frame,
+	bar: Frame,
+	track: Frame,
+	label: TextLabel,
+	icon: Frame,
+	plus: Frame,
+	value: NumberValue,
+	pop: UIScale,
+	target: number?,
+	tween: Tween?,
+}
 
-local row: Frame
+local stack: Frame
+local list: UIListLayout
 local pills: { [string]: Pill } = {}
 
 local function float(pill: Pill, delta: number)
@@ -34,15 +52,16 @@ local function float(pill: Pill, delta: number)
 		Text = (if up then "+" else "") .. Format.number(delta),
 		TextSize = 22,
 		Color = if up then Theme.Colors.Good else Theme.Colors.Bad,
-		Size = UDim2.new(1, 0, 0, 26),
-		Position = UDim2.new(0.5, 0, 1, 4),
-		AnchorPoint = Vector2.new(0.5, 0),
-		ZIndex = 5,
-		Parent = pill.frame,
+		Align = "Right",
+		Size = UDim2.fromOffset(FLOAT_WIDTH, 26),
+		Position = UDim2.new(0, -6, 0.5, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
+		ZIndex = 7,
+		Parent = pill.row,
 	})
 	local stroke = text:FindFirstChildOfClass("UIStroke") :: UIStroke
 	local info = TweenInfo.new(UIConfig.Hud.FloatSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(text, info, { Position = UDim2.new(0.5, 0, 1, 34), TextTransparency = 1 }):Play()
+	TweenService:Create(text, info, { Position = UDim2.new(0, -6, 0.5, -FLOAT_RISE), TextTransparency = 1 }):Play()
 	local fade = TweenService:Create(stroke, info, { Transparency = 1 })
 	fade.Completed:Connect(function()
 		text:Destroy()
@@ -75,72 +94,118 @@ local function update(pill: Pill, value: any, sound: string?)
 	end
 end
 
-local function makePill(id: string, icon: string, color: Color3, order: number, onClick: (() -> ())?): Pill
-	local frame = Panel.new({ Name = id, Size = UDim2.fromOffset(WIDTH[id], Theme.TOUCH), Gems = false, BorderThickness = 3, LayoutOrder = order, Parent = row })
+-- Sizes one bar for the current layout (dims = CONFIG.Normal or CONFIG.Compact).
+local function size(pill: Pill, dims: any, width: number)
+	local iconSize, barHeight = dims.Icon, dims.Bar
+	local barLeft = math.floor(iconSize * ICON_OVERLAP)
+	local trackLeft = math.floor(iconSize * TRACK_INSET)
+	pill.row.Size = UDim2.fromOffset(width, iconSize)
+	pill.icon.Size = UDim2.fromOffset(iconSize, iconSize)
+	pill.bar.Position = UDim2.new(0, barLeft, 0.5, 0)
+	pill.bar.Size = UDim2.new(1, -barLeft, 0, barHeight)
+	pill.track.Position = UDim2.new(0, trackLeft, 0.5, 0)
+	pill.track.Size = UDim2.new(1, -(trackLeft + PLUS_AREA), 1, -10)
+	-- the amount starts right of the icon
+	local textLeft = iconSize + 4 - barLeft - trackLeft
+	pill.label.Position = UDim2.new(0, textLeft, 0.5, 0)
+	pill.label.Size = UDim2.new(1, -(textLeft + 8), 1, -4)
+	local plusSize = math.floor(barHeight * 0.55)
+	pill.plus.Size = UDim2.fromOffset(plusSize, plusSize)
+end
+
+local function makePill(id: string, order: number): Pill
+	local config = CONFIG[id]
+	local row = Instance.new("Frame")
+	row.Name = id
+	row.BackgroundTransparency = 1
+	row.LayoutOrder = order
 	local pop = Instance.new("UIScale")
-	pop.Parent = frame
-	Icons.create(icon, frame, { Size = UDim2.new(0, 0, 0.7, 0), Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
-	local label = Theme.text({ Name = "Amount", Font = "Number", TextSize = 28, Color = color, Align = "Left", Size = UDim2.new(1, -56, 0.72, 0), Position = UDim2.new(0, 48, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = frame })
+	pop.Parent = row
+
+	local bar = Instance.new("Frame")
+	bar.Name = "Bar"
+	bar.AnchorPoint = Vector2.new(0, 0.5)
+	bar.BackgroundColor3 = WHITE
+	bar.BorderSizePixel = 0
+	bar.ZIndex = 1
+	Theme.gradient(bar, Theme.Colors.WoodLight, Theme.Colors.WoodTop)
+	Theme.round(bar)
+	Theme.stroke(bar, Theme.Colors.Ink, 2.5)
+	bar.Parent = row
+
+	local track = Instance.new("Frame")
+	track.Name = "Track"
+	track.AnchorPoint = Vector2.new(0, 0.5)
+	track.BackgroundColor3 = Theme.Colors.WoodInset
+	track.BorderSizePixel = 0
+	track.ZIndex = 2
+	Theme.round(track)
+	Theme.stroke(track, Theme.Colors.WoodLine, 1.5)
+	track.Parent = bar
+
+	local label = Theme.text({ Name = "Amount", Font = "Number", Text = "0", TextSize = 28, Color = WHITE, StrokeThickness = 2, Align = "Right", AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3, Parent = track })
+	local plus = Icons.create("Plus", bar, { Position = UDim2.new(1, -PLUS_AREA / 2, 0.5, 0), Color = WHITE, ZIndex = 3 })
+	plus.Name = "Plus"
+	local icon = Icons.create(config.Icon, row, { Position = UDim2.fromScale(0, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
+
+	local tap = Instance.new("TextButton")
+	tap.Name = "Tap"
+	tap.Text = ""
+	tap.AutoButtonColor = false
+	tap.BackgroundTransparency = 1
+	tap.Size = UDim2.fromScale(1, 1)
+	tap.ZIndex = 6
+	tap.Activated:Connect(function()
+		Sfx.play("UIClick")
+		Window.open("Shop", config.ShopTab)
+	end)
+	tap.Parent = row
+
 	local value = Instance.new("NumberValue")
-	value.Parent = frame
+	value.Parent = row
 	value.Changed:Connect(function(v)
 		label.Text = Format.number(v)
 	end)
-	label.Text = "0"
-	if onClick then
-		local hit = Instance.new("TextButton")
-		hit.Name = "Tap"
-		hit.Text = ""
-		hit.BackgroundTransparency = 1
-		hit.Size = UDim2.fromScale(1, 1)
-		hit.ZIndex = 4
-		hit.Activated:Connect(function()
-			Sfx.play("UIClick")
-			onClick()
-		end)
-		hit.Parent = frame
-	end
-	return { frame = frame, label = label, value = value, pop = pop, target = nil, color = color, tween = nil }
+	row.Parent = stack
+	return { row = row, bar = bar, track = track, label = label, icon = icon, plus = plus, value = value, pop = pop, target = nil, tween = nil }
 end
 
 local function layout()
 	local compact = Theme.isCompact()
-	if compact then
-		row.AnchorPoint = Vector2.zero
-		row.Position = UDim2.fromOffset(12, 66)
-	else
-		row.AnchorPoint = Vector2.new(1, 0)
-		row.Position = UDim2.new(1, -12, 0, 10)
+	local dims = if compact then CONFIG.Compact else CONFIG.Normal
+	list.Padding = UDim.new(0, dims.Gap)
+	local widest = 0
+	for _, id in ipairs(CONFIG.Order) do
+		local width = if compact then CONFIG[id].CompactWidth else CONFIG[id].Width
+		size(pills[id], dims, width)
+		widest = math.max(widest, width)
 	end
-	for id, pill in pairs(pills) do
-		pill.frame.Size = UDim2.fromOffset(if compact then COMPACT_WIDTH[id] else WIDTH[id], Theme.TOUCH)
-	end
+	local count = #CONFIG.Order
+	stack.Size = UDim2.fromOffset(widest, count * dims.Icon + (count - 1) * dims.Gap)
+	stack.Position = UDim2.new(1, -MARGIN, 0, dims.Top)
 end
 
 function Currencies:Start()
-	row = Instance.new("Frame")
-	row.Name = "Currencies"
-	row.BackgroundTransparency = 1
-	row.AutomaticSize = Enum.AutomaticSize.XY
-	row.Size = UDim2.fromOffset(0, Theme.TOUCH)
-	local list = Instance.new("UIListLayout")
-	list.FillDirection = Enum.FillDirection.Horizontal
-	list.Padding = UDim.new(0, GAP)
+	stack = Instance.new("Frame")
+	stack.Name = "Currencies"
+	stack.BackgroundTransparency = 1
+	stack.AnchorPoint = Vector2.new(1, 0)
+	list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Vertical
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	list.SortOrder = Enum.SortOrder.LayoutOrder
-	list.Parent = row
-	row.Parent = Screens.hud()
-	pills.Gold = makePill("Gold", "Gold", Theme.Colors.Gold, 1, nil)
-	pills.Diamonds = makePill("Diamonds", "Diamond", Theme.Colors.Diamond, 2, function()
-		Window.open("Shop", "Diamonds")
-	end)
+	list.Parent = stack
+	stack.Parent = Screens.hud()
+	for order, id in ipairs(CONFIG.Order) do
+		pills[id] = makePill(id, order)
+	end
 	layout()
 	Theme.Changed:Connect(layout)
-	State.observe("Gold", function(value)
-		update(pills.Gold, value, "GoldPickup")
-	end)
-	State.observe("Diamonds", function(value)
-		update(pills.Diamonds, value, "GoldPickup")
-	end)
+	for _, id in ipairs(CONFIG.Order) do
+		State.observe(id, function(value)
+			update(pills[id], value, CONFIG[id].Sound)
+		end)
+	end
 end
 
 return Currencies

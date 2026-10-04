@@ -171,7 +171,12 @@ What was built (all in `src/`, mirrored from Studio):
   Bar, Slot, Tabs, Slider, Toggle, Badge, Toast, Window, Icons (placeholder shapes; put image ids in
   `Icons.Assets`), Screens.
 * **HUD** (`GameClient/UI/`): HealthBar (+ low-HP vignette, hides CoreGui Health/Backpack), Currencies
-  (count-up, pop, +/- float; Diamonds pill opens Shop > Diamonds), ZoneBanner (+ 2 s title card +
+  (restyled 00:50 on the owner's reference image: Gold and Diamonds bars stacked at the top-right on
+  every device, a big round icon over the left end of a dark wooden pill, white amount with a dark
+  stroke that shrinks to fit, "+" end cap; Gold is longer (270 vs 200 design units) so "999.99Qa"
+  fits; tapping a bar opens the Shop on its tab, Gold -> Weapons, Diamonds -> Diamonds; sizes and
+  tabs in `Config/UI` `Currencies`; count-up, pop, and a +/- float left of the bar. On phones the
+  Menu button and the admin crown moved under the health bar; screenshots 14-17), ZoneBanner (+ 2 s title card +
   Zone Boost badge "Weapon + n/3 Armor"), Equipment (weapon + 3 pet slots), MenuBar (9 buttons with
   badges; left column on PC, 2 columns on tablets or when one column does not fit, Menu popup on
   phones), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get

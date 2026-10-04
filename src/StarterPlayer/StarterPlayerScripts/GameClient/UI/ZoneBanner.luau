@@ -23,9 +23,9 @@ local ZoneBanner = { Priority = 10 }
 
 local SIZE = { Normal = Vector2.new(380, 62), Compact = Vector2.new(300, 52) }
 local BOOST_SIZE = Vector2.new(300, 40)
--- Widest top-corner block (Gold + Diamonds pills on the right) plus a gap; on narrow screens
--- (4:3 tablets) the banner shrinks so it never reaches them.
-local SIDE_RESERVED = 352
+-- Widest top-corner block (the health bar on the left: 12 + 300; the currency bars on the right
+-- are 12 + 270) plus a gap; on narrow screens (4:3 tablets) the banner shrinks to stay clear.
+local SIDE_RESERVED = 322
 local MIN_WIDTH = 200
 
 local banner: Frame

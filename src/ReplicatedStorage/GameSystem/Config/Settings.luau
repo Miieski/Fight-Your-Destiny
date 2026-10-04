@@ -45,7 +45,7 @@ Settings.BUTTON_IDS = { "Attack", "Roll", "Block" }
 Settings.BUTTON_LAYOUT_DEFAULT = {
 	Attack = { X = 0.80, Y = 0.60, Size = 88 },
 	Roll = { X = 0.74, Y = 0.86, Size = 64 },
-	Block = { X = 0.93, Y = 0.42, Size = 64 },
+	Block = { X = 0.93, Y = 0.48, Size = 64 },
 }
 Settings.BUTTON_SIZE = { Min = 56, Max = 140, Step = 8 }
 Settings.BUTTON_POSITION_MARGIN = 0.03 -- keep button centers this far from the screen edges

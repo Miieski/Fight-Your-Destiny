@@ -25,7 +25,7 @@ local Window = require(Kit.Window)
 local AdminPanel = { Priority = 13 }
 
 local CELL = Vector2.new(150, 56)
-local TOP = { Normal = 72, Compact = 10 }
+local TOP = { Normal = 146, Compact = 130 } -- under the currency bars (right) / under the Menu button (left, phones)
 
 local function send(command: string, ...: any)
 	local ok, message = Net.request("Admin", command, ...)
@@ -201,7 +201,13 @@ local function build()
 		Window.toggle("Admin")
 	end })
 	local function layout()
-		crown.Instance.Position = UDim2.new(1, -12, 0, if Theme.isCompact() then TOP.Compact else TOP.Normal)
+		if Theme.isCompact() then
+			crown.Instance.AnchorPoint = Vector2.zero
+			crown.Instance.Position = UDim2.fromOffset(12, TOP.Compact)
+		else
+			crown.Instance.AnchorPoint = Vector2.new(1, 0)
+			crown.Instance.Position = UDim2.new(1, -12, 0, TOP.Normal)
+		end
 	end
 	layout()
 	Theme.Changed:Connect(layout)

@@ -16,7 +16,7 @@ local MenuBar = { Priority = 11 }
 
 local TILE = 58
 local GAP = 5
-local TOP = { Normal = 72, Compact = 128 } -- below the health bar (and the currencies on phones)
+local TOP = { Normal = 72, Compact = 66 } -- below the health bar
 local POPUP_COLUMNS = 3
 local BOTTOM_MARGIN = 12
 

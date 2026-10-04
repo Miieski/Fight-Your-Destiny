@@ -58,6 +58,17 @@ UI.Hud = {
 	PetSlots = 3,
 }
 
+-- Gold and Diamonds bars (top-right, stacked in Order). Sizes in design units: Icon is the round
+-- icon over the left end of the pill, Bar the pill height. Gold is longer for K/M/B/T/Qa amounts;
+-- the amount shrinks to fit when it is still too long. The bar's "+" opens the Shop on ShopTab.
+UI.Currencies = {
+	Order = { "Gold", "Diamonds" }, -- profile keys
+	Normal = { Icon = 62, Bar = 44, Gap = 4, Top = 8 },
+	Compact = { Icon = 56, Bar = 38, Gap = 4, Top = 8 },
+	Gold = { Icon = "Gold", Width = 270, CompactWidth = 226, ShopTab = "Weapons", Sound = "GoldPickup" },
+	Diamonds = { Icon = "Diamond", Width = 200, CompactWidth = 170, ShopTab = "Diamonds", Sound = "GoldPickup" },
+}
+
 UI.Toast = {
 	MaxVisible = 4,
 	Seconds = 3,
