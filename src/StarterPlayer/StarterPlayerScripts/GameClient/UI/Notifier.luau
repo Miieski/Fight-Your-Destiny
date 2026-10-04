@@ -17,7 +17,8 @@ local Toast = require(script.Parent.Kit.Toast)
 
 local Notifier = { Priority = 3 }
 
-local TOP = { Normal = 124, Compact = 112 } -- below the zone banner and the Zone Boost badge
+local GAP_BELOW = 8 -- under the zone banner + Zone Boost badge (ZoneBanner publishes their bottom)
+local FALLBACK_TOP = { Normal = 124, Compact = 114 } -- until ZoneBanner has published it
 local BOTTOM_RESERVED = 140 -- the weapon and pet slots (with the weapon name) at the bottom
 local DISPLAY_ORDER = 30 -- above the windows (20), so "Not enough Gold" shows over the Shop
 local SHAKE = 8
@@ -36,16 +37,24 @@ local function getHolder(): Frame
 end
 
 -- As many toasts as fit between the banner and the slots, at most MaxVisible.
+local function stackTop(): number
+	local bottom = Screens.hud():GetAttribute("TopCenterBottom")
+	if typeof(bottom) == "number" then
+		return bottom + GAP_BELOW
+	end
+	return if Theme.isCompact() then FALLBACK_TOP.Compact else FALLBACK_TOP.Normal
+end
+
 local function maxVisible(): number
 	local config = UIConfig.Toast
-	local top = if Theme.isCompact() then TOP.Compact else TOP.Normal
+	local top = stackTop()
 	local fits = math.floor((Theme.size().Y - top - BOTTOM_RESERVED + config.Gap) / (config.Height + config.Gap))
 	return math.clamp(fits, 1, config.MaxVisible)
 end
 
 local function targetY(index: number): number
 	local config = UIConfig.Toast
-	return (if Theme.isCompact() then TOP.Compact else TOP.Normal) + (index - 1) * (config.Height + config.Gap)
+	return stackTop() + (index - 1) * (config.Height + config.Gap)
 end
 
 local function textOf(entry: Entry): string
@@ -182,6 +191,7 @@ function Notifier:Start()
 	getHolder()
 	Net.on("Notify", Notifier.push)
 	Theme.Changed:Connect(relayout)
+	Screens.hud():GetAttributeChangedSignal("TopCenterBottom"):Connect(relayout)
 end
 
 return Notifier

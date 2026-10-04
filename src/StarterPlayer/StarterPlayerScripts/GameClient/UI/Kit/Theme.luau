@@ -3,6 +3,7 @@
 -- Every ScreenGui is created with Theme.screen(); its "Root" frame is measured in design units
 -- (Config/UI Scale), so one layout fits a phone and a 1080p monitor.
 local CollectionService = game:GetService("CollectionService")
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -231,6 +232,7 @@ local function ensureMeasure()
 	gui.Parent = playerGui()
 	measure = gui
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(recompute)
+	GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(recompute)
 end
 
 function Theme.getScale(): number
@@ -260,6 +262,20 @@ function Theme.limit(target: GuiObject, max: number, min: number?): UITextSizeCo
 	limit:AddTag(TEXT_LIMIT_TAG)
 	limit.Parent = target
 	return limit
+end
+
+-- Phones (compact layout) lift top-center and top-right HUD pieces into the Roblox top bar strip,
+-- which is free right of the Roblox buttons (GuiService.TopbarInset). Returns how far up, in design
+-- units, a piece whose left edge is at leftX (design units) may move: 0 when the layout is not
+-- compact or when the piece would reach the Roblox buttons.
+local TOPBAR_GAP = 8 -- pixels kept between a lifted piece and the Roblox buttons
+
+function Theme.topbarLift(leftX: number): number
+	local inset = GuiService.TopbarInset
+	if not compact or inset.Height <= 0 or leftX * scale < inset.Min.X + TOPBAR_GAP then
+		return 0
+	end
+	return inset.Height / scale
 end
 
 function Theme.setUserScale(value: number)

@@ -188,12 +188,21 @@ What was built (all in `src/`, mirrored from Studio):
   (health bar now 270 wide, `Config/UI Hud.Health`); phones keep the Menu pop-up, now the same 2 x 4
   grid, with the gear beside the Menu button; screenshots 18-20. Owner, 01:10: on PC (no touch) the
   tiles are 40% bigger (`MenuGrid.PcTile` 80) and the grid sits at the vertical middle of the left
-  edge; tablets unchanged; screenshots 21-23), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
+  edge; screenshots 21-23. Owner, 01:20: tablets centered vertically too (tile size unchanged);
+  screenshot 25), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
   diamonds" confirm -> GoToHub), Pages/SettingsPage (Audio, Display, Controls, Other), AdminPanel
   (crown button / F2: Money, Teleport, UI Test tabs).
 * **Controllers:** SettingsController (applies locally, saves debounced via SetSetting; volumes go to
   the SoundGroups Master > Music/PlayerFX/EnemyFX/UI/Ambient), ControlsController (CAS binds + touch
   Attack/Roll/Block buttons + layout editor), FxController (LowFx, screen shake).
+
+Phone top bar lift (owner, 01:20): in the compact layout the zone banner + Zone Boost badge and the
+currency bars move up into the Roblox top bar strip, which is free right of the Roblox buttons
+(`Theme.topbarLift(leftX)` reads `GuiService.TopbarInset`; it returns 0 when a piece would reach the
+Roblox buttons). ZoneBanner publishes the bottom of its stack as the `TopCenterBottom` attribute on
+the HUD root and the toasts stack under it. Finger taps reach the lifted bars (hit-testing checked),
+but gamepad selection skips pieces that sit entirely in the strip (the Gold bar on phones), because
+they are outside the HUD ScreenGui's bounds. Screenshot 24.
 
 Scaling rule: every ScreenGui comes from `Theme.screen()`; its `Root` is in design units with a
 UIScale `s = clamp(safeHeight/660, 0.6, 1.4) * UiScale` (min 0.8 on touch); compact (phone) layout

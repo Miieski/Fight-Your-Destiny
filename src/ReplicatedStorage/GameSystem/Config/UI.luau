@@ -23,8 +23,8 @@ UI.Menu = {
 	{ Id = "Team", Label = "Team", Icon = "Team" },
 	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
 }
--- 8 buttons -> 4 rows. On PC (no touch) the grid uses PcTile / PcGap and sits at the vertical middle
--- of the left edge; tablets keep Tile / Gap under the health bar; phones use the Menu pop-up.
+-- 8 buttons -> 4 rows at the vertical middle of the left edge. PC (no touch) uses PcTile / PcGap,
+-- tablets Tile / Gap; phones use the Menu pop-up.
 UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5, PcTile = 80, PcGap = 6 }
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.

@@ -23,6 +23,10 @@ local ZoneBanner = { Priority = 10 }
 
 local SIZE = { Normal = Vector2.new(380, 62), Compact = Vector2.new(300, 52) }
 local BOOST_SIZE = Vector2.new(300, 40)
+local BANNER_TOP = 8
+local BOOST_GAP = 6
+-- Attribute on the HUD root: bottom of the banner + badge space (design units); the toasts stack under it.
+local STACK_BOTTOM = "TopCenterBottom"
 -- Widest top-corner block plus a gap: on the left the health bar and the Settings gear
 -- (12 + 270 + 8 + 58); the currency bars on the right are 12 + 270. On narrow screens (4:3 tablets)
 -- the banner shrinks to stay clear.
@@ -143,7 +147,12 @@ local function layout()
 	local size = if compact then SIZE.Compact else SIZE.Normal
 	local width = if compact then size.X else math.clamp(Theme.size().X - 2 * SIDE_RESERVED, MIN_WIDTH, size.X)
 	banner.Size = UDim2.fromOffset(width, size.Y)
-	boost.Position = UDim2.new(0.5, 0, 0, size.Y + 14)
+	-- phones: banner and badge move up into the Roblox top bar strip when it is free there
+	local top = BANNER_TOP - Theme.topbarLift((Theme.size().X - width) / 2)
+	banner.Position = UDim2.new(0.5, 0, 0, top)
+	boost.Position = UDim2.new(0.5, 0, 0, top + size.Y + BOOST_GAP)
+	-- the badge space is kept even while the badge is hidden, so the toasts do not jump
+	Screens.hud():SetAttribute(STACK_BOTTOM, top + size.Y + BOOST_GAP + BOOST_SIZE.Y)
 end
 
 function ZoneBanner:Start()

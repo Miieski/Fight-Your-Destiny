@@ -182,7 +182,8 @@ local function layout()
 	end
 	local count = #CONFIG.Order
 	stack.Size = UDim2.fromOffset(widest, count * dims.Icon + (count - 1) * dims.Gap)
-	stack.Position = UDim2.new(1, -MARGIN, 0, dims.Top)
+	-- phones: the bars move up into the Roblox top bar strip when it is free there
+	stack.Position = UDim2.new(1, -MARGIN, 0, dims.Top - Theme.topbarLift(Theme.size().X - MARGIN - widest))
 end
 
 function Currencies:Start()

@@ -1,7 +1,6 @@
 --!strict
 -- HUD 6 + 8: menu buttons with red badges, in a grid MenuGrid.Columns wide filled row by row
--- (8 buttons -> 4 rows). On PC the tiles are bigger (PcTile) and the grid sits at the vertical middle
--- of the left edge; on tablets it sits under the health bar. Entries marked Apart
+-- (8 buttons -> 4 rows) at the vertical middle of the left edge, with bigger tiles on PC (PcTile). Entries marked Apart
 -- in Config/UI Menu (Settings) are separate icon buttons right of the health bar. On phones the grid
 -- lives in a pop-up opened by a single Menu button, with the Apart buttons beside that button.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -75,8 +74,8 @@ local function layout()
 	columnGrid.CellSize = UDim2.fromOffset(tile, tile)
 	columnGrid.CellPadding = UDim2.fromOffset(gap, gap)
 	column.Size = UDim2.fromOffset(size.X, size.Y)
-	-- PC: vertical middle of the left edge, never above the spot under the health bar
-	local top = if pc then math.max(TOP.Normal, math.floor((Theme.size().Y - size.Y) / 2)) else TOP.Normal
+	-- vertical middle of the left edge, never above the spot under the health bar
+	local top = math.max(TOP.Normal, math.floor((Theme.size().Y - size.Y) / 2))
 	column.Position = UDim2.fromOffset(MARGIN, top)
 	toggle.Instance.Position = UDim2.fromOffset(MARGIN, TOP.Compact)
 	-- Apart buttons: right of the health bar (centered on it), or right of the Menu button on phones
