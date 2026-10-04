@@ -149,7 +149,15 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (22:55). Zone 11 (Mechanical City, id `Mechanical`) is built (4,756 parts +
+**Updated 2026-10-05 (00:00). THE WORLD IS COMPLETE: Hub + all 12 zones are built, validated and
+checked in Play, each with its kit catalog (`docs/ASSET_KIT_*.md`), lighting presets and a boss
+arena in `ServerStorage.BossArenas` (12 arenas). Zone 12 (Void) was the last: 11,728 parts + arena
+1,578; its arena floor is 8 pie sections (`FloorSections/Section1..8`) over an invisible `SafetyNet`
+for the Void Collapse pattern. Next phases per the owner's plan: (1) real enemy and boss models
+(Blender -> owner's 3D Importer), (2) full gameplay scripts. Open: owner review, Blender landmarks
+for Heaven and zones 9-12, owner's landmark import, sounds never auditioned.**
+
+**Earlier (22:55). Zone 11 (Mechanical City, id `Mechanical`) is built (4,756 parts +
 arena 643), validated and checked in Play (all 4 sub-zones + arena readable; sub-zones 2-4 are
 light on parts but clean, more dressing optional). The owner changed Claude and GitHub accounts
 on 2026-10-04: pushes still go through the Miieski credential (fallback account: KodElse); the
