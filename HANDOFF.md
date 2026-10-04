@@ -149,9 +149,13 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (19:00). Zones 6-8 (Volcano, Hell, Heaven) are BUILT and validated, arenas in
-`ServerStorage.BossArenas`, catalogs in `docs/ASSET_KIT_*.md`. The Play walk-through of these three
-zones is the next step (see the notes below this block once it is done). Zones 9-12 (Dead, Abyss,
+**Updated 2026-10-04 (19:10). Hub + zones 1-8 are built, validated (0 FAIL lines, 69,177 zone parts)
+and walked in Play. Zones 6-8 (Volcano, Hell, Heaven) were walked on 2026-10-04 evening with the
+admin teleport buttons: Volcano 1-3 + arena, Hell 1, 2, 4 + arena, Heaven 1, 3, 4 + arena all read
+well in Play (no glare in Heaven, Hell dark but readable). NOT seen in Play: Volcano_4 itself,
+Hell_3, Heaven_2. Fix made after the walk: placeholder enemy tints for Hell (bone white) and
+Heaven (blue), which blended into their zones. WAITING for the owner's review: do not start
+zones 9-12 until they say go. Zones 9-12 (Dead, Abyss,
 Mechanical, Void) only have folders and markers and must NOT be started until the owner says go.
 The admin panel also has teleport buttons for every zone (sub-zone 1-4 or the boss arena).
 `Blender_Exports/` now has 29 FBX (Hub + zones 1-7); the 4 Heaven landmarks are not made yet.**
