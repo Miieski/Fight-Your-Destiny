@@ -1,0 +1,131 @@
+{
+ "name": "Swamp_4_GiantCauldron",
+ "target": [
+  50,
+  50,
+  34
+ ],
+ "size": [
+  49.2,
+  44.0,
+  36.9
+ ],
+ "triangles": 1944,
+ "objects": [
+  {
+   "object": "Swamp_4_GiantCauldron__Swamp_BarkDark",
+   "color": "Swamp_BarkDark",
+   "rgb": [
+    50,
+    38,
+    32
+   ],
+   "triangles": 224,
+   "verts": 132,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Swamp_Wood",
+   "color": "Swamp_Wood",
+   "rgb": [
+    104,
+    76,
+    52
+   ],
+   "triangles": 212,
+   "verts": 126,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Neon_Common_Fire",
+   "color": "Neon_Common_Fire",
+   "rgb": [
+    255,
+    140,
+    40
+   ],
+   "triangles": 180,
+   "verts": 110,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Common_Stone",
+   "color": "Common_Stone",
+   "rgb": [
+    150,
+    156,
+    168
+   ],
+   "triangles": 264,
+   "verts": 144,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Common_Iron",
+   "color": "Common_Iron",
+   "rgb": [
+    92,
+    98,
+    110
+   ],
+   "triangles": 256,
+   "verts": 132,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Common_StoneDark",
+   "color": "Common_StoneDark",
+   "rgb": [
+    104,
+    110,
+    124
+   ],
+   "triangles": 340,
+   "verts": 212,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 20
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Neon_Swamp_Toxic",
+   "color": "Neon_Swamp_Toxic",
+   "rgb": [
+    140,
+    255,
+    90
+   ],
+   "triangles": 276,
+   "verts": 168,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_4_GiantCauldron__Neon_Swamp_Magic",
+   "color": "Neon_Swamp_Magic",
+   "rgb": [
+    170,
+    80,
+    255
+   ],
+   "triangles": 192,
+   "verts": 128,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

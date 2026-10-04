@@ -1,0 +1,131 @@
+{
+ "name": "Tundra_2_FrozenShip",
+ "target": [
+  110,
+  40,
+  60
+ ],
+ "size": [
+  114.2,
+  42.2,
+  61.2
+ ],
+ "triangles": 3876,
+ "objects": [
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_Wood",
+   "color": "Tundra_Wood",
+   "rgb": [
+    134,
+    92,
+    66
+   ],
+   "triangles": 566,
+   "verts": 295,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_Trunk",
+   "color": "Tundra_Trunk",
+   "rgb": [
+    92,
+    66,
+    54
+   ],
+   "triangles": 1050,
+   "verts": 609,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_Snow",
+   "color": "Tundra_Snow",
+   "rgb": [
+    244,
+    248,
+    255
+   ],
+   "triangles": 388,
+   "verts": 212,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_Ice",
+   "color": "Tundra_Ice",
+   "rgb": [
+    150,
+    214,
+    250
+   ],
+   "triangles": 952,
+   "verts": 570,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_SnowShade",
+   "color": "Tundra_SnowShade",
+   "rgb": [
+    206,
+    222,
+    246
+   ],
+   "triangles": 60,
+   "verts": 36,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_IceDeep",
+   "color": "Tundra_IceDeep",
+   "rgb": [
+    84,
+    160,
+    232
+   ],
+   "triangles": 366,
+   "verts": 207,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Tundra_Frost",
+   "color": "Tundra_Frost",
+   "rgb": [
+    214,
+    236,
+    255
+   ],
+   "triangles": 446,
+   "verts": 247,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_2_FrozenShip__Common_Iron",
+   "color": "Common_Iron",
+   "rgb": [
+    92,
+    98,
+    110
+   ],
+   "triangles": 48,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

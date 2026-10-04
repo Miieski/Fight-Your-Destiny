@@ -1,0 +1,117 @@
+{
+ "name": "Swamp_1_SunkenTrunk",
+ "target": [
+  110,
+  40,
+  45
+ ],
+ "size": [
+  110.0,
+  43.7,
+  45.7
+ ],
+ "triangles": 1741,
+ "objects": [
+  {
+   "object": "Swamp_1_SunkenTrunk__Swamp_Bark",
+   "color": "Swamp_Bark",
+   "rgb": [
+    78,
+    58,
+    44
+   ],
+   "triangles": 675,
+   "verts": 403,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 7
+  },
+  {
+   "object": "Swamp_1_SunkenTrunk__Swamp_BarkDark",
+   "color": "Swamp_BarkDark",
+   "rgb": [
+    50,
+    38,
+    32
+   ],
+   "triangles": 272,
+   "verts": 170,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_1_SunkenTrunk__Swamp_Wood",
+   "color": "Swamp_Wood",
+   "rgb": [
+    104,
+    76,
+    52
+   ],
+   "triangles": 174,
+   "verts": 111,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_1_SunkenTrunk__Swamp_MossDark",
+   "color": "Swamp_MossDark",
+   "rgb": [
+    56,
+    90,
+    46
+   ],
+   "triangles": 60,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_1_SunkenTrunk__Swamp_Mud",
+   "color": "Swamp_Mud",
+   "rgb": [
+    92,
+    76,
+    50
+   ],
+   "triangles": 140,
+   "verts": 74,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_1_SunkenTrunk__Swamp_Moss",
+   "color": "Swamp_Moss",
+   "rgb": [
+    92,
+    130,
+    58
+   ],
+   "triangles": 120,
+   "verts": 72,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_1_SunkenTrunk__Neon_Swamp_MushroomGlow",
+   "color": "Neon_Swamp_MushroomGlow",
+   "rgb": [
+    120,
+    255,
+    210
+   ],
+   "triangles": 300,
+   "verts": 180,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Hollow end (right side, +X): the opening is about 20 wide x 14 high above the ground, 26 deep, dark inside.",
+ "anchors": {}
+}

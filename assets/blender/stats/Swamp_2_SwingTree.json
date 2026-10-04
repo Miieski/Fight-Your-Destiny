@@ -1,0 +1,117 @@
+{
+ "name": "Swamp_2_SwingTree",
+ "target": [
+  80,
+  70,
+  85
+ ],
+ "size": [
+  86.7,
+  64.1,
+  84.7
+ ],
+ "triangles": 2606,
+ "objects": [
+  {
+   "object": "Swamp_2_SwingTree__Swamp_Mud",
+   "color": "Swamp_Mud",
+   "rgb": [
+    92,
+    76,
+    50
+   ],
+   "triangles": 88,
+   "verts": 46,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_2_SwingTree__Swamp_Bark",
+   "color": "Swamp_Bark",
+   "rgb": [
+    78,
+    58,
+    44
+   ],
+   "triangles": 1408,
+   "verts": 788,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_2_SwingTree__Swamp_BarkDark",
+   "color": "Swamp_BarkDark",
+   "rgb": [
+    50,
+    38,
+    32
+   ],
+   "triangles": 340,
+   "verts": 206,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_2_SwingTree__Swamp_Bone",
+   "color": "Swamp_Bone",
+   "rgb": [
+    222,
+    214,
+    190
+   ],
+   "triangles": 174,
+   "verts": 121,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_2_SwingTree__Swamp_MossDark",
+   "color": "Swamp_MossDark",
+   "rgb": [
+    56,
+    90,
+    46
+   ],
+   "triangles": 492,
+   "verts": 328,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_2_SwingTree__Common_Rope",
+   "color": "Common_Rope",
+   "rgb": [
+    196,
+    160,
+    104
+   ],
+   "triangles": 92,
+   "verts": 56,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_2_SwingTree__Swamp_Wood",
+   "color": "Swamp_Wood",
+   "rgb": [
+    104,
+    76,
+    52
+   ],
+   "triangles": 12,
+   "verts": 8,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

@@ -1,0 +1,123 @@
+{
+ "name": "Tundra_3_IceCavePeak",
+ "target": [
+  130,
+  80,
+  110
+ ],
+ "size": [
+  132.6,
+  77.6,
+  110.0
+ ],
+ "triangles": 1582,
+ "objects": [
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_Rock",
+   "color": "Tundra_Rock",
+   "rgb": [
+    118,
+    128,
+    150
+   ],
+   "triangles": 144,
+   "verts": 84,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_RockDark",
+   "color": "Tundra_RockDark",
+   "rgb": [
+    78,
+    86,
+    110
+   ],
+   "triangles": 348,
+   "verts": 192,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_IceDark",
+   "color": "Tundra_IceDark",
+   "rgb": [
+    52,
+    104,
+    180
+   ],
+   "triangles": 48,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_IceDeep",
+   "color": "Tundra_IceDeep",
+   "rgb": [
+    84,
+    160,
+    232
+   ],
+   "triangles": 212,
+   "verts": 126,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_Snow",
+   "color": "Tundra_Snow",
+   "rgb": [
+    244,
+    248,
+    255
+   ],
+   "triangles": 464,
+   "verts": 250,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_Ice",
+   "color": "Tundra_Ice",
+   "rgb": [
+    150,
+    214,
+    250
+   ],
+   "triangles": 126,
+   "verts": 77,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_3_IceCavePeak__Tundra_SnowShade",
+   "color": "Tundra_SnowShade",
+   "rgb": [
+    206,
+    222,
+    246
+   ],
+   "triangles": 240,
+   "verts": 126,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Cave: real recess 33 wide x 30 high x 41 deep, 26 clear under the middle icicles; back side flat.",
+ "anchors": {
+  "CaveMouthFloor": [
+   2.63,
+   -34.49,
+   0.02
+  ]
+ }
+}

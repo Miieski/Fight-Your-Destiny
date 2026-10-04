@@ -94,6 +94,25 @@ PALETTE = {
         "Flower1": (255, 80, 140), "Flower2": (255, 170, 40), "Flower3": (190, 90, 255),
         "Bamboo": (150, 200, 80), "Totem": (196, 70, 50), "TotemAlt": (60, 170, 190),
     },
+    "Tundra": {
+        "Snow": (244, 248, 255), "SnowShade": (206, 222, 246), "Ice": (150, 214, 250), "IceDeep": (84, 160, 232),
+        "IceDark": (52, 104, 180), "Frost": (214, 236, 255), "PalePurple": (186, 170, 236), "Pine": (30, 86, 72),
+        "PineSnow": (226, 238, 248), "Trunk": (92, 66, 54), "Rock": (118, 128, 150), "RockDark": (78, 86, 110),
+        "Wood": (134, 92, 66), "Aurora": (110, 255, 200), "BlueFlame": (96, 190, 255), "Water": (70, 150, 214),
+    },
+    "Swamp": {
+        "Mud": (92, 76, 50), "MudDark": (64, 52, 38), "Moss": (92, 130, 58), "MossDark": (56, 90, 46),
+        "Water": (78, 112, 70), "WaterDeep": (48, 78, 56), "Bark": (78, 58, 44), "BarkDark": (50, 38, 32),
+        "DeadLeaf": (128, 120, 62), "Reed": (140, 150, 74), "Magic": (170, 80, 255), "MagicDark": (98, 44, 160),
+        "Firefly": (255, 232, 96), "Toxic": (140, 255, 90), "Wood": (104, 76, 52), "Lantern": (255, 196, 96),
+        "MushroomGlow": (120, 255, 210), "Bone": (222, 214, 190),
+    },
+    "Volcano": {
+        "Basalt": (52, 48, 54), "BasaltDark": (30, 28, 34), "BasaltLight": (84, 78, 84), "Ash": (128, 124, 126),
+        "AshLight": (170, 164, 162), "Lava": (255, 120, 30), "LavaHot": (255, 208, 70), "LavaCrust": (150, 40, 20),
+        "RedGlow": (255, 60, 40), "Obsidian": (24, 20, 34), "Ember": (255, 170, 60), "DeadWood": (70, 56, 50),
+        "Iron": (98, 96, 104), "Crystal": (255, 70, 70), "Wood": (110, 72, 52), "Steam": (232, 232, 232),
+    },
 }
 
 
@@ -529,6 +548,39 @@ class Model:
             a = math.radians(lerp(a0, a1, i / n))
             prof.append((r_in * math.cos(a), r_in * math.sin(a)))
         self.extrude(key, prof, depth, axis=axis, **kw)
+
+    def icicle(self, key, top, r, h, n=5, lean=(0.0, 0.0)):
+        """Icicle / stalactite hanging down from the point top (pointed, closed)."""
+        self.rings(key, [(0, r), (-h * 0.45, r * 0.55, r * 0.55, lean[0] * 0.4, lean[1] * 0.4),
+                         (-h, 0, 0, lean[0], lean[1])], n=n, loc=tuple(top))
+
+    def spike(self, key, base, r, h, n=5, rot=(0, 0, 0), waist=0.3):
+        """Crystal spike standing on base (widest at waist * h, pointed top)."""
+        self.rings(key, [(0, r * 0.6), (h * waist, r), (h, 0)], n=n, loc=tuple(base), rot=rot, phase=0)
+
+    def branch(self, key, p, d, L, r, depth, rng, out, bend=0.35, n=5, droop=0.0, spread=(0.5, 0.9), lift=(0.0, 0.5)):
+        """Crooked tapering dead-tree branch (3 segments) that forks into two children per level.
+        Appends (points, radii, depth) of every branch to the list out."""
+        pts, rad = [Vector(p)], [r]
+        d = Vector(d).normalized()
+        for i in range(3):
+            d = (d + Vector((rng.uniform(-bend, bend), rng.uniform(-bend, bend),
+                             rng.uniform(-bend * 0.5, bend) - droop))).normalized()
+            pts.append(pts[-1] + d * L / 3.0)
+            rad.append(r * (1.0 - 0.45 * (i + 1) / 3.0))
+        if depth == 0:
+            rad[-1] = 0.0
+        self.tube(key, pts, rad, n=n)
+        out.append((pts, rad, depth))
+        if depth > 0:
+            side = d.cross(Vector((0, 0, 1)))
+            if side.length < 1e-3:
+                side = Vector((1, 0, 0))
+            side.normalize()
+            for s in (-1, 1):
+                nd = (d + side * s * rng.uniform(*spread) + Vector((0, 0, rng.uniform(*lift)))).normalized()
+                self.branch(key, pts[-1], nd, L * rng.uniform(0.6, 0.8), rad[-1] * 0.9, depth - 1, rng, out,
+                            bend, n, droop, spread, lift)
 
     # -- output ----------------------------------------------------------------------------
     def bounds(self):

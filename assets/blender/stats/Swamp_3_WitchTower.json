@@ -1,0 +1,131 @@
+{
+ "name": "Swamp_3_WitchTower",
+ "target": [
+  40,
+  40,
+  95
+ ],
+ "size": [
+  39.0,
+  39.5,
+  95.1
+ ],
+ "triangles": 1828,
+ "objects": [
+  {
+   "object": "Swamp_3_WitchTower__Swamp_Bark",
+   "color": "Swamp_Bark",
+   "rgb": [
+    78,
+    58,
+    44
+   ],
+   "triangles": 512,
+   "verts": 332,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Swamp_BarkDark",
+   "color": "Swamp_BarkDark",
+   "rgb": [
+    50,
+    38,
+    32
+   ],
+   "triangles": 684,
+   "verts": 436,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Swamp_Wood",
+   "color": "Swamp_Wood",
+   "rgb": [
+    104,
+    76,
+    52
+   ],
+   "triangles": 180,
+   "verts": 120,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Neon_Swamp_Magic",
+   "color": "Neon_Swamp_Magic",
+   "rgb": [
+    170,
+    80,
+    255
+   ],
+   "triangles": 190,
+   "verts": 111,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Common_Iron",
+   "color": "Common_Iron",
+   "rgb": [
+    92,
+    98,
+    110
+   ],
+   "triangles": 80,
+   "verts": 48,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Neon_Swamp_Lantern",
+   "color": "Neon_Swamp_Lantern",
+   "rgb": [
+    255,
+    196,
+    96
+   ],
+   "triangles": 32,
+   "verts": 18,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Swamp_MagicDark",
+   "color": "Swamp_MagicDark",
+   "rgb": [
+    98,
+    44,
+    160
+   ],
+   "triangles": 70,
+   "verts": 37,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Swamp_3_WitchTower__Swamp_Moss",
+   "color": "Swamp_Moss",
+   "rgb": [
+    92,
+    130,
+    58
+   ],
+   "triangles": 80,
+   "verts": 48,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Platform at Z 23.8 on four stilts (players can walk under it); stairs: 12 steps of 2.0 high along the front.",
+ "anchors": {}
+}

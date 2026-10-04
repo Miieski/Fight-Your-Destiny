@@ -1,0 +1,117 @@
+{
+ "name": "Tundra_4_IceThrone",
+ "target": [
+  36,
+  30,
+  48
+ ],
+ "size": [
+  37.1,
+  34.2,
+  46.6
+ ],
+ "triangles": 958,
+ "objects": [
+  {
+   "object": "Tundra_4_IceThrone__Tundra_IceDeep",
+   "color": "Tundra_IceDeep",
+   "rgb": [
+    84,
+    160,
+    232
+   ],
+   "triangles": 166,
+   "verts": 97,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_4_IceThrone__Tundra_Frost",
+   "color": "Tundra_Frost",
+   "rgb": [
+    214,
+    236,
+    255
+   ],
+   "triangles": 112,
+   "verts": 70,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_4_IceThrone__Neon_Tundra_BlueFlame",
+   "color": "Neon_Tundra_BlueFlame",
+   "rgb": [
+    96,
+    190,
+    255
+   ],
+   "triangles": 196,
+   "verts": 128,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_4_IceThrone__Tundra_PalePurple",
+   "color": "Tundra_PalePurple",
+   "rgb": [
+    186,
+    170,
+    236
+   ],
+   "triangles": 48,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_4_IceThrone__Tundra_Ice",
+   "color": "Tundra_Ice",
+   "rgb": [
+    150,
+    214,
+    250
+   ],
+   "triangles": 252,
+   "verts": 142,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_4_IceThrone__Tundra_IceDark",
+   "color": "Tundra_IceDark",
+   "rgb": [
+    52,
+    104,
+    180
+   ],
+   "triangles": 104,
+   "verts": 62,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Tundra_4_IceThrone__Tundra_Snow",
+   "color": "Tundra_Snow",
+   "rgb": [
+    244,
+    248,
+    255
+   ],
+   "triangles": 80,
+   "verts": 48,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}
