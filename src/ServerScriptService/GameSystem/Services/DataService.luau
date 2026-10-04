@@ -32,9 +32,16 @@ function DataService:AddGold(player: Player, amount: number)
 	end
 end
 
+function DataService:AddDiamonds(player: Player, amount: number)
+	local profile = profiles[player]
+	if profile then
+		DataService:Set(player, "Diamonds", math.max(0, math.floor(profile.Diamonds + amount)))
+	end
+end
+
 function DataService:Init()
 	local function add(player: Player)
-		local profile = { Gold = Playtest.StartGold, SubZones = {}, CurrentZone = "Hub" }
+		local profile = { Gold = Playtest.StartGold, Diamonds = 0, SubZones = {}, CurrentZone = "Hub" }
 		profiles[player] = profile
 		Net.event("Data"):FireClient(player, profile)
 		if RunService:IsStudio() then

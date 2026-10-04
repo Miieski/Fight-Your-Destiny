@@ -10,6 +10,7 @@ local EVENTS = {
 	"Attack", -- client -> server: attack request (no arguments; the server decides everything)
 	"Hit", -- server -> client: position, damage, isCrit (damage numbers)
 	"Notify", -- server -> client: text, kind ("info" | "good" | "bad")
+	"Admin", -- client -> server: command name, amount (admins only, checked on the server)
 }
 
 local folder: Instance

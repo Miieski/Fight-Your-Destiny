@@ -16,12 +16,14 @@ local Hud = { Priority = 10 }
 local WOOD = Color3.fromRGB(74, 48, 32)
 local GOLD = Color3.fromRGB(255, 201, 60)
 local GOLD_BORDER = Color3.fromRGB(232, 180, 74)
+local DIAMOND = Color3.fromRGB(95, 212, 255)
 local KIND_COLORS = { info = Color3.new(1, 1, 1), good = Color3.fromRGB(91, 220, 110), bad = Color3.fromRGB(255, 96, 96) }
 local BASE_HEIGHT = 720 -- the layout is designed for this viewport height
 local BANNER_SECONDS = 2.5
 local NOTIFY_SECONDS = 2.5
 
 local goldLabel: TextLabel
+local diamondLabel: TextLabel
 local banner: TextLabel
 local notice: TextLabel
 local bannerToken, noticeToken = 0, 0
@@ -111,6 +113,22 @@ function Hud:Init()
 	goldLabel = label(panel, { Name = "Gold", Position = UDim2.fromOffset(48, 6), Size = UDim2.fromOffset(134, 36), TextColor3 = GOLD, TextXAlignment = Enum.TextXAlignment.Left, Text = "0" })
 	panel.Parent = gui
 
+	local diamondPanel = panel:Clone()
+	diamondPanel.Name = "DiamondPanel"
+	diamondPanel.Position = UDim2.fromOffset(12, 68)
+	local gem = diamondPanel:FindFirstChildOfClass("Frame") :: Frame
+	gem.BackgroundColor3 = DIAMOND
+	gem.Rotation = 45
+	gem.Size = UDim2.fromOffset(24, 24)
+	gem.Position = UDim2.fromOffset(12, 12)
+	local gemCorner = gem:FindFirstChildOfClass("UICorner") :: UICorner
+	gemCorner.CornerRadius = UDim.new(0, 4)
+	diamondLabel = diamondPanel:FindFirstChild("Gold") :: TextLabel
+	diamondLabel.Name = "Diamonds"
+	diamondLabel.TextColor3 = DIAMOND
+	diamondLabel.Text = "0"
+	diamondPanel.Parent = gui
+
 	banner = label(gui, { Name = "Banner", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 70), Size = UDim2.fromOffset(520, 56), Text = "", TextTransparency = 1 })
 	notice = label(gui, { Name = "Notice", AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -120), Size = UDim2.fromOffset(520, 40), Text = "", TextTransparency = 1 })
 	for _, hidden in ipairs({ banner, notice }) do
@@ -122,7 +140,11 @@ end
 function Hud:Start()
 	local player = Players.LocalPlayer
 	goldLabel.Text = Format.number(State.get("Gold") or 0)
+	diamondLabel.Text = Format.number(State.get("Diamonds") or 0)
 	State.Changed:Connect(function(key, value, old)
+		if key == "Diamonds" then
+			diamondLabel.Text = Format.number(value)
+		end
 		if key == "Gold" then
 			goldLabel.Text = Format.number(value)
 			if typeof(old) == "number" and value > old then
