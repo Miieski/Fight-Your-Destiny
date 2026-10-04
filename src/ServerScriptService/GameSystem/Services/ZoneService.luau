@@ -86,9 +86,24 @@ function ZoneService:ToHub(player: Player)
 	local hub = workspace:FindFirstChild("Hub")
 	local spawn = hub and hub:FindFirstChildOfClass("SpawnLocation")
 	if spawn then
+		ZoneService:LeaveArena(player, true)
 		player:SetAttribute("RespawnSubZone", nil)
 		teleport(player, spawn.CFrame)
 	end
+end
+
+-- Test/admin teleport straight to the Entrance of a sub-zone. It does not check unlocks: the caller
+-- (AdminService) unlocks the sub-zones first, otherwise the location loop sends the player back.
+function ZoneService:TeleportTo(player: Player, zoneId: string, n: number): boolean
+	local subZone = byId[Zones.subZoneId(zoneId, n)]
+	if not (subZone and hasGround(subZone.entrance.Position)) then
+		local zone = Zones.ById[zoneId]
+		notify(player, `{if zone then zone.Name else zoneId} is not built yet`, "bad")
+		return false
+	end
+	ZoneService:LeaveArena(player, true)
+	teleport(player, subZone.entrance.CFrame)
+	return true
 end
 
 function ZoneService:EnterZone(player: Player, zoneId: string)
@@ -131,7 +146,7 @@ local function tryUnlock(player: Player, subZone: SubZone)
 	notify(player, `{Zones.ById[subZone.zoneId].SubZones[subZone.n]} unlocked!`, "good")
 end
 
-function ZoneService:LeaveArena(player: Player)
+function ZoneService:LeaveArena(player: Player, stay: boolean?)
 	local arena = arenas[player]
 	if not arena then
 		return
@@ -139,7 +154,7 @@ function ZoneService:LeaveArena(player: Player)
 	arenas[player] = nil
 	EnemyService:EndArena(arena.key)
 	local back = byId[Zones.subZoneId(arena.zoneId, Zones.BOSS_SUBZONE)]
-	if player.Parent and back then
+	if player.Parent and back and not stay then
 		teleport(player, back.entrance.CFrame)
 	end
 	task.delay(2, function()

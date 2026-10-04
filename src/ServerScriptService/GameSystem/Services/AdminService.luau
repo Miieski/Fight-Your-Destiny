@@ -10,10 +10,11 @@ local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
+local ZoneService = require(script.Parent.ZoneService)
 
 local AdminService = { Priority = 6 }
 
-local COMMANDS: { [string]: (Player, number) -> () } = {
+local COMMANDS: { [string]: (Player, number, any) -> () } = {
 	AddGold = function(player, amount)
 		DataService:AddGold(player, amount)
 	end,
@@ -36,6 +37,29 @@ local COMMANDS: { [string]: (Player, number) -> () } = {
 		end
 		DataService:Set(player, "SubZones", unlocked)
 	end,
+	-- amount = sub-zone 1..4, 5 = the zone's boss arena, 0 = hub; extra = zone id ("Plains", ...).
+	-- The sub-zones up to the target are unlocked first so the player is not sent back.
+	Teleport = function(player, amount, extra)
+		local zone = if typeof(extra) == "string" then Zones.ById[extra] else nil
+		local n = math.floor(amount)
+		if not zone or n < 1 then
+			ZoneService:ToHub(player)
+			return
+		end
+		local profile = DataService:Get(player)
+		if profile then
+			local unlocked = table.clone(profile.SubZones)
+			for i = 2, math.min(n, Zones.SUBZONE_COUNT) do
+				unlocked[Zones.subZoneId(zone.Id, i)] = true
+			end
+			DataService:Set(player, "SubZones", unlocked)
+		end
+		if n > Zones.SUBZONE_COUNT then
+			ZoneService:EnterArena(player, zone.Id)
+		else
+			ZoneService:TeleportTo(player, zone.Id, n)
+		end
+	end,
 }
 
 function AdminService:IsAdmin(player: Player): boolean
@@ -57,7 +81,7 @@ function AdminService:Init()
 	for _, player in ipairs(Players:GetPlayers()) do
 		flag(player)
 	end
-	Net.event("Admin").OnServerEvent:Connect(function(player: Player, command: any, amount: any)
+	Net.event("Admin").OnServerEvent:Connect(function(player: Player, command: any, amount: any, extra: any)
 		if not AdminService:IsAdmin(player) then
 			return
 		end
@@ -66,8 +90,10 @@ function AdminService:Init()
 			Net.event("Notify"):FireClient(player, "Admin: invalid command or amount", "bad")
 			return
 		end
-		handler(player, amount)
-		Net.event("Notify"):FireClient(player, `Admin: {command} {Format.number(amount)}`, "info")
+		handler(player, amount, extra)
+		if command ~= "Teleport" then
+			Net.event("Notify"):FireClient(player, `Admin: {command} {Format.number(amount)}`, "info")
+		end
 	end)
 end
 

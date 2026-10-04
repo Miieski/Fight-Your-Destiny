@@ -11,6 +11,7 @@ local Admins = require(ReplicatedStorage.GameSystem.Config.Admins)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
+local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
 local AdminPanel = { Priority = 20 }
 
@@ -23,7 +24,8 @@ local STEEL = Color3.fromRGB(150, 156, 168)
 local DANGER = Color3.fromRGB(217, 59, 59)
 local INK = Color3.fromRGB(40, 24, 12)
 local BASE_HEIGHT = 720
-local WINDOW = Vector2.new(440, 412)
+local COLUMN = 440 -- money and world on the left, teleports on the right
+local WINDOW = Vector2.new(COLUMN * 2, 412)
 local MARGIN, GAP, ROW = 18, 6, 44
 local OPEN_TWEEN = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
@@ -76,7 +78,7 @@ local function section(parent: Instance, y: number, title: string, color: Color3
 	local function send(command: string, amount: number)
 		Net.event("Admin"):FireServer(command, amount)
 	end
-	local inner = WINDOW.X - MARGIN * 2
+	local inner = COLUMN - MARGIN * 2
 	local count = #presets + 1
 	local width = math.floor((inner - GAP * (count - 1)) / count)
 	local top = y + 28
@@ -163,8 +165,49 @@ local function build(player: Player)
 		Text = "World", BackgroundTransparency = 1, TextXAlignment = Enum.TextXAlignment.Left,
 		Position = UDim2.fromOffset(MARGIN, 322), Size = UDim2.fromOffset(200, 24),
 	})
-	button(window, "Unlock all gates", STEEL, MARGIN, 350, WINDOW.X - MARGIN * 2, function()
+	button(window, "Unlock all gates", STEEL, MARGIN, 350, COLUMN - MARGIN * 2, function()
 		Net.event("Admin"):FireServer("UnlockAll", 0)
+	end)
+
+	-- Teleport column: pick a sub-zone (or the boss arena), then press a zone.
+	local left = COLUMN + MARGIN
+	local inner = COLUMN - MARGIN * 2
+	text(window, "TextLabel", {
+		Text = "Teleport to", BackgroundTransparency = 1, TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(left, 52), Size = UDim2.fromOffset(200, 24),
+	})
+	local choices = { "1", "2", "3", "4", "Boss" } -- sub-zone 1..4, or the zone's boss arena
+	local target = 1
+	local choiceButtons: { TextButton } = {}
+	local choiceWidth = math.floor((inner - GAP * (#choices - 1)) / #choices)
+	local function choose(index: number)
+		target = index
+		for i, item in ipairs(choiceButtons) do
+			item.BackgroundColor3 = if i == index then GOLD else STEEL
+		end
+	end
+	for i, label in ipairs(choices) do
+		choiceButtons[i] = button(window, label, STEEL, left + (i - 1) * (choiceWidth + GAP), 80, choiceWidth, function()
+			choose(i)
+		end)
+		choiceButtons[i].Name = "Sub" .. label
+	end
+	choose(1)
+	local columns = 3
+	local zoneWidth = math.floor((inner - GAP * (columns - 1)) / columns)
+	for i, zone in ipairs(Zones.List) do
+		local column, row = (i - 1) % columns, math.floor((i - 1) / columns)
+		local item = button(window, zone.Name, STEEL, left + column * (zoneWidth + GAP), 130 + row * (ROW + GAP), zoneWidth, function()
+			Net.event("Admin"):FireServer("Teleport", target, zone.Id)
+		end)
+		item.Name = "Zone" .. zone.Id
+		item.TextScaled = true
+		local limit = Instance.new("UITextSizeConstraint")
+		limit.MaxTextSize = 18
+		limit.Parent = item
+	end
+	button(window, "Hub", GOLD, left, 130 + 4 * (ROW + GAP), inner, function()
+		Net.event("Admin"):FireServer("Teleport", 0, "Hub")
 	end)
 
 	local open = false

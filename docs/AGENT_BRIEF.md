@@ -151,7 +151,32 @@ You add:
 * Lights: at most 20 per sub-zone, `Shadows = false` except 1-2 hero lights. Particle emitters:
   `Rate <= 20`, keep the count low; ambient only.
 
-## 7. Final report (your last message)
+## 7. Lessons from zones 1-5 (apply them)
+
+* **Edit-mode screenshots show interiors flatter and darker than Play does.** Do NOT compensate by
+  raising lights: PointLight `Brightness <= 1`, `Range <= 26`. A citadel built with Brightness 2.4
+  was blown out to white in Play and had to be redone. Presets: `ExposureCompensation <= 0.1` for
+  bright zones, Bloom `Intensity <= 0.4`.
+* **Never rotate the `Entrance` markers.** They face +Z; players arrive looking that way.
+* **Telegraph readability.** Boss and enemy attacks are announced by flat Neon RED shapes on the
+  floor. Fight floors must contrast with that: no large red, orange or Neon flat decor on fight
+  floors (carpets, discs, lava-coloured tiles). In fire zones keep the fight floor dark (basalt,
+  dark tile) and put lava at the edges, behind invisible walls.
+* **Enemy readability.** Placeholder enemies are tinted per zone; make sure a 6-stud creature is
+  easy to see on your floor (not white on white, not black on black).
+* **Hazards are visual only.** Lava, void and deep water never kill and are never reachable:
+  invisible walls keep players on the walkable area. Bridges and ledges are at least 20 wide with
+  invisible rails. Walkable water is at most 1.5 studs deep.
+* **Landmark stand-ins** go in `Decor.Landmark` with `LandmarkName`; if a path must pass through or
+  under one, say so in your report (the Blender mesh must match).
+* **One screen_capture at a time**, and apply your lighting preset in the execute_luau call right
+  before it (other agents switch presets too). If captures time out twice, continue with data
+  checks and say exactly what was never looked at.
+* Zone builders own their zone's lighting presets (`ReplicatedStorage.Assets.Lighting.<ZoneId>` and
+  `<ZoneId>_<n>`; format in `docs/VFX_KIT.md`; copy the `Sky` from an existing preset unless the
+  zone needs its own sky) and may add zone VFX prefabs to `ServerStorage.MapAssets.VFX`.
+
+## 8. Final report (your last message)
 
 1. What you built (paths + part counts) and what you skipped or could not do.
 2. Validator output (`Kit.validate...`) and the backup file names.
