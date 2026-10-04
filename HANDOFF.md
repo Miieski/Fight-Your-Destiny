@@ -149,9 +149,9 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (evening). Zones 6-7 (Volcano, Hell) are BUILT and validated but have NOT
-been seen or walked in Play by the orchestrator yet. Zone 8 (Heaven) is being built: its 4 lighting
-presets and 6 VFX prefabs exist, kit / sub-zones / arena in progress. Zones 9-12 (Dead, Abyss,
+**Updated 2026-10-04 (19:00). Zones 6-8 (Volcano, Hell, Heaven) are BUILT and validated, arenas in
+`ServerStorage.BossArenas`, catalogs in `docs/ASSET_KIT_*.md`. The Play walk-through of these three
+zones is the next step (see the notes below this block once it is done). Zones 9-12 (Dead, Abyss,
 Mechanical, Void) only have folders and markers and must NOT be started until the owner says go.
 The admin panel also has teleport buttons for every zone (sub-zone 1-4 or the boss arena).
 `Blender_Exports/` now has 29 FBX (Hub + zones 1-7); the 4 Heaven landmarks are not made yet.**
