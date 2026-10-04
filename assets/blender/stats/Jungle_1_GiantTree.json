@@ -1,0 +1,131 @@
+{
+ "name": "Jungle_1_GiantTree",
+ "target": [
+  90,
+  90,
+  120
+ ],
+ "size": [
+  90.3,
+  87.1,
+  121.0
+ ],
+ "triangles": 3618,
+ "objects": [
+  {
+   "object": "Jungle_1_GiantTree__Jungle_Trunk",
+   "color": "Jungle_Trunk",
+   "rgb": [
+    104,
+    68,
+    44
+   ],
+   "triangles": 626,
+   "verts": 355,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_TrunkDark",
+   "color": "Jungle_TrunkDark",
+   "rgb": [
+    74,
+    48,
+    34
+   ],
+   "triangles": 204,
+   "verts": 132,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_Leaf",
+   "color": "Jungle_Leaf",
+   "rgb": [
+    40,
+    150,
+    66
+   ],
+   "triangles": 880,
+   "verts": 462,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_LeafDark",
+   "color": "Jungle_LeafDark",
+   "rgb": [
+    22,
+    100,
+    56
+   ],
+   "triangles": 480,
+   "verts": 252,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_LeafLight",
+   "color": "Jungle_LeafLight",
+   "rgb": [
+    120,
+    210,
+    70
+   ],
+   "triangles": 260,
+   "verts": 150,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_Vine",
+   "color": "Jungle_Vine",
+   "rgb": [
+    70,
+    170,
+    60
+   ],
+   "triangles": 928,
+   "verts": 540,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_TotemAlt",
+   "color": "Jungle_TotemAlt",
+   "rgb": [
+    60,
+    170,
+    190
+   ],
+   "triangles": 172,
+   "verts": 108,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_1_GiantTree__Jungle_Totem",
+   "color": "Jungle_Totem",
+   "rgb": [
+    196,
+    70,
+    50
+   ],
+   "triangles": 68,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

@@ -1,0 +1,137 @@
+{
+ "name": "Plains_1_Windmill",
+ "target": [
+  40,
+  40,
+  72
+ ],
+ "size": [
+  46.3,
+  34.1,
+  71.9
+ ],
+ "triangles": 2174,
+ "objects": [
+  {
+   "object": "Plains_1_Windmill__Common_StoneDark",
+   "color": "Common_StoneDark",
+   "rgb": [
+    104,
+    110,
+    124
+   ],
+   "triangles": 416,
+   "verts": 272,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill__Common_Stone",
+   "color": "Common_Stone",
+   "rgb": [
+    150,
+    156,
+    168
+   ],
+   "triangles": 68,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill__Hub_Wall",
+   "color": "Hub_Wall",
+   "rgb": [
+    240,
+    228,
+    200
+   ],
+   "triangles": 28,
+   "verts": 16,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill__Hub_Timber",
+   "color": "Hub_Timber",
+   "rgb": [
+    112,
+    62,
+    38
+   ],
+   "triangles": 516,
+   "verts": 336,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill__Common_Wood",
+   "color": "Common_Wood",
+   "rgb": [
+    168,
+    98,
+    56
+   ],
+   "triangles": 498,
+   "verts": 325,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill__Hub_Roof",
+   "color": "Hub_Roof",
+   "rgb": [
+    196,
+    64,
+    58
+   ],
+   "triangles": 54,
+   "verts": 31,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill_Blades__Common_Wood",
+   "color": "Common_Wood",
+   "rgb": [
+    168,
+    98,
+    56
+   ],
+   "triangles": 498,
+   "verts": 325,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_1_Windmill_Blades__Common_Cloth",
+   "color": "Common_Cloth",
+   "rgb": [
+    232,
+    226,
+    208
+   ],
+   "triangles": 96,
+   "verts": 64,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Blades rotate about the Blender Y axis (Studio Z axis) through the BladesHub anchor.",
+ "anchors": {
+  "BladesHub": [
+   -0.0,
+   -10.37,
+   48.78
+  ]
+ }
+}

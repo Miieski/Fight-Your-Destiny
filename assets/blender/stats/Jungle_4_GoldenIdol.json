@@ -1,0 +1,103 @@
+{
+ "name": "Jungle_4_GoldenIdol",
+ "target": [
+  40,
+  36,
+  50
+ ],
+ "size": [
+  40.0,
+  36.0,
+  50.5
+ ],
+ "triangles": 1764,
+ "objects": [
+  {
+   "object": "Jungle_4_GoldenIdol__Jungle_StoneDark",
+   "color": "Jungle_StoneDark",
+   "rgb": [
+    92,
+    100,
+    92
+   ],
+   "triangles": 88,
+   "verts": 56,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_4_GoldenIdol__Jungle_Stone",
+   "color": "Jungle_Stone",
+   "rgb": [
+    132,
+    138,
+    124
+   ],
+   "triangles": 12,
+   "verts": 8,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_4_GoldenIdol__Neon_Jungle_Glyph",
+   "color": "Neon_Jungle_Glyph",
+   "rgb": [
+    120,
+    255,
+    190
+   ],
+   "triangles": 364,
+   "verts": 240,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_4_GoldenIdol__Jungle_Moss",
+   "color": "Jungle_Moss",
+   "rgb": [
+    88,
+    150,
+    66
+   ],
+   "triangles": 208,
+   "verts": 120,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_4_GoldenIdol__Jungle_Gold",
+   "color": "Jungle_Gold",
+   "rgb": [
+    255,
+    201,
+    60
+   ],
+   "triangles": 668,
+   "verts": 370,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_4_GoldenIdol__Jungle_Flower2",
+   "color": "Jungle_Flower2",
+   "rgb": [
+    255,
+    170,
+    40
+   ],
+   "triangles": 424,
+   "verts": 236,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

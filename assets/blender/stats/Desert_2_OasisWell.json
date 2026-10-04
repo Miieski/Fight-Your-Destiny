@@ -1,0 +1,131 @@
+{
+ "name": "Desert_2_OasisWell",
+ "target": [
+  40,
+  30,
+  22
+ ],
+ "size": [
+  40.5,
+  28.3,
+  22.0
+ ],
+ "triangles": 1914,
+ "objects": [
+  {
+   "object": "Desert_2_OasisWell__Desert_SandstoneDark",
+   "color": "Desert_SandstoneDark",
+   "rgb": [
+    184,
+    146,
+    98
+   ],
+   "triangles": 548,
+   "verts": 328,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Desert_Sandstone",
+   "color": "Desert_Sandstone",
+   "rgb": [
+    226,
+    190,
+    132
+   ],
+   "triangles": 598,
+   "verts": 365,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Desert_Water",
+   "color": "Desert_Water",
+   "rgb": [
+    48,
+    214,
+    208
+   ],
+   "triangles": 96,
+   "verts": 54,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Common_Wood",
+   "color": "Common_Wood",
+   "rgb": [
+    168,
+    98,
+    56
+   ],
+   "triangles": 168,
+   "verts": 108,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Common_Iron",
+   "color": "Common_Iron",
+   "rgb": [
+    92,
+    98,
+    110
+   ],
+   "triangles": 112,
+   "verts": 64,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Common_Rope",
+   "color": "Common_Rope",
+   "rgb": [
+    196,
+    160,
+    104
+   ],
+   "triangles": 60,
+   "verts": 36,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Desert_Terracotta",
+   "color": "Desert_Terracotta",
+   "rgb": [
+    204,
+    96,
+    62
+   ],
+   "triangles": 12,
+   "verts": 8,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_2_OasisWell__Desert_Sand",
+   "color": "Desert_Sand",
+   "rgb": [
+    244,
+    208,
+    124
+   ],
+   "triangles": 320,
+   "verts": 168,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

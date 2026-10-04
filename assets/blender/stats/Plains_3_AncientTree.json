@@ -1,0 +1,117 @@
+{
+ "name": "Plains_3_AncientTree",
+ "target": [
+  110,
+  110,
+  115
+ ],
+ "size": [
+  118.2,
+  126.6,
+  117.6
+ ],
+ "triangles": 2900,
+ "objects": [
+  {
+   "object": "Plains_3_AncientTree__Plains_Trunk",
+   "color": "Plains_Trunk",
+   "rgb": [
+    128,
+    78,
+    48
+   ],
+   "triangles": 1050,
+   "verts": 563,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_3_AncientTree__Plains_MountainDark",
+   "color": "Plains_MountainDark",
+   "rgb": [
+    116,
+    70,
+    54
+   ],
+   "triangles": 130,
+   "verts": 73,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_3_AncientTree__Plains_Moss",
+   "color": "Plains_Moss",
+   "rgb": [
+    104,
+    168,
+    72
+   ],
+   "triangles": 160,
+   "verts": 96,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_3_AncientTree__Plains_Leaf",
+   "color": "Plains_Leaf",
+   "rgb": [
+    72,
+    176,
+    62
+   ],
+   "triangles": 640,
+   "verts": 336,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_3_AncientTree__Plains_LeafDark",
+   "color": "Plains_LeafDark",
+   "rgb": [
+    40,
+    124,
+    58
+   ],
+   "triangles": 560,
+   "verts": 294,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_3_AncientTree__Plains_GrassLight",
+   "color": "Plains_GrassLight",
+   "rgb": [
+    140,
+    224,
+    84
+   ],
+   "triangles": 220,
+   "verts": 126,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_3_AncientTree__Plains_Mushroom",
+   "color": "Plains_Mushroom",
+   "rgb": [
+    232,
+    72,
+    72
+   ],
+   "triangles": 140,
+   "verts": 84,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

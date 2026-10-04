@@ -43,12 +43,18 @@ local function label(parent: Instance, props: { [string]: any }): TextLabel
 end
 
 local function flash(target: TextLabel, seconds: number, token: number, current: () -> number)
+	local stroke = target:FindFirstChildOfClass("UIStroke")
 	target.TextTransparency = 0
+	if stroke then
+		stroke.Transparency = 0
+	end
 	target.Visible = true
 	task.delay(seconds, function()
 		if current() == token then
-			local tween = TweenService:Create(target, TweenInfo.new(0.5), { TextTransparency = 1 })
-			tween:Play()
+			TweenService:Create(target, TweenInfo.new(0.5), { TextTransparency = 1 }):Play()
+			if stroke then
+				TweenService:Create(stroke, TweenInfo.new(0.5), { Transparency = 1 }):Play()
+			end
 		end
 	end)
 end
@@ -62,7 +68,8 @@ local function locationText(zoneId: string, subZoneId: string): string
 		return `{zone.Boss}'s Lair`
 	end
 	local _, n = Zones.parseSubZoneId(subZoneId)
-	return if n then `{zone.Name} - {zone.SubZones[n]}` else zone.Name
+	local subZoneName = n and zone.SubZones[n]
+	return if subZoneName and subZoneName ~= zone.Name then `{zone.Name} - {subZoneName}` else zone.Name
 end
 
 function Hud:Init()
@@ -105,6 +112,9 @@ function Hud:Init()
 
 	banner = label(gui, { Name = "Banner", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 70), Size = UDim2.fromOffset(520, 56), Text = "", TextTransparency = 1 })
 	notice = label(gui, { Name = "Notice", AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -120), Size = UDim2.fromOffset(520, 40), Text = "", TextTransparency = 1 })
+	for _, hidden in ipairs({ banner, notice }) do
+		(hidden:FindFirstChildOfClass("UIStroke") :: UIStroke).Transparency = 1
+	end
 	gui.Parent = player:WaitForChild("PlayerGui")
 end
 

@@ -1,0 +1,75 @@
+{
+ "name": "Desert_1_RockArch",
+ "target": [
+  90,
+  30,
+  70
+ ],
+ "size": [
+  90.9,
+  29.7,
+  71.0
+ ],
+ "triangles": 1080,
+ "objects": [
+  {
+   "object": "Desert_1_RockArch__Desert_CanyonDark",
+   "color": "Desert_CanyonDark",
+   "rgb": [
+    150,
+    62,
+    48
+   ],
+   "triangles": 308,
+   "verts": 178,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_1_RockArch__Desert_CanyonRed",
+   "color": "Desert_CanyonRed",
+   "rgb": [
+    196,
+    84,
+    56
+   ],
+   "triangles": 442,
+   "verts": 253,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_1_RockArch__Desert_CanyonLight",
+   "color": "Desert_CanyonLight",
+   "rgb": [
+    228,
+    128,
+    80
+   ],
+   "triangles": 250,
+   "verts": 143,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_1_RockArch__Desert_Sand",
+   "color": "Desert_Sand",
+   "rgb": [
+    244,
+    208,
+    124
+   ],
+   "triangles": 80,
+   "verts": 48,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

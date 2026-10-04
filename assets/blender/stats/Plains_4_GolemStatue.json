@@ -1,0 +1,89 @@
+{
+ "name": "Plains_4_GolemStatue",
+ "target": [
+  30,
+  22,
+  38
+ ],
+ "size": [
+  33.6,
+  26.7,
+  36.6
+ ],
+ "triangles": 1392,
+ "objects": [
+  {
+   "object": "Plains_4_GolemStatue__Plains_CaveRock",
+   "color": "Plains_CaveRock",
+   "rgb": [
+    96,
+    92,
+    110
+   ],
+   "triangles": 390,
+   "verts": 219,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_4_GolemStatue__Plains_CaveRockDark",
+   "color": "Plains_CaveRockDark",
+   "rgb": [
+    62,
+    60,
+    78
+   ],
+   "triangles": 378,
+   "verts": 217,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_4_GolemStatue__Plains_Rock",
+   "color": "Plains_Rock",
+   "rgb": [
+    150,
+    156,
+    168
+   ],
+   "triangles": 380,
+   "verts": 214,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_4_GolemStatue__Neon_Plains_Ore",
+   "color": "Neon_Plains_Ore",
+   "rgb": [
+    90,
+    230,
+    255
+   ],
+   "triangles": 84,
+   "verts": 56,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_4_GolemStatue__Plains_Moss",
+   "color": "Plains_Moss",
+   "rgb": [
+    104,
+    168,
+    72
+   ],
+   "triangles": 160,
+   "verts": 96,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

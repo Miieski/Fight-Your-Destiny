@@ -1,0 +1,109 @@
+{
+ "name": "Jungle_2_WaterfallCliff",
+ "target": [
+  120,
+  50,
+  90
+ ],
+ "size": [
+  121.6,
+  50.6,
+  89.8
+ ],
+ "triangles": 3240,
+ "objects": [
+  {
+   "object": "Jungle_2_WaterfallCliff__Jungle_Stone",
+   "color": "Jungle_Stone",
+   "rgb": [
+    132,
+    138,
+    124
+   ],
+   "triangles": 606,
+   "verts": 333,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_2_WaterfallCliff__Jungle_Moss",
+   "color": "Jungle_Moss",
+   "rgb": [
+    88,
+    150,
+    66
+   ],
+   "triangles": 1224,
+   "verts": 720,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_2_WaterfallCliff__Jungle_StoneDark",
+   "color": "Jungle_StoneDark",
+   "rgb": [
+    92,
+    100,
+    92
+   ],
+   "triangles": 606,
+   "verts": 345,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_2_WaterfallCliff__Jungle_Water",
+   "color": "Jungle_Water",
+   "rgb": [
+    48,
+    196,
+    190
+   ],
+   "triangles": 84,
+   "verts": 52,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_2_WaterfallCliff__Jungle_Leaf",
+   "color": "Jungle_Leaf",
+   "rgb": [
+    40,
+    150,
+    66
+   ],
+   "triangles": 240,
+   "verts": 144,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_2_WaterfallCliff__Jungle_Vine",
+   "color": "Jungle_Vine",
+   "rgb": [
+    70,
+    170,
+    60
+   ],
+   "triangles": 480,
+   "verts": 288,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Water sheet = object ...__Jungle_Water: runs along the top channel (Z 75.6), drops to a ledge pool (Z 49.1), then drops to the ground; 12.3 wide. Back face is flat (put it against the map edge).",
+ "anchors": {
+  "WaterTop": [
+   -0.1,
+   23.2,
+   76.26
+  ]
+ }
+}

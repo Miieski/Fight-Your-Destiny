@@ -1,0 +1,109 @@
+{
+ "name": "Desert_3_StoneBridge",
+ "target": [
+  150,
+  30,
+  60
+ ],
+ "size": [
+  151.1,
+  31.5,
+  60.1
+ ],
+ "triangles": 1996,
+ "objects": [
+  {
+   "object": "Desert_3_StoneBridge__Desert_CanyonDark",
+   "color": "Desert_CanyonDark",
+   "rgb": [
+    150,
+    62,
+    48
+   ],
+   "triangles": 60,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_3_StoneBridge__Desert_CanyonRed",
+   "color": "Desert_CanyonRed",
+   "rgb": [
+    196,
+    84,
+    56
+   ],
+   "triangles": 108,
+   "verts": 72,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_3_StoneBridge__Desert_CanyonLight",
+   "color": "Desert_CanyonLight",
+   "rgb": [
+    228,
+    128,
+    80
+   ],
+   "triangles": 60,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_3_StoneBridge__Desert_SandstoneDark",
+   "color": "Desert_SandstoneDark",
+   "rgb": [
+    184,
+    146,
+    98
+   ],
+   "triangles": 1036,
+   "verts": 656,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_3_StoneBridge__Desert_Sandstone",
+   "color": "Desert_Sandstone",
+   "rgb": [
+    226,
+    190,
+    132
+   ],
+   "triangles": 412,
+   "verts": 250,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_3_StoneBridge__Desert_Sand",
+   "color": "Desert_Sand",
+   "rgb": [
+    244,
+    208,
+    124
+   ],
+   "triangles": 320,
+   "verts": 168,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Deck top is flat at Z = 50 (Studio Y = 50 above the model bottom); walkway 24 wide between the parapets.",
+ "anchors": {
+  "DeckCenterTop": [
+   -0.04,
+   0.01,
+   50.08
+  ]
+ }
+}

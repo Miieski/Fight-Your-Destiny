@@ -1,0 +1,128 @@
+{
+ "name": "Jungle_3_StepPyramid",
+ "target": [
+  120,
+  120,
+  80
+ ],
+ "size": [
+  124.0,
+  119.7,
+  80.0
+ ],
+ "triangles": 3976,
+ "objects": [
+  {
+   "object": "Jungle_3_StepPyramid__Jungle_Stone",
+   "color": "Jungle_Stone",
+   "rgb": [
+    132,
+    138,
+    124
+   ],
+   "triangles": 444,
+   "verts": 254,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_3_StepPyramid__Jungle_StoneDark",
+   "color": "Jungle_StoneDark",
+   "rgb": [
+    92,
+    100,
+    92
+   ],
+   "triangles": 248,
+   "verts": 164,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_3_StepPyramid__Neon_Jungle_Glyph",
+   "color": "Neon_Jungle_Glyph",
+   "rgb": [
+    120,
+    255,
+    190
+   ],
+   "triangles": 1240,
+   "verts": 824,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_3_StepPyramid__Jungle_Gold",
+   "color": "Jungle_Gold",
+   "rgb": [
+    255,
+    201,
+    60
+   ],
+   "triangles": 144,
+   "verts": 78,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_3_StepPyramid__Jungle_Moss",
+   "color": "Jungle_Moss",
+   "rgb": [
+    88,
+    150,
+    66
+   ],
+   "triangles": 1120,
+   "verts": 640,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_3_StepPyramid__Jungle_Trunk",
+   "color": "Jungle_Trunk",
+   "rgb": [
+    104,
+    68,
+    44
+   ],
+   "triangles": 460,
+   "verts": 238,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Jungle_3_StepPyramid__Jungle_Leaf",
+   "color": "Jungle_Leaf",
+   "rgb": [
+    40,
+    150,
+    66
+   ],
+   "triangles": 320,
+   "verts": 180,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Stair: 24 steps of 2.35 high x 1.99 deep, 19.4 wide, from the ground to the top platform at Z 56.4 (add an invisible ramp in Studio). Shrine doorway about 9 wide x 9.4 high.",
+ "anchors": {
+  "ShrineDoor": [
+   0.13,
+   1.75,
+   57.42
+  ],
+  "StairFoot": [
+   0.13,
+   -54.06,
+   0.0
+  ]
+ }
+}

@@ -1,0 +1,103 @@
+{
+ "name": "Desert_4_Sarcophagus",
+ "target": [
+  26,
+  40,
+  22
+ ],
+ "size": [
+  26.0,
+  40.0,
+  23.6
+ ],
+ "triangles": 1572,
+ "objects": [
+  {
+   "object": "Desert_4_Sarcophagus__Desert_SandstoneDark",
+   "color": "Desert_SandstoneDark",
+   "rgb": [
+    184,
+    146,
+    98
+   ],
+   "triangles": 24,
+   "verts": 16,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_4_Sarcophagus__Desert_Sandstone",
+   "color": "Desert_Sandstone",
+   "rgb": [
+    226,
+    190,
+    132
+   ],
+   "triangles": 60,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_4_Sarcophagus__Desert_Lapis",
+   "color": "Desert_Lapis",
+   "rgb": [
+    44,
+    92,
+    200
+   ],
+   "triangles": 632,
+   "verts": 392,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_4_Sarcophagus__Desert_Turquoise",
+   "color": "Desert_Turquoise",
+   "rgb": [
+    64,
+    208,
+    196
+   ],
+   "triangles": 284,
+   "verts": 176,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_4_Sarcophagus__Desert_Gold",
+   "color": "Desert_Gold",
+   "rgb": [
+    255,
+    201,
+    60
+   ],
+   "triangles": 512,
+   "verts": 294,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Desert_4_Sarcophagus__Desert_PyramidDark",
+   "color": "Desert_PyramidDark",
+   "rgb": [
+    140,
+    104,
+    68
+   ],
+   "triangles": 60,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

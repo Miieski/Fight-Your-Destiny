@@ -1,0 +1,130 @@
+{
+ "name": "Hub_RebirthAltar",
+ "target": [
+  44,
+  44,
+  34
+ ],
+ "size": [
+  43.6,
+  43.6,
+  34.0
+ ],
+ "triangles": 2440,
+ "objects": [
+  {
+   "object": "Hub_RebirthAltar__Hub_PlazaDark",
+   "color": "Hub_PlazaDark",
+   "rgb": [
+    160,
+    150,
+    136
+   ],
+   "triangles": 120,
+   "verts": 64,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Hub_Plaza",
+   "color": "Hub_Plaza",
+   "rgb": [
+    206,
+    196,
+    178
+   ],
+   "triangles": 120,
+   "verts": 64,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Common_StoneBlue",
+   "color": "Common_StoneBlue",
+   "rgb": [
+    112,
+    128,
+    204
+   ],
+   "triangles": 204,
+   "verts": 128,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Neon_Hub_Portal",
+   "color": "Neon_Hub_Portal",
+   "rgb": [
+    150,
+    110,
+    255
+   ],
+   "triangles": 484,
+   "verts": 320,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Common_StoneDark",
+   "color": "Common_StoneDark",
+   "rgb": [
+    104,
+    110,
+    124
+   ],
+   "triangles": 388,
+   "verts": 216,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Common_Stone",
+   "color": "Common_Stone",
+   "rgb": [
+    150,
+    156,
+    168
+   ],
+   "triangles": 252,
+   "verts": 136,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Common_Gold",
+   "color": "Common_Gold",
+   "rgb": [
+    255,
+    201,
+    60
+   ],
+   "triangles": 672,
+   "verts": 356,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hub_RebirthAltar__Neon_Common_Diamond",
+   "color": "Neon_Common_Diamond",
+   "rgb": [
+    95,
+    212,
+    255
+   ],
+   "triangles": 200,
+   "verts": 118,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": ""
+}

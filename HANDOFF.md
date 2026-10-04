@@ -149,7 +149,40 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Design is done; implementation has not started** (update this section as soon as code exists).
+**Updated 2026-10-04. World build in progress: Hub + Plains are built and playtested; 11 zones to go.**
+
+Owner decisions (2026-10-03): build the world for all 12 zones first (maps, props, lighting, VFX,
+sounds) with ONE placeholder dummy enemy; real enemy and boss models come after the 12 worlds;
+the full gameplay scripts come last. Blender work is exported to `Blender_Exports/` and imported
+by the owner with Studio's 3D Importer (landmarks first, then enemies and bosses).
+
+In the place now:
+* `workspace.Hub` (4,167 parts): spawn, 12 zone portals, 10 stations, 5 leaderboards, AFK zone.
+* `workspace.Zones.Plains` (4 sub-zones, about 10,300 parts) and `ServerStorage.BossArenas.Plains`.
+  The other 11 zones only have their folders and markers (`Area`, `Entrance`, `Spawns`, ...).
+* `ServerStorage.MapAssets`: kit of 104 models (Common, Plains, Hub, Gates) + 33 VFX prefabs;
+  `ReplicatedStorage.Assets`: 14 combat VFX and 11 lighting presets (Hub, Plains, Desert, Jungle).
+  Catalogs: `docs/ASSET_KIT_A.md`, `docs/VFX_KIT.md`.
+* Minimal playable layer (PLACEHOLDER, in `src/`): hub portals, return pads, per-player sub-zone
+  gates paid with Gold, location tracking with pushback from locked areas, one dummy enemy tinted
+  per zone with real HP/Gold, hold-to-attack test sword, lighting and music switching, Gold HUD,
+  solo boss-arena visit. No DataStore (session memory only), no enemy AI, no real weapons.
+  Playtested 2026-10-04 on Hub + Plains: portal, combat, Gold, the 3 gates, pushback, cave lighting
+  and arena entry all work. NOT tested: mini-boss -> boss sequence, leaving by the arena door,
+  death/respawn, mobile, 2+ players.
+* `Blender_Exports/`: 13 landmark FBX (Hub + zones 1-3) waiting for the owner's import; see its README.
+
+How the tooling works (read `docs/AGENT_BRIEF.md`):
+* Backups: `require(game.ServerStorage.DevTools.Backup)("label")` in Studio, then
+  `python tools/collect_backup.py --wait 15` -> verified `.rbxm` files in `BackUP_Files/`.
+* Scripts are edited in Studio through the MCP and mirrored to disk with
+  `require(game.ServerStorage.DevTools.ExportScripts)()` + `python tools/pull_scripts.py`.
+  Rojo (`default.project.json`) pushes the other way: pull before you connect it.
+* `ServerStorage.DevTools.BuildKit`: palettes for all 12 zones, faceted-terrain helpers, contract
+  validators (`validateHub`, `validateZone`, `validateArena`).
+* Sub-agents: at most 2 at a time. Three at once exhausted the owner's usage limit twice.
+
+Earlier status (design phase), kept for reference:
 
 Done:
 * Zone list, sub-zones, bosses and progression order.

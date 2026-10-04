@@ -1,0 +1,131 @@
+{
+ "name": "Plains_2_PirateShip",
+ "target": [
+  110,
+  34,
+  60
+ ],
+ "size": [
+  112.0,
+  37.9,
+  61.4
+ ],
+ "triangles": 3408,
+ "objects": [
+  {
+   "object": "Plains_2_PirateShip__Common_Wood",
+   "color": "Common_Wood",
+   "rgb": [
+    168,
+    98,
+    56
+   ],
+   "triangles": 732,
+   "verts": 392,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Common_WoodDark",
+   "color": "Common_WoodDark",
+   "rgb": [
+    112,
+    62,
+    38
+   ],
+   "triangles": 1476,
+   "verts": 864,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Common_WoodLight",
+   "color": "Common_WoodLight",
+   "rgb": [
+    214,
+    150,
+    92
+   ],
+   "triangles": 432,
+   "verts": 262,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Common_Gold",
+   "color": "Common_Gold",
+   "rgb": [
+    255,
+    201,
+    60
+   ],
+   "triangles": 268,
+   "verts": 158,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Common_Iron",
+   "color": "Common_Iron",
+   "rgb": [
+    92,
+    98,
+    110
+   ],
+   "triangles": 288,
+   "verts": 170,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Common_Cloth",
+   "color": "Common_Cloth",
+   "rgb": [
+    232,
+    226,
+    208
+   ],
+   "triangles": 132,
+   "verts": 80,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Hub_Banner",
+   "color": "Hub_Banner",
+   "rgb": [
+    212,
+    52,
+    60
+   ],
+   "triangles": 20,
+   "verts": 12,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Plains_2_PirateShip__Common_Rope",
+   "color": "Common_Rope",
+   "rgb": [
+    196,
+    160,
+    104
+   ],
+   "triangles": 60,
+   "verts": 44,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}
