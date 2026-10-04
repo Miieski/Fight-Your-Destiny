@@ -149,7 +149,17 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04. World build in progress: Hub + Plains are built and playtested; 11 zones to go.**
+**Updated 2026-10-04 (afternoon). World build in progress: Hub + zones 1-5 (Plains, Desert, Jungle,
+Tundra, Swamp) are built, validated and walked in Play; zones 6-12 (Volcano ... Void) only have
+their folders and markers. Each built zone has its kit catalog (`docs/ASSET_KIT_*.md`), its boss
+arena in `ServerStorage.BossArenas`, and lighting presets in `ReplicatedStorage.Assets.Lighting`.
+An admin panel (F2 or the ADMIN button; `Config/Admins.luau`) adds/sets Gold and Diamonds and
+unlocks all gates. `Blender_Exports/` holds 25 landmark FBX (Hub + zones 1-6) waiting for the
+owner's import; the maps use part-built stand-ins (`Decor.Landmark`, attribute `LandmarkName`).
+Known gaps: see `docs/QC_REPORT_1.md` (Hub + Plains only; zones 2-5 have had no QC agent pass),
+boss-arena fights beyond entry are untested, sounds were never auditioned by ear.**
+
+Earlier note (morning of 2026-10-04): Hub + Plains built and playtested.
 
 Owner decisions (2026-10-03): build the world for all 12 zones first (maps, props, lighting, VFX,
 sounds) with ONE placeholder dummy enemy; real enemy and boss models come after the 12 worlds;
