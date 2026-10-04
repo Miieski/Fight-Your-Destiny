@@ -1,0 +1,131 @@
+{
+ "name": "Hell_4_DemonThrone",
+ "target": [
+  50,
+  40,
+  78
+ ],
+ "size": [
+  50.0,
+  40.2,
+  78.0
+ ],
+ "triangles": 1384,
+ "objects": [
+  {
+   "object": "Hell_4_DemonThrone__Hell_GroundDark",
+   "color": "Hell_GroundDark",
+   "rgb": [
+    52,
+    16,
+    22
+   ],
+   "triangles": 24,
+   "verts": 16,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Hell_Tile",
+   "color": "Hell_Tile",
+   "rgb": [
+    110,
+    34,
+    36
+   ],
+   "triangles": 100,
+   "verts": 56,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Hell_TileBorder",
+   "color": "Hell_TileBorder",
+   "rgb": [
+    160,
+    48,
+    44
+   ],
+   "triangles": 200,
+   "verts": 130,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Neon_Hell_Red",
+   "color": "Neon_Hell_Red",
+   "rgb": [
+    200,
+    36,
+    40
+   ],
+   "triangles": 288,
+   "verts": 192,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Hell_Banner",
+   "color": "Hell_Banner",
+   "rgb": [
+    180,
+    24,
+    40
+   ],
+   "triangles": 60,
+   "verts": 40,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Hell_Black",
+   "color": "Hell_Black",
+   "rgb": [
+    26,
+    14,
+    18
+   ],
+   "triangles": 432,
+   "verts": 274,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Hell_Purple",
+   "color": "Hell_Purple",
+   "rgb": [
+    140,
+    60,
+    200
+   ],
+   "triangles": 44,
+   "verts": 26,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_4_DemonThrone__Hell_Bone",
+   "color": "Hell_Bone",
+   "rgb": [
+    226,
+    214,
+    190
+   ],
+   "triangles": 236,
+   "verts": 146,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

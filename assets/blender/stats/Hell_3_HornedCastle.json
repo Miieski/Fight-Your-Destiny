@@ -1,0 +1,142 @@
+{
+ "name": "Hell_3_HornedCastle",
+ "target": [
+  230,
+  60,
+  180
+ ],
+ "size": [
+  245.7,
+  61.4,
+  181.0
+ ],
+ "triangles": 1886,
+ "objects": [
+  {
+   "object": "Hell_3_HornedCastle__Hell_Tile",
+   "color": "Hell_Tile",
+   "rgb": [
+    110,
+    34,
+    36
+   ],
+   "triangles": 424,
+   "verts": 272,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Hell_GroundDark",
+   "color": "Hell_GroundDark",
+   "rgb": [
+    52,
+    16,
+    22
+   ],
+   "triangles": 228,
+   "verts": 140,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Hell_TileBorder",
+   "color": "Hell_TileBorder",
+   "rgb": [
+    160,
+    48,
+    44
+   ],
+   "triangles": 200,
+   "verts": 120,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Neon_Hell_Red",
+   "color": "Neon_Hell_Red",
+   "rgb": [
+    200,
+    36,
+    40
+   ],
+   "triangles": 500,
+   "verts": 334,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Hell_Iron",
+   "color": "Hell_Iron",
+   "rgb": [
+    70,
+    60,
+    64
+   ],
+   "triangles": 304,
+   "verts": 224,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Hell_Black",
+   "color": "Hell_Black",
+   "rgb": [
+    26,
+    14,
+    18
+   ],
+   "triangles": 122,
+   "verts": 75,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Hell_Banner",
+   "color": "Hell_Banner",
+   "rgb": [
+    180,
+    24,
+    40
+   ],
+   "triangles": 32,
+   "verts": 20,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_3_HornedCastle__Hell_Ground",
+   "color": "Hell_Ground",
+   "rgb": [
+    96,
+    28,
+    30
+   ],
+   "triangles": 76,
+   "verts": 46,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Ground-level tunnel on the center line, front to back: 34.8 wide x 28.4 high clear, 60 long.",
+ "anchors": {
+  "TunnelFront": [
+   0.0,
+   -30.0,
+   0.0
+  ],
+  "TunnelBack": [
+   0.0,
+   30.0,
+   0.0
+  ]
+ }
+}

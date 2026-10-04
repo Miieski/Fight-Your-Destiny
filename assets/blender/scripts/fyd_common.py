@@ -113,6 +113,18 @@ PALETTE = {
         "RedGlow": (255, 60, 40), "Obsidian": (24, 20, 34), "Ember": (255, 170, 60), "DeadWood": (70, 56, 50),
         "Iron": (98, 96, 104), "Crystal": (255, 70, 70), "Wood": (110, 72, 52), "Steam": (232, 232, 232),
     },
+    "Hell": {
+        "Ground": (96, 28, 30), "GroundDark": (52, 16, 22), "Black": (26, 14, 18), "Red": (200, 36, 40),
+        "Blood": (140, 20, 30), "Lava": (255, 110, 30), "LavaHot": (255, 200, 80), "Orange": (232, 96, 30),
+        "Bone": (226, 214, 190), "Obsidian": (28, 20, 34), "Purple": (140, 60, 200), "Tile": (110, 34, 36),
+        "TileBorder": (160, 48, 44), "Iron": (70, 60, 64), "Banner": (180, 24, 40), "Ember": (255, 150, 60),
+    },
+    "Heaven": {
+        "Cloud": (250, 250, 255), "CloudShade": (222, 232, 250), "Marble": (242, 240, 234), "MarbleShade": (214, 210, 204),
+        "Gold": (255, 208, 84), "GoldDark": (214, 160, 50), "SkyBlue": (150, 208, 255), "Pink": (255, 196, 220),
+        "Grass": (150, 226, 120), "GrassLight": (196, 240, 150), "LeafGold": (255, 232, 150), "Trunk": (236, 226, 206),
+        "Water": (140, 224, 255), "Light": (255, 250, 220), "Crystal": (190, 240, 255), "Banner": (120, 170, 255),
+    },
 }
 
 
@@ -196,6 +208,7 @@ class Model:
         self.view_dir = None          # optional camera direction override
         self.notes = ""
         self.anchors = {}             # name -> (x, y, z) build-space points reported in the stats file
+        self.base_z = None            # when set, this build-space Z becomes Z = 0 (geometry may go below it)
 
     # -- transform stack -------------------------------------------------------------------
     @contextmanager
@@ -549,6 +562,22 @@ class Model:
             prof.append((r_in * math.cos(a), r_in * math.sin(a)))
         self.extrude(key, prof, depth, axis=axis, **kw)
 
+    def feather(self, key, root, L, w, thick=0.8, ang=0.0, **kw):
+        """Pointed feather / ray blade in the XZ plane: starts at root, points +Z, turned by ang degrees toward +X."""
+        prof = [(-w * 0.5, L * 0.16), (0, 0), (w * 0.5, L * 0.16), (w * 0.42, L * 0.74), (0, L), (-w * 0.42, L * 0.74)]
+        self.extrude(key, prof, thick, loc=tuple(root), rot=(0, ang, 0), **kw)
+
+    def gate_box(self, key, half_w, y0, y1, z0, z1, tw, th):
+        """Wall block spanning |x| <= half_w, y0..y1, z0..z1 with a tunnel (|x| < tw, z < th) left open along Y."""
+        d, cy = y1 - y0, (y0 + y1) / 2.0
+        if z0 >= th:
+            self.box(key, (half_w * 2, d, z1 - z0), loc=(0, cy, z0), base=True)
+            return
+        for s in (-1, 1):
+            self.box(key, (half_w - tw, d, z1 - z0), loc=(s * (half_w + tw) / 2.0, cy, z0), base=True)
+        if z1 > th:
+            self.box(key, (tw * 2, d, z1 - th), loc=(0, cy, th), base=True)
+
     def icicle(self, key, top, r, h, n=5, lean=(0.0, 0.0)):
         """Icicle / stalactite hanging down from the point top (pointed, closed)."""
         self.rings(key, [(0, r), (-h * 0.45, r * 0.55, r * 0.55, lean[0] * 0.4, lean[1] * 0.4),
@@ -637,7 +666,8 @@ def make_objects(model):
     """Create one mesh object per key. Returns (objects, stats)."""
     lo, hi = model.bounds()
     shift = Vector((-(lo.x + hi.x) / 2 if model.center_xy else 0.0,
-                    -(lo.y + hi.y) / 2 if model.center_xy else 0.0, -lo.z))
+                    -(lo.y + hi.y) / 2 if model.center_xy else 0.0,
+                    -lo.z if model.base_z is None else -model.base_z))
     coll = bpy.data.collections.new(model.name)
     bpy.context.scene.collection.children.link(coll)
     objs, stats = [], []
@@ -796,6 +826,7 @@ def render_preview(objs, path, ref_pos=None, view_dir=None, res=(800, 600), with
     lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
     hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     coll = _preview_stage(lo, hi)
+    bpy.data.objects["PreviewGround"].location.z = min(0.0, lo.z)
     if with_ref and bpy.data.objects.get("REF_Figure_5p5") is None:
         if ref_pos is None:
             ref_pos = (hi.x + 4.0, lo.y + 1.0)

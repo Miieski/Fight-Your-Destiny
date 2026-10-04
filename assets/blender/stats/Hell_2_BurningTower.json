@@ -1,0 +1,131 @@
+{
+ "name": "Hell_2_BurningTower",
+ "target": [
+  44,
+  44,
+  110
+ ],
+ "size": [
+  44.0,
+  44.0,
+  110.8
+ ],
+ "triangles": 1860,
+ "objects": [
+  {
+   "object": "Hell_2_BurningTower__Hell_GroundDark",
+   "color": "Hell_GroundDark",
+   "rgb": [
+    52,
+    16,
+    22
+   ],
+   "triangles": 160,
+   "verts": 100,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Hell_Tile",
+   "color": "Hell_Tile",
+   "rgb": [
+    110,
+    34,
+    36
+   ],
+   "triangles": 392,
+   "verts": 240,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Hell_TileBorder",
+   "color": "Hell_TileBorder",
+   "rgb": [
+    160,
+    48,
+    44
+   ],
+   "triangles": 84,
+   "verts": 56,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Hell_Black",
+   "color": "Hell_Black",
+   "rgb": [
+    26,
+    14,
+    18
+   ],
+   "triangles": 402,
+   "verts": 271,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Neon_Hell_Orange",
+   "color": "Neon_Hell_Orange",
+   "rgb": [
+    232,
+    96,
+    30
+   ],
+   "triangles": 192,
+   "verts": 120,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Hell_Iron",
+   "color": "Hell_Iron",
+   "rgb": [
+    70,
+    60,
+    64
+   ],
+   "triangles": 428,
+   "verts": 236,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Neon_Hell_Lava",
+   "color": "Neon_Hell_Lava",
+   "rgb": [
+    255,
+    110,
+    30
+   ],
+   "triangles": 130,
+   "verts": 79,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_2_BurningTower__Neon_Hell_LavaHot",
+   "color": "Neon_Hell_LavaHot",
+   "rgb": [
+    255,
+    200,
+    80
+   ],
+   "triangles": 72,
+   "verts": 44,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

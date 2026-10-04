@@ -1,0 +1,131 @@
+{
+ "name": "Hell_1_SkullRock",
+ "target": [
+  74,
+  70,
+  80
+ ],
+ "size": [
+  75.3,
+  67.0,
+  80.0
+ ],
+ "triangles": 1324,
+ "objects": [
+  {
+   "object": "Hell_1_SkullRock__Neon_Hell_Lava",
+   "color": "Neon_Hell_Lava",
+   "rgb": [
+    255,
+    110,
+    30
+   ],
+   "triangles": 170,
+   "verts": 103,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Hell_GroundDark",
+   "color": "Hell_GroundDark",
+   "rgb": [
+    52,
+    16,
+    22
+   ],
+   "triangles": 430,
+   "verts": 237,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Hell_Ground",
+   "color": "Hell_Ground",
+   "rgb": [
+    96,
+    28,
+    30
+   ],
+   "triangles": 134,
+   "verts": 81,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Hell_Black",
+   "color": "Hell_Black",
+   "rgb": [
+    26,
+    14,
+    18
+   ],
+   "triangles": 156,
+   "verts": 96,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Hell_Tile",
+   "color": "Hell_Tile",
+   "rgb": [
+    110,
+    34,
+    36
+   ],
+   "triangles": 124,
+   "verts": 66,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Neon_Hell_LavaHot",
+   "color": "Neon_Hell_LavaHot",
+   "rgb": [
+    255,
+    200,
+    80
+   ],
+   "triangles": 32,
+   "verts": 20,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Hell_Iron",
+   "color": "Hell_Iron",
+   "rgb": [
+    70,
+    60,
+    64
+   ],
+   "triangles": 110,
+   "verts": 65,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Hell_1_SkullRock__Hell_Bone",
+   "color": "Hell_Bone",
+   "rgb": [
+    226,
+    214,
+    190
+   ],
+   "triangles": 168,
+   "verts": 112,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

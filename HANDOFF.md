@@ -149,7 +149,18 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**Updated 2026-10-04 (afternoon). World build in progress: Hub + zones 1-5 (Plains, Desert, Jungle,
+**Updated 2026-10-04 (evening). Zones 6-7 (Volcano, Hell) are BUILT and validated but have NOT
+been seen or walked in Play by the orchestrator yet. Zone 8 (Heaven) is being built: its 4 lighting
+presets and 6 VFX prefabs exist, kit / sub-zones / arena in progress. Zones 9-12 (Dead, Abyss,
+Mechanical, Void) only have folders and markers and must NOT be started until the owner says go.
+The admin panel also has teleport buttons for every zone (sub-zone 1-4 or the boss arena).
+`Blender_Exports/` now has 29 FBX (Hub + zones 1-7); the 4 Heaven landmarks are not made yet.**
+
+**Owner's working rules (2026-10-04):** only ONE builder agent at a time; after each finished zone
+update this file, take a backup and push to GitHub; never press Play while a builder runs; after
+Heaven, walk Volcano / Hell / Heaven in Play, fix, then stop and report.
+
+Earlier note (afternoon of 2026-10-04): World build in progress: Hub + zones 1-5 (Plains, Desert, Jungle,
 Tundra, Swamp) are built, validated and walked in Play; zones 6-12 (Volcano ... Void) only have
 their folders and markers. Each built zone has its kit catalog (`docs/ASSET_KIT_*.md`), its boss
 arena in `ServerStorage.BossArenas`, and lighting presets in `ReplicatedStorage.Assets.Lighting`.
