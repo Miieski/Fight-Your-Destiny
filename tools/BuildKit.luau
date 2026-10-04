@@ -634,6 +634,9 @@ function Kit.validateZone(zoneId: string): string
 		if not (entrance and entrance:IsA("BasePart")) then
 			fail(id .. " Entrance missing")
 		else
+			if entrance.CFrame.LookVector.Z < 0.9 then
+				fail(id .. " Entrance must face +Z: CFrame.lookAt(pos, pos + Vector3.zAxis) (players arrive looking that way)")
+			end
 			local pos = Kit.ground(entrance.Position.X, entrance.Position.Z, nil, entrance.Position.Y + 3)
 			if not pos then
 				fail(id .. " Entrance has no ground under it")
