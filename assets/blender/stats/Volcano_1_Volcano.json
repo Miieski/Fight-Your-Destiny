@@ -1,0 +1,131 @@
+{
+ "name": "Volcano_1_Volcano",
+ "target": [
+  320,
+  320,
+  220
+ ],
+ "size": [
+  318.1,
+  333.2,
+  222.0
+ ],
+ "triangles": 2422,
+ "objects": [
+  {
+   "object": "Volcano_1_Volcano__Volcano_BasaltDark",
+   "color": "Volcano_BasaltDark",
+   "rgb": [
+    30,
+    28,
+    34
+   ],
+   "triangles": 398,
+   "verts": 241,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Volcano_Basalt",
+   "color": "Volcano_Basalt",
+   "rgb": [
+    52,
+    48,
+    54
+   ],
+   "triangles": 482,
+   "verts": 277,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Volcano_Ash",
+   "color": "Volcano_Ash",
+   "rgb": [
+    128,
+    124,
+    126
+   ],
+   "triangles": 60,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Volcano_AshLight",
+   "color": "Volcano_AshLight",
+   "rgb": [
+    170,
+    164,
+    162
+   ],
+   "triangles": 60,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Neon_Volcano_Lava",
+   "color": "Neon_Volcano_Lava",
+   "rgb": [
+    255,
+    120,
+    30
+   ],
+   "triangles": 656,
+   "verts": 356,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Neon_Volcano_LavaHot",
+   "color": "Neon_Volcano_LavaHot",
+   "rgb": [
+    255,
+    208,
+    70
+   ],
+   "triangles": 136,
+   "verts": 74,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Volcano_LavaCrust",
+   "color": "Volcano_LavaCrust",
+   "rgb": [
+    150,
+    40,
+    20
+   ],
+   "triangles": 460,
+   "verts": 240,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_1_Volcano__Volcano_BasaltLight",
+   "color": "Volcano_BasaltLight",
+   "rgb": [
+    84,
+    78,
+    84
+   ],
+   "triangles": 170,
+   "verts": 99,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Backdrop piece, meant to sit far outside the play area. Lava = objects Neon_Volcano_Lava and Neon_Volcano_LavaHot.",
+ "anchors": {}
+}

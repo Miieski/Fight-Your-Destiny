@@ -1,0 +1,123 @@
+{
+ "name": "Volcano_3_LavaFall",
+ "target": [
+  120,
+  50,
+  100
+ ],
+ "size": [
+  120.2,
+  49.9,
+  100.0
+ ],
+ "triangles": 2474,
+ "objects": [
+  {
+   "object": "Volcano_3_LavaFall__Volcano_BasaltDark",
+   "color": "Volcano_BasaltDark",
+   "rgb": [
+    30,
+    28,
+    34
+   ],
+   "triangles": 518,
+   "verts": 307,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_3_LavaFall__Volcano_Ash",
+   "color": "Volcano_Ash",
+   "rgb": [
+    128,
+    124,
+    126
+   ],
+   "triangles": 480,
+   "verts": 288,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_3_LavaFall__Volcano_Basalt",
+   "color": "Volcano_Basalt",
+   "rgb": [
+    52,
+    48,
+    54
+   ],
+   "triangles": 600,
+   "verts": 360,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_3_LavaFall__Volcano_BasaltLight",
+   "color": "Volcano_BasaltLight",
+   "rgb": [
+    84,
+    78,
+    84
+   ],
+   "triangles": 380,
+   "verts": 228,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_3_LavaFall__Volcano_LavaCrust",
+   "color": "Volcano_LavaCrust",
+   "rgb": [
+    150,
+    40,
+    20
+   ],
+   "triangles": 296,
+   "verts": 168,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_3_LavaFall__Neon_Volcano_Lava",
+   "color": "Neon_Volcano_Lava",
+   "rgb": [
+    255,
+    120,
+    30
+   ],
+   "triangles": 92,
+   "verts": 56,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_3_LavaFall__Volcano_Obsidian",
+   "color": "Volcano_Obsidian",
+   "rgb": [
+    24,
+    20,
+    34
+   ],
+   "triangles": 108,
+   "verts": 66,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Lava sheet = object ...__Neon_Volcano_Lava: 18 wide, channel floor at Z 84, ledge at Z 33, pool on the ground in front. Back side is flat-ish.",
+ "anchors": {
+  "LavaTop": [
+   0.0,
+   21.34,
+   85.07
+  ]
+ }
+}

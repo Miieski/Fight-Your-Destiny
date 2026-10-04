@@ -1,0 +1,137 @@
+{
+ "name": "Volcano_2_MineElevator",
+ "target": [
+  60,
+  44,
+  90
+ ],
+ "size": [
+  61.8,
+  37.0,
+  89.3
+ ],
+ "triangles": 1950,
+ "objects": [
+  {
+   "object": "Volcano_2_MineElevator__Volcano_Wood",
+   "color": "Volcano_Wood",
+   "rgb": [
+    110,
+    72,
+    52
+   ],
+   "triangles": 360,
+   "verts": 238,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Volcano_BasaltLight",
+   "color": "Volcano_BasaltLight",
+   "rgb": [
+    84,
+    78,
+    84
+   ],
+   "triangles": 280,
+   "verts": 176,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Volcano_Iron",
+   "color": "Volcano_Iron",
+   "rgb": [
+    98,
+    96,
+    104
+   ],
+   "triangles": 956,
+   "verts": 582,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Volcano_BasaltDark",
+   "color": "Volcano_BasaltDark",
+   "rgb": [
+    30,
+    28,
+    34
+   ],
+   "triangles": 158,
+   "verts": 91,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Volcano_Basalt",
+   "color": "Volcano_Basalt",
+   "rgb": [
+    52,
+    48,
+    54
+   ],
+   "triangles": 56,
+   "verts": 32,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Neon_Volcano_Lava",
+   "color": "Neon_Volcano_Lava",
+   "rgb": [
+    255,
+    120,
+    30
+   ],
+   "triangles": 36,
+   "verts": 22,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Neon_Volcano_Ember",
+   "color": "Neon_Volcano_Ember",
+   "rgb": [
+    255,
+    170,
+    60
+   ],
+   "triangles": 84,
+   "verts": 54,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_2_MineElevator__Volcano_Ash",
+   "color": "Volcano_Ash",
+   "rgb": [
+    128,
+    124,
+    126
+   ],
+   "triangles": 20,
+   "verts": 12,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "Wheel (iron) spins about the Blender Y axis through the WheelCentre anchor; it is part of the Volcano_Iron object.",
+ "anchors": {
+  "WheelCentre": [
+   -14.18,
+   1.71,
+   80.54
+  ]
+ }
+}

@@ -1,0 +1,117 @@
+{
+ "name": "Volcano_4_StoneTitan",
+ "target": [
+  60,
+  46,
+  70
+ ],
+ "size": [
+  61.6,
+  43.5,
+  71.4
+ ],
+ "triangles": 1546,
+ "objects": [
+  {
+   "object": "Volcano_4_StoneTitan__Neon_Volcano_Lava",
+   "color": "Neon_Volcano_Lava",
+   "rgb": [
+    255,
+    120,
+    30
+   ],
+   "triangles": 270,
+   "verts": 165,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_4_StoneTitan__Volcano_BasaltDark",
+   "color": "Volcano_BasaltDark",
+   "rgb": [
+    30,
+    28,
+    34
+   ],
+   "triangles": 308,
+   "verts": 174,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_4_StoneTitan__Volcano_LavaCrust",
+   "color": "Volcano_LavaCrust",
+   "rgb": [
+    150,
+    40,
+    20
+   ],
+   "triangles": 364,
+   "verts": 208,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_4_StoneTitan__Volcano_Basalt",
+   "color": "Volcano_Basalt",
+   "rgb": [
+    52,
+    48,
+    54
+   ],
+   "triangles": 332,
+   "verts": 184,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_4_StoneTitan__Volcano_BasaltLight",
+   "color": "Volcano_BasaltLight",
+   "rgb": [
+    84,
+    78,
+    84
+   ],
+   "triangles": 110,
+   "verts": 63,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_4_StoneTitan__Neon_Volcano_LavaHot",
+   "color": "Neon_Volcano_LavaHot",
+   "rgb": [
+    255,
+    208,
+    70
+   ],
+   "triangles": 36,
+   "verts": 24,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  },
+  {
+   "object": "Volcano_4_StoneTitan__Volcano_Obsidian",
+   "color": "Volcano_Obsidian",
+   "rgb": [
+    24,
+    20,
+    34
+   ],
+   "triangles": 126,
+   "verts": 81,
+   "loose": 0,
+   "ngons": 0,
+   "dups_removed": 0
+  }
+ ],
+ "problems": [],
+ "notes": "",
+ "anchors": {}
+}

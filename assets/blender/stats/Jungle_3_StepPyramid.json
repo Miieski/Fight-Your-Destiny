@@ -7,10 +7,10 @@
  ],
  "size": [
   124.0,
-  119.7,
+  120.9,
   80.0
  ],
- "triangles": 3976,
+ "triangles": 4432,
  "objects": [
   {
    "object": "Jungle_3_StepPyramid__Jungle_Stone",
@@ -20,8 +20,8 @@
     138,
     124
    ],
-   "triangles": 444,
-   "verts": 254,
+   "triangles": 596,
+   "verts": 342,
    "loose": 0,
    "ngons": 0,
    "dups_removed": 0
@@ -34,8 +34,8 @@
     100,
     92
    ],
-   "triangles": 248,
-   "verts": 164,
+   "triangles": 412,
+   "verts": 272,
    "loose": 0,
    "ngons": 0,
    "dups_removed": 0
@@ -48,8 +48,8 @@
     255,
     190
    ],
-   "triangles": 1240,
-   "verts": 824,
+   "triangles": 1264,
+   "verts": 840,
    "loose": 0,
    "ngons": 0,
    "dups_removed": 0
@@ -62,8 +62,8 @@
     201,
     60
    ],
-   "triangles": 144,
-   "verts": 78,
+   "triangles": 260,
+   "verts": 140,
    "loose": 0,
    "ngons": 0,
    "dups_removed": 0
@@ -112,16 +112,21 @@
   }
  ],
  "problems": [],
- "notes": "Stair: 24 steps of 2.35 high x 1.99 deep, 19.4 wide, from the ground to the top platform at Z 56.4 (add an invisible ramp in Studio). Shrine doorway about 9 wide x 9.4 high.",
+ "notes": "Ground-level tunnel straight through, front to back: 40.4 wide x 26.2 high clear, 105 long. Stairs: two side flights (9.7 wide, 12 steps) beside the gate up to the landing at Z 28.2, then a central flight (19.4 wide, 12 steps) to the top platform at Z 56.4; steps 2.35 high x 1.99 deep (add invisible ramps). Shrine doorway about 9 wide x 9.4 high.",
  "anchors": {
   "ShrineDoor": [
    0.13,
-   1.75,
+   1.14,
    57.42
   ],
-  "StairFoot": [
+  "TunnelFront": [
    0.13,
-   -54.06,
+   -45.22,
+   0.0
+  ],
+  "TunnelBack": [
+   0.13,
+   59.79,
    0.0
   ]
  }
