@@ -23,7 +23,7 @@ local STEEL = Color3.fromRGB(150, 156, 168)
 local DANGER = Color3.fromRGB(217, 59, 59)
 local INK = Color3.fromRGB(40, 24, 12)
 local BASE_HEIGHT = 720
-local WINDOW = Vector2.new(440, 330)
+local WINDOW = Vector2.new(440, 412)
 local MARGIN, GAP, ROW = 18, 6, 44
 local OPEN_TWEEN = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
@@ -154,11 +154,18 @@ local function build(player: Player)
 	window.Parent = gui
 
 	text(window, "TextLabel", {
-		Text = "Admin - Money", TextSize = 26, TextColor3 = GOLD, BackgroundTransparency = 1,
+		Text = "Admin", TextSize = 26, TextColor3 = GOLD, BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(MARGIN, 10), Size = UDim2.fromOffset(300, 32), TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	section(window, 52, "Gold", GOLD, "AddGold", "SetGold", Admins.GoldButtons)
 	section(window, 192, "Diamonds", DIAMOND, "AddDiamonds", "SetDiamonds", Admins.DiamondButtons)
+	text(window, "TextLabel", {
+		Text = "World", BackgroundTransparency = 1, TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(MARGIN, 322), Size = UDim2.fromOffset(200, 24),
+	})
+	button(window, "Unlock all gates", STEEL, MARGIN, 350, WINDOW.X - MARGIN * 2, function()
+		Net.event("Admin"):FireServer("UnlockAll", 0)
+	end)
 
 	local open = false
 	local function setOpen(value: boolean)

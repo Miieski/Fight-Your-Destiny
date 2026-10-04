@@ -407,6 +407,7 @@ function Kit.scatter(opts): { Instance }
 			local pos, hitPart = Kit.ground(x, z, placed)
 			if pos and hitPart and (not opts.on or opts.on(hitPart, pos) ~= false) then
 				local clone = opts.templates[rng:NextInteger(1, #opts.templates)]:Clone()
+				clone.Parent = opts.parent -- Model:ScaleTo only works once the model is in the DataModel
 				if opts.scale and clone:IsA("Model") then
 					clone:ScaleTo(rng:NextNumber(opts.scale[1], opts.scale[2]))
 				elseif opts.scale and clone:IsA("BasePart") then

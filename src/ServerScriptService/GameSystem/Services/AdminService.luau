@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Admins = require(ReplicatedStorage.GameSystem.Config.Admins)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 
 local AdminService = { Priority = 6 }
@@ -24,6 +25,16 @@ local COMMANDS: { [string]: (Player, number) -> () } = {
 	end,
 	SetDiamonds = function(player, amount)
 		DataService:Set(player, "Diamonds", math.floor(amount))
+	end,
+	-- Opens every sub-zone gate of every zone for this player (the amount is ignored).
+	UnlockAll = function(player, _amount)
+		local unlocked = {}
+		for _, zone in ipairs(Zones.List) do
+			for n = 2, Zones.SUBZONE_COUNT do
+				unlocked[Zones.subZoneId(zone.Id, n)] = true
+			end
+		end
+		DataService:Set(player, "SubZones", unlocked)
 	end,
 }
 
