@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.State)
 
@@ -121,9 +122,12 @@ end
 function Hud:Start()
 	local player = Players.LocalPlayer
 	goldLabel.Text = Format.number(State.get("Gold") or 0)
-	State.Changed:Connect(function(key, value)
+	State.Changed:Connect(function(key, value, old)
 		if key == "Gold" then
 			goldLabel.Text = Format.number(value)
+			if typeof(old) == "number" and value > old then
+				Sfx.play("GoldPickup")
+			end
 		end
 	end)
 	local function showLocation()
@@ -139,6 +143,11 @@ function Hud:Start()
 		noticeToken += 1
 		notice.Text = text
 		notice.TextColor3 = KIND_COLORS[kind] or KIND_COLORS.info
+		if kind == "good" then
+			Sfx.play("Unlock")
+		elseif kind == "bad" then
+			Sfx.play("Denied")
+		end
 		flash(notice, NOTIFY_SECONDS, noticeToken, function()
 			return noticeToken
 		end)

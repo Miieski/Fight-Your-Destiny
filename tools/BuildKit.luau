@@ -331,14 +331,22 @@ end
 ---------------------------------------------------------------------
 -- Placement
 ---------------------------------------------------------------------
--- Ground hit below (x, z). Only parts with CanQuery = true are hit (markers are ignored).
+-- Ground hit below (x, z). Markers (no collision, CanQuery false) and invisible parts such as the
+-- Bounds walls are skipped, so the result is the visible ground or prop.
 function Kit.ground(x: number, z: number, ignore: { Instance }?, fromY: number?): (Vector3?, BasePart?)
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = ignore or {}
-	local hit = workspace:Raycast(Vector3.new(x, fromY or 300, z), Vector3.new(0, -700, 0), params)
-	if hit then
-		return hit.Position, hit.Instance :: BasePart
+	local ignored = table.clone(ignore or {})
+	for _ = 1, 8 do
+		params.FilterDescendantsInstances = ignored
+		local hit = workspace:Raycast(Vector3.new(x, fromY or 300, z), Vector3.new(0, -700, 0), params)
+		if not hit then
+			return nil, nil
+		end
+		if hit.Instance.Transparency < 1 then
+			return hit.Position, hit.Instance :: BasePart
+		end
+		table.insert(ignored, hit.Instance)
 	end
 	return nil, nil
 end
@@ -487,6 +495,12 @@ function Kit.finishGate(model: Model, zoneId: string, n: number)
 		gui.Parent = sign
 	end
 	model.Parent = Kit.subZone(zoneId, n)
+	-- Invisible lid above the Barrier: the opening stays closed whatever the jump height.
+	local bounds = Kit.subZone(zoneId, n).Bounds
+	local lid = bounds:FindFirstChild("GateLid") or Kit.part({ Name = "GateLid", Parent = bounds })
+	lid.Size = Vector3.new(barrier.Size.X, 84, math.max(barrier.Size.Z, 2))
+	lid.CFrame = barrier.CFrame * CFrame.new(0, barrier.Size.Y / 2 + 42, 0)
+	lid.Transparency, lid.CanCollide, lid.CanTouch, lid.CastShadow = 1, true, false, false
 end
 
 --[[

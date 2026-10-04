@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
+local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 
 local CombatController = {}
 
@@ -62,6 +63,7 @@ end
 function CombatController:Start()
 	Net.event("Hit").OnClientEvent:Connect(function(position: Vector3, amount: number, crit: boolean)
 		damageNumber(position, amount, crit)
+		Sfx.play(if crit then "Crit" else "Hit", position)
 		burst(if crit then "Crit_Spark" else "Hit_Spark", position - Vector3.new(0, 1.5, 0))
 	end)
 	ContextActionService:BindAction(ACTION, function(_, inputState)
@@ -71,6 +73,7 @@ function CombatController:Start()
 				task.spawn(function()
 					while holding do
 						Net.event("Attack"):FireServer()
+						Sfx.play("SwordSwing")
 						task.wait(Playtest.AttackCooldown)
 					end
 				end)

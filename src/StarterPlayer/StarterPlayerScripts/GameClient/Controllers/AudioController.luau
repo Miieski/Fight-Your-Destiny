@@ -7,6 +7,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
+local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
+
 local AudioController = {}
 
 local FADE = TweenInfo.new(1.5)
@@ -65,6 +67,14 @@ function AudioController:Start()
 	end
 	player:GetAttributeChangedSignal("SubZoneId"):Connect(update)
 	update()
+	local lastZone = player:GetAttribute("ZoneId")
+	player:GetAttributeChangedSignal("ZoneId"):Connect(function()
+		local zoneId = player:GetAttribute("ZoneId")
+		if zoneId ~= lastZone then
+			lastZone = zoneId
+			Sfx.play("PortalEnter")
+		end
+	end)
 end
 
 return AudioController
