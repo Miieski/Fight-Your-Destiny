@@ -17,7 +17,6 @@ local Theme = require(Kit.Theme)
 
 local HealthBar = { Priority = 10 }
 
-local SIZE = { Normal = Vector2.new(300, 54), Compact = Vector2.new(250, 50) }
 local VIGNETTE_DEPTH = 0.22 -- fraction of the screen covered by each red edge
 local PULSE = TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 
@@ -117,7 +116,7 @@ local function makeVignette(root: Instance)
 end
 
 local function layout()
-	local size = if Theme.isCompact() then SIZE.Compact else SIZE.Normal
+	local size = if Theme.isCompact() then UIConfig.Hud.Health.Compact else UIConfig.Hud.Health.Normal
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
 end
 
@@ -128,7 +127,7 @@ function HealthBar:Start()
 	end)
 	makeVignette(vignetteScreen())
 	local root = Screens.hud()
-	panel = Panel.new({ Name = "Health", Position = UDim2.fromOffset(12, 10), Gems = false, BorderThickness = 3, Parent = root })
+	panel = Panel.new({ Name = "Health", Position = UDim2.fromOffset(12, UIConfig.Hud.Health.Top), Gems = false, BorderThickness = 3, Parent = root })
 	Icons.create("Heart", panel, { Size = UDim2.new(0, 0, 0.72, 0), Position = UDim2.new(0, 10, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
 	bar = Bar.new({ Name = "HP", Size = UDim2.new(1, -62, 0.56, 0), Position = UDim2.new(0, 52, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = panel })
 	layout()

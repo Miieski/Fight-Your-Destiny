@@ -1,6 +1,8 @@
 --!strict
--- HUD 6 + 8: menu buttons with red badges. Left column on PC, two columns on touch tablets
--- (clear of the joystick), and a single Menu button with a pop-up grid on phones.
+-- HUD 6 + 8: menu buttons with red badges. On PC and tablets the grid sits on the left under the
+-- health bar, MenuGrid.Columns wide and filled row by row (8 buttons -> 4 rows). Entries marked Apart
+-- in Config/UI Menu (Settings) are separate icon buttons right of the health bar. On phones the grid
+-- lives in a pop-up opened by a single Menu button, with the Apart buttons beside that button.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
@@ -14,18 +16,18 @@ local Window = require(Kit.Window)
 
 local MenuBar = { Priority = 11 }
 
-local TILE = 58
-local GAP = 5
+local GRID = UIConfig.MenuGrid
+local MARGIN = 12 -- from the left edge of the screen
+local SPACING = 8 -- between the health bar (or the Menu button) and the Apart buttons
 local TOP = { Normal = 72, Compact = 66 } -- below the health bar
-local POPUP_COLUMNS = 3
-local BOTTOM_MARGIN = 12
+local POPUP_PADDING = 12
 
 local column: Frame
-local grid: UIGridLayout
 local popup: Frame
 local popupGrid: Frame
 local toggle: any
 local tiles: { any } = {}
+local apart: { any } = {}
 local counts: { [string]: number } = {}
 
 local function updateToggleBadge()
@@ -34,6 +36,21 @@ local function updateToggleBadge()
 		total += n
 	end
 	toggle.Badge:Set(total)
+end
+
+local function gridSize(count: number): Vector2
+	local rows = math.ceil(count / GRID.Columns)
+	return Vector2.new(GRID.Columns * GRID.Tile + (GRID.Columns - 1) * GRID.Gap, rows * GRID.Tile + (rows - 1) * GRID.Gap)
+end
+
+local function addGridLayout(parent: Instance)
+	local grid = Instance.new("UIGridLayout")
+	grid.CellSize = UDim2.fromOffset(GRID.Tile, GRID.Tile)
+	grid.CellPadding = UDim2.fromOffset(GRID.Gap, GRID.Gap)
+	grid.FillDirection = Enum.FillDirection.Horizontal
+	grid.FillDirectionMaxCells = GRID.Columns
+	grid.SortOrder = Enum.SortOrder.LayoutOrder
+	grid.Parent = parent
 end
 
 local function layout()
@@ -47,57 +64,72 @@ local function layout()
 		tile.Instance.Parent = if compact then popupGrid else column
 		tile:SetLabelVisible(not compact)
 	end
-	local oneColumn = #tiles * TILE + (#tiles - 1) * GAP
-	local columns = if Theme.isTouch() or TOP.Normal + oneColumn + BOTTOM_MARGIN > Theme.size().Y then 2 else 1
-	local rows = math.ceil(#tiles / columns)
-	grid.FillDirectionMaxCells = rows
-	column.Size = UDim2.fromOffset(columns * TILE + (columns - 1) * GAP, rows * TILE + (rows - 1) * GAP)
-	column.Position = UDim2.fromOffset(12, TOP.Normal)
-	toggle.Instance.Position = UDim2.fromOffset(12, TOP.Compact)
-	popup.Position = UDim2.fromOffset(12 + TILE + 10, TOP.Compact)
+	column.Position = UDim2.fromOffset(MARGIN, TOP.Normal)
+	toggle.Instance.Position = UDim2.fromOffset(MARGIN, TOP.Compact)
+	-- Apart buttons: right of the health bar (centered on it), or right of the Menu button on phones
+	local health = UIConfig.Hud.Health
+	local x = if compact then MARGIN + GRID.Tile + SPACING else MARGIN + health.Normal.X + SPACING
+	local y = if compact then TOP.Compact else health.Top + (health.Normal.Y - GRID.Tile) / 2
+	for _, button in ipairs(apart) do
+		button.Instance.Position = UDim2.fromOffset(x, y)
+		x += GRID.Tile + SPACING
+	end
+	popup.Position = UDim2.fromOffset(if compact then x else MARGIN, TOP.Compact)
 end
 
 function MenuBar:Start()
 	local root = Screens.hud()
+	local gridCount = 0
+	for _, entry in ipairs(UIConfig.Menu) do
+		if not entry.Apart then
+			gridCount += 1
+		end
+	end
+	local size = gridSize(gridCount)
+
 	column = Instance.new("Frame")
 	column.Name = "Menu"
 	column.BackgroundTransparency = 1
-	grid = Instance.new("UIGridLayout")
-	grid.CellSize = UDim2.fromOffset(TILE, TILE)
-	grid.CellPadding = UDim2.fromOffset(GAP, GAP)
-	grid.FillDirection = Enum.FillDirection.Vertical
-	grid.SortOrder = Enum.SortOrder.LayoutOrder
-	grid.Parent = column
+	column.Size = UDim2.fromOffset(size.X, size.Y)
+	addGridLayout(column)
 	column.Parent = root
 
-	local cells = math.ceil(#UIConfig.Menu / POPUP_COLUMNS)
-	popup = Panel.new({ Name = "MenuPopup", Size = UDim2.fromOffset(POPUP_COLUMNS * (TILE + GAP) + 18, cells * (TILE + GAP) + 18), Parent = root })
+	popup = Panel.new({ Name = "MenuPopup", Size = UDim2.fromOffset(size.X + 2 * POPUP_PADDING, size.Y + 2 * POPUP_PADDING), Parent = root })
 	popup.Visible = false
 	popupGrid = Instance.new("Frame")
+	popupGrid.Name = "Grid"
 	popupGrid.BackgroundTransparency = 1
-	popupGrid.Position = UDim2.fromOffset(12, 12)
-	popupGrid.Size = UDim2.new(1, -18, 1, -18)
-	local popupLayout = Instance.new("UIGridLayout")
-	popupLayout.CellSize = UDim2.fromOffset(TILE, TILE)
-	popupLayout.CellPadding = UDim2.fromOffset(GAP, GAP)
-	popupLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	popupLayout.Parent = popupGrid
+	popupGrid.Position = UDim2.fromOffset(POPUP_PADDING, POPUP_PADDING)
+	popupGrid.Size = UDim2.fromOffset(size.X, size.Y)
+	addGridLayout(popupGrid)
 	popupGrid.Parent = popup
 
-	toggle = IconButton.new({ Name = "MenuToggle", Icon = "Menu", Label = "Menu", Size = Vector2.new(TILE, TILE), ShowLabel = false, Parent = root, OnClick = function()
+	toggle = IconButton.new({ Name = "MenuToggle", Icon = "Menu", Label = "Menu", Size = Vector2.new(GRID.Tile, GRID.Tile), ShowLabel = false, Parent = root, OnClick = function()
 		popup.Visible = not popup.Visible
 	end })
 
 	for index, entry in ipairs(UIConfig.Menu) do
-		local tile = IconButton.new({ Name = entry.Id, Icon = entry.Icon, Label = entry.Label, Size = Vector2.new(TILE, TILE), LayoutOrder = index, Parent = column, OnClick = function()
-			popup.Visible = false
-			Window.toggle(entry.Id)
-		end })
-		table.insert(tiles, tile)
+		local button = IconButton.new({
+			Name = entry.Id,
+			Icon = entry.Icon,
+			Label = entry.Label,
+			Size = Vector2.new(GRID.Tile, GRID.Tile),
+			ShowLabel = not entry.Apart,
+			LayoutOrder = index,
+			Parent = if entry.Apart then root else column,
+			OnClick = function()
+				popup.Visible = false
+				Window.toggle(entry.Id)
+			end,
+		})
+		table.insert(if entry.Apart then apart else tiles, button)
 		Badges.watch(entry.Id, function(count)
-			tile.Badge:Set(count)
-			counts[entry.Id] = count
-			updateToggleBadge()
+			button.Badge:Set(count)
+			-- the Menu button sums the badges hidden in its pop-up only
+			if not entry.Apart then
+				counts[entry.Id] = count
+				updateToggleBadge()
+			end
 		end)
 	end
 	layout()

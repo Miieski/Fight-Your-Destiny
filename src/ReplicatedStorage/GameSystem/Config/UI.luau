@@ -10,6 +10,8 @@ UI.Scale = { BaseHeight = 660, Min = 0.6, Max = 1.4, TouchMin = 0.8, CompactHeig
 -- Minimum size of anything tappable, in design units (56 x 0.8 = 44.8 px on the smallest scale).
 UI.TOUCH = 56
 
+-- Menu buttons in order. The grid (MenuGrid) holds the entries without Apart, filled row by row;
+-- Apart entries are separate icon buttons next to the health bar (next to the Menu button on phones).
 UI.Menu = {
 	{ Id = "Inventory", Label = "Inventory", Icon = "Inventory" },
 	{ Id = "Training", Label = "Training", Icon = "Training" },
@@ -19,8 +21,9 @@ UI.Menu = {
 	{ Id = "Index", Label = "Index", Icon = "Index" },
 	{ Id = "Quests", Label = "Quests", Icon = "Quests" },
 	{ Id = "Team", Label = "Team", Icon = "Team" },
-	{ Id = "Settings", Label = "Settings", Icon = "Settings" },
+	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
 }
+UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5 } -- 8 buttons -> 4 rows
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
 UI.Windows = {
@@ -46,6 +49,7 @@ UI.BadgeIds = { "Inventory", "Quests", "Index", "Pets", "RebirthShop", "Shop" }
 UI.BADGE_MAX_SHOWN = 9 -- above this the badge shows "9+"
 
 UI.Hud = {
+	Health = { Top = 10, Normal = Vector2.new(270, 54), Compact = Vector2.new(250, 50) }, -- top-left panel
 	HealthSegments = 10,
 	LowHealthFraction = 0.25,
 	HealthTweenSeconds = 0.25,

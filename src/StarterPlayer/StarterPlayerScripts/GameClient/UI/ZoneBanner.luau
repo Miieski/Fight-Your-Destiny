@@ -23,9 +23,10 @@ local ZoneBanner = { Priority = 10 }
 
 local SIZE = { Normal = Vector2.new(380, 62), Compact = Vector2.new(300, 52) }
 local BOOST_SIZE = Vector2.new(300, 40)
--- Widest top-corner block (the health bar on the left: 12 + 300; the currency bars on the right
--- are 12 + 270) plus a gap; on narrow screens (4:3 tablets) the banner shrinks to stay clear.
-local SIDE_RESERVED = 322
+-- Widest top-corner block plus a gap: on the left the health bar and the Settings gear
+-- (12 + 270 + 8 + 58); the currency bars on the right are 12 + 270. On narrow screens (4:3 tablets)
+-- the banner shrinks to stay clear.
+local SIDE_RESERVED = 12 + UIConfig.Hud.Health.Normal.X + 8 + UIConfig.MenuGrid.Tile + 10
 local MIN_WIDTH = 200
 
 local banner: Frame

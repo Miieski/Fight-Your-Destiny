@@ -177,9 +177,11 @@ What was built (all in `src/`, mirrored from Studio):
   fits; tapping a bar opens the Shop on its tab, Gold -> Weapons, Diamonds -> Diamonds; sizes and
   tabs in `Config/UI` `Currencies`; count-up, pop, and a +/- float left of the bar. On phones the
   Menu button and the admin crown moved under the health bar; screenshots 14-17), ZoneBanner (+ 2 s title card +
-  Zone Boost badge "Weapon + n/3 Armor"), Equipment (weapon + 3 pet slots), MenuBar (9 buttons with
-  badges; left column on PC, 2 columns on tablets or when one column does not fit, Menu popup on
-  phones), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
+  Zone Boost badge "Weapon + n/3 Armor"), Equipment (weapon + 3 pet slots), MenuBar (owner's choice
+  01:00, after a reference photo: 8 buttons in a 2-wide x 4-tall grid filled row by row on PC and
+  tablets; Settings is `Apart = true` in `Config/UI Menu` and shows as a gear right of the health bar
+  (health bar now 270 wide, `Config/UI Hud.Health`); phones keep the Menu pop-up, now the same 2 x 4
+  grid, with the gear beside the Menu button; screenshots 18-20), Notifier (queue, merge "x2", rarity glow, error shake), Windows (9 shells + Shop "Get
   diamonds" confirm -> GoToHub), Pages/SettingsPage (Audio, Display, Controls, Other), AdminPanel
   (crown button / F2: Money, Teleport, UI Test tabs).
 * **Controllers:** SettingsController (applies locally, saves debounced via SetSetting; volumes go to
