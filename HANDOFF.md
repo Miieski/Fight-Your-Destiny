@@ -189,7 +189,7 @@ until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p,
   combat, Hub, Boss Gate, portal open (first build too). Screenshots `docs/screenshots/ui_redo/B*`.
 
 **Night 2026-10-05, Part C (96 weapons in Blender) - IN PROGRESS, see `docs/NIGHT_LOG.md` and
-`Blender/Weapons/weapons_manifest.csv` for the exact resume point.** Done so far: Sword, Spear, Heavy, Dagger.
+`Blender/Weapons/weapons_manifest.csv` for the exact resume point.** Done so far: Sword, Spear, Heavy, Dagger, Gauntlet.
 * Pipeline `tools/blender/fyd_weapons.py`: `make_weapon(category, zone_index, builder)` builds the parts
   (meters, origin = grip, head along +Z), joins, scales to the category length (`LENGTH_STUDS` x 0.28 m),
   triangulates, Smart-UV unwraps, Cycles-bakes color/metalness/roughness (512 px, packed), makes
@@ -197,7 +197,8 @@ until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p,
   `Blender/Weapons/<Cat>/<NN>_<id>.blend`, exports `Blender_Exports/Weapons/<Cat>/<NN>_<id>.fbx`
   (Y up, textures embedded) and updates the manifest. `lineup(category)` makes `Previews/Weapons/<Cat>_lineup.png`.
 * Builders: one module per category, `fyd_weapon_swords.py`, `fyd_weapon_spears.py`, `fyd_weapon_heavy.py`,
-  `fyd_weapon_daggers.py` (`BUILDERS[zone_index - 1]`), shared parts in `fyd_weapon_parts.py`. Convention in `Blender/Weapons/README.txt`.
+  `fyd_weapon_daggers.py`, `fyd_weapon_gauntlets.py`
+  (`BUILDERS[zone_index - 1]`), shared parts in `fyd_weapon_parts.py`. Convention in `Blender/Weapons/README.txt`.
 * Icons uploaded; ids in `Config/Weapons.luau` between `-- ICONS BEGIN` / `-- ICONS END`
   (`Weapons.ById[id].Icon`). `tools/weapon_icon_table.py` prints the table from `Icons/asset_ids.json`.
 * The FBX files are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions = Meters).

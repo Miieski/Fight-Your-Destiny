@@ -11,6 +11,9 @@ AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05, not yet teste
     Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Gauntlet 1.8 (one hand) | Ranged 5 | Magic 6 | Whip 6 studs
 - ORIGIN = grip center (where the hand holds the weapon).
 - In Blender the blade / head points along +Z (up) and the front of the weapon faces -Y.
+- GAUNTLET exception: ONE right-hand gauntlet per zone (mirror it in Studio, scale X -1, for the left
+  hand). Origin = fist center (where the hand is), knuckles along +Z, forearm cuff along -Z, back of the
+  hand facing -Y, thumb on -X. Attach it to the RightHand/LeftHand rather than as a Tool grip.
 - FBX export: Y up, -Z forward (Blender defaults), apply unit scale, scale 1.0, textures embedded.
   -> In Roblox the blade points along +Y (up), the origin is the grip.
 - IMPORT (owner): Studio > Asset Manager > Bulk Import (or 3D Importer), choose FILE DIMENSIONS =

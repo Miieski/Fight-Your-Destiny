@@ -5,6 +5,15 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:21 PART C - GAUNTLET category done and pushed (60/96). Builders `tools/blender/fyd_weapon_gauntlets.py`
+  (1.8 studs = 0.5 m, ONE right-hand gauntlet: origin = fist center, knuckles +Z, cuff -Z, back of the
+  hand -Y; shared `fist()` / `cuff()` parts; 1104-1726 tris of the 4000 budget). Convention added to
+  `Blender/Weapons/README.txt`. Each one checked on its preview; fixes: Leather Knuckles (no skin-tone
+  fingers, darker leathers), Desert Wraps cloth fingers, Jaguar Claws rosettes, Mud Fists darker mud +
+  lumps, Magma cracks, Angelic wings swept back (they were wider than the gauntlet was long).
+  Lineup `Previews/Weapons/Gauntlet_lineup.png`. Icons uploaded (60 ids in `Config/Weapons.luau`).
+  Next: Ranged (`fyd_weapon_ranged.py`, 5 studs).
+
 - 03:15 PART C - DAGGER category done and pushed (48/96). Builders `tools/blender/fyd_weapon_daggers.py`
   (2 studs = 0.56 m, 0.16 m grip + ~0.3 m blade before scaling, 560-1340 tris). Each dagger checked on
   its preview; fixes: Hunter's Knife detail (was 328 tris, under the brief's 500 minimum), Venom Fang
@@ -83,6 +92,8 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 - Admins skip arena/combat/cooldown checks but NOT the unlock checks (so the owner can test locked
   states with an admin account; `lockAll` / `unlockZone` / `unlockAll` change the unlocks).
 - Hub portals now open the teleport menu on their zone instead of teleporting directly (brief).
+- Gauntlets are modeled as ONE right-hand piece (the brief says "pair, one per hand"): the left one is the
+  same mesh mirrored in Studio, so the pair always matches and the file count stays 12 per category.
 - Weapon icon outline width is per category (Sword 14 px, Spear 8, Heavy 11, Dagger 14, Gauntlet 14,
   Ranged 9, Magic 9, Whip 10): a 14 px outline swallowed the thin spear shafts at 512 px.
 
