@@ -199,12 +199,16 @@ local function tooltip(attribute: any)
 	holder.ZIndex = 30
 	holder.Activated:Connect(closeOverlay)
 	holder.Parent = root
-	local height = 70 + 34 * #attribute.Effects
+	overlay = holder -- remembered, so the X, a tap outside or closing the window removes it
+	local top = Theme.TOUCH + 16 -- the title row holds the close (X) button
+	local height = top + 14 + 34 * #attribute.Effects
 	local panel = Panel.new({ Size = UDim2.fromOffset(math.min(520, root.AbsoluteSize.X / Theme.getScale() - 20), height), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 31, Parent = holder })
-	Icons.create(attribute.Icon, panel, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(14, 10), AnchorPoint = Vector2.zero, ZIndex = 32 })
-	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -80, 0, 40), Position = UDim2.fromOffset(66, 12), ZIndex = 32, Parent = panel })
+	panel.Active = true -- a tap on the panel itself keeps it open; the X or a tap outside closes it
+	Icons.create(attribute.Icon, panel, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(14, 12), AnchorPoint = Vector2.zero, ZIndex = 32 })
+	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -(66 + Theme.TOUCH + 16), 0, 40), Position = UDim2.fromOffset(66, 14), ZIndex = 32, Parent = panel })
+	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 33, OnClick = closeOverlay, Parent = panel })
 	for i, effect in ipairs(attribute.Effects) do
-		Theme.text({ Text = "- " .. effect, TextSize = 19, Wrapped = true, Align = "Left", Size = UDim2.new(1, -32, 0, 32), Position = UDim2.fromOffset(18, 58 + (i - 1) * 34), ZIndex = 32, Parent = panel })
+		Theme.text({ Text = "- " .. effect, TextSize = 19, Wrapped = true, Align = "Left", Size = UDim2.new(1, -32, 0, 32), Position = UDim2.fromOffset(18, top + (i - 1) * 34), ZIndex = 32, Parent = panel })
 	end
 	Sfx.play("UIClick")
 end

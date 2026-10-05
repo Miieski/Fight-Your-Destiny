@@ -224,6 +224,11 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 15:05 OWNER FIX: the attribute info panel (Stats window, tap on an attribute name) could not be closed: the
+  tooltip was never remembered as the open overlay, so tapping outside did nothing. Fixed, and the panel now has a
+  red X close button (touch size) like the other panels; a tap outside or closing the window also closes it.
+  Tested in Play: X closes, tap outside closes. Screenshot `docs/screenshots/menu_systems/A7_*`.
+
 - 14:26 FINAL. Every part of the brief is done and pushed (portal rule, A, B, C, D1-D5). Last pass: phone and
   tablet screenshots for D2-D5 (`docs/screenshots/menus/*_P*`, `*_T*`), Daily / Gifts rows fitted to one line,
   "Show Armor" off checked through the real Settings toggle (armor parts removed, saved; on again = back), Output
