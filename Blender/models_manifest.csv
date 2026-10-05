@@ -1,0 +1,2 @@
+id,category,zone,name,rig,size_studs,size_axis,triangles,budget,parts,glow_parts,clips,status,blend,fbx,notes
+plains_boar,Mobs,01_Plains,Boar,Quadruped,3,height,482,300-1500,7,0,Idle Walk Run Attack1 Hit Death Spawn,ok,Blender/Mobs/01_Plains/plains_boar.blend,Blender_Exports/Mobs/01_Plains/plains_boar.fbx,pilot: conventions in Blender/README.txt

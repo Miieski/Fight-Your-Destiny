@@ -2,9 +2,10 @@
 -- Enemies on the client (docs/enemies_npcs_pets_brief.txt Part B): HP bars, hit and telegraph flashes, the procedural
 -- animation of the rigs, spawn fade-in, death fade and the kill reward pop. Nothing here decides anything: the server
 -- (EnemyService) moves the enemies and sets their attributes (HP, MaxHP, State, Telegraph, AttackAt, HitAt, Dead).
--- Animation: every rig joint is a Motor6D named after its part (Body, Head, LegFL, ArmR, WingL, Seg2...), posed here
--- through Motor6D.Transform from the movement speed and the attack timings. The imported Blender rigs use the same
--- joint names, so they animate the same way until their own clips are played.
+-- Animation: every rig joint is a Motor6D named after its part (Body, Head, LegFL, ArmR, WingL, Seg2...); AnimPlayer
+-- plays the family clips of Config/RigClips on them (the same clips the Blender files bake): locomotion from the speed,
+-- attacks timed on the server telegraph, Hit, Death, Spawn, the boss Intro / Enrage. Imported Blender rigs use the
+-- same joint names, so they animate the same way as the placeholders.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -16,6 +17,7 @@ local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Settings = require(script.Parent.SettingsController)
+local AnimPlayer = require(script.Parent.AnimPlayer)
 
 local EnemyController = {}
 
@@ -29,7 +31,6 @@ local TIER_COLORS = {
 }
 local FILL_COLOR = Color3.fromRGB(230, 60, 60)
 local GOLD_COLOR = Color3.fromRGB(255, 205, 60)
-local LEG_SIGNS = { LegFL = 1, LegBR = 1, LegFR = -1, LegBL = -1, LegL = 1, LegR = -1 } -- walk cycle: diagonal pairs
 
 type Entry = {
 	model: Model,
@@ -39,8 +40,7 @@ type Entry = {
 	gui: BillboardGui,
 	fill: Frame,
 	hpLabel: TextLabel,
-	phase: number,
-	seed: number,
+	anim: any,
 	flash: Highlight?,
 	flashUntil: number,
 	deadAt: number?,
@@ -178,7 +178,7 @@ local function add(model: Instance)
 	local gui, fill, hpLabel = makeBar(model, root, def)
 	local entry: Entry = {
 		model = model, root = root, def = def, joints = joints, gui = gui, fill = fill, hpLabel = hpLabel,
-		phase = math.random() * 10, seed = math.random() * 100, flash = nil, flashUntil = 0, deadAt = nil, connections = {},
+		anim = AnimPlayer.new(model, def.Rig or "Biped", def.Height), flash = nil, flashUntil = 0, deadAt = nil, connections = {},
 	}
 	entries[model] = entry
 	updateBar(entry)
@@ -187,15 +187,41 @@ local function add(model: Instance)
 	end))
 	table.insert(entry.connections, model:GetAttributeChangedSignal("HitAt"):Connect(function()
 		flash(entry, Color3.new(1, 1, 1), 0.35, 0.1)
+		local current = entry.anim:ActionName()
+		if not entry.deadAt and (current == nil or current == "Hit" or current == "Spawn") then
+			entry.anim:Action("Hit")
+		end
+	end))
+	table.insert(entry.connections, model:GetAttributeChangedSignal("Telegraph"):Connect(function()
+		local at = model:GetAttribute("Telegraph")
+		if typeof(at) == "number" and at > serverNow() and not entry.deadAt then
+			entry.anim:Action(attackClip(entry), { impactAt = serverToClock(at) })
+		end
+	end))
+	table.insert(entry.connections, model:GetAttributeChangedSignal("State"):Connect(function()
+		if model:GetAttribute("State") == "Intro" then
+			entry.anim:Action(if entry.anim:Has("Intro") then "Intro" else "Roar")
+		end
+	end))
+	table.insert(entry.connections, model:GetAttributeChangedSignal("Enraged"):Connect(function()
+		if model:GetAttribute("Enraged") and entry.anim:Has("Enrage") then
+			entry.anim:Action("Enrage")
+		end
 	end))
 	table.insert(entry.connections, model:GetAttributeChangedSignal("Dead"):Connect(function()
 		if model:GetAttribute("Dead") and not entry.deadAt then
 			entry.deadAt = os.clock()
 			entry.gui.Enabled = false
+			entry.anim:Action("Death", { hold = true })
 			Sfx.play("EnemyDeath", root.Position)
 		end
 	end))
-	-- spawn: fade in
+	-- spawn: pop in and fade in
+	if model:GetAttribute("State") == "Intro" then
+		entry.anim:Action(if entry.anim:Has("Intro") then "Intro" else "Roar")
+	else
+		entry.anim:Action("Spawn")
+	end
 	setTransparency(model, 1)
 	local start = os.clock()
 	local connection: RBXScriptConnection
@@ -213,126 +239,19 @@ local function add(model: Instance)
 	table.insert(entry.connections, connection)
 end
 
-local function angles(x: number, y: number, z: number): CFrame
-	return CFrame.Angles(x, y, z)
+local function serverToClock(serverTime: number): number
+	return os.clock() + (serverTime - serverNow())
 end
 
--- Pose of one enemy for this frame.
-local function animate(entry: Entry, dt: number, now: number, serverTime: number)
-	local model, joints = entry.model, entry.joints
-	local velocity = entry.root.AssemblyLinearVelocity
-	local speed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-	local walk = math.clamp(speed / 10, 0, 1.3)
-	entry.phase += dt * (3 + speed * 0.55)
-	local phase = entry.phase
-	local t = now + entry.seed
-	local rig = entry.def.Rig or "Biped"
-
-	-- attack timings from the server attributes
-	local telegraphAt = model:GetAttribute("Telegraph")
-	local windup = 0
-	if typeof(telegraphAt) == "number" and serverTime < telegraphAt then
-		local total = math.max(0.2, entry.def.Telegraph or 0.4)
-		windup = math.clamp(1 - (telegraphAt - serverTime) / total, 0, 1)
+-- The attack clip for a telegraph: heavy -> Attack2, ranged -> Shoot, else Attack1 (when the rig has it).
+local function attackClip(entry: Entry): string
+	local anim = entry.anim
+	if entry.model:GetAttribute("Heavy") and anim:Has("Attack2") then
+		return "Attack2"
+	elseif entry.def.AttackType == "ranged" and anim:Has("Shoot") then
+		return "Shoot"
 	end
-	local attackAt = model:GetAttribute("AttackAt")
-	local strike = 0
-	if typeof(attackAt) == "number" then
-		local since = serverTime - attackAt
-		if since >= 0 and since < 0.3 then
-			strike = 1 - since / 0.3
-		end
-	end
-	local hitAt = model:GetAttribute("HitAt")
-	local recoil = 0
-	if typeof(hitAt) == "number" then
-		local since = serverTime - hitAt
-		if since >= 0 and since < 0.15 then
-			recoil = 1 - since / 0.15
-		end
-	end
-	local dying = 0
-	if entry.deadAt then
-		dying = math.clamp((now - entry.deadAt) / 0.6, 0, 1)
-	end
-
-	local swing = math.sin(phase) * walk
-	local bodyPitch = windup * 0.3 - strike * 0.35 + recoil * 0.2
-	local bob = math.sin(phase * 2) * 0.08 * walk + math.sin(t * 2) * 0.03
-	local body = joints.Body or joints.Torso
-	if body then
-		local fall = CFrame.new(0, -dying * 0.6, 0) * angles(0, 0, dying * math.rad(80))
-		local float = if rig == "Floater" then math.sin(t * 2) * 0.25 else 0
-		body.Transform = fall * CFrame.new(0, bob + float, -strike * 0.5) * angles(bodyPitch, 0, 0)
-	end
-	local head = joints.Head
-	if head then
-		head.Transform = angles(math.sin(t * 1.3) * 0.06 - windup * 0.15, math.sin(t * 0.7) * 0.12, 0)
-	end
-	-- four legs, two legs, arms
-	for name, sign in pairs(LEG_SIGNS) do
-		local joint = joints[name]
-		if joint then
-			joint.Transform = angles(swing * 0.6 * sign, 0, 0)
-		end
-	end
-	local armL, armR = joints.ArmL, joints.ArmR
-	local raise = windup * 2.2 - strike * 1.4
-	if armR then
-		armR.Transform = angles(-swing * 0.5 + (if rig == "Crustacean" then -raise * 0.3 else -raise), 0, 0)
-	end
-	if armL then
-		local both = rig == "Golem" or rig == "Gorilla" or rig == "Crustacean" or rig == "Snowman"
-		armL.Transform = angles(swing * 0.5 + (if both then -raise * (if rig == "Crustacean" then 0.3 else 1) else 0), 0, 0)
-	end
-	-- many-legged rigs: legs sweep in turn
-	for i = 1, 4 do
-		local left, right = joints[`LegL{i}`], joints[`LegR{i}`]
-		local sweep = math.sin(phase * 1.6 + i * 1.3) * 0.3 * walk
-		if left then
-			left.Transform = angles(0, sweep, math.max(0, -sweep) * 0.6)
-		end
-		if right then
-			right.Transform = angles(0, -sweep, -math.max(0, -sweep) * 0.6)
-		end
-	end
-	-- wings
-	local flap = math.sin(t * (if speed > 1 then 14 else 9)) * 0.55 + windup * 0.4
-	if joints.WingL then
-		joints.WingL.Transform = angles(0, 0, -flap)
-	end
-	if joints.WingR then
-		joints.WingR.Transform = angles(0, 0, flap)
-	end
-	-- tails and serpent segments
-	if joints.Tail then
-		joints.Tail.Transform = angles(0, math.sin(t * 3) * 0.3, 0)
-	end
-	for i = 2, 6 do
-		local segment = joints[`Seg{i}`]
-		if segment then
-			segment.Transform = angles(0, math.sin(phase * 0.9 - i * 0.9) * 0.35 * (0.4 + walk), 0)
-		end
-	end
-	if joints.Seg1 then
-		joints.Seg1.Transform = CFrame.new(0, 0, -strike * 0.8) * angles(windup * 0.25, 0, 0)
-	end
-	if joints.Tail2 then
-		joints.Tail2.Transform = angles(math.sin(t * 2.5) * 0.25, 0, 0)
-	end
-	if joints.FinL then
-		joints.FinL.Transform = angles(0, 0, math.sin(t * 6) * 0.3)
-	end
-	if joints.FinR then
-		joints.FinR.Transform = angles(0, 0, -math.sin(t * 6) * 0.3)
-	end
-	if joints.Jaw then
-		joints.Jaw.Transform = angles(math.max(windup, strike) * 0.5, 0, 0)
-	end
-	-- death fade
-	if entry.deadAt then
-		setTransparency(model, math.clamp((now - entry.deadAt - 0.3) / 0.6, 0, 1))
-	end
+	return "Attack1"
 end
 
 local function killPop(position: any, gold: any)
@@ -437,7 +356,13 @@ function EnemyController:Start()
 			end
 			local position = entry.root.Position
 			if (position - eye).Magnitude < ANIMATE_RANGE or entry.deadAt then
-				animate(entry, dt, now, serverTime)
+				local velocity = entry.root.AssemblyLinearVelocity
+				local speed = if entry.deadAt then 0 else Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+				entry.anim:SetLocomotion(speed, entry.def.WalkSpeed or 12)
+				entry.anim:Update(dt)
+				if entry.deadAt then
+					setTransparency(model, math.clamp((now - entry.deadAt - 0.5) / 0.6, 0, 1))
+				end
 			end
 			-- telegraph: red pulse until the hit
 			local telegraphAt = model:GetAttribute("Telegraph")

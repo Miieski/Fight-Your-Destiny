@@ -23,3 +23,8 @@ __pycache__/
 
 # Weapon preview scratch renders
 Previews/Weapons/*/_tmp/
+
+# Blender pipeline scratch
+*.blend1
+Previews/**/_tmp/
+tools/blender/_last_run.json

@@ -439,6 +439,22 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 21:32 PARTS D/E - BLENDER PIPELINE + BOAR PILOT done and pushed.
+  `tools/blender/fyd_creatures.py` (recipes written in Roblox space and studs -> segmented rig, one mesh per joint
+  with its origin on the joint, palette texture 256 px, flat shading, height normalised to the Part F size, meters,
+  FBX like the weapons with the rig encoded in the object names, <id>_rig.json, <id>_anims.json, previews, .blend,
+  manifest row), `fyd_creature_clips.py` (clips of the 14 rig families, baked on the .blend timelines),
+  `run_creatures.py` (batch + lineups), recipes per zone (`fyd_recipes_plains.py` ...). Animation decision: option 2
+  of the brief (clips as data): the same clips live in `Config/RigClips.luau` (Luau twin, checksums equal for the 14
+  families) and the new client `AnimPlayer` plays them on the Motor6D joints (locomotion by speed, attacks stretched
+  to land on the server telegraph, Hit, Death, Spawn, boss Intro / Enrage); EnemyController now uses it on the
+  placeholders (same joint names) - wolf run cycle measured in Play (LegFL +-0.70 rad at 14 studs/s).
+  `DevTools.EnemyModels.fromImport(folder)` rebuilds the owner's imported FBX models as rigs (Root hitbox, Motor6Ds
+  from the names, Neon glow parts) into ServerStorage.Enemies / Bosses / Assets.Pets / NPCs; self-test (placeholder
+  exported with the FBX naming and rebuilt) keeps every joint within 0.007 studs. Pilot `plains_boar`: 482
+  triangles, 7 parts, clips Idle Walk Run Attack1 Hit Death Spawn, preview `Previews/Mobs/01_Plains`.
+  Conventions in `Blender/README.txt`, rig families in `Blender/Rigs/README.txt`.
+  Next: the models zone by zone (mobs, mini-bosses, bosses), then pets and NPCs.
 - 21:07 PART C (MINIMAL BOSS ROOMS, NO PATTERNS) done and pushed.
   New `BossService` + `Config/Bosses`. BossGate of each sub-zone 4: prompts "Enter solo" (E) and "Enter with team"
   (F / gamepad Y). Checks: zone and sub-zone 4 unlocked, within 30 studs of the gate, not already in a room, zones
