@@ -1,0 +1,90 @@
+{
+ "id": "tundra_ice_spirit",
+ "rig": "Floater",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.0,
+  0.037
+ ],
+ "rootSize": [
+  3.091,
+  4.0,
+  1.746
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.364,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    1.727,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail2",
+   "parent": "Tail",
+   "joint": [
+    0.0,
+    0.864,
+    0.182
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -0.773,
+    2.591,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    0.773,
+    2.591,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Body",
+   "joint": [
+    -0.0,
+    2.591,
+    -0.773
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 306,
+ "colors": [
+  "#a8dcf8",
+  "#62b8f0",
+  "#c8ecff",
+  "#8ebbd2",
+  "#d8f2ff",
+  "#759aad",
+  "#97c6df",
+  "#e8faff"
+ ]
+}

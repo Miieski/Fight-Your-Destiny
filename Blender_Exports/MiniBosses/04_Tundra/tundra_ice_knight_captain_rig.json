@@ -1,0 +1,91 @@
+{
+ "id": "tundra_ice_knight_captain",
+ "rig": "Biped",
+ "role": "mini",
+ "size": 10,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  5.0,
+  -2.355
+ ],
+ "rootSize": [
+  5.658,
+  10.0,
+  7.765
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.952,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    6.61,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -1.696,
+    6.251,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    1.696,
+    6.251,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.647,
+    3.772,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.647,
+    3.772,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 1680,
+ "colors": [
+  "#3a6aa8",
+  "#7ab4e4",
+  "#e8f6ff",
+  "#2a4a8a",
+  "#121016",
+  "#f4f4f4",
+  "#6da2cd",
+  "#10202e",
+  "#d8f0ff"
+ ]
+}

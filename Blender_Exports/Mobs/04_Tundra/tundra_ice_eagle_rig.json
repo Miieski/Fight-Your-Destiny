@@ -1,0 +1,101 @@
+{
+ "id": "tundra_ice_eagle",
+ "rig": "Bird",
+ "role": "normal",
+ "size": 4.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.25,
+  -0.006
+ ],
+ "rootSize": [
+  10.689,
+  4.5,
+  6.171
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.368,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.921,
+    -1.184
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingL",
+   "parent": "Body",
+   "joint": [
+    -0.868,
+    2.763,
+    -0.079
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingR",
+   "parent": "Body",
+   "joint": [
+    0.868,
+    2.763,
+    -0.079
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.447,
+    1.263
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -0.395,
+    1.579,
+    0.158
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    0.395,
+    1.579,
+    0.158
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 302,
+ "colors": [
+  "#cce0f2",
+  "#f4f8fc",
+  "#121016",
+  "#f4f4f4",
+  "#f0d060",
+  "#62b8f0",
+  "#8ab4e0",
+  "#6787a8",
+  "#607d9c"
+ ]
+}

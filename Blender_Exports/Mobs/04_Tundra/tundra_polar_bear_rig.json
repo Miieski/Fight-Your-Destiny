@@ -1,0 +1,100 @@
+{
+ "id": "tundra_polar_bear",
+ "rig": "Quadruped",
+ "role": "normal",
+ "size": 6.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.027,
+  3.25,
+  -0.847
+ ],
+ "rootSize": [
+  4.354,
+  6.5,
+  11.862
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    4.139,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    4.528,
+    -2.121
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -1.285,
+    2.727,
+    -2.357
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    1.285,
+    2.727,
+    -2.357
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -1.285,
+    2.727,
+    2.571
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    1.285,
+    2.727,
+    2.571
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    4.782,
+    4.071
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 556,
+ "colors": [
+  "#eef0ea",
+  "#f8f8f4",
+  "#121016",
+  "#f4f4f4",
+  "#c8ccc4",
+  "#2a2a30",
+  "#d0d4cc",
+  "#3a3a40"
+ ]
+}

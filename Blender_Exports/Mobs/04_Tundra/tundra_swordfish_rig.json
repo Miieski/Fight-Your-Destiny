@@ -1,0 +1,69 @@
+{
+ "id": "tundra_swordfish",
+ "rig": "Fish",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.0,
+  -0.649
+ ],
+ "rootSize": [
+  2.992,
+  4.0,
+  8.082
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.655,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    1.655,
+    1.724
+   ],
+   "glow": false
+  },
+  {
+   "name": "FinL",
+   "parent": "Body",
+   "joint": [
+    -0.662,
+    1.379,
+    -0.276
+   ],
+   "glow": false
+  },
+  {
+   "name": "FinR",
+   "parent": "Body",
+   "joint": [
+    0.662,
+    1.379,
+    -0.276
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 320,
+ "colors": [
+  "#486ea8",
+  "#d4e0f0",
+  "#2e4a7a",
+  "#121016",
+  "#f4f4f4",
+  "#bec9d8",
+  "#9ab8e0"
+ ]
+}

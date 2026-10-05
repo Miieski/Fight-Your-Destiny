@@ -1,0 +1,126 @@
+{
+ "id": "tundra_frost_king",
+ "rig": "BossBiped",
+ "role": "boss",
+ "size": 18,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.759,
+  9.0,
+  -4.73
+ ],
+ "rootSize": [
+  11.018,
+  18.0,
+  14.967
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    6.337,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    10.6,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -2.927,
+    10.024,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    2.927,
+    10.024,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -1.123,
+    6.049,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    1.123,
+    6.049,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Crown_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    14.752,
+    -0.0
+   ],
+   "glow": true
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    12.913,
+    -2.025
+   ],
+   "glow": true
+  },
+  {
+   "name": "Gem_Glow",
+   "parent": "Torso",
+   "joint": [
+    -0.0,
+    8.929,
+    -1.584
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 3078,
+ "colors": [
+  "#2a4a8a",
+  "#6a9ad8",
+  "#c8e4f8",
+  "#62d0ff",
+  "#a8dcf8",
+  "#e8f6ff",
+  "#f4faff",
+  "#b8d4ec",
+  "#121016",
+  "#f4f4f4",
+  "#a5bed4",
+  "#5a7ab0",
+  "#8ae4ff",
+  "#96f0ff"
+ ]
+}

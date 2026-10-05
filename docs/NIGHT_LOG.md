@@ -5,6 +5,12 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 22:36 MODELS ZONE 4 (TUNDRA) done and pushed: 11 mobs (white wolf, arctic fox with a huge tail, cursed snowman
+  with glowing purple coal eyes, top hat and stick arms, ice spirit, polar bear, swordfish with sail fin, yeti with
+  a blue face, furious ibex with curved horns, ice eagle, ice knight with kite shield, frost golem with blue crystals
+  after reference 5), Frost Wolf Alpha (1,726, glowing ice shards), Ice Knight Captain (1,680, crested helm,
+  greatsword, cape), Frost King (3,078: icicle crown, frost beard and fur collar, jagged ice cloak, spiked ice mace).
+  All 56 enemy / mini-boss / boss models of zones 1-4 are built: manifest all "ok", 16 lineups in Previews/.
 - 22:24 MODELS ZONE 3 (JUNGLE) done and pushed: 11 mobs (monkey with long arms and curly tail, green snake,
   venomous spider, piranha, toxic frog after reference 4 with big glossy eyes and purple / yellow warning marks,
   tribal warrior, jaguar with rosettes, animated statue with glyphs and moss, tribal archer, shaman with mask and

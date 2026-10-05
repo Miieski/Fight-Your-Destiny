@@ -1,0 +1,99 @@
+{
+ "id": "tundra_furious_ibex",
+ "rig": "Quadruped",
+ "role": "normal",
+ "size": 5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.006,
+  2.5,
+  -0.191
+ ],
+ "rootSize": [
+  1.84,
+  5.0,
+  5.689
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.695,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.944,
+    -1.049
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -0.583,
+    2.119,
+    -1.165
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    0.583,
+    2.119,
+    -1.165
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -0.583,
+    2.119,
+    1.271
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    0.583,
+    2.119,
+    1.271
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.976,
+    2.013
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 568,
+ "colors": [
+  "#a88a6a",
+  "#e8dcc8",
+  "#121016",
+  "#f4f4f4",
+  "#5a4632",
+  "#e0d4bc",
+  "#c8bca4"
+ ]
+}

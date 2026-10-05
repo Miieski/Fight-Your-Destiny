@@ -1,0 +1,106 @@
+{
+ "id": "tundra_frost_golem",
+ "rig": "Golem",
+ "role": "normal",
+ "size": 9,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.025,
+  4.5,
+  0.195
+ ],
+ "rootSize": [
+  8.632,
+  9.0,
+  3.428
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    5.045,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    7.091,
+    -0.273
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -2.591,
+    6.545,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    2.591,
+    6.545,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -1.159,
+    3.545,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    1.159,
+    3.545,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    7.977,
+    -1.255
+   ],
+   "glow": true
+  },
+  {
+   "name": "Crystals_Glow",
+   "parent": "Body",
+   "joint": [
+    -0.014,
+    6.027,
+    1.473
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 326,
+ "colors": [
+  "#b8dcf4",
+  "#7aaed8",
+  "#e8f6ff",
+  "#62d0ff"
+ ]
+}

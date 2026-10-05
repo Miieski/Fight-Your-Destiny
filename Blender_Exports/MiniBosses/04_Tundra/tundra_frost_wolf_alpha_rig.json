@@ -1,0 +1,119 @@
+{
+ "id": "tundra_frost_wolf_alpha",
+ "rig": "Quadruped",
+ "role": "mini",
+ "size": 10,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.031,
+  4.982,
+  0.492
+ ],
+ "rootSize": [
+  5.203,
+  10.0,
+  17.775
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    5.617,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    6.13,
+    -2.669
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -1.342,
+    4.237,
+    -2.966
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    1.342,
+    4.237,
+    -2.966
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -1.342,
+    4.237,
+    3.235
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    1.342,
+    4.237,
+    3.235
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    6.271,
+    5.122
+   ],
+   "glow": false
+  },
+  {
+   "name": "Shards_Glow",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    7.59,
+    0.4
+   ],
+   "glow": true
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    7.106,
+    -5.995
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 1726,
+ "colors": [
+  "#e6eef8",
+  "#ffffff",
+  "#f4f8ff",
+  "#121016",
+  "#f4f4f4",
+  "#8eaad8",
+  "#7ad8ff"
+ ]
+}

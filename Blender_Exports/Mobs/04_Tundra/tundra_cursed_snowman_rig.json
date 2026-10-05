@@ -1,0 +1,89 @@
+{
+ "id": "tundra_cursed_snowman",
+ "rig": "Snowman",
+ "role": "normal",
+ "size": 5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.5,
+  -0.034
+ ],
+ "rootSize": [
+  4.614,
+  5.0,
+  2.268
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.125,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Middle",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.12,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Middle",
+   "joint": [
+    0.0,
+    3.418,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    0.0,
+    3.998,
+    -0.571
+   ],
+   "glow": true
+  },
+  {
+   "name": "ArmL",
+   "parent": "Middle",
+   "joint": [
+    -0.779,
+    2.812,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Middle",
+   "joint": [
+    0.779,
+    2.812,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 500,
+ "colors": [
+  "#f0f4fa",
+  "#c8d4e4",
+  "#2a2028",
+  "#7a3ab8",
+  "#e87a2a",
+  "#c050ff",
+  "#6a4a2e"
+ ]
+}

@@ -1,0 +1,91 @@
+{
+ "id": "tundra_yeti",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 8,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  4.0,
+  -0.125
+ ],
+ "rootSize": [
+  4.61,
+  8.0,
+  3.049
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.44,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    5.754,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -1.757,
+    5.441,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    1.757,
+    5.441,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.68,
+    3.283,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.68,
+    3.283,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 558,
+ "colors": [
+  "#eef2f6",
+  "#ffffff",
+  "#6a98d8",
+  "#121016",
+  "#f4f4f4",
+  "#5f88c2",
+  "#4a70b0",
+  "#3a4a6a",
+  "#c8d4e0"
+ ]
+}
