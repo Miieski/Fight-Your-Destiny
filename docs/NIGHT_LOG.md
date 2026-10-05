@@ -5,6 +5,10 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:45 NIGHT FINISHED. Parts A, B and C are done and pushed. Studio left open in Edit mode (no Play running),
+  local icon server stopped. Waiting for the owner: FBX Bulk Import, the missing Part B tablet screenshot,
+  review of the 8 weapon lineups.
+
 - 03:43 PART C DONE - WHIP & CHAIN category pushed: ALL 96 WEAPONS ARE MADE. Builders
   `tools/blender/fyd_weapon_whips.py` (handle + S-curved lash or chain, 6 studs; shared `path()`, `lash()`,
   `chain()` with alternating links; 952-1936 tris). Each whip checked on its preview; fixes: lashes 1.3x
@@ -104,6 +108,7 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
    sub-zone icons -> tests -> push.
 3. Part C: weapons, category by category (Sword pilot first), manifest
    `Blender/Weapons/weapons_manifest.csv`, push after each category.
+ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to resume from this list.
 
 ## Decisions taken without the owner
 
@@ -134,3 +139,10 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 - 02:35 Studio stopped receiving synthetic input and `screen_capture` times out (the PC display
   probably went to sleep). The Part B tablet screenshot is missing (desktop and phone are done).
   Studio and Blender still run scripts.
+
+- 03:45 `screen_capture` still times out (second try after Part C), so the Part B TABLET screenshot was skipped
+  (rule 4: failed twice). Desktop and phone screenshots of both teleport pages exist.
+- Note for the next session: an `execute_luau` `require(module)` can return a cached copy; to check an edited
+  config, require a temporary clone parented next to it (done for every Config/Weapons ICONS update).
+- No UI shows weapon icons yet (Equipment still uses category icons); the ids are ready in
+  `Weapons.ById[id].Icon` for the inventory/shop step.
