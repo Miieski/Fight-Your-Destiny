@@ -224,6 +224,20 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 14:26 FINAL. Every part of the brief is done and pushed (portal rule, A, B, C, D1-D5). Last pass: phone and
+  tablet screenshots for D2-D5 (`docs/screenshots/menus/*_P*`, `*_T*`), Daily / Gifts rows fitted to one line,
+  "Show Armor" off checked through the real Settings toggle (armor parts removed, saved; on again = back), Output
+  clean (only the expected API Services lines), HANDOFF.md updated, final backup `after_menu_systems`.
+  FINAL REPORT
+  * Finished: all of the brief; acceptance checks run with admin data (simulations, StatsTests 78/78, request
+    validation, double-claim refusals, UTC-day logic via setDaily / addPlaytime).
+  * Not finished / not testable alone: 2-player team flows; DataStore persistence (API Services off); Robux
+    products (ids 0); combat-side effects of Regeneration, Boss Slayer, Loot / Diamond Luck, Trophy Value; trophies;
+    skins; Index enemy art (placeholder skull / crown).
+  * Decisions: see "Decisions taken without the owner" below.
+  * Owner by hand: save the place (pet / egg models live in it), enable API Services to test saving, create the
+    passes / products and put their ids in Config/Products, test teams with 2 clients, edit codes in Config/Codes.
+
 - 14:50 PART D5 TEAM done and pushed. `Config/Teams` (max 5, invite 30 s, invite rate limit 1.5 s, nearby 120
   studs). `TeamService`: TeamCreate, TeamInvite(userId) (leader; inviting without a team creates one; target must
   exist, not be you, not be in a team; no duplicate pending invite; team not full), TeamRespond(inviteId, accept)
@@ -405,3 +419,13 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   leader of a new team. The party list sits under the health bar (left), clear of the menu grid and the buttons.
 
 ## Problems / missing
+
+- Studio's display went to sleep twice during the run, which stops rendering (screen_capture times out,
+  RenderStepped stops). A keep-awake helper (SetThreadExecutionState) ran during the test passes; the first version
+  had a signed-flag bug and did nothing.
+- The Edit-mode command bar can return stale cached copies of config modules (StatsTests / IndexBook failed there);
+  all tests were run in Play instead. `loadstring` was used as a compile check before each Play.
+- One client syntax error reached Play once (ArmorPage `:: number <` cast) and blanked the HUD; fixed, and every
+  later script was compile-checked first.
+- Services that listen to DataService.Loaded in Init missed the player in Studio solo (profile loaded earlier):
+  fixed with a catch-up loop in Pet, Armor, Reward and Team services.

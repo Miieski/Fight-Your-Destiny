@@ -149,6 +149,37 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-05 (afternoon): MENU SYSTEMS (`docs/menu_systems_brief.txt`) are DONE - every part, A to D5.**
+Live log with every decision and test: `docs/NIGHT_LOG.md` ("Menu systems task"). Screenshots:
+`docs/screenshots/menu_systems/` (portal, Attributes), `pets/`, `armor/`, `menus/` (D1-D5), desktop / phone / tablet.
+* **Portal rule:** a hub portal teleports straight to sub-zone 1 (`PortalController` -> Net "UsePortal"); locked
+  portals are gray with a lock for that player. Zone Sign setting is off by default.
+* **A - Attributes** (Stats button, window "Attributes"): `Config/Attributes`, `Util/Stats.compute` (every derived
+  stat, shared by server and UI), `StatsService` (TrainAttributes, RespecAttributes, Max HP / walk speed on the
+  Humanoid), `DevTools/StatsTests` (78 checks incl. pets and armor; admin runStatsTests).
+* **B - Eggs & pets:** `Config/Pets` (72 species + 4 premium), `Config/PetRarities`, `PetService` (hatch, Hatch All,
+  premium eggs, equip / lock / release, Equip Best, auto-sell, `grantPremium`), procedural models built by
+  `DevTools/PetModels.buildAll()` into `ReplicatedStorage.Assets.Pets` / `Assets.Eggs` (in the place, not in git),
+  `Kit/ModelIcon` (cached 3D icons), `PetFollowController`, `UI/Hatching`, `UI/Pages/PetsPage`. Egg odds checked by
+  `DevTools/EggSim` (docs/egg_simulation.txt).
+* **C - Armor & Equipment:** `Config/Armor` (36 pieces), `ArmorService`, `Util/ArmorLook` (procedural pieces on R15,
+  placeholders for the future Blender armor), `ArmorVisualsController` (Show Armor setting), Inventory tabs Equipment
+  (own avatar on a pedestal, slots, picker with arrows, stats) / Weapons / Armor / Pets + Eggs shortcuts / Trophies.
+* **D1 Shop > Diamonds:** premium eggs, Weapon Reroll (keep new / old), Gold Boost x2 packs (`BoostService`, HUD
+  `UI/BoostTimer`), skins "Coming soon". **D2 Rebirth Shop** (`RebirthShopService`). **D3 Index** (`Config/IndexBook`,
+  `IndexService`, rewards per zone and tab; weapons now store their best rarity). **D4 Quests** (`Config/Quests`,
+  `Config/Codes`, `RewardService` with ClaimQuest / ClaimDaily / ClaimGift / RedeemCode and
+  `RewardService.progress(player, kind, n)` hooks in EnemyService, ZoneService, PetService, ShopService,
+  StatsService). **D5 Team** (`TeamService.getTeam(player)` for the boss gate, invites, HUD party list).
+* Admin commands added (section 8 of the brief): giveEgg, givePet, giveArmor, giveBoost, discover, simulateEggs,
+  simulateQuests, setUpgrade, setPass, progressQuest, addPlaytime, setDaily, resetQuests, clearPets, clearIndex.
+* MCP tips added this session: `loadstring(source)` in the Edit command bar is a quick compile check;
+  `require` there may return stale cached configs (test in Play instead); mouse x/y for `user_mouse_input` =
+  screenshot y - 58 (top-bar inset); if `screen_capture` times out, the display went to sleep (RenderStepped stops).
+* NOT done / not testable here: real 2-player team invites, DataStore persistence (API Services off), regeneration /
+  boss slayer / loot luck / trophy effects (computed, applied by the future combat step), trophies, skins, Robux
+  products (ids are 0), Extra Pet Slots pass purchase (admin setPass simulates it), enemy models for the Index.
+
 **Updated 2026-10-05 (00:40). GAMEPLAY PHASE, STEP 1 (UI) IS DONE AND WAITING FOR THE OWNER'S
 REVIEW. Brief: `docs/ui_hud_brief.txt`. Do NOT start CombatService (step 2 of the brief's section 8)
 until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p, phone, tablet).**
@@ -425,7 +456,12 @@ Not done yet (suggested order):
 ### Manual items for the owner (keep collecting, give at the very end)
 * Save the place (Ctrl+S); map/assets live only in the place file.
 * Game Settings -> Security -> enable **API Services** for Studio DataStore testing.
-* Create the game passes and Developer Products, then put their IDs in `Config/Products.luau`.
+* Create the game passes and Developer Products, then put their IDs in `Config/Products.luau`
+  (Passes incl. ExtraPetSlots, DiamondPacks, PremiumPets) and wire the receipts to `PetService.grantPremium`.
+* The pet / egg models (`ReplicatedStorage.Assets.Pets`, `Assets.Eggs`) only exist in the place: save it. To rebuild
+  them: `require(game.ServerStorage.DevTools.PetModels).buildAll()` in the command bar (Edit mode).
+* Test teams with 2+ players (Studio Test > Clients and Servers): invite, accept, kick, leader leaving.
+* Codes live in `Config/Codes.luau` (WELCOME, DESTINY, BOSSKEY); add or remove codes there.
 * Set the admin UserId(s) in the admin config (owner account only).
 * Copy `.rbxl` backups to a cloud drive or external disk.
 * Remove any dev-only tools or test commands before publishing.
