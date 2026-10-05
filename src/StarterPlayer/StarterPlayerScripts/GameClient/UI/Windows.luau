@@ -1,6 +1,6 @@
 --!strict
--- Window shells for every menu button (Config/UI Windows). For now everything except Settings is an
--- empty shell: title, frame, X button, tabs and a "Coming soon" placeholder. The Shop's Diamonds tab
+-- Window shells for every menu button (Config/UI Windows). Built so far: Shop (weapon shop), Inventory
+-- (weapons), Settings and Zones; the others are empty shells: title, frame, X button, tabs, "Coming soon". The Shop's Diamonds tab
 -- explains where diamond packs are sold and offers a trip to the hub.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -8,6 +8,8 @@ local Net = require(ReplicatedStorage.GameSystem.Net)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local SettingsPage = require(script.Parent.Pages.SettingsPage)
 local ZonesPage = require(script.Parent.Pages.ZonesPage)
+local InventoryPage = require(script.Parent.Pages.InventoryPage)
+local WeaponShopPage = require(script.Parent.Pages.WeaponShopPage)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
 local Theme = require(Kit.Theme)
@@ -25,7 +27,7 @@ local function placeholders(ctx: any, intro: string?)
 end
 
 local function shop(ctx: any)
-	Window.placeholder(ctx.Pages.Weapons)
+	WeaponShopPage.build(ctx.Pages.Weapons, ctx)
 	local page = ctx.Pages.Diamonds
 	Theme.text({ Text = "Spend diamonds on rarity rerolls, premium eggs, Gold boosts and skins.", TextSize = 22, Wrapped = true, Size = UDim2.new(1, 0, 0, 56), LayoutOrder = 1, Parent = page })
 	Button.new({ Text = UIConfig.Text.GetDiamonds, Icon = "Diamond", Style = "primary", Size = UDim2.fromOffset(260, Theme.TOUCH), LayoutOrder = 2, Parent = page, OnClick = function()
@@ -43,8 +45,18 @@ local function shop(ctx: any)
 	Window.placeholder(page)
 end
 
+local function inventory(ctx: any)
+	InventoryPage.buildWeapons(ctx.Pages.Weapons)
+	for name, page in pairs(ctx.Pages) do
+		if name ~= "Weapons" then
+			Window.placeholder(page)
+		end
+	end
+end
+
 local BUILDERS = {
 	Shop = shop,
+	Inventory = inventory,
 	Settings = SettingsPage.build,
 	Zones = ZonesPage.build,
 }

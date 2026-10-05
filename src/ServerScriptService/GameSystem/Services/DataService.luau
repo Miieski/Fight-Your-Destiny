@@ -195,6 +195,12 @@ function DataService:GetTransient(player: Player, key: string): any
 	return values and values[key]
 end
 
+-- Saves now without releasing the session lock (purchases call it so the new item is stored before the
+-- client is told about it). Returns false when the save failed; the autosave retries later.
+function DataService:Save(player: Player): boolean
+	return save(player, false)
+end
+
 function DataService:AddGold(player: Player, amount: number)
 	local profile = profiles[player]
 	if profile then

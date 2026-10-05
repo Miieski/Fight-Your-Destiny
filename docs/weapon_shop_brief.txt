@@ -1,0 +1,157 @@
+=====================================================================
+ FIGHT YOUR DESTINY - WEAPON SHOP + WEAPONS IN-GAME + CASE OPENING
+=====================================================================
+Task: put every weapon modeled in Blender into the game, build the Weapon Shop, and add a
+CS:GO-style case opening that reveals the rarity of a purchased weapon.
+
+READ FIRST: DESIGN.md (sections 1, 2, 6, 11), docs/weapon_system_document.txt (rarity table, odds,
+prices, pity, formulas), docs/ui_hud_brief.txt and docs/ui_redo_teleport_brief.txt (Kit, 3D icons),
+docs/weapon_modeling_brief.txt, Blender/Weapons/weapons_manifest.csv.
+
+RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite).
+2. AT THE END: commit and push to https://github.com/Miieski/Fight-Your-Destiny (main), update
+   HANDOFF.md. Check with git status that no .rbxl/.rbxm/backup file is staged.
+3. Keep docs/NIGHT_LOG.md updated after every finished item (usage limits can stop the work).
+   If the owner is away, take the most reasonable choice, log it, and continue.
+4. Server authoritative: the server charges Gold, rolls the rarity and saves the item. The client
+   only animates what the server decided.
+5. Mobile first (touch targets >= 44 px, nothing overlapping Roblox's own UI).
+6. No enemy/boss models and no combat code in this task.
+
+---------------------------------------------------------------------
+ PART 1 - GET THE WEAPONS INTO THE GAME
+---------------------------------------------------------------------
+ - The owner imports the FBX files from `Blender_Exports/Weapons/` with Studio's 3D Importer
+   (Asset Manager -> Bulk Import). You cannot import FBX yourself unless an approved route exists.
+ - After the import, for each weapon build a **Tool** at
+   `ReplicatedStorage.Assets.Weapons.<WeaponId>` where WeaponId = file name without the leading
+   number (`01_plains_sword` -> `plains_sword`):
+     * `Handle` = the imported MeshPart (Anchored false, CanCollide false, Massless true),
+     * correct `Grip` (CFrame values) so it is held properly; document the convention you found,
+     * SurfaceAppearance if textures were exported; a separate emissive part kept for glow,
+     * attributes: WeaponId, Category, Zone,
+     * Attachments for VFX: `TipAttachment`, `BaseAttachment` (and `MuzzleAttachment` for Ranged/Magic).
+ - Missing weapons: if some FBX are not imported yet, create a clearly-named placeholder Tool built
+   from simple parts (one per category) so the shop and case opening still work, and list the
+   missing ones in docs/NIGHT_LOG.md. Never block on a missing model.
+ - Icons: use the asset ids already stored for each weapon (`Config/Weapons.luau`, field `Icon`).
+   If an icon is missing, use the category icon.
+ - **Config modules (all numbers/ids live here):**
+     * `Config/Weapons.luau` - 96 entries: `Id, Name, Category, Zone (1..12), Icon, Element`.
+       Names come from docs/weapon_system_document.txt section 6.
+     * `Config/WeaponCategories.luau` - damage multiplier, hits/sec, range, shape/special text.
+     * `Config/WeaponRarities.luau` - tier, name, color, damage multiplier, zone boost, element proc,
+       shop odds (from the weapon doc section 3).
+     * Price per zone = `1000 x 10^(zone-1)` Gold (weapon doc section 5).
+   Damage shown in the UI uses the shared formula in `Util/Stats` (zone base x category x rarity).
+
+---------------------------------------------------------------------
+ PART 2 - THE WEAPON SHOP (HUD -> Shop -> "Weapons" tab)
+---------------------------------------------------------------------
+LAYOUT (wood fantasy, 3D icons)
+ - **Left side: 8 category tabs** (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic,
+   Whip & Chain), each with its 3D category icon; the selected tab is highlighted. On phones the
+   tabs become a horizontal scroll bar on top.
+ - **Main area: a grid of 12 cards for the selected category, ordered by zone 1 -> 12.**
+ - Header: current Gold, "Your pity: X/30" (optional small text), and an **Odds** button.
+
+WEAPON CARD (unlocked zone)
+ - Dedicated 3D weapon icon, weapon name, zone icon + zone name, price in Gold, "Owned: N" badge,
+   and a **Buy** button (gold). Insufficient Gold: button grayed and an error toast on press
+   ("Not enough Gold").
+ - Tapping the card (not the button) opens a **preview panel**: a rotating 3D `ViewportFrame` of the
+   weapon model (drag to rotate), category, base damage per hit (Common), hits/sec, range, element
+   and its effect, and the Zone Boost range (+5% Common ... +120% Secret).
+
+LOCKED CARD (the weapon's zone is not unlocked in profile.Zones)
+ - The icon is shown as a **pure black silhouette** (the same icon tinted black, no detail) with
+   large white **"?" marks** over it. Name shows `???`, price shows `???`, and a line "Unlock <Zone name>
+   to reveal". Buy disabled. Tapping shows a small tooltip with the zone's unlock requirements
+   (DESIGN.md section 4) but never reveals the weapon's name, stats or model.
+ - Do NOT put the real model or the real name in anything the client receives for a locked weapon if it
+   can be avoided (the silhouette is just the tinted icon).
+ - When a zone gets unlocked, play a short reveal animation (the silhouette flips to the colored icon).
+
+ODDS PANEL (Odds button)
+ - Table of the 8 rarities: color, name, chance (50%, 28%, 13%, 6%, 2.2%, 0.7%, 0.09%, 0.01%),
+   damage multiplier, Zone Boost, plus the pity rules. Values come from `Config/WeaponRarities.luau`.
+
+---------------------------------------------------------------------
+ PART 3 - PURCHASE FLOW (server)
+---------------------------------------------------------------------
+ Request `Net.request("BuyWeapon", weaponId)`. The server:
+  1. validates: weaponId exists, its zone is unlocked, the player is not already in an opening,
+     rate limit (min interval 1 s), enough Gold;
+  2. deducts the Gold **before** the roll (atomic with the creation of the item; if anything fails,
+     refund automatically);
+  3. rolls the rarity with the weighted odds table, applying the pity counter
+     (`profile.PityCounter`: after 30 purchases without Epic or better -> guaranteed Epic or better;
+     after 100 -> Legendary or better; reset when triggered; counters saved in the profile);
+  4. creates the item `{ id, rarity }` under a new GUID in `profile.Weapons[uid]`, marks the Index entry,
+     and auto-equips it if the player has no weapon equipped;
+  5. saves (DataService), then replies `{ uid, rarity, pityCounter }` and sends Notify toasts.
+ The roll is final the moment the server answers; closing the game mid-animation loses nothing.
+ Rarity can never be influenced by the client. Add an admin-only `forceRarity` command for testing.
+
+---------------------------------------------------------------------
+ PART 4 - CASE OPENING (CS:GO style)
+---------------------------------------------------------------------
+After the server reply, open a full-screen modal over a dimmed background:
+ - **Title**: "Opening: <weapon name>" with the zone name. Gold balance stays visible.
+ - **Reel**: a horizontal strip of ~60 tiles, each tile = the weapon's icon on a rarity-colored
+   background (tile ~140 px wide, scales with UIScale), with the rarity name under it. A fixed
+   **center marker** (vertical line + arrow) shows the selection point.
+ - **Contents of the reel**: random tiles chosen visually from the odds table (so common tiles dominate
+   and rare ones flash by occasionally). The **winning tile** (the server's rarity) is placed at a fixed
+   index near the end (for example 48). The stop position lands at a random offset inside that tile like
+   CS:GO. The reel is purely cosmetic; the result is the server's rarity.
+ - **Motion**: starts fast and decelerates with an ease-out (quint) over about 6 s; the strip is built
+   once and moved with a single tween (no per-frame allocations); a **tick sound** every time a tile
+   crosses the marker (pitch rises slightly with speed); the tile under the marker is subtly enlarged.
+ - **Reveal**: the winning tile pops (scale 1.15), a rarity banner shows the name (Common ... Secret)
+   in its color; below it: the final damage per hit (`zone base x category x rarity`), the Zone Boost
+   for that rarity, and the element proc chance. Rarity effects scale up: Common/Uncommon quiet,
+   Rare/Epic sparkle, Legendary gold burst, Mythic red burst, Divine prismatic burst + screen glow, Secret
+   rainbow burst with a longer sting. Sounds: tick, RarityReveal, RarityLegendary (reuse Sfx names).
+ - **Skip**: a "Skip" button (and tap on the reel) jumps to the reveal. A setting "Fast open" (Settings
+   window) shortens the spin to about 1.5 s. The reveal itself is never skipped.
+ - **Buttons after the reveal**: **Equip** (equips this copy), **Open again** (same weapon, if enough
+   Gold), **Close**. If the new copy is better than the equipped one, show a small "Better than
+   equipped!" hint.
+ - **Announcements**: Mythic or better also sends a server-wide toast ("<Player> opened a <Rarity>
+   <Weapon>!") through Net (server decides, throttled).
+ - Mobile: the reel must be readable on a phone (tile ~110 px), buttons >= 44 px.
+ - While an opening is active, shop buttons are disabled and the HUD stays usable.
+
+---------------------------------------------------------------------
+ PART 5 - EQUIPPING WEAPONS (minimum for now)
+---------------------------------------------------------------------
+ - `WeaponService`: `Net.request("EquipWeapon", uid)` validates ownership, clones the Tool from
+   `Assets.Weapons.<WeaponId>`, sets attributes `Uid`, `Rarity`, applies a simple rarity visual
+   (glow/outline tint) and gives it to the player; re-gives it on respawn. The HUD weapon slot and the
+   Inventory (Weapons tab, a simple grid with rarity borders) must show the equipped weapon.
+ - No damage/combat logic in this task.
+
+---------------------------------------------------------------------
+ ADMIN TEST COMMANDS (owner only, checked on the server)
+---------------------------------------------------------------------
+ `setGold(n)`, `unlockZone(zoneId)`, `lockZone(zoneId)`, `giveWeapon(weaponId, rarity)`,
+ `forceRarity(rarity)` (applies to the next BuyWeapon), `setPity(n)`, `resetWeapons()`.
+
+---------------------------------------------------------------------
+ ACCEPTANCE (all checked by you before reporting)
+---------------------------------------------------------------------
+ - Screenshots at desktop, phone and tablet sizes: shop with unlocked cards, shop with locked
+   black-silhouette cards, odds panel, preview panel, reel mid-spin, and the reveal for Common,
+   Epic, Legendary and Secret (use forceRarity).
+ - A server-side simulation script: run 100,000 rolls and compare the observed rarity frequencies with
+   the odds table (report the numbers); verify the pity counters trigger exactly at 30 and 100.
+ - Gold is deducted exactly once per purchase, never when the purchase fails; spam-clicking Buy cannot
+   start two openings or double-charge; leaving mid-animation keeps the weapon.
+ - Locked weapons never reveal their name/model/stats; unlocking a zone reveals them.
+ - All 96 weapons appear in the right category and zone order; no missing icons (fallback used and
+   listed otherwise).
+ - No errors/warnings in the Output; no per-frame allocations in the reel.
+ - MORNING/FINAL REPORT (short): what is finished, what is not, decisions you took, missing models or
+   icons, files I must import or upload manually.

@@ -150,6 +150,10 @@ local IMAGE_BLEED = 1.14
 
 -- Image id for an icon id (any group), or nil when only a placeholder shape exists.
 function Icons.asset(id: string): string?
+	-- a raw asset id (weapon icons from Config/Weapons) is used as it is
+	if string.sub(id, 1, 13) == "rbxassetid://" then
+		return id
+	end
 	local key = ALIASES[id] or id
 	for _, group in ipairs(GROUPS) do
 		local list = (Icons :: any)[group]

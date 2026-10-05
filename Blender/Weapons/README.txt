@@ -42,3 +42,19 @@ ONE .blend PER WEAPON
 - weapons_manifest.csv: id, category, zone, display name, triangles, budget, length, glow, status.
 
 BUDGETS: 500-3,000 triangles (Gauntlet and Magic up to 4,000). Rarity is NOT modeled.
+
+IN STUDIO (weapon Tools, 2026-10-05)
+- Until the FBX files are imported, ReplicatedStorage.Assets.Weapons holds 96 PLACEHOLDER Tools (simple parts per
+  category, zone colors, attribute Placeholder = true) so the shop, case opening and equipping already work.
+- After the Bulk Import (File Dimensions = Meters), put the imported models in one folder (any place, e.g.
+  workspace.ImportedWeapons) and run in the command bar:
+      require(game.ServerStorage.DevTools.WeaponTools).fromImport(workspace.ImportedWeapons)
+  It builds the real Tool for every model it recognises ("01_plains_sword" or "plains_sword"): biggest part =
+  Handle, the others welded, "_Glow" parts made Neon, grip restored from DevTools.WeaponBounds (Studio recenters
+  imported meshes), TipAttachment / BaseAttachment (+ MuzzleAttachment for Ranged and Magic), attributes WeaponId,
+  Category, Zone, Placeholder = false. It returns (built, skipped) and warns when a model has the wrong length.
+  require(...).missing() lists the weapons that still use a placeholder.
+- Tool.Grip (R15, measured in Play): identity = the head points straight up out of the fist with the front facing
+  forward (swords, spears, heavies, daggers, staffs, whips). Bows: limbs up, string toward the body. Crossbows
+  (tundra, hell, dead) and guns / blowgun (jungle, abyss, mechanical): muzzle forward. Gauntlets: knuckles forward,
+  back of the hand up. The FBX export maps Blender +X to Roblox -X (bow strings and gauntlet thumbs are on +X).

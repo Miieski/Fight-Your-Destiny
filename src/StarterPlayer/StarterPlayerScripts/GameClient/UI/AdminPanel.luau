@@ -15,6 +15,7 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local Notifier = require(script.Parent.Notifier)
+local State = require(script.Parent.Parent.State)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
 local IconButton = require(Kit.IconButton)
@@ -190,12 +191,59 @@ local function testPage(page: Instance)
 	end)
 end
 
+-- Weapon shop tests (docs/weapon_shop_brief.txt): forced rarity, pity, reset, zone locks.
+local function weaponsPage(page: Instance)
+	local force = section(page, "Next purchase rarity", Vector2.new(110, 56))
+	for _, rarity in ipairs(Rarities.List) do
+		button(force, rarity.Name, "secondary", function()
+			send("forceRarity", rarity.Tier)
+		end)
+	end
+	button(force, "Normal", "primary", function()
+		send("forceRarity", 0)
+	end)
+	local pity = section(page, "Pity counters (Epic 30 / Legendary 100)", Vector2.new(110, 56))
+	for _, n in ipairs({ 0, 29, 30, 99, 100 }) do
+		button(pity, `Pity {n}`, "secondary", function()
+			send("setPity", n)
+		end)
+	end
+	local tools = section(page, "Weapons & Gold")
+	button(tools, "Reset weapons", "danger", function()
+		send("resetWeapons")
+	end)
+	button(tools, "Gold +1T", "primary", function()
+		send("addGold", 1e12)
+	end)
+	button(tools, "Gold = 0", "danger", function()
+		send("setGold", 0)
+	end)
+	local zones = section(page, "Zones (tap to lock / unlock)")
+	local zoneButtons = {}
+	for index, zone in ipairs(Zones.List) do
+		if index > 1 then
+			zoneButtons[zone.Id] = button(zones, zone.Name, "secondary", function()
+				local open = (State.get("Zones") or {})[zone.Id]
+				send(if open then "lockZone" else "unlockZone", zone.Id)
+			end)
+		end
+	end
+	State.observe("Zones", function(open)
+		for zoneId, zoneButton in pairs(zoneButtons) do
+			local isOpen = (open or {})[zoneId] == true
+			zoneButton:SetStyle(if isOpen then "go" else "secondary")
+			zoneButton:SetText(`{Zones.ById[zoneId].Name}: {if isOpen then "open" else "locked"}`)
+		end
+	end)
+end
+
 local function build()
 	local def = UIConfig.Windows.Admin
 	Window.define("Admin", { Title = def.Title, Tabs = def.Tabs, Size = def.Size, Build = function(ctx)
 		moneyPage(ctx.Pages.Money)
 		teleportPage(ctx.Pages.Teleport)
 		testPage(ctx.Pages["UI Test"])
+		weaponsPage(ctx.Pages.Weapons)
 	end })
 	local crown = IconButton.new({ Name = "AdminToggle", Icon = "Admin", Label = "Admin", Size = Vector2.new(Theme.TOUCH, Theme.TOUCH), ShowLabel = false, AnchorPoint = Vector2.new(1, 0), Parent = Screens.hud(), OnClick = function()
 		Window.toggle("Admin")

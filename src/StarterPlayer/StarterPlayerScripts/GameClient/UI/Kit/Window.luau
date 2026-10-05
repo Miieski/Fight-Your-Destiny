@@ -21,10 +21,13 @@ local Theme = require(script.Parent.Theme)
 local Window = {}
 
 type Definition = { Title: string, Tabs: { string }?, Size: Vector2?, Build: ((any) -> ())? }
-type Built = { frame: Frame, pages: { [string]: ScrollingFrame }, tabs: any?, pop: UIScale, def: Definition }
+type Built = { frame: Frame, pages: { [string]: ScrollingFrame }, tabs: any?, pop: UIScale, def: Definition, banner: Frame, content: Frame }
 
 local HEADER = 74
 local MAIN = "Main"
+-- Phones (Theme.isCompact): the title banner moves to the left of the tab row, so the content gets the
+-- height of one row back (a phone in landscape is only ~380 design units tall).
+local COMPACT_BANNER = 210
 -- The screen root stops under the Roblox top bar; an oversized, centered backdrop dims that strip too.
 local BACKDROP_COVER = 4
 
@@ -112,6 +115,42 @@ local function select(entry: Built, tab: string?)
 	end
 end
 
+-- Places the banner, the tabs and the content for the current screen (normal or phone layout).
+local function arrange(entry: Built)
+	local compact = Theme.isCompact()
+	local banner = entry.banner
+	local limit = banner:FindFirstChildOfClass("UISizeConstraint")
+	local top = HEADER
+	if compact then
+		banner.AnchorPoint = Vector2.zero
+		banner.Position = UDim2.fromOffset(12, 8)
+		banner.Size = UDim2.fromOffset(COMPACT_BANNER, Theme.TOUCH)
+		if limit then
+			limit.MaxSize = Vector2.new(COMPACT_BANNER, Theme.TOUCH)
+		end
+		top = 8 + Theme.TOUCH + 8
+		if entry.tabs then
+			local left = 12 + COMPACT_BANNER + 8
+			entry.tabs.Instance.Position = UDim2.fromOffset(left, 8)
+			entry.tabs.Instance.Size = UDim2.new(1, -(left + Theme.TOUCH + 16), 0, Theme.TOUCH)
+		end
+	else
+		banner.AnchorPoint = Vector2.new(0.5, 0)
+		banner.Position = UDim2.new(0.5, 0, 0, 10)
+		banner.Size = UDim2.new(0.5, 0, 0, 50)
+		if limit then
+			limit.MaxSize = Vector2.new(380, 50)
+		end
+		if entry.tabs then
+			entry.tabs.Instance.Position = UDim2.fromOffset(12, HEADER)
+			entry.tabs.Instance.Size = UDim2.new(1, -24, 0, Theme.TOUCH)
+			top += Theme.TOUCH + 8
+		end
+	end
+	entry.content.Position = UDim2.fromOffset(12, top)
+	entry.content.Size = UDim2.new(1, -24, 1, -top - 12)
+end
+
 local function build(id: string): Built
 	local existing = built[id]
 	if existing then
@@ -134,34 +173,32 @@ local function build(id: string): Built
 
 	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, OnClick = Window.close, Parent = frame })
 
-	local top = HEADER
-	local entry: Built = { frame = frame, pages = {}, tabs = nil, pop = pop, def = def }
+	local entry: Built = { frame = frame, pages = {}, tabs = nil, pop = pop, def = def, banner = banner, content = nil :: any }
 	if def.Tabs then
 		entry.tabs = Tabs.new({
 			Tabs = def.Tabs,
 			Size = UDim2.new(1, -24, 0, Theme.TOUCH),
-			Position = UDim2.fromOffset(12, top),
+			Position = UDim2.fromOffset(12, HEADER),
 			OnSelect = function(name: string)
 				select(entry, name)
 			end,
 			Parent = frame,
 		})
-		top += Theme.TOUCH + 8
 	end
 	local content = Instance.new("Frame")
 	content.Name = "Content"
-	content.Position = UDim2.fromOffset(12, top)
-	content.Size = UDim2.new(1, -24, 1, -top - 12)
 	content.BackgroundColor3 = Theme.Colors.WoodInset
 	content.BorderSizePixel = 0
 	content.ZIndex = 2
 	Theme.corner(content, 4)
 	Theme.stroke(content, Theme.Colors.WoodLine, 1.5)
 	content.Parent = frame
+	entry.content = content
 	for _, name in ipairs(def.Tabs or { MAIN }) do
 		entry.pages[name] = newPage(content, name)
 	end
 	built[id] = entry
+	arrange(entry)
 	if def.Build then
 		def.Build({
 			Frame = frame,
@@ -179,6 +216,7 @@ end
 local function resize(entry: Built)
 	local size = fitSize(entry.def.Size or UIConfig.WINDOW_SIZE)
 	entry.frame.Size = UDim2.fromOffset(size.X, size.Y)
+	arrange(entry)
 end
 
 function Window.define(id: string, def: Definition)

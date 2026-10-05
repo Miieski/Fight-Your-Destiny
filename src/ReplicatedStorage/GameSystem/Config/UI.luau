@@ -30,10 +30,10 @@ UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5, PcTile = 80, PcGap = 6 }
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
 UI.Windows = {
-	Inventory = { Title = "Inventory", Tabs = { "Weapons", "Armor", "Eggs", "Trophies" } },
+	Inventory = { Title = "Inventory", Tabs = { "Weapons", "Armor", "Eggs", "Trophies" }, Size = Vector2.new(820, 560) },
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
 	Stats = { Title = "Stats", Intro = "Your RPG stats will live here: HP, Attack, Defense, Speed, Crit and the derived stats." },
-	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" } },
+	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },
 	RebirthShop = { Title = "Rebirth Shop" },
 	Pets = { Title = "Pets" },
 	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" } },
@@ -41,7 +41,7 @@ UI.Windows = {
 	Team = { Title = "Team" },
 	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Other" } },
 	Zones = { Title = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
-	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test" }, Size = Vector2.new(760, 520) },
+	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test", "Weapons" }, Size = Vector2.new(760, 520) },
 }
 UI.WINDOW_SIZE = Vector2.new(700, 500)
 UI.MaxScreenFraction = 0.9
@@ -76,6 +76,37 @@ UI.Currencies = {
 	Compact = { Icon = 56, Bar = 38, Gap = 4, Top = 8 },
 	Gold = { Icon = "Gold", Width = 270, CompactWidth = 226, ShopTab = "Weapons", Sound = "GoldPickup" },
 	Diamonds = { Icon = "Diamond", Width = 200, CompactWidth = 170, ShopTab = "Diamonds", Sound = "GoldPickup" },
+}
+
+-- Weapon shop (docs/weapon_shop_brief.txt part 2): sizes in design units.
+UI.WeaponShop = {
+	TabWidth = 150, -- left column of category tabs (PC / tablet)
+	TabHeight = 64,
+	CardSize = Vector2.new(176, 254),
+	CompactCardSize = Vector2.new(240, 152), -- phones: icon left, texts right, Buy below
+	CompactInfoHeight = 24, -- phones: one line "Gold | pity" above the grid
+	CardGap = 10,
+	HeaderHeight = 56,
+	PreviewSpinSeconds = 8, -- one turn of the preview model when nobody drags it
+	RevealSeconds = 0.5, -- a newly unlocked zone's cards flip from silhouette to colors
+	Locked = "???",
+}
+
+-- CS:GO-style case opening (part 4). The reel is cosmetic: the result is always the server's.
+UI.CaseOpening = {
+	SpinSeconds = 6, -- normal spin (ease-out quint)
+	FastSpinSeconds = 1.5, -- with the "Fast Open" setting
+	ServerGraceSeconds = 2, -- the server ends an opening the client never closed after spin + this
+	TileCount = 60,
+	WinIndex = 48, -- the server's rarity sits on this tile
+	TileWidth = 140,
+	CompactTileWidth = 110, -- phones
+	TileGap = 8,
+	MarkerScale = 1.08, -- the tile under the marker grows a little
+	RevealScale = 1.15,
+	TickMaxPitch = 1.35, -- the tick sound's pitch at full speed (1 when stopping)
+	BurstFrom = 5, -- Legendary and better: burst of rays; Divine/Secret add a screen glow
+	SecretStingSeconds = 2.2,
 }
 
 UI.Toast = {

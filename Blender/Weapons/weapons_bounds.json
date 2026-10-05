@@ -1,0 +1,1519 @@
+{
+ "abyss_dagger": {
+  "materials": [
+   "abyss_dagger_Main",
+   "abyss_dagger_Glow"
+  ],
+  "max": [
+   0.0571,
+   0.0258,
+   0.4287
+  ],
+  "min": [
+   -0.0791,
+   -0.0258,
+   -0.1313
+  ]
+ },
+ "abyss_gauntlet": {
+  "materials": [
+   "abyss_gauntlet_Main",
+   "abyss_gauntlet_Glow"
+  ],
+  "max": [
+   0.1943,
+   0.0882,
+   0.1356
+  ],
+  "min": [
+   -0.1943,
+   -0.1072,
+   -0.3684
+  ]
+ },
+ "abyss_heavy": {
+  "materials": [
+   "abyss_heavy_Main",
+   "abyss_heavy_Glow"
+  ],
+  "max": [
+   0.2546,
+   0.0706,
+   1.02
+  ],
+  "min": [
+   -0.2546,
+   -0.0724,
+   -0.38
+  ]
+ },
+ "abyss_magic": {
+  "materials": [
+   "abyss_magic_Main",
+   "abyss_magic_Glow"
+  ],
+  "max": [
+   0.1281,
+   0.0821,
+   1.1333
+  ],
+  "min": [
+   -0.1281,
+   -0.0821,
+   -0.5467
+  ]
+ },
+ "abyss_ranged": {
+  "materials": [
+   "abyss_ranged_Main",
+   "abyss_ranged_Glow"
+  ],
+  "max": [
+   0.1046,
+   0.0588,
+   0.8819
+  ],
+  "min": [
+   -0.1614,
+   -0.0588,
+   -0.5181
+  ]
+ },
+ "abyss_spear": {
+  "materials": [
+   "abyss_spear_Main",
+   "abyss_spear_Glow"
+  ],
+  "max": [
+   0.1021,
+   0.0252,
+   1.5218
+  ],
+  "min": [
+   -0.1021,
+   -0.0297,
+   -0.7182
+  ]
+ },
+ "abyss_sword": {
+  "materials": [
+   "abyss_sword_Main",
+   "abyss_sword_Glow"
+  ],
+  "max": [
+   0.1164,
+   0.0296,
+   1.0985
+  ],
+  "min": [
+   -0.1548,
+   -0.0327,
+   -0.1615
+  ]
+ },
+ "abyss_whip": {
+  "materials": [
+   "abyss_whip_Main",
+   "abyss_whip_Glow"
+  ],
+  "max": [
+   0.1106,
+   0.0318,
+   1.4715
+  ],
+  "min": [
+   -0.1229,
+   -0.0373,
+   -0.2085
+  ]
+ },
+ "dead_dagger": {
+  "materials": [
+   "dead_dagger_Main",
+   "dead_dagger_Glow"
+  ],
+  "max": [
+   0.0686,
+   0.0296,
+   0.4101
+  ],
+  "min": [
+   -0.0686,
+   -0.0357,
+   -0.1499
+  ]
+ },
+ "dead_gauntlet": {
+  "materials": [
+   "dead_gauntlet_Main",
+   "dead_gauntlet_Glow"
+  ],
+  "max": [
+   0.1181,
+   0.0882,
+   0.1356
+  ],
+  "min": [
+   -0.1335,
+   -0.1088,
+   -0.3684
+  ]
+ },
+ "dead_heavy": {
+  "materials": [
+   "dead_heavy_Main",
+   "dead_heavy_Glow"
+  ],
+  "max": [
+   0.2082,
+   0.0983,
+   1.0409
+  ],
+  "min": [
+   -0.203,
+   -0.0983,
+   -0.3591
+  ]
+ },
+ "dead_magic": {
+  "materials": [
+   "dead_magic_Main",
+   "dead_magic_Glow"
+  ],
+  "max": [
+   0.1214,
+   0.0929,
+   1.1718
+  ],
+  "min": [
+   -0.1214,
+   -0.0918,
+   -0.5082
+  ]
+ },
+ "dead_ranged": {
+  "materials": [
+   "dead_ranged_Main",
+   "dead_ranged_Glow"
+  ],
+  "max": [
+   0.4617,
+   0.1566,
+   0.8309
+  ],
+  "min": [
+   -0.4617,
+   -0.1115,
+   -0.5691
+  ]
+ },
+ "dead_spear": {
+  "materials": [
+   "dead_spear_Main",
+   "dead_spear_Glow"
+  ],
+  "max": [
+   0.1094,
+   0.0352,
+   1.5304
+  ],
+  "min": [
+   -0.0371,
+   -0.0408,
+   -0.7096
+  ]
+ },
+ "dead_sword": {
+  "materials": [
+   "dead_sword_Main",
+   "dead_sword_Glow"
+  ],
+  "max": [
+   0.0986,
+   0.0328,
+   1.0873
+  ],
+  "min": [
+   -0.0594,
+   -0.0396,
+   -0.1727
+  ]
+ },
+ "dead_whip": {
+  "materials": [
+   "dead_whip_Main",
+   "dead_whip_Glow"
+  ],
+  "max": [
+   0.1284,
+   0.0365,
+   1.4511
+  ],
+  "min": [
+   -0.1368,
+   -0.0434,
+   -0.2289
+  ]
+ },
+ "desert_dagger": {
+  "materials": [
+   "desert_dagger_Main"
+  ],
+  "max": [
+   0.1009,
+   0.0241,
+   0.4365
+  ],
+  "min": [
+   -0.1009,
+   -0.0241,
+   -0.1235
+  ]
+ },
+ "desert_gauntlet": {
+  "materials": [
+   "desert_gauntlet_Main"
+  ],
+  "max": [
+   0.1081,
+   0.0877,
+   0.1347
+  ],
+  "min": [
+   -0.1326,
+   -0.1198,
+   -0.3693
+  ]
+ },
+ "desert_heavy": {
+  "materials": [
+   "desert_heavy_Main"
+  ],
+  "max": [
+   0.3034,
+   0.1225,
+   1.0124
+  ],
+  "min": [
+   -0.3034,
+   -0.1225,
+   -0.3876
+  ]
+ },
+ "desert_magic": {
+  "materials": [
+   "desert_magic_Main",
+   "desert_magic_Glow"
+  ],
+  "max": [
+   0.1231,
+   0.1151,
+   1.1677
+  ],
+  "min": [
+   -0.1226,
+   -0.122,
+   -0.5123
+  ]
+ },
+ "desert_ranged": {
+  "materials": [
+   "desert_ranged_Main"
+  ],
+  "max": [
+   0.0552,
+   0.0396,
+   0.7
+  ],
+  "min": [
+   -0.1768,
+   -0.0396,
+   -0.7
+  ]
+ },
+ "desert_spear": {
+  "materials": [
+   "desert_spear_Main"
+  ],
+  "max": [
+   0.2127,
+   0.0283,
+   1.5504
+  ],
+  "min": [
+   -0.0297,
+   -0.0283,
+   -0.6896
+  ]
+ },
+ "desert_sword": {
+  "materials": [
+   "desert_sword_Main"
+  ],
+  "max": [
+   0.194,
+   0.0233,
+   1.1014
+  ],
+  "min": [
+   -0.1132,
+   -0.0338,
+   -0.1586
+  ]
+ },
+ "desert_whip": {
+  "materials": [
+   "desert_whip_Main"
+  ],
+  "max": [
+   0.1491,
+   0.031,
+   1.459
+  ],
+  "min": [
+   -0.11,
+   -0.0407,
+   -0.221
+  ]
+ },
+ "heaven_dagger": {
+  "materials": [
+   "heaven_dagger_Main",
+   "heaven_dagger_Glow"
+  ],
+  "max": [
+   0.0963,
+   0.0226,
+   0.3961
+  ],
+  "min": [
+   -0.0963,
+   -0.028,
+   -0.1639
+  ]
+ },
+ "heaven_gauntlet": {
+  "materials": [
+   "heaven_gauntlet_Main",
+   "heaven_gauntlet_Glow"
+  ],
+  "max": [
+   0.1918,
+   0.1011,
+   0.1356
+  ],
+  "min": [
+   -0.1918,
+   -0.1206,
+   -0.3684
+  ]
+ },
+ "heaven_heavy": {
+  "materials": [
+   "heaven_heavy_Main",
+   "heaven_heavy_Glow"
+  ],
+  "max": [
+   0.2354,
+   0.0907,
+   1.0871
+  ],
+  "min": [
+   -0.2354,
+   -0.1016,
+   -0.3129
+  ]
+ },
+ "heaven_magic": {
+  "materials": [
+   "heaven_magic_Main",
+   "heaven_magic_Glow"
+  ],
+  "max": [
+   0.2343,
+   0.073,
+   1.1589
+  ],
+  "min": [
+   -0.2343,
+   -0.073,
+   -0.5211
+  ]
+ },
+ "heaven_ranged": {
+  "materials": [
+   "heaven_ranged_Main",
+   "heaven_ranged_Glow"
+  ],
+  "max": [
+   0.1586,
+   0.04,
+   0.7
+  ],
+  "min": [
+   -0.1867,
+   -0.04,
+   -0.7
+  ]
+ },
+ "heaven_spear": {
+  "materials": [
+   "heaven_spear_Main",
+   "heaven_spear_Glow"
+  ],
+  "max": [
+   0.126,
+   0.0284,
+   1.549
+  ],
+  "min": [
+   -0.126,
+   -0.0284,
+   -0.691
+  ]
+ },
+ "heaven_sword": {
+  "materials": [
+   "heaven_sword_Main",
+   "heaven_sword_Glow"
+  ],
+  "max": [
+   0.1785,
+   0.0207,
+   1.089
+  ],
+  "min": [
+   -0.1785,
+   -0.0207,
+   -0.171
+  ]
+ },
+ "heaven_whip": {
+  "materials": [
+   "heaven_whip_Main",
+   "heaven_whip_Glow"
+  ],
+  "max": [
+   0.1604,
+   0.029,
+   1.4449
+  ],
+  "min": [
+   -0.1174,
+   -0.029,
+   -0.2351
+  ]
+ },
+ "hell_dagger": {
+  "materials": [
+   "hell_dagger_Main",
+   "hell_dagger_Glow"
+  ],
+  "max": [
+   0.0605,
+   0.0238,
+   0.407
+  ],
+  "min": [
+   -0.1137,
+   -0.0327,
+   -0.153
+  ]
+ },
+ "hell_gauntlet": {
+  "materials": [
+   "hell_gauntlet_Main",
+   "hell_gauntlet_Glow"
+  ],
+  "max": [
+   0.0985,
+   0.0798,
+   0.2097
+  ],
+  "min": [
+   -0.1066,
+   -0.1003,
+   -0.2943
+  ]
+ },
+ "hell_heavy": {
+  "materials": [
+   "hell_heavy_Main",
+   "hell_heavy_Glow"
+  ],
+  "max": [
+   0.2942,
+   0.0314,
+   1.0814
+  ],
+  "min": [
+   -0.2942,
+   -0.0628,
+   -0.3186
+  ]
+ },
+ "hell_magic": {
+  "materials": [
+   "hell_magic_Main",
+   "hell_magic_Glow"
+  ],
+  "max": [
+   0.1429,
+   0.0323,
+   1.1532
+  ],
+  "min": [
+   -0.1429,
+   -0.062,
+   -0.5268
+  ]
+ },
+ "hell_ranged": {
+  "materials": [
+   "hell_ranged_Main",
+   "hell_ranged_Glow"
+  ],
+  "max": [
+   0.49,
+   0.1592,
+   0.8215
+  ],
+  "min": [
+   -0.49,
+   -0.075,
+   -0.5785
+  ]
+ },
+ "hell_spear": {
+  "materials": [
+   "hell_spear_Main",
+   "hell_spear_Glow"
+  ],
+  "max": [
+   0.2764,
+   0.0297,
+   1.5304
+  ],
+  "min": [
+   -0.1414,
+   -0.0334,
+   -0.7096
+  ]
+ },
+ "hell_sword": {
+  "materials": [
+   "hell_sword_Main",
+   "hell_sword_Glow"
+  ],
+  "max": [
+   0.1402,
+   0.0244,
+   1.0873
+  ],
+  "min": [
+   -0.1402,
+   -0.0335,
+   -0.1727
+  ]
+ },
+ "hell_whip": {
+  "materials": [
+   "hell_whip_Main",
+   "hell_whip_Glow"
+  ],
+  "max": [
+   0.1525,
+   0.04,
+   1.4976
+  ],
+  "min": [
+   -0.1209,
+   -0.04,
+   -0.1824
+  ]
+ },
+ "jungle_dagger": {
+  "materials": [
+   "jungle_dagger_Main",
+   "jungle_dagger_Glow"
+  ],
+  "max": [
+   0.0868,
+   0.0404,
+   0.4359
+  ],
+  "min": [
+   -0.053,
+   -0.0488,
+   -0.1241
+  ]
+ },
+ "jungle_gauntlet": {
+  "materials": [
+   "jungle_gauntlet_Main"
+  ],
+  "max": [
+   0.075,
+   0.0638,
+   0.2378
+  ],
+  "min": [
+   -0.0965,
+   -0.0702,
+   -0.2662
+  ]
+ },
+ "jungle_heavy": {
+  "materials": [
+   "jungle_heavy_Main"
+  ],
+  "max": [
+   0.259,
+   0.0977,
+   1.0791
+  ],
+  "min": [
+   -0.259,
+   -0.1395,
+   -0.3209
+  ]
+ },
+ "jungle_magic": {
+  "materials": [
+   "jungle_magic_Main",
+   "jungle_magic_Glow"
+  ],
+  "max": [
+   0.1625,
+   0.0882,
+   1.1592
+  ],
+  "min": [
+   -0.1625,
+   -0.122,
+   -0.5208
+  ]
+ },
+ "jungle_ranged": {
+  "materials": [
+   "jungle_ranged_Main",
+   "jungle_ranged_Glow"
+  ],
+  "max": [
+   0.1405,
+   0.0474,
+   0.9685
+  ],
+  "min": [
+   -0.0499,
+   -0.0474,
+   -0.4315
+  ]
+ },
+ "jungle_spear": {
+  "materials": [
+   "jungle_spear_Main"
+  ],
+  "max": [
+   0.0802,
+   0.0289,
+   1.4901
+  ],
+  "min": [
+   -0.0441,
+   -0.0289,
+   -0.7499
+  ]
+ },
+ "jungle_sword": {
+  "materials": [
+   "jungle_sword_Main"
+  ],
+  "max": [
+   0.0822,
+   0.0258,
+   1.0773
+  ],
+  "min": [
+   -0.0799,
+   -0.0258,
+   -0.1827
+  ]
+ },
+ "jungle_whip": {
+  "materials": [
+   "jungle_whip_Main"
+  ],
+  "max": [
+   0.1146,
+   0.036,
+   1.3988
+  ],
+  "min": [
+   -0.1188,
+   -0.0485,
+   -0.2812
+  ]
+ },
+ "mechanical_dagger": {
+  "materials": [
+   "mechanical_dagger_Main",
+   "mechanical_dagger_Glow"
+  ],
+  "max": [
+   0.0754,
+   0.0284,
+   0.4492
+  ],
+  "min": [
+   -0.0754,
+   -0.0284,
+   -0.1108
+  ]
+ },
+ "mechanical_gauntlet": {
+  "materials": [
+   "mechanical_gauntlet_Main",
+   "mechanical_gauntlet_Glow"
+  ],
+  "max": [
+   0.1206,
+   0.1025,
+   0.1338
+  ],
+  "min": [
+   -0.1317,
+   -0.114,
+   -0.3702
+  ]
+ },
+ "mechanical_heavy": {
+  "materials": [
+   "mechanical_heavy_Main",
+   "mechanical_heavy_Glow"
+  ],
+  "max": [
+   0.2329,
+   0.1418,
+   1.0429
+  ],
+  "min": [
+   -0.1967,
+   -0.1418,
+   -0.3571
+  ]
+ },
+ "mechanical_magic": {
+  "materials": [
+   "mechanical_magic_Main",
+   "mechanical_magic_Glow"
+  ],
+  "max": [
+   0.1678,
+   0.098,
+   1.1284
+  ],
+  "min": [
+   -0.1679,
+   -0.1936,
+   -0.5516
+  ]
+ },
+ "mechanical_ranged": {
+  "materials": [
+   "mechanical_ranged_Main",
+   "mechanical_ranged_Glow"
+  ],
+  "max": [
+   0.1049,
+   0.0448,
+   0.8313
+  ],
+  "min": [
+   -0.1664,
+   -0.0448,
+   -0.5687
+  ]
+ },
+ "mechanical_spear": {
+  "materials": [
+   "mechanical_spear_Main",
+   "mechanical_spear_Glow"
+  ],
+  "max": [
+   0.0317,
+   0.0317,
+   1.5275
+  ],
+  "min": [
+   -0.0317,
+   -0.0317,
+   -0.7125
+  ]
+ },
+ "mechanical_sword": {
+  "materials": [
+   "mechanical_sword_Main",
+   "mechanical_sword_Glow"
+  ],
+  "max": [
+   0.0583,
+   0.0286,
+   1.1037
+  ],
+  "min": [
+   -0.0583,
+   -0.0286,
+   -0.1563
+  ]
+ },
+ "mechanical_whip": {
+  "materials": [
+   "mechanical_whip_Main",
+   "mechanical_whip_Glow"
+  ],
+  "max": [
+   0.1212,
+   0.037,
+   1.4935
+  ],
+  "min": [
+   -0.1084,
+   -0.0402,
+   -0.1865
+  ]
+ },
+ "plains_dagger": {
+  "materials": [
+   "plains_dagger_Main"
+  ],
+  "max": [
+   0.0368,
+   0.0241,
+   0.4165
+  ],
+  "min": [
+   -0.0305,
+   -0.0249,
+   -0.1435
+  ]
+ },
+ "plains_gauntlet": {
+  "materials": [
+   "plains_gauntlet_Main"
+  ],
+  "max": [
+   0.113,
+   0.0961,
+   0.1405
+  ],
+  "min": [
+   -0.1317,
+   -0.0961,
+   -0.3635
+  ]
+ },
+ "plains_heavy": {
+  "materials": [
+   "plains_heavy_Main"
+  ],
+  "max": [
+   0.1983,
+   0.1057,
+   1.02
+  ],
+  "min": [
+   -0.1983,
+   -0.1057,
+   -0.38
+  ]
+ },
+ "plains_magic": {
+  "materials": [
+   "plains_magic_Main",
+   "plains_magic_Glow"
+  ],
+  "max": [
+   0.1105,
+   0.1276,
+   1.137
+  ],
+  "min": [
+   -0.1105,
+   -0.0881,
+   -0.543
+  ]
+ },
+ "plains_ranged": {
+  "materials": [
+   "plains_ranged_Main"
+  ],
+  "max": [
+   0.0445,
+   0.0384,
+   0.7
+  ],
+  "min": [
+   -0.1921,
+   -0.0384,
+   -0.7
+  ]
+ },
+ "plains_spear": {
+  "materials": [
+   "plains_spear_Main"
+  ],
+  "max": [
+   0.0541,
+   0.0266,
+   1.5139
+  ],
+  "min": [
+   -0.0541,
+   -0.0266,
+   -0.7261
+  ]
+ },
+ "plains_sword": {
+  "materials": [
+   "plains_sword_Main"
+  ],
+  "max": [
+   0.1226,
+   0.028,
+   1.0976
+  ],
+  "min": [
+   -0.1226,
+   -0.028,
+   -0.1624
+  ]
+ },
+ "plains_whip": {
+  "materials": [
+   "plains_whip_Main"
+  ],
+  "max": [
+   0.1291,
+   0.0321,
+   1.4791
+  ],
+  "min": [
+   -0.1366,
+   -0.0321,
+   -0.2009
+  ]
+ },
+ "swamp_dagger": {
+  "materials": [
+   "swamp_dagger_Main",
+   "swamp_dagger_Glow"
+  ],
+  "max": [
+   0.0605,
+   0.0465,
+   0.4352
+  ],
+  "min": [
+   -0.0605,
+   -0.0521,
+   -0.1248
+  ]
+ },
+ "swamp_gauntlet": {
+  "materials": [
+   "swamp_gauntlet_Main",
+   "swamp_gauntlet_Glow"
+  ],
+  "max": [
+   0.1015,
+   0.088,
+   0.1208
+  ],
+  "min": [
+   -0.1189,
+   -0.0923,
+   -0.3832
+  ]
+ },
+ "swamp_heavy": {
+  "materials": [
+   "swamp_heavy_Main",
+   "swamp_heavy_Glow"
+  ],
+  "max": [
+   0.1805,
+   0.1767,
+   1.0481
+  ],
+  "min": [
+   -0.1805,
+   -0.1767,
+   -0.3519
+  ]
+ },
+ "swamp_magic": {
+  "materials": [
+   "swamp_magic_Main",
+   "swamp_magic_Glow"
+  ],
+  "max": [
+   0.2807,
+   0.0795,
+   1.0973
+  ],
+  "min": [
+   -0.0848,
+   -0.0795,
+   -0.5827
+  ]
+ },
+ "swamp_ranged": {
+  "materials": [
+   "swamp_ranged_Main",
+   "swamp_ranged_Glow"
+  ],
+  "max": [
+   0.1222,
+   0.042,
+   0.7
+  ],
+  "min": [
+   -0.2331,
+   -0.042,
+   -0.7
+  ]
+ },
+ "swamp_spear": {
+  "materials": [
+   "swamp_spear_Main",
+   "swamp_spear_Glow"
+  ],
+  "max": [
+   0.1405,
+   0.0257,
+   1.5375
+  ],
+  "min": [
+   -0.0491,
+   -0.0257,
+   -0.7025
+  ]
+ },
+ "swamp_sword": {
+  "materials": [
+   "swamp_sword_Main",
+   "swamp_sword_Glow"
+  ],
+  "max": [
+   0.1339,
+   0.0237,
+   1.1014
+  ],
+  "min": [
+   -0.1229,
+   -0.0237,
+   -0.1586
+  ]
+ },
+ "swamp_whip": {
+  "materials": [
+   "swamp_whip_Main",
+   "swamp_whip_Glow"
+  ],
+  "max": [
+   0.1406,
+   0.0335,
+   1.4881
+  ],
+  "min": [
+   -0.1092,
+   -0.0335,
+   -0.1919
+  ]
+ },
+ "tundra_dagger": {
+  "materials": [
+   "tundra_dagger_Main",
+   "tundra_dagger_Glow"
+  ],
+  "max": [
+   0.082,
+   0.025,
+   0.4187
+  ],
+  "min": [
+   -0.082,
+   -0.025,
+   -0.1413
+  ]
+ },
+ "tundra_gauntlet": {
+  "materials": [
+   "tundra_gauntlet_Main",
+   "tundra_gauntlet_Glow"
+  ],
+  "max": [
+   0.1628,
+   0.1065,
+   0.1765
+  ],
+  "min": [
+   -0.1628,
+   -0.1065,
+   -0.3275
+  ]
+ },
+ "tundra_heavy": {
+  "materials": [
+   "tundra_heavy_Main",
+   "tundra_heavy_Glow"
+  ],
+  "max": [
+   0.3665,
+   0.0343,
+   1.064
+  ],
+  "min": [
+   -0.1948,
+   -0.0343,
+   -0.336
+  ]
+ },
+ "tundra_magic": {
+  "materials": [
+   "tundra_magic_Main",
+   "tundra_magic_Glow"
+  ],
+  "max": [
+   0.1043,
+   0.109,
+   1.1417
+  ],
+  "min": [
+   -0.1252,
+   -0.109,
+   -0.5383
+  ]
+ },
+ "tundra_ranged": {
+  "materials": [
+   "tundra_ranged_Main",
+   "tundra_ranged_Glow"
+  ],
+  "max": [
+   0.5765,
+   0.1618,
+   0.8118
+  ],
+  "min": [
+   -0.5765,
+   -0.0788,
+   -0.5882
+  ]
+ },
+ "tundra_spear": {
+  "materials": [
+   "tundra_spear_Main",
+   "tundra_spear_Glow"
+  ],
+  "max": [
+   0.0636,
+   0.0636,
+   1.5448
+  ],
+  "min": [
+   -0.0636,
+   -0.0636,
+   -0.6952
+  ]
+ },
+ "tundra_sword": {
+  "materials": [
+   "tundra_sword_Main",
+   "tundra_sword_Glow"
+  ],
+  "max": [
+   0.1382,
+   0.0216,
+   1.0829
+  ],
+  "min": [
+   -0.1382,
+   -0.0216,
+   -0.1771
+  ]
+ },
+ "tundra_whip": {
+  "materials": [
+   "tundra_whip_Main",
+   "tundra_whip_Glow"
+  ],
+  "max": [
+   0.1558,
+   0.0509,
+   1.4673
+  ],
+  "min": [
+   -0.1097,
+   -0.0638,
+   -0.2127
+  ]
+ },
+ "void_dagger": {
+  "materials": [
+   "void_dagger_Main",
+   "void_dagger_Glow"
+  ],
+  "max": [
+   0.0917,
+   0.0279,
+   0.4135
+  ],
+  "min": [
+   -0.0917,
+   -0.0279,
+   -0.1465
+  ]
+ },
+ "void_gauntlet": {
+  "materials": [
+   "void_gauntlet_Main",
+   "void_gauntlet_Glow"
+  ],
+  "max": [
+   0.184,
+   0.0773,
+   0.1562
+  ],
+  "min": [
+   -0.184,
+   -0.1252,
+   -0.3478
+  ]
+ },
+ "void_heavy": {
+  "materials": [
+   "void_heavy_Main",
+   "void_heavy_Glow"
+  ],
+  "max": [
+   0.343,
+   0.1535,
+   1.0384
+  ],
+  "min": [
+   -0.343,
+   -0.1535,
+   -0.3616
+  ]
+ },
+ "void_magic": {
+  "materials": [
+   "void_magic_Main",
+   "void_magic_Glow"
+  ],
+  "max": [
+   0.1846,
+   0.0946,
+   1.1566
+  ],
+  "min": [
+   -0.1846,
+   -0.0946,
+   -0.5234
+  ]
+ },
+ "void_ranged": {
+  "materials": [
+   "void_ranged_Main",
+   "void_ranged_Glow"
+  ],
+  "max": [
+   0.1742,
+   0.0365,
+   0.7043
+  ],
+  "min": [
+   -0.2135,
+   -0.0365,
+   -0.6957
+  ]
+ },
+ "void_spear": {
+  "materials": [
+   "void_spear_Main",
+   "void_spear_Glow"
+  ],
+  "max": [
+   0.1092,
+   0.0472,
+   1.5373
+  ],
+  "min": [
+   -0.1092,
+   -0.0568,
+   -0.7027
+  ]
+ },
+ "void_sword": {
+  "materials": [
+   "void_sword_Main",
+   "void_sword_Glow"
+  ],
+  "max": [
+   0.1355,
+   0.0218,
+   1.0811
+  ],
+  "min": [
+   -0.1355,
+   -0.0329,
+   -0.1789
+  ]
+ },
+ "void_whip": {
+  "materials": [
+   "void_whip_Main.001",
+   "void_whip_Glow.001"
+  ],
+  "max": [
+   0.1543,
+   0.0906,
+   1.4557
+  ],
+  "min": [
+   -0.1392,
+   -0.0906,
+   -0.2243
+  ]
+ },
+ "volcano_dagger": {
+  "materials": [
+   "volcano_dagger_Main",
+   "volcano_dagger_Glow"
+  ],
+  "max": [
+   0.0763,
+   0.0252,
+   0.4295
+  ],
+  "min": [
+   -0.0763,
+   -0.029,
+   -0.1305
+  ]
+ },
+ "volcano_gauntlet": {
+  "materials": [
+   "volcano_gauntlet_Main",
+   "volcano_gauntlet_Glow"
+  ],
+  "max": [
+   0.1365,
+   0.088,
+   0.169
+  ],
+  "min": [
+   -0.1365,
+   -0.0913,
+   -0.335
+  ]
+ },
+ "volcano_heavy": {
+  "materials": [
+   "volcano_heavy_Main",
+   "volcano_heavy_Glow"
+  ],
+  "max": [
+   0.2165,
+   0.1133,
+   1.0526
+  ],
+  "min": [
+   -0.2165,
+   -0.1133,
+   -0.3474
+  ]
+ },
+ "volcano_magic": {
+  "materials": [
+   "volcano_magic_Main",
+   "volcano_magic_Glow"
+  ],
+  "max": [
+   0.1168,
+   0.1168,
+   1.1814
+  ],
+  "min": [
+   -0.1168,
+   -0.1168,
+   -0.4986
+  ]
+ },
+ "volcano_ranged": {
+  "materials": [
+   "volcano_ranged_Main",
+   "volcano_ranged_Glow"
+  ],
+  "max": [
+   0.0663,
+   0.0352,
+   0.7
+  ],
+  "min": [
+   -0.1902,
+   -0.0382,
+   -0.7
+  ]
+ },
+ "volcano_spear": {
+  "materials": [
+   "volcano_spear_Main",
+   "volcano_spear_Glow"
+  ],
+  "max": [
+   0.082,
+   0.0292,
+   1.5429
+  ],
+  "min": [
+   -0.082,
+   -0.0292,
+   -0.6971
+  ]
+ },
+ "volcano_sword": {
+  "materials": [
+   "volcano_sword_Main",
+   "volcano_sword_Glow"
+  ],
+  "max": [
+   0.1139,
+   0.0228,
+   1.1078
+  ],
+  "min": [
+   -0.1139,
+   -0.0228,
+   -0.1522
+  ]
+ },
+ "volcano_whip": {
+  "materials": [
+   "volcano_whip_Main",
+   "volcano_whip_Glow"
+  ],
+  "max": [
+   0.1831,
+   0.0518,
+   1.4812
+  ],
+  "min": [
+   -0.1257,
+   -0.0642,
+   -0.1988
+  ]
+ }
+}

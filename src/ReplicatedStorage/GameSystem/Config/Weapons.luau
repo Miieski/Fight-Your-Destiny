@@ -1,25 +1,38 @@
 --!strict
--- 8 categories x 12 zones = 96 weapons (docs/weapon_system_document.txt). Ids: "<zone lower>_<category lower>".
+-- 8 categories x 12 zones = 96 weapons (docs/weapon_system_document.txt). Ids: "<zone lower>_<category lower>"
+-- (file "01_plains_sword" -> "plains_sword"). Each entry: Id, Name, Category, Zone (1..12), ZoneId, Icon (asset
+-- id; nil -> the UI shows the category icon) and Element (the zone's element, weapon doc section 4).
+-- Weapons.ByCategory[categoryId] = the category's 12 weapons in zone order 1 -> 12.
+local WeaponCategories = require(script.Parent.WeaponCategories)
 local Zones = require(script.Parent.Zones)
 
-export type Category = { Id: string, Name: string, DamageMult: number, HitsPerSecond: number, Range: number, Melee: boolean }
-export type Weapon = { Id: string, Name: string, ZoneId: string, Category: string, Icon: string? }
+export type Category = WeaponCategories.Category
+export type Weapon = { Id: string, Name: string, Category: string, Zone: number, ZoneId: string, Icon: string?, Element: string }
 
 local Weapons = {}
 
-Weapons.ZONE_BASE_DAMAGE = 10 -- x 10^(zone - 1)
-Weapons.SHOP_BASE_PRICE = 1000 -- x 10^(zone - 1)
+Weapons.ZONE_BASE_DAMAGE = 10 -- damage per hit of a Common weapon of zone 1, x 10^(zone - 1)
+Weapons.SHOP_BASE_PRICE = 1000 -- Gold, x 10^(zone - 1)
+Weapons.BUY_INTERVAL = 1 -- seconds between two BuyWeapon requests of a player
 
-Weapons.Categories = {
-	{ Id = "Sword", Name = "Sword", DamageMult = 1.0, HitsPerSecond = 1.0, Range = 6, Melee = true },
-	{ Id = "Spear", Name = "Spear", DamageMult = 1.2, HitsPerSecond = 0.9, Range = 10, Melee = true },
-	{ Id = "Heavy", Name = "Heavy", DamageMult = 2.5, HitsPerSecond = 0.4, Range = 6, Melee = true },
-	{ Id = "Dagger", Name = "Dagger", DamageMult = 0.4, HitsPerSecond = 2.5, Range = 4, Melee = true },
-	{ Id = "Gauntlet", Name = "Gauntlet", DamageMult = 0.6, HitsPerSecond = 1.8, Range = 5, Melee = true },
-	{ Id = "Ranged", Name = "Ranged", DamageMult = 0.8, HitsPerSecond = 1.2, Range = 60, Melee = false },
-	{ Id = "Magic", Name = "Magic", DamageMult = 0.8, HitsPerSecond = 1.0, Range = 35, Melee = false },
-	{ Id = "Whip", Name = "Whip & Chain", DamageMult = 0.9, HitsPerSecond = 1.1, Range = 12, Melee = true },
-} :: { Category }
+Weapons.Categories = WeaponCategories.List
+Weapons.CategoryById = WeaponCategories.ById
+
+-- What each zone element does on a proc (weapon doc section 4); the chance is the rarity's ElementProc.
+Weapons.ELEMENT_EFFECTS = {
+	Nature = "Entangle: slows the enemy for 2s",
+	Sand = "Blind: enemy attacks miss more for 3s",
+	Poison = "Damage over time for 4s",
+	Frost = "Slows, then freezes briefly at max stacks",
+	Curse = "Enemy takes +15% damage for 4s",
+	Burn = "Damage over time for 4s",
+	Hellfire = "Strong burn (bigger damage over time)",
+	Holy = "Burst of extra damage and a small heal for you",
+	["Soul Drain"] = "Lifesteal on the hit",
+	Tidal = "Knockback and a short stun",
+	Shock = "Chain lightning to 2 nearby enemies",
+	Gravity = "Pulls nearby enemies together and a void burst",
+} :: { [string]: string }
 
 -- ICONS BEGIN
 -- Weapon icons (Icons/Weapons/<Category>/<NN>_<id>_icon.png), one per weapon (96).
@@ -143,16 +156,32 @@ function Weapons.idOf(zoneId: string, categoryId: string): string
 	return string.lower(zoneId) .. "_" .. string.lower(categoryId)
 end
 
-Weapons.ById = {} :: { [string]: Weapon }
-Weapons.CategoryById = {} :: { [string]: Category }
-for _, category in ipairs(Weapons.Categories) do
-	Weapons.CategoryById[category.Id] = category
+-- Shop price of the weapons of a zone (weapon doc section 5): 1K, 10K, ... 100T Gold.
+function Weapons.price(zone: number): number
+	return Weapons.SHOP_BASE_PRICE * 10 ^ (zone - 1)
 end
-for _, zone in ipairs(Zones.List) do
-	for i, category in ipairs(Weapons.Categories) do
+
+Weapons.ById = {} :: { [string]: Weapon }
+Weapons.ByCategory = {} :: { [string]: { Weapon } }
+Weapons.List = {} :: { Weapon } -- all 96: category order, then zone order
+for index, category in ipairs(Weapons.Categories) do
+	local list = {}
+	for _, zone in ipairs(Zones.List) do
 		local id = Weapons.idOf(zone.Id, category.Id)
-		Weapons.ById[id] = { Id = id, Name = NAMES[zone.Id][i], ZoneId = zone.Id, Category = category.Id, Icon = ICONS[id] }
+		local weapon: Weapon = {
+			Id = id,
+			Name = NAMES[zone.Id][index],
+			Category = category.Id,
+			Zone = zone.Index,
+			ZoneId = zone.Id,
+			Icon = ICONS[id],
+			Element = zone.Element,
+		}
+		Weapons.ById[id] = weapon
+		table.insert(list, weapon)
+		table.insert(Weapons.List, weapon)
 	end
+	Weapons.ByCategory[category.Id] = list
 end
 
 return Weapons

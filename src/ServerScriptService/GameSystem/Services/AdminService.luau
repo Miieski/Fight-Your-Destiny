@@ -17,6 +17,8 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
+local ShopService = require(script.Parent.ShopService)
+local WeaponService = require(script.Parent.WeaponService)
 local ZoneService = require(script.Parent.ZoneService)
 
 local AdminService = { Priority = 6 }
@@ -164,8 +166,7 @@ local COMMANDS: { [string]: Command } = {
 		local owned = table.clone(profile.Weapons)
 		owned[uid] = { id = Weapons.idOf(zone.Id, categoryId), rarity = tier(rarity) }
 		DataService:Set(player, "Weapons", owned)
-		DataService:Set(player, "EquippedWeapon", uid)
-		return true, nil
+		return WeaponService:Equip(player, uid)
 	end,
 	-- equipArmorFake(slot, zoneId, rarity)
 	equipArmorFake = function(player, slot, zoneId, rarity)
@@ -198,10 +199,63 @@ local COMMANDS: { [string]: Command } = {
 	clearEquipment = function(player)
 		local profile = DataService:Get(player)
 		if not profile then return false, nil end
-		DataService:Set(player, "EquippedWeapon", nil)
+		WeaponService:Equip(player, nil)
 		DataService:Set(player, "EquippedArmor", {})
 		DataService:Set(player, "EquippedPets", {})
 		return true, "Equipment cleared"
+	end,
+	-- lockZone(zoneId): closes one zone again (not the first one), to test the shop's locked cards
+	lockZone = function(player, zoneId)
+		local zone = zoneOf(zoneId)
+		local profile = DataService:Get(player)
+		if not zone or not profile or zone.Index == 1 then
+			return false, "lockZone(zoneId) - the first zone stays open"
+		end
+		local open = table.clone(profile.Zones)
+		open[zone.Id] = nil
+		DataService:Set(player, "Zones", open)
+		return true, `{zone.Name} locked`
+	end,
+	-- giveWeapon(weaponId, rarity): adds a copy for free (no pity change)
+	giveWeapon = function(player, weaponId, rarity)
+		local profile = DataService:Get(player)
+		if not profile or typeof(weaponId) ~= "string" or not Weapons.ById[weaponId] then
+			return false, "giveWeapon(weaponId, rarity)"
+		end
+		local owned = table.clone(profile.Weapons)
+		owned[HttpService:GenerateGUID(false)] = { id = weaponId, rarity = tier(rarity) }
+		DataService:Set(player, "Weapons", owned)
+		return true, `Gave {Rarities.get(tier(rarity)).Name} {Weapons.ById[weaponId].Name}`
+	end,
+	-- forceRarity(rarity): the next BuyWeapon of this player rolls exactly this tier (0 = off)
+	forceRarity = function(player, rarity)
+		local n = math.floor(tonumber(rarity) or 0)
+		if n < 0 or n > #Rarities.List then
+			return false, "forceRarity(1-8, 0 = off)"
+		end
+		ShopService:ForceNext(player, if n > 0 then n else nil)
+		return true, if n > 0 then `Next purchase: {Rarities.get(n).Name}` else "Next purchase: normal odds"
+	end,
+	-- setPity(n): both pity counters (Epic at 30, Legendary at 100) = n
+	setPity = function(player, value)
+		local n = math.floor(tonumber(value) or -1)
+		if n < 0 or n > 1000 then
+			return false, "setPity(0-1000)"
+		end
+		DataService:Set(player, "PityCounter", n)
+		DataService:Set(player, "PityLegendary", n)
+		return true, `Pity counters = {n}`
+	end,
+	-- resetWeapons(): no weapons, nothing equipped, pity counters 0
+	resetWeapons = function(player)
+		if not DataService:Get(player) then
+			return false, nil
+		end
+		DataService:Set(player, "Weapons", {})
+		DataService:Set(player, "PityCounter", 0)
+		DataService:Set(player, "PityLegendary", 0)
+		WeaponService:Equip(player, nil)
+		return true, "Weapons reset"
 	end,
 	damageSelf = function(player, value)
 		local humanoid = humanoidOf(player)

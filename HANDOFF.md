@@ -207,6 +207,23 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
 * The 96 FBX files are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions =
   Meters). After import: Tools under `ReplicatedStorage.Assets.Weapons.<WeaponId>` (gameplay step).
 
+**2026-10-05: WEAPON SHOP + CASE OPENING + WEAPONS IN-GAME (docs/weapon_shop_brief.txt) are done** (details,
+decisions and tests in `docs/NIGHT_LOG.md`, screenshots `docs/screenshots/weapon_shop/`).
+* Configs: `Config/WeaponCategories`, `Config/WeaponRarities` (8 tiers + pity 30/100 + announcements),
+  `Config/Weapons` (Id, Name, Category, Zone, ZoneId, Icon, Element; ByCategory; price(zone) = 1000 x 10^(zone-1)),
+  `Util/Stats` (zone base x category x rarity), Settings `FastOpen`, Profile `PityLegendary`, Config/UI `WeaponShop`
+  and `CaseOpening`.
+* Server: `ShopService` (Net "BuyWeapon": checks, Gold, roll with pity, item + Index, save, reply; one opening at a
+  time; toast / auto-equip of a first weapon / Mythic+ announcement sent at the reveal via Net "OpeningDone" or a
+  timer; full undo + refund on failure; `ShopService.roll` is pure), `WeaponService` (Net "EquipWeapon", Tool with
+  Uid/Rarity + rarity light/outline, re-given on respawn). Admin: lockZone, giveWeapon, forceRarity, setPity,
+  resetWeapons (+ an Admin panel "Weapons" tab).
+* Client: `UI/Pages/WeaponShopPage`, `UI/CaseOpening`, `UI/Pages/InventoryPage`; Kit/Window has a phone layout.
+* Tools: 96 PLACEHOLDER Tools in `ReplicatedStorage.Assets.Weapons` until the FBX import; then
+  `require(game.ServerStorage.DevTools.WeaponTools).fromImport(folder)` (see Blender/Weapons/README.txt).
+  `DevTools.WeaponRollSim` = the 100,000-roll check (`docs/weapon_roll_simulation.txt`).
+* NOT done (not in this brief): damage/combat with the weapon, diamond reroll, salvage, weapon lock.
+
 **Owner request 2026-10-05 (morning): the health bar shows the player's avatar headshot instead of the heart**
 (`UI/HealthBar.luau` `makePortrait`: `rbxthumb://type=AvatarHeadShot`, round, gold ring, overlapping the panel's
 left end like the currency icons). Test players without an account (UserId <= 0) keep the heart.

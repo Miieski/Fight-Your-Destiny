@@ -37,6 +37,8 @@ Settings.Definitions = {
 	{ Key = "CameraZoom", Type = "number", Section = "Controls", Label = "Default Camera Zoom", Default = 18, Min = 8, Max = 40, Step = 1, Unit = " studs" },
 	{ Key = "AutoAttack", Type = "boolean", Section = "Controls", Label = "Auto-Attack", Default = false, RequiresPass = "AutoAttack", Hint = "Needs the Auto-Attack pass" },
 	{ Key = "ButtonLayout", Type = "layout", Section = "Controls", Label = "Mobile Buttons", Default = {} },
+
+	{ Key = "FastOpen", Type = "boolean", Section = "Other", Label = "Fast Open", Default = false, Hint = "Shorter case-opening spin (the reveal always plays)" },
 } :: { Definition }
 
 -- Mobile action buttons: position = center of the button as a fraction of the screen,

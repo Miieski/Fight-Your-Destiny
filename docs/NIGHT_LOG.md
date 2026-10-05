@@ -112,6 +112,15 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Decisions taken without the owner
 
+- Phones: the shop shows wide short cards (icon left, texts right, Buy below) so a full row with its Buy buttons
+  fits the ~380-unit-tall landscape screen; Gold and pity are one line under the tab row (the HUD Gold bar stays
+  visible above the window). Every window on phones now puts its title banner beside its tabs.
+- Reel tiles are picked with weights = odds^0.6: commons still dominate but rare tiles flash by now and then (pure
+  odds would almost never show Divine/Secret tiles). The winning tile is tile 48 of 60, the stop lands at a random
+  spot inside it.
+- Rarity visuals on the held Tool: a PointLight in the rarity color from Uncommon, an outline (Highlight) from Epic.
+- "Not enough Gold": the Buy button turns gray but stays pressable so the player gets the toast.
+- Inventory: tapping a copy equips it (no separate details panel yet).
 - The brief's menu icon "Training" is made as "Stats" (bar chart + rising arrow), because the owner
   renamed the Training window to Stats on 2026-10-05.
 - Icon outline is done in post (alpha dilation 14 px + soft drop shadow) instead of Freestyle, so
@@ -146,3 +155,67 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   config, require a temporary clone parented next to it (done for every Config/Weapons ICONS update).
 - No UI shows weapon icons yet (Equipment still uses category icons); the ids are ready in
   `Weapons.ById[id].Icon` for the inventory/shop step.
+
+# Weapon Shop task - 2026-10-05 (docs/weapon_shop_brief.txt)
+
+## Status (newest first)
+
+- 10:45 WEAPON SHOP TASK DONE and pushed. Client: `UI/Pages/WeaponShopPage` (Shop > Weapons: 8 category tabs left /
+  scrolling row on phones, 12 cards per category in zone order, Gold + pity header, Odds panel, 3D preview with drag,
+  locked cards = black silhouette + "?" + `???`, unlock flip animation), `UI/CaseOpening` (60-tile reel, one tween
+  ease-out quint 6 s / 1.5 s Fast Open, tick sound with rising pitch, tile under the marker enlarged, Skip + tap to
+  skip, reveal pop + rarity effects: quiet, sparkles, rays, screen glow for Divine/Secret; Equip / Open again /
+  Close, "Better than equipped!"), `UI/Pages/InventoryPage` (Weapons tab grid with rarity borders, tap = equip),
+  HUD weapon slot shows the weapon's own icon, Admin panel "Weapons" tab (force rarity, pity, reset, zone locks,
+  Gold). `Kit/Window` phone layout: title banner beside the tabs (saves one row on phones, every window).
+  Tested on desktop 1080p, iPhone 17 Pro (landscape) and iPad 10th gen: 28 screenshots in
+  `docs/screenshots/weapon_shop/` (D = desktop, P = phone, T = tablet). Equip + respawn re-give, Fast Open, Skip,
+  server timer ending an unclosed opening, refund path reviewed. Output: no errors or warnings (only the usual
+  Studio DataStore notice).
+
+- 10:40 PART 1 + SERVER + SIMULATION done (not pushed yet).
+  * Configs: `Config/WeaponCategories` (mult, hits/s, range, shape/special), `Config/WeaponRarities` (8 tiers from
+    Config/Rarities + pity rules + announcements), `Config/Weapons` entries now Id, Name, Category, Zone, ZoneId,
+    Icon, Element + ByCategory / List / price(zone), `Util/Stats` (zone base x category x rarity), Settings
+    `FastOpen`, Profile `PityLegendary`, Config/UI `WeaponShop` + `CaseOpening`.
+  * 96 PLACEHOLDER Tools in `ReplicatedStorage.Assets.Weapons.<WeaponId>` (no FBX imported yet): one simple-parts
+    design per category tinted per zone, Handle origin = grip, head +Y, Tip/Base (+Muzzle) attachments,
+    attributes WeaponId/Category/Zone/Placeholder=true. `ServerStorage.DevTools.WeaponTools`: `placeholders()`,
+    `fromImport(folder)` (turns the imported meshes into the real Tools, grip restored from
+    `DevTools.WeaponBounds` = bounds of the 96 .blend meshes, `Blender/Weapons/weapons_bounds.json`).
+    Grips measured in Play (R15): identity = head up out of the fist; bows / crossbows / guns / gauntlets turned.
+  * Server: `ShopService` (BuyWeapon: validate, charge, roll odds+pity, item + Index, save, reply; opening lock;
+    deferred toast / auto-equip / Mythic+ announcement until the reveal), `WeaponService` (EquipWeapon, Tool with
+    Uid/Rarity + rarity light/outline, re-given on respawn), `DataService:Save`, admin `lockZone`, `giveWeapon`,
+    `forceRarity`, `setPity`, `resetWeapons` (+ setGold/unlockZone existed).
+  * Tested in Play: buy -> Gold 5000 -> 4000 -> 3000 (once per buy), not enough Gold refused with no charge,
+    spam refused ("Too fast" / "Finish the current opening first"), locked zone refused, first weapon auto-equipped.
+  * 100,000-roll simulation: `docs/weapon_roll_simulation.txt` (all tiers within 2.2 sd; pity exactly at 30/100).
+  Next: client UI (shop page, case opening, inventory, admin weapons tab).
+
+- 10:00 Started. Read the brief, DESIGN.md (1, 2, 6, 11), the weapon doc and the code. Backup
+  `BackUP_Files/FightYourDestiny_2026-10-05_095919_before_weapon_shop_*`. No weapon FBX is imported in
+  Studio yet (`ReplicatedStorage.Assets.Weapons` is empty), so Part 1 uses placeholder Tools.
+
+## Decisions taken without the owner
+
+- Pity follows the weapon doc literally: after 30 purchases without Epic+ (counter = 30) the NEXT one is
+  guaranteed Epic+; same at 100 for Legendary+. Two counters (`PityCounter`, `PityLegendary`); each resets when
+  its tier or better comes out, by luck or by pity. The guaranteed roll uses the normal odds among the allowed tiers.
+- The "Obtained ..." toast, the auto-equip of a first weapon and the Mythic+ announcement are sent when the reveal
+  shows (client `OpeningDone`, or the server timer), not with the reply, so nothing spoils the reel. The item and
+  its auto-equip are saved before the reply, so leaving mid-animation keeps both.
+- Announcements never reveal a locked weapon: players who have not unlocked that zone read "mystery weapon".
+- Weapon names and the 96 Tools live where the brief puts them (Config/Weapons, ReplicatedStorage.Assets.Weapons),
+  so a determined exploiter could read them; the UI never shows a locked weapon's name, stats or model.
+- Weapons placeholders: one shape per category, colored with the zone palette, named `PLACEHOLDER_<id>` inside
+  each Tool (attribute Placeholder = true). The FBX export turns Blender +X into Roblox -X (bow strings and
+  gauntlet thumbs on +X); placeholders follow the real models.
+
+## Problems / missing
+
+- Not testable in Studio here: the server-wide Mythic+ announcement needs a second player (logic reviewed only),
+  and the DataStore save before the reply (API Services off: Studio keeps profiles in memory). The item is written
+  to the profile before the reply in both modes, so leaving mid-animation keeps it.
+- No weapon FBX imported yet: all 96 Tools are placeholders (list: every weapon). Owner: import, then run
+  `require(game.ServerStorage.DevTools.WeaponTools).fromImport(folder)` (see Blender/Weapons/README.txt).

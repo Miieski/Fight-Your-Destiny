@@ -35,7 +35,7 @@ local function refreshWeapon()
 		gradient:Destroy()
 	end
 	if def then
-		weaponSlot:Set({ Icon = def.Category, Tier = item.rarity })
+		weaponSlot:Set({ Icon = def.Icon or def.Category, Tier = item.rarity })
 		nameLabel.Text = def.Name
 		Theme.paintRarity(nameLabel, item.rarity)
 	else
