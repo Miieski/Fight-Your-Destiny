@@ -439,6 +439,30 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 20:27 PART A (PLAYER COMBAT) done and pushed.
+  Server `CombatService` rewritten (the placeholder is gone): `Net.send("Attack", aimDir, aimPoint)` with the
+  shapes of the new `Config/Combat` (Sword arc 120/6/3 targets, Spear line 10x3 pierce 4, Heavy arc 90/6 + slam 6
+  with 0.3 s stagger, Dagger arc 60/4 single +20% crit, Gauntlet cone 90/5 with a 3-hit combo (3rd x2), Ranged
+  projectile 120 studs/s range 60 first enemy, Magic AoE at the aim point clamped to 35 studs, radius 6 x (1 + Magic
+  radius), Whip cone 100/12 up to 6). Rate = HitsPerSecond x (1 + attack speed), 18% tolerance. Damage = Stats
+  WeaponDamage (no zone factor) x crit x (1 + Boss Slayer) on mini-bosses / bosses. Roll (cooldown from Stats,
+  0.35 s i-frames) and Block (Stats block %, speed x0.5, no attacks) with server timestamps;
+  `CombatService:DamagePlayer(player, raw)` for enemies (dodge / block / defense / god mode). Starter weapon: a
+  player with no weapon gets a free Common sword of their current zone (Plains outside zones) on load, after a
+  wipe or when the weapon list empties. Client `CombatController` rewritten: hold for melee, one press = one shot
+  for Ranged / Magic, mouse aim on PC, nearest-enemy aim on touch / gamepad, swing animation through the tool
+  (`toolanim` Slash / Lunge), shot trails and AoE discs (new Net events Projectile / Burst / Hurt), roll dash with
+  fade, block bubble (also seen by other players), Dodge / blocked / hurt numbers, Auto-Attack HUD toggle (shown
+  only with the pass; above the touch Attack button, right of the hotbar on PC). StatsService keeps the block
+  slowdown. Admin: `godMode(on)`, `enemyHit(raw)`.
+  Tests (Play, Desert Common weapons, base 100): Sword 100, Spear 120, Heavy 250 (+ slam burst), Dagger 40 (crit 80),
+  Gauntlet 60/60/120, Whip 90, Ranged 80 at 25 studs (hit after 0.25 s), Magic 80 at 25 studs and nothing at 50
+  (clamped to 35). 6 attacks sent at once = 1 hit; NaN / string inputs ignored, no errors. Block: 50 -> 20 and
+  speed 16 -> 8 -> 16; roll: 0 + "Dodge", then 10 after the i-frames; god mode 0. Starter weapon: resetWeapons in
+  the Hub -> Iron Shortsword, in Desert -> Sand Scimitar. Death: "You lost 35% of your Gold: -350" (1000 -> 650),
+  respawn 2 studs from the Desert_1 Entrance. Auto-Attack with a bow: 3 hits in 3 s. Toolslash / toollunge play.
+  Screenshots `docs/screenshots/enemies_task/2A_*` (PC block bubble + toggle, auto bow, phone buttons).
+  Next: Part B (enemy system).
 - 20:10 PART 1 (TWO RULE CHANGES) done and pushed.
   1A No spoilers: new `GameClient/UI/Kit/ZoneVisibility` (isRevealed, displayName, bossName, subZoneName,
   description, requirement, displayIcon, icon, applySilhouette / removeSilhouette, changed) and
@@ -467,5 +491,16 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   shows the generic requirement instead.
 - Weapon silhouettes of locked zones stay as shapes (black, with "?"), like the existing shop rule; only names,
   colors, prices and zones are hidden.
+- Attacks use `Net.send` (fire-and-forget) instead of `Net.request`: the server answers both the same way
+  (`Net.handle`) and a melee hold loop must not wait for a round trip.
+- Auto-Attack toggle on the HUD and the existing Settings > Controls > Auto-Attack are the same setting.
+- Roll direction = the movement direction, or facing when standing still. While rolling the body fades (shows
+  the i-frames).
+- On PC the character turns toward the aim (mouse) when it attacks; on touch toward the nearest enemy in reach
+  (+4 studs).
 
 ## Problems / missing
+
+- The backup before Part A was forgotten; taken right after the Part A edits instead
+  (`BackUP_Files/FightYourDestiny_2026-10-05_202520_partA_combat_*`). The scripts before Part A are in git commit
+  67594b4, so nothing is lost.

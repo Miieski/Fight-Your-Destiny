@@ -18,6 +18,9 @@ Net.EVENTS = {
 	"OpenWindow", -- windowId, arg?: the server asks the client to open a window (hub portals -> Zones)
 	"Team", -- { Id, Leader = userId, Members = { userId } } or nil: the player's team (TeamService)
 	"TeamInvite", -- { Id, From = userId, FromName, Seconds }: an invite to answer (TeamService)
+	"Projectile", -- origin, direction, speed, distance, style: a shot to draw (CombatService / EnemyService)
+	"Burst", -- position, radius, style: an area effect to draw (Magic, slams)
+	"Hurt", -- amount, kind ("hit" | "block" | "dodge"): damage taken by this player
 }
 
 local IS_SERVER = RunService:IsServer()

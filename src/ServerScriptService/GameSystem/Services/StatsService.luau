@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
+local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 local DataService = require(script.Parent.DataService)
@@ -41,7 +42,8 @@ function StatsService:Apply(player: Player)
 		humanoid.MaxHealth = maxHP
 		humanoid.Health = math.min(maxHP, math.max(1, fraction * maxHP))
 	end
-	humanoid.WalkSpeed = stats.WalkSpeed
+	-- blocking halves the speed (CombatService sets the Blocking attribute)
+	humanoid.WalkSpeed = stats.WalkSpeed * (if player:GetAttribute("Blocking") then Combat.Block.SpeedFactor else 1)
 end
 
 local function train(player: Player, plan: any): (boolean, any)

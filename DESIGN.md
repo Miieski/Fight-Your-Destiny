@@ -526,6 +526,10 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
   Strength, Dexterity, Intelligence, Faith, Arcane); full rules in `docs/menu_systems_brief.txt`.
   The profile field `Stats` becomes `Attributes`.
 * Armor is equipped from the **Inventory -> Equipment** tab (character view with slots around it).
+* **No spoilers:** locked zones (not in `profile.Zones`) appear as black "?" silhouettes with the name `???`
+  in every UI and on the hub portals. Damage never depends on the player's current or highest zone;
+  the Zone Boost is disabled by `Config.Balance.ZoneBoostEnabled = false` until the owner decides.
+* Models are stored in `Blender/<Category>/<NN_Zone>/` (NPC, Mobs, MiniBosses, Bosses, Pets).
 
 ## 16. Open questions (defaults used until confirmed)
 

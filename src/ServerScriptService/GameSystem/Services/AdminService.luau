@@ -508,6 +508,18 @@ local COMMANDS: { [string]: Command } = {
 		humanoid.Health = humanoid.MaxHealth
 		return true, nil
 	end,
+	-- godMode(on): enemies and bosses deal no damage to this player (not saved)
+	godMode = function(player, on)
+		player:SetAttribute("GodMode", on == true or on == "true" or on == 1)
+		return true, if player:GetAttribute("GodMode") then "God mode on" else "God mode off"
+	end,
+	-- enemyHit(raw): an enemy-style hit through CombatService:DamagePlayer (tests roll / block / defense)
+	enemyHit = function(player, value)
+		local n = amount(value)
+		if not n then return false, "enemyHit(amount)" end
+		local CombatService = require(script.Parent.CombatService) :: any
+		return true, `dealt {CombatService:DamagePlayer(player, n)}`
+	end,
 	-- setBadge(id, count): fake red badge counts (not saved).
 	setBadge = function(player, id, count)
 		local n = math.floor(tonumber(count) or 0)
