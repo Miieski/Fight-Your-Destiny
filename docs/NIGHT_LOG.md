@@ -224,6 +224,20 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 14:50 PART D5 TEAM done and pushed. `Config/Teams` (max 5, invite 30 s, invite rate limit 1.5 s, nearby 120
+  studs). `TeamService`: TeamCreate, TeamInvite(userId) (leader; inviting without a team creates one; target must
+  exist, not be you, not be in a team; no duplicate pending invite; team not full), TeamRespond(inviteId, accept)
+  (expiry, still valid, room left), TeamLeave (leader passes to the next member, empty team removed), TeamKick
+  (leader), TeamDisband (leader); members get Net "Team" snapshots, the invited player Net "TeamInvite"; player
+  attributes TeamId and Rebirths; `TeamService.getTeam(player)` for the boss gate. Client `UI/Team`: Team tab
+  (headshot, name, crown, Rebirth, zone, Kick / Leave / Disband with confirms, Create Team), Invite tab (friends
+  first, then by distance, status and Invite), invite popup (Accept / Decline, countdown, queue), HUD party list
+  under the health bar while in a team. Also: services that react to `DataService.Loaded` now also handle profiles
+  loaded before they started (Studio play solo: quests, followers, armor look, team attributes were late).
+  Tests (one player): leave / disband / kick / invite-self / unknown user / bad invite refused, create, double
+  create refused, leave clears TeamId, disband, invite popup shown and a bad answer refused. NOT tested: a real
+  2-player invite / accept / kick (needs a multi-client test server). Screenshots `docs/screenshots/menus/D5_*`.
+
 - 14:40 PART D4 QUESTS done and pushed. `Config/Quests` (G = 2000 x 10^(Z-1); pool of 10 kinds, 3 a day picked
   deterministically from the UTC day; targets in G / zone damage units; normal = 3 G, hard (mini-boss, boss,
   trophies) = 2 Diamonds; all 3 claimed = +5 Diamonds with the 3rd claim; 7-day streak table; 6 playtime gifts),
@@ -387,5 +401,7 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   button). "Earn G Gold" counts Gold from enemies only. Quest targets are fixed when the day's quests are made.
 - Daily reward day 5 "premium egg" = an egg of the highest unlocked zone with a rarity rolled with the shop odds,
   added to the egg storage (auto-sold if full). Rewards in G use the player's G at claim time.
+- Team: only the leader invites (and kicks / disbands); a player without a team who invites someone becomes the
+  leader of a new team. The party list sits under the health bar (left), clear of the menu grid and the buttons.
 
 ## Problems / missing

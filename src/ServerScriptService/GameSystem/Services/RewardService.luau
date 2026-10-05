@@ -264,14 +264,19 @@ function RewardService:Init()
 	Net.handle("ClaimDaily", claimDaily, 0.5)
 	Net.handle("ClaimGift", claimGift, 0.3)
 	Net.handle("RedeemCode", redeem, 1)
-	DataService.Loaded:Connect(function(player: Player)
+	local function loaded(player: Player)
 		local profile = DataService:Get(player)
 		if profile then
 			ensureQuests(player, profile)
 			ensurePlaytime(player, profile)
-			lastTick[player] = os.clock()
+			lastTick[player] = lastTick[player] or os.clock()
 		end
-	end)
+	end
+	DataService.Loaded:Connect(loaded)
+	-- profiles loaded before this service started listening (Studio play solo)
+	for _, player in ipairs(Players:GetPlayers()) do
+		loaded(player)
+	end
 	Players.PlayerRemoving:Connect(function(player)
 		lastTick[player] = nil
 	end)

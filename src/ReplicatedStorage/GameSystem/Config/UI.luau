@@ -41,7 +41,7 @@ UI.Windows = {
 	Pets = { Title = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620) },
 	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620) },
 	Quests = { Title = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600) },
-	Team = { Title = "Team" },
+	Team = { Title = "Team", Tabs = { "Team", "Invite" }, Size = Vector2.new(900, 580) },
 	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Other" } },
 	Zones = { Title = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
 	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test", "Weapons" }, Size = Vector2.new(760, 520) },

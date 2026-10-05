@@ -18,6 +18,7 @@ local DiamondShopPage = require(script.Parent.Pages.DiamondShopPage)
 local RebirthShopPage = require(script.Parent.Pages.RebirthShopPage)
 local IndexPage = require(script.Parent.Pages.IndexPage)
 local QuestsPage = require(script.Parent.Pages.QuestsPage)
+local TeamUI = require(script.Parent.Team)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
 local Theme = require(Kit.Theme)
@@ -73,6 +74,7 @@ local BUILDERS = {
 	Pets = PetsPage.build,
 	Index = IndexPage.build,
 	Quests = QuestsPage.build,
+	Team = TeamUI.buildPage,
 	RebirthShop = function(ctx: any)
 		RebirthShopPage.build(ctx.Pages.Main)
 	end,

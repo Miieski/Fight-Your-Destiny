@@ -200,6 +200,12 @@ function ArmorService:Init()
 	DataService.Loaded:Connect(function(player: Player)
 		ArmorService:UpdateLook(player)
 	end)
+	-- profiles loaded before this service started listening (Studio play solo)
+	for _, player in ipairs(Players:GetPlayers()) do
+		if DataService:Get(player) then
+			ArmorService:UpdateLook(player)
+		end
+	end
 	DataService.Changed:Connect(function(player: Player, key: string)
 		if key == "Armor" or key == "EquippedArmor" then
 			ArmorService:UpdateLook(player)

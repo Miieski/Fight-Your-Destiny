@@ -392,7 +392,7 @@ function PetService:Init()
 	Net.handle("LockPet", lockPet, 0.1)
 	Net.handle("ReleasePet", releasePet, 0.1)
 	Net.handle("EquipBestPets", equipBest, 0.5)
-	DataService.Loaded:Connect(function(player: Player)
+	local function loaded(player: Player)
 		-- drop equipped uids that no longer exist, keep the slot count
 		local profile = DataService:Get(player)
 		if profile then
@@ -407,7 +407,14 @@ function PetService:Init()
 			end
 		end
 		PetService:UpdateFollowers(player)
-	end)
+	end
+	DataService.Loaded:Connect(loaded)
+	-- profiles loaded before this service started listening (Studio play solo)
+	for _, player in ipairs(Players:GetPlayers()) do
+		if DataService:Get(player) then
+			loaded(player)
+		end
+	end
 	DataService.Changed:Connect(function(player: Player, key: string)
 		if key == "EquippedPets" or key == "Pets" then
 			PetService:UpdateFollowers(player)

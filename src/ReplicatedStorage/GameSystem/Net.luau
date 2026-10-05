@@ -16,6 +16,8 @@ Net.EVENTS = {
 	"Notify", -- { Kind, Text, Icon?, Rarity? }: a toast (see GameClient/UI/Notifier)
 	"Hit", -- position, damage, isCrit: damage numbers
 	"OpenWindow", -- windowId, arg?: the server asks the client to open a window (hub portals -> Zones)
+	"Team", -- { Id, Leader = userId, Members = { userId } } or nil: the player's team (TeamService)
+	"TeamInvite", -- { Id, From = userId, FromName, Seconds }: an invite to answer (TeamService)
 }
 
 local IS_SERVER = RunService:IsServer()
