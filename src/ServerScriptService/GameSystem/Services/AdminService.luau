@@ -9,6 +9,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Admins = require(ReplicatedStorage.GameSystem.Config.Admins)
+local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
+local ServerStorage = game:GetService("ServerStorage")
 local Economy = require(ReplicatedStorage.GameSystem.Config.Economy)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
@@ -256,6 +258,70 @@ local COMMANDS: { [string]: Command } = {
 		DataService:Set(player, "PityLegendary", 0)
 		WeaponService:Equip(player, nil)
 		return true, "Weapons reset"
+	end,
+	-- setPoints(attr, n): points of one attribute (0..40), free
+	setPoints = function(player, attribute, value)
+		local profile = DataService:Get(player)
+		local n = math.floor(tonumber(value) or -1)
+		if not profile or typeof(attribute) ~= "string" or not Attributes.ById[attribute] or n < 0 or n > Attributes.MaxPoints then
+			return false, "setPoints(attribute, 0-40)"
+		end
+		local values = table.clone(profile.Attributes or Attributes.empty())
+		values[attribute] = n
+		DataService:Set(player, "Attributes", values)
+		return true, `{attribute} = {n}`
+	end,
+	setRebirths = function(player, value)
+		local n = math.floor(tonumber(value) or -1)
+		if n < 0 or n > 12 then return false, "setRebirths(0-12)" end
+		DataService:Set(player, "Rebirths", n)
+		return true, `Rebirths = {n}`
+	end,
+	setCredits = function(player, value)
+		local n = math.floor(tonumber(value) or -1)
+		if n < 0 or n > 1000 then return false, "setCredits(0-1000)" end
+		DataService:Set(player, "RebirthCredits", n)
+		return true, `Rebirth Credits = {n}`
+	end,
+	-- wipeForRebirth(): the Rebirth reset of docs/menu_systems_brief.txt section 7, to test the rules before the
+	-- Rebirth system exists. Reset: Gold, Attributes, Weapons, Armor, Eggs, non-premium Pets and whatever was
+	-- equipped from them. Kept: Diamonds, Keys, premium pets, Index, Credits, Rebirth upgrades, boosts, settings,
+	-- passes (everything else is untouched).
+	wipeForRebirth = function(player)
+		local profile = DataService:Get(player)
+		if not profile then return false, nil end
+		DataService:Set(player, "Gold", 0)
+		DataService:Set(player, "Attributes", Attributes.empty())
+		DataService:Set(player, "Weapons", {})
+		DataService:Set(player, "EquippedWeapon", nil)
+		DataService:Set(player, "Armor", {})
+		DataService:Set(player, "EquippedArmor", {})
+		DataService:Set(player, "Eggs", {})
+		local pets, kept = {}, 0
+		for uid, pet in pairs(profile.Pets or {}) do
+			if pet.premium then
+				pets[uid] = pet
+				kept += 1
+			end
+		end
+		DataService:Set(player, "Pets", pets)
+		local equipped = {}
+		for _, uid in ipairs(profile.EquippedPets or {}) do
+			if pets[uid] then
+				table.insert(equipped, uid)
+			end
+		end
+		DataService:Set(player, "EquippedPets", equipped)
+		WeaponService:Refresh(player)
+		return true, `Rebirth wipe done ({kept} premium pet{if kept == 1 then "" else "s"} kept)`
+	end,
+	-- runStatsTests(): the Util/Stats sample profiles (ServerStorage.DevTools.StatsTests)
+	runStatsTests = function(player)
+		local tests = ServerStorage:FindFirstChild("DevTools") and ServerStorage.DevTools:FindFirstChild("StatsTests")
+		if not tests then return false, "StatsTests not found" end
+		local passed, total, report = require(tests :: ModuleScript)()
+		print(report)
+		return passed == total, `Stats tests: {passed}/{total} passed`
 	end,
 	damageSelf = function(player, value)
 		local humanoid = humanoidOf(player)

@@ -224,6 +224,21 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 12:54 PART A ATTRIBUTES done and pushed. `Config/Attributes` (8 attributes, 0..40, soft cap 20 -> Peff, cost
+  round(100 x 10^(Z-1) x (1 + L/10)^1.5), RebirthPower, respec 5 + 2Z Diamonds, effects, hard caps, weapon scaling
+  weights + grades), `Config/RebirthShop` (6 upgrades, rebirth Gold bonus), `Config/Boosts` (GoldX2), `Util/Stats.compute`
+  (A4 formulas; pet and armor hooks ready for Parts B/C), Profile `Attributes` replaces `Stats`, `DataService.Changed`
+  event. Server `StatsService`: Net "TrainAttributes" (keys, integers, caps, cost point by point, Gold, atomic, save),
+  "RespecAttributes"; Max HP and walk speed applied to the Humanoid. Admin: setPoints, setRebirths, setCredits,
+  runStatsTests (`DevTools/StatsTests`: 5 sample profiles + cost examples, 45/45 pass), wipeForRebirth (section 7).
+  Window (Stats button, title "Attributes", `UI/Pages/AttributesPage`): 8 rows with bar + soft-cap marker, pending
+  [-]/[+] with hold-to-repeat (and keyboard/gamepad), effects tooltip, 15 status lines before -> after in green/red,
+  equipped weapon damage before -> after + grades, Confirm (cost) / Reset pending / Respec (confirm popup). Phones:
+  buttons in the header row and a Points/Status switch. Tested: train 3 Vigor = 346 Gold, Max HP 112; 4 tampered
+  requests rejected; not enough Gold refused; respec 7 Diamonds; wipeForRebirth. Screenshots
+  `docs/screenshots/menu_systems/A1-A6` (desktop, phone, tablet).
+  Next: Part B (eggs and pets).
+
 - 12:43 SECTION 1 PORTAL RULE done and pushed. Hub portals: touch (client, Controllers/PortalController) ->
   Net "UsePortal" -> server checks (zone unlocked, coming soon, boss arena, damage in the last 5 s, 3 s cooldown
   shared with the Zones menu; admins skip arena/combat/cooldown) -> straight to the Entrance of sub-zone 1, with the
@@ -239,6 +254,11 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 - The menu button stays "Stats" (owner's rename of 2026-10-05); its window is the brief's "Training" Attributes
   window, titled "Attributes".
+- PointCost example: the brief prints 18,870 for L 319 (Z1); its own formula gives 18,870.9 -> round() = 18,871. The
+  formula is kept (test expects 18,871).
+- Max HP and walk speed from the attributes are applied to the Humanoid now (StatsService). HP regeneration, block,
+  roll, crit, attack speed and the rest are computed and shown, and will be used by the combat step (no combat code
+  in this task); the default Roblox health regeneration is unchanged for now.
 - The owner mentioned a reference image for the Equipment screen, but none was attached to the message: Part C
   follows the brief's text (character in the middle, slots around) and docs/UI Fantesy like *.jpg.
 

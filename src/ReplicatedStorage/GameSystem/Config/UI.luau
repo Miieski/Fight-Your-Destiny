@@ -35,7 +35,7 @@ UI.CornerButton = { Size = Vector2.new(210, 68), Margin = 16, TextSize = 32 }
 UI.Windows = {
 	Inventory = { Title = "Inventory", Tabs = { "Weapons", "Armor", "Eggs", "Trophies" }, Size = Vector2.new(820, 560) },
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
-	Stats = { Title = "Stats", Intro = "Your RPG stats will live here: HP, Attack, Defense, Speed, Crit and the derived stats." },
+	Stats = { Title = "Attributes", Size = Vector2.new(1080, 620) }, -- Attributes, Elden Ring style (UI/Pages/AttributesPage)
 	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },
 	RebirthShop = { Title = "Rebirth Shop" },
 	Pets = { Title = "Pets" },

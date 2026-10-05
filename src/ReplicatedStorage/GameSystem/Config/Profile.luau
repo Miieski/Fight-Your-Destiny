@@ -1,5 +1,6 @@
 --!strict
 -- The player profile (DESIGN.md section 11): defaults and DataStore settings.
+local Attributes = require(script.Parent.Attributes)
 local Economy = require(script.Parent.Economy)
 local Settings = require(script.Parent.Settings)
 
@@ -33,7 +34,7 @@ function Profile.new(): { [string]: any }
 		SubZones = {},
 		RedoneSinceRebirth = {},
 		CurrentZone = "Plains",
-		Stats = {},
+		Attributes = Attributes.empty(), -- points bought per attribute (Config/Attributes), reset on Rebirth
 		Weapons = {}, -- [uid] = { id = "plains_sword", rarity = 1 }
 		Armor = {}, -- [uid] = { id = "plains_helmet", slot = "Helmet", rarity = 1 }
 		EquippedArmor = {}, -- { Helmet = uid, Chest = uid, Legs = uid }

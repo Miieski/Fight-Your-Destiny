@@ -9,6 +9,7 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local SettingsPage = require(script.Parent.Pages.SettingsPage)
 local ZonesPage = require(script.Parent.Pages.ZonesPage)
 local InventoryPage = require(script.Parent.Pages.InventoryPage)
+local AttributesPage = require(script.Parent.Pages.AttributesPage)
 local WeaponShopPage = require(script.Parent.Pages.WeaponShopPage)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
@@ -57,6 +58,9 @@ end
 local BUILDERS = {
 	Shop = shop,
 	Inventory = inventory,
+	Stats = function(ctx: any)
+		AttributesPage.build(ctx.Pages.Main)
+	end,
 	Settings = SettingsPage.build,
 	Zones = ZonesPage.build,
 }

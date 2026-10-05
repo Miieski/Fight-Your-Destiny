@@ -26,6 +26,9 @@ local store: DataStore? = nil
 
 -- Fires (player, profile) when a profile is ready.
 DataService.Loaded = loadedEvent.Event
+-- Fires (player, key) after DataService:Set changed a top-level key.
+local changedEvent = Instance.new("BindableEvent")
+DataService.Changed = changedEvent.Event
 
 local function deepCopy(value: any): any
 	if typeof(value) ~= "table" then
@@ -178,6 +181,7 @@ function DataService:Set(player: Player, key: string, value: any)
 		if not Profile.NotReplicated[key] then
 			Net.fire(player, "Data", { [key] = value })
 		end
+		changedEvent:Fire(player, key)
 	end
 end
 
