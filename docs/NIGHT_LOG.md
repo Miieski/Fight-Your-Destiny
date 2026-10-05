@@ -224,6 +224,31 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 13:55 PART C ARMOR & EQUIPMENT done and pushed. `Config/Armor` (36 pieces with the brief's names, slot shares
+  .25/.45/.30, HP = 100 x 10^(Z-1) x share x rarityMult, Defense 3 x tier, Zone Boost in the piece's zone, full set
+  +10% Max HP and +10% Zone Boost, storage 100, sell rarityMult x 200 x 10^(Z-1), C4 palettes; `totals` feeds
+  Util/Stats). Server `ArmorService`: EquipArmor (replaces the old piece), UnequipArmor(slot | "All"), EquipBestArmor
+  (pieceHP x (1 + Def/100) in the CURRENT zone), LockArmor, SellArmor (locked / worn refused), `GiveArmor` (auto-sell
+  when full), Index best rarity, player attribute "ArmorLook". Admin giveArmor(id | zone, rarity, count?).
+  Look: `Util/ArmorLook` builds procedural pieces on any R15 body (sizes from the body parts; helmet features per zone:
+  crest, headwrap, tribal mask, fur, witch hat, horns, big horns, halo, skull, coral, visor; chest plate + pauldrons +
+  belt; thigh plates + greaves + knee caps; rarity trims, neon from Epic, shimmer particles from Epic; head
+  accessories hidden under a helmet). `Controllers/ArmorVisualsController` welds them to every character in 150
+  studs; Settings "Show Armor" (default on). Inventory window (1080x620) tabs: Equipment (default), Weapons, Armor,
+  Pets + Eggs (shortcuts to the Pets window), Trophies (placeholder). `UI/Pages/EquipmentPage`: scroll banner (name +
+  Rebirths), the player's own avatar (posed copy of the character, AnimationConstraint / Motor6D joints solved to the
+  rest pose) on a pedestal with the worn armor, slow turn / drag / tap to pause, Helmet-Chest-Legs slots (+HP, info
+  button, picker), weapon slot, 5 pet slots (2 locked), stats summary (Max HP, Defense + reduction, Zone Boost per
+  slot, set x/3, weapon damage), Equip Best Armor / Unequip All; phones: one screen + Stats drawer.
+  `UI/Pages/ArmorPage`: grid with slot filter / sort / storage, detail panel (3D preview, HP / Defense with and
+  without Zone Boost, sell value, Equip / Lock / Sell confirm) and the slot picker with green / red arrows.
+  `Kit/ModelIcon.armor` (piece on an invisible body, mannequin head for helmets), `Kit/Overlay` (shared panels).
+  Tests: StatsTests 78/78 (armor cases: Legendary Plains set in / out of Plains, Epic Desert chest in Desert);
+  request validation (bad uid / slot / type), replace on equip, worn / locked sell refused, sell 200 Gold, Equip Best,
+  Unequip All clears "ArmorLook"; Max HP 1,157 with the Plains set + pets (650 x 1.78). Screenshots
+  `docs/screenshots/armor/` (D1-D5 desktop incl. armor in the world, P1-P3 phone, T1-T2 tablet).
+  Next: Part D (other buttons).
+
 - 13:40 PART B EGGS & PETS done and pushed. `Config/PetRarities` (main values 2..45 %, bonus 25 %, storage 30 eggs /
   60 pets, slots 3 + 2 pass, release / egg sell values, premium egg price 10 + 4Z, Equip Best weights, hatch timing,
   follower numbers) and `Config/Pets` (72 species with the brief's names and slot roles + 4 premium pets; body type,
@@ -300,5 +325,15 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   step (it needs the "out of combat" delay); same for Boss Slayer, Crit Damage, Loot / Diamond Luck and Trophy Value.
 - Index entries for pets store the best rarity (number); weapons still store `true` until D3 converts them.
 - Baby Croc uses a long snout (new accessory) instead of the pig nose; the Sand Snake uses the Fish body.
+- Armor storage full when a piece drops: the piece is sold at once with a toast (same rule as eggs).
+- Inventory "Eggs" tab: a shortcut to Pets > Eggs like the "Pets" tab (the eggs are hatched there). Trophies tab:
+  "Coming soon" (trophies come with combat loot).
+- Equipment avatar = a posed copy of the player's current character (same skin and accessories as in the world)
+  instead of CreateHumanoidModelFromDescription (server-only API); joints are solved to the rest pose.
+- While a helmet is worn, head accessories (hats, hair, big-head accessories) are hidden on the character and on
+  the Equipment avatar, so the helmet shows; they come back when the helmet is removed or Show Armor is off.
+- The worn weapon and pets are not shown on the Equipment avatar (only the armor, as the brief says); the weapon
+  is in its own slot.
+- Equipping a piece never fails for storage reasons (equipping does not change the item count).
 
 ## Problems / missing

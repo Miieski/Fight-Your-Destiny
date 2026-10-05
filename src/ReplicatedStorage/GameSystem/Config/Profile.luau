@@ -36,7 +36,7 @@ function Profile.new(): { [string]: any }
 		CurrentZone = "Plains",
 		Attributes = Attributes.empty(), -- points bought per attribute (Config/Attributes), reset on Rebirth
 		Weapons = {}, -- [uid] = { id = "plains_sword", rarity = 1 }
-		Armor = {}, -- [uid] = { id = "plains_helmet", slot = "Helmet", rarity = 1 }
+		Armor = {}, -- [uid] = { id = "plains_helmet", rarity = 1, locked = false } (Config/Armor)
 		EquippedArmor = {}, -- { Helmet = uid, Chest = uid, Legs = uid }
 		Eggs = {},
 		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, premium = false }

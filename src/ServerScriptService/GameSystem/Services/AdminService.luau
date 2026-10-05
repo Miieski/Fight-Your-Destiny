@@ -22,6 +22,8 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local PetService = require(script.Parent.PetService)
+local ArmorService = require(script.Parent.ArmorService)
+local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
@@ -338,6 +340,30 @@ local COMMANDS: { [string]: Command } = {
 		if typeof(petId) ~= "string" or not Pets.ById[petId] then return false, "givePet(petId, rarity)" end
 		local uid = PetService:GivePet(player, petId, tier(rarity))
 		return uid ~= nil, `{Pets.ById[petId].Name} added`
+	end,
+	-- giveArmor(id, rarity, count?) or giveArmor(zone, rarity) = the full set of a zone (zone = 1..12 or a zone id)
+	giveArmor = function(player, what, rarity, howMany)
+		local n = math.floor(tonumber(howMany) or 1)
+		if n < 1 or n > 100 then return false, "giveArmor(id | zone, rarity, count?)" end
+		local ids = {}
+		if typeof(what) == "string" and Armor.ById[what] then
+			ids = { what }
+		else
+			local zone = if typeof(what) == "number" then Zones.List[what] else zoneOf(what)
+			if not zone then return false, "giveArmor(id | zone, rarity, count?)" end
+			for _, slot in ipairs(Armor.SLOTS) do
+				table.insert(ids, `{string.lower(zone.Id)}_{string.lower(slot)}`)
+			end
+		end
+		local given = 0
+		for _ = 1, n do
+			for _, id in ipairs(ids) do
+				if ArmorService:GiveArmor(player, id, tier(rarity), #ids * n > 1) then
+					given += 1
+				end
+			end
+		end
+		return true, `{given} armor piece{if given == 1 then "" else "s"} given`
 	end,
 	-- clearPets(): removes every pet and egg (tests)
 	clearPets = function(player)

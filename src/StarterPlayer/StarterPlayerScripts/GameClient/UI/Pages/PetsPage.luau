@@ -981,6 +981,13 @@ function PetsPage.build(ctx: any)
 	buildPets(ctx.Pages.Pets)
 	buildEggs(ctx.Pages.Eggs)
 	buildPremium(ctx.Pages["Premium Eggs"])
+	for _, page in pairs(ctx.Pages) do
+		page:GetPropertyChangedSignal("Visible"):Connect(function()
+			if not page.Visible then
+				closeOverlay() -- another tab closes the open panel
+			end
+		end)
+	end
 	Window.Closed:Connect(function(id: string)
 		if id == "Pets" then
 			closeOverlay()

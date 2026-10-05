@@ -33,7 +33,7 @@ UI.CornerButton = { Size = Vector2.new(210, 68), Margin = 16, TextSize = 32 }
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
 UI.Windows = {
-	Inventory = { Title = "Inventory", Tabs = { "Weapons", "Armor", "Eggs", "Trophies" }, Size = Vector2.new(820, 560) },
+	Inventory = { Title = "Inventory", Tabs = { "Equipment", "Weapons", "Armor", "Pets", "Eggs", "Trophies" }, Size = Vector2.new(1080, 620) },
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
 	Stats = { Title = "Attributes", Size = Vector2.new(1080, 620) }, -- Attributes, Elden Ring style (UI/Pages/AttributesPage)
 	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },

@@ -2,12 +2,15 @@
 -- Live 3D icons in ViewportFrames (docs/menu_systems_brief.txt B4: no PNG for pets, eggs or armor).
 -- Each icon (kind, id, tier) is built once as a template (model, camera framing, rarity ring); every later use
 -- is a Clone() of it, so a grid of 60 pets never rebuilds models.
---   ModelIcon.pet(petId, props?), ModelIcon.egg(zoneIndex, tier?, props?) -> ViewportFrame
+--   ModelIcon.pet(petId, props?), ModelIcon.egg(zoneIndex, tier?, props?), ModelIcon.armor(id, tier, props?)
+--       -> ViewportFrame (armor = the procedural piece of Util/ArmorLook, built on an invisible body)
 --   props = { Size, Position, AnchorPoint, ZIndex, Parent, Silhouette (black shape, locked items), Name }
 --   ModelIcon.turntable(view, seconds?) -> stop(): slow spin, drag to turn (detail previews)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
+local ArmorLook = require(ReplicatedStorage.GameSystem.Util.ArmorLook)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
@@ -92,6 +95,34 @@ function ModelIcon.egg(zone: number, tier: number?, props: { [string]: any }?): 
 	local name = if zoneDef then string.lower(zoneDef.Id) else ""
 	return instance(`egg:{name}:{tier or 0}`, function()
 		return build(source("Eggs", name), tier, 1.25)
+	end, props)
+end
+
+function ModelIcon.armor(id: string, tier: number, props: { [string]: any }?): ViewportFrame
+	return instance(`armor:{id}:{tier}`, function()
+		local piece = Armor.ById[id]
+		local model = Instance.new("Model")
+		if piece then
+			local dummy = ArmorLook.dummy()
+			local folder = ArmorLook.apply(dummy, { [piece.Slot] = { id = id, tier = tier } }, { LowFx = true })
+			if folder then
+				for _, part in ipairs(folder:GetChildren()) do
+					part.Parent = model
+				end
+			end
+			if piece.Slot == "Helmet" then
+				-- a mannequin head inside, so the icon reads as a helmet
+				local head = Instance.new("Part")
+				head.Shape = Enum.PartType.Ball
+				head.Size = Vector3.new(1.15, 1.15, 1.15)
+				head.CFrame = (dummy:FindFirstChild("Head") :: BasePart).CFrame
+				head.Color = Color3.fromRGB(205, 195, 185)
+				head.Anchored = true
+				head.Parent = model
+			end
+			dummy:Destroy()
+		end
+		return build(model, nil, if piece and piece.Slot == "Chest" then 1.0 else 1.1)
 	end, props)
 end
 

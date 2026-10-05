@@ -84,6 +84,28 @@ StatsTests.cases = {
 		context = { now = NOW },
 		expected = { Defense = 13.2, DamageReduction = 13.2 / 113.2, MaxHP = 132, BossDamage = 0.08 },
 	},
+	-- Part C: armor (HP = 100 x 10^(Z-1) x share x rarityMult, Defense 3 x tier, Zone Boost in its zone, set +10%)
+	{
+		name = "9 Legendary Plains set (3/3) standing in Plains: Zone Boost 40% x 1.1",
+		data = {
+			Attributes = attrs({}), Rebirths = 0,
+			Armor = { h = { id = "plains_helmet", rarity = 5 }, c = { id = "plains_chest", rarity = 5 }, l = { id = "plains_legs", rarity = 5 } },
+			EquippedArmor = { Helmet = "h", Chest = "c", Legs = "l" },
+		},
+		context = { now = NOW, zoneId = "Plains" },
+		expected = { ArmorHP = 550 * 1.44, ArmorDefense = 45 * 1.44, SetCount = 3, MaxHP = (100 + 792) * 1.1, Defense = 64.8, DamageReduction = 64.8 / 164.8 },
+		alsoOutsideStats = { ArmorHP = 550, ArmorDefense = 45, MaxHP = 650 * 1.1 },
+	},
+	{
+		name = "10 Epic Desert chest + Common Plains helmet in Desert (no set)",
+		data = {
+			Attributes = attrs({ Vigor = 10 }), Rebirths = 0,
+			Armor = { c = { id = "desert_chest", rarity = 4 }, h = { id = "plains_helmet", rarity = 1 }, x = { id = "void_legs", rarity = 8 } },
+			EquippedArmor = { Chest = "c", Helmet = "h" },
+		},
+		context = { now = NOW, zoneId = "Desert" },
+		expected = { ArmorHP = 1575 * 1.25 + 25, ArmorDefense = 12 * 1.25 + 3, SetCount = 1, MaxHP = (100 + 1575 * 1.25 + 25) * 1.4 },
+	},
 }
 
 local function near(a: number, b: number): boolean
@@ -105,6 +127,12 @@ return setmetatable(StatsTests, {
 			local out = Stats.compute(case.data, case.context)
 			for stat, want in pairs(case.expected) do
 				check(`{case.name} - {stat}`, out[stat] or 0, want)
+			end
+			if case.alsoOutsideStats then
+				local outside = Stats.compute(case.data, { now = NOW, zoneId = "Hub" })
+				for stat, want in pairs(case.alsoOutsideStats) do
+					check(`{case.name} - {stat} outside its zone`, outside[stat] or 0, want)
+				end
 			end
 			if case.alsoOutside then
 				local outside = Stats.compute(case.data, { now = NOW, zoneId = "Hub" })

@@ -12,6 +12,8 @@ local InventoryPage = require(script.Parent.Pages.InventoryPage)
 local AttributesPage = require(script.Parent.Pages.AttributesPage)
 local WeaponShopPage = require(script.Parent.Pages.WeaponShopPage)
 local PetsPage = require(script.Parent.Pages.PetsPage)
+local ArmorPage = require(script.Parent.Pages.ArmorPage)
+local EquipmentPage = require(script.Parent.Pages.EquipmentPage)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
 local Theme = require(Kit.Theme)
@@ -47,13 +49,28 @@ local function shop(ctx: any)
 	Window.placeholder(page)
 end
 
-local function inventory(ctx: any)
-	InventoryPage.buildWeapons(ctx.Pages.Weapons)
-	for name, page in pairs(ctx.Pages) do
-		if name ~= "Weapons" then
-			Window.placeholder(page)
+-- Inventory: Equipment (default), Weapons, Armor, Pets and Eggs (shortcuts to the Pets window), Trophies.
+local function shortcut(page: ScrollingFrame, text: string, tab: string)
+	Theme.text({ Text = text, TextSize = 22, Wrapped = true, Size = UDim2.new(1, 0, 0, 56), LayoutOrder = 1, Parent = page })
+	Button.new({ Text = "Open Pets", Icon = "Pets", Style = "primary", Size = UDim2.fromOffset(240, Theme.TOUCH), LayoutOrder = 2, Parent = page, OnClick = function()
+		Window.open("Pets", tab)
+	end })
+	-- choosing the tab jumps straight to the Pets window
+	page:GetPropertyChangedSignal("Visible"):Connect(function()
+		if page.Visible and Window.isOpen("Inventory") then
+			task.defer(Window.open, "Pets", tab)
 		end
-	end
+	end)
+end
+
+local function inventory(ctx: any)
+	EquipmentPage.build(ctx.Pages.Equipment, ctx)
+	InventoryPage.buildWeapons(ctx.Pages.Weapons)
+	ArmorPage.build(ctx.Pages.Armor, ctx)
+	shortcut(ctx.Pages.Pets, "Your pets live in the Pets window.", "Pets")
+	shortcut(ctx.Pages.Eggs, "Your eggs are hatched in the Pets window.", "Eggs")
+	Theme.text({ Text = "Trophies drop from mini-bosses and bosses; sell them for Gold.", TextSize = 22, Wrapped = true, Size = UDim2.new(1, 0, 0, 56), LayoutOrder = 1, Parent = ctx.Pages.Trophies })
+	Window.placeholder(ctx.Pages.Trophies)
 end
 
 local BUILDERS = {
