@@ -39,7 +39,7 @@ UI.Windows = {
 	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },
 	RebirthShop = { Title = "Rebirth Shop", Size = Vector2.new(920, 600) },
 	Pets = { Title = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620) },
-	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" } },
+	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620) },
 	Quests = { Title = "Quests", Tabs = { "Daily" } },
 	Team = { Title = "Team" },
 	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Other" } },

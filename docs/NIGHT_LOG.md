@@ -224,6 +224,16 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 14:25 PART D3 INDEX done and pushed. `Config/IndexBook` (catalog: 96 weapons, 36 armor, 72 + 4 premium pets,
+  168 enemies (11 + 2 minis + boss per zone), grouped by zone; best rarity, counts, rewards: 2 + zone Diamonds per
+  zone of a tab, 100 per tab). `IndexService` ("ClaimIndexReward": complete, once, saved; `Discover`). Weapons now
+  store their best rarity in the Index (was `true`; `true` still reads as discovered). Admin discover(entryId |
+  Tab:Zone | Tab:All | All, rarity?) and clearIndex. Window `UI/Pages/IndexPage`: tab summary with progress bar and
+  tab reward, zone sections (icon, x/y %, Claim), cells with 3D icon / weapon icon / enemy placeholder, rarity pips,
+  undiscovered = black silhouette + "?" and no name; built on first view, rebuilt on change. Menu badge = claimable
+  rewards. Tests: zone reward 3, again refused, incomplete zone / tab refused, unknown refused, Enemies:Desert 4,
+  Armor:All 100 -> 107 Diamonds. Screenshots `docs/screenshots/menus/D3_*`.
+
 - 14:18 PART D2 REBIRTH SHOP done and pushed. `RebirthShopService` ("BuyRebirthUpgrade": known id, below max,
   1 credit per level, credits and level change together, saved). Window `UI/Pages/RebirthShopPage`: credits, the 6
   upgrades with 3D icon, level pips, Lv x / max, current bonus, Buy / Max. Tests: unknown ids refused, Egg Luck to 6
@@ -355,5 +365,7 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   old rarity stays (the brief: it is replaced only after the player confirms). The case opening shows Diamonds
   instead of Gold during a reroll.
 - Gold Boost stacking is capped at 24 hours of remaining time.
+- Index: the 4 premium pets are listed (own "Premium" group) but are not needed for the Pets tab reward (Robux
+  only). Enemies have no models yet: skull icon (crown for bosses, red names for mini-bosses) until they exist.
 
 ## Problems / missing

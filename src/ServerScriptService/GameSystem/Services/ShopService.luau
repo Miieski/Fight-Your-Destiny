@@ -165,9 +165,10 @@ local function buy(player: Player, weaponId: any): (boolean, any)
 		for key, value in pairs(nextCounters) do
 			DataService:Set(player, key, value)
 		end
-		if not profile.Index[weapon.Id] then
+		local best = profile.Index[weapon.Id]
+		if typeof(best) ~= "number" or best < tier then
 			local index = table.clone(profile.Index)
-			index[weapon.Id] = true
+			index[weapon.Id] = tier -- best rarity owned (docs/menu_systems_brief.txt D3)
 			DataService:Set(player, "Index", index)
 		end
 		-- a first weapon is equipped in the saved profile right away (so leaving mid-opening keeps it

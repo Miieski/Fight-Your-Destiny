@@ -24,6 +24,8 @@ local DataService = require(script.Parent.DataService)
 local PetService = require(script.Parent.PetService)
 local ArmorService = require(script.Parent.ArmorService)
 local BoostService = require(script.Parent.BoostService)
+local IndexService = require(script.Parent.IndexService)
+local IndexBook = require(ReplicatedStorage.GameSystem.Config.IndexBook)
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
@@ -365,6 +367,36 @@ local COMMANDS: { [string]: Command } = {
 			end
 		end
 		return true, `{given} armor piece{if given == 1 then "" else "s"} given`
+	end,
+	-- discover(entryId | "<Tab>:<ZoneId>" | "<Tab>:All" | "All", rarity?): marks Index entries as found
+	discover = function(player, what, rarity)
+		if typeof(what) ~= "string" then return false, "discover(entryId | Tab:Zone | Tab:All | All, rarity?)" end
+		local ids = {}
+		if IndexBook.ById[what] then
+			ids = { what }
+		else
+			local tabName, key = string.match(what, "^(%a+):(%a+)$")
+			for _, tab in ipairs(IndexBook.TABS) do
+				for _, group in ipairs(IndexBook.Groups[tab]) do
+					if what == "All" or (tab == tabName and (key == "All" or key == group.Key)) then
+						for _, entry in ipairs(group.Entries) do
+							table.insert(ids, entry.Id)
+						end
+					end
+				end
+			end
+		end
+		if #ids == 0 then return false, "Nothing matches " .. what end
+		for _, id in ipairs(ids) do
+			IndexService:Discover(player, id, tier(rarity))
+		end
+		return true, `{#ids} Index entr{if #ids == 1 then "y" else "ies"} discovered`
+	end,
+	-- clearIndex(): empties the Index and its claimed rewards (tests)
+	clearIndex = function(player)
+		DataService:Set(player, "Index", {})
+		DataService:Set(player, "IndexClaimed", {})
+		return true, "Index cleared"
 	end,
 	-- giveBoost(id, seconds): adds time to a boost (GoldX2)
 	giveBoost = function(player, id, seconds)

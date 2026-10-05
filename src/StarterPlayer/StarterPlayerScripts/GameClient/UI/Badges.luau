@@ -2,6 +2,9 @@
 -- BadgeRegistry (docs/ui_hud_brief.txt section 4.8): the red count on each menu button.
 -- Each id reads State. Until the real systems exist, counts also come from the admin command
 -- setBadge (State "DebugBadges", not saved). Settings never shows a badge.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local IndexBook = require(ReplicatedStorage.GameSystem.Config.IndexBook)
 local State = require(script.Parent.Parent.State)
 
 local Badges = {}
@@ -22,7 +25,9 @@ end
 local REGISTRY: { [string]: Entry } = {
 	Inventory = debugOnly("Inventory"), -- later: new loot not seen yet
 	Quests = debugOnly("Quests"), -- later: claimable quests
-	Index = debugOnly("Index"), -- later: claimable Index rewards
+	Index = { Keys = { "DebugBadges", "Index", "IndexClaimed" }, Count = function() -- claimable Index rewards
+		return math.max(debugCount("Index"), IndexBook.claimable(State.get("Index"), State.get("IndexClaimed")))
+	end },
 	Pets = debugOnly("Pets"), -- later: new pets
 	Shop = debugOnly("Shop"), -- later: new reward / daily
 	RebirthShop = { Keys = { "DebugBadges", "RebirthCredits" }, Count = function() -- unspent Rebirth Credits
