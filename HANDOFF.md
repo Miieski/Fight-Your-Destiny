@@ -207,6 +207,11 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
 * The 96 FBX files are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions =
   Meters). After import: Tools under `ReplicatedStorage.Assets.Weapons.<WeaponId>` (gameplay step).
 
+**Owner request 2026-10-05 (morning): the health bar shows the player's avatar headshot instead of the heart**
+(`UI/HealthBar.luau` `makePortrait`: `rbxthumb://type=AvatarHeadShot`, round, gold ring, overlapping the panel's
+left end like the currency icons). Test players without an account (UserId <= 0) keep the heart.
+Screenshots `docs/screenshots/ui_redo/C1_desktop_health_portrait.jpg`, `C2_phone_health_portrait.jpg`.
+
 **Owner decision 2026-10-05: the "Training" menu button and window are now "Stats". The Stats window
 will hold the WHOLE RPG system (HP, Attack, Defense, Speed, Crit, Gold Gain, their upgrades and the
 derived stats); see DESIGN.md section 3. Step 3 of the brief's plan is therefore "Stats window +

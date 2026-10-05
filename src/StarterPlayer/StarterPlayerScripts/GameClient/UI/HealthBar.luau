@@ -1,5 +1,6 @@
 --!strict
--- HUD 1: player health, top-left below the Roblox icons: exact "current / max", a lighter trailing
+-- HUD 1: player health, top-left below the Roblox icons: the player's avatar portrait, exact
+-- "current / max", a lighter trailing
 -- segment on damage, pulse + red vignette under LowHealthFraction. Also hides the default
 -- Roblox health bar and backpack hotbar.
 local Players = game:GetService("Players")
@@ -19,6 +20,7 @@ local HealthBar = { Priority = 10 }
 
 local VIGNETTE_DEPTH = 0.22 -- fraction of the screen covered by each red edge
 local PULSE = TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+local PORTRAIT = 1.12 -- portrait height relative to the panel (it overlaps the panel's left end)
 
 local panel: Frame
 local bar: any
@@ -115,6 +117,36 @@ local function makeVignette(root: Instance)
 	end
 end
 
+-- The player's avatar headshot in a gold ring over the panel's left end, like the currency icons.
+-- Test players without a Roblox account (UserId <= 0, Studio local servers) get the heart instead.
+local function makePortrait(parent: Instance)
+	local ring = Instance.new("Frame")
+	ring.Name = "Portrait"
+	ring.AnchorPoint = Vector2.new(0, 0.5)
+	ring.Position = UDim2.new(0, -6, 0.5, 0)
+	ring.Size = UDim2.fromScale(PORTRAIT, PORTRAIT)
+	ring.SizeConstraint = Enum.SizeConstraint.RelativeYY
+	ring.BackgroundColor3 = Color3.new(1, 1, 1)
+	ring.ZIndex = 5
+	Theme.gradient(ring, Theme.Colors.WoodLight, Theme.Colors.WoodInset)
+	Theme.round(ring)
+	Theme.stroke(ring, Theme.Colors.GoldLight, 3)
+	local userId = Players.LocalPlayer.UserId
+	if userId > 0 then
+		local image = Instance.new("ImageLabel")
+		image.Name = "Headshot"
+		image.BackgroundTransparency = 1
+		image.Size = UDim2.fromScale(1, 1)
+		image.Image = `rbxthumb://type=AvatarHeadShot&id={userId}&w=150&h=150`
+		image.ZIndex = 6
+		Theme.round(image)
+		image.Parent = ring
+	else
+		Icons.create("Heart", ring, { Size = UDim2.fromScale(0.8, 0.8), ZIndex = 6 })
+	end
+	ring.Parent = parent
+end
+
 local function layout()
 	local size = if Theme.isCompact() then UIConfig.Hud.Health.Compact else UIConfig.Hud.Health.Normal
 	panel.Size = UDim2.fromOffset(size.X, size.Y)
@@ -128,8 +160,8 @@ function HealthBar:Start()
 	makeVignette(vignetteScreen())
 	local root = Screens.hud()
 	panel = Panel.new({ Name = "Health", Position = UDim2.fromOffset(12, UIConfig.Hud.Health.Top), Gems = false, BorderThickness = 3, Parent = root })
-	Icons.create("Heart", panel, { Size = UDim2.new(0, 0, 0.72, 0), Position = UDim2.new(0, 10, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
-	bar = Bar.new({ Name = "HP", Size = UDim2.new(1, -62, 0.56, 0), Position = UDim2.new(0, 52, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = panel })
+	makePortrait(panel)
+	bar = Bar.new({ Name = "HP", Size = UDim2.new(1, -68, 0.56, 0), Position = UDim2.new(0, 58, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = panel })
 	layout()
 	Theme.Changed:Connect(layout)
 	local player = Players.LocalPlayer
