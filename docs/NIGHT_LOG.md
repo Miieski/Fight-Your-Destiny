@@ -224,6 +224,12 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 14:18 PART D2 REBIRTH SHOP done and pushed. `RebirthShopService` ("BuyRebirthUpgrade": known id, below max,
+  1 credit per level, credits and level change together, saved). Window `UI/Pages/RebirthShopPage`: credits, the 6
+  upgrades with 3D icon, level pips, Lv x / max, current bonus, Buy / Max. Tests: unknown ids refused, Egg Luck to 6
+  then "at its maximum", no credits refused, Health Boost 1 -> Max HP 110. Desktop screenshot
+  `docs/screenshots/menus/D2_D1_rebirth_shop.jpg` (phone / tablet shots of D2-D5 come in one pass at the end).
+
 - 14:12 PART D1 SHOP > DIAMONDS done and pushed. `UI/Pages/DiamondShopPage`: Diamonds + Get Diamonds (hub
   teleport confirm), Premium Eggs strip (12 zones, locked silhouettes, same purchase as the Pets window), Weapon
   Reroll (weapon list -> 5 + 2 x zone Diamonds -> case opening in reroll mode -> Keep new / Keep old; ShopService

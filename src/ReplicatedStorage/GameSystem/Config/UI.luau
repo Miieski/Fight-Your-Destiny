@@ -37,7 +37,7 @@ UI.Windows = {
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
 	Stats = { Title = "Attributes", Size = Vector2.new(1080, 620) }, -- Attributes, Elden Ring style (UI/Pages/AttributesPage)
 	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },
-	RebirthShop = { Title = "Rebirth Shop" },
+	RebirthShop = { Title = "Rebirth Shop", Size = Vector2.new(920, 600) },
 	Pets = { Title = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620) },
 	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" } },
 	Quests = { Title = "Quests", Tabs = { "Daily" } },
