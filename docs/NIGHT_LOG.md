@@ -5,6 +5,15 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:43 PART C DONE - WHIP & CHAIN category pushed: ALL 96 WEAPONS ARE MADE. Builders
+  `tools/blender/fyd_weapon_whips.py` (handle + S-curved lash or chain, 6 studs; shared `path()`, `lash()`,
+  `chain()` with alternating links; 952-1936 tris). Each whip checked on its preview; fixes: lashes 1.3x
+  thicker, bigger leaves / flowers / vertebrae / segments, gold rings sized to the lash, bigger chain links
+  (Frozen Chain was 2904 tris, now 1816), Soul Chain hook and Rift blade turned to face the camera.
+  Lineup `Previews/Weapons/Whip_lineup.png`. All 96 icons uploaded; `Config/Weapons.luau` ICONS has 96/96
+  (checked with a fresh require: no weapon without an icon). Manifest: 96 rows, every weapon within budget.
+  Next: none for Part C - the FBX files wait for the owner's Bulk Import.
+
 - 03:36 PART C - MAGIC category done and pushed (84/96). Builders `tools/blender/fyd_weapon_magic.py`
   (6 studs = 1.68 m staffs, head on top along +Z, origin at the grip; 1080-2126 tris of the 4000 budget).
   Each staff checked on its preview; fixes: shorter shaft for all staffs so the heads read at icon size,
@@ -112,6 +121,11 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 - Hub portals now open the teleport menu on their zone instead of teleporting directly (brief).
 - Gauntlets are modeled as ONE right-hand piece (the brief says "pair, one per hand"): the left one is the
   same mesh mirrored in Studio, so the pair always matches and the file count stays 12 per category.
+- Whip & Chain (brief: "6 studs, handle part") are modeled as the handle + a rigid S-curved lash/chain,
+  6 studs in total, so the icon and the held weapon read as a whip; a physical rope/Beam can replace the
+  lash in Studio later (written in Blender/Weapons/README.txt).
+- Ranged: one convention per type (bow / crossbow / gun) instead of one for all, so each icon shows its
+  best side (README). Long thin parts (bow limbs, lashes, spear shafts) are drawn thicker than real.
 - Weapon icon outline width is per category (Sword 14 px, Spear 8, Heavy 11, Dagger 14, Gauntlet 14,
   Ranged 9, Magic 9, Whip 10): a 14 px outline swallowed the thin spear shafts at 512 px.
 
