@@ -224,6 +224,16 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 14:12 PART D1 SHOP > DIAMONDS done and pushed. `UI/Pages/DiamondShopPage`: Diamonds + Get Diamonds (hub
+  teleport confirm), Premium Eggs strip (12 zones, locked silhouettes, same purchase as the Pets window), Weapon
+  Reroll (weapon list -> 5 + 2 x zone Diamonds -> case opening in reroll mode -> Keep new / Keep old; ShopService
+  "RerollWeapon" + "RerollChoice", no pity, admin forceRarity applies), Gold Boost x2 packs 15 / 30 / 60 min for
+  25 / 45 / 80 Diamonds (new `BoostService`: "BuyBoost", `Add` stacks time, max 24 h; `Config/Boosts.Packs`,
+  `remaining`), Skins "Coming soon" silhouettes. HUD `UI/BoostTimer` (Gold x2 mm:ss, tap -> Shop > Diamonds; PC /
+  tablet under the bars left of the admin crown, phones left of the Diamonds bar, clear of the action buttons).
+  Admin giveBoost(id, seconds). Tests: reroll keep old (rarity kept), keep new (rarity changed), second answer
+  refused, bad uid refused, Diamonds 300 -> 237 (45 + 9 + 9), boost 30 min; screenshots `docs/screenshots/menus/D1_*`.
+
 - 13:55 PART C ARMOR & EQUIPMENT done and pushed. `Config/Armor` (36 pieces with the brief's names, slot shares
   .25/.45/.30, HP = 100 x 10^(Z-1) x share x rarityMult, Defense 3 x tier, Zone Boost in the piece's zone, full set
   +10% Max HP and +10% Zone Boost, storage 100, sell rarityMult x 200 x 10^(Z-1), C4 palettes; `totals` feeds
@@ -335,5 +345,9 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 - The worn weapon and pets are not shown on the Equipment avatar (only the armor, as the brief says); the weapon
   is in its own slot.
 - Equipping a piece never fails for storage reasons (equipping does not change the item count).
+- Weapon Reroll: the reroll screen can only be closed with Keep new / Keep old; if the player leaves mid-reroll the
+  old rarity stays (the brief: it is replaced only after the player confirms). The case opening shows Diamonds
+  instead of Gold during a reroll.
+- Gold Boost stacking is capped at 24 hours of remaining time.
 
 ## Problems / missing

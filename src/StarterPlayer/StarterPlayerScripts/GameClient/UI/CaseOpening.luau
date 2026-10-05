@@ -6,6 +6,8 @@
 --   CaseOpening.play(result, onAgain)  result = the BuyWeapon reply; onAgain(weaponId) buys the same again
 --   CaseOpening.isActive(), CaseOpening.Changed (fires with the new active flag)
 --   CaseOpening.burst(fx, modal, tier): the rarity reveal effects (shared with the hatch screen)
+-- A Weapon Reroll result (result.reroll, Shop > Diamonds) plays the same reel and ends on "Keep new" / "Keep old"
+-- (Net "RerollChoice"); the screen only closes through one of the two.
 -- One tween moves the strip. The per-frame check (tick sound, tile under the marker) recomputes the strip
 -- position from the clock with the same easing, so it only works with numbers: no allocation per frame.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -358,6 +360,16 @@ local function reveal(opening: Opening)
 	end
 	local price = Weapons.price(weapon.Zone)
 	buttons.Again:SetStyle(if (State.get("Gold") or 0) >= price then "primary" else "disabled")
+	if opening.result.reroll then
+		for _, name in ipairs({ "Equip", "Again", "Close" }) do
+			buttons[name].Instance.Visible = false
+		end
+		buttons.KeepNew.Instance.Visible = true
+		buttons.KeepOld.Instance.Visible = true
+		local old, new = WeaponRarities.get(opening.result.oldRarity), WeaponRarities.get(tier)
+		hint.Text = `Old: {old.Name}   ->   New: {new.Name}`
+		hint.TextColor3 = if tier > old.Tier then Theme.Colors.Good elseif tier < old.Tier then Theme.Colors.Bad else Theme.Colors.Gold
+	end
 end
 
 -- Shows the opening of `result` (the server's BuyWeapon reply). onAgain(weaponId) is called by "Open again".
@@ -406,9 +418,9 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 
 	-- title, zone, Gold
 	if compact then
-		Theme.text({ Name = "Title", Font = "Title", Text = `Opening: {weapon.Name}  -  {zoneName(weapon)}`, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -200, 0, 34), Position = UDim2.fromOffset(16, 10), ZIndex = 3, Parent = panel })
+		Theme.text({ Name = "Title", Font = "Title", Text = `{if result.reroll then "Reroll" else "Opening"}: {weapon.Name}  -  {zoneName(weapon)}`, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -200, 0, 34), Position = UDim2.fromOffset(16, 10), ZIndex = 3, Parent = panel })
 	else
-		Theme.text({ Name = "Title", Font = "Title", Text = `Opening: {weapon.Name}`, TextSize = 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -260, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
+		Theme.text({ Name = "Title", Font = "Title", Text = `{if result.reroll then "Reroll" else "Opening"}: {weapon.Name}`, TextSize = 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -260, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
 		Theme.text({ Name = "Zone", Text = zoneName(weapon), TextSize = 20, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -260, 0, 24), Position = UDim2.new(0.5, 0, 0, 50), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
 	end
 	local goldBox = Instance.new("Frame")
@@ -421,9 +433,11 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 	Theme.corner(goldBox, 20)
 	Theme.stroke(goldBox, Theme.Colors.GoldDark, 2)
 	goldBox.Parent = panel
-	Icons.create("Gold", goldBox, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, -6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
+	-- a reroll is paid in Diamonds: the box shows them instead of Gold
+	local currency = if result.reroll then "Diamonds" else "Gold"
+	Icons.create(if result.reroll then "Diamond" else "Gold", goldBox, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, -6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 	local goldLabel = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Right", Size = UDim2.new(1, -50, 1, -6), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 4, Parent = goldBox })
-	local goldConn = State.observe("Gold", function(value)
+	local goldConn = State.observe(currency, function(value)
 		goldLabel.Text = Format.number(value or 0)
 	end)
 
@@ -558,7 +572,24 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 		end
 	end })
 	buttons.Close = Button.new({ Name = "Close", Text = "Close", Style = "secondary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 4, ZIndex = 4, Parent = row, OnClick = close })
-	for _, name in ipairs({ "Equip", "Again", "Close" }) do
+	-- Weapon Reroll answer
+	local function choose(keepNew: boolean)
+		local called, ok, message = pcall(Net.request, "RerollChoice", result.uid, keepNew)
+		if called and ok then
+			local rarity = WeaponRarities.get(message)
+			Notifier.push({ Kind = "info", Text = `{weapon.Name} is now {rarity.Name}`, Rarity = rarity.Tier, Icon = weapon.Icon or weapon.Category })
+		else
+			Notifier.push({ Kind = "error", Text = if called and typeof(message) == "string" then message else "Could not save the choice" })
+		end
+		close()
+	end
+	buttons.KeepNew = Button.new({ Name = "KeepNew", Text = "Keep new", Style = "go", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 5, ZIndex = 4, Parent = row, OnClick = function()
+		choose(true)
+	end })
+	buttons.KeepOld = Button.new({ Name = "KeepOld", Text = "Keep old", Style = "secondary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 6, ZIndex = 4, Parent = row, OnClick = function()
+		choose(false)
+	end })
+	for _, name in ipairs({ "Equip", "Again", "Close", "KeepNew", "KeepOld" }) do
 		buttons[name].Instance.Visible = false
 	end
 

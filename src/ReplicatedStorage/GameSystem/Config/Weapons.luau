@@ -157,6 +157,13 @@ function Weapons.idOf(zoneId: string, categoryId: string): string
 end
 
 -- Shop price of the weapons of a zone (weapon doc section 5): 1K, 10K, ... 100T Gold.
+-- Shop > Diamonds: Weapon Reroll price (docs/menu_systems_brief.txt D1): 5 + 2 x zone Diamonds.
+Weapons.REROLL_BASE = 5
+Weapons.REROLL_PER_ZONE = 2
+function Weapons.rerollPrice(zone: number): number
+	return Weapons.REROLL_BASE + Weapons.REROLL_PER_ZONE * zone
+end
+
 function Weapons.price(zone: number): number
 	return Weapons.SHOP_BASE_PRICE * 10 ^ (zone - 1)
 end

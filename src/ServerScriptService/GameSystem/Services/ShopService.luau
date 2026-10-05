@@ -22,6 +22,12 @@ local WeaponService = require(script.Parent.WeaponService)
 
 local ShopService = { Priority = 5 }
 
+-- Weapon Reroll (docs/menu_systems_brief.txt D1): the Diamonds are taken and the new rarity rolled at once (shop
+-- odds, no pity); it replaces the old one only when the player answers "Keep new" (RerollChoice). No answer
+-- (closed, left the game) = the old rarity stays.
+type Reroll = { uid: string, tier: number }
+local rerolls: { [Player]: Reroll } = {}
+
 type Pending = { weaponId: string, tier: number, uid: string, equip: boolean }
 
 local random = Random.new()
@@ -204,6 +210,62 @@ local function buy(player: Player, weaponId: any): (boolean, any)
 	return true, result
 end
 
+local function reroll(player: Player, uid: any): (boolean, any)
+	local profile = DataService:Get(player)
+	if not profile then
+		return false, "Profile not loaded"
+	end
+	local item = if typeof(uid) == "string" then profile.Weapons[uid] else nil
+	local weapon = item and Weapons.ById[item.id]
+	if not weapon then
+		return false, "Weapon not found"
+	end
+	if busy[player] or (openingUntil[player] or 0) > os.clock() then
+		return false, "Finish the current opening first"
+	end
+	local price = Weapons.rerollPrice(weapon.Zone)
+	if typeof(profile.Diamonds) ~= "number" or profile.Diamonds < price then
+		return false, "Not enough Diamonds"
+	end
+	DataService:Set(player, "Diamonds", profile.Diamonds - price)
+	local tier = forced[player] or ShopService.rollTier(random, 1)
+	forced[player] = nil
+	rerolls[player] = { uid = uid, tier = tier }
+	DataService:Save(player)
+	return true, { uid = uid, weaponId = weapon.Id, rarity = tier, oldRarity = item.rarity, cost = price, reroll = true }
+end
+
+local function rerollChoice(player: Player, uid: any, keepNew: any): (boolean, any)
+	local pending = rerolls[player]
+	if not pending or pending.uid ~= uid or typeof(keepNew) ~= "boolean" then
+		return false, "Nothing to choose"
+	end
+	rerolls[player] = nil
+	local profile = DataService:Get(player)
+	local item = profile and profile.Weapons[pending.uid]
+	if not item then
+		return false, "Weapon not found"
+	end
+	if keepNew and pending.tier ~= item.rarity then
+		local owned = table.clone(profile.Weapons)
+		local changed = table.clone(item)
+		changed.rarity = pending.tier
+		owned[pending.uid] = changed
+		DataService:Set(player, "Weapons", owned)
+		local best = profile.Index[item.id]
+		if typeof(best) ~= "number" or best < pending.tier then
+			local index = table.clone(profile.Index)
+			index[item.id] = pending.tier
+			DataService:Set(player, "Index", index)
+		end
+		if profile.EquippedWeapon == pending.uid then
+			WeaponService:Equip(player, pending.uid) -- the Tool gets its new rarity look
+		end
+		DataService:Save(player)
+	end
+	return true, if keepNew then pending.tier else item.rarity
+end
+
 -- Admin (AdminService): the next purchase of this player gets this tier.
 function ShopService:ForceNext(player: Player, tier: number?)
 	forced[player] = tier
@@ -215,6 +277,8 @@ end
 
 function ShopService:Init()
 	Net.handle("BuyWeapon", buy, Weapons.BUY_INTERVAL)
+	Net.handle("RerollWeapon", reroll, Weapons.BUY_INTERVAL)
+	Net.handle("RerollChoice", rerollChoice, 0.2)
 	-- the client's reveal is showing: the next purchase is allowed and the deferred messages go out
 	Net.handle("OpeningDone", function(player: Player)
 		if pending[player] or openingUntil[player] then
@@ -226,6 +290,7 @@ function ShopService:Init()
 		openingUntil[player] = nil
 		pending[player] = nil
 		forced[player] = nil
+		rerolls[player] = nil
 	end)
 end
 

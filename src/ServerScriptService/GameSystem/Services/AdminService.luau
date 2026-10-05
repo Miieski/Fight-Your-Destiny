@@ -23,6 +23,7 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local PetService = require(script.Parent.PetService)
 local ArmorService = require(script.Parent.ArmorService)
+local BoostService = require(script.Parent.BoostService)
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
@@ -364,6 +365,13 @@ local COMMANDS: { [string]: Command } = {
 			end
 		end
 		return true, `{given} armor piece{if given == 1 then "" else "s"} given`
+	end,
+	-- giveBoost(id, seconds): adds time to a boost (GoldX2)
+	giveBoost = function(player, id, seconds)
+		local n = tonumber(seconds)
+		if typeof(id) ~= "string" or not n or n <= 0 or n > 86400 then return false, "giveBoost(id, seconds)" end
+		local expires = BoostService:Add(player, id, n)
+		return expires ~= nil, if expires then `{id} active for {math.floor((expires - os.time()) / 60)} min` else "Unknown boost"
 	end,
 	-- clearPets(): removes every pet and egg (tests)
 	clearPets = function(player)

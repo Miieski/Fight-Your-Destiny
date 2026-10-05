@@ -976,6 +976,11 @@ local function buildPremium(page: ScrollingFrame)
 	end)
 end
 
+-- Shop > Diamonds uses the same purchase (hatch screen with "Buy again").
+function PetsPage.buyPremium(zone: any)
+	buyPremium(zone)
+end
+
 function PetsPage.build(ctx: any)
 	overlayParent = ctx.Frame
 	buildPets(ctx.Pages.Pets)
