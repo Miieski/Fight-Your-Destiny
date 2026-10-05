@@ -1,0 +1,97 @@
+{
+ "id": "plains_field_bandit",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 5.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.75,
+  0.008
+ ],
+ "rootSize": [
+  2.271,
+  5.5,
+  2.288
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.331,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.898,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.847,
+    3.686,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.847,
+    3.686,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.318,
+    2.225,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.318,
+    2.225,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 552,
+ "colors": [
+  "#4e4030",
+  "#56794a",
+  "#2b1f15",
+  "#d8b04a",
+  "#7a5434",
+  "#5a3c24",
+  "#d9a27a",
+  "#121016",
+  "#f4f4f4",
+  "#c3916d",
+  "#3d6b3a",
+  "#2f3a2a",
+  "#3a2a1e",
+  "#6a5030",
+  "#b8bcc4"
+ ]
+}

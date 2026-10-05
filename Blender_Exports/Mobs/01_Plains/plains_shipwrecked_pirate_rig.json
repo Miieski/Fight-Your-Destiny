@@ -1,0 +1,98 @@
+{
+ "id": "plains_shipwrecked_pirate",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 5.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.025,
+  2.75,
+  -0.693
+ ],
+ "rootSize": [
+  2.256,
+  5.5,
+  2.879
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.264,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.787,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.823,
+    3.581,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.823,
+    3.581,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.309,
+    2.161,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.309,
+    2.161,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 596,
+ "colors": [
+  "#3a4a6a",
+  "#efe6d8",
+  "#6a2a1e",
+  "#e0c050",
+  "#c03a32",
+  "#d29a72",
+  "#121016",
+  "#f4f4f4",
+  "#bd8a66",
+  "#22222a",
+  "#5a3a26",
+  "#141414",
+  "#3a2a1e",
+  "#d8b04a",
+  "#c8ccd4",
+  "#2a1e16"
+ ]
+}

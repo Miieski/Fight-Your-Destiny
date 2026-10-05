@@ -1,0 +1,107 @@
+{
+ "id": "plains_miner_skeleton",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 5.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.75,
+  -0.8
+ ],
+ "rootSize": [
+  2.23,
+  5.5,
+  3.159
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.288,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.827,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.832,
+    3.619,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.832,
+    3.619,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.312,
+    2.184,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.312,
+    2.184,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Lamp_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    5.249,
+    -0.711
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 648,
+ "colors": [
+  "#5a5048",
+  "#e6e0cc",
+  "#4a3a2a",
+  "#d8b04a",
+  "#3a3430",
+  "#121016",
+  "#f4f4f4",
+  "#cfc9b7",
+  "#1a1414",
+  "#d8a820",
+  "#e0b428",
+  "#6a4a2e",
+  "#8a8e96",
+  "#3a3230",
+  "#fff2a0"
+ ]
+}

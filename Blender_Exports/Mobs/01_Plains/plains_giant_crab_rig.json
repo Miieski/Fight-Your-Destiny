@@ -1,0 +1,118 @@
+{
+ "id": "plains_giant_crab",
+ "rig": "Crustacean",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  1.989,
+  -1.404
+ ],
+ "rootSize": [
+  8.412,
+  4.0,
+  6.491
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.121,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -1.795,
+    2.203,
+    -1.142
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    1.795,
+    2.203,
+    -1.142
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL1",
+   "parent": "Body",
+   "joint": [
+    -1.876,
+    1.876,
+    -0.408
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR1",
+   "parent": "Body",
+   "joint": [
+    1.876,
+    1.876,
+    -0.408
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL2",
+   "parent": "Body",
+   "joint": [
+    -1.876,
+    1.876,
+    0.408
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR2",
+   "parent": "Body",
+   "joint": [
+    1.876,
+    1.876,
+    0.408
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL3",
+   "parent": "Body",
+   "joint": [
+    -1.876,
+    1.876,
+    1.224
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR3",
+   "parent": "Body",
+   "joint": [
+    1.876,
+    1.876,
+    1.224
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 344,
+ "colors": [
+  "#e2683a",
+  "#e67e57",
+  "#121016",
+  "#f08a50",
+  "#cc7544",
+  "#b8502a"
+ ]
+}

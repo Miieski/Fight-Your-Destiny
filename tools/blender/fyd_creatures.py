@@ -76,16 +76,20 @@ class Part:
 
     # every primitive: center / end points in studs, Roblox model space; color "#rrggbb"
     def ico(self, c, r, s=(1, 1, 1), color="#888888", sub=1, jit=0.0, rot=(0, 0, 0)):
+        if sub >= 1 and self.model.detail >= 1:
+            sub = min(3, sub + 1)  # mini-bosses, bosses, NPCs: rounder shapes
         self.prims.append(("ico", dict(c=c, r=r, s=s, color=color, sub=sub, jit=jit, rot=rot)))
         return self
 
     def box(self, c, size, color="#888888", rot=(0, 0, 0), taper=1.0, jit=0.0):
         """Box (size x, y, z); taper < 1 shrinks the top face (+y) for wedge-like blocks."""
-        self.prims.append(("box", dict(c=c, size=size, color=color, rot=rot, taper=taper, jit=jit)))
+        cuts = self.model.detail if jit > 0 else 0  # jittered blocks become faceted slabs on big models
+        self.prims.append(("box", dict(c=c, size=size, color=color, rot=rot, taper=taper, jit=jit, cuts=cuts)))
         return self
 
     def cone(self, a, b, r1, r2=0.0, color="#888888", segs=6, jit=0.0):
         """Cone / frustum from point a (radius r1) to point b (radius r2)."""
+        segs = segs + 2 * self.model.detail if segs >= 5 else segs
         self.prims.append(("cone", dict(a=a, b=b, r1=r1, r2=r2, color=color, segs=segs, jit=jit)))
         return self
 
@@ -104,12 +108,16 @@ class Part:
         return self
 
 
+DETAIL = {"normal": 0, "pet": 0, "mini": 1, "npc": 1, "boss": 2}
+
+
 class Model:
     def __init__(self, mid, category, zone=None, rig="Quadruped", size=3.0, size_axis="height", role="normal",
-                 name="", notes=""):
+                 name="", notes="", detail=None):
         assert category in CATEGORIES, category
         self.id, self.category, self.zone, self.rig = mid, category, zone, rig
         self.size, self.size_axis, self.role, self.name, self.notes = size, size_axis, role, name or mid, notes
+        self.detail = DETAIL.get(role, 0) if detail is None else detail
         self.parts = {}
 
     def part(self, name, parent=None, joint=(0, 0, 0)):
@@ -139,20 +147,23 @@ def _align_z(direction):
     return Vector((0, 0, 1)).rotation_difference(d).to_matrix().to_4x4()
 
 
-def _emit(bm, kind, a, rng):
-    """Adds one primitive (Roblox space, studs) to bm; returns its new faces and verts."""
-    before_v = set(bm.verts)
+def _emit(kind, a, rng):
+    """One primitive (Roblox space, studs) in its own bmesh (merging later avoids stale vertex references when a
+    big primitive makes the target bmesh reallocate)."""
+    bm = bmesh.new()
     if kind == "ico":
         bmesh.ops.create_icosphere(bm, subdivisions=a["sub"], radius=1.0)
         m = Matrix.Translation(Vector(a["c"])) @ _rot_matrix(a["rot"]) @ Matrix.Diagonal(Vector(a["s"]) * a["r"]).to_4x4()
         scale_ref = a["r"] * min(a["s"])
     elif kind == "box":
         bmesh.ops.create_cube(bm, size=1.0)
-        new = [v for v in bm.verts if v not in before_v]
-        for v in new:
-            if v.co.y > 0 and a["taper"] != 1.0:
-                v.co.x *= a["taper"]
-                v.co.z *= a["taper"]
+        if a.get("cuts"):
+            bmesh.ops.subdivide_edges(bm, edges=list(bm.edges), cuts=a["cuts"], use_grid_fill=True)
+        if a["taper"] != 1.0:
+            for v in bm.verts:
+                if v.co.y > 0:
+                    v.co.x *= a["taper"]
+                    v.co.z *= a["taper"]
         m = Matrix.Translation(Vector(a["c"])) @ _rot_matrix(a["rot"]) @ Matrix.Diagonal(Vector(a["size"])).to_4x4()
         scale_ref = min(a["size"])
     else:  # cone
@@ -162,28 +173,40 @@ def _emit(bm, kind, a, rng):
                               radius2=max(0.0, a["r2"]), depth=length)
         m = Matrix.Translation((pa + pb) / 2) @ _align_z(pb - pa)
         scale_ref = max(a["r1"], a["r2"])
-    new_v = [v for v in bm.verts if v not in before_v]
-    for v in new_v:
+    for v in bm.verts:
         v.co = m @ v.co
     if a.get("jit"):
         amp = a["jit"] * scale_ref
-        for v in new_v:
+        for v in bm.verts:
             v.co += Vector((rng.uniform(-amp, amp), rng.uniform(-amp, amp), rng.uniform(-amp, amp)))
-    faces = {f for v in new_v for f in v.link_faces}
-    return faces, new_v
+    return bm
+
+
+_TMP_MESH = None
 
 
 def _part_bmesh(part, colors, seed):
     """bmesh of a part in Roblox space (studs, unscaled) with material indices from `colors`."""
+    global _TMP_MESH
+    try:
+        alive = _TMP_MESH is not None and _TMP_MESH.name in bpy.data.meshes
+    except ReferenceError:  # removed by _clear_scene (no users)
+        alive = False
+    if not alive:
+        _TMP_MESH = bpy.data.meshes.new("_prim_tmp")
     bm = bmesh.new()
     rng = random.Random(seed)
-    for i, (kind, a) in enumerate(part.prims):
-        faces, _ = _emit(bm, kind, a, rng)
+    for kind, a in part.prims:
+        pb = _emit(kind, a, rng)
         col = a["color"].lower()
         if col not in colors:
             colors.append(col)
-        for f in faces:
+        for f in pb.faces:
             f.material_index = colors.index(col)
+        _TMP_MESH.clear_geometry()
+        pb.to_mesh(_TMP_MESH)
+        pb.free()
+        bm.from_mesh(_TMP_MESH)
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
     return bm
 
@@ -615,6 +638,11 @@ def lineup(category, zone, ids, out=None, gap=1.5):
             if o.parent is None:
                 o.location.x += shift
         x += w + gap * STUD
+    cam = bpy.data.objects["IconCam"]
+    old_loc, old_rot = cam.location.copy(), cam.rotation_euler.copy()
+    az, el = math.radians(6), math.radians(9)
+    cam.location = Vector((math.sin(az) * math.cos(el), -math.cos(az) * math.cos(el), math.sin(el))) * 30
+    I._look(cam)
     I.frame(0.04)
     out = out or os.path.join(ROOT, "Previews", cat, sub, f"{cat}_{sub}_lineup.png")
     os.makedirs(os.path.dirname(out), exist_ok=True)
@@ -624,5 +652,6 @@ def lineup(category, zone, ids, out=None, gap=1.5):
     scn.render.filepath = out
     bpy.ops.render.render(write_still=True)
     scn.render.resolution_x, scn.render.resolution_y = old
+    cam.location, cam.rotation_euler = old_loc, old_rot
     I.postprocess(out, outline=4, shadow=False)
     return out

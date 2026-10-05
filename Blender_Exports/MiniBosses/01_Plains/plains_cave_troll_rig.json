@@ -1,0 +1,96 @@
+{
+ "id": "plains_cave_troll",
+ "rig": "Biped",
+ "role": "mini",
+ "size": 10,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.078,
+  5.0,
+  -2.326
+ ],
+ "rootSize": [
+  6.416,
+  10.0,
+  8.821
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    4.456,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    7.453,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -2.349,
+    7.048,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    2.349,
+    7.048,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.911,
+    4.253,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.911,
+    4.253,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 1928,
+ "colors": [
+  "#5a4630",
+  "#7a8c74",
+  "#4a3624",
+  "#e8e0cc",
+  "#879781",
+  "#6a5038",
+  "#121016",
+  "#f4f4f4",
+  "#6d7e68",
+  "#f0e8d8",
+  "#495445",
+  "#6a4a2e",
+  "#d0c8b8",
+  "#556251"
+ ]
+}

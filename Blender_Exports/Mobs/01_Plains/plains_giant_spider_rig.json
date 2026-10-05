@@ -1,0 +1,128 @@
+{
+ "id": "plains_giant_spider",
+ "rig": "Arachnid",
+ "role": "normal",
+ "size": 4.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.23,
+  0.364
+ ],
+ "rootSize": [
+  8.741,
+  4.5,
+  6.394
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.277,
+    -0.734
+   ],
+   "glow": false
+  },
+  {
+   "name": "Abdomen",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.57,
+    0.294
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL1",
+   "parent": "Body",
+   "joint": [
+    -0.808,
+    2.35,
+    -1.469
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR1",
+   "parent": "Body",
+   "joint": [
+    0.808,
+    2.35,
+    -1.469
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL2",
+   "parent": "Body",
+   "joint": [
+    -0.808,
+    2.35,
+    -0.881
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR2",
+   "parent": "Body",
+   "joint": [
+    0.808,
+    2.35,
+    -0.881
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL3",
+   "parent": "Body",
+   "joint": [
+    -0.808,
+    2.35,
+    -0.294
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR3",
+   "parent": "Body",
+   "joint": [
+    0.808,
+    2.35,
+    -0.294
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL4",
+   "parent": "Body",
+   "joint": [
+    -0.808,
+    2.35,
+    0.294
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR4",
+   "parent": "Body",
+   "joint": [
+    0.808,
+    2.35,
+    0.294
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 412,
+ "colors": [
+  "#4a2e4a",
+  "#e83030",
+  "#d8d0b8",
+  "#58385a",
+  "#9a5a6a",
+  "#3a243a"
+ ]
+}

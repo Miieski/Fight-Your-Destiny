@@ -1,0 +1,101 @@
+{
+ "id": "plains_bat",
+ "rig": "Bird",
+ "role": "normal",
+ "size": 2.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  1.25,
+  0.067
+ ],
+ "rootSize": [
+  5.01,
+  2.5,
+  2.663
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.271,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    1.568,
+    -0.636
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingL",
+   "parent": "Body",
+   "joint": [
+    -0.466,
+    1.483,
+    -0.042
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingR",
+   "parent": "Body",
+   "joint": [
+    0.466,
+    1.483,
+    -0.042
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    1.314,
+    0.678
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -0.212,
+    0.847,
+    0.085
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    0.212,
+    0.847,
+    0.085
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 300,
+ "colors": [
+  "#34283e",
+  "#4a3a56",
+  "#121016",
+  "#f4f4f4",
+  "#5a4668",
+  "#706877",
+  "#f0ece0",
+  "#3e3148",
+  "#2a2030"
+ ]
+}

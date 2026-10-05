@@ -1,0 +1,95 @@
+{
+ "id": "plains_forest_archer",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 5.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.75,
+  -0.074
+ ],
+ "rootSize": [
+  2.277,
+  5.5,
+  2.777
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.336,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.908,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.85,
+    3.696,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.85,
+    3.696,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.319,
+    2.23,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.319,
+    2.23,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 552,
+ "colors": [
+  "#6a5236",
+  "#3e6e38",
+  "#5a3c24",
+  "#d8b04a",
+  "#2e5a2c",
+  "#6a4426",
+  "#d8d0b8",
+  "#e0b088",
+  "#121016",
+  "#f4f4f4",
+  "#c99e7a",
+  "#e8e0c8",
+  "#4a3422"
+ ]
+}

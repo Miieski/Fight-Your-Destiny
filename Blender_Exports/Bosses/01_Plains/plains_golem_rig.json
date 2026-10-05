@@ -1,0 +1,129 @@
+{
+ "id": "plains_golem",
+ "rig": "Golem",
+ "role": "boss",
+ "size": 18,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.009,
+  9.0,
+  0.009
+ ],
+ "rootSize": [
+  14.755,
+  18.0,
+  5.884
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    8.973,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    12.61,
+    -0.485
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -4.608,
+    11.64,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    4.608,
+    11.64,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -2.061,
+    6.305,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    2.061,
+    6.305,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    14.187,
+    -2.231
+   ],
+   "glow": true
+  },
+  {
+   "name": "Rune_Glow",
+   "parent": "ArmR",
+   "joint": [
+    5.277,
+    5.815,
+    -1.989
+   ],
+   "glow": true
+  },
+  {
+   "name": "Core_Glow",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    10.428,
+    -2.377
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 4364,
+ "colors": [
+  "#7a5a46",
+  "#5a4232",
+  "#5e9a3a",
+  "#896d5c",
+  "#3e7a2c",
+  "#6a4a2e",
+  "#7ac24a",
+  "#62a83a",
+  "#6d513f",
+  "#674c3b",
+  "#947b6b",
+  "#49362a",
+  "#614838",
+  "#735542",
+  "#80624f",
+  "#876a58",
+  "#7cff6a"
+ ]
+}

@@ -439,6 +439,14 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 21:58 MODELS ZONE 1 (PLAINS) done and pushed: 11 mobs, 2 mini-bosses, the boss (14 .blend + FBX + rig / clip
+  JSON + previews, `Blender/models_manifest.csv` all "ok": mobs 300-648, Cave Troll 1,928, Crystal Spider Matriarch
+  2,292, Golem 4,364 triangles). Shared family builders in `tools/blender/fyd_creature_parts.py`; role-based detail
+  (mini-bosses / bosses / NPCs get finer spheres, more cone sides and faceted slabs). Golem boss after reference 6
+  (rust-brown slabs, moss patches, vines, a sprout on the shoulder, glowing green eyes, chest core and a rune spiral
+  on the right forearm). Lineups `Previews/<Category>/01_Plains/*_lineup.png` (frontal camera, relative scale).
+  Kit fix found on the way: a big icosphere made the bmesh reallocate and older primitives were transformed twice
+  (the "exploded" troll); every primitive is now built in its own bmesh and merged.
 - 21:32 PARTS D/E - BLENDER PIPELINE + BOAR PILOT done and pushed.
   `tools/blender/fyd_creatures.py` (recipes written in Roblox space and studs -> segmented rig, one mesh per joint
   with its origin on the joint, palette texture 256 px, flat shading, height normalised to the Part F size, meters,

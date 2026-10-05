@@ -1,0 +1,150 @@
+{
+ "id": "plains_crystal_spider_matriarch",
+ "rig": "Arachnid",
+ "role": "mini",
+ "size": 9,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  4.466,
+  0.786
+ ],
+ "rootSize": [
+  13.017,
+  9.0,
+  10.011
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.39,
+    -1.093
+   ],
+   "glow": false
+  },
+  {
+   "name": "Abdomen",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    3.827,
+    0.437
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL1",
+   "parent": "Body",
+   "joint": [
+    -1.203,
+    3.499,
+    -2.187
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR1",
+   "parent": "Body",
+   "joint": [
+    1.203,
+    3.499,
+    -2.187
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL2",
+   "parent": "Body",
+   "joint": [
+    -1.203,
+    3.499,
+    -1.312
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR2",
+   "parent": "Body",
+   "joint": [
+    1.203,
+    3.499,
+    -1.312
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL3",
+   "parent": "Body",
+   "joint": [
+    -1.203,
+    3.499,
+    -0.437
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR3",
+   "parent": "Body",
+   "joint": [
+    1.203,
+    3.499,
+    -0.437
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL4",
+   "parent": "Body",
+   "joint": [
+    -1.203,
+    3.499,
+    0.437
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR4",
+   "parent": "Body",
+   "joint": [
+    1.203,
+    3.499,
+    0.437
+   ],
+   "glow": false
+  },
+  {
+   "name": "Crystals_Glow",
+   "parent": "Abdomen",
+   "joint": [
+    0.0,
+    6.342,
+    2.216
+   ],
+   "glow": true
+  },
+  {
+   "name": "HeadCrystals_Glow",
+   "parent": "Body",
+   "joint": [
+    -0.0,
+    4.84,
+    -0.321
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 2292,
+ "colors": [
+  "#3e3448",
+  "#40fff0",
+  "#f0f4f4",
+  "#4a3e58",
+  "#5ad8c8",
+  "#6a5a7a",
+  "#2e2638",
+  "#3ee8d8"
+ ]
+}

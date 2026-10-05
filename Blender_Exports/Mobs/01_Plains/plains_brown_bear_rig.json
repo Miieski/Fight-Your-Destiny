@@ -1,0 +1,99 @@
+{
+ "id": "plains_brown_bear",
+ "rig": "Quadruped",
+ "role": "normal",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.002,
+  3.0,
+  -0.558
+ ],
+ "rootSize": [
+  3.948,
+  6.0,
+  9.323
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.665,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    4.004,
+    -1.678
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -1.165,
+    2.373,
+    -1.864
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    1.165,
+    2.373,
+    -1.864
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -1.165,
+    2.373,
+    2.034
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    1.165,
+    2.373,
+    2.034
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    4.25,
+    3.22
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 536,
+ "colors": [
+  "#704828",
+  "#8a5e3a",
+  "#121016",
+  "#f4f4f4",
+  "#46301c",
+  "#3a2818",
+  "#e8e0d0"
+ ]
+}
