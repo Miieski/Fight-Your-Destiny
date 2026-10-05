@@ -5,32 +5,6 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
-- 22:48 PET MODELS (24, zones 1-4) done and pushed: chibi pets after reference 2 (big head, big glossy eyes with a
-  highlight, blush, simple faceted shapes), 0.6-1.05 studs, 292-656 triangles, 2-6 parts (Idle clip only):
-  Boar Piglet, Wolf Pup, Baby Bear, Seagull Chick, Crab Buddy, Spider Hatchling, Jackal Pup, Scorpion Cub, Baby Croc,
-  Desert Eaglet, Scarab Beetle, Sand Snake, Monkey, Jaguar Cub, Frog Prince (crown), Piranha Pal, Green Viper, Totem
-  Spirit (glowing mask), Snow Owl, Arctic Fox, Polar Bear Cub, Baby Yeti, Ice Eaglet (ice crystal), White Wolf Pup.
-  Ids = Config/Pets slot ids (plains_pet1...); after import they go to ReplicatedStorage.Assets.Pets.<id> and replace
-  the procedural pets of the menu task. Lineups `Previews/Pets/<NN_Zone>/`.
-- 22:36 MODELS ZONE 4 (TUNDRA) done and pushed: 11 mobs (white wolf, arctic fox with a huge tail, cursed snowman
-  with glowing purple coal eyes, top hat and stick arms, ice spirit, polar bear, swordfish with sail fin, yeti with
-  a blue face, furious ibex with curved horns, ice eagle, ice knight with kite shield, frost golem with blue crystals
-  after reference 5), Frost Wolf Alpha (1,726, glowing ice shards), Ice Knight Captain (1,680, crested helm,
-  greatsword, cape), Frost King (3,078: icicle crown, frost beard and fur collar, jagged ice cloak, spiked ice mace).
-  All 56 enemy / mini-boss / boss models of zones 1-4 are built: manifest all "ok", 16 lineups in Previews/.
-- 22:24 MODELS ZONE 3 (JUNGLE) done and pushed: 11 mobs (monkey with long arms and curly tail, green snake,
-  venomous spider, piranha, toxic frog after reference 4 with big glossy eyes and purple / yellow warning marks,
-  tribal warrior, jaguar with rosettes, animated statue with glyphs and moss, tribal archer, shaman with mask and
-  totem staff, temple guard with big shield), Elder Jaguar (1,860, glowing gold eyes), Tribal Warlord (2,044, skull
-  trophies, big axe), Ancestral Gorilla after reference 1 (3,164: hunched knuckle-walker, huge arms with stone and
-  gold totem bracers and vines, golden markings, amber eyes). All "ok" in the manifest.
-- 22:12 MODELS ZONE 2 (DESERT) done and pushed: 11 mobs (scorpion with segmented tail and claws, sand snake,
-  vulture, jackal, crocodile 7 long, nomad bandit, sandstone golem after reference 5 with gold glyph crystals, royal
-  eagle, cliff bandit, mummy with glowing eyes, giant scarab), Anubis Guard (1,686), Sandstorm Djinn rising from a gold
-  lamp (1,528), Cursed Pharaoh after reference 7: faceted gold face plate, lapis-striped nemes draping on the
-  shoulders, uraeus, braided beard, broad collar, wraps, cape, crook staff with a glowing orb (3,768). Detail rule
-  refined (bosses / minis: plain blocks get one subdivision; birds got wing-tip and tail feathers), Plains minis and
-  boss rebuilt with it (troll 2,216, matriarch 2,328, golem 5,012). All 28 models "ok" in the manifest.
 - 03:45 NIGHT FINISHED. Parts A, B and C are done and pushed. Studio left open in Edit mode (no Play running),
   local icon server stopped. Waiting for the owner: FBX Bulk Import, the missing Part B tablet screenshot,
   review of the 8 weapon lineups.
@@ -465,7 +439,46 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
-- 21:58 MODELS ZONE 1 (PLAINS) done and pushed: 11 mobs, 2 mini-bosses, the boss (14 .blend + FBX + rig / clip
+- 21:58 PART F - HUB NPCs done and pushed. 8 NPC models (Blender/NPC/Hub, reference 3 style, 1,592-1,920
+  triangles, Idle / Wave / Talk): Guide (explorer hat, orange scarf, backpack, map), Blacksmith (apron, hammer),
+  Trainer (headband, wrapped fists), Egg Keeper (straw hat, overalls, basket of eggs), Trophy Merchant (backpack of
+  trophies, coin pouch), Priest (robe, stole, tall hat, glowing staff), Gem Merchant (top hat, long coat, gem pouch),
+  Quartermaster (officer cap, epaulettes, clipboard). In game: `Config/NPCs` + `NPCService` (each NPC on its hub
+  marker - the NpcSpot part or where the world builder's stand-in stood - facing the plaza, in workspace.Hub.NPCs;
+  the marker's prompt now reads Talk / Shop / Train / Sell trophies / Teams and opens Shop > Weapons, Stats,
+  Pets > Eggs, Inventory > Trophies, Rebirth Shop, Shop > Diamonds, Team, Quests (+ a rotating tip from the
+  Guide); Codes Board -> Quests > Codes, Rebirth Shop tent -> Rebirth Shop) + client `NPCController` (Idle, Wave
+  once when the player comes within 15 studs, head turning toward the player within 22 studs, Talk for 3 s after a
+  prompt). Placeholders built from parts until the FBX import (ServerStorage.NPCs.<id>). Tests (Play): 8 NPCs placed,
+  10 prompts hooked, Trophy Merchant prompt -> Inventory > Trophies (screenshot `2F_1`), Guide -> Quests + tip, wave
+  measured (ArmR z 2.54 rad) and head yaw toward the player.
+- 21:51 PET MODELS (24, zones 1-4) done and pushed: chibi pets after reference 2 (big head, big glossy eyes with a
+  highlight, blush, simple faceted shapes), 0.6-1.05 studs, 292-656 triangles, 2-6 parts (Idle clip only):
+  Boar Piglet, Wolf Pup, Baby Bear, Seagull Chick, Crab Buddy, Spider Hatchling, Jackal Pup, Scorpion Cub, Baby Croc,
+  Desert Eaglet, Scarab Beetle, Sand Snake, Monkey, Jaguar Cub, Frog Prince (crown), Piranha Pal, Green Viper, Totem
+  Spirit (glowing mask), Snow Owl, Arctic Fox, Polar Bear Cub, Baby Yeti, Ice Eaglet (ice crystal), White Wolf Pup.
+  Ids = Config/Pets slot ids (plains_pet1...); after import they go to ReplicatedStorage.Assets.Pets.<id> and replace
+  the procedural pets of the menu task. Lineups `Previews/Pets/<NN_Zone>/`.
+- 21:48 MODELS ZONE 4 (TUNDRA) done and pushed: 11 mobs (white wolf, arctic fox with a huge tail, cursed snowman
+  with glowing purple coal eyes, top hat and stick arms, ice spirit, polar bear, swordfish with sail fin, yeti with
+  a blue face, furious ibex with curved horns, ice eagle, ice knight with kite shield, frost golem with blue crystals
+  after reference 5), Frost Wolf Alpha (1,726, glowing ice shards), Ice Knight Captain (1,680, crested helm,
+  greatsword, cape), Frost King (3,078: icicle crown, frost beard and fur collar, jagged ice cloak, spiked ice mace).
+  All 56 enemy / mini-boss / boss models of zones 1-4 are built: manifest all "ok", 16 lineups in Previews/.
+- 21:46 MODELS ZONE 3 (JUNGLE) done and pushed: 11 mobs (monkey with long arms and curly tail, green snake,
+  venomous spider, piranha, toxic frog after reference 4 with big glossy eyes and purple / yellow warning marks,
+  tribal warrior, jaguar with rosettes, animated statue with glyphs and moss, tribal archer, shaman with mask and
+  totem staff, temple guard with big shield), Elder Jaguar (1,860, glowing gold eyes), Tribal Warlord (2,044, skull
+  trophies, big axe), Ancestral Gorilla after reference 1 (3,164: hunched knuckle-walker, huge arms with stone and
+  gold totem bracers and vines, golden markings, amber eyes). All "ok" in the manifest.
+- 21:43 MODELS ZONE 2 (DESERT) done and pushed: 11 mobs (scorpion with segmented tail and claws, sand snake,
+  vulture, jackal, crocodile 7 long, nomad bandit, sandstone golem after reference 5 with gold glyph crystals, royal
+  eagle, cliff bandit, mummy with glowing eyes, giant scarab), Anubis Guard (1,686), Sandstorm Djinn rising from a gold
+  lamp (1,528), Cursed Pharaoh after reference 7: faceted gold face plate, lapis-striped nemes draping on the
+  shoulders, uraeus, braided beard, broad collar, wraps, cape, crook staff with a glowing orb (3,768). Detail rule
+  refined (bosses / minis: plain blocks get one subdivision; birds got wing-tip and tail feathers), Plains minis and
+  boss rebuilt with it (troll 2,216, matriarch 2,328, golem 5,012). All 28 models "ok" in the manifest.
+- 21:40 MODELS ZONE 1 (PLAINS) done and pushed: 11 mobs, 2 mini-bosses, the boss (14 .blend + FBX + rig / clip
   JSON + previews, `Blender/models_manifest.csv` all "ok": mobs 300-648, Cave Troll 1,928, Crystal Spider Matriarch
   2,292, Golem 4,364 triangles). Shared family builders in `tools/blender/fyd_creature_parts.py`; role-based detail
   (mini-bosses / bosses / NPCs get finer spheres, more cone sides and faceted slabs). Golem boss after reference 6
@@ -623,6 +636,12 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 - The boss room choice uses two ProximityPrompts on the gate (E solo, F team) instead of a menu: tappable on mobile,
   no extra window.
 - Arena enemies always know where the room's players are (no aggro radius, no leash).
+- Blender: the brief's option 2 for the animations (clips as data in Config/RigClips + AnimPlayer), the meshes as
+  segmented rigs (one mesh per joint) - see Blender/README.txt. FBX files carry no animation curves.
+- NPC windows: the Guide has no tutorial window yet, so it opens Quests and gives a rotating tip; the Priest opens the
+  Rebirth Shop (the Rebirth itself is not built); the Quartermaster opens Team (Team Board).
+- Pets: 2-6 parts each (body, head, tail / wings / claws) so the Idle clip can move them; the brief allows 2-4,
+  the crab and bird pets have 5-6 small parts.
 
 ## Problems / missing
 

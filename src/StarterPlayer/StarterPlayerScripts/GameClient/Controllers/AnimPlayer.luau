@@ -5,7 +5,8 @@
 -- and one action on top (Attack1, Shoot, Attack2, Hit, Death, Spawn, Roar, Intro, Enrage, Wave, Talk).
 --   local anim = AnimPlayer.new(model, family, size)   size = the model's height (length for serpents) in studs
 --   anim:SetLocomotion(speed, walkSpeed)               each frame (studs / s)
---   anim:Action(name, { rate?, impactAt? (os.clock() time the clip's Impact must land), hold? })
+--   anim:Action(name, { rate?, impactAt? (os.clock() time the clip's Impact must land), hold?, duration? (s, then
+--   fades out; plays a looping clip for a while) })
 --   anim:Update(dt)                                    each frame (writes the Transforms)
 --   anim:Has(name)
 -- When this module is not running, the joints stay in their rest pose.
@@ -20,7 +21,7 @@ local FADE = 0.15
 local ZERO = Vector3.zero
 
 type Clip = { Length: number, Loop: boolean, Impact: number?, Tracks: { [string]: { r: { any }?, p: { any }? } } }
-type Layer = { clip: Clip, name: string, time: number, rate: number, weight: number, target: number, impactAt: number?, startedAt: number, hold: boolean }
+type Layer = { clip: Clip, name: string, time: number, rate: number, weight: number, target: number, impactAt: number?, startedAt: number, hold: boolean, stopAt: number? }
 
 export type Player = typeof(setmetatable({} :: {
 	joints: { [string]: Motor6D },
@@ -82,7 +83,7 @@ function AnimPlayer.Has(self: Player, name: string): boolean
 end
 
 local function newLayer(clip: Clip, name: string, rate: number): Layer
-	return { clip = clip, name = name, time = 0, rate = rate, weight = 0, target = 1, impactAt = nil, startedAt = os.clock(), hold = false }
+	return { clip = clip, name = name, time = 0, rate = rate, weight = 0, target = 1, impactAt = nil, startedAt = os.clock(), hold = false, stopAt = nil }
 end
 
 -- Idle / Walk / Run from the current speed (the playback rate follows the speed).
@@ -125,6 +126,7 @@ function AnimPlayer.Action(self: Player, name: string, opts: { [string]: any }?)
 	local layer = newLayer(clip, name, options.rate or 1)
 	layer.impactAt = options.impactAt
 	layer.hold = options.hold == true
+	layer.stopAt = if options.duration then os.clock() + options.duration else nil
 	layer.weight = if self.action then self.action.weight else 0
 	self.action = layer
 	return true
@@ -166,7 +168,7 @@ function AnimPlayer.Update(self: Player, dt: number)
 	if action then
 		advance(action, dt)
 		local finished = not action.clip.Loop and action.time >= action.clip.Length
-		if finished and not action.hold then
+		if (finished and not action.hold) or (action.stopAt and os.clock() >= action.stopAt) then
 			action.target = 0
 		end
 		local step = dt / FADE
