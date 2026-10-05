@@ -17,6 +17,8 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
+local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local ModelIcon = require(Kit.ModelIcon)
@@ -53,8 +55,7 @@ local function currentZone(): string?
 end
 
 local function zoneName(id: string): string
-	local zone = Zones.ById[id]
-	return if zone then zone.Name else id
+	return ZoneVisibility.displayName(id)
 end
 
 function ArmorPage.equippedSlot(uid: string): string?
@@ -154,8 +155,10 @@ function ArmorPage.detail(uid: string)
 	local hp, defense = Armor.baseHP(item.id, item.rarity), Armor.baseDefense(item.rarity)
 	line(info, `Max HP +{Format.number(math.floor(hp + 0.5))}   |   Defense +{defense}`, 4, nil, text)
 	local boost = rarity.ZoneBoost
-	line(info, `In {zoneName(piece.ZoneId)}: Zone Boost +{math.round(boost * 100)}% -> +{Format.number(math.floor(hp * (1 + boost) + 0.5))} HP, +{math.floor(defense * (1 + boost) * 10 + 0.5) / 10} Defense`, 5, Theme.Colors.Good, text - 1)
-	line(info, `Full {zoneName(piece.ZoneId)} set: +10% Max HP and +10% Zone Boost`, 6, Theme.Colors.TextDim, text - 3)
+	if Balance.ZoneBoostEnabled then
+		line(info, `In {zoneName(piece.ZoneId)}: Zone Boost +{math.round(boost * 100)}% -> +{Format.number(math.floor(hp * (1 + boost) + 0.5))} HP, +{math.floor(defense * (1 + boost) * 10 + 0.5) / 10} Defense`, 5, Theme.Colors.Good, text - 1)
+	end
+	line(info, `Full {zoneName(piece.ZoneId)} set: +10% Max HP{if Balance.ZoneBoostEnabled then " and +10% Zone Boost" else ""}`, 6, Theme.Colors.TextDim, text - 3)
 	line(info, `Sell value: {Format.number(Armor.sellValue(item.id, item.rarity))} Gold`, 7, Theme.Colors.Gold, text - 2)
 
 	local row = Instance.new("Frame")

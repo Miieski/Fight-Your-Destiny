@@ -434,3 +434,38 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   later script was compile-checked first.
 - Services that listen to DataService.Loaded in Init missed the player in Studio solo (profile loaded earlier):
   fixed with a catch-up loop in Pet, Armor, Reward and Team services.
+
+# Enemies, NPCs, pets task - 2026-10-05 evening (docs/enemies_npcs_pets_brief.txt, zones 1-4 only)
+
+## Status (newest first)
+
+- 20:10 PART 1 (TWO RULE CHANGES) done and pushed.
+  1A No spoilers: new `GameClient/UI/Kit/ZoneVisibility` (isRevealed, displayName, bossName, subZoneName,
+  description, requirement, displayIcon, icon, applySilhouette / removeSilhouette, changed) and
+  `Config/Zones.HIDDEN_NAME / HIDDEN_REQUIREMENT / HIDDEN_SHORT / isUnlocked`. A locked zone (not in profile.Zones)
+  shows as a black silhouette with "?" and "???" in: hub portals (black filter on the portal and its frame, zone
+  swirl effects off, dark swirl, nameplates "? ? ?", sign with the generic requirement; reveal on unlock = white
+  flash + colors dissolving back + name), Zones menu (rows, preview, no sub-zone page for a hidden zone), weapon
+  shop (zone row icon + name, locked tip), Index (zone group headers; refreshes on reveal), Pets / Premium eggs,
+  Diamond shop eggs, armor / pet / hatch texts. Server refusals no longer name the zone (ZoneService UsePortal /
+  Teleport, ShopService, PetService). Fix: `Icons.setFaded` no longer makes the "?" overlay opaque.
+  1B Damage never depends on the zone. CAUSE found: the placeholder `CombatService` computed the hit as
+  `Playtest.WeaponBaseDamage x 10^(currentZone - 1)` - the zone the player STOOD in - so walking from Plains into
+  Desert multiplied damage by 10 (and by 100 in Jungle...). Second, smaller source: `Util/Stats.compute` added the
+  weapon's Zone Boost in its home zone (and Config/Armor the armor Zone Boost). Now: the hit uses
+  `Stats.compute(profile).WeaponDamage` (weapon's OWN zone base x category x rarity x attributes x pets x Rebirth
+  Shop) and crits from Stats; new `Config/Balance.ZoneBoostEnabled = false` gates every Zone Boost (Stats, Armor);
+  HUD Zone Boost badge, shop odds column, preview / case-opening / armor / equipment Zone Boost lines are hidden
+  while it is false. Test: same loadout (Legendary Desert sword, Strength 10, Rebirth 1, Damage Boost 2, a pet, a
+  Desert helmet) = 916.3 damage per hit and 650 Max HP in the Hub, Plains, Desert, Jungle and Tundra.
+  StatsTests 78/78 (zone-boost cases follow the flag). Screenshots `docs/screenshots/enemies_task/1A_*`.
+  Next: Part A (player combat).
+
+## Decisions taken without the owner
+
+- A hidden zone's row in the Zones menu does not open its sub-zone page (it would list the sub-zone names); a tap
+  shows the generic requirement instead.
+- Weapon silhouettes of locked zones stay as shapes (black, with "?"), like the existing shop rule; only names,
+  colors, prices and zones are hidden.
+
+## Problems / missing

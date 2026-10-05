@@ -5,6 +5,7 @@
 -- server uses. Weapon damage per hit = ZoneBase x CategoryMult x RarityMult (x (1 + Zone Boost) in the home zone).
 local Config = script.Parent.Parent.Config
 local Attributes = require(Config.Attributes)
+local Balance = require(Config.Balance)
 local Boosts = require(Config.Boosts)
 local Rarities = require(Config.Rarities)
 local RebirthShop = require(Config.RebirthShop)
@@ -20,7 +21,8 @@ function Stats.zoneBase(zone: number): number
 	return Weapons.ZONE_BASE_DAMAGE * 10 ^ (zone - 1)
 end
 
--- Damage per hit of a weapon at a rarity tier; inHomeZone applies the rarity's Zone Boost.
+-- Damage per hit of a weapon at a rarity tier: its OWN zone base x category x rarity. inHomeZone applies the
+-- rarity's Zone Boost only while Config/Balance.ZoneBoostEnabled (off for now). Never the player's zone.
 function Stats.weaponDamage(weaponId: string, tier: number?, inHomeZone: boolean?): number
 	local weapon = Weapons.ById[weaponId]
 	if not weapon then
@@ -28,7 +30,7 @@ function Stats.weaponDamage(weaponId: string, tier: number?, inHomeZone: boolean
 	end
 	local rarity = Rarities.get(tier)
 	local damage = Stats.zoneBase(weapon.Zone) * Weapons.CategoryById[weapon.Category].DamageMult * rarity.DamageMult
-	if inHomeZone then
+	if inHomeZone and Balance.ZoneBoostEnabled then
 		damage *= 1 + rarity.ZoneBoost
 	end
 	return damage

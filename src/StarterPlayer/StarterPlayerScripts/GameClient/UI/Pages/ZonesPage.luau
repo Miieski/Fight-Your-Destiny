@@ -18,6 +18,7 @@ local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
 local Fade = require(Kit.Fade)
 local Icons = require(Kit.Icons)
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 
@@ -85,13 +86,14 @@ local function setPreview(id: string)
 	if preview.iconId ~= id then
 		local parent = preview.icon.Parent
 		preview.icon:Destroy()
-		preview.icon = Icons.create(iconFor(id), parent, { Size = UDim2.fromScale(0.62, 0.5), Position = UDim2.fromScale(0.5, 0.04), AnchorPoint = Vector2.new(0.5, 0) })
+		-- a locked zone is a black silhouette with "?" (ZoneVisibility, no spoilers)
+		preview.icon = ZoneVisibility.icon(iconFor(id), if isHub then nil else id, parent, { Size = UDim2.fromScale(0.62, 0.5), Position = UDim2.fromScale(0.5, 0.04), AnchorPoint = Vector2.new(0.5, 0) })
 		preview.iconId = id
 	end
-	preview.title.Text = if isHub then "Hub" else `Zone {zone.Index} - {zone.Name}`
-	preview.description.Text = if isHub then UIConfig.Text.HubDescription else Zones.Descriptions[id] or ""
+	preview.title.Text = if isHub then "Hub" else `Zone {zone.Index} - {ZoneVisibility.displayName(id)}`
+	preview.description.Text = if isHub then UIConfig.Text.HubDescription elseif ZoneVisibility.isRevealed(id) then ZoneVisibility.description(id) else ZoneVisibility.requirement(id)
 	preview.bossRow.Visible = not isHub
-	preview.boss.Text = if zone then `Boss: {zone.Boss}` else ""
+	preview.boss.Text = if zone then `Boss: {ZoneVisibility.bossName(id)}` else ""
 end
 
 local function paintRow(id: string)
@@ -104,7 +106,7 @@ local function paintRow(id: string)
 	elseif Zones.NOT_BUILT[id] then
 		state, text = "soon", UIConfig.Text.ComingSoon
 	elseif not zoneOpen(id) then
-		state, text = "locked", Zones.requirementText(id, true)
+		state, text = "locked", ZoneVisibility.requirement(id, true)
 	else
 		state, text = if here then "here" else "open", if here then UIConfig.Text.YouAreHere else "Unlocked"
 	end
@@ -116,7 +118,23 @@ local function paintRow(id: string)
 	entry.status.Text = text
 	entry.status.TextColor3 = if state == "here" then colors.Good elseif state == "locked" then colors.Bad else colors.TextDim
 	entry.lock.Visible = state == "locked"
-	Icons.setFaded(entry.icon, if dim then 0.45 else 0)
+	if id ~= HUB then
+		entry.title.Text = ZoneVisibility.displayName(id)
+		local hidden = not ZoneVisibility.isRevealed(id)
+		if entry.hidden ~= hidden then
+			entry.hidden = hidden
+			if hidden then
+				ZoneVisibility.applySilhouette(entry.icon)
+			else
+				ZoneVisibility.removeSilhouette(entry.icon)
+			end
+		end
+	end
+	Icons.setFaded(entry.icon, if dim and not entry.hidden then 0.45 else 0)
+	if preview.iconId == id then
+		preview.iconId = nil -- redraw the preview (it may have been revealed)
+		setPreview(id)
+	end
 end
 
 local function refreshList()
@@ -149,7 +167,11 @@ local function makeRow(parent: Instance, id: string, name: string, order: number
 		if id == HUB then
 			teleport(HUB, nil)
 		elseif Zones.NOT_BUILT[id] then
-			Notifier.push({ Kind = "info", Text = `{name}: {UIConfig.Text.ComingSoon}` })
+			Notifier.push({ Kind = "info", Text = `{ZoneVisibility.displayName(id)}: {UIConfig.Text.ComingSoon}` })
+		elseif not ZoneVisibility.isRevealed(id) then
+			-- no sub-zone page for a hidden zone: it would show its names
+			Sfx.play("Denied")
+			Notifier.push({ Kind = "error", Text = ZoneVisibility.requirement(id), Icon = "Lock" })
 		else
 			ZonesPage.showZone(id)
 		end
@@ -170,7 +192,7 @@ local function paintCard(card: Card, zoneId: string, n: number)
 		card.icon:Destroy()
 	end
 	card.icon = Icons.create(iconFor(id), card.iconSlot)
-	card.title.Text = zone.SubZones[n]
+	card.title.Text = ZoneVisibility.subZoneName(zoneId, n)
 	card.boss.Visible = isBoss
 	card.stroke.Color = if isBoss then colors.DangerLight elseif here then colors.Gold else colors.GoldDark
 	card.stroke.Thickness = if isBoss or here then 3.5 else 2.5
@@ -255,8 +277,8 @@ local function refreshZone()
 		header.icon = Icons.create(iconFor(zoneId), parent, { Size = UDim2.fromOffset(HEADER_HEIGHT, HEADER_HEIGHT), Position = UDim2.new(0.5, -150, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5) })
 		header.iconId = zoneId
 	end
-	header.title.Text = `Zone {zone.Index} - {zone.Name}`
-	header.info.Text = if zoneOpen(zoneId) then `Boss: {zone.Boss}` else Zones.requirementText(zoneId)
+	header.title.Text = `Zone {zone.Index} - {ZoneVisibility.displayName(zoneId)}`
+	header.info.Text = if zoneOpen(zoneId) then `Boss: {ZoneVisibility.bossName(zoneId)}` else ZoneVisibility.requirement(zoneId)
 	header.info.TextColor3 = if zoneOpen(zoneId) then Theme.Colors.TextDim else Theme.Colors.Bad
 	for n, card in ipairs(cards) do
 		paintCard(card, zoneId, n)
@@ -335,7 +357,7 @@ function ZonesPage.build(ctx: any)
 	list.Parent = listPage
 	makeRow(list, HUB, "Hub", 0)
 	for _, zone in ipairs(Zones.List) do
-		makeRow(list, zone.Id, zone.Name, zone.Index)
+		makeRow(list, zone.Id, ZoneVisibility.displayName(zone.Id), zone.Index)
 	end
 
 	local side = Instance.new("Frame")

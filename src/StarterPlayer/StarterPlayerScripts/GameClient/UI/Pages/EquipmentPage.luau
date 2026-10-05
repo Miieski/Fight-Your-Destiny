@@ -25,6 +25,8 @@ local State = require(script.Parent.Parent.Parent.State)
 local ArmorPage = require(script.Parent.ArmorPage)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
+local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local ModelIcon = require(Kit.ModelIcon)
@@ -468,10 +470,12 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 			local per = armor.PerSlot[slot]
 			table.insert(parts, `{slot} {if per == nil then "-" elseif per.Boosted then "ON" else "off"}`)
 		end
-		add(`Zone Boost{if zoneDef then ` ({zoneDef.Name})` else ""}: {table.concat(parts, ", ")}`, nil, 17)
+		if Balance.ZoneBoostEnabled then
+			add(`Zone Boost{if zoneDef then ` ({ZoneVisibility.displayName(zoneDef.Id)})` else ""}: {table.concat(parts, ", ")}`, nil, 17)
+		end
 		if armor.SetZone then
 			local full = armor.SetCount >= Armor.SetSize
-			add(`{Zones.ById[armor.SetZone].Name} set {armor.SetCount}/{Armor.SetSize}{if full then " (+10% Max HP, +10% Zone Boost)" else ""}`, if full then Theme.Colors.Good else Theme.Colors.TextDim, 17)
+			add(`{ZoneVisibility.displayName(armor.SetZone)} set {armor.SetCount}/{Armor.SetSize}{if full then (if Balance.ZoneBoostEnabled then " (+10% Max HP, +10% Zone Boost)" else " (+10% Max HP)") else ""}`, if full then Theme.Colors.Good else Theme.Colors.TextDim, 17)
 		else
 			add("No set bonus (wear 3 pieces of one zone)", Theme.Colors.TextDim, 17)
 		end

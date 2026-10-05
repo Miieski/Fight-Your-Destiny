@@ -6,6 +6,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
+local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
+local ZB = Balance.ZoneBoostEnabled -- the zone-boost cases expect the boost only while it is enabled
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 
 local StatsTests = {}
@@ -44,7 +46,7 @@ StatsTests.cases = {
 		name = "4 Legendary Volcano hammer, Strength 30, Damage Boost 3",
 		data = { Attributes = attrs({ Strength = 30 }), Rebirths = 0, RebirthUpgrades = { DamageBoost = 3 }, Weapons = { w1 = { id = "volcano_heavy", rarity = 5 } }, EquippedWeapon = "w1" },
 		context = { now = NOW, zoneId = "Volcano" },
-		expected = { AttributeDamageMult = 1.9, WeaponDamage = 1e6 * 2.5 * 5.5 * 1.4 * 1.9 * 1.3 },
+		expected = { AttributeDamageMult = 1.9, WeaponDamage = 1e6 * 2.5 * 5.5 * (if ZB then 1.4 else 1) * 1.9 * 1.3 },
 		alsoOutside = 1e6 * 2.5 * 5.5 * 1.9 * 1.3,
 	},
 	{
@@ -93,7 +95,9 @@ StatsTests.cases = {
 			EquippedArmor = { Helmet = "h", Chest = "c", Legs = "l" },
 		},
 		context = { now = NOW, zoneId = "Plains" },
-		expected = { ArmorHP = 550 * 1.44, ArmorDefense = 45 * 1.44, SetCount = 3, MaxHP = (100 + 792) * 1.1, Defense = 64.8, DamageReduction = 64.8 / 164.8 },
+		expected = if ZB
+			then { ArmorHP = 550 * 1.44, ArmorDefense = 45 * 1.44, SetCount = 3, MaxHP = (100 + 792) * 1.1, Defense = 64.8, DamageReduction = 64.8 / 164.8 }
+			else { ArmorHP = 550, ArmorDefense = 45, SetCount = 3, MaxHP = 650 * 1.1, Defense = 45, DamageReduction = 45 / 145 },
 		alsoOutsideStats = { ArmorHP = 550, ArmorDefense = 45, MaxHP = 650 * 1.1 },
 	},
 	{
@@ -104,7 +108,9 @@ StatsTests.cases = {
 			EquippedArmor = { Chest = "c", Helmet = "h" },
 		},
 		context = { now = NOW, zoneId = "Desert" },
-		expected = { ArmorHP = 1575 * 1.25 + 25, ArmorDefense = 12 * 1.25 + 3, SetCount = 1, MaxHP = (100 + 1575 * 1.25 + 25) * 1.4 },
+		expected = if ZB
+			then { ArmorHP = 1575 * 1.25 + 25, ArmorDefense = 12 * 1.25 + 3, SetCount = 1, MaxHP = (100 + 1575 * 1.25 + 25) * 1.4 }
+			else { ArmorHP = 1575 + 25, ArmorDefense = 15, SetCount = 1, MaxHP = (100 + 1575 + 25) * 1.4 },
 	},
 }
 

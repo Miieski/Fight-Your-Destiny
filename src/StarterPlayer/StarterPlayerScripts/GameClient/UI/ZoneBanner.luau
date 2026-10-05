@@ -16,6 +16,7 @@ local State = require(script.Parent.Parent.State)
 local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
+local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
 local Icons = require(Kit.Icons)
 local Panel = require(Kit.Panel)
 local Screens = require(Kit.Screens)
@@ -114,7 +115,8 @@ local function updateBoost()
 			table.insert(armorBoosts, Format.bonus(Rarities.get(piece.rarity).ZoneBoost))
 		end
 	end
-	boost.Visible = weaponMatch or armorMatches > 0
+	-- Zone Boost disabled (Config/Balance): no badge at all
+	boost.Visible = Balance.ZoneBoostEnabled and (weaponMatch or armorMatches > 0)
 	local parts = {}
 	if weaponMatch then
 		table.insert(parts, "Weapon")

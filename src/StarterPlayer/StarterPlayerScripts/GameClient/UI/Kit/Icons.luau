@@ -291,7 +291,9 @@ end
 -- Fades an icon made by Icons.create (image or shape), e.g. for empty slots.
 function Icons.setFaded(holder: Instance, transparency: number)
 	for _, d in ipairs(holder:GetDescendants()) do
-		if d:IsA("ImageLabel") then
+		if d.Name == "MysteryMarks" or d:FindFirstAncestor("MysteryMarks") then
+			continue -- the "?" overlay of a hidden zone (Kit/ZoneVisibility) stays as it is
+		elseif d:IsA("ImageLabel") then
 			d.ImageTransparency = transparency
 		elseif d:IsA("Frame") then
 			d.BackgroundTransparency = transparency

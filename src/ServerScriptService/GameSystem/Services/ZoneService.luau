@@ -309,7 +309,7 @@ function ZoneService:Init()
 			return false, "Not ready yet"
 		end
 		if zone.Index > 1 and not profile.Zones[zone.Id] then
-			return false, `{zone.Name} locked: {Zones.requirementText(zone.Id)}`
+			return false, `{Zones.HIDDEN_NAME} locked: {Zones.HIDDEN_REQUIREMENT}` -- no spoilers (brief 1A)
 		end
 		if not admin then
 			if arenas[player] then
@@ -368,7 +368,7 @@ function ZoneService:Init()
 			return false, `{zone.Name} is coming soon`
 		end
 		if zone.Index > 1 and not profile.Zones[zone.Id] then
-			return false, `{zone.Name} locked: {Zones.requirementText(zone.Id)}`
+			return false, `{Zones.HIDDEN_NAME} locked: {Zones.HIDDEN_REQUIREMENT}` -- no spoilers (brief 1A)
 		end
 		local id = Zones.subZoneId(zone.Id, n)
 		if n > 1 and not profile.SubZones[id] then

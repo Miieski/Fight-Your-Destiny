@@ -23,6 +23,7 @@ local State = require(script.Parent.Parent.Parent.State)
 local Hatching = require(script.Parent.Parent.Hatching)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local ModelIcon = require(Kit.ModelIcon)
@@ -71,6 +72,9 @@ end
 
 local function zoneName(zone: number): string
 	local def = Zones.List[zone]
+	if def then
+		return ZoneVisibility.displayName(def.Id)
+	end
 	return if def then def.Name else ""
 end
 
@@ -358,7 +362,7 @@ end
 local function speciesList(zone: any)
 	local small = Theme.isCompact()
 	local panel = openOverlay(Vector2.new(820, 470))
-	Theme.text({ Font = "Title", Text = `{zone.Name} Egg - 6 pets`, TextSize = if small then 26 else 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
+	Theme.text({ Font = "Title", Text = `{ZoneVisibility.displayName(zone.Id)} Egg - 6 pets`, TextSize = if small then 26 else 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
 	local body = Instance.new("ScrollingFrame")
 	body.BackgroundTransparency = 1
 	body.BorderSizePixel = 0
@@ -948,20 +952,20 @@ local function buildPremium(page: ScrollingFrame)
 			if not open then
 				Theme.text({ Font = "Title", Text = "?", TextSize = 54, Size = UDim2.fromOffset(iconH, iconH), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), StrokeThickness = 3, ZIndex = 5, Parent = card })
 			end
-			Theme.text({ Font = "Button", Text = if open then `{zone.Name} Egg` else "???", TextSize = 18, Size = UDim2.new(1, -8, 0, 22), Position = UDim2.new(0.5, 0, 0, iconH + 6), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = card })
+			Theme.text({ Font = "Button", Text = if open then `{ZoneVisibility.displayName(zone.Id)} Egg` else "???", TextSize = 18, Size = UDim2.new(1, -8, 0, 22), Position = UDim2.new(0.5, 0, 0, iconH + 6), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = card })
 			if open then
 				local buy = Button.new({ Text = `{price}`, Icon = "Diamond", Style = if have >= price then "primary" else "disabled", TextSize = 28, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card, OnClick = function()
 					buyPremium(zone)
 				end })
 				buy.Instance.Name = "Buy"
 			else
-				Theme.text({ Text = `Unlock {zone.Name}`, TextSize = 16, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
+				Theme.text({ Text = ZoneVisibility.requirement(zone.Id, true), TextSize = 16, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
 			end
 			card.Activated:Connect(function()
 				if open then
 					speciesList(zone)
 				else
-					Notifier.push({ Kind = "info", Text = `Unlock {zone.Name} to buy its egg. {Zones.requirementText(zone.Id)}`, Icon = "Lock" })
+					Notifier.push({ Kind = "info", Text = ZoneVisibility.requirement(zone.Id), Icon = "Lock" })
 				end
 			end)
 			card.Parent = grid

@@ -15,6 +15,7 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local ModelIcon = require(Kit.ModelIcon)
@@ -199,12 +200,12 @@ local function buildTab(page: ScrollingFrame, tab: string)
 		head.ZIndex = 3
 		head.Parent = section
 		if group.ZoneId then
-			Icons.create(group.ZoneId, head, { Size = UDim2.fromOffset(38, 38), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
+			ZoneVisibility.icon(group.ZoneId, group.ZoneId, head, { Size = UDim2.fromOffset(38, 38), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 		else
 			Icons.create("Crown", head, { Size = UDim2.fromOffset(38, 38), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 		end
 		local have = IndexBook.count(index, group.Entries)
-		Theme.text({ Font = "Title", Text = group.Name, TextSize = 24, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.4, -46, 1, 0), Position = UDim2.fromOffset(46, 0), ZIndex = 4, Parent = head })
+		Theme.text({ Font = "Title", Text = if group.ZoneId then ZoneVisibility.displayName(group.ZoneId) else group.Name, TextSize = 24, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.4, -46, 1, 0), Position = UDim2.fromOffset(46, 0), ZIndex = 4, Parent = head })
 		Theme.text({ Font = "Number", Text = percent(have, #group.Entries), TextSize = 18, Color = if have >= #group.Entries then Theme.Colors.Good else Theme.Colors.Text, Size = UDim2.new(0.28, 0, 1, 0), Position = UDim2.fromScale(0.4, 0), ZIndex = 4, Parent = head })
 		if group.Rewarded then
 			local reward = IndexBook.reward(index, claimed, `{tab}:{group.Key}`)
@@ -252,6 +253,7 @@ function IndexPage.build(ctx: any)
 			show()
 		end
 		State.changed("Index", changed)
+		State.changed("Zones", changed)
 		State.changed("IndexClaimed", changed)
 		task.defer(show)
 	end

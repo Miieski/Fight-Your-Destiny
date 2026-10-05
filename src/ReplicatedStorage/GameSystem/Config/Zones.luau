@@ -81,6 +81,21 @@ Zones.Descriptions = {
 
 -- Why a zone is locked (DESIGN.md section 4: key of the previous boss, Rebirths, previous zone
 -- redone since the last Rebirth). short = true gives the compact form for list rows.
+-- No spoilers for locked zones (docs/enemies_npcs_pets_brief.txt 1A): what every UI and server message shows for a
+-- zone the player has not unlocked. Clients go through GameClient/UI/Kit/ZoneVisibility.
+Zones.HIDDEN_NAME = "???"
+Zones.HIDDEN_REQUIREMENT = "Defeat the boss of the previous zone and Rebirth to reveal"
+Zones.HIDDEN_SHORT = "Locked: defeat the previous boss and Rebirth"
+
+-- Is the zone unlocked in this profile's Zones table (zone 1 always is)?
+function Zones.isUnlocked(zonesTable: { [string]: any }?, zoneId: string?): boolean
+	if zoneId == nil or zoneId == "Hub" then
+		return true
+	end
+	local zone = Zones.ById[zoneId]
+	return zone ~= nil and (zone.Index == 1 or (zonesTable ~= nil and zonesTable[zoneId] == true))
+end
+
 function Zones.requirementText(zoneId: string, short: boolean?): string
 	local zone = Zones.ById[zoneId]
 	local previous = zone and Zones.List[zone.Index - 1]

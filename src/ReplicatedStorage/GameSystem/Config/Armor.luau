@@ -6,6 +6,7 @@
 -- Ids "<zone lower>_helmet|_chest|_legs". Items in profile.Armor = { [uid] = { id, rarity, locked? } },
 -- equipped in profile.EquippedArmor = { Helmet = uid, Chest = uid, Legs = uid }.
 -- Palette = the in-world look (GameSystem/Util/ArmorLook): Main, Second, Accent, Glow (accent is neon).
+local Balance = require(script.Parent.Balance)
 local Rarities = require(script.Parent.Rarities)
 local Zones = require(script.Parent.Zones)
 
@@ -96,7 +97,8 @@ function Armor.pieceStats(id: string, tier: number, zoneId: string?, setActive: 
 		return 0, 0, false
 	end
 	local hp, defense = Armor.baseHP(id, tier), Armor.baseDefense(tier)
-	local boosted = zoneId ~= nil and zoneId == piece.ZoneId
+	-- the Zone Boost only applies while Config/Balance.ZoneBoostEnabled (off for now)
+	local boosted = Balance.ZoneBoostEnabled and zoneId ~= nil and zoneId == piece.ZoneId
 	if boosted then
 		local boost = Rarities.get(tier).ZoneBoost * (if setActive then 1 + Armor.SetBoostBonus else 1)
 		hp *= 1 + boost

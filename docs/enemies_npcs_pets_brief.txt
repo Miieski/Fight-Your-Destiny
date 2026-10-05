@@ -1,0 +1,318 @@
+=====================================================================
+ FIGHT YOUR DESTINY - MOBS, NPCs, PETS & BOSSES (very long task)
+ FIRST FOUR ZONES ONLY: Plains, Desert, Jungle, Tundra
+=====================================================================
+Goal: make the enemies FUNCTIONAL (player combat, enemy AI, rewards, boss rooms with basic
+behavior) and give everything its low-poly Blender model and animations. Boss PATTERNS come in
+the next step, NOT now.
+Every decision is in this file. If something is missing, apply the closest rule here, log it in
+docs/NIGHT_LOG.md and continue. Never stop to ask.
+
+READ FIRST: DESIGN.md, HANDOFF.md (3b), docs/enemy_database.txt, docs/weapon_system_document.txt,
+docs/zone_design_document.txt, docs/menu_systems_brief.txt, docs/boss_patterns_document.txt (for
+context only), docs/weapon_modeling_brief.txt (Blender conventions).
+
+RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite).
+2. Commit and push to https://github.com/Miieski/Fight-Your-Destiny (main) after EACH part and after
+   each finished zone of models. Check `git status`: no .rbxl/.rbxm/backup staged, no secrets.
+3. Update docs/NIGHT_LOG.md after every finished item (usage limits can stop the work) and keep
+   Blender/models_manifest.csv current (id, category, zone, rig, triangles, status).
+4. Server authoritative (damage, HP, drops, Gold, keys). The client only shows things. Validate all requests.
+   All numbers/ids live in Config modules, never hard-coded in scripts.
+5. Mobile first; fantasy wood UI with 3D icons (existing Kit). Big numbers use Format (K, M, B, T, Qa).
+6. FOCUS: only zones 1-4. Do not touch zones 5-12 (their config can exist but no models, no spawns).
+7. Priority is FUNCTIONAL FIRST, ART SECOND: get everything working with simple placeholder models,
+   then replace them with Blender models zone by zone. Never block on a missing model.
+8. If a step fails twice: log it, skip to the next item, continue. Keep Studio open and visible.
+
+---------------------------------------------------------------------
+ 1. TWO RULE CHANGES (do these first)
+---------------------------------------------------------------------
+1A. NO SPOILERS FOR LOCKED ZONES
+ - "Locked zone" = a zone that is not in `profile.Zones`. A locked zone must be shown as a **black
+   silhouette with big "?" marks** and the name `???`, EVERYWHERE: hub portals (lobby), the Zones menu
+   (teleport), the Shop (weapons, premium eggs), the Index, the Pets/Eggs windows, zone icons, boss/enemy
+   entries, zone banners and any other UI. No real name, description, boss, enemy, icon colors or
+   item names of a locked zone may appear. Requirement text stays generic: "Defeat the boss of the
+   previous zone and Rebirth to reveal".
+ - Hub portals: when locked, the portal is rendered with a **black filter** (all its colors turned to
+   black/dark gray, a dark swirl, no zone icon) and a billboard "? ? ?" with the generic requirement.
+   Do it per player on the client from State (the server still validates). When the zone unlocks, play a
+   reveal animation (white flash, black filter dissolves into the zone colors, name and icon appear).
+ - Implement ONE helper (`ZoneVisibility`) used by every UI: `isRevealed(zoneId)`, `displayName`,
+   `displayIcon`, `applySilhouette(imageLabel)`. No UI may read a zone name directly from Config.
+ - Zones 5-12 are not built yet: they are shown exactly like any other locked zone.
+1B. DAMAGE MUST NOT CHANGE WHEN THE PLAYER CHANGES ZONE
+ - The owner noticed damage going up when changing zone. Find the cause (search every use of the current
+   zone / highest zone in damage code, Stats.compute, shops and previews) and remove it. Write the cause in
+   docs/NIGHT_LOG.md.
+ - Damage per hit depends ONLY on: the equipped weapon (its OWN zone base x category x rarity), the
+   attributes, pets, Rebirth Shop upgrades, boosts and crits. It never depends on the player's current zone
+   or highest unlocked zone.
+ - The **Zone Boost** (weapon/armor gets a bonus in its home zone) is DISABLED for now: add
+   `Config.Balance.ZoneBoostEnabled = false`, keep the code and config, hide the "Zone Boost active" HUD badge
+   and zone-boost lines in tooltips while the flag is false. (The owner may turn it on later.)
+ - Test: the same loadout deals exactly the same damage in zone 1, 2, 3 and 4 and in the hub.
+
+---------------------------------------------------------------------
+ 2. ORDER OF WORK
+---------------------------------------------------------------------
+ A. Player combat (functional)         B. Enemy system (functional, placeholders, zones 1-4)
+ C. Minimal boss rooms (no patterns)   D. Low-poly art direction + Blender pipeline pilot (the Boar)
+ E. Models + animations by zone: 1 Plains, 2 Desert, 3 Jungle, 4 Tundra (mobs, mini-bosses, boss, pets)
+ F. Hub NPCs                           G. Final checks
+ (Do 1A and 1B before A. If usage runs short, finish A-C fully; then models in zone order.)
+
+=====================================================================
+ PART A - PLAYER COMBAT (functional)
+=====================================================================
+Server-authoritative; rules from DESIGN.md section 2 and docs/weapon_system_document.txt.
+ - **Starter weapon:** if a player owns no weapon (new player OR after a Rebirth wipe), grant one free
+   Common `<zone>_sword` of the zone they are currently in/redoing (zone 1 for new players). This avoids soft-locks.
+ - Input: PC mouse 1, mobile attack button, gamepad RT. Melee categories: HOLD to attack at the weapon's
+   hits/sec. Ranged and Magic: ONE press = one shot (repeat only with the Auto-Attack pass). Request:
+   `Net.request("Attack", aimDir, aimPoint)`, throttled to the weapon's rate with small tolerance.
+ - Hit shapes (server, at the swing's impact moment):
+   Sword: arc 120 deg, radius 6, up to 3 targets | Spear: line 10 long x 3 wide, pierces up to 4 |
+   Heavy: arc 90 deg radius 6 + small ground slam AoE radius 6, target stagger 0.3 s | Dagger: arc 60 deg radius 4,
+   single target (+20% crit chance on top) | Gauntlet: cone 90 deg radius 5, 3-hit combo, 3rd hit x2 damage |
+   Ranged: projectile 120 studs/s, range 60, hits the first enemy | Magic: projectile or targeted AoE at the aim point
+   within range 35, radius 6 (x (1 + Magic radius bonus)), hits all inside | Whip & Chain: cone 100 deg radius 12, up to 6 targets.
+ - **Damage per hit** = formula in menu_systems_brief.txt A4 with `Util/Stats.compute` (shared), with NO zone factor (rule 1B).
+ - Roll: key Q / button / B, 0.35 s invulnerability, 12 studs, cooldown 1.5 s (Mind reduces, floor 0.6 s).
+   Block: hold mouse 2 / button / LT, reduces damage 60% (+Endurance, cap 85%), movement -50%, cannot attack.
+   Server checks cooldowns and the i-frame/block windows with timestamps.
+ - Feedback (client): hit sparks, short camera shake (Settings toggle), floating damage numbers (crits bigger/yellow),
+   weapon swing animation per category (placeholder arm swing now), sounds (Sfx names from DESIGN.md).
+ - Death: the player loses **35% of their Gold**, instant respawn at the Entrance of the current sub-zone
+   (`workspace.Zones.<Zone>.<Zone>_<n>.Entrance`; hub spawn if none), toast "You lost 35% of your Gold: -N".
+ - Auto-Attack pass (if owned): toggle on the HUD; melee auto-swings at the nearest enemy in range, ranged auto-fires at
+   the nearest enemy in range.
+
+=====================================================================
+ PART B - ENEMY SYSTEM (functional)
+=====================================================================
+Config: `Config/Enemies.luau` generated from docs/enemy_database.txt (zones 1-4 only): per enemy
+`Id, Name, Zone, SubZone, Tier ("normal"|"mini"|"boss"), HP, DMG, Gold, Loot (type, rarity), Rig, Size, WalkSpeed,
+AggroRadius, AttackType ("melee"|"ranged"), AttackRange, AttackCooldown, Telegraph`.
+Ids = `<zone>_<name snake_case>` (for example `plains_wild_wolf`, `jungle_toxic_frog`).
+Write a validation command `validateEnemies` that compares the config with enemy_database.txt (HP, DMG, Gold) and prints mismatches.
+
+SPAWNING
+ - Per sub-zone, **10 enemies alive at once**: sub-zones 1-3 = 4 / 3 / 3 of the three types; sub-zone 4 = 5 / 5 of its two
+   normal types (the boss room's mini-bosses and boss live in the arena, Part C).
+ - Spawn points: `workspace.Zones.<Zone>.<Zone>_<n>.Spawns`; if empty, random free positions inside `Area`.
+ - **Respawn 2 seconds after an enemy dies**, at a random spawn point at least 12 studs from any player.
+ - Enemies are active only while at least one player is inside that sub-zone's `Area`; otherwise they are paused/hidden
+   (performance). Enemies are shared by all players in the sub-zone.
+
+AI (server, 10 Hz tick)
+ - States: Idle (small wander) -> Aggro (player within AggroRadius, default 30) -> Chase -> Telegraph -> Attack -> Recover ->
+   Leash (target farther than 60 studs from its spawn: return and heal to full).
+ - Melee attack: wind-up animation + red flash for the config `Telegraph` (default 0.4 s), damage applied at the impact frame
+   if the player is in range/cone, cooldown default 2 s. Ranged attack (archers, bats' spit, etc.): projectile 60 studs/s, range 40, telegraph 0.5 s.
+ - Flying enemies (bat, seagull, vulture, eagle) hover 4 studs above ground; fish (piranha, swordfish) hover/swim just above
+   the ground or in shallow water (no swimming mechanics); spirits and the djinn float.
+ - Default speeds (studs/s): quadruped 14, biped 12, bird 16, serpent 12, arachnid 15, golem 8, mini-boss 10, boss 10.
+ - Movement: server-controlled with a root part (no heavy physics), ground snapping by raycast, short obstacle avoidance;
+   PathfindingService only as a stuck fallback. Network ownership server.
+ - Hit reaction: white flash 0.1 s, small knockback (not for mini-bosses/bosses), stagger from Heavy slam.
+
+DAMAGE, REWARDS, LOOT
+ - Track damage per player per enemy. On death the **top damage dealer** (tie: last hit) gets the Gold and the loot roll.
+ - Gold = config Gold x the player's Gold multiplier (`Stats.compute`). Death effect: dissolve + coin pop; "+N" floating text.
+ - Loot: normal 2%, mini-boss 4% (x LootLuck multipliers from Arcane, pets, Rebirth Shop). Item type mapping (DESIGN.md section 5):
+   Egg -> Egg | Armor/Weapon -> Armor piece of the zone (random slot) | Corpse/Material/Trophy -> Head Trophy; rarity as listed in
+   enemy_database.txt. Granted straight to the inventory (use the existing egg/armor systems; add `Trophies`); full storage
+   auto-sells with a toast. Toast "Obtained: <rarity> <item>" with rarity color.
+ - Trophy sale: the Trophy Merchant NPC (Part F) and the Inventory "Trophies" tab sell trophies for
+   `25 x enemy Gold x rarityMult x (1 + Trophy Value bonus)`; "Sell All" button.
+ - UI: HP bar above each enemy (name, rarity-less tier color: normal white, mini orange, boss red), shown when damaged or within 30 studs.
+
+ADMIN TEST COMMANDS: `spawnEnemy(id)`, `killAll`, `setZone(zoneId, subZone)`, `giveWeapon`, `godMode`, `setGold`, `validateEnemies`, `simulateKills(id, n)`
+(the last one runs n server-side kills and reports the observed drop frequencies).
+
+=====================================================================
+ PART C - MINIMAL BOSS ROOMS (functional, NO patterns yet)
+=====================================================================
+ - **BossGate** at the end of sub-zone 4 (`workspace.Zones.<Zone>.<Zone>_4.BossGate`): prompt "Enter solo" / "Enter with team".
+   A team leader (TeamService, if built; otherwise only solo) starts the group; max 5 players. Each group gets its OWN arena clone
+   from `ServerStorage.BossArenas.<ZoneId>` into `workspace.BossArenas` (if the world builder made no template, use the built boss
+   room if it is marked `BossArena`, else create a simple circular arena template: 150 stud platform, walls, door, PlayerSpawns, BossSpawn,
+   MiniBossSpawn1, MiniBossSpawn2; log it).
+ - Flow: lobby 5 s countdown -> door locks -> the 2 mini-bosses spawn -> when BOTH are dead the boss spawns with a 2 s intro
+   (roar animation, name banner, invulnerable) -> fight -> boss dies -> rewards screen -> 15 s later the arena is destroyed
+   and players return to the entrance of sub-zone 4.
+ - Boss HP scales with group size: `HP x (1 + 0.6 x (players - 1))`.
+ - **Mini-bosses** (functional): chase, basic attack (telegraph 0.5 s), and one HEAVY attack (slam/lunge, telegraph 1.0 s, damage x1.5,
+   cooldown 6 s).
+ - **Boss** (functional skeleton): states Intro -> Chase -> BasicAttack (telegraph 1.0 s, damage x1.0, cooldown 3 s) -> Death, plus empty
+   hooks `Patterns = {}` and `OnEnrage()` (50% HP) for the next step (boss patterns). Boss HP bar at the top of the screen.
+   Do NOT implement the patterns of docs/boss_patterns_document.txt now.
+ - Death in the arena: the player loses 35% Gold, becomes a spectator until the fight ends, then returns to the entrance of sub-zone 4.
+   If all players die, the arena is destroyed and they return there.
+ - **Rewards:** every player with at least **5% of the total HP** of the boss (and of each mini-boss) receives, rolled SEPARATELY per player:
+   Gold, loot roll (mini 4%, boss 6%), diamonds with their chance and amount (mini-bosses 15% / (2+z) and (3+z); boss 40% / (10+3z), see
+   enemy_database.txt section 3, plus Diamond Luck bonuses), and the first time that player beats that boss: its **Key** (`profile.Keys[zoneId] = true`, guaranteed).
+   Rewards screen listing each item received.
+
+=====================================================================
+ PART D - ART DIRECTION (LOW-POLY) + REFERENCE IMAGES
+=====================================================================
+The owner sends 7 reference images (in this order). Study them and use them heavily:
+ 1. **Low-poly gorilla**, tan flat-shaded, hunched knuckle-walking pose, huge chest and arms, faceted face. -> base for the
+    Jungle boss **Ancestral Gorilla** (make the fur dark gray-brown, add golden tribal markings, vine/stone totem bracers, glowing amber eyes).
+ 2. **Low-poly cat**, orange with cream chest and paws, big black eyes, sitting. -> style for **pets**: cute, big head, simple shapes,
+    large eyes, clean facets.
+ 3. **"3D Character Low Poly Model" lineup** (a space explorer with a green visor, a bearded adventurer with a scarf and strap, a warrior with a hammer, belts,
+    leather armor, boots). -> style for **NPCs and humanoid enemies**: slightly big heads, readable clothing layers, belts/straps/boots, flat colors with soft gradients.
+ 4. **Low-poly green frog**, smooth big facets, large black glossy eyes. -> **Toxic Frog** and the Frog Prince pet (add purple/yellow warning marks for the enemy).
+ 5. **Low-poly rock golem**, grey icosahedron-like boulders for shoulders/fists/legs, floating segments, glowing red crystals on the back and red eyes. -> the **golem family**
+    (Sandstone Golem, Frost Golem, Animated Statue); recolor the glowing crystals per zone (gold glyphs, ice-blue, green).
+ 6. **Mossy stone golem** (rust-brown stone slabs, green moss patches, vines, glowing green eyes, huge arms, a sprout growing on the shoulder, standing on a stone tile). ->
+    PRIMARY reference for the Plains boss **Golem**: slab-built body, moss, small tree sprout, green glowing eyes and rune spiral on an arm.
+ 7. **Paper-craft pharaoh mask**, gold faceted face with blue stripes on the headdress (nemes). -> the **Cursed Pharaoh** boss and the Anubis Guard/Mummy design cues
+    (gold + blue stripes, sharp planes).
+STYLE RULES
+ - Low-poly with **visible flat-shaded facets**, strong silhouettes, chunky readable shapes, bright saturated colors per zone palette (docs/zone_design_document.txt),
+   simple glossy dark eyes, subtle gradient per part. Clean and consistent across all models; not noisy, no tiny details.
+ - Triangle budgets: pets 200-800 | normal enemies 300-1,500 | mini-bosses 1,500-3,000 | bosses 3,000-6,000 | NPCs 1,000-2,500.
+ - One material and one small texture per model (512 max) or vertex/flat colors baked to a 256 palette; emissive parts (eyes, crystals, runes) separated.
+ - Sizes in studs: small 2-3.5, medium 4-5.5, large 6-8, mini-bosses 9-11, bosses 16-20 (boss roughly 3x a mini-boss).
+ - Facing: define the Roblox front axis in the pilot, write it down, apply it to everything.
+
+=====================================================================
+ PART E - BLENDER PIPELINE, FOLDERS, ANIMATION
+=====================================================================
+FOLDERS (category first, then zone). Create them:
+```
+Blender/
+  README.txt                 conventions (axes, scale, pivots, naming, animation pipeline decision)
+  models_manifest.csv
+  Rigs/                      shared rig templates (Quadruped, Biped, Bird, Arachnid, Serpent, Crustacean, Fish,
+                             Amphibian, Insect, Golem, Floater, Snowman, Gorilla, Boss-Biped)
+  NPC/Hub/                   npc_*.blend
+  Mobs/01_Plains/  02_Desert/  03_Jungle/  04_Tundra/        <id>.blend
+  MiniBosses/01_Plains/ ... 04_Tundra/
+  Bosses/01_Plains/ ... 04_Tundra/
+  Pets/01_Plains/ ... 04_Tundra/
+Blender_Exports/<same structure>/<id>.fbx   (and animation exports, see below)
+Previews/<same structure>/                  lineup images per zone and category
+```
+One .blend per model (model, rig, actions, materials/textures packed or in a textures/ folder). Save after every model.
+
+RIG FAMILIES: build each rig ONCE with its animation set, then reuse it for all models of that family by changing mesh, palette, scale and accessories.
+Animations required (Blender Actions, 24 fps, looping flags set):
+ - Normal enemies: Idle, Walk, Run (if faster), Attack1, Hit, Death, Spawn (pop-in). Ranged: Attack1 = draw/shoot.
+ - Mini-bosses: the above + Attack2 (heavy), Roar.
+ - Bosses: Intro (roar), Idle, Walk, Attack1 (basic), Hit (small), Death, Enrage (roar). (Pattern animations come next step.)
+ - NPCs: Idle (breathing/look), Wave, Talk (loop).
+ - Pets: simple Idle (bob/tail/ear) only; walking is a scripted bob.
+Pilot FIRST: model, rig and animate the **Boar** (plains_boar), import test, and settle the animation pipeline:
+ 1. Preferred: segmented rig (one MeshPart per body part, pivots at the joints) + Motor6D in Studio, animations as Roblox
+    animations (KeyframeSequences) from FBX/animation import.
+ 2. If animations cannot be imported without the owner's manual steps tonight: export per-bone keyframes from Blender as JSON
+    (`Blender_Exports/<...>/<id>_anims.json`: bone, frame, position/rotation offsets, loop flag) and play them at runtime with a small
+    `AnimPlayer` module that drives the Motor6D `Transform`/C0 values. This needs no import and works fully automatically.
+ Pick the most reliable, write the decision and steps in Blender/README.txt, and use it for everything. Models themselves (FBX meshes)
+ are imported by the owner with Studio's Asset Manager -> Bulk Import; until then use `Placeholder_<RigFamily>` models built from parts so
+ gameplay is never blocked. Name Studio models exactly by id: `ServerStorage.Enemies.<id>`, `ServerStorage.Bosses.<id>`,
+ `ServerStorage.NPCs.<id>`, `ReplicatedStorage.Assets.Pets.<id>`. Provide a list of files the owner must import.
+Per model checklist: silhouette readable at 128 px | in budget | origin and pivots correct | animations present | .blend saved in its
+category/zone folder | FBX/JSON exported | manifest row updated | preview rendered.
+Build ONE model at a time, check it yourself with a screenshot, then continue. After each zone/category, render a lineup image into Previews/.
+
+=====================================================================
+ PART F - CONTENT LIST (zones 1-4)
+=====================================================================
+Format: id | rig | height in studs | look
+NORMAL ENEMIES
+ZONE 1 PLAINS
+ plains_boar | Quadruped | 3 | brown boar, tusks, bristle ridge
+ plains_wild_wolf | Quadruped | 4 | gray lean wolf, fangs
+ plains_field_bandit | Biped | 5.5 | green hood, dagger, leather vest (reference 3)
+ plains_giant_crab | Crustacean | 4 | red-orange shell facets, big claws
+ plains_shipwrecked_pirate | Biped | 5.5 | tricorn hat, torn striped shirt, cutlass
+ plains_aggressive_seagull | Bird | 3 | white/gray gull, orange beak, hovers
+ plains_brown_bear | Quadruped | 6 | heavy brown bear, rears up to attack
+ plains_forest_archer | Biped | 5.5 | green hood, bow (ranged)
+ plains_giant_spider | Arachnid | 4.5 | dark purple-brown, red eyes
+ plains_bat | Bird (bat) | 2.5 | dark, big ears, hovers
+ plains_miner_skeleton | Biped | 5.5 | bone, mining helmet with lamp, pickaxe
+ MINI: plains_cave_troll | Biped brute | 10 | gray-green troll, club, bones around belt
+ MINI: plains_crystal_spider_matriarch | Arachnid | 9 | teal crystals on the back, bigger fangs
+ BOSS: plains_golem | Golem | 18 | mossy stone golem (reference 6) with green eyes, sprout, rune spiral
+ZONE 2 DESERT
+ desert_scorpion | Arachnid | 3.5 | tan, curved tail stinger
+ desert_sand_snake | Serpent | 6 long | sand yellow with dark diamond pattern
+ desert_vulture | Bird | 4 | bald, dark brown, hunched
+ desert_jackal | Quadruped | 4 | tan and black, big ears
+ desert_crocodile | Quadruped long | 7 | sandy green, jaws
+ desert_nomad_bandit | Biped | 5.5 | turban, scarf, scimitar
+ desert_sandstone_golem | Golem | 8 | sandstone blocks, gold glyph glow (reference 5 recolored)
+ desert_royal_eagle | Bird | 4 | golden-brown, blue crest
+ desert_cliff_bandit | Biped | 5.5 | rope, dagger, brown wraps
+ desert_mummy | Biped | 5.5 | cream bandages, glowing yellow eyes
+ desert_giant_scarab | Insect | 4 | blue-green shell with gold trim
+ MINI: desert_anubis_guard | Biped | 10 | jackal head, black and gold, spear
+ MINI: desert_sandstorm_djinn | Floater | 9 | blue-violet smoke body rising from a lamp base
+ BOSS: desert_cursed_pharaoh | Boss-Biped | 17 | gold faceted mask with blue-striped headdress (reference 7), wrapped body, staff
+ZONE 3 JUNGLE
+ jungle_monkey | Biped (simian) | 3.5 | brown fur, long arms
+ jungle_green_snake | Serpent | 5 long | bright green
+ jungle_venomous_spider | Arachnid | 4 | green-black, yellow marks
+ jungle_piranha | Fish | 2.5 | silver-red, big teeth, hovers
+ jungle_toxic_frog | Amphibian | 3.5 | bright green with purple/yellow marks (reference 4)
+ jungle_tribal_warrior | Biped | 5.5 | face paint, feathers, spear
+ jungle_jaguar | Quadruped | 5 | golden with black rosettes
+ jungle_animated_statue | Golem | 7 | mossy idol with glowing green glyphs
+ jungle_tribal_archer | Biped | 5.5 | blowgun/bow (ranged)
+ jungle_shaman | Biped | 6 | mask, totem staff, feathers
+ jungle_temple_guard | Biped | 6.5 | stone/bronze armor, big shield
+ MINI: jungle_elder_jaguar | Quadruped | 10 | near-black with glowing gold eyes
+ MINI: jungle_tribal_warlord | Biped brute | 10 | war paint, skull trophies, big axe
+ BOSS: jungle_ancestral_gorilla | Gorilla | 18 | from reference 1
+ZONE 4 TUNDRA
+ tundra_white_wolf | Quadruped | 4 | white-blue fur
+ tundra_arctic_fox | Quadruped | 3 | white fox, big tail
+ tundra_cursed_snowman | Snowman | 5 | stacked snowballs, glowing purple coal eyes, stick arms
+ tundra_ice_spirit | Floater | 4 | translucent blue crystals
+ tundra_polar_bear | Quadruped | 6.5 | heavy white bear
+ tundra_swordfish | Fish | 4 | long bill, hovers
+ tundra_yeti | Biped brute | 8 | white fur, blue face
+ tundra_furious_ibex | Quadruped | 5 | big curved horns
+ tundra_ice_eagle | Bird | 4.5 | pale blue-white
+ tundra_ice_knight | Biped | 6 | ice-blue plate armor, sword and shield
+ tundra_frost_golem | Golem | 9 | ice blocks with blue crystals (reference 5 recolored)
+ MINI: tundra_frost_wolf_alpha | Quadruped | 10 | huge white wolf with ice shards
+ MINI: tundra_ice_knight_captain | Biped | 10 | taller, crested helm, greatsword
+ BOSS: tundra_frost_king | Boss-Biped | 18 | icicle crown, ice cloak, huge ice mace
+
+PETS (24, ids `<zone>_pet1..6`, species from docs/menu_systems_brief.txt B3, cute low-poly like reference 2, one Idle)
+ Plains: Boar Piglet, Wolf Pup, Baby Bear, Seagull Chick, Crab Buddy, Spider Hatchling
+ Desert: Jackal Pup, Scorpion Cub, Baby Croc, Desert Eaglet, Scarab Beetle, Sand Snake
+ Jungle: Monkey, Jaguar Cub, Frog Prince, Piranha Pal, Green Viper, Totem Spirit
+ Tundra: Snow Owl, Arctic Fox, Polar Bear Cub, Baby Yeti, Ice Eaglet, White Wolf Pup
+ Pets are 0.6-1.2 studs tall, 200-800 triangles, one mesh each (or 2-4 parts). Replace the procedural pets of the menu task for these 24.
+
+HUB NPCs (8, `npc_*`, humanoid low-poly like reference 3, 1,000-2,500 triangles, Idle + Wave + Talk)
+ npc_guide (tutorial guide, bright adventurer, scarf) | npc_blacksmith (Weapon Shop, apron, hammer) | npc_trainer (Training, bearded fighter) |
+ npc_egg_keeper (Egg Station, farmer hat with a basket of eggs) | npc_trophy_merchant (sells trophies, trader with a backpack of trophies) |
+ npc_priest (Rebirth Altar, robed, glowing staff) | npc_gem_merchant (Diamond Shop, fancy coat, gem pouch) | npc_quartermaster (Team Board / Quests, officer with a clipboard)
+ Interaction: ProximityPrompt "Talk" opens the matching window (Weapon Shop, Training, Egg Station, Trophy sale, Rebirth, Diamond Shop, Team/Quests);
+ the NPC waves when a player comes within 15 studs and turns its head toward the player. Place them on the hub markers (`workspace.Hub.<Name>`).
+
+=====================================================================
+ PART G - FINAL CHECKS
+=====================================================================
+ - 1A: locked zones appear as black "?" silhouettes in portals, Zones menu, Shop, Index, Eggs/Pets, banners (screenshots of each).
+ - 1B: identical damage in zones 1-4 and the hub with the same loadout (print the numbers).
+ - Combat: all 8 weapon categories hit as specified; roll and block verified on the server; death penalty correct; starter weapon logic works after `wipeForRebirth`.
+ - Enemies: `validateEnemies` reports 0 mismatches; each sub-zone keeps 10 alive and respawns in 2 s; top damage dealer gets Gold/loot; loot frequencies from
+   `simulateKills` match 2% / 4%; enemies pause when no player is in the sub-zone; no enemy gets stuck or falls through the map (test one full lap per sub-zone).
+ - Boss rooms: gate, solo and group (simulate 2-5 players if possible), mini-bosses then boss, scaling, rewards per player (5% rule), first-kill key, cleanup, return.
+ - Models: every model for zones 1-4 exists in its Blender category/zone folder, manifest complete, animations play, sizes match the list, previews saved.
+ - Performance: 10 enemies per active sub-zone with AI at 10 Hz stays smooth on the phone emulator; no per-frame allocations; no errors in the Output.
+ - FINAL REPORT (short): what is finished, what is not, decisions taken, files I must import (FBX via Asset Manager -> Bulk Import) and anything I must do by hand.
+ Next step (NOT now): the boss patterns from docs/boss_patterns_document.txt.

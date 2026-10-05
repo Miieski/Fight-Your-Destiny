@@ -28,6 +28,8 @@ local State = require(script.Parent.Parent.State)
 local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
+local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local Panel = require(Kit.Panel)
@@ -166,7 +168,7 @@ local function makeTile(parent: Instance, weapon: any, tier: number, width: numb
 end
 
 local function zoneName(weapon: any): string
-	return Zones.ById[weapon.ZoneId].Name
+	return ZoneVisibility.displayName(weapon.ZoneId)
 end
 
 local function close()
@@ -330,8 +332,10 @@ local function reveal(opening: Opening)
 	Theme.paintRarity(banner, tier)
 	local damage = Stats.weaponDamage(weapon.Id, tier)
 	local details = panel:FindFirstChild("Details") :: TextLabel
-	details.Text = string.format("%s damage per hit   |   Zone Boost +%d%% in %s   |   %s %d%% proc",
-		Format.number(damage), math.round(rarity.ZoneBoost * 100), zoneName(weapon), weapon.Element, math.round(rarity.ElementProc * 100))
+	details.Text = if Balance.ZoneBoostEnabled
+		then string.format("%s damage per hit   |   Zone Boost +%d%% in %s   |   %s %d%% proc",
+			Format.number(damage), math.round(rarity.ZoneBoost * 100), zoneName(weapon), weapon.Element, math.round(rarity.ElementProc * 100))
+		else string.format("%s damage per hit   |   %s %d%% proc", Format.number(damage), weapon.Element, math.round(rarity.ElementProc * 100))
 	local hint = panel:FindFirstChild("Hint") :: TextLabel
 	local weapons = State.get("Weapons") or {}
 	local equipped = opening.equippedBefore and weapons[opening.equippedBefore]

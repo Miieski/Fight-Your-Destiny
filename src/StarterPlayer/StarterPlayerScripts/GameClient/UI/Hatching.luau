@@ -22,6 +22,7 @@ local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local CaseOpening = require(script.Parent.CaseOpening)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local ModelIcon = require(Kit.ModelIcon)
 local Panel = require(Kit.Panel)
@@ -133,7 +134,7 @@ local function revealOne(show: Show, result: any)
 	Theme.paintRarity(banner, result.rarity)
 	local zone = Zones.List[result.zone]
 	info(show, species.Name, if Theme.isCompact() then 24 else 30, Theme.Colors.Gold, 2, "Title")
-	info(show, `{species.Role} - {if species.Premium then "Premium" else (zone and zone.Name or "")}`, 18, Theme.Colors.TextDim, 3)
+	info(show, `{species.Role} - {if species.Premium then "Premium" else (zone and ZoneVisibility.displayName(zone.Id) or "")}`, 18, Theme.Colors.TextDim, 3)
 	local lines, bonus = Pets.describe(result.petId, result.rarity, Hatching.petEffect())
 	info(show, table.concat(lines, "   "), 20, nil, 4)
 	info(show, `Bonus: {bonus}`, 19, Theme.Colors.Good, 5)
@@ -280,7 +281,8 @@ function Hatching.play(results: { any }, options: Options?)
 	TweenService:Create(popIn, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 
 	local zone = Zones.List[best.zone]
-	local eggName = if best.premiumEgg then `Premium {zone and zone.Name or ""} Egg` else `{Rarities.get(best.eggRarity).Name} {zone and zone.Name or ""} Egg`
+	local zoneText = if zone then ZoneVisibility.displayName(zone.Id) else ""
+	local eggName = if best.premiumEgg then `Premium {zoneText} Egg` else `{Rarities.get(best.eggRarity).Name} {zoneText} Egg`
 	local title = if #results > 1 then `Hatching {#results} eggs` else `Hatching: {eggName}`
 	Theme.text({ Name = "Title", Font = "Title", Text = title, TextSize = if compact then 26 else 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -40, 0, if compact then 32 else 42), Position = UDim2.new(0.5, 0, 0, 8), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
 

@@ -7,6 +7,8 @@ local Net = require(ReplicatedStorage.GameSystem.Net)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local EnemyService = require(script.Parent.EnemyService)
+local DataService = require(script.Parent.DataService)
+local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 
 local CombatService = { Priority = 5 }
 
@@ -40,11 +42,14 @@ function CombatService:Init()
 		table.sort(targets, function(a, b)
 			return a.distance < b.distance
 		end)
-		local base = Playtest.WeaponBaseDamage * 10 ^ (zone.Index - 1)
+		-- rule 1B: the damage never depends on the zone the player stands in (it used to be 10 x 10^(zone - 1))
+		local profile = DataService:Get(player)
+		local stats = profile and Stats.compute(profile, { now = os.time() })
+		local base = if stats and stats.WeaponDamage > 0 then stats.WeaponDamage else Playtest.WeaponBaseDamage
 		for i = 1, math.min(#targets, Playtest.MaxTargets) do
 			local state = targets[i].state
-			local crit = rng:NextNumber() < Playtest.CritChance
-			local damage = base * (if crit then Playtest.CritMultiplier else 1)
+			local crit = rng:NextNumber() < (if stats then stats.CritChance else Playtest.CritChance)
+			local damage = base * (if crit then (if stats then stats.CritDamage else Playtest.CritMultiplier) else 1)
 			local hitPosition = state.model:GetPivot().Position + Vector3.new(0, 3 + state.radius, 0)
 			EnemyService:Damage(player, state, damage)
 			Net.fire(player, "Hit", hitPosition, damage, crit)

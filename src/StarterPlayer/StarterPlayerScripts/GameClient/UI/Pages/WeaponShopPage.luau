@@ -22,6 +22,8 @@ local State = require(script.Parent.Parent.Parent.State)
 local CaseOpening = require(script.Parent.Parent.CaseOpening)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
+local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local Panel = require(Kit.Panel)
@@ -219,7 +221,9 @@ local function preview(weapon: any)
 	line(info, `Hits per second: {category.HitsPerSecond}   |   Range: {category.Range} studs`, 4, nil, text)
 	line(info, `Element: {weapon.Element} - {Weapons.ELEMENT_EFFECTS[weapon.Element] or ""}`, 5, nil, text)
 	line(info, `Proc chance: {math.round(common.ElementProc * 100)}% (Common) to {math.round(best.ElementProc * 100)}% (Secret)`, 6, Theme.Colors.TextDim, text - 2)
-	line(info, `Zone Boost in {zone.Name}: +{math.round(common.ZoneBoost * 100)}% (Common) to +{math.round(best.ZoneBoost * 100)}% (Secret)`, 7, nil, text)
+	if Balance.ZoneBoostEnabled then
+		line(info, `Zone Boost in {ZoneVisibility.displayName(zone.Id)}: +{math.round(common.ZoneBoost * 100)}% (Common) to +{math.round(best.ZoneBoost * 100)}% (Secret)`, 7, nil, text)
+	end
 	line(info, `Price: {Format.number(Weapons.price(weapon.Zone))} Gold - rarity rolled on purchase`, 8, Theme.Colors.Gold, text)
 	local buyButton = Button.new({ Name = "Buy", Text = "Buy", Icon = "Gold", Style = "primary", Size = UDim2.fromOffset(if small then 180 else 220, Theme.TOUCH), Position = UDim2.new(1, -16, 1, -14), AnchorPoint = Vector2.new(1, 1), ZIndex = 23, Parent = panel, OnClick = function()
 		buy(weapon)
@@ -248,7 +252,9 @@ local function odds()
 	list.SortOrder = Enum.SortOrder.LayoutOrder
 	list.Parent = tableFrame
 	tableFrame.Parent = panel
-	local COLUMNS = { { "Rarity", 0.3 }, { "Chance", 0.17 }, { "Damage", 0.17 }, { "Zone Boost", 0.18 }, { "Element", 0.18 } }
+	local COLUMNS = if Balance.ZoneBoostEnabled
+		then { { "Rarity", 0.3 }, { "Chance", 0.17 }, { "Damage", 0.17 }, { "Zone Boost", 0.18 }, { "Element", 0.18 } }
+		else { { "Rarity", 0.34 }, { "Chance", 0.22 }, { "Damage", 0.22 }, { "Element", 0.22 } }
 	local function row(order: number, values: { string }, tier: number?)
 		local frame = Instance.new("Frame")
 		frame.BackgroundColor3 = if order % 2 == 0 then Theme.Colors.WoodInset else Theme.Colors.WoodTop
@@ -275,9 +281,13 @@ local function odds()
 		end
 		frame.Parent = tableFrame
 	end
-	row(0, { "Rarity", "Chance", "Damage", "Zone Boost", "Element proc" }, nil)
+	row(0, if Balance.ZoneBoostEnabled then { "Rarity", "Chance", "Damage", "Zone Boost", "Element proc" } else { "Rarity", "Chance", "Damage", "Element proc" }, nil)
 	for tier, rarity in ipairs(WeaponRarities.List) do
-		row(tier, { rarity.Name, WeaponRarities.percentText(rarity.ShopOdds), `x{rarity.DamageMult}`, `+{math.round(rarity.ZoneBoost * 100)}%`, `{math.round(rarity.ElementProc * 100)}%` }, tier)
+		local values = { rarity.Name, WeaponRarities.percentText(rarity.ShopOdds), `x{rarity.DamageMult}`, `{math.round(rarity.ElementProc * 100)}%` }
+		if Balance.ZoneBoostEnabled then
+			table.insert(values, 4, `+{math.round(rarity.ZoneBoost * 100)}%`)
+		end
+		row(tier, values, tier)
 	end
 	local order = 20
 	for _, pity in ipairs(WeaponRarities.Pity) do
@@ -292,9 +302,9 @@ end
 -- Tapping a locked card: only the zone's requirements, never the weapon.
 local function lockedTip(weapon: any)
 	local panel = openOverlay(Vector2.new(480, 230))
-	local zone = Zones.ById[weapon.ZoneId]
-	Theme.text({ Font = "Title", Text = `{LOCKED} - {zone.Name}`, TextSize = 30, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 12), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
-	Theme.text({ Text = `Unlock {zone.Name} to reveal this weapon.\n{Zones.requirementText(zone.Id)}`, TextSize = 20, Wrapped = true, Size = UDim2.new(1, -40, 1, -80), Position = UDim2.new(0.5, 0, 0, 62), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
+	-- no spoilers: neither the weapon nor its zone (ZoneVisibility)
+	Theme.text({ Font = "Title", Text = `{LOCKED} - {ZoneVisibility.displayName(weapon.ZoneId)}`, TextSize = 30, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 12), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
+	Theme.text({ Text = `This weapon belongs to a locked zone.\n{ZoneVisibility.requirement(weapon.ZoneId)}`, TextSize = 20, Wrapped = true, Size = UDim2.new(1, -40, 1, -80), Position = UDim2.new(0.5, 0, 0, 62), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -309,6 +319,18 @@ local function refreshCard(card: Card)
 	end
 	card.marks.Visible = not open
 	card.name.Text = if open then weapon.Name else LOCKED
+	local zoneLabel = card.zoneRow:FindFirstChild("ZoneName") :: TextLabel?
+	if zoneLabel then
+		zoneLabel.Text = ZoneVisibility.displayName(weapon.ZoneId)
+	end
+	local zoneIcon = card.zoneRow:FindFirstChild("ZoneIcon")
+	if zoneIcon then
+		if open then
+			ZoneVisibility.removeSilhouette(zoneIcon)
+		else
+			ZoneVisibility.applySilhouette(zoneIcon)
+		end
+	end
 	card.price.Text = if open then Format.number(Weapons.price(weapon.Zone)) else LOCKED
 	local count = if open then ownedCount(weapon.Id) else 0
 	card.ownedBadge.Visible = count > 0
@@ -444,15 +466,16 @@ local function makeCard(weapon: any, parent: Instance, order: number): Card
 	local zoneRow = Instance.new("Frame")
 	zoneRow.BackgroundTransparency = 1
 	zoneRow.Parent = frame
-	Icons.create(weapon.ZoneId, zoneRow, { Size = UDim2.fromOffset(24, 24), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
-	Theme.text({ Text = Zones.ById[weapon.ZoneId].Name, TextSize = 16, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -30, 1, 0), Position = UDim2.fromOffset(30, 0), Parent = zoneRow })
+	local zoneIcon = ZoneVisibility.icon(weapon.ZoneId, weapon.ZoneId, zoneRow, { Size = UDim2.fromOffset(24, 24), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
+	zoneIcon.Name = "ZoneIcon"
+	Theme.text({ Name = "ZoneName", Text = ZoneVisibility.displayName(weapon.ZoneId), TextSize = 16, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -30, 1, 0), Position = UDim2.fromOffset(30, 0), Parent = zoneRow })
 	local priceRow = Instance.new("Frame")
 	priceRow.BackgroundTransparency = 1
 	priceRow.Parent = frame
 	Icons.create("Gold", priceRow, { Size = UDim2.fromOffset(26, 26), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
 	local price = Theme.text({ Font = "Number", Text = "", TextSize = 20, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Parent = priceRow })
 
-	local unlock = Theme.text({ Text = `Unlock {Zones.ById[weapon.ZoneId].Name} to reveal`, TextSize = 16, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), Parent = frame })
+	local unlock = Theme.text({ Text = ZoneVisibility.requirement(weapon.ZoneId, true), TextSize = 16, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), Parent = frame })
 	local buyButton = Button.new({ Name = "Buy", Text = "Buy", Style = "primary", Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), Parent = frame, OnClick = function()
 		buy(weapon)
 	end })

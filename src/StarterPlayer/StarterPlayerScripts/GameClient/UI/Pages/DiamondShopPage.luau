@@ -23,6 +23,7 @@ local CaseOpening = require(script.Parent.Parent.CaseOpening)
 local Notifier = require(script.Parent.Parent.Notifier)
 local PetsPage = require(script.Parent.PetsPage)
 local Kit = script.Parent.Parent.Kit
+local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local ModelIcon = require(Kit.ModelIcon)
@@ -128,7 +129,7 @@ local function chooseWeapon(parent: GuiObject)
 		local x = rowH + 4
 		local name = Theme.text({ Font = "Button", Text = entry.weapon.Name, TextSize = 20, Align = "Left", Size = UDim2.new(0.5, -x, 0, 26), Position = UDim2.fromOffset(x, 6), ZIndex = 23, Parent = row })
 		Theme.paintRarity(name, entry.item.rarity)
-		Theme.text({ Text = `{rarity.Name} - {Zones.ById[entry.weapon.ZoneId].Name}{if State.get("EquippedWeapon") == entry.uid then "  (equipped)" else ""}`, TextSize = 15, Align = "Left", Color = Theme.Colors.TextDim, Size = UDim2.new(0.5, -x, 0, 20), Position = UDim2.fromOffset(x, 34), ZIndex = 23, Parent = row })
+		Theme.text({ Text = `{rarity.Name} - {ZoneVisibility.displayName(entry.weapon.ZoneId)}{if State.get("EquippedWeapon") == entry.uid then "  (equipped)" else ""}`, TextSize = 15, Align = "Left", Color = Theme.Colors.TextDim, Size = UDim2.new(0.5, -x, 0, 20), Position = UDim2.fromOffset(x, 34), ZIndex = 23, Parent = row })
 		Button.new({ Text = `Reroll  {price}`, Icon = "Diamond", Style = if (State.get("Diamonds") or 0) >= price then "primary" else "disabled", TextSize = 20, Size = UDim2.new(0.34, 0, 0, Theme.TOUCH), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 23, Parent = row, OnClick = function()
 			if CaseOpening.isActive() then
 				return
@@ -300,13 +301,13 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 			if not open then
 				Theme.text({ Font = "Title", Text = "?", TextSize = 46, Size = UDim2.fromOffset(iconH, iconH), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), StrokeThickness = 3, ZIndex = 5, Parent = card })
 			end
-			Theme.text({ Font = "Button", Text = if open then `{zone.Name} Egg` else "???", TextSize = 16, Size = UDim2.new(1, -8, 0, 20), Position = UDim2.new(0.5, 0, 0, iconH + 6), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = card })
+			Theme.text({ Font = "Button", Text = if open then `{ZoneVisibility.displayName(zone.Id)} Egg` else "???", TextSize = 16, Size = UDim2.new(1, -8, 0, 20), Position = UDim2.new(0.5, 0, 0, iconH + 6), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = card })
 			if open then
 				Button.new({ Text = `{price}`, Icon = "Diamond", Style = if have >= price then "primary" else "disabled", TextSize = 24, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card, OnClick = function()
 					PetsPage.buyPremium(zone)
 				end })
 			else
-				Theme.text({ Text = `Unlock {zone.Name}`, TextSize = 15, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
+				Theme.text({ Text = ZoneVisibility.requirement(zone.Id, true), TextSize = 15, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
 			end
 			card.Parent = strip
 		end

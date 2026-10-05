@@ -132,7 +132,7 @@ local function buy(player: Player, weaponId: any): (boolean, any)
 		return false, "Unknown weapon"
 	end
 	if not profile.Zones[weapon.ZoneId] then
-		return false, `Unlock {Zones.ById[weapon.ZoneId].Name} first`
+		return false, `This weapon's zone is locked. {Zones.HIDDEN_REQUIREMENT}`
 	end
 	if busy[player] or (openingUntil[player] or 0) > os.clock() then
 		return false, "Finish the current opening first"
