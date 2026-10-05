@@ -1,0 +1,97 @@
+{
+ "id": "jungle_jaguar",
+ "rig": "Quadruped",
+ "role": "normal",
+ "size": 5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.5,
+  0.754
+ ],
+ "rootSize": [
+  3.043,
+  5.0,
+  11.305
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.382,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    3.736,
+    -1.838
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -0.827,
+    2.564,
+    -2.043
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    0.827,
+    2.564,
+    -2.043
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -0.827,
+    2.564,
+    2.228
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    0.827,
+    2.564,
+    2.228
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    3.78,
+    3.528
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 736,
+ "colors": [
+  "#dcaa40",
+  "#f4e4b8",
+  "#2a2018",
+  "#121016",
+  "#f4f4f4"
+ ]
+}

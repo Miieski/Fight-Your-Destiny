@@ -1,0 +1,101 @@
+{
+ "id": "jungle_ancestral_gorilla",
+ "rig": "Gorilla",
+ "role": "boss",
+ "size": 18,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.001,
+  8.867,
+  -0.788
+ ],
+ "rootSize": [
+  19.813,
+  18.0,
+  13.561
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    9.942,
+    0.962
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    13.791,
+    -2.886
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    0.0,
+    14.817,
+    -6.575
+   ],
+   "glow": true
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -6.094,
+    13.47,
+    -1.604
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    6.094,
+    13.47,
+    -1.604
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -3.047,
+    6.735,
+    2.886
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    3.047,
+    6.735,
+    2.886
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 3164,
+ "colors": [
+  "#4a403c",
+  "#6a5c54",
+  "#e0b040",
+  "#3e3532",
+  "#3e7a2c",
+  "#2a2422",
+  "#141210",
+  "#ffa830",
+  "#8a8a7a"
+ ]
+}

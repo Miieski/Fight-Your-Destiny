@@ -1,0 +1,101 @@
+{
+ "id": "jungle_shaman",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.056,
+  1.927,
+  -0.05
+ ],
+ "rootSize": [
+  1.91,
+  6.0,
+  1.218
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.845,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.086,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.671,
+    2.918,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.671,
+    2.918,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.252,
+    1.761,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.252,
+    1.761,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 572,
+ "colors": [
+  "#5a3a2a",
+  "#6a3a8a",
+  "#e0b040",
+  "#2a9a5a",
+  "#5a2a7a",
+  "#8a5a3a",
+  "#121016",
+  "#f4f4f4",
+  "#7c5134",
+  "#e0c060",
+  "#c83a2e",
+  "#1a1414",
+  "#d83a2a",
+  "#f0c030",
+  "#3a6ad8",
+  "#5a3a22",
+  "#60ff80",
+  "#c8a050",
+  "#3a2a1e"
+ ]
+}

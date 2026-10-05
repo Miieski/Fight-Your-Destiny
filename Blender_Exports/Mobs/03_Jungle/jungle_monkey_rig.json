@@ -1,0 +1,88 @@
+{
+ "id": "jungle_monkey",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 3.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  1.75,
+  0.217
+ ],
+ "rootSize": [
+  1.481,
+  3.5,
+  1.619
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.457,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    2.438,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.53,
+    2.305,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.53,
+    2.305,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.199,
+    1.391,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.199,
+    1.391,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 608,
+ "colors": [
+  "#7a5234",
+  "#d8a880",
+  "#121016",
+  "#f4f4f4",
+  "#c29773",
+  "#614129"
+ ]
+}

@@ -1,0 +1,110 @@
+{
+ "id": "jungle_elder_jaguar",
+ "rig": "Quadruped",
+ "role": "mini",
+ "size": 10,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.001,
+  4.975,
+  1.13
+ ],
+ "rootSize": [
+  5.86,
+  10.0,
+  21.606
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    6.536,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    7.177,
+    -3.493
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -1.676,
+    4.812,
+    -3.881
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    1.676,
+    4.812,
+    -3.881
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -1.676,
+    4.812,
+    4.234
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    1.676,
+    4.812,
+    4.234
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    7.354,
+    6.704
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    0.0,
+    8.14,
+    -8.122
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 1860,
+ "colors": [
+  "#26222a",
+  "#3a3640",
+  "#3e3846",
+  "#ffc840",
+  "#121016",
+  "#f4f4f4",
+  "#141218",
+  "#ece4cc"
+ ]
+}

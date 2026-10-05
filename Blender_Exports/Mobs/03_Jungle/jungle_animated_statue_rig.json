@@ -1,0 +1,107 @@
+{
+ "id": "jungle_animated_statue",
+ "rig": "Golem",
+ "role": "normal",
+ "size": 7,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.018,
+  3.5,
+  -0.043
+ ],
+ "rootSize": [
+  6.316,
+  7.0,
+  2.372
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.909,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    5.494,
+    -0.211
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -2.008,
+    5.072,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    2.008,
+    5.072,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -0.898,
+    2.747,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    0.898,
+    2.747,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    6.181,
+    -0.972
+   ],
+   "glow": true
+  },
+  {
+   "name": "Glyphs_Glow",
+   "parent": "Body",
+   "joint": [
+    -0.0,
+    4.367,
+    -1.025
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 456,
+ "colors": [
+  "#7a8470",
+  "#5a6252",
+  "#4a8a3a",
+  "#6a7460",
+  "#60ff80"
+ ]
+}

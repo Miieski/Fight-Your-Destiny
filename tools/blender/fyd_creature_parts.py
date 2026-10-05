@@ -317,8 +317,10 @@ def insect(m, shell, trim="#e0b840", legs=None, horn=True, jit=0.04):
 def fish(m, body, belly, fin=None, jaw=True, teeth=True, bill=False, jit=0.04):
     fin = fin or shade(body, 0.8)
     b = m.part("Body", joint=(0, 1.2, 0))
-    b.ico((0, 1.2, 0), 1.0, (0.55, 0.85, 1.35), body, jit=jit)
+    b.ico((0, 1.2, 0), 1.0, (0.55, 0.85, 1.35), body, sub=2, jit=jit)
     b.ico((0, 0.85, -0.1), 0.8, (0.5, 0.45, 1.15), belly, sub=1)
+    for k in range(4):  # spiny back ridge
+        b.cone((0, 1.95, -0.6 + k * 0.35), (0, 2.25, -0.45 + k * 0.35), 0.08, 0.0, fin, segs=3)
     b.box((0, 2.05, 0.15), (0.08, 0.7, 1.1), fin, taper=0.3)
     eyes(b, 0.42, 1.45, -0.95, r=0.16)
     if bill:

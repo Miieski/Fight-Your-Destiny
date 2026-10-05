@@ -5,6 +5,12 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 22:24 MODELS ZONE 3 (JUNGLE) done and pushed: 11 mobs (monkey with long arms and curly tail, green snake,
+  venomous spider, piranha, toxic frog after reference 4 with big glossy eyes and purple / yellow warning marks,
+  tribal warrior, jaguar with rosettes, animated statue with glyphs and moss, tribal archer, shaman with mask and
+  totem staff, temple guard with big shield), Elder Jaguar (1,860, glowing gold eyes), Tribal Warlord (2,044, skull
+  trophies, big axe), Ancestral Gorilla after reference 1 (3,164: hunched knuckle-walker, huge arms with stone and
+  gold totem bracers and vines, golden markings, amber eyes). All "ok" in the manifest.
 - 22:12 MODELS ZONE 2 (DESERT) done and pushed: 11 mobs (scorpion with segmented tail and claws, sand snake,
   vulture, jackal, crocodile 7 long, nomad bandit, sandstone golem after reference 5 with gold glyph crystals, royal
   eagle, cliff bandit, mummy with glowing eyes, giant scarab), Anubis Guard (1,686), Sandstorm Djinn rising from a gold

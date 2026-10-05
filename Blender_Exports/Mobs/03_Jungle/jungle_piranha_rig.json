@@ -1,0 +1,78 @@
+{
+ "id": "jungle_piranha",
+ "rig": "Fish",
+ "role": "normal",
+ "size": 2.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  1.25,
+  0.468
+ ],
+ "rootSize": [
+  2.26,
+  2.5,
+  4.186
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.25,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    1.25,
+    1.302
+   ],
+   "glow": false
+  },
+  {
+   "name": "FinL",
+   "parent": "Body",
+   "joint": [
+    -0.5,
+    1.042,
+    -0.208
+   ],
+   "glow": false
+  },
+  {
+   "name": "FinR",
+   "parent": "Body",
+   "joint": [
+    0.5,
+    1.042,
+    -0.208
+   ],
+   "glow": false
+  },
+  {
+   "name": "Jaw",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.99,
+    -0.833
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 300,
+ "colors": [
+  "#b8bcc8",
+  "#d23a3a",
+  "#8a8e9a",
+  "#121016",
+  "#f4f4f4",
+  "#bd3434"
+ ]
+}

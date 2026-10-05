@@ -1,0 +1,96 @@
+{
+ "id": "jungle_tribal_warlord",
+ "rig": "Biped",
+ "role": "mini",
+ "size": 10,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.002,
+  5.0,
+  -2.402
+ ],
+ "rootSize": [
+  5.549,
+  10.0,
+  6.915
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.736,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    6.25,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -1.97,
+    5.91,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    1.97,
+    5.91,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.764,
+    3.567,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.764,
+    3.567,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 2044,
+ "colors": [
+  "#7a5a36",
+  "#8a5638",
+  "#5a2a1a",
+  "#ece4cc",
+  "#2a2018",
+  "#d83a2a",
+  "#121016",
+  "#f4f4f4",
+  "#7c4d32",
+  "#f0c030",
+  "#2a9a5a",
+  "#5a3a22",
+  "#8a8e96",
+  "#4a3422"
+ ]
+}
