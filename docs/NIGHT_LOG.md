@@ -5,6 +5,15 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:15 PART C - DAGGER category done and pushed (48/96). Builders `tools/blender/fyd_weapon_daggers.py`
+  (2 studs = 0.56 m, 0.16 m grip + ~0.3 m blade before scaling, 560-1340 tris). Each dagger checked on
+  its preview; fixes: Hunter's Knife detail (was 328 tris, under the brief's 500 minimum), Venom Fang
+  cream ivory, Ice Shard core visible + dark grip, Toad Tooth made distinct from the Venom Fang (barbs,
+  slime, warty collar), Feather Dagger barbs/vane, Ghoul Fang (deeper serration, ribs, skull), Nano
+  Dagger enriched for zone 11 (circuits, emitters, power cell). Lineup `Previews/Weapons/Dagger_lineup.png`.
+  Icons uploaded, ids in `Config/Weapons.luau` (48 icons). Next: Gauntlet (`fyd_weapon_gauntlets.py`,
+  1.8 studs, one hand, budget 4000).
+
 - 03:09 PART C - HEAVY category done and pushed (36/96). Builders `tools/blender/fyd_weapon_heavy.py`
   (5 studs = 1.4 m, head centered 0.82 m above the grip before scaling, 764-1682 tris). Each weapon
   checked on its preview; fixes: Stone Hammer darker stone, Obelisk Hammer contrast (sandstone vs gold),
