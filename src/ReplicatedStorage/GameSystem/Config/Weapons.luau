@@ -24,17 +24,29 @@ Weapons.Categories = {
 -- ICONS BEGIN
 -- Weapon icons (Icons/Weapons/<Category>/<NN>_<id>_icon.png), filled in as each category is made.
 local ICONS: { [string]: string } = {
+	abyss_spear = "rbxassetid://102828414148654",
 	abyss_sword = "rbxassetid://140705468541573",
+	dead_spear = "rbxassetid://115971354260490",
 	dead_sword = "rbxassetid://86350187699042",
+	desert_spear = "rbxassetid://130304382924941",
 	desert_sword = "rbxassetid://127203537657986",
+	heaven_spear = "rbxassetid://125293223326464",
 	heaven_sword = "rbxassetid://115117176295789",
+	hell_spear = "rbxassetid://77484183713373",
 	hell_sword = "rbxassetid://115568529523971",
+	jungle_spear = "rbxassetid://120336713062825",
 	jungle_sword = "rbxassetid://73574132420956",
+	mechanical_spear = "rbxassetid://120270748769824",
 	mechanical_sword = "rbxassetid://125746837454794",
+	plains_spear = "rbxassetid://71400183932637",
 	plains_sword = "rbxassetid://75894377351246",
+	swamp_spear = "rbxassetid://107865546779607",
 	swamp_sword = "rbxassetid://128484317854811",
+	tundra_spear = "rbxassetid://113434317061374",
 	tundra_sword = "rbxassetid://104079839321876",
+	void_spear = "rbxassetid://103041162156233",
 	void_sword = "rbxassetid://114683905930446",
+	volcano_spear = "rbxassetid://103125123734578",
 	volcano_sword = "rbxassetid://94960393474724",
 }
 -- ICONS END

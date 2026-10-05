@@ -32,6 +32,8 @@ STUD = 0.28
 TEX = 512
 LENGTH_STUDS = {"Sword": 4.5, "Spear": 8, "Heavy": 5, "Dagger": 2, "Gauntlet": 1.8, "Ranged": 5, "Magic": 6, "Whip": 6}
 TRI_BUDGET = {"Gauntlet": 4000, "Magic": 4000}
+# icon outline (px at 512): thinner for long thin weapons so the outline does not swallow them
+OUTLINE = {"Sword": 14, "Spear": 8, "Heavy": 11, "Dagger": 14, "Gauntlet": 14, "Ranged": 9, "Magic": 9, "Whip": 10}
 CATEGORIES = ["Sword", "Spear", "Heavy", "Dagger", "Gauntlet", "Ranged", "Magic", "Whip"]
 ZONES = ["Plains", "Desert", "Jungle", "Tundra", "Swamp", "Volcano", "Hell", "Heaven", "Dead", "Abyss", "Mechanical", "Void"]
 NAMES = {
@@ -253,12 +255,12 @@ def finalize(wid, category):
 # ------------------------------------------------------------------------------------------------
 # previews, icon, export, manifest
 # ------------------------------------------------------------------------------------------------
-def _render(path, ob, rot, margin=0.08):
+def _render(path, ob, rot, margin=0.08, outline=I.OUTLINE_PX):
     ob.rotation_euler = [math.radians(a) for a in rot]
     I.frame(margin)
     bpy.context.scene.render.filepath = path
     bpy.ops.render.render(write_still=True)
-    I.postprocess(path)
+    I.postprocess(path, outline=outline)
 
 
 WEAPON_WORLD_STRENGTH = 1.1  # metals need more environment to reflect than the UI icons
@@ -283,11 +285,12 @@ def _previews_and_icon(ob, category, fid):
     os.makedirs(tmp, exist_ok=True)
     icon = os.path.join(ICON_DIR, category, fid + "_icon.png")
     # icon pose: hilt bottom-left, tip top-right
-    _render(icon, ob, (0, 45, 0))
+    line = OUTLINE.get(category, I.OUTLINE_PX)
+    _render(icon, ob, (0, 45, 0), outline=line)
     side = os.path.join(tmp, "side.png")
-    _render(side, ob, (0, 45, 90))
+    _render(side, ob, (0, 45, 90), outline=line)
     back = os.path.join(tmp, "back.png")
-    _render(back, ob, (0, 45, 180))
+    _render(back, ob, (0, 45, 180), outline=line)
     ob.rotation_euler = (0, 0, 0)
     preview = os.path.join(PREVIEW_DIR, category, fid + "_preview.png")
     I.make_sheet([icon, side, back], preview, cols=3, cell=256)

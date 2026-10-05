@@ -5,7 +5,15 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
-- 03:05 PART C - SWORD category done and pushed (12/96). Pipeline `tools/blender/fyd_weapons.py`
+- 02:59 PART C - SPEAR category done and pushed (24/96). Builders `tools/blender/fyd_weapon_spears.py`
+  (shared shaft/socket/ring/butt-cap/grip-wrap parts, 8 studs = 2.24 m, 694-1256 tris). Each spear
+  checked on its preview; fixes: leaf head rebuilt (was a sliver), thicker shaft + 8 px outline so
+  the long thin icons stay readable, Desert needle, Swamp head, Volcano lava rings, Hell crescent
+  halberd, Heaven wider blade, Void rebuilt (faceted crystal blade + orbit ring). Lineup
+  `Previews/Weapons/Spear_lineup.png`. Icons uploaded, ids added to `Config/Weapons.luau` ICONS.
+  Next: Heavy (`fyd_weapon_heavy.py`, 5 studs).
+
+- 02:49 PART C - SWORD category done and pushed (12/96). Pipeline `tools/blender/fyd_weapons.py`
   (build -> join -> triangulate -> Smart UV -> Cycles EMIT bakes of color/metalness/roughness 512 px
   packed -> 3-angle preview -> .blend -> FBX (Y up, meters, textures embedded) -> icon -> manifest).
   Pilot 01_plains_sword checked first (FBX re-import: 1.26 m, upright, 3 textures). Convention in
@@ -56,6 +64,8 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 - Admins skip arena/combat/cooldown checks but NOT the unlock checks (so the owner can test locked
   states with an admin account; `lockAll` / `unlockZone` / `unlockAll` change the unlocks).
 - Hub portals now open the teleport menu on their zone instead of teleporting directly (brief).
+- Weapon icon outline width is per category (Sword 14 px, Spear 8, Heavy 11, Dagger 14, Gauntlet 14,
+  Ranged 9, Magic 9, Whip 10): a 14 px outline swallowed the thin spear shafts at 512 px.
 
 ## Problems
 
