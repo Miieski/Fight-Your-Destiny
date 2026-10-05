@@ -1,0 +1,60 @@
+{
+ "id": "plains_pet1",
+ "rig": "Quadruped",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.002,
+  0.472,
+  0.034
+ ],
+ "rootSize": [
+  0.52,
+  0.95,
+  0.912
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.282,
+    0.085
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.423,
+    -0.085
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.338,
+    0.338
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 580,
+ "colors": [
+  "#e8a3a3",
+  "#f6c8c8",
+  "#121016",
+  "#f4f4f4",
+  "#2a2026",
+  "#f4a0a8",
+  "#f6efdc",
+  "#c07070"
+ ]
+}

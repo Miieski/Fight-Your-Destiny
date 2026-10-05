@@ -1,0 +1,49 @@
+{
+ "id": "desert_pet5",
+ "rig": "Insect",
+ "role": "pet",
+ "size": 0.8075,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.393,
+  -0.118
+ ],
+ "rootSize": [
+  1.041,
+  0.808,
+  1.073
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.341,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.406,
+    -0.244
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 388,
+ "colors": [
+  "#1fa59a",
+  "#15736b",
+  "#e2b04a",
+  "#1b948a",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8"
+ ]
+}

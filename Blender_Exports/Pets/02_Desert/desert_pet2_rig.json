@@ -1,0 +1,70 @@
+{
+ "id": "desert_pet2",
+ "rig": "Arachnid",
+ "role": "pet",
+ "size": 0.9025,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.44,
+  -0.095
+ ],
+ "rootSize": [
+  1.131,
+  0.902,
+  1.303
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.358,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -0.299,
+    0.384,
+    -0.256
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    0.299,
+    0.384,
+    -0.256
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.384,
+    0.341
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 462,
+ "colors": [
+  "#e0a030",
+  "#9c7021",
+  "#d4982d",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8",
+  "#c9902b",
+  "#7a3e16"
+ ]
+}

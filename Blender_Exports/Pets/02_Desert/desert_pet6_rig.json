@@ -1,0 +1,47 @@
+{
+ "id": "desert_pet6",
+ "rig": "Serpent",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.475,
+  -0.012
+ ],
+ "rootSize": [
+  0.985,
+  0.95,
+  0.94
+ ],
+ "parts": [
+  {
+   "name": "Seg1",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.175,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Seg1",
+   "joint": [
+    0.0,
+    0.568,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 528,
+ "colors": [
+  "#8a5a33",
+  "#d9b77a",
+  "#121016",
+  "#f4f4f4",
+  "#d23a4a"
+ ]
+}

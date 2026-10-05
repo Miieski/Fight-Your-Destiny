@@ -5,6 +5,13 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 22:48 PET MODELS (24, zones 1-4) done and pushed: chibi pets after reference 2 (big head, big glossy eyes with a
+  highlight, blush, simple faceted shapes), 0.6-1.05 studs, 292-656 triangles, 2-6 parts (Idle clip only):
+  Boar Piglet, Wolf Pup, Baby Bear, Seagull Chick, Crab Buddy, Spider Hatchling, Jackal Pup, Scorpion Cub, Baby Croc,
+  Desert Eaglet, Scarab Beetle, Sand Snake, Monkey, Jaguar Cub, Frog Prince (crown), Piranha Pal, Green Viper, Totem
+  Spirit (glowing mask), Snow Owl, Arctic Fox, Polar Bear Cub, Baby Yeti, Ice Eaglet (ice crystal), White Wolf Pup.
+  Ids = Config/Pets slot ids (plains_pet1...); after import they go to ReplicatedStorage.Assets.Pets.<id> and replace
+  the procedural pets of the menu task. Lineups `Previews/Pets/<NN_Zone>/`.
 - 22:36 MODELS ZONE 4 (TUNDRA) done and pushed: 11 mobs (white wolf, arctic fox with a huge tail, cursed snowman
   with glowing purple coal eyes, top hat and stick arms, ice spirit, polar bear, swordfish with sail fin, yeti with
   a blue face, furious ibex with curved horns, ice eagle, ice knight with kite shield, frost golem with blue crystals

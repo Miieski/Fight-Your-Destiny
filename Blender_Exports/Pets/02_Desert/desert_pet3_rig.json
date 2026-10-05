@@ -1,0 +1,59 @@
+{
+ "id": "desert_pet3",
+ "rig": "Quadruped",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.002,
+  0.471,
+  0.054
+ ],
+ "rootSize": [
+  0.586,
+  0.95,
+  1.358
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.319,
+    0.096
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.478,
+    -0.096
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.382,
+    0.382
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 548,
+ "colors": [
+  "#5e8a3a",
+  "#c9d98a",
+  "#121016",
+  "#f4f4f4",
+  "#2a2026",
+  "#f4a0a8",
+  "#ffffff"
+ ]
+}

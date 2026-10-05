@@ -1,0 +1,90 @@
+{
+ "id": "tundra_pet5",
+ "rig": "Bird",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.467,
+  0.012
+ ],
+ "rootSize": [
+  0.645,
+  0.95,
+  0.827
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.274,
+    0.03
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.456,
+    -0.03
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingL",
+   "parent": "Body",
+   "joint": [
+    -0.231,
+    0.334,
+    0.03
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingR",
+   "parent": "Body",
+   "joint": [
+    0.231,
+    0.334,
+    0.03
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.304,
+    0.255
+   ],
+   "glow": false
+  },
+  {
+   "name": "Crystal_Glow",
+   "parent": "Head",
+   "joint": [
+    0.0,
+    0.821,
+    -0.055
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 406,
+ "colors": [
+  "#7cc8ee",
+  "#e8f0f8",
+  "#f0d060",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8",
+  "#69aaca",
+  "#9ae4ff"
+ ]
+}

@@ -1,0 +1,67 @@
+{
+ "id": "tundra_pet4",
+ "rig": "Biped",
+ "role": "pet",
+ "size": 1.045,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.522,
+  -0.037
+ ],
+ "rootSize": [
+  0.655,
+  1.045,
+  0.596
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.229,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    0.457,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.196,
+    0.379,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.196,
+    0.379,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 444,
+ "colors": [
+  "#e8f0f8",
+  "#7cc8ee",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8"
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "id": "jungle_pet5",
+ "rig": "Serpent",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.475,
+  -0.012
+ ],
+ "rootSize": [
+  0.98,
+  0.95,
+  0.935
+ ],
+ "parts": [
+  {
+   "name": "Seg1",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.174,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Seg1",
+   "joint": [
+    0.0,
+    0.566,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 528,
+ "colors": [
+  "#9ad94a",
+  "#2e8b3a",
+  "#121016",
+  "#f4f4f4",
+  "#d23a4a"
+ ]
+}

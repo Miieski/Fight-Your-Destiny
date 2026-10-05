@@ -1,0 +1,67 @@
+{
+ "id": "jungle_pet1",
+ "rig": "Biped",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.475,
+  0.039
+ ],
+ "rootSize": [
+  0.674,
+  0.95,
+  0.765
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.234,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    0.468,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.201,
+    0.388,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.201,
+    0.388,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 504,
+ "colors": [
+  "#8a5a33",
+  "#e8c9a0",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8"
+ ]
+}

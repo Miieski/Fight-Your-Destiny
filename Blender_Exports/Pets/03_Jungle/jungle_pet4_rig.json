@@ -1,0 +1,70 @@
+{
+ "id": "jungle_pet4",
+ "rig": "Fish",
+ "role": "pet",
+ "size": 0.855,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.428,
+  0.13
+ ],
+ "rootSize": [
+  0.837,
+  0.855,
+  1.071
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.398,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.398,
+    0.334
+   ],
+   "glow": false
+  },
+  {
+   "name": "FinL",
+   "parent": "Body",
+   "joint": [
+    -0.239,
+    0.334,
+    -0.04
+   ],
+   "glow": false
+  },
+  {
+   "name": "FinR",
+   "parent": "Body",
+   "joint": [
+    0.239,
+    0.334,
+    -0.04
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 292,
+ "colors": [
+  "#c0392b",
+  "#9aa0a8",
+  "#992d22",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8",
+  "#ffffff",
+  "#a33024"
+ ]
+}

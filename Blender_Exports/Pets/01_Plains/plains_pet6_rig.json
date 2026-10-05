@@ -1,0 +1,50 @@
+{
+ "id": "plains_pet6",
+ "rig": "Arachnid",
+ "role": "pet",
+ "size": 0.8075,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.392,
+  0.084
+ ],
+ "rootSize": [
+  1.101,
+  0.808,
+  1.294
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.361,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Abdomen",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.43,
+    0.215
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 540,
+ "colors": [
+  "#3a3036",
+  "#282125",
+  "#372d33",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8",
+  "#2a2026",
+  "#b04a4a"
+ ]
+}

@@ -1,0 +1,59 @@
+{
+ "id": "plains_pet5",
+ "rig": "Crustacean",
+ "role": "pet",
+ "size": 0.855,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.415,
+  -0.165
+ ],
+ "rootSize": [
+  1.226,
+  0.855,
+  1.287
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.388,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -0.324,
+    0.416,
+    -0.277
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    0.324,
+    0.416,
+    -0.277
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 432,
+ "colors": [
+  "#e0503a",
+  "#9c3828",
+  "#d44c37",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8",
+  "#c94834"
+ ]
+}

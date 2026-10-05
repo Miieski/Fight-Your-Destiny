@@ -1,0 +1,79 @@
+{
+ "id": "desert_pet4",
+ "rig": "Bird",
+ "role": "pet",
+ "size": 0.95,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  0.466,
+  0.014
+ ],
+ "rootSize": [
+  0.742,
+  0.95,
+  0.951
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.315,
+    0.035
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.525,
+    -0.035
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingL",
+   "parent": "Body",
+   "joint": [
+    -0.266,
+    0.385,
+    0.035
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingR",
+   "parent": "Body",
+   "joint": [
+    0.266,
+    0.385,
+    0.035
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.35,
+    0.294
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 400,
+ "colors": [
+  "#8a5a33",
+  "#f2e2c0",
+  "#f0c040",
+  "#121016",
+  "#f4f4f4",
+  "#f4a0a8",
+  "#754c2b"
+ ]
+}
