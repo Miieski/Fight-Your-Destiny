@@ -134,10 +134,7 @@ big, semi-transparent and movable in settings (position + size).
 | Crit Chance | `Crit` | 5% | chance for x2 damage |
 | Gold Gain | `GoldGain` | +0% | % bonus to Gold earned |
 
-### Stats window (was "Training"; renamed by the owner on 2026-10-05)
-* The **Stats** window holds the whole RPG system: the stats above (HP, Attack, Defense, Speed,
-  Crit, Gold Gain), their upgrades, and the derived stats (final HP with armor, damage per hit,
-  damage reduction, crit, Zone Boost, rebirth multiplier...).
+### Upgrade menu ("Training")
 * Opened from the HUD and from a trainer NPC in the hub. Each stat is bought with **Gold**
   level by level (max 100 levels each).
 * Cost: `100 x 10^(zone - 1) x 1.15^level`, where `zone` is the highest zone the player has
@@ -325,7 +322,9 @@ The hub is the central safe area (no combat). Players spawn here on join.
 * **Trophy Merchant:** sells head trophies.
 * **Rebirth Altar** and **Rebirth Shop.**
 * **Diamond Shop:** Robux packs, boosts, skins, game passes.
-* **Zone Portals:** one per zone, grayed out when locked (shows requirements).
+* **Zone Portals:** one per zone, grayed out when locked (shows requirements). Walking into an
+  unlocked portal teleports the player **directly to sub-zone 1** of that zone (no sub-zone
+  choice; the Zones menu in the HUD is where a sub-zone is chosen).
 * **AFK Zone**, **Team Board**, **Leaderboards**, **Codes** board and the **Tutorial guide** NPC.
 * **No player bases / plots in this game.**
 
@@ -385,7 +384,7 @@ src/StarterPlayer/StarterPlayerScripts/GameClient/
 `DataService` (profile, DataStore, session lock, autosave 90 s) - `StatsService` (derived stats) -
 `CombatService` (player attacks, roll, block, validation) - `EnemyService` (spawn, AI, damage
 tracking, drops) - `BossService` (arenas, groups, patterns, rewards) - `ZoneService` (unlocks,
-gates, teleports, death respawn) - `ShopService` (weapons, stat upgrades, premium eggs, rerolls) -
+gates, teleports, death respawn) - `ShopService` (weapons, training, premium eggs, rerolls) -
 `LootService` (drops, trophies) - `PetService` - `ArmorService` - `RebirthService` -
 `RewardService` (daily, playtime, quests, codes, boosts, AFK/offline) - `LeaderboardService` -
 `TeamService` - `MarketService` (Robux products) - `TutorialService` - `AdminService`.
@@ -426,10 +425,7 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Quests = { Day = 0, List = {} },
   Codes = {},
   Skins = {}, EquippedSkin = nil,
-  Settings = {},                       -- keys, types, ranges and defaults: Config/Settings.luau
-                                       -- (6 volumes 0-100, LowFx, DamageNumbers, ScreenShake,
-                                       -- ShakeIntensity, UiScale 0.8-1.2, HighContrastTelegraphs,
-                                       -- CameraZoom, AutoAttack, ButtonLayout = { [Attack|Roll|Block] = { X, Y, Size } })
+  Settings = { Music = true, Sfx = true, LowFx = false, ButtonLayout = {} },
   Stats_Lifetime = { TotalGold = 0, TotalDamage = 0, BossKills = 0, EnemyKills = 0, PlaySeconds = 0 },
   PityCounter = 0,                     -- weapon shop pity
   LastOnline = 0,
@@ -526,6 +522,10 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
 * `zone_design_document.txt`: no player bases; the hub is the only safe area; art direction is
   **low-poly fantasy** (palette per zone stays).
 * `HANDOFF.md`: Rebirth now resets weapons and keeps keys and diamonds (see section 4).
+* Player stats (section 3) are replaced by **Elden Ring-style Attributes** (Vigor, Mind, Endurance,
+  Strength, Dexterity, Intelligence, Faith, Arcane); full rules in `docs/menu_systems_brief.txt`.
+  The profile field `Stats` becomes `Attributes`.
+* Armor is equipped from the **Inventory -> Equipment** tab (character view with slots around it).
 
 ## 16. Open questions (defaults used until confirmed)
 

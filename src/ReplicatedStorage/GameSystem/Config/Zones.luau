@@ -57,7 +57,7 @@ end
 Zones.TELEPORT = {
 	Cooldown = 3, -- between two menu teleports
 	CombatSeconds = 5, -- no teleport within this time after taking damage
-	PortalReopen = 4, -- a hub portal re-opens the Zones window at most this often
+	PortalRetry = 2, -- a refused hub portal (locked zone) tries again / shows its toast at most this often
 }
 
 -- Zones whose world is not built yet: the teleport menu shows them as "Coming soon".

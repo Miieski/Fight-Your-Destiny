@@ -1,0 +1,369 @@
+=====================================================================
+ FIGHT YOUR DESTINY - MENU SYSTEMS BRIEF (long task)
+ Portals rule, Attributes (Elden Ring style), Eggs & Pets, Armor & Equipment, remaining buttons
+=====================================================================
+Every decision is made in this document. If something seems missing, apply the closest rule
+written here, log it in docs/NIGHT_LOG.md, and continue. Do not stop to ask.
+
+READ FIRST: DESIGN.md (all), HANDOFF.md (section 3b), docs/weapon_system_document.txt,
+docs/enemy_database.txt, docs/ui_hud_brief.txt, docs/ui_redo_teleport_brief.txt,
+docs/weapon_shop_brief.txt.
+
+RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite).
+2. Commit and push to https://github.com/Miieski/Fight-Your-Destiny (main) after EACH part
+   (section 1, A, B, C, D1... D5). Check with `git status` that no .rbxl/.rbxm/backup is staged.
+3. Update docs/NIGHT_LOG.md after every finished item (usage limits can stop the work); a part is
+   finished only when its acceptance checks pass.
+4. Server authoritative: all costs, rolls, caps, ownership, rewards are decided on the server.
+   The client only displays and sends requests. Validate every request (types, ranges, ownership,
+   rate limit). All numbers live in Config modules, never hard-coded in UI or gameplay scripts.
+5. Mobile first (touch targets >= 44 px, nothing overlapping Roblox's UI). Style: fantasy wood UI
+   with 3D icons (docs/ui_redo_teleport_brief.txt). All big numbers use Format (K, M, B, T, Qa).
+6. No combat code, no enemy/boss models, no map changes in this task. Test data comes from admin
+   commands (section 8). Keep Studio open and visible.
+7. If a step fails twice: log it, skip to the next item, continue.
+
+---------------------------------------------------------------------
+ 1. PORTAL RULE (do this first, small)
+---------------------------------------------------------------------
+ - Walking into a hub portal `workspace.Hub.Portals.Portal_<ZoneId>` teleports the player
+   **directly to the Entrance of sub-zone 1 of that zone**:
+   `workspace.Zones.<ZoneId>.<ZoneId>_1.Entrance`. There is NO sub-zone choice when using a portal.
+ - The Zones menu (HUD) is the only place where a sub-zone can be chosen (it keeps its 2 pages).
+ - If the zone is locked: no teleport; show a toast with the requirements (DESIGN.md section 4:
+   key of the previous boss, Rebirth count, previous zone redone). A locked portal looks grayed
+   with a lock icon and a billboard "Locked".
+ - Server: Request `Net.request("UsePortal", zoneId)` (touch triggers it on the client, the
+   server validates zone unlocked, cooldown 3 s, not in a boss arena, no damage taken in the
+   last 5 s). Admin bypasses. Same fade transition and sound as the Zones menu.
+ - Zones not built yet: portal shows "Coming soon" and does nothing.
+
+=====================================================================
+ PART A - TRAINING WINDOW: ATTRIBUTES (Elden Ring style)
+=====================================================================
+Replaces the 6 "stats" of DESIGN.md section 3. Profile field `Stats` becomes
+`Attributes = { Vigor=0, Mind=0, Endurance=0, Strength=0, Dexterity=0, Intelligence=0,
+Faith=0, Arcane=0 }` (each is the number of points bought). All config in
+`Config/Attributes.luau`; all derived numbers in the shared `Util/Stats.compute` (server and
+client identical).
+
+A1. RULES
+ - 8 attributes, each 0..40 points. Points are bought with **Gold**, one at a time (no XP, no level).
+ - **Soft cap like Elden Ring:** effective points `Peff(p) = min(p, 20) + 0.5 x max(0, p - 20)`
+   (so 40 points = 30 effective points).
+ - **Total points** `L` = sum of all 8 attributes (max 320). Shown as "Attribute Level: L".
+ - Cost of the next point: `PointCost(L, Z) = round(100 x 10^(Z-1) x (1 + L/10)^1.5)`
+   where Z = highest zone unlocked (1..12). Examples: Z1: L0 -> 100, L10 -> 283, L100 -> 3,648,
+   L319 -> 18,870 (multiplied by 10 for each higher zone).
+ - **Rebirth:** all points reset to 0 at Rebirth (DESIGN.md section 4). Each Rebirth makes every
+   per-point effect stronger: `RebirthPower = 1 + 0.25 x Rebirths`. It multiplies the per-point values
+   below EXCEPT the hard-capped values (hard caps are absolute).
+ - **Respec:** a button resets all points to 0 (Gold is NOT refunded). Cost = `5 + 2 x Z` Diamonds,
+   with a confirmation popup.
+
+A2. EFFECTS PER EFFECTIVE POINT (before RebirthPower; values apply to Peff)
+ | Attribute | Effects |
+ |---|---|
+ | Vigor | Max HP +4% ; HP regeneration out of combat +0.05% of Max HP per second (starts 5 s after the last damage) |
+ | Mind | Gold Gain +2.5% ; Roll cooldown -0.7% (base 1.5 s, hard floor 0.6 s) |
+ | Endurance | Defense +1.0 point ; Block reduction +0.5 percentage points (base 60%, hard cap 85%) ; Move speed +0.4% (hard cap +40% in total with pets) |
+ | Strength | Weapon damage scaling (A3) |
+ | Dexterity | Weapon damage scaling (A3) ; Attack speed +0.3% (hard cap +15%) |
+ | Intelligence | Weapon damage scaling (A3) ; Element proc chance +0.4 percentage points (hard cap +16 pp) ; Magic area radius +0.5% (hard cap +25%) |
+ | Faith | Pet bonus effectiveness +1.2% ; Lifesteal and healing effects +1.5% |
+ | Arcane | Crit chance +0.25 percentage points (base 5%, hard cap 60%) ; Crit damage +1.5% (base x2.0) ; Loot drop chance +0.5% (multiplicative on base chances) |
+
+A3. WEAPON DAMAGE SCALING (by weapon category, like Elden Ring)
+ `AttributeDamageMult = 1 + 0.03 x RebirthPower x sum( weight_attr x Peff_attr )`
+ | Category | Strength | Dexterity | Intelligence | Arcane | Grade shown in UI |
+ |---|---|---|---|---|---|
+ | Sword | 0.6 | 0.6 | - | - | B / B |
+ | Spear | 0.5 | 0.7 | - | - | B / A |
+ | Heavy | 1.2 | - | - | - | S |
+ | Dagger | - | 0.8 | - | 0.4 | A / C |
+ | Gauntlet | 0.7 | 0.5 | - | - | A / B |
+ | Ranged | - | 1.2 | - | - | S |
+ | Magic | - | - | 1.2 | - | S |
+ | Whip & Chain | - | 0.6 | - | 0.6 | B / B |
+ Grade letters from the weight: >= 1.0 S, 0.7-0.99 A, 0.5-0.69 B, 0.3-0.49 C, below D.
+ Faith has no damage scaling; Vigor/Mind/Endurance have none either.
+
+A4. HOW THE PIECES COMBINE (put this exactly in `Util/Stats.compute`)
+ - MaxHP = (100 + sum of armor HP) x (1 + 0.04 x RP x Peff_Vigor + petHP% + 0.10 x HealthBoostLevel
+           + setBonus 0.10) ; armor HP already includes its Zone Boost.
+ - DefensePoints = (sum of armor Defense + 1.0 x RP x Peff_Endurance) x (1 + petDefense%)
+ - DamagePerHit = weaponDamage(zone base x category x rarity x (1 + ZoneBoost)) x AttributeDamageMult
+                  x (1 + petAttack% + 0.10 x DamageBoostLevel) x (crit ? CritDamage : 1)
+ - Damage taken = raw x (1 - blockReduction if blocking) x (1 - Def / (Def + 100))
+ - Gold gain multiplier = (1 + 0.025 x RP x Peff_Mind + petGold% + 0.10 x GoldBoostLevel + boosts)
+                          x (1 + sum of Rebirth multiplier bonuses)
+ - Pet percentages are multiplied by `(1 + 0.012 x RP x Peff_Faith)` before use.
+ - Apply every hard cap listed in A2 at the end.
+ Write a test script (admin command `runStatsTests`) with 5 sample profiles and expected results.
+
+A5. THE WINDOW ("Training" button), inspired by the Elden Ring status screen
+ - Wood-fantasy panel. Header "Attributes", "Attribute Level: L / 320", Gold available.
+ - **Left: 8 rows** (3D icon, name, current points big, a bar up to 40 with a visible marker at the soft
+   cap 20, [-] and [+] buttons). [+] adds a PENDING point (cost shown), [-] removes only pending points.
+   Pending values show as `12 -> 15` in green. Hold [+]/[-] to repeat. Tap/hold an attribute name for a
+   tooltip listing its effects.
+ - **Right: "Status" list** with `before -> after` (green when better): Max HP, HP regen, Defense and
+   damage reduction %, Block reduction, Move speed, Roll cooldown, Attack speed, Gold gain, Crit chance,
+   Crit damage, Loot luck, Element proc, Magic radius, Pet effectiveness, Lifesteal/heal. Below it:
+   "Equipped weapon": damage per hit before -> after (Zone Boost included) and the scaling grades.
+ - **Bottom:** `Confirm (N Gold)` (disabled if not enough Gold, with a "Not enough Gold" toast),
+   `Reset pending`, `Respec (X Diamonds)` with confirm popup.
+ - Server: `Net.request("TrainAttributes", { Vigor = 2, ... })` -> validates keys, integers >= 0, caps,
+   total cost (computed point by point), Gold >= cost, charges and applies atomically, saves, replies.
+   `Net.request("RespecAttributes")` -> validates Diamonds, resets.
+
+=====================================================================
+ PART B - EGGS & PETS
+=====================================================================
+B1. EGGS
+ - An egg item = `{ uid, zone = 1..12, rarity = 1..8 }`. Eggs come from enemy loot (loot system built
+   later; here use admin `giveEgg`). Zone egg looks: one egg model per zone (12), a recolored egg with a
+   pattern fitting the zone, plus a rarity glow ring.
+ - Hatch location: **Egg Station in the hub** (and the Pets window has a "Hatch" tab that opens the same
+   hatch screen from anywhere). Hatching a loot egg is free.
+ - Result: a random pet from that zone's pool of 6 species (uniform) with **the egg's rarity**
+   (guaranteed). Rebirth Shop `EggLuck`: after the rarity is decided, with probability `5% x level` the
+   pet is one tier rarer (max Secret).
+ - **Premium eggs** (Shop -> Diamonds tab and Egg Station): price `10 + 4 x zone` Diamonds, per zone
+   (Z1 14 ... Z12 58). Rarity random with the weapon odds table (50, 28, 13, 6, 2.2, 0.7, 0.09, 0.01 %),
+   same EggLuck rule. Only zones the player has unlocked can be bought; locked zones show the black
+   silhouette with "?" like the weapon shop.
+ - Storage: max 30 eggs. If an egg drops while full, it is auto-sold for
+   `rarityMult x 100 x 10^(zone-1)` Gold (rarityMult from weapon doc) with a toast.
+ - Hatch screen: egg appears, wobbles (speeds up), cracks, bursts; the pet pops out with name,
+   species, rarity banner (reuse the rarity effect levels of the case opening), its stats and bonus.
+   Buttons: Equip (if a slot is free), Hatch next, Close. "Hatch All" hatches every egg at once with a
+   summary grid. A Fast mode follows the Settings "Fast open".
+ - Eggs are lost on Rebirth.
+
+B2. PETS
+ - A pet = `{ uid, id (species), rarity = 1..8, premium = false }`.
+ - **Stats:** each species has 2 **main stats** and 1 **unique bonus**. Main stat value by rarity
+   (applies to each of its two main stats):
+   Common +2% | Uncommon +4% | Rare +7% | Epic +11% | Legendary +16% | Mythic +23% | Divine +32% | Secret +45%.
+   Stat meaning: Gold = Gold Gain % ; HP = Max HP % ; Attack = damage % ; Speed = move speed % (shares
+   the +40% hard cap) ; Defense = Defense points %.
+   Unique bonus value = **25% of the rarity's main value** (Legendary 4%, Secret 11.25%).
+ - **Faith** multiplies all pet values (A4).
+ - **Unique bonus types:** Trophy Value (+% Gold when selling trophies) | Crit Damage (+%) |
+   Regeneration (+value x 0.05% Max HP per second) | Boss Slayer (+% damage to mini-bosses and bosses) |
+   Loot Luck (+% loot drop chance, multiplicative) | Diamond Luck (+% relative diamond drop chance).
+ - **Slots:** 3 equipped pets by default; the Extra Pet Slots game pass adds 2 (max 5). Max 3 pets
+   FOLLOW the player visually (the first 3 equipped); all equipped pets give their stats.
+ - Storage: 60 pets. Release (sell) a pet for `rarityMult x 150 x 10^(zone-1)` Gold. A locked pet cannot
+   be released. If storage is full, hatching is blocked with a toast.
+ - **Rebirth:** all pets are lost EXCEPT premium pets (bought with Robux).
+
+B3. THE 72 SPECIES (6 per zone, fixed slot order = fixed stats and bonus)
+ Slot roles (the same in every zone):
+   1 Fortune   : Gold + HP        | bonus Trophy Value
+   2 Hunter    : Attack + Speed   | bonus Crit Damage
+   3 Guardian  : HP + Defense     | bonus Regeneration
+   4 Berserker : Attack + Defense | bonus Boss Slayer
+   5 Scout     : Speed + Gold     | bonus Loot Luck
+   6 Lucky     : Attack + Gold    | bonus Diamond Luck
+ Species per zone, in slot order 1..6 (ids = `<zone lower>_pet<slot>`, for example `plains_pet1`):
+  1 Plains    : Boar Piglet, Wolf Pup, Baby Bear, Seagull Chick, Crab Buddy, Spider Hatchling
+  2 Desert    : Jackal Pup, Scorpion Cub, Baby Croc, Desert Eaglet, Scarab Beetle, Sand Snake
+  3 Jungle    : Monkey, Jaguar Cub, Frog Prince, Piranha Pal, Green Viper, Totem Spirit
+  4 Tundra    : Snow Owl, Arctic Fox, Polar Bear Cub, Baby Yeti, Ice Eaglet, White Wolf Pup
+  5 Swamp     : Leech Buddy, Black Kitten, Mud Golemite, Baby Treant, Crow, Little Wisp
+  6 Volcano   : Ash Lizard, Fire Bat, Rock Worm, Lava Crab, Salamander, Ember Sprite
+  7 Hell      : Cinder Imp, Hellhound Pup, Baby Gargoyle, Flame Skull, Infernal Kitten, Brimstone Beetle
+  8 Heaven    : Glowing Bird, Cherub, Baby Griffin, Celestial Fawn, Cloud Puff, Halo Bunny
+  9 Dead      : Little Ghost, Bone Rat, Mini Skeleton, Baby Ghoul, Grave Kitten, Spooky Bat
+ 10 Abyss     : Jellyfish, Baby Shark, Armor Crab, Octopus, Seahorse, Anglerfish
+ 11 Mechanical: Mini Drone, Robo Rat, Clockwork Spider, Slime Bot, Gear Cat, Laser Bot
+ 12 Void      : Shadow Wisp, Void Stalker Pup, Obsidian Golemite, Crystal Butterfly, Rift Cat, Baby Void Dragon
+ Premium pets (Robux only, not zone-bound, survive Rebirth, never come from eggs, fixed rarity):
+  `premium_dragonling` Golden Dragonling (Legendary): Gold + Attack, bonus Diamond Luck
+  `premium_phoenix`    Rainbow Phoenix  (Mythic):    HP + Speed,     bonus Regeneration
+  `premium_golem`      Diamond Golem    (Divine):    Defense + HP,   bonus Boss Slayer
+  `premium_kitsune`    Celestial Kitsune(Secret):    Attack + Gold,  bonus Loot Luck
+  Product ids go in `Config/Products.luau` (0 = hidden); provide `PetService.grantPremium(player, id)`.
+ Config: `Config/Pets.luau` (species, zone, slot, stats, bonus), `Config/PetRarities.luau`.
+
+B4. PET MODELS (no Blender needed)
+ - Build **7 low-poly body types** from parts or procedural generation (Quadruped, Bird, Blob,
+   Insect/Crab, Fish/Jelly, Small Biped, Mech/Robot); each species uses the closest body type with its
+   own palette, scale and accessories (horns, wings, antennas, flames...). Cute, chunky, ~0.6-1.2 studs tall.
+   Save at `ReplicatedStorage.Assets.Pets.<PetId>`; eggs at `Assets.Eggs.<zone lower>`.
+ - Zone palettes: use the zone's colors from docs/zone_design_document.txt.
+ - Icons for eggs/pets/armor are rendered live with ViewportFrame (cached), no PNG needed.
+ - Following: pets float/walk behind the owner with smoothing and a gentle bob, no collision,
+   client-side visuals; render other players' pets only within 80 studs, never more than 3 per player;
+   hide them when the Low FX setting is on and more than 10 players are nearby.
+
+B5. THE PETS WINDOW ("Pets" button)
+ - Tabs: **Pets** (grid, rarity borders, filter by zone and rarity, sort by rarity/zone/power), **Eggs**
+   (list of eggs, Hatch / Hatch All), **Premium Eggs** (buy with Diamonds).
+ - Detail panel: live 3D preview, name, species, zone, rarity, the two main stats and the bonus with
+   their current values (including Faith), buttons Equip/Unequip, Lock, Release (confirm popup).
+ - Top: the equipped pet slots (3, +2 if pass owned, extra slots shown locked with a lock icon).
+ - Button "Equip Best": picks the pets with the highest `powerScore` = Gold 1.0 + HP 1.0 + Attack 1.2 +
+   Speed 0.5 + Defense 1.0 (sum of the % values of its two main stats with those weights) + bonus x 0.5.
+ - Server requests: `HatchEgg(uid)`, `HatchAll`, `BuyPremiumEgg(zone)`, `EquipPet(uid)`, `UnequipPet(uid)`,
+   `LockPet(uid, bool)`, `ReleasePet(uid)`, `EquipBestPets`. All validated; hatching rolls on the server.
+
+=====================================================================
+ PART C - ARMOR & THE EQUIPMENT SCREEN
+=====================================================================
+C1. ARMOR RULES (36 pieces: Helmet, Chest, Legs for each of the 12 zones)
+ - Piece HP = `100 x 10^(zone-1) x slotShare x rarityMult` (slotShare Helmet 0.25, Chest 0.45, Legs 0.30);
+   Defense points = `3 x rarityTier`; Zone Boost (+5% ... +120%) applies to both while in the piece's zone.
+ - **Set bonus:** wearing all 3 pieces of the SAME zone gives +10% Max HP and +10% Zone Boost effectiveness.
+ - Ids: `<zone lower>_helmet`, `<zone lower>_chest`, `<zone lower>_legs`.
+ - Names (Helmet / Chest / Legs):
+   1 Plains: Ranger Helm / Ranger Chestplate / Ranger Greaves
+   2 Desert: Nomad Headwrap / Nomad Cuirass / Nomad Leggings
+   3 Jungle: Tribal Mask / Tribal Vest / Tribal Leg Wraps
+   4 Tundra: Frostguard Helm / Frostguard Plate / Frostguard Greaves
+   5 Swamp: Bogwitch Hat / Bogwitch Robe / Bog Waders
+   6 Volcano: Magma Helm / Magma Cuirass / Magma Greaves
+   7 Hell: Infernal Horned Helm / Infernal Plate / Infernal Greaves
+   8 Heaven: Radiant Halo Helm / Radiant Breastplate / Radiant Greaves
+   9 Dead: Deathbound Skull Helm / Deathbound Cuirass / Deathbound Greaves
+  10 Abyss: Coral Crown Helm / Tidal Scale Mail / Tidal Greaves
+  11 Mechanical: Cyber Visor / Cyber Chassis / Cyber Leg Servos
+  12 Void: Voidforged Helm / Voidforged Cuirass / Voidforged Greaves
+ - Armor item = `{ uid, id, rarity }` in `profile.Armor`; equipped in `profile.EquippedArmor =
+   { Helmet = uid, Chest = uid, Legs = uid }`. Storage 100. Sell value `rarityMult x 200 x 10^(zone-1)`
+   Gold; a locked piece cannot be sold. Armor comes from loot later (use admin `giveArmor` now).
+   Armor is lost on Rebirth. Equipping replaces the old piece (it returns to the inventory).
+ - Config: `Config/Armor.luau` (36 entries: id, name, zone, slot, palette).
+
+C2. WHERE IT LIVES: **HUD "Inventory" button -> first tab "Equipment"** (default tab). The other tabs:
+ Weapons, Armor, Pets (shortcut to the Pets window), Eggs, Trophies.
+
+C3. THE EQUIPMENT SCREEN (inspired by the reference image: character in the middle, slots around)
+ - Header: a wooden scroll banner with the **player's name** and Rebirth count, and a red X close button.
+ - **Center:** the player's **own avatar** (their Roblox skin) in a ViewportFrame on a round pedestal,
+   slow idle rotation, drag to rotate, tap to pause. Built from the player's HumanoidDescription.
+   The equipped armor is shown on the avatar.
+ - **Left column of slots:** Helmet (top), Chest (middle), Legs (bottom). **Right side:** the equipped
+   Weapon in a large slot, and under it the pet slots (3, +2 locked if no pass).
+ - Each slot: rarity-colored border and glow, live 3D icon of the item, a small "+HP" label, an info (i)
+   button. Tap a slot -> a picker list of compatible items from the inventory (sorted by zone and rarity)
+   with a **comparison tooltip** (green up arrow / red down arrow for HP and Defense), buttons Equip /
+   Unequip.
+ - **Bottom bar:** `Equip Best Armor` (score = pieceHP x (1 + Defense/100); computed with the Zone Boost of the
+   CURRENT zone), `Unequip All`.
+ - **Stats summary** panel (collapsible on phones): Max HP, Defense and damage reduction %, Zone Boost
+   status per slot, set bonus (e.g. "Plains set 2/3"), weapon damage per hit.
+ - Phones: the avatar and slots stay on one screen; the stats summary becomes a drawer.
+ - Server requests: `EquipArmor(uid)`, `UnequipArmor(slot)`, `EquipBestArmor`, `LockArmor(uid, bool)`,
+   `SellArmor(uid)`. All validated.
+
+C4. IN-WORLD ARMOR VISUALS (placeholders now, real models later)
+ - Equipped armor appears on the character as low-poly parts welded to the R15 body: helmet on the Head,
+   chest plate on UpperTorso (+ shoulder pieces), greaves on the UpperLeg/LowerLeg parts. Built
+   procedurally from simple shapes using the zone palette:
+   Plains steel gray + green leather | Desert sand + gold | Jungle green + brown + bone | Tundra icy blue +
+   white | Swamp murky green + purple | Volcano black + orange emissive | Hell dark red + black horns |
+   Heaven white + gold | Dead bone gray + green glow | Abyss teal + coral pink | Mechanical steel + orange
+   neon | Void obsidian + purple glow.
+ - Rarity: trim and glow lines use the rarity color; Epic and above get a subtle particle shimmer.
+ - Settings toggle "Show armor" (default on) hides the visuals but keeps the stats.
+ - Replicate to other players via attributes (EquippedArmor ids + rarities), built client-side; limit
+   the work for far players.
+ (Later task: model the 36 armor pieces in Blender and replace the procedural parts.)
+
+=====================================================================
+ PART D - THE OTHER MENU BUTTONS (do after A, B, C; if usage runs out, stop and log)
+=====================================================================
+D1. SHOP -> "Diamonds" tab (spend Diamonds; Robux packs are bought only in the hub)
+ - Premium Eggs (Part B, price 10 + 4 x zone).
+ - **Weapon Reroll:** pick a weapon from the inventory, pay `5 + 2 x zone` Diamonds, the server rolls a NEW
+   rarity (same odds, no pity), the case opening plays, and the new rarity REPLACES the old one only after
+   the player confirms ("Keep new" / "Keep old": if they keep the old one the Diamonds are still spent).
+ - **Gold Boost x2:** 15 min 25 Diamonds | 30 min 45 | 60 min 80. Stacking extends the time. HUD shows a timer.
+ - **Skins:** a "Coming soon" grid with locked silhouettes (no skins exist yet).
+ - A "Get Diamonds" button that says Robux packs are in the hub and offers a teleport to the hub.
+
+D2. REBIRTH SHOP (HUD button)
+ - Header: credits available. List of the 6 upgrades from DESIGN.md section 4 (Gold Boost, Damage Boost,
+   Loot Luck, Egg Luck, Health Boost, Diamond Luck), each with 3D icon, current level / max, effect text,
+   cost 1 credit per level, Buy button. `Net.request("BuyRebirthUpgrade", id)` validated on the server.
+   Effects feed `Util/Stats.compute`. Credits are granted by the Rebirth system (built later); test with
+   admin `setCredits`. Kept on Rebirth.
+
+D3. INDEX (collection)
+ - Tabs: Weapons (96) | Armor (36) | Pets (72 + 4 premium) | Enemies (132 + 24 mini-bosses + 12 bosses).
+   Grouped by zone. Undiscovered entries = black silhouette with "?" and no name. Discovered entries show
+   the 3D icon, name, and the **best rarity owned** as small colored pips. Completion % per tab and per zone.
+ - Discovery: weapon/armor/pet = when first owned (any rarity); enemy = first kill (use admin `discover` now).
+   Profile `Index[entryId] = bestRarity`. Kept on Rebirth.
+ - Rewards (claim button, once each): completing all entries of a ZONE in a tab gives Diamonds
+   `2 + zone`; completing a whole tab gives 100 Diamonds. Badge on the Index button when something is claimable.
+
+D4. QUESTS window (tabs: Quests | Daily Reward | Playtime Gifts | Codes)
+ - Let G = `2000 x 10^(Z-1)` Gold where Z = highest zone unlocked.
+ - **Daily quests:** 3 per day, same for everyone (deterministic by UTC day), reset at 00:00 UTC. Kinds (pool of 10):
+   kill 40 enemies | earn 20 G | open a sub-zone | hatch 2 eggs | buy 1 weapon | spend 10 G on attributes |
+   deal 500 x (zone damage unit) total damage | kill 1 mini-boss | beat a boss | collect 3 trophies.
+   Kinds that depend on systems not built yet still exist and progress via `RewardService.progress(player,
+   kind, n)` (called later). Reward per quest: Gold `3 x G` (or Diamonds 2 for the harder kinds). Completing
+   all 3 gives +5 Diamonds. Progress bar, claim button, red badge when claimable.
+ - **Daily Reward (7-day streak):** D1 Gold G | D2 Gold 2G | D3 5 Diamonds | D4 Gold 4G | D5 a premium egg of the
+   highest unlocked zone | D6 Gold Boost x2 (30 min) | D7 15 Diamonds + 8G. Missing a day restarts at D1.
+ - **Playtime Gifts** (minutes played today, resets 00:00 UTC): 5 min G | 10 min G | 20 min 2 Diamonds | 30 min 2G |
+   45 min Gold Boost x2 (15 min) | 60 min 3 Diamonds + 3G.
+ - **Codes:** input box + Redeem; server validates in `Config/Codes.luau` (uppercase, one use per player, optional
+   expiry). Ship 3 example codes: `WELCOME` (Gold 5G + 5 Diamonds), `DESTINY` (10 Diamonds), `BOSSKEY`
+   (Gold 10G); the owner can add more in the config.
+ - Server: `ClaimQuest(i)`, `ClaimDaily`, `ClaimGift(i)`, `RedeemCode(code)`; profile fields from DESIGN.md
+   section 11 (Quests.List stores Id, Progress, Claimed; Playtime.Claimed is an array of indices).
+
+D5. TEAM
+ - Teams live inside a server (not saved), max 5 players, one leader (crown icon).
+ - Window: your team members (avatar headshot, name, Rebirths, current zone), buttons Create Team, Leave, and for
+   the leader Kick and Disband. **Invite** tab: friends in this server first, then nearby players, with an Invite
+   button; the invited player gets a toast with Accept / Decline (expires after 30 s). Rate-limit invites.
+ - Teams are used by the boss gate later (`TeamService.getTeam(player)`); expose that API and a "party" display
+   (small member list on the HUD when in a team).
+ - Requests: `TeamCreate`, `TeamInvite(userId)`, `TeamRespond(inviteId, accept)`, `TeamLeave`, `TeamKick(userId)`,
+   `TeamDisband`. All validated on the server.
+
+=====================================================================
+ 7. DATA MODEL CHANGES (add to the profile, keep DESIGN.md section 11 otherwise)
+=====================================================================
+ Attributes = { Vigor, Mind, Endurance, Strength, Dexterity, Intelligence, Faith, Arcane } (replaces Stats)
+ Eggs = { [uid] = { zone, rarity } }       Pets = { [uid] = { id, rarity, premium, locked } }
+ EquippedPets = { uid, ... }               Armor = { [uid] = { id, rarity, locked } }
+ EquippedArmor = { Helmet, Chest, Legs }   RebirthCredits, RebirthUpgrades = { [id] = level }
+ Index = { [entryId] = bestRarity }        IndexClaimed = { [rewardId] = true }
+ Boosts = { [boostId] = expiresAt }        Settings.ShowArmor = true
+ Reset on Rebirth: Gold, Attributes, Weapons, Armor, Eggs, non-premium Pets, EquippedArmor/Pets of removed items.
+ Kept: Diamonds, Keys, premium pets, Index, Credits and Rebirth upgrades, boosts, settings, passes.
+ Use arrays (not sparse tables) for anything saved or sent by remote; item uids are GUIDs from the server.
+ Add the admin command `wipeForRebirth` that applies exactly this reset so the rules can be tested before the
+ Rebirth system exists.
+
+=====================================================================
+ 8. ADMIN TEST COMMANDS (owner only, checked on the server)
+=====================================================================
+ setGold, setDiamonds, setRebirths, setCredits, unlockZone, setPoints(attr, n), giveEgg(zone, rarity),
+ givePet(id, rarity), giveArmor(id, rarity), giveWeapon(id, rarity), giveBoost(id, seconds), discover(entryId),
+ forceRarity(rarity), wipeForRebirth, runStatsTests, simulateEggs(n), simulateQuests(day).
+
+=====================================================================
+ 9. ACCEPTANCE (check everything before reporting)
+=====================================================================
+ - Portal: every unlocked portal lands in sub-zone 1; locked ones refuse with the right toast.
+ - Stats: `runStatsTests` passes; `PointCost` matches the examples; soft cap and every hard cap enforced; a tampered
+   `TrainAttributes` request is rejected; Respec works; Rebirth reset via `wipeForRebirth` is correct.
+ - Eggs/pets: a 100,000-egg simulation matches the odds; EggLuck shifts rarity as specified; pet values and the Faith
+   multiplier are correct; storage limits and auto-sell work; premium pets survive `wipeForRebirth`, others do not.
+ - Armor: Equipment screen shows the player's avatar with armor; comparison tooltips correct; set bonus applies at 3/3
+   of one zone; Zone Boost applies only in the home zone; "Show armor" off hides visuals.
+ - Part D: each window works with admin data; rewards cannot be claimed twice; resets at 00:00 UTC are correct.
+ - Screenshots at desktop, phone and tablet sizes: Training, Pets (3 tabs), hatch screen, Equipment, Shop Diamonds,
+   Rebirth Shop, Index, Quests tabs, Team.
+ - No errors/warnings in the Output; no per-frame allocations in loops; ViewportFrames cached and cleaned up.
+ - FINAL REPORT (short): what is finished, what is not, the decisions taken, and anything I must do by hand.

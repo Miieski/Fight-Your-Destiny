@@ -16,6 +16,7 @@ local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
+local Fade = require(Kit.Fade)
 local Icons = require(Kit.Icons)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
@@ -26,9 +27,6 @@ local HUB = "Hub"
 local LIST_WIDTH = 0.44 -- share of the content width used by the zone list
 local ROW_HEIGHT = 72 -- design units (57 px on the smallest phone scale)
 local HEADER_HEIGHT = 60
-local FADE = TweenInfo.new(0.25, Enum.EasingStyle.Quad)
-local FADE_ORDER = 25 -- above the windows (20), below the toasts (30)
-local SETTLE_SECONDS = 0.35 -- wait for the character to arrive before fading back in
 
 type Row = { row: TextButton, stroke: UIStroke, gradient: UIGradient, icon: Frame, title: TextLabel, status: TextLabel, lock: Frame }
 type Card = { frame: Frame, stroke: UIStroke, iconSlot: Frame, icon: Frame?, title: TextLabel, status: TextLabel, button: any, boss: Frame }
@@ -42,7 +40,6 @@ local header: { icon: Frame, iconId: string?, title: TextLabel, info: TextLabel 
 local shownZone: string? = nil
 local pendingZone: string? = nil -- zone page to show once the window has opened (signals are deferred)
 local busy = false
-local fade: Frame? = nil
 
 -- data -----------------------------------------------------------------------------------------------
 local function iconFor(id: string): string
@@ -65,47 +62,19 @@ local function subZoneOpen(zoneId: string, n: number): boolean
 end
 
 -- fade + request --------------------------------------------------------------------------------------
-local function fadeFrame(): Frame
-	if fade then
-		return fade
-	end
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "TeleportFade"
-	gui.ResetOnSpawn = false
-	gui.ScreenInsets = Enum.ScreenInsets.None
-	gui.DisplayOrder = FADE_ORDER
-	local frame = Instance.new("Frame")
-	frame.BackgroundColor3 = Color3.new(0, 0, 0)
-	frame.BackgroundTransparency = 1
-	frame.Size = UDim2.fromScale(1, 1)
-	frame.Visible = false
-	frame.Parent = gui
-	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-	fade = frame
-	return frame
-end
-
 local function teleport(zoneId: string, n: number?)
 	if busy then
 		return
 	end
 	busy = true
-	local frame = fadeFrame()
-	frame.Visible = true
-	local out = TweenService:Create(frame, FADE, { BackgroundTransparency = 0 })
-	out:Play()
-	out.Completed:Wait()
+	Fade.cover()
 	local ok, message = Net.request("Teleport", zoneId, n)
 	if ok then
 		Sfx.play("PortalEnter")
 		Window.close()
-		task.wait(SETTLE_SECONDS)
 	end
-	local back = TweenService:Create(frame, FADE, { BackgroundTransparency = 1 })
-	back:Play()
 	Notifier.push({ Kind = if ok then "info" else "error", Text = tostring(message or "Teleport failed"), Icon = if ok then "Zones" else nil })
-	back.Completed:Wait()
-	frame.Visible = false
+	Fade.reveal(ok)
 	busy = false
 end
 

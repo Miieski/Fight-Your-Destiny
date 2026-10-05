@@ -219,3 +219,27 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   to the profile before the reply in both modes, so leaving mid-animation keeps it.
 - No weapon FBX imported yet: all 96 Tools are placeholders (list: every weapon). Owner: import, then run
   `require(game.ServerStorage.DevTools.WeaponTools).fromImport(folder)` (see Blender/Weapons/README.txt).
+
+# Menu systems task - 2026-10-05 (docs/menu_systems_brief.txt)
+
+## Status (newest first)
+
+- 12:43 SECTION 1 PORTAL RULE done and pushed. Hub portals: touch (client, Controllers/PortalController) ->
+  Net "UsePortal" -> server checks (zone unlocked, coming soon, boss arena, damage in the last 5 s, 3 s cooldown
+  shared with the Zones menu; admins skip arena/combat/cooldown) -> straight to the Entrance of sub-zone 1, with the
+  Zones-menu fade (new Kit/Fade, also used by ZonesPage) and the PortalEnter sound. Locked portals are gray with a
+  lock and a "Locked" sign for THIS player; a refused touch shows the requirements toast (at most every 2 s).
+  "Coming soon" sign for Zones.NOT_BUILT (empty today). Server portal Touched -> OpenWindow removed. Tested in Play:
+  Plains portal -> Plains_1, Desert locked -> toast "Desert locked: Needs the Golem key, 1 Rebirth and Plains
+  redone", Desert unlocked by admin -> portal colored again -> Desert_1. Also (owner request): the Zone Sign
+  setting is now OFF by default.
+  Next: Part A (Attributes).
+
+## Decisions taken without the owner
+
+- The menu button stays "Stats" (owner's rename of 2026-10-05); its window is the brief's "Training" Attributes
+  window, titled "Attributes".
+- The owner mentioned a reference image for the Equipment screen, but none was attached to the message: Part C
+  follows the brief's text (character in the middle, slots around) and docs/UI Fantesy like *.jpg.
+
+## Problems / missing

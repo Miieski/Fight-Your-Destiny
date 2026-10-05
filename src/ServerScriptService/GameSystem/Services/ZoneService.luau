@@ -25,7 +25,6 @@ local byId: { [string]: SubZone } = {}
 local lastTeleport: { [Player]: number } = {}
 local lastMenuTeleport: { [Player]: number } = {} -- teleport menu cooldown
 local lastDamage: { [Player]: number } = {} -- "in combat" = took damage recently
-local lastPortalOpen: { [Player]: number } = {}
 local arenas: { [Player]: Arena } = {}
 local usedSlots: { [number]: boolean } = {}
 
@@ -226,14 +225,9 @@ local function hookWorld()
 	for _, portal in ipairs(if portals then portals:GetChildren() else {}) do
 		local zoneId = portal:GetAttribute("ZoneId")
 		if portal:IsA("BasePart") and zoneId then
-			-- a hub portal opens the teleport menu on that zone (the player then picks a sub-zone)
-			portal.Touched:Connect(function(hit)
-				local player = Players:GetPlayerFromCharacter(hit.Parent)
-				if player and os.clock() - (lastPortalOpen[player] or -math.huge) > Zones.TELEPORT.PortalReopen then
-					lastPortalOpen[player] = os.clock()
-					Net.fire(player, "OpenWindow", "Zones", zoneId)
-				end
-			end)
+			-- docs/menu_systems_brief.txt section 1: a hub portal sends the player straight to sub-zone 1 of its
+			-- zone. The touch is detected on the client (Controllers/PortalController), which asks "UsePortal";
+			-- the server validates it below. The Zones menu is the only place to pick another sub-zone.
 		end
 	end
 	for _, subZone in ipairs(subZones) do
@@ -294,6 +288,47 @@ function ZoneService:Init()
 		ZoneService:ToHub(player)
 		return true
 	end, 2)
+
+	-- Hub portal: straight to the Entrance of sub-zone 1. Same rules as the Teleport menu (zone unlocked,
+	-- not in a boss arena, no damage in the last CombatSeconds, shared cooldown); admins skip the arena,
+	-- combat and cooldown checks, not the unlocks.
+	Net.handle("UsePortal", function(player: Player, zoneId: any)
+		local rules = Zones.TELEPORT
+		local admin = player:GetAttribute("IsAdmin") == true
+		local zone = if typeof(zoneId) == "string" then Zones.ById[zoneId] else nil
+		if not zone then
+			return false, "Bad request"
+		end
+		if Zones.NOT_BUILT[zone.Id] then
+			return false, `{zone.Name} is coming soon`
+		end
+		local profile = DataService:Get(player)
+		if not (profile and rootOf(player)) then
+			return false, "Not ready yet"
+		end
+		if zone.Index > 1 and not profile.Zones[zone.Id] then
+			return false, `{zone.Name} locked: {Zones.requirementText(zone.Id)}`
+		end
+		if not admin then
+			if arenas[player] then
+				return false, "Leave the boss arena first"
+			end
+			if os.clock() - (lastDamage[player] or -math.huge) < rules.CombatSeconds then
+				return false, "You can't teleport during a fight"
+			end
+			if os.clock() - (lastMenuTeleport[player] or -math.huge) < rules.Cooldown then
+				return false, "Teleport is recharging"
+			end
+		end
+		local subZone = byId[Zones.subZoneId(zone.Id, 1)]
+		if not (subZone and hasGround(subZone.entrance.Position)) then
+			return false, `{zone.Name} is not built yet`
+		end
+		lastMenuTeleport[player] = os.clock()
+		ZoneService:LeaveArena(player, true)
+		teleport(player, subZone.entrance.CFrame)
+		return true, `Welcome to {zone.Name}!`
+	end, 0.5)
 
 	-- Teleport menu: every request is validated here (unlocks, boss arena, combat, cooldown).
 	-- Admins skip the arena, combat and cooldown checks, not the unlocks.
@@ -391,7 +426,6 @@ function ZoneService:Init()
 		lastTeleport[player] = nil
 		lastMenuTeleport[player] = nil
 		lastDamage[player] = nil
-		lastPortalOpen[player] = nil
 	end)
 end
 

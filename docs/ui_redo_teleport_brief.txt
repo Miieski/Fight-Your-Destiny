@@ -66,7 +66,8 @@ UI KIT CHANGES
 ---------------------------------------------------------------------
  PART 2 - TELEPORT MENU
 ---------------------------------------------------------------------
-OPENING: a "Zones" button in the HUD menu bar (and the hub portals open the same window).
+OPENING: a "Zones" button in the HUD menu bar. (The physical hub portals do NOT open this window:
+they teleport straight to sub-zone 1 of their zone, see docs/menu_systems_brief.txt, section 1.)
 
 PAGE 1 - ZONES
  - A **scrollable vertical list on the left side** of the window with one row per zone: the 12 zones
