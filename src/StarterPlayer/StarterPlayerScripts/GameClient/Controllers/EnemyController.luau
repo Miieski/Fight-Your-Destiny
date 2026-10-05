@@ -451,7 +451,8 @@ function EnemyController:Start()
 			if checkBars and not entry.deadAt then
 				local hurt = (model:GetAttribute("HP") or 0) < (model:GetAttribute("MaxHP") or 0)
 				local near = myRoot ~= nil and (myRoot.Position - position).Magnitude <= BAR_RANGE + entry.root.Size.X / 2
-				entry.gui.Enabled = hurt or near or entry.def.Tier ~= "normal"
+				-- boss room enemies use the top-of-screen bars (UI/BossRoom) instead
+				entry.gui.Enabled = (hurt or near or entry.def.Tier ~= "normal") and not model:GetAttribute("ArenaKey")
 			end
 		end
 	end)

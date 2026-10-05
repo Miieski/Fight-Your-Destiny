@@ -439,6 +439,32 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 21:07 PART C (MINIMAL BOSS ROOMS, NO PATTERNS) done and pushed.
+  New `BossService` + `Config/Bosses`. BossGate of each sub-zone 4: prompts "Enter solo" (E) and "Enter with team"
+  (F / gamepad Y). Checks: zone and sub-zone 4 unlocked, within 30 studs of the gate, not already in a room, zones
+  1-4 only. Team: the leader starts, the members standing in sub-zone 4 come along (max 5); a member pressing the
+  gate during the 5 s lobby joins. Each group gets its own copy of ServerStorage.BossArenas.<Zone> (slots 600 studs
+  apart). Flow: lobby 5 s (door open, "Leave" prompt) -> door locks -> both mini-bosses -> boss with a 2 s intro
+  (invulnerable, roar, name banner) -> victory: rewards screen -> 15 s -> back at the sub-zone 4 Entrance, arena
+  destroyed. Boss HP x (1 + 0.6 x (players - 1)). Mini-boss heavy attack (1 s telegraph, x1.5, 6 s cooldown) in the
+  shared AI; boss basic attack 1 s telegraph / 3 s cooldown; `Bosses.Patterns = {}` per zone and
+  `BossService.OnEnrage(room, boss)` at 50% HP (sets Enraged + toast; empty hook for the next step). Death: -35%
+  Gold (ZoneService), spectator above the room until the end; everyone dead -> "Defeated", room closes after 4 s.
+  Rewards per player with >= 5% of the enemy's HP in damage, rolled separately: Gold x Gold multiplier, loot roll
+  (4% / 6% x Loot Luck), diamonds (mini 15%: 2+z / 3+z, boss 40%: 10+3z, chance x (1 + Diamond Luck)), first
+  victory: `profile.Keys[zone] = true`. Client `UI/BossRoom`: phase banners (countdown, "Mini-bosses!", boss name +
+  BossRoar, Victory / Defeated), top-of-screen HP bars of the room's enemies (world bars hidden there), rewards
+  screen with "Leave now". ZoneService no longer runs arenas (attributes ArenaKey / ArenaZone, wrappers for the old
+  calls); EnemyService lost its old StartArena.
+  Tests (Play, Plains, solo): gate E -> room; lobby countdown; Cave Troll 4K + Matriarch 5.6K, Golem 20K (x1 with one
+  player, also through the team prompt as a lone leader); mini-boss Gold 1.2K + 1.68K; boss 8K Gold, 13 Diamonds
+  (10 + 3), Plains Boss Key (first victory); after 15 s back 2 studs from the Plains_4 Entrance, 0 arenas left.
+  Heavy attack 209 vs 140 normal (x1.5 after armor). Death in the room: toast, -35% Gold, "Defeated", out after 4 s
+  alive. Team prompt without a team: "You are not in a team". LeaveBossRoom works in the lobby, refused mid-fight
+  (admins can still teleport out). Output clean. Screenshots `2C_*`.
+  NOT tested live: 2-5 real players (Studio MCP runs one client) - spectator placement and the 5% split are only
+  covered by the code paths above.
+  Next: Parts D/E (Blender pipeline, Boar pilot).
 - 20:57 PART B (ENEMY SYSTEM) done and pushed.
   `Config/Enemies` extended for zones 1-4 (Part F list): Tier, Rig, Height, colors, WalkSpeed (rig defaults,
   mini / boss 10), Hover (flyers 4, fish and floaters lower), AggroRadius 30, AttackType (archers, bats, toxic frog,
@@ -541,6 +567,12 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 - Mini-bosses are not knocked back but can be staggered by Heavy slams; bosses ignore both.
 - Monsters chase only players inside their leash (60 studs from their spawn); a hit from farther away still pulls
   them, then they leash back if the attacker is out of range.
+- Boss rooms: only the boss HP scales with the group (as written); mini-bosses keep their database HP. Team members
+  come along only if they stand in sub-zone 4 when the leader starts (others get a toast and can join from the gate
+  during the 5 s lobby). Dying during the lobby just sends the player out (the fight has not started).
+- The boss room choice uses two ProximityPrompts on the gate (E solo, F team) instead of a menu: tappable on mobile,
+  no extra window.
+- Arena enemies always know where the room's players are (no aggro radius, no leash).
 
 ## Problems / missing
 

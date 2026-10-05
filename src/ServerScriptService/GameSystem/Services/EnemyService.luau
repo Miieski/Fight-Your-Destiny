@@ -5,7 +5,7 @@
 --   EnemyService:Damage(player, state, amount) -> died        a hit decided by CombatService
 --   EnemyService:Stagger(state, seconds)                      Heavy slam
 --   EnemyService:SetOccupied(occupied)                        ZoneService location loop: sub-zones with players
---   EnemyService:CreateGroup(key, opts) / Spawn(group, def, position, opts?) / EndGroup(key)   boss rooms (Part C)
+--   EnemyService:CreateGroup(key, opts) / Spawn(group, def, position, opts?) / Intro(state, s) / EndGroup(key)   boss rooms
 --   EnemyService:SpawnNear(player, def) / KillAll(player)     admin
 -- Per sub-zone 10 enemies are alive (types 4 / 3 / 3, sub-zone 4: 5 / 5) on the Spawns points (random free spots in
 -- Area when a type has none); 2 s after a death a new one appears on a point at least 12 studs from every player.
@@ -920,35 +920,10 @@ function EnemyService:KillAll(player: Player): number
 	return n
 end
 
--- Boss room flow used by ZoneService until the boss rooms of Part C: both mini-bosses, then the boss.
-function EnemyService:StartArena(key: string, arena: Model, zoneId: string, onCleared: () -> ())
-	local room = Enemies.BossRoom[zoneId]
-	local function at(name: string): Vector3
-		local point = arena:FindFirstChild(name, true) :: BasePart
-		return point.Position - UP * point.Size.Y / 2
-	end
-	local minisLeft = 2
-	local group: Group
-	group = EnemyService:CreateGroup(key, { kind = "arena", onDeath = function(state: EnemyState, killer: Player?)
-		if killer then
-			EnemyService:Reward(killer, state)
-		end
-		if state.def.Tier == "mini" then
-			minisLeft -= 1
-			if minisLeft == 0 and group.active then
-				local boss = EnemyService:Spawn(group, room.Boss, at("BossSpawn"), { invulnerable = Enemies.BOSS_ATTACK.IntroSeconds })
-				setMode(boss, "Intro", os.clock() + Enemies.BOSS_ATTACK.IntroSeconds)
-			end
-		elseif state.def.Tier == "boss" then
-			onCleared()
-		end
-	end })
-	EnemyService:Spawn(group, room.Mini1, at("MiniBossSpawn1"))
-	EnemyService:Spawn(group, room.Mini2, at("MiniBossSpawn2"))
-end
-
-function EnemyService:EndArena(key: string)
-	EnemyService:EndGroup(key)
+-- Boss rooms (BossService): an Intro of a few seconds (still and invulnerable) before the fight.
+function EnemyService:Intro(state: EnemyState, seconds: number)
+	state.invulnerableUntil = os.clock() + seconds
+	setMode(state, "Intro", os.clock() + seconds)
 end
 
 function EnemyService:Init()

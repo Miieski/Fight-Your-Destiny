@@ -1,6 +1,7 @@
 --!strict
 -- PLACEHOLDER world flow: hub portals, return pads, sub-zone gates (paid with Gold, per player),
--- location tracking, respawn at the current sub-zone, and a solo boss-arena visit.
+-- location tracking and respawn at the current sub-zone. Boss rooms live in BossService (player attributes
+-- ArenaKey / ArenaZone while inside one).
 -- Everything relies on the world markers of DESIGN.md section 12.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,15 +20,12 @@ local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = { Priority = 4 }
 
 type SubZone = { id: string, zoneId: string, n: number, folder: Instance, area: BasePart, entrance: BasePart }
-type Arena = { model: Model, key: string, zoneId: string, slot: number }
 
 local subZones: { SubZone } = {}
 local byId: { [string]: SubZone } = {}
 local lastTeleport: { [Player]: number } = {}
 local lastMenuTeleport: { [Player]: number } = {} -- teleport menu cooldown
 local lastDamage: { [Player]: number } = {} -- "in combat" = took damage recently
-local arenas: { [Player]: Arena } = {}
-local usedSlots: { [number]: boolean } = {}
 
 -- kind: "info" | "reward" | "error" | "loot" | "death" (see GameClient/UI/Notifier)
 local function notify(player: Player, text: string, kind: string?)
@@ -153,72 +151,35 @@ local function tryUnlock(player: Player, subZone: SubZone)
 	RewardService.progress(player, "OpenSubZone", 1)
 end
 
-function ZoneService:LeaveArena(player: Player, stay: boolean?)
-	local arena = arenas[player]
-	if not arena then
-		return
+-- Boss rooms (Part C) are run by BossService; these wrappers keep the old call sites (lazy require: BossService
+-- requires this module).
+local BossService: any = nil
+local function bossService(): any
+	if not BossService then
+		BossService = require(script.Parent.BossService) :: any
 	end
-	arenas[player] = nil
-	EnemyService:EndArena(arena.key)
-	local back = byId[Zones.subZoneId(arena.zoneId, Zones.BOSS_SUBZONE)]
-	if player.Parent and back and not stay then
-		teleport(player, back.entrance.CFrame)
-	end
-	task.delay(2, function()
-		arena.model:Destroy()
-		usedSlots[arena.slot] = nil
-	end)
+	return BossService
 end
 
+function ZoneService:LeaveArena(player: Player, stay: boolean?)
+	if player:GetAttribute("ArenaKey") then
+		bossService():Leave(player, stay)
+	end
+end
+
+-- Admin / tests: straight into a solo boss room of the zone (no gate checks).
 function ZoneService:EnterArena(player: Player, zoneId: string)
-	if arenas[player] or not canTeleport(player) then
-		return
-	end
-	local template = ServerStorage.BossArenas:FindFirstChild(zoneId)
-	if not (template and template:IsA("Model") and template.PrimaryPart) then
-		lastTeleport[player] = os.clock()
-		notify(player, "The boss arena is not built yet", "error")
-		return
-	end
-	local slot = 1
-	while usedSlots[slot] do
-		slot += 1
-	end
-	usedSlots[slot] = true
-	local model = template:Clone()
-	model:PivotTo(CFrame.new(Playtest.ArenaOrigin + Vector3.new(slot * Playtest.ArenaSpacing, 0, 0)))
-	model.Parent = workspace.BossArenas
-	local key = `arena_{player.UserId}`
-	arenas[player] = { model = model, key = key, zoneId = zoneId, slot = slot }
+	bossService():Enter(player, zoneId, false, true)
+end
 
-	local pads = (model:FindFirstChild("PlayerSpawns") :: Instance):GetChildren()
-	local pad = pads[1] :: BasePart
-	local bossPad = model:FindFirstChild("BossSpawn") :: BasePart
-	teleport(player, CFrame.lookAt(pad.Position, Vector3.new(bossPad.Position.X, pad.Position.Y, bossPad.Position.Z)))
+-- Helpers for BossService.
+function ZoneService:Teleport(player: Player, cframe: CFrame)
+	teleport(player, cframe)
+end
 
-	local door = model:FindFirstChild("Door")
-	local doorPart = if door and door:IsA("Model") then door.PrimaryPart or door:FindFirstChildWhichIsA("BasePart", true) else door
-	if doorPart and doorPart:IsA("BasePart") then
-		local prompt = Instance.new("ProximityPrompt")
-		prompt.ActionText = "Leave"
-		prompt.ObjectText = "Boss arena"
-		prompt.HoldDuration = 0.6
-		prompt.MaxActivationDistance = 18
-		prompt.RequiresLineOfSight = false
-		prompt.Parent = doorPart
-		prompt.Triggered:Connect(function(who)
-			ZoneService:LeaveArena(who)
-		end)
-	end
-
-	EnemyService:StartArena(key, model, zoneId, function()
-		notify(player, `{Zones.ById[zoneId].Boss} defeated!`, "reward")
-		task.delay(Playtest.ArenaCleanupSeconds, function()
-			if arenas[player] and arenas[player].model == model then
-				ZoneService:LeaveArena(player)
-			end
-		end)
-	end)
+function ZoneService:EntranceOf(zoneId: string, n: number): CFrame?
+	local subZone = byId[Zones.subZoneId(zoneId, n)]
+	return if subZone then subZone.entrance.CFrame else nil
 end
 
 local function hookWorld()
@@ -255,14 +216,6 @@ local function hookWorld()
 			prompt.Parent = gate.PrimaryPart
 			prompt.Triggered:Connect(function(player)
 				tryUnlock(player, subZone)
-			end)
-		end
-		local bossGate = subZone.folder:FindFirstChild("BossGate")
-		local interact = bossGate and bossGate:FindFirstChild("Interact", true)
-		local bossPrompt = interact and interact:FindFirstChildOfClass("ProximityPrompt")
-		if bossPrompt then
-			bossPrompt.Triggered:Connect(function(player)
-				ZoneService:EnterArena(player, subZone.zoneId)
 			end)
 		end
 	end
@@ -312,7 +265,7 @@ function ZoneService:Init()
 			return false, `{Zones.HIDDEN_NAME} locked: {Zones.HIDDEN_REQUIREMENT}` -- no spoilers (brief 1A)
 		end
 		if not admin then
-			if arenas[player] then
+			if player:GetAttribute("ArenaKey") then
 				return false, "Leave the boss arena first"
 			end
 			if os.clock() - (lastDamage[player] or -math.huge) < rules.CombatSeconds then
@@ -340,7 +293,7 @@ function ZoneService:Init()
 		if typeof(zoneId) ~= "string" then
 			return false, "Bad request"
 		end
-		if arenas[player] and not admin then
+		if player:GetAttribute("ArenaKey") and not admin then
 			return false, "Leave the boss arena first"
 		end
 		if not admin then
@@ -398,7 +351,7 @@ function ZoneService:Init()
 					health = value
 				end)
 				humanoid.Died:Connect(function()
-					ZoneService:LeaveArena(player)
+					-- (in a boss room BossService turns the player into a spectator)
 					-- Death penalty (DESIGN.md section 2): lose a share of the Gold.
 					local profile = DataService:Get(player)
 					local loss = if profile then math.floor(profile.Gold * Economy.DeathGoldLoss) else 0
@@ -413,6 +366,9 @@ function ZoneService:Init()
 			end
 			-- Respawn at the start of the current sub-zone (DESIGN.md section 2, Death).
 			local subZone = byId[player:GetAttribute("RespawnSubZone") or ""]
+			if player:GetAttribute("ArenaKey") then
+				subZone = nil -- BossService places spectators
+			end
 			if subZone and character:WaitForChild("HumanoidRootPart", 10) then
 				task.wait(0.3)
 				teleport(player, subZone.entrance.CFrame)
@@ -437,10 +393,10 @@ function ZoneService:Start()
 		local occupied: { [string]: boolean } = {}
 		for _, player in ipairs(Players:GetPlayers()) do
 			local root = rootOf(player)
-			local arena = arenas[player]
-			if root and arena then
-				setLocation(player, arena.zoneId, arena.zoneId .. "_Arena")
-				player:SetAttribute("RespawnSubZone", Zones.subZoneId(arena.zoneId, Zones.BOSS_SUBZONE))
+			local arenaZone = player:GetAttribute("ArenaZone")
+			if root and typeof(arenaZone) == "string" then
+				setLocation(player, arenaZone, arenaZone .. "_Arena")
+				player:SetAttribute("RespawnSubZone", Zones.subZoneId(arenaZone, Zones.BOSS_SUBZONE))
 			elseif root then
 				local position = root.Position
 				local found: SubZone? = nil
