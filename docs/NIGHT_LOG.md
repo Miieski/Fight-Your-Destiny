@@ -5,6 +5,16 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:29 PART C - RANGED category done and pushed (72/96). Builders `tools/blender/fyd_weapon_ranged.py`
+  (5 studs = 1.4 m; shared bow / crossbow / gun parts; 680-1486 tris). Conventions per type written in
+  `Blender/Weapons/README.txt` (bows: limbs on Z, string -X; crossbows: bolt +Z, prod across X; guns: muzzle
+  +Z, grip -X). Each one checked on its preview; fixes: bow limbs drawn 1.35x thicker + deeper curves (thin
+  bows vanished in the icon), Blowgun feathers/vial bigger, Frostbite crystals, Plague Bow made distinct
+  (bone hooks, rag, toxic drips), Flame Bow veins on the front, Dawn Bow scalloped wings, Bone Crossbow
+  skull/prod, Harpoon Gun thicker + barnacles, Starfall Bow crystals. Lineup
+  `Previews/Weapons/Ranged_lineup.png`. Icons uploaded (72 ids). Next: Magic (`fyd_weapon_magic.py`,
+  6 studs, budget 4000).
+
 - 03:21 PART C - GAUNTLET category done and pushed (60/96). Builders `tools/blender/fyd_weapon_gauntlets.py`
   (1.8 studs = 0.5 m, ONE right-hand gauntlet: origin = fist center, knuckles +Z, cuff -Z, back of the
   hand -Y; shared `fist()` / `cuff()` parts; 1104-1726 tris of the 4000 budget). Convention added to

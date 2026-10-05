@@ -14,6 +14,9 @@ AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05, not yet teste
 - GAUNTLET exception: ONE right-hand gauntlet per zone (mirror it in Studio, scale X -1, for the left
   hand). Origin = fist center (where the hand is), knuckles along +Z, forearm cuff along -Z, back of the
   hand facing -Y, thumb on -X. Attach it to the RightHand/LeftHand rather than as a Tool grip.
+- RANGED: origin = the hand grip, longest side along Z. Bows: limbs along Z, string on -X, arrows fly
+  towards +X. Crossbows: bolt points +Z, prod spans X, trigger grip hangs towards +Y. Guns and the blowgun:
+  muzzle +Z, pistol grip towards -X. Set Tool.Grip per weapon type in Studio.
 - FBX export: Y up, -Z forward (Blender defaults), apply unit scale, scale 1.0, textures embedded.
   -> In Roblox the blade points along +Y (up), the origin is the grip.
 - IMPORT (owner): Studio > Asset Manager > Bulk Import (or 3D Importer), choose FILE DIMENSIONS =
