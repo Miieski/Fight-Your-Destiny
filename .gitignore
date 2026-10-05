@@ -20,3 +20,6 @@ sourcemap.json
 __pycache__/
 *.pyc
 *.blend1
+
+# Weapon preview scratch renders
+Previews/Weapons/*/_tmp/

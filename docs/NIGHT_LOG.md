@@ -5,6 +5,14 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:05 PART C - SWORD category done and pushed (12/96). Pipeline `tools/blender/fyd_weapons.py`
+  (build -> join -> triangulate -> Smart UV -> Cycles EMIT bakes of color/metalness/roughness 512 px
+  packed -> 3-angle preview -> .blend -> FBX (Y up, meters, textures embedded) -> icon -> manifest).
+  Pilot 01_plains_sword checked first (FBX re-import: 1.26 m, upright, 3 textures). Convention in
+  `Blender/Weapons/README.txt`. Each sword checked on its preview before the next; fixes: Dead sword
+  enriched, Abyss fuller removed. Lineup `Previews/Weapons/Sword_lineup.png`. Icons uploaded, ids in
+  `Config/Weapons.luau` (ICONS table, `Weapons.ById[id].Icon`). Next: Spear.
+
 - 02:40 PART B DONE and pushed. Teleport menu (page 1 list + preview, page 2 sub-zone cards, fade,
   toasts), server-validated `Teleport` request, hub portals open the menu, 60 zone/sub-zone diorama
   icons uploaded. Tested every state with admin commands at 1080p and phone. Next: Part C weapons

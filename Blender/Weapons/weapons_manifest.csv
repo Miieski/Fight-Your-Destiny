@@ -1,0 +1,13 @@
+file_id,weapon_id,category,zone,zone_index,name,triangles,budget,length_m,length_studs,glow,status,notes
+01_plains_sword,plains_sword,Sword,Plains,1,Iron Shortsword,1112,3000,1.260,4.50,no,ok,pilot; convention in Blender/Weapons/README.txt
+02_desert_sword,desert_sword,Sword,Desert,2,Sand Scimitar,1188,3000,1.260,4.50,no,ok,
+03_jungle_sword,jungle_sword,Sword,Jungle,3,Jungle Machete,836,3000,1.260,4.50,no,ok,
+04_tundra_sword,tundra_sword,Sword,Tundra,4,Frostbrand Blade,862,3000,1.260,4.50,yes,ok,
+05_swamp_sword,swamp_sword,Sword,Swamp,5,Rotwood Sword,816,3000,1.260,4.50,yes,ok,
+06_volcano_sword,volcano_sword,Sword,Volcano,6,Magma Blade,948,3000,1.260,4.50,yes,ok,
+07_hell_sword,hell_sword,Sword,Hell,7,Demon Blade,1220,3000,1.260,4.50,yes,ok,
+08_heaven_sword,heaven_sword,Sword,Heaven,8,Radiant Longsword,1244,3000,1.260,4.50,yes,ok,
+09_dead_sword,dead_sword,Sword,Dead,9,Deathbringer Sword,2340,3000,1.260,4.50,yes,ok,
+10_abyss_sword,abyss_sword,Sword,Abyss,10,Tidal Sword,1456,3000,1.260,4.50,yes,ok,
+11_mechanical_sword,mechanical_sword,Sword,Mechanical,11,Plasma Sword,844,3000,1.260,4.50,yes,ok,
+12_void_sword,void_sword,Sword,Void,12,Voidforged Blade,1096,3000,1.260,4.50,yes,ok,
