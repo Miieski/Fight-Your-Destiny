@@ -1,0 +1,99 @@
+{
+ "id": "npc_egg_keeper",
+ "rig": "Biped",
+ "role": "npc",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.164,
+  3.0,
+  0.055
+ ],
+ "rootSize": [
+  2.885,
+  6.0,
+  2.556
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.441,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    4.083,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.888,
+    3.861,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.888,
+    3.861,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.333,
+    2.33,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.333,
+    2.33,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 1920,
+ "colors": [
+  "#4a6ab0",
+  "#e8d8a0",
+  "#e0b040",
+  "#f0c49a",
+  "#121016",
+  "#f4f4f4",
+  "#d8b08a",
+  "#c87a3a",
+  "#e6c870",
+  "#d84a5a",
+  "#a87a40",
+  "#f6efe0",
+  "#a8e0ff",
+  "#f6c8d8",
+  "#c8f0a0",
+  "#8a5a30",
+  "#6a4a2e"
+ ]
+}

@@ -1,0 +1,91 @@
+{
+ "id": "npc_trainer",
+ "rig": "Biped",
+ "role": "npc",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  3.0,
+  0.028
+ ],
+ "rootSize": [
+  2.832,
+  6.0,
+  1.888
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.566,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    4.292,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -1.059,
+    4.059,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    1.059,
+    4.059,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.402,
+    2.449,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.402,
+    2.449,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 1840,
+ "colors": [
+  "#2a2a3a",
+  "#c8402e",
+  "#e8e0d0",
+  "#d29a72",
+  "#121016",
+  "#f4f4f4",
+  "#bd8a66",
+  "#5a3420",
+  "#1a1a20"
+ ]
+}

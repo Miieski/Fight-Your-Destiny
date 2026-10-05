@@ -1,0 +1,104 @@
+{
+ "id": "npc_gem_merchant",
+ "rig": "Biped",
+ "role": "npc",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.065,
+  3.0,
+  0.052
+ ],
+ "rootSize": [
+  2.394,
+  6.0,
+  2.11
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.303,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.852,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.837,
+    3.643,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.837,
+    3.643,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.314,
+    2.198,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.314,
+    2.198,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Gems_Glow",
+   "parent": "ArmR",
+   "joint": [
+    0.963,
+    2.135,
+    -0.073
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 1712,
+ "colors": [
+  "#2a2a3a",
+  "#f2f2f6",
+  "#e0b040",
+  "#5ad8ff",
+  "#2a3a8a",
+  "#e8b890",
+  "#121016",
+  "#f4f4f4",
+  "#d0a581",
+  "#2a2028",
+  "#1a1a24",
+  "#6a3a8a"
+ ]
+}

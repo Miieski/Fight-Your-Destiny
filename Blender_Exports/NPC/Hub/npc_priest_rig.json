@@ -1,0 +1,103 @@
+{
+ "id": "npc_priest",
+ "rig": "Biped",
+ "role": "npc",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.074,
+  3.0,
+  0.079
+ ],
+ "rootSize": [
+  2.408,
+  6.0,
+  1.799
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.297,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.842,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.835,
+    3.633,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.835,
+    3.633,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.313,
+    2.192,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.313,
+    2.192,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Orb_Glow",
+   "parent": "ArmR",
+   "joint": [
+    0.961,
+    5.293,
+    -0.073
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 1820,
+ "colors": [
+  "#f2eee4",
+  "#e0b040",
+  "#8a5ae8",
+  "#e8c0a0",
+  "#121016",
+  "#f4f4f4",
+  "#d0ac90",
+  "#e8e8f0",
+  "#8a6a3a",
+  "#d8cfb8",
+  "#c890ff"
+ ]
+}

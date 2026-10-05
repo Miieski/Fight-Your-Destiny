@@ -1,0 +1,100 @@
+{
+ "id": "npc_trophy_merchant",
+ "rig": "Biped",
+ "role": "npc",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.049,
+  3.0,
+  0.235
+ ],
+ "rootSize": [
+  2.549,
+  6.0,
+  2.25
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.493,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    4.171,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.907,
+    3.944,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.907,
+    3.944,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.34,
+    2.38,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.34,
+    2.38,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 1898,
+ "colors": [
+  "#5a4630",
+  "#7a3a8a",
+  "#3a2a1e",
+  "#e0b040",
+  "#9a5aa8",
+  "#7a5a36",
+  "#f6efdc",
+  "#e8e0cc",
+  "#6a8ad8",
+  "#5a3a22",
+  "#c08a60",
+  "#121016",
+  "#f4f4f4",
+  "#ac7c56",
+  "#3a2a20",
+  "#6a6a70",
+  "#c8402e",
+  "#c8a050"
+ ]
+}

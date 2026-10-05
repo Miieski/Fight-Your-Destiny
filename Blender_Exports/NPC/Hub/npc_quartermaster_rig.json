@@ -1,0 +1,98 @@
+{
+ "id": "npc_quartermaster",
+ "rig": "Biped",
+ "role": "npc",
+ "size": 6,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  3.0,
+  -0.036
+ ],
+ "rootSize": [
+  2.528,
+  6.0,
+  1.994
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.571,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    4.301,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.935,
+    4.067,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.935,
+    4.067,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.351,
+    2.454,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.351,
+    2.454,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 1676,
+ "colors": [
+  "#2a3a2a",
+  "#3a5a3a",
+  "#3a2a1e",
+  "#e0b040",
+  "#c8402e",
+  "#3a6ad8",
+  "#d8a880",
+  "#121016",
+  "#f4f4f4",
+  "#c29773",
+  "#6a4a2e",
+  "#1a1a1a",
+  "#e8e0d0",
+  "#8a6a40",
+  "#f6f2e6",
+  "#9aa0a8"
+ ]
+}
