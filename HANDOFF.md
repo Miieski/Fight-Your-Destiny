@@ -188,6 +188,20 @@ until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p,
   `Icons.Zones` / `Icons.SubZones`. Tested: unlocked, locked zone, locked gate, bad request, cooldown,
   combat, Hub, Boss Gate, portal open (first build too). Screenshots `docs/screenshots/ui_redo/B*`.
 
+**Night 2026-10-05, Part C (96 weapons in Blender) - IN PROGRESS, see `docs/NIGHT_LOG.md` and
+`Blender/Weapons/weapons_manifest.csv` for the exact resume point.** Done so far: Sword, Spear, Heavy.
+* Pipeline `tools/blender/fyd_weapons.py`: `make_weapon(category, zone_index, builder)` builds the parts
+  (meters, origin = grip, head along +Z), joins, scales to the category length (`LENGTH_STUDS` x 0.28 m),
+  triangulates, Smart-UV unwraps, Cycles-bakes color/metalness/roughness (512 px, packed), makes
+  `<id>_Main` + optional `<id>_Glow` (emissive parts), renders the icon + 3-angle preview, saves
+  `Blender/Weapons/<Cat>/<NN>_<id>.blend`, exports `Blender_Exports/Weapons/<Cat>/<NN>_<id>.fbx`
+  (Y up, textures embedded) and updates the manifest. `lineup(category)` makes `Previews/Weapons/<Cat>_lineup.png`.
+* Builders: one module per category, `fyd_weapon_swords.py`, `fyd_weapon_spears.py`, `fyd_weapon_heavy.py`
+  (`BUILDERS[zone_index - 1]`), shared parts in `fyd_weapon_parts.py`. Convention in `Blender/Weapons/README.txt`.
+* Icons uploaded; ids in `Config/Weapons.luau` between `-- ICONS BEGIN` / `-- ICONS END`
+  (`Weapons.ById[id].Icon`). `tools/weapon_icon_table.py` prints the table from `Icons/asset_ids.json`.
+* The FBX files are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions = Meters).
+
 **Owner decision 2026-10-05: the "Training" menu button and window are now "Stats". The Stats window
 will hold the WHOLE RPG system (HP, Attack, Defense, Speed, Crit, Gold Gain, their upgrades and the
 derived stats); see DESIGN.md section 3. Step 3 of the brief's plan is therefore "Stats window +

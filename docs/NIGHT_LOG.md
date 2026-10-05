@@ -5,6 +5,16 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:09 PART C - HEAVY category done and pushed (36/96). Builders `tools/blender/fyd_weapon_heavy.py`
+  (5 studs = 1.4 m, head centered 0.82 m above the grip before scaling, 764-1682 tris). Each weapon
+  checked on its preview; fixes: Stone Hammer darker stone, Obelisk Hammer contrast (sandstone vs gold),
+  Glacier Axe (dark haft, bearded blade, outer glow edge), Swamp Maul (moss, mushrooms, tones), Lava
+  Hammer (rough obsidian, zig-zag cracks), Doom Axe horns, Judgment Hammer (feathered wings, gold core,
+  halo), Gravedigger's Maul (chains, bigger skull/cross), Kraken Anchor (thicker), Hydraulic Hammer
+  (bigger head, exhausts), Void Maul (bigger crystal head, tilted orbit). Lineup
+  `Previews/Weapons/Heavy_lineup.png`. Icons uploaded, ids in `Config/Weapons.luau` (36 icons).
+  HANDOFF.md now has a Part C section. Next: Dagger (`fyd_weapon_daggers.py`, 2 studs).
+
 - 02:59 PART C - SPEAR category done and pushed (24/96). Builders `tools/blender/fyd_weapon_spears.py`
   (shared shaft/socket/ring/butt-cap/grip-wrap parts, 8 studs = 2.24 m, 694-1256 tris). Each spear
   checked on its preview; fixes: leaf head rebuilt (was a sliver), thicker shaft + 8 px outline so
