@@ -8,6 +8,13 @@ return {
 		VIP = 0,
 		ExclusiveWeapon = 0,
 	},
+	-- Premium pets (Developer Products, Robux): PetService.grantPremium gives them. 0 = hidden.
+	PremiumPets = {
+		premium_dragonling = 0,
+		premium_phoenix = 0,
+		premium_golem = 0,
+		premium_kitsune = 0,
+	},
 	DiamondPacks = {
 		{ Id = 0, Diamonds = 50 },
 		{ Id = 0, Diamonds = 150 },

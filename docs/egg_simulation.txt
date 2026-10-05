@@ -1,0 +1,41 @@
+EGG HATCH SIMULATION (docs/menu_systems_brief.txt Part B acceptance)
+Run: admin command simulateEggs(100000) -> ServerStorage.DevTools.EggSim (tools/EggSim.luau), which calls the
+server's real functions: ShopService.rollTier (premium egg rarity, shop odds) and PetService.hatchRoll (species
+and Egg Luck). Studio Play test, 2026-10-05.
+
+Premium Plains eggs, Egg Luck level 0 (0%), 100000 hatches:
+  Common    expected   50.000%  observed   50.102%  (+0.6 sd)
+  Uncommon  expected   28.000%  observed   27.796%  (-1.4 sd)
+  Rare      expected   13.000%  observed   12.986%  (-0.1 sd)
+  Epic      expected    6.000%  observed    6.043%  (+0.6 sd)
+  Legendary expected    2.200%  observed    2.232%  (+0.7 sd)
+  Mythic    expected    0.700%  observed    0.740%  (+1.5 sd)
+  Divine    expected    0.090%  observed    0.093%  (+0.3 sd)
+  Secret    expected    0.010%  observed    0.008%  (-0.6 sd)
+  species (16.67% each): Boar Piglet 16.94%, Wolf Pup 16.52%, Baby Bear 16.58%, Seagull Chick 16.66%, Crab Buddy 16.71%, Spider Hatchling 16.60%
+Premium Hell eggs, Egg Luck level 6 (30%), 100000 hatches:
+  (expected = shop odds, then 30% of each tier moves one tier up; Secret stays Secret)
+  Common    expected   35.000%  observed   34.808%  (-1.3 sd)
+  Uncommon  expected   34.600%  observed   34.506%  (-0.6 sd)
+  Rare      expected   17.500%  observed   17.613%  (+0.9 sd)
+  Epic      expected    8.100%  observed    8.316%  (+2.5 sd)
+  Legendary expected    3.340%  observed    3.273%  (-1.2 sd)
+  Mythic    expected    1.150%  observed    1.178%  (+0.8 sd)
+  Divine    expected    0.273%  observed    0.266%  (-0.4 sd)
+  Secret    expected    0.037%  observed    0.040%  (+0.5 sd)
+  species (16.67% each): Cinder Imp 16.66%, Hellhound Pup 16.79%, Baby Gargoyle 16.67%, Flame Skull 16.66%, Infernal Kitten 16.66%, Brimstone Beetle 16.56%
+Loot eggs (the egg's rarity is guaranteed; Egg Luck = one tier rarer):
+  Egg Luck level 0: 0.00% one tier rarer (expected 0%, +0.0 sd), 0 wrong tiers, 0 Secret eggs above Secret.
+  Egg Luck level 1: 5.14% one tier rarer (expected 5%, +2.0 sd), 0 wrong tiers, 0 Secret eggs above Secret.
+  Egg Luck level 3: 14.86% one tier rarer (expected 15%, -1.2 sd), 0 wrong tiers, 0 Secret eggs above Secret.
+  Egg Luck level 6: 29.95% one tier rarer (expected 30%, -0.4 sd), 0 wrong tiers, 0 Secret eggs above Secret.
+Largest gap: 2.50 standard errors (|z| < 4 expected over all lines). PASS.
+
+Other Part B checks (same Play test, admin commands + direct requests):
+  - giveEgg(3, Uncommon, 32): 30 eggs stored, 2 auto-sold for 15,000 Gold each (1.5 x 100 x 10^2), toast shown.
+  - 60 pets in storage: HatchAll and BuyPremiumEgg refused "Pet storage full (60)".
+  - ReleasePet: premium pet refused, locked pet refused, unlocked Legendary Plains pet released for 825 Gold
+    (5.5 x 150 x 10^0). Bad uids / types / locked zones / unknown zones refused.
+  - BuyPremiumEgg: Plains 14 and Desert 18 Diamonds charged; locked Cursed Swamp refused.
+  - wipeForRebirth: only the premium pet (Celestial Kitsune) kept, still equipped and following; eggs cleared.
+  - Max HP with an equipped Secret Fortune pet: 145 (100 x (1 + 0.45)).

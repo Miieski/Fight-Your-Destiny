@@ -116,6 +116,7 @@ local function openOverlay(size: Vector2): Frame
 	local parentSize = (overlayParent :: GuiObject).AbsoluteSize / Theme.getScale()
 	local w, h = math.min(size.X, parentSize.X - 24), math.min(size.Y, parentSize.Y - 24)
 	local panel = Panel.new({ Name = "Panel", Size = UDim2.fromOffset(w, h), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 21, Parent = holder })
+	panel.Active = true -- clicks on the panel must not reach the dim behind it (which closes the overlay)
 	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 24, OnClick = closeOverlay, Parent = panel })
 	holder.Parent = overlayParent
 	overlay = holder

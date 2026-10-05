@@ -1,6 +1,6 @@
 --!strict
 -- Window shells for every menu button (Config/UI Windows). Built so far: Shop (weapon shop), Inventory
--- (weapons), Settings and Zones; the others are empty shells: title, frame, X button, tabs, "Coming soon". The Shop's Diamonds tab
+-- (weapons), Stats (Attributes), Pets (pets, eggs, premium eggs), Settings and Zones; the others are empty shells: title, frame, X button, tabs, "Coming soon". The Shop's Diamonds tab
 -- explains where diamond packs are sold and offers a trip to the hub.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -11,6 +11,7 @@ local ZonesPage = require(script.Parent.Pages.ZonesPage)
 local InventoryPage = require(script.Parent.Pages.InventoryPage)
 local AttributesPage = require(script.Parent.Pages.AttributesPage)
 local WeaponShopPage = require(script.Parent.Pages.WeaponShopPage)
+local PetsPage = require(script.Parent.Pages.PetsPage)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
 local Theme = require(Kit.Theme)
@@ -62,6 +63,7 @@ local BUILDERS = {
 		AttributesPage.build(ctx.Pages.Main)
 	end,
 	Settings = SettingsPage.build,
+	Pets = PetsPage.build,
 	Zones = ZonesPage.build,
 }
 
@@ -71,7 +73,7 @@ function Windows:Start()
 		if id == "Zones" then
 			ZonesPage.open(if typeof(arg) == "string" then arg else nil)
 		elseif typeof(id) == "string" and UIConfig.Windows[id] and id ~= "Admin" then
-			Window.open(id)
+			Window.open(id, if typeof(arg) == "string" then arg else nil)
 		end
 	end)
 end

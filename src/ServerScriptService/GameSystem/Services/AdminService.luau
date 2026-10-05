@@ -14,11 +14,15 @@ local ServerStorage = game:GetService("ServerStorage")
 local Economy = require(ReplicatedStorage.GameSystem.Config.Economy)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local Products = require(ReplicatedStorage.GameSystem.Config.Products)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local RebirthShop = require(ReplicatedStorage.GameSystem.Config.RebirthShop)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
+local PetService = require(script.Parent.PetService)
+local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
 local ZoneService = require(script.Parent.ZoneService)
@@ -314,6 +318,63 @@ local COMMANDS: { [string]: Command } = {
 		DataService:Set(player, "EquippedPets", equipped)
 		WeaponService:Refresh(player)
 		return true, `Rebirth wipe done ({kept} premium pet{if kept == 1 then "" else "s"} kept)`
+	end,
+	-- giveEgg(zone, rarity, count?): zone = 1..12 or a zone id; loot eggs (auto-sold when the storage is full)
+	giveEgg = function(player, zoneValue, rarity, howMany)
+		local zone = if typeof(zoneValue) == "number" then Zones.List[zoneValue] else zoneOf(zoneValue)
+		local n = math.floor(tonumber(howMany) or 1)
+		if not zone or n < 1 or n > 100 then return false, "giveEgg(zone, rarity, count?)" end
+		local sold = 0
+		for i = 1, n do
+			local _, what = PetService:GiveEgg(player, zone.Index, tier(rarity), n > 1)
+			if what == "sold" then
+				sold += 1
+			end
+		end
+		return true, `{n} {Rarities.get(tier(rarity)).Name} {zone.Name} egg{if n == 1 then "" else "s"}` .. (if sold > 0 then ` ({sold} auto-sold)` else "")
+	end,
+	-- givePet(petId, rarity): premium pets keep their fixed rarity
+	givePet = function(player, petId, rarity)
+		if typeof(petId) ~= "string" or not Pets.ById[petId] then return false, "givePet(petId, rarity)" end
+		local uid = PetService:GivePet(player, petId, tier(rarity))
+		return uid ~= nil, `{Pets.ById[petId].Name} added`
+	end,
+	-- clearPets(): removes every pet and egg (tests)
+	clearPets = function(player)
+		DataService:Set(player, "Pets", {})
+		DataService:Set(player, "EquippedPets", {})
+		DataService:Set(player, "Eggs", {})
+		PetService:UpdateFollowers(player)
+		return true, "Pets and eggs cleared"
+	end,
+	-- simulateEggs(n): the egg odds and Egg Luck check (ServerStorage.DevTools.EggSim), printed in the output
+	simulateEggs = function(player, howMany)
+		local sim = ServerStorage:FindFirstChild("DevTools") and ServerStorage.DevTools:FindFirstChild("EggSim")
+		local n = math.floor(tonumber(howMany) or 100000)
+		if not sim or n < 1000 or n > 1000000 then return false, "simulateEggs(n = 1000..1000000)" end
+		local report, maxZ = require(sim :: ModuleScript)(n)
+		print(report)
+		return maxZ < 4, string.format("Egg simulation: largest gap %.2f sd (see the output)", maxZ)
+	end,
+	-- setPass(name, on): a game pass flag in the profile (tests: ExtraPetSlots, AutoAttack...)
+	setPass = function(player, name, on)
+		local profile = DataService:Get(player)
+		if not profile or typeof(name) ~= "string" or Products.Passes[name] == nil then return false, "setPass(name, on)" end
+		local passes = table.clone(profile.Passes)
+		passes[name] = if on == false then nil else true
+		DataService:Set(player, "Passes", passes)
+		return true, `{name} {if on == false then "removed" else "given"}`
+	end,
+	-- setUpgrade(id, level): a Rebirth Shop upgrade level (tests: EggLuck)
+	setUpgrade = function(player, id, level)
+		local profile = DataService:Get(player)
+		local upgrade = if typeof(id) == "string" then RebirthShop.ById[id] else nil
+		local n = math.floor(tonumber(level) or -1)
+		if not profile or not upgrade or n < 0 or n > upgrade.Max then return false, "setUpgrade(id, level)" end
+		local levels = table.clone(profile.RebirthUpgrades)
+		levels[id] = if n > 0 then n else nil
+		DataService:Set(player, "RebirthUpgrades", levels)
+		return true, `{upgrade.Name} level {n}`
 	end,
 	-- runStatsTests(): the Util/Stats sample profiles (ServerStorage.DevTools.StatsTests)
 	runStatsTests = function(player)

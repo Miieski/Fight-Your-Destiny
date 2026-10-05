@@ -53,6 +53,37 @@ StatsTests.cases = {
 		context = { now = NOW },
 		expected = { GoldMult = (1 + 0.9375 + 0.5 + 1.0) * 1.5, RollCooldown = 1.10625, ElementProcBonus = 0.15, MagicRadius = 0.1875, PetEffectiveness = 1.30, HealingBonus = 0.375, MaxHP = 120 },
 	},
+	-- Part B: pets (main value per rarity 2/4/7/11/16/23/32/45 %, bonus = 25% of it, Faith multiplies all)
+	{
+		name = "6 pets: Secret Fortune, Legendary Hunter, Epic Guardian (+ an unequipped Lucky)",
+		data = {
+			Attributes = attrs({}), Rebirths = 0,
+			Pets = { a = { id = "plains_pet1", rarity = 8 }, b = { id = "plains_pet2", rarity = 5 }, c = { id = "plains_pet3", rarity = 4 }, d = { id = "plains_pet6", rarity = 8 } },
+			EquippedPets = { "a", "b", "c" },
+		},
+		context = { now = NOW },
+		expected = { MaxHP = 156, GoldMult = 1.45, MoveSpeed = 0.16, DamageBonus = 0.16, CritDamage = 2.08, TrophyValue = 0.1125, RegenFraction = 0.001375, PetEffectiveness = 1, Defense = 0 },
+	},
+	{
+		name = "7 Faith 40 (soft cap), Rebirths 2: pets x1.54, speed hits the 40% cap",
+		data = {
+			Attributes = attrs({ Faith = 40 }), Rebirths = 2,
+			Pets = { a = { id = "jungle_pet2", rarity = 8 }, b = { id = "desert_pet5", rarity = 8 }, c = { id = "void_pet4", rarity = 6 } },
+			EquippedPets = { "a", "b", "c" },
+		},
+		context = { now = NOW },
+		expected = {
+			PetEffectiveness = 1.54, MoveSpeed = 0.40, DamageBonus = (0.45 + 0.23) * 1.54, BossDamage = 0.0575 * 1.54,
+			LootMult = 1 + 0.1125 * 1.54, CritDamage = 2 * (1 + 0.1125 * 1.54),
+			GoldMult = (1 + 0.45 * 1.54) * (1 + 0.5 + 0.5 + 0.5 / 11),
+		},
+	},
+	{
+		name = "8 premium Diamond Golem (Divine, Defense + HP, Boss Slayer), Endurance 10",
+		data = { Attributes = attrs({ Endurance = 10 }), Rebirths = 0, Pets = { g = { id = "premium_golem", rarity = 7, premium = true } }, EquippedPets = { "g" } },
+		context = { now = NOW },
+		expected = { Defense = 13.2, DamageReduction = 13.2 / 113.2, MaxHP = 132, BossDamage = 0.08 },
+	},
 }
 
 local function near(a: number, b: number): boolean

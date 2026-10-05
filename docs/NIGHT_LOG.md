@@ -224,6 +224,32 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 13:40 PART B EGGS & PETS done and pushed. `Config/PetRarities` (main values 2..45 %, bonus 25 %, storage 30 eggs /
+  60 pets, slots 3 + 2 pass, release / egg sell values, premium egg price 10 + 4Z, Equip Best weights, hatch timing,
+  follower numbers) and `Config/Pets` (72 species with the brief's names and slot roles + 4 premium pets; body type,
+  palette, scale, accessories; `ById`, `ByZone`, `mainValue`, `bonusValue`, `powerScore`, `releaseValue`,
+  `eggSellValue`, `describe`). Server `PetService`: HatchEgg, HatchAll (rarest eggs first, stops when the pet storage
+  is full), BuyPremiumEgg (Diamonds, shop odds via ShopService.rollTier, hatches at once), EquipPet, UnequipPet,
+  LockPet, ReleasePet, EquipBestPets; `GiveEgg` (auto-sell + toast when 30 eggs), `GivePet`, `grantPremium(player, id)`;
+  Egg Luck from the Rebirth Shop; Index[petId] = best rarity; player attribute "FollowPets"; the hub Egg Station
+  prompt opens Pets > Eggs. Product ids `Products.PremiumPets` (0 = hidden). Admin: giveEgg(zone, rarity, count),
+  givePet, clearPets, simulateEggs(n), setPass(name, on), setUpgrade(id, level).
+  Models: `tools/PetModels.luau` (DevTools) builds 7 procedural body types from parts (Quadruped, Bird, Blob, Insect,
+  Fish / Jelly, Biped, Mech) + 30 accessories -> `ReplicatedStorage.Assets.Pets` (76, ~21 parts each) and 12 zone
+  eggs with patterns + a rarity ring -> `Assets.Eggs`. Client: `Kit/ModelIcon` (cached ViewportFrame icons, turntable),
+  `Controllers/PetFollowController` (walkers hop, flyers bob, 80 studs view range, Low FX crowd rule, rarity light
+  from Epic), `UI/Hatching` (wobble -> 3 cracks -> burst with the case-opening effects -> pet reveal; Hatch All
+  summary grid; Fast Open), `UI/Pages/PetsPage` (Pets / Eggs / Premium Eggs tabs, slots, Equip Best, filters + sort,
+  detail panel with 3D preview, values with Faith, Equip / Lock / Release confirm; phones: one header row + Filters
+  popup, wide egg cards). HUD pet slots show the 3D pets.
+  Tests: 100,000-egg simulation PASS (largest gap 2.5 sd; Egg Luck 5 / 15 / 30 % exact; docs/egg_simulation.txt);
+  StatsTests 65/65 (3 new pet cases: values, Faith x1.54 + speed cap, premium golem); storage limits, auto-sell,
+  release rules, premium release refused, wipeForRebirth keeps premium pets; screenshots `docs/screenshots/pets/`
+  (D0-D8 desktop, P1-P6 phone, T1-T5 tablet).
+  Also fixed: a click on an empty spot inside any window (or shop / pets overlay) fell through to the backdrop and
+  closed it (Window frame and overlay panels now sink clicks).
+  Next: Part C (armor and the Equipment screen).
+
 - 12:54 PART A ATTRIBUTES done and pushed. `Config/Attributes` (8 attributes, 0..40, soft cap 20 -> Peff, cost
   round(100 x 10^(Z-1) x (1 + L/10)^1.5), RebirthPower, respec 5 + 2Z Diamonds, effects, hard caps, weapon scaling
   weights + grades), `Config/RebirthShop` (6 upgrades, rebirth Gold bonus), `Config/Boosts` (GoldX2), `Util/Stats.compute`
@@ -261,5 +287,18 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   in this task); the default Roblox health regeneration is unchanged for now.
 - The owner mentioned a reference image for the Equipment screen, but none was attached to the message: Part C
   follows the brief's text (character in the middle, slots around) and docs/UI Fantesy like *.jpg.
+- Premium egg (B1): buying one hatches it at once (the rarity is rolled at purchase with the shop odds, then Egg
+  Luck); it never goes into the 30-egg storage. Refused when the pet storage is full.
+- Premium pets cannot be released (bought with Robux; the brief only says they survive Rebirth).
+- HatchAll with less room than eggs hatches the rarest eggs first and leaves the rest (toast with the count).
+- `grantPremium` ignores the 60-pet storage limit (a Robux purchase must always be delivered).
+- Pet models are ~0.6-1.2 studs as the brief says; followers are drawn at x1.4 (`PetRarities.Follow.Scale`) so they
+  read next to a 5-stud avatar. Change that one number to resize every follower.
+- Followers: up to 3 per player, offsets behind-left / behind-right / behind; flying = birds, fish, jellies, winged
+  pets, glowing / flaming blobs, the drone.
+- Pet Regeneration is computed (Util/Stats RegenFraction) but not applied yet: HP regeneration belongs to the combat
+  step (it needs the "out of combat" delay); same for Boss Slayer, Crit Damage, Loot / Diamond Luck and Trophy Value.
+- Index entries for pets store the best rarity (number); weapons still store `true` until D3 converts them.
+- Baby Croc uses a long snout (new accessory) instead of the pig nose; the Sand Snake uses the Fish body.
 
 ## Problems / missing

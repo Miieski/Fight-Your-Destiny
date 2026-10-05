@@ -162,6 +162,7 @@ local function build(id: string): Built
 	local size = fitSize(def.Size or UIConfig.WINDOW_SIZE)
 	local frame = Panel.new({ Name = id .. "Window", Size = UDim2.fromOffset(size.X, size.Y), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2, Parent = parent })
 	frame.Visible = false
+	frame.Active = true -- a click on an empty spot of the window must not reach the backdrop (which closes it)
 	local pop = Instance.new("UIScale")
 	pop.Parent = frame
 

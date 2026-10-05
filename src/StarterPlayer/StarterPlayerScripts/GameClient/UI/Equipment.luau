@@ -1,6 +1,6 @@
 --!strict
 -- HUD 4 + 5: the equipped weapon (icon, name and border in its rarity color; tap = Inventory >
--- Weapons; empty = "No weapon" + hint) and the pet slots (empty = "+", tap = Pets window).
+-- Weapons; empty = "No weapon" + hint) and the pet slots (live 3D pet icon; empty = "+", tap = Pets window).
 -- Bottom-center, clear of the joystick (left) and the action buttons (right).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -10,6 +10,7 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local State = require(script.Parent.Parent.State)
 local Kit = script.Parent.Kit
 local Icons = require(Kit.Icons)
+local ModelIcon = require(Kit.ModelIcon)
 local Screens = require(Kit.Screens)
 local Slot = require(Kit.Slot)
 local Theme = require(Kit.Theme)
@@ -57,6 +58,11 @@ local function refreshPets()
 		local pet = pets[equipped[index] or ""]
 		if pet then
 			slot:Set({ Icon = "Pet", Tier = Rarities.get(pet.rarity).Tier })
+			-- the pet's live 3D icon replaces the generic paw (Slot destroys it on the next Set / Clear)
+			if slot._icon then
+				slot._icon:Destroy()
+			end
+			slot._icon = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = slot.Box.ZIndex + 1, Parent = slot.Box })
 		else
 			slot:Clear("Plus")
 		end

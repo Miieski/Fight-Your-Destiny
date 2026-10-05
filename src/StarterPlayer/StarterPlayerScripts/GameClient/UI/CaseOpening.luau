@@ -5,6 +5,7 @@
 -- with the Fast Open setting). Skip (button or a tap on the reel) jumps to the reveal; the reveal always plays.
 --   CaseOpening.play(result, onAgain)  result = the BuyWeapon reply; onAgain(weaponId) buys the same again
 --   CaseOpening.isActive(), CaseOpening.Changed (fires with the new active flag)
+--   CaseOpening.burst(fx, modal, tier): the rarity reveal effects (shared with the hatch screen)
 -- One tween moves the strip. The per-frame check (tick sound, tile under the marker) recomputes the strip
 -- position from the clock with the same easing, so it only works with numbers: no allocation per frame.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -184,10 +185,10 @@ local function close()
 	Sfx.play("UIClose")
 end
 
--- Rarity effects, bigger for rarer tiers (Low FX keeps only the flash).
-local function burst(opening: Opening, tier: number)
+-- Rarity effects, bigger for rarer tiers (Low FX keeps only the flash). fx = a small frame at the burst
+-- center, modal = the full-screen layer (Divine / Secret glow). Also used by the hatch screen (UI/Hatching).
+function CaseOpening.burst(fx: Frame, modal: Frame, tier: number)
 	local rarity = WeaponRarities.get(tier)
-	local fx = opening.fx
 	local low = Settings.get("LowFx") == true
 	local flash = Instance.new("Frame")
 	flash.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -280,7 +281,7 @@ local function burst(opening: Opening, tier: number)
 		glow.ZIndex = 50
 		glow.Active = false
 		Theme.paintRarity(glow, tier)
-		glow.Parent = opening.modal
+		glow.Parent = modal
 		local seconds = if tier == #WeaponRarities.List then CONFIG.SecretStingSeconds else 1.1
 		TweenService:Create(glow, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
 		task.delay(seconds, function()
@@ -317,7 +318,7 @@ local function reveal(opening: Opening)
 			Sfx.play("RarityReveal")
 		end)
 	end
-	burst(opening, tier)
+	CaseOpening.burst(opening.fx, opening.modal, tier)
 
 	-- result texts
 	local panel = opening.result_
