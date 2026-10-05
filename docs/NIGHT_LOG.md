@@ -5,6 +5,11 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 02:40 PART B DONE and pushed. Teleport menu (page 1 list + preview, page 2 sub-zone cards, fade,
+  toasts), server-validated `Teleport` request, hub portals open the menu, 60 zone/sub-zone diorama
+  icons uploaded. Tested every state with admin commands at 1080p and phone. Next: Part C weapons
+  (Sword pilot first).
+
 - 02:08 PART A DONE and pushed. 50 icons uploaded (45 + Skull, Info, Warning, Crown, MenuLines so no
   flat placeholder is left in the HUD); ids in `Icons/asset_ids.json` and `UI/Kit/Icons.luau`.
   Kit restyled (menu tiles, badges, close button, touch buttons, currency icons, toasts).
@@ -36,7 +41,16 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 - Icon outline is done in post (alpha dilation 14 px + soft drop shadow) instead of Freestyle, so
   every icon gets the same thick dark outline regardless of the model.
 - The Diamond keeps the game's cyan (DESIGN: Diamonds #5FD4FF), not the reference's purple.
+- Zones button is an extra "Apart" button under the Settings gear (with a label) so the owner's 2 x 4
+  grid stays as chosen.
+- Zone and sub-zone icon ids live in `UI/Kit/Icons.luau` (Icons.Zones / Icons.SubZones) like every
+  other icon id, not in Config/Zones (the two briefs disagreed; Part A says ids only in Icons.luau).
+- Admins skip arena/combat/cooldown checks but NOT the unlock checks (so the owner can test locked
+  states with an admin account; `lockAll` / `unlockZone` / `unlockAll` change the unlocks).
+- Hub portals now open the teleport menu on their zone instead of teleporting directly (brief).
 
 ## Problems
 
-(none yet)
+- 02:35 Studio stopped receiving synthetic input and `screen_capture` times out (the PC display
+  probably went to sleep). The Part B tablet screenshot is missing (desktop and phone are done).
+  Studio and Blender still run scripts.

@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local SettingsPage = require(script.Parent.Pages.SettingsPage)
+local ZonesPage = require(script.Parent.Pages.ZonesPage)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
 local Theme = require(Kit.Theme)
@@ -45,7 +46,19 @@ end
 local BUILDERS = {
 	Shop = shop,
 	Settings = SettingsPage.build,
+	Zones = ZonesPage.build,
 }
+
+function Windows:Start()
+	-- the server opens windows for world objects (a hub portal opens the teleport menu on its zone)
+	Net.on("OpenWindow", function(id: any, arg: any)
+		if id == "Zones" then
+			ZonesPage.open(if typeof(arg) == "string" then arg else nil)
+		elseif typeof(id) == "string" and UIConfig.Windows[id] and id ~= "Admin" then
+			Window.open(id)
+		end
+	end)
+end
 
 function Windows:Init()
 	for id, def in pairs(UIConfig.Windows) do

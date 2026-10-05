@@ -22,6 +22,7 @@ UI.Menu = {
 	{ Id = "Quests", Label = "Quests", Icon = "Quests" },
 	{ Id = "Team", Label = "Team", Icon = "Team" },
 	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
+	{ Id = "Zones", Label = "Zones", Icon = "Zones", Apart = true, ShowLabel = true }, -- teleport menu
 }
 -- 8 buttons -> 4 rows at the vertical middle of the left edge. PC (no touch) uses PcTile / PcGap,
 -- tablets Tile / Gap; phones use the Menu pop-up.
@@ -39,6 +40,7 @@ UI.Windows = {
 	Quests = { Title = "Quests", Tabs = { "Daily" } },
 	Team = { Title = "Team" },
 	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Other" } },
+	Zones = { Title = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
 	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test" }, Size = Vector2.new(760, 520) },
 }
 UI.WINDOW_SIZE = Vector2.new(700, 500)
@@ -105,6 +107,12 @@ UI.Text = {
 	GetDiamonds = "Get diamonds",
 	GetDiamondsInfo = "Diamond packs are sold at the Diamond Shop in the hub. Do you want to go there now?",
 	ZoneBoost = "Zone Boost Active",
+	YouAreHere = "You are here",
+	Teleport = "Teleport",
+	BossGate = "Boss Gate",
+	ZoneLocked = "Zone locked",
+	Back = "Back",
+	HubDescription = "The safe hub: shops, the Rebirth Altar and the portals to every zone.",
 	DeathGold = "You lost %d%% of your Gold: -%s",
 }
 

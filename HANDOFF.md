@@ -169,6 +169,25 @@ until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p,
   bold cream label with a thick stroke; chunkier badges; window close = wood button with the red 3D X;
   touch Roll/Block use the boot/shield icons. Screenshots: `docs/screenshots/ui_redo/`.
 
+**Night 2026-10-05, Part B (teleport menu) is done:**
+* Zones button = an `Apart` menu entry with a label, stacked under the Settings gear (PC/tablet) or
+  beside it (phone), so the owner's 2 x 4 grid stays intact. Hub portals now open the same window on
+  their zone (`Net "OpenWindow"` event) instead of teleporting directly.
+* `UI/Pages/ZonesPage.luau`: page 1 = scrollable list (Hub + 12 zones, rows 72 design units = 57 px on
+  phones, states here / unlocked / locked with short requirement + lock / coming soon) and a preview
+  (big diorama, name, description, boss); page 2 = Back + header + 4 cards (Teleport `go` button,
+  locked with gate price, "You are here", boss card with red accent and "Boss Gate" = boss-room
+  entrance, never the arena). Fade to black 0.25 s, `PortalEnter` sound, toast with the server message.
+* Server: `Net.request("Teleport", zoneId, n)` in ZoneService checks zone unlock
+  (`Zones.requirementText`), gate unlock (price), boss arena, combat (damage in the last
+  `Zones.TELEPORT.CombatSeconds` = 5 s, tracked from HealthChanged) and cooldown (3 s). Admins skip
+  arena/combat/cooldown, NOT the unlocks. Admin commands added: `lockAll`, `unlockZone(zoneId, gates)`;
+  `unlockAll` and `setZone` now also open `profile.Zones`.
+* Config: `Zones.TELEPORT`, `Zones.NOT_BUILT` (empty: all 12 worlds are built), `Zones.Descriptions`.
+* 60 diorama icons (12 zones + 48 sub-zones, recipes `tools/blender/fyd_zone_recipes.py`), ids in
+  `Icons.Zones` / `Icons.SubZones`. Tested: unlocked, locked zone, locked gate, bad request, cooldown,
+  combat, Hub, Boss Gate, portal open (first build too). Screenshots `docs/screenshots/ui_redo/B*`.
+
 **Owner decision 2026-10-05: the "Training" menu button and window are now "Stats". The Stats window
 will hold the WHOLE RPG system (HP, Attack, Defense, Speed, Crit, Gold Gain, their upgrades and the
 derived stats); see DESIGN.md section 3. Step 3 of the brief's plan is therefore "Stats window +

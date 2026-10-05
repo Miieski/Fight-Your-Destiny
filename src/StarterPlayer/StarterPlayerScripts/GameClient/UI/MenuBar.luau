@@ -30,6 +30,7 @@ local popupGrid: Frame
 local toggle: any
 local tiles: { any } = {}
 local apart: { any } = {}
+local apartLabels: { boolean } = {} -- Apart entries with ShowLabel keep their label (not on phones)
 local counts: { [string]: number } = {}
 
 local function updateToggleBadge()
@@ -78,15 +79,17 @@ local function layout()
 	local top = math.max(TOP.Normal, math.floor((Theme.size().Y - size.Y) / 2))
 	column.Position = UDim2.fromOffset(MARGIN, top)
 	toggle.Instance.Position = UDim2.fromOffset(MARGIN, TOP.Compact)
-	-- Apart buttons: right of the health bar (centered on it), or right of the Menu button on phones
+	-- Apart buttons: a column right of the health bar (the first one centered on it), or right of the
+	-- Menu button on phones
 	local health = UIConfig.Hud.Health
 	local x = if compact then MARGIN + GRID.Tile + SPACING else MARGIN + health.Normal.X + SPACING
 	local y = if compact then TOP.Compact else health.Top + (health.Normal.Y - GRID.Tile) / 2
-	for _, button in ipairs(apart) do
+	for index, button in ipairs(apart) do
 		button.Instance.Position = UDim2.fromOffset(x, y)
-		x += GRID.Tile + SPACING
+		button:SetLabelVisible(apartLabels[index] and not compact)
+		y += GRID.Tile + SPACING
 	end
-	popup.Position = UDim2.fromOffset(if compact then x else MARGIN, TOP.Compact)
+	popup.Position = UDim2.fromOffset(if compact then x + GRID.Tile + SPACING else MARGIN, TOP.Compact)
 end
 
 function MenuBar:Start()
@@ -124,7 +127,7 @@ function MenuBar:Start()
 			Icon = entry.Icon,
 			Label = entry.Label,
 			Size = Vector2.new(GRID.Tile, GRID.Tile),
-			ShowLabel = not entry.Apart,
+			ShowLabel = not entry.Apart or entry.ShowLabel == true,
 			LayoutOrder = index,
 			Parent = if entry.Apart then root else column,
 			OnClick = function()
@@ -133,6 +136,9 @@ function MenuBar:Start()
 			end,
 		})
 		table.insert(if entry.Apart then apart else tiles, button)
+		if entry.Apart then
+			table.insert(apartLabels, entry.ShowLabel == true)
+		end
 		Badges.watch(entry.Id, function(count)
 			button.Badge:Set(count)
 			-- the Menu button sums the badges hidden in its pop-up only

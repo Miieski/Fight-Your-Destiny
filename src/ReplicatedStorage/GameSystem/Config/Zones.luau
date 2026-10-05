@@ -53,6 +53,48 @@ function Zones.parseSubZoneId(subZoneId: string): (string?, number?)
 	return nil, nil
 end
 
+-- Teleport menu (docs/ui_redo_teleport_brief.txt part 2), in seconds.
+Zones.TELEPORT = {
+	Cooldown = 3, -- between two menu teleports
+	CombatSeconds = 5, -- no teleport within this time after taking damage
+	PortalReopen = 4, -- a hub portal re-opens the Zones window at most this often
+}
+
+-- Zones whose world is not built yet: the teleport menu shows them as "Coming soon".
+Zones.NOT_BUILT = {} :: { [string]: boolean }
+
+-- One-line description for the teleport menu preview.
+Zones.Descriptions = {
+	Plains = "Green hills, a windy beach and a quiet forest hiding the Golem's cave.",
+	Desert = "Endless dunes, a lonely oasis and a red canyon leading to the Cursed Pharaoh's pyramid.",
+	Jungle = "Thick vines, a wild river and a lost temple guarded by the Ancestral Gorilla.",
+	Tundra = "Snowy plains, a frozen lake and an icy peak crowned by the Frost King's citadel.",
+	Swamp = "Murky marshes, a dead forest and a witch village around a giant cauldron.",
+	Volcano = "Ash fields, a magma mine and rivers of lava below the Magma Titan's crater.",
+	Hell = "Burning plains and a demon city below the Supreme Demon's horned castle.",
+	Heaven = "Floating islands and cloud bridges up to the Supreme Angel's golden throne.",
+	Dead = "A haunted graveyard, endless catacombs and the Lich King's royal tomb.",
+	Abyss = "Coral reefs, sunken ships and a dark trench leading to the Leviathan's palace.",
+	Mechanical = "A rusty factory, toxic sewers and the reactor core of the Colossal Robot.",
+	Void = "Floating obsidian islands and crystal forests at the heart of the Void Dragon's realm.",
+} :: { [string]: string }
+
+-- Why a zone is locked (DESIGN.md section 4: key of the previous boss, Rebirths, previous zone
+-- redone since the last Rebirth). short = true gives the compact form for list rows.
+function Zones.requirementText(zoneId: string, short: boolean?): string
+	local zone = Zones.ById[zoneId]
+	local previous = zone and Zones.List[zone.Index - 1]
+	if not (zone and previous) then
+		return "Locked"
+	end
+	local rebirths = zone.Index - 1
+	local plural = if rebirths == 1 then "" else "s"
+	if short then
+		return `Needs {previous.Boss} key + {rebirths} Rebirth{plural}`
+	end
+	return `Needs the {previous.Boss} key, {rebirths} Rebirth{plural} and {previous.Name} redone`
+end
+
 -- Gold price to open sub-zone n of a zone (0 for sub-zone 1).
 function Zones.subZonePrice(zoneId: string, n: number): number
 	local base = Zones.SUBZONE_BASE_PRICE[n]

@@ -1,6 +1,6 @@
 --!strict
 -- Beveled button: a darker base under the face; pressing moves the face down 2 px and scales to 0.96.
---   local button = Button.new({ Text, Style = "primary"|"secondary"|"danger"|"wood", Size, Position,
+--   local button = Button.new({ Text, Style = "primary"|"secondary"|"danger"|"wood"|"go", Size, Position,
 --       AnchorPoint, Parent, LayoutOrder, Icon (Icons id), TextSize, OnClick, Name, ZIndex, Depth })
 --   button.Instance, button.Face, button.Label, button:SetText(), :SetEnabled(), :SetStyle()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,6 +22,7 @@ local function styles()
 		primary = { Top = c.GoldFace, Bottom = c.GoldDark, Base = c.GoldBase, Text = c.TextDark, Border = c.Ink, TextStroke = false },
 		secondary = { Top = c.SteelLight, Bottom = c.SteelDark, Base = c.SteelBase, Text = c.Text, Border = c.Ink, TextStroke = true },
 		danger = { Top = c.DangerLight, Bottom = c.DangerDark, Base = c.DangerBase, Text = c.Text, Border = c.GoldLight, TextStroke = true },
+		go = { Top = Color3.fromRGB(112, 226, 104), Bottom = Color3.fromRGB(44, 156, 60), Base = Color3.fromRGB(26, 92, 34), Text = c.Text, Border = c.Ink, TextStroke = true },
 		wood = { Top = c.WoodLight, Bottom = c.WoodBottom, Base = c.WoodLine, Text = c.Gold, Border = c.GoldDark, TextStroke = true },
 		disabled = { Top = c.DisabledLight, Bottom = c.DisabledDark, Base = c.DisabledBase, Text = c.TextDim, Border = c.Ink, TextStroke = true },
 	}

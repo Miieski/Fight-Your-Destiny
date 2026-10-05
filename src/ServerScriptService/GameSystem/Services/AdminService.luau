@@ -107,6 +107,12 @@ local COMMANDS: { [string]: Command } = {
 			return false, "setZone(zoneId, 1-5)"
 		end
 		unlockUpTo(player, zone.Id, sub)
+		local profile = DataService:Get(player)
+		if profile and not profile.Zones[zone.Id] then
+			local open = table.clone(profile.Zones)
+			open[zone.Id] = true
+			DataService:Set(player, "Zones", open)
+		end
 		if sub > Zones.SUBZONE_COUNT then
 			ZoneService:EnterArena(player, zone.Id)
 		else
@@ -122,7 +128,31 @@ local COMMANDS: { [string]: Command } = {
 			end
 		end
 		DataService:Set(player, "SubZones", unlocked)
-		return true, "All gates unlocked"
+		local open = {}
+		for _, zone in ipairs(Zones.List) do
+			open[zone.Id] = true
+		end
+		DataService:Set(player, "Zones", open)
+		return true, "All zones and gates unlocked"
+	end,
+	-- lockAll: back to a new player's unlocks (Plains only, no gates), to test the teleport menu
+	lockAll = function(player)
+		DataService:Set(player, "Zones", { [Zones.List[1].Id] = true })
+		DataService:Set(player, "SubZones", {})
+		return true, "Zones and gates locked"
+	end,
+	-- unlockZone(zoneId, gates?): opens one zone and its gates up to `gates` (1-4)
+	unlockZone = function(player, zoneId, gates)
+		local zone = zoneOf(zoneId)
+		local profile = DataService:Get(player)
+		if not zone or not profile then
+			return false, "unlockZone(zoneId, gates?)"
+		end
+		local open = table.clone(profile.Zones)
+		open[zone.Id] = true
+		DataService:Set(player, "Zones", open)
+		unlockUpTo(player, zone.Id, math.clamp(math.floor(tonumber(gates) or 1), 1, Zones.SUBZONE_COUNT))
+		return true, `{zone.Name} unlocked`
 	end,
 	-- equipWeaponFake(zoneId, rarity, category?)
 	equipWeaponFake = function(player, zoneId, rarity, category)

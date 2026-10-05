@@ -23,6 +23,9 @@ type Arena = { model: Model, key: string, zoneId: string, slot: number }
 local subZones: { SubZone } = {}
 local byId: { [string]: SubZone } = {}
 local lastTeleport: { [Player]: number } = {}
+local lastMenuTeleport: { [Player]: number } = {} -- teleport menu cooldown
+local lastDamage: { [Player]: number } = {} -- "in combat" = took damage recently
+local lastPortalOpen: { [Player]: number } = {}
 local arenas: { [Player]: Arena } = {}
 local usedSlots: { [number]: boolean } = {}
 
@@ -223,10 +226,12 @@ local function hookWorld()
 	for _, portal in ipairs(if portals then portals:GetChildren() else {}) do
 		local zoneId = portal:GetAttribute("ZoneId")
 		if portal:IsA("BasePart") and zoneId then
+			-- a hub portal opens the teleport menu on that zone (the player then picks a sub-zone)
 			portal.Touched:Connect(function(hit)
 				local player = Players:GetPlayerFromCharacter(hit.Parent)
-				if player then
-					ZoneService:EnterZone(player, zoneId)
+				if player and os.clock() - (lastPortalOpen[player] or -math.huge) > Zones.TELEPORT.PortalReopen then
+					lastPortalOpen[player] = os.clock()
+					Net.fire(player, "OpenWindow", "Zones", zoneId)
 				end
 			end)
 		end
@@ -290,12 +295,71 @@ function ZoneService:Init()
 		return true
 	end, 2)
 
+	-- Teleport menu: every request is validated here (unlocks, boss arena, combat, cooldown).
+	-- Admins skip the arena, combat and cooldown checks, not the unlocks.
+	Net.handle("Teleport", function(player: Player, zoneId: any, n: any)
+		local rules = Zones.TELEPORT
+		local admin = player:GetAttribute("IsAdmin") == true
+		if typeof(zoneId) ~= "string" then
+			return false, "Bad request"
+		end
+		if arenas[player] and not admin then
+			return false, "Leave the boss arena first"
+		end
+		if not admin then
+			if os.clock() - (lastDamage[player] or -math.huge) < rules.CombatSeconds then
+				return false, "You can't teleport during a fight"
+			end
+			if os.clock() - (lastMenuTeleport[player] or -math.huge) < rules.Cooldown then
+				return false, "Teleport is recharging"
+			end
+		end
+		local profile = DataService:Get(player)
+		if not (profile and rootOf(player)) then
+			return false, "Not ready yet"
+		end
+		if zoneId == "Hub" then
+			lastMenuTeleport[player] = os.clock()
+			ZoneService:ToHub(player)
+			return true, "Teleported to the Hub"
+		end
+		local zone = Zones.ById[zoneId]
+		if not zone or typeof(n) ~= "number" or n % 1 ~= 0 or n < 1 or n > Zones.SUBZONE_COUNT then
+			return false, "Bad request"
+		end
+		if Zones.NOT_BUILT[zone.Id] then
+			return false, `{zone.Name} is coming soon`
+		end
+		if zone.Index > 1 and not profile.Zones[zone.Id] then
+			return false, `{zone.Name} locked: {Zones.requirementText(zone.Id)}`
+		end
+		local id = Zones.subZoneId(zone.Id, n)
+		if n > 1 and not profile.SubZones[id] then
+			return false, `{zone.SubZones[n]} locked: open its gate for {Format.number(Zones.subZonePrice(zone.Id, n))} Gold`
+		end
+		local subZone = byId[id]
+		if not (subZone and hasGround(subZone.entrance.Position)) then
+			return false, `{zone.Name} is not built yet`
+		end
+		lastMenuTeleport[player] = os.clock()
+		ZoneService:LeaveArena(player, true)
+		teleport(player, subZone.entrance.CFrame)
+		return true, `Teleported to {zone.SubZones[n]}`
+	end, 0.5)
+
 	local function onPlayer(player: Player)
 		player:SetAttribute("CurrentZone", "Hub")
 		player:SetAttribute("CurrentSubZone", "Hub")
 		player.CharacterAdded:Connect(function(character)
 			local humanoid = character:WaitForChild("Humanoid", 10) :: Humanoid?
 			if humanoid then
+				local health = humanoid.Health
+				humanoid.HealthChanged:Connect(function(value)
+					if value < health then
+						lastDamage[player] = os.clock()
+					end
+					health = value
+				end)
 				humanoid.Died:Connect(function()
 					ZoneService:LeaveArena(player)
 					-- Death penalty (DESIGN.md section 2): lose a share of the Gold.
@@ -325,6 +389,9 @@ function ZoneService:Init()
 	Players.PlayerRemoving:Connect(function(player)
 		ZoneService:LeaveArena(player)
 		lastTeleport[player] = nil
+		lastMenuTeleport[player] = nil
+		lastDamage[player] = nil
+		lastPortalOpen[player] = nil
 	end)
 end
 

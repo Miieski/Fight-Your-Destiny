@@ -15,6 +15,7 @@ Net.EVENTS = {
 	"Data", -- { [profileKey] = wholeValue }: patches of the player's own profile
 	"Notify", -- { Kind, Text, Icon?, Rarity? }: a toast (see GameClient/UI/Notifier)
 	"Hit", -- position, damage, isCrit: damage numbers
+	"OpenWindow", -- windowId, arg?: the server asks the client to open a window (hub portals -> Zones)
 }
 
 local IS_SERVER = RunService:IsServer()
