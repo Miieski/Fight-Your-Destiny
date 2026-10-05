@@ -42,7 +42,7 @@ UI.Windows = {
 	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620) },
 	Quests = { Title = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600) },
 	Team = { Title = "Team", Tabs = { "Team", "Invite" }, Size = Vector2.new(900, 580) },
-	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Other" } },
+	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Keys", "Other" } },
 	Zones = { Title = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
 	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test", "Weapons" }, Size = Vector2.new(760, 520) },
 }
@@ -127,7 +127,7 @@ UI.Fx = {
 	ShakeMaxOffset = 0.7, -- studs of camera offset at 100% intensity
 	ShakeSeconds = 0.3,
 	DamageShakeFraction = 0.25, -- losing this fraction of max HP in one hit = full shake
-	CameraMinZoom = 8,
+	CameraMinZoom = 0.5, -- zooming all the way in gives first person (Roblox switches under 1 stud)
 	CameraMaxZoom = 40,
 }
 

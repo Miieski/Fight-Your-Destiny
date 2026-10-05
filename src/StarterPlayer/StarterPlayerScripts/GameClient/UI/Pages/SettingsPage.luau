@@ -1,7 +1,9 @@
 --!strict
 -- The Settings window (docs/ui_hud_brief.txt section 6), built from Config/Settings definitions.
--- Every control applies at once and saves through SettingsController (debounced).
+-- Every control applies at once and saves through SettingsController (debounced). The Keys tab lists
+-- Config/Settings KEY_ACTIONS: click a key, then press the new key or mouse button.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local SettingsConfig = require(ReplicatedStorage.GameSystem.Config.Settings)
@@ -20,6 +22,10 @@ local SettingsPage = {}
 
 local ROW_HEIGHT = 66
 local LABEL_WIDTH = 0.44
+local HEADER_HEIGHT = 40
+local KEY_BUTTON_WIDTH = 0.6 -- of the control area
+local KEYS_HELP = "Click a key, then press the new key or mouse button (Escape cancels). Gamepad: RT attack, LT block, B roll."
+local KEYS_NO_KEYBOARD = "Key bindings are for a keyboard and mouse. On a touch screen, move the buttons in Controls > Mobile Buttons."
 
 local function formatValue(definition: any, value: number): string
 	if definition.Unit == "x" then
@@ -115,6 +121,91 @@ local function layoutRow(page: Instance, order: number)
 	Button.new({ Text = "Edit layout", Style = "secondary", Size = UDim2.new(1, -8, 1, 0), Parent = area, OnClick = Controls.editLayout })
 end
 
+local function textRow(page: Instance, order: number, text: string, height: number, title: boolean?)
+	local frame = Instance.new("Frame")
+	frame.Name = if title then text else "Help"
+	frame.BackgroundTransparency = 1
+	frame.Size = UDim2.new(1, 0, 0, height)
+	frame.LayoutOrder = order
+	Theme.text({
+		Font = if title then "Title" else nil,
+		Text = text,
+		TextSize = if title then 26 else 18,
+		Color = if title then Theme.Colors.Gold else Theme.Colors.TextDim,
+		Wrapped = not title,
+		Align = "Left",
+		Size = UDim2.new(1, -8, 1, -4),
+		Position = UDim2.fromOffset(4, 2),
+		Parent = frame,
+	})
+	frame.Parent = page
+end
+
+local function keysPage(page: Instance)
+	if not (UserInputService.KeyboardEnabled or UserInputService.MouseEnabled) then
+		textRow(page, 1, KEYS_NO_KEYBOARD, ROW_HEIGHT)
+		return
+	end
+	textRow(page, 1, KEYS_HELP, ROW_HEIGHT)
+	local keyButtons: { [string]: any } = {}
+	local waiting: string? = nil
+	local function paint()
+		local bindings = SettingsConfig.cleanKeys(Settings.get("KeyBindings"))
+		for id, button in pairs(keyButtons) do
+			if id ~= waiting then
+				button:SetText(Controls.keyLabel(bindings[id]))
+				button:SetStyle("secondary")
+			end
+		end
+	end
+	local order = 1
+	for _, group in ipairs(SettingsConfig.KEY_GROUPS) do
+		order += 1
+		textRow(page, order, group, HEADER_HEIGHT, true)
+		for _, action in ipairs(SettingsConfig.KEY_ACTIONS) do
+			if action.Group == group then
+				order += 1
+				local area = control(row(page, order, action.Label))
+				keyButtons[action.Id] = Button.new({ Name = action.Id, Text = "", Style = "secondary", Size = UDim2.new(KEY_BUTTON_WIDTH, 0, 1, 0), Parent = area, OnClick = function()
+					waiting = action.Id
+					paint()
+					local button = keyButtons[action.Id]
+					button:SetText("Press a key...")
+					button:SetStyle("primary")
+					Controls.capture(function(name: string?)
+						if waiting == action.Id then
+							waiting = nil
+						end
+						if name then
+							local before = SettingsConfig.cleanKeys(Settings.get("KeyBindings"))
+							local ok, result = SettingsConfig.assignKey(before, action.Id, name)
+							if ok then
+								Settings.set("KeyBindings", result)
+								for _, other in ipairs(SettingsConfig.KEY_ACTIONS) do
+									if other.Id ~= action.Id and result[other.Id] ~= before[other.Id] then
+										Notifier.push({ Kind = "info", Text = `{other.Label}: {Controls.keyLabel(result[other.Id])}` })
+									end
+								end
+							else
+								Notifier.push({ Kind = "error", Text = tostring(result) })
+							end
+						end
+						paint()
+					end)
+				end })
+			end
+		end
+	end
+	order += 1
+	local resetArea = control(row(page, order, "Reset keys", "Every key back to default"))
+	Button.new({ Text = "Reset", Style = "danger", Size = UDim2.new(KEY_BUTTON_WIDTH, 0, 1, 0), Parent = resetArea, OnClick = function()
+		Settings.set("KeyBindings", SettingsConfig.defaultKeys())
+		Notifier.push({ Kind = "info", Text = "Keys reset" })
+	end })
+	paint()
+	Settings.changed("KeyBindings", paint)
+end
+
 local function otherPage(page: Instance)
 	local codeRow = row(page, 1, "Redeem Code")
 	local area = control(codeRow)
@@ -166,6 +257,7 @@ function SettingsPage.build(ctx: any)
 			end
 		end
 	end
+	keysPage(ctx.Pages.Keys)
 	otherPage(ctx.Pages.Other)
 end
 

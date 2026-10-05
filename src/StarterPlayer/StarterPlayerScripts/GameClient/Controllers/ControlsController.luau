@@ -1,15 +1,19 @@
 --!strict
--- Player inputs. Keyboard, mouse and gamepad go through ContextActionService; touch screens get
--- three movable buttons (Attack, Roll, Block) placed from the ButtonLayout setting, with an
--- editor opened from Settings > Controls.
+-- Player inputs. Keyboard, mouse and gamepad go through ContextActionService, with the keyboard and
+-- mouse keys taken from the KeyBindings setting (Settings > Keys; gamepad buttons are fixed). Touch
+-- screens get three movable buttons (Attack, Roll, Block) placed from the ButtonLayout setting, with
+-- an editor opened from Settings > Controls. In first person or Shift-Lock the cursor is free while a
+-- window is open (Window's Modal backdrop) or while the Free Cursor key is held.
 --   Controls.Attack:Connect(fn(holding))  Controls.Roll:Connect(fn())  Controls.Block:Connect(fn(holding))
---   Controls.editLayout()
+--   Controls.editLayout()  Controls.capture(fn(keyName?))  Controls.keyLabel(keyName)
 local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local SettingsConfig = require(ReplicatedStorage.GameSystem.Config.Settings)
 local Settings = require(script.Parent.SettingsController)
+local State = require(script.Parent.Parent.State)
+local Notifier = require(script.Parent.Parent.UI.Notifier)
 local Kit = script.Parent.Parent.UI.Kit
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
@@ -29,13 +33,22 @@ Controls.Block = blockEvent.Event
 local ICONS = { Attack = "Sword", Roll = "Speed", Block = "Defense" }
 -- Layout editor toolbar: left part of the screen so it never covers the buttons being moved.
 local EDITOR = { Width = 560, Height = 120, MaxWidthFraction = 0.56, CenterX = 0.3, Top = 70 }
+-- Fixed gamepad buttons, bound next to the player's keyboard / mouse key.
+local GAMEPAD = { Attack = Enum.KeyCode.ButtonR2, Roll = Enum.KeyCode.ButtonB, Block = Enum.KeyCode.ButtonL2 }
+local MOUSE_LABELS = { MouseButton1 = "Left Click", MouseButton2 = "Right Click", MouseButton3 = "Middle Click" }
+local KEY_LABELS = { LeftControl = "Left Ctrl", RightControl = "Right Ctrl", None = "None" }
 
 local root: Frame
 local toolbar: Frame
+local cursorButton: TextButton
 local buttons: { [string]: TextButton } = {}
 local layout: { [string]: any } = SettingsConfig.defaultLayout()
 local editing = false
 local selected: string? = nil
+local keys: { [string]: string } = SettingsConfig.defaultKeys()
+local held: { [string]: boolean } = {} -- hold actions (Attack, Block) currently down
+local capturing: (() -> ())? = nil -- cancels the key capture in progress
+local swallowed: { [string]: boolean } = {} -- the key that ended a capture, ignored until released
 
 local function place(id: string)
 	local entry = layout[id]
@@ -57,6 +70,9 @@ local function refreshVisibility()
 end
 
 local function fire(id: string, down: boolean)
+	if id == "Attack" or id == "Block" then
+		held[id] = if down then true else nil
+	end
 	if id == "Attack" then
 		attackEvent:Fire(down)
 	elseif id == "Block" then
@@ -157,17 +173,131 @@ local function copy(source: { [string]: any }): { [string]: any }
 	return result
 end
 
-local function bind(name: string, id: string, ...: any)
-	ContextActionService:BindAction(name, function(_, state)
-		if state == Enum.UserInputState.Begin then
-			if id ~= "Roll" or not Window.isOpen() then
+-- The binding name of an input ("Q", "MouseButton2"), or nil for gamepad / touch input.
+local function nameOf(input: InputObject): string?
+	if SettingsConfig.MOUSE_BUTTONS[input.UserInputType.Name] then
+		return input.UserInputType.Name
+	elseif input.UserInputType == Enum.UserInputType.Keyboard then
+		return input.KeyCode.Name
+	end
+	return nil
+end
+
+-- "Left Click", "Q" (the letter of the player's keyboard layout), "Left Alt", "None".
+function Controls.keyLabel(name: string): string
+	local fixed = MOUSE_LABELS[name] or KEY_LABELS[name]
+	if fixed then
+		return fixed
+	end
+	local ok, text = pcall(function()
+		return UserInputService:GetStringForKeyCode((Enum.KeyCode :: any)[name])
+	end)
+	if ok and typeof(text) == "string" and #text == 1 and text ~= " " then
+		return string.upper(text)
+	end
+	return (string.gsub(name, "(%l)(%u)", "%1 %2")) -- "LeftAlt" -> "Left Alt"
+end
+
+-- Waits for the next key or mouse button and calls done(name), or done(nil) on Escape / time-out. The
+-- pressed key does not trigger its own action meanwhile.
+function Controls.capture(done: (string?) -> ())
+	if capturing then
+		capturing()
+	end
+	local connection: RBXScriptConnection
+	local function finish(name: string?)
+		if not connection.Connected then
+			return
+		end
+		connection:Disconnect()
+		capturing = nil
+		done(name)
+	end
+	connection = UserInputService.InputBegan:Connect(function(input)
+		if input.KeyCode == Enum.KeyCode.Escape then
+			finish(nil)
+			return
+		end
+		local name = nameOf(input)
+		if name then
+			swallowed[name] = true
+			finish(name)
+		end
+	end)
+	capturing = function()
+		finish(nil)
+	end
+	task.delay(SettingsConfig.KEY_CAPTURE_SECONDS, function()
+		finish(nil)
+	end)
+end
+
+local function setCursorFree(free: boolean)
+	cursorButton.Visible = free
+end
+
+local function press(action: SettingsConfig.KeyAction)
+	if action.Window then
+		Window.toggle(action.Window)
+	elseif action.Id == "FirstPerson" then
+		Settings.set("FirstPerson", not (Settings.get("FirstPerson") == true))
+	elseif action.Id == "AutoAttack" then
+		local passes = State.get("Passes")
+		if typeof(passes) == "table" and passes.AutoAttack == true then
+			Settings.set("AutoAttack", not (Settings.get("AutoAttack") == true))
+		else
+			Notifier.push({ Kind = "error", Text = "Needs the Auto-Attack pass" })
+		end
+	end
+end
+
+local function handler(action: SettingsConfig.KeyAction)
+	local id = action.Id
+	return function(_, state: Enum.UserInputState, input: InputObject)
+		local name = nameOf(input)
+		if capturing or (name and swallowed[name]) then
+			return Enum.ContextActionResult.Pass
+		end
+		local began = state == Enum.UserInputState.Begin
+		local ended = state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel
+		if id == "Attack" or id == "Block" or id == "Roll" then
+			if began and (id ~= "Roll" or not Window.isOpen()) then
 				fire(id, true)
+			elseif ended then
+				fire(id, false)
 			end
-		elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
-			fire(id, false)
+		elseif id == "FreeCursor" then
+			if began or ended then
+				setCursorFree(began)
+			end
+		elseif began then
+			press(action)
 		end
 		return Enum.ContextActionResult.Pass
-	end, false, ...)
+	end
+end
+
+-- (Re)binds every action to the player's key plus its fixed gamepad button.
+local function bindAll()
+	for id in pairs(held) do
+		fire(id, false)
+	end
+	setCursorFree(false)
+	for _, action in ipairs(SettingsConfig.KEY_ACTIONS) do
+		local actionName = "FYD_" .. action.Id
+		ContextActionService:UnbindAction(actionName)
+		local inputs: { any } = {}
+		local key = keys[action.Id]
+		if key and key ~= "None" then
+			table.insert(inputs, if SettingsConfig.MOUSE_BUTTONS[key] then (Enum.UserInputType :: any)[key] else (Enum.KeyCode :: any)[key])
+		end
+		if GAMEPAD[action.Id] then
+			table.insert(inputs, GAMEPAD[action.Id])
+		end
+		if #inputs > 0 then
+			ContextActionService:BindAction(actionName, handler(action), false, table.unpack(inputs))
+		end
+	end
 end
 
 function Controls:Start()
@@ -226,9 +356,29 @@ function Controls:Start()
 	Settings.changed("ButtonLayout", load)
 	refreshVisibility()
 
-	bind("FYD_Attack", "Attack", Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2)
-	bind("FYD_Roll", "Roll", Enum.KeyCode.Q, Enum.KeyCode.ButtonB)
-	bind("FYD_Block", "Block", Enum.UserInputType.MouseButton2, Enum.KeyCode.ButtonL2)
+	-- a visible Modal button frees the mouse in first person / Shift-Lock (1 px, invisible, never clicked)
+	cursorButton = Instance.new("TextButton")
+	cursorButton.Name = "FreeCursor"
+	cursorButton.Text = ""
+	cursorButton.BackgroundTransparency = 1
+	cursorButton.Size = UDim2.fromOffset(1, 1)
+	cursorButton.Selectable = false
+	cursorButton.Modal = true
+	cursorButton.Visible = false
+	cursorButton.Parent = screenRoot
+
+	UserInputService.InputEnded:Connect(function(input)
+		local name = nameOf(input)
+		if name then
+			swallowed[name] = nil
+		end
+	end)
+	local function loadKeys(value: any)
+		keys = SettingsConfig.cleanKeys(value)
+		bindAll()
+	end
+	loadKeys(Settings.get("KeyBindings"))
+	Settings.changed("KeyBindings", loadKeys)
 end
 
 return Controls

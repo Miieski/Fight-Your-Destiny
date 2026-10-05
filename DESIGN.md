@@ -81,8 +81,11 @@ shared `Sfx` module (names listed in section 10).
 ## 2. Controls & combat
 
 ### Camera
-Third person by default, freely adjustable by the player: zoom from 8 to 40 studs, Shift-Lock
-toggle on PC, free drag on mobile. A setting allows a more top-down angle.
+Third person by default, freely adjustable by the player: zoom from 0.5 to 40 studs (all the
+way in = first person), Shift-Lock toggle on PC, free drag on mobile. Settings > Controls has a
+**First Person** switch (camera locked in the eyes; key V on PC by default). In first person or
+Shift-Lock the cursor is free while a window is open, or while the Free Cursor key (Left Alt) is
+held. A setting allows a more top-down angle.
 
 ### Input
 | Action | PC | Mobile | Gamepad |
@@ -95,6 +98,14 @@ toggle on PC, free drag on mobile. A setting allows a more top-down angle.
 
 Use `ContextActionService` so actions map to touch buttons automatically. Buttons must be
 big, semi-transparent and movable in settings (position + size).
+
+**Editable keys (PC):** every keyboard / mouse key is set in Settings > Keys (click a key, press
+the new one; a key taken by another action swaps with it; Reset puts the defaults back). Defaults:
+Attack left click, Block right click, Roll Q, Auto-Attack R, First Person V, Free Cursor Left Alt;
+menus Inventory B, Stats C, Shop G, Rebirth Shop Y, Pets P, Index X, Quests J, Team T, Zones M,
+Settings K. Mouse buttons only for Attack, Block and Roll. Keys Roblox or the game already use
+(W A S D, arrows, Space, E, F, I, O, Shift, Escape, Tab, /, `, Enter, F2, F9-F12) are refused.
+Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 
 ### Attack rules
 * **Melee categories** (Sword, Spear, Heavy, Dagger, Gauntlet, Whip & Chain): **hold** the

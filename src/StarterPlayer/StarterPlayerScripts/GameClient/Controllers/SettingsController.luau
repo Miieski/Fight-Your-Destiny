@@ -1,8 +1,8 @@
 --!strict
 -- The player's settings on the client: every change is applied at once and saved a moment later
 -- (Net.request "SetSetting", debounced; the server validates). Volumes drive the SoundGroups,
--- UI Scale the screens, Camera Zoom the camera; other settings are read where they are used
--- (Settings.get / Settings.changed).
+-- UI Scale the screens, Camera Zoom and First Person the camera; other settings are read where they
+-- are used (Settings.get / Settings.changed).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -22,7 +22,7 @@ local listeners: { [string]: { (any) -> () } } = {}
 
 local function applyZoom(distance: number)
 	local player = Players.LocalPlayer
-	if not player.Character then
+	if not player.Character or values.FirstPerson == true then
 		return
 	end
 	player.CameraMinZoomDistance = distance
@@ -31,6 +31,14 @@ local function applyZoom(distance: number)
 		player.CameraMinZoomDistance = UIConfig.Fx.CameraMinZoom
 		player.CameraMaxZoomDistance = UIConfig.Fx.CameraMaxZoom
 	end)
+end
+
+-- LockFirstPerson keeps the camera in the eyes; back to Classic, the camera returns to the default zoom.
+local function applyFirstPerson(on: boolean, pullOut: boolean)
+	Players.LocalPlayer.CameraMode = if on then Enum.CameraMode.LockFirstPerson else Enum.CameraMode.Classic
+	if not on and pullOut then
+		applyZoom(values.CameraZoom)
+	end
 end
 
 local function apply(key: string, fromServer: boolean?)
@@ -44,6 +52,8 @@ local function apply(key: string, fromServer: boolean?)
 		Theme.setUserScale(value)
 	elseif key == "CameraZoom" and not fromServer then
 		applyZoom(value)
+	elseif key == "FirstPerson" then
+		applyFirstPerson(value == true, not fromServer)
 	end
 	for _, fn in ipairs(listeners[key] or {}) do
 		task.spawn(fn, value)

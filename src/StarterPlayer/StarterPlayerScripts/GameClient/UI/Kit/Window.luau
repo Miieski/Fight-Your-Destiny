@@ -59,6 +59,7 @@ local function ensureRoot(): Frame
 	dim.AutoButtonColor = false
 	dim.BackgroundColor3 = Theme.Colors.Black
 	dim.BackgroundTransparency = 1
+	dim.Modal = true -- frees the mouse while a window is open (first person, Shift-Lock)
 	cover(dim)
 	dim.Visible = false
 	dim.ZIndex = 1
@@ -302,6 +303,7 @@ function Window.confirm(props: { [string]: any })
 	dim.AutoButtonColor = false
 	dim.BackgroundColor3 = Theme.Colors.Black
 	dim.BackgroundTransparency = 0.35
+	dim.Modal = true
 	cover(dim)
 	dim.ZIndex = 20
 	dim.Parent = parent

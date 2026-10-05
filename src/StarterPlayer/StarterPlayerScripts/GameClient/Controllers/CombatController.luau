@@ -403,19 +403,19 @@ local function dash(root: BasePart, dir: Vector3)
 	velocity.Parent = root
 	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
 	Debris:AddItem(velocity, Combat.Roll.Duration)
-	-- the body fades while invulnerable
+	-- the body fades while invulnerable, then gets its own value back (1 = hidden in first person)
 	local character = root.Parent
 	if character then
+		local before: { [BasePart]: number } = {}
 		for _, part in ipairs(character:GetDescendants()) do
 			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" and part.Name ~= "BlockBubble" then
-				part.LocalTransparencyModifier = 0.5
+				before[part] = part.LocalTransparencyModifier
+				part.LocalTransparencyModifier = math.max(part.LocalTransparencyModifier, 0.5)
 			end
 		end
 		task.delay(Combat.Roll.IFrames, function()
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-					part.LocalTransparencyModifier = 0
-				end
+			for part, value in pairs(before) do
+				part.LocalTransparencyModifier = value
 			end
 		end)
 	end

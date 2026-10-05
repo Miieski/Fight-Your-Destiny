@@ -671,3 +671,38 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 - The backup before Part A was forgotten; taken right after the Part A edits instead
   (`BackUP_Files/FightYourDestiny_2026-10-05_202520_partA_combat_*`). The scripts before Part A are in git commit
   67594b4, so nothing is lost.
+
+# Editable keys + first person - 2026-10-05 late evening (owner: "In setting system, Make the keys editable. Also make the 1st person available.")
+
+## Status (newest first)
+
+- 23:52 DONE. Backup before the change: `BackUP_Files/FightYourDestiny_2026-10-05_233703_before_keybinds_firstperson_*`.
+  Settings window: new **Keys** tab (16 actions in 3 groups, click a key then press the new key or mouse button,
+  Escape / 6 s cancels, swap when the key is taken, Reset). Controls tab: new **First Person** switch. Zoom minimum
+  8 -> 0.5 so zooming all the way in gives first person too. Tested in Play: the 16 bindings on ContextActionService,
+  K opens Settings, Roll rebound to Z then to B (Inventory moved to Z with a toast, B did not open Inventory during
+  the capture), W refused with a message, Z opens / closes Inventory, B rolls, V first person on / off (camera back
+  to 18 studs), body stays hidden after a roll in first person, Left Alt held shows the Modal cursor button, scroll
+  zooms into first person. Phone emulator (iPhone 17 Pro landscape): 5 tabs fit, the First Person switch works by
+  touch selection. Output: only the usual DataStore notice (Studio API access off), no save warning.
+  After backup `..._235041_after_keybinds_firstperson_*`; screenshots `docs/screenshots/keys_task/1-5`.
+
+## Decisions taken without the owner
+
+- Bindable actions = the existing combat keys (Attack, Block, Roll) + Auto-Attack, First Person, Free Cursor + one
+  hotkey per menu window (DESIGN.md already planned "Open menus: hotkeys + buttons", never built). Defaults: Attack
+  left click, Block right click, Roll Q, Auto-Attack R, First Person V, Free Cursor Left Alt, Inventory B, Stats C,
+  Shop G, Rebirth Shop Y, Pets P, Index X, Quests J, Team T, Zones M, Settings K.
+- Refused keys: W A S D / arrows / Space (movement, jump), E and F (prompts), I and O (Roblox camera zoom),
+  Shift (Shift-Lock), Escape, Tab, /, `, Enter, Windows keys, F2 (admin panel), F9-F12. Mouse buttons only for
+  Attack, Block and Roll (a click on a menu would open windows all the time). Gamepad buttons stay fixed.
+- First person = Settings switch (LockFirstPerson) + zoom down to 0.5 studs (Roblox default). With the cursor locked
+  in first person, a window's backdrop is a Modal button so the mouse is free in menus; the Free Cursor key (hold)
+  frees it to click the HUD. The same fixes menus in Shift-Lock.
+- On a device with no keyboard and no mouse, the Keys tab shows one line pointing to Controls > Mobile Buttons.
+
+## Problems / missing
+
+- Not verifiable through the MCP: that the cursor is really unlocked while a window is open in first person (the
+  simulated mouse moves even when locked). Uses Roblox's documented GuiButton.Modal; to check by hand: V, then K,
+  the cursor must move over the Settings window.
