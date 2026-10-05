@@ -207,6 +207,12 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
 * The 96 FBX files are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions =
   Meters). After import: Tools under `ReplicatedStorage.Assets.Weapons.<WeaponId>` (gameplay step).
 
+**Owner request 2026-10-05 (noon): "Zone Sign" setting (Settings > Display, default on) hides the top-center zone
+banner (the Zone Boost badge takes its place; the title card when entering a sub-zone still shows). On PC (no touch
+screen) the Zones button is a wide wooden button in the bottom-right corner (`Config/UI` `CornerButton`, menu entry
+`PcCorner`); tablets and phones keep the square tile next to the Settings gear (their bottom-right holds the action
+buttons). Screenshots `docs/screenshots/ui_redo/E1-E4`.**
+
 **2026-10-05: WEAPON SHOP + CASE OPENING + WEAPONS IN-GAME (docs/weapon_shop_brief.txt) are done** (details,
 decisions and tests in `docs/NIGHT_LOG.md`, screenshots `docs/screenshots/weapon_shop/`).
 * Configs: `Config/WeaponCategories`, `Config/WeaponRarities` (8 tiers + pity 30/100 + announcements),

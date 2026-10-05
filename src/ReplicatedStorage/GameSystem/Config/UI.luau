@@ -22,11 +22,14 @@ UI.Menu = {
 	{ Id = "Quests", Label = "Quests", Icon = "Quests" },
 	{ Id = "Team", Label = "Team", Icon = "Team" },
 	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
-	{ Id = "Zones", Label = "Zones", Icon = "Zones", Apart = true, ShowLabel = true }, -- teleport menu
+	{ Id = "Zones", Label = "Zones", Icon = "Zones", Apart = true, ShowLabel = true, PcCorner = true }, -- teleport menu
 }
 -- 8 buttons -> 4 rows at the vertical middle of the left edge. PC (no touch) uses PcTile / PcGap,
 -- tablets Tile / Gap; phones use the Menu pop-up.
 UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5, PcTile = 80, PcGap = 6 }
+-- Entries with PcCorner: on PC (no touch screen) a wide button in the bottom-right corner instead of the
+-- square tile next to the health bar (tablets and phones keep the tile).
+UI.CornerButton = { Size = Vector2.new(210, 68), Margin = 16, TextSize = 32 }
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
 UI.Windows = {

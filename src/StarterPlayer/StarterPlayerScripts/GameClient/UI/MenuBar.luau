@@ -3,11 +3,13 @@
 -- (8 buttons -> 4 rows) at the vertical middle of the left edge, with bigger tiles on PC (PcTile). Entries marked Apart
 -- in Config/UI Menu (Settings) are separate icon buttons right of the health bar. On phones the grid
 -- lives in a pop-up opened by a single Menu button, with the Apart buttons beside that button.
+-- Apart entries with PcCorner (Zones) become a wide button in the bottom-right corner on PC.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Badges = require(script.Parent.Badges)
 local Kit = script.Parent.Kit
+local Button = require(Kit.Button)
 local IconButton = require(Kit.IconButton)
 local Panel = require(Kit.Panel)
 local Screens = require(Kit.Screens)
@@ -31,6 +33,8 @@ local toggle: any
 local tiles: { any } = {}
 local apart: { any } = {}
 local apartLabels: { boolean } = {} -- Apart entries with ShowLabel keep their label (not on phones)
+local corner: { [number]: any } = {} -- index in `apart` -> its wide bottom-right button (PC)
+local CORNER = UIConfig.CornerButton
 local counts: { [string]: number } = {}
 
 local function updateToggleBadge()
@@ -85,9 +89,17 @@ local function layout()
 	local x = if compact then MARGIN + GRID.Tile + SPACING else MARGIN + health.Normal.X + SPACING
 	local y = if compact then TOP.Compact else health.Top + (health.Normal.Y - GRID.Tile) / 2
 	for index, button in ipairs(apart) do
-		button.Instance.Position = UDim2.fromOffset(x, y)
-		button:SetLabelVisible(apartLabels[index] and not compact)
-		y += GRID.Tile + SPACING
+		local wide = corner[index]
+		local inCorner = wide ~= nil and pc and not compact
+		button.Instance.Visible = not inCorner
+		if wide then
+			wide.Instance.Visible = inCorner
+		end
+		if not inCorner then
+			button.Instance.Position = UDim2.fromOffset(x, y)
+			button:SetLabelVisible(apartLabels[index] and not compact)
+			y += GRID.Tile + SPACING
+		end
 	end
 	popup.Position = UDim2.fromOffset(if compact then x + GRID.Tile + SPACING else MARGIN, TOP.Compact)
 end
@@ -138,6 +150,34 @@ function MenuBar:Start()
 		table.insert(if entry.Apart then apart else tiles, button)
 		if entry.Apart then
 			table.insert(apartLabels, entry.ShowLabel == true)
+		end
+		if entry.Apart and entry.PcCorner then
+			-- wide wooden button: big icon on the left, the name on the right
+			local wide = Button.new({
+				Name = entry.Id .. "Corner",
+				Text = entry.Label,
+				Icon = entry.Icon,
+				Style = "wood",
+				TextSize = CORNER.TextSize,
+				Depth = 6,
+				Size = UDim2.fromOffset(CORNER.Size.X, CORNER.Size.Y),
+				Position = UDim2.new(1, -CORNER.Margin, 1, -CORNER.Margin),
+				AnchorPoint = Vector2.new(1, 1),
+				Parent = root,
+				OnClick = function()
+					popup.Visible = false
+					Window.toggle(entry.Id)
+				end,
+			})
+			local icon = wide.Face:FindFirstChild("Icon") :: Frame?
+			if icon then
+				icon.Size = UDim2.fromScale(0.92, 0.92) -- the holder is sized on the button's height (RelativeYY)
+				icon.Position = UDim2.new(0, 6, 0.5, 0)
+			end
+			wide.Label.Size = UDim2.new(1, -(CORNER.Size.Y + 10), 0.7, 0)
+			wide.Label.Position = UDim2.new(0, CORNER.Size.Y + 2, 0.5, 0)
+			wide.Instance.Visible = false
+			corner[#apart] = wide
 		end
 		Badges.watch(entry.Id, function(count)
 			button.Badge:Set(count)

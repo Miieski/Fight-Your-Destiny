@@ -32,6 +32,7 @@ Settings.Definitions = {
 	{ Key = "ScreenShake", Type = "boolean", Section = "Display", Label = "Screen Shake", Default = true },
 	{ Key = "ShakeIntensity", Type = "number", Section = "Display", Label = "Shake Intensity", Default = 60, Min = 0, Max = 100, Step = 5, Unit = "%" },
 	{ Key = "UiScale", Type = "number", Section = "Display", Label = "UI Scale", Default = 1, Min = 0.8, Max = 1.2, Step = 0.05, Unit = "x" },
+	{ Key = "ZoneSign", Type = "boolean", Section = "Display", Label = "Zone Sign", Default = true, Hint = "Zone name sign at the top of the screen" },
 	{ Key = "HighContrastTelegraphs", Type = "boolean", Section = "Display", Label = "High-Contrast Boss Telegraphs", Default = false },
 
 	{ Key = "CameraZoom", Type = "number", Section = "Controls", Label = "Default Camera Zoom", Default = 18, Min = 8, Max = 40, Step = 1, Unit = " studs" },

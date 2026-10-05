@@ -1,6 +1,7 @@
 --!strict
--- HUD 3: zone and sub-zone banner (top-center), a large title card for 2 s when the player enters
--- a new sub-zone, and the Zone Boost badge (equipped weapon / armor from the current zone).
+-- HUD 3: zone and sub-zone banner (top-center; hidden with the "Zone Sign" setting off), a large title
+-- card for 2 s when the player enters a new sub-zone, and the Zone Boost badge (equipped weapon / armor
+-- from the current zone; it moves up into the banner's place when the banner is hidden).
 -- Reads the player attributes CurrentZone / CurrentSubZone (set by ZoneService).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,6 +13,7 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.State)
+local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
 local Icons = require(Kit.Icons)
@@ -149,10 +151,13 @@ local function layout()
 	banner.Size = UDim2.fromOffset(width, size.Y)
 	-- phones: banner and badge move up into the Roblox top bar strip when it is free there
 	local top = BANNER_TOP - Theme.topbarLift((Theme.size().X - width) / 2)
+	local shown = Settings.get("ZoneSign") ~= false
+	banner.Visible = shown
 	banner.Position = UDim2.new(0.5, 0, 0, top)
-	boost.Position = UDim2.new(0.5, 0, 0, top + size.Y + BOOST_GAP)
+	local boostTop = if shown then top + size.Y + BOOST_GAP else BANNER_TOP - Theme.topbarLift((Theme.size().X - BOOST_SIZE.X) / 2)
+	boost.Position = UDim2.new(0.5, 0, 0, boostTop)
 	-- the badge space is kept even while the badge is hidden, so the toasts do not jump
-	Screens.hud():SetAttribute(STACK_BOTTOM, top + size.Y + BOOST_GAP + BOOST_SIZE.Y)
+	Screens.hud():SetAttribute(STACK_BOTTOM, boostTop + BOOST_SIZE.Y)
 end
 
 function ZoneBanner:Start()
@@ -193,6 +198,7 @@ function ZoneBanner:Start()
 
 	layout()
 	Theme.Changed:Connect(layout)
+	Settings.changed("ZoneSign", layout)
 	local player = Players.LocalPlayer
 	updateLocation(false)
 	player:GetAttributeChangedSignal("CurrentSubZone"):Connect(function()
