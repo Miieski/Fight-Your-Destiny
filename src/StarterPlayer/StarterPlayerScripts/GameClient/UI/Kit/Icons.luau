@@ -1,18 +1,101 @@
 --!strict
--- Icons. Placeholder shapes for now; put a real image asset id in Icons.Assets and that id is used
--- instead (ids are shared with Config/UI Menu, weapon categories and toast kinds).
+-- Icons: 3D images (Icons.<Group>.<id>) with the old flat shapes kept as a fallback for ids that
+-- have no image yet. Icon ids are shared with Config/UI Menu, weapon categories and toast kinds.
 local Theme = require(script.Parent.Theme)
 
 local rgb = Color3.fromRGB
 
 local Icons = {}
 
-Icons.Assets = {
-	Inventory = "", Training = "", Stats = "", Shop = "", RebirthShop = "", Pets = "", Index = "", Quests = "",
-	Team = "", Settings = "", Gold = "", Diamond = "", Heart = "", Plus = "", Close = "", Menu = "",
-	Sword = "", Spear = "", Heavy = "", Dagger = "", Gauntlet = "", Ranged = "", Magic = "", Whip = "",
-	Pet = "", Egg = "", Armor = "", Info = "", Warning = "", Skull = "", Gift = "", Admin = "", Boost = "",
+-- 3D icons rendered in Blender with the shared template (Blender/Icons/_IconTemplate.blend) and
+-- uploaded to Roblox. Sources: Icons/<Group>/<id>.png and Blender/Icons/<Group>/<id>.blend.
+Icons.Menu = {
+	Hub = "rbxassetid://78324314568458",
+	Index = "rbxassetid://110181092540409",
+	Inventory = "rbxassetid://79699217856369",
+	Pets = "rbxassetid://87961432830762",
+	Quests = "rbxassetid://113023989103215",
+	RebirthShop = "rbxassetid://114458665213719",
+	Rewards = "rbxassetid://72322246886996",
+	Settings = "rbxassetid://105368314181534",
+	Shop = "rbxassetid://84453152556643",
+	Stats = "rbxassetid://71235942557638",
+	Team = "rbxassetid://77048844197287",
+	Zones = "rbxassetid://87870957016250",
 }
+Icons.Currency = {
+	Diamond = "rbxassetid://111694226932707",
+	Gold = "rbxassetid://70512606638184",
+	HealthHeart = "rbxassetid://87715477453344",
+	Key = "rbxassetid://137031644082310",
+	RebirthCredit = "rbxassetid://99588676527504",
+	ZoneBoost = "rbxassetid://93633978298060",
+}
+Icons.Stats = {
+	Attack = "rbxassetid://137835841351396",
+	Crit = "rbxassetid://132335612435152",
+	Defense = "rbxassetid://131900689208521",
+	GoldGain = "rbxassetid://131899708084383",
+	MaxHP = "rbxassetid://71889356267933",
+	Speed = "rbxassetid://111503145787274",
+}
+Icons.Items = {
+	Chest = "rbxassetid://134774043747832",
+	Egg = "rbxassetid://93450406424053",
+	Helmet = "rbxassetid://123418582134733",
+	Legs = "rbxassetid://85544373051050",
+	Pet = "rbxassetid://98845945273001",
+	Trophy = "rbxassetid://80417676746268",
+	Weapon = "rbxassetid://107109969437348",
+}
+Icons.Categories = {
+	Dagger = "rbxassetid://72050021112662",
+	Gauntlet = "rbxassetid://101679861341149",
+	Heavy = "rbxassetid://82601398662224",
+	Magic = "rbxassetid://74488887759460",
+	Ranged = "rbxassetid://107838210333106",
+	Spear = "rbxassetid://115877288350430",
+	Sword = "rbxassetid://109014283536385",
+	Whip = "rbxassetid://131679346612564",
+}
+Icons.Marks = {
+	Arrow = "rbxassetid://133050853433089",
+	Check = "rbxassetid://85216806609407",
+	Close = "rbxassetid://94070366675137",
+	Crown = "rbxassetid://89547984850233",
+	Info = "rbxassetid://103973805729568",
+	Lock = "rbxassetid://128219452761622",
+	MenuLines = "rbxassetid://112737404070158",
+	Plus = "rbxassetid://110393683182263",
+	Skull = "rbxassetid://133585783255050",
+	Star = "rbxassetid://131833469305832",
+	Warning = "rbxassetid://96078521254826",
+}
+Icons.Zones = {} -- Part B: zone icons, keyed by zone id
+Icons.SubZones = {} -- Part B: sub-zone icons, keyed by sub-zone id ("Plains_1")
+
+-- Older UI ids that now point at a 3D icon.
+local ALIASES = {
+	Heart = "HealthHeart", Boost = "ZoneBoost", Armor = "Chest", Gift = "Rewards", Training = "Stats",
+	Admin = "Crown", Menu = "MenuLines",
+}
+local GROUPS = { "Menu", "Currency", "Stats", "Items", "Categories", "Marks", "Zones", "SubZones" }
+
+-- The rendered icons keep a transparent margin (outline + shadow), so the image is drawn a bit larger
+-- than its holder to fill the same space as the old flat shapes.
+local IMAGE_BLEED = 1.14
+
+-- Image id for an icon id (any group), or nil when only a placeholder shape exists.
+function Icons.asset(id: string): string?
+	local key = ALIASES[id] or id
+	for _, group in ipairs(GROUPS) do
+		local list = (Icons :: any)[group]
+		if list and list[key] then
+			return list[key]
+		end
+	end
+	return nil
+end
 
 local C = {
 	Gold = rgb(255, 201, 60), GoldDark = rgb(196, 140, 30), Silver = rgb(220, 226, 236), Steel = rgb(150, 156, 168),
@@ -60,7 +143,8 @@ local SHAPES: { [string]: { { any } } } = {
 	Boost = { { 0.57, 0.31, 0.18, 0.48, "Gold", 25, 0.1 }, { 0.43, 0.69, 0.18, 0.48, "Gold", 25, 0.1 }, { 0.5, 0.5, 0.42, 0.12, "Gold", -20, 0.1 } },
 }
 
--- A square-ish holder (fills its parent by default) with the icon drawn inside.
+-- A square-ish holder (fills its parent by default) with the icon drawn inside. props.Flat = true
+-- forces the flat shape (for example the white "+" of the currency bars).
 function Icons.create(id: string, parent: Instance?, props: { [string]: any }?): Frame
 	local options = props or {}
 	local holder = Instance.new("Frame")
@@ -78,11 +162,15 @@ function Icons.create(id: string, parent: Instance?, props: { [string]: any }?):
 		local ratio = Instance.new("UIAspectRatioConstraint")
 		ratio.Parent = holder
 	end
-	local asset = Icons.Assets[id]
-	if asset and asset ~= "" then
+	local asset = if options.Flat then nil else Icons.asset(id)
+	if asset then
 		local image = Instance.new("ImageLabel")
+		image.Name = "Image"
 		image.BackgroundTransparency = 1
-		image.Size = UDim2.fromScale(1, 1)
+		image.AnchorPoint = Vector2.new(0.5, 0.5)
+		image.Position = UDim2.fromScale(0.5, 0.5)
+		image.Size = UDim2.fromScale(IMAGE_BLEED, IMAGE_BLEED)
+		image.ScaleType = Enum.ScaleType.Fit
 		image.Image = asset
 		image.ZIndex = holder.ZIndex
 		image.Parent = holder
@@ -111,6 +199,37 @@ function Icons.create(id: string, parent: Instance?, props: { [string]: any }?):
 	end
 	holder.Parent = parent
 	return holder
+end
+
+-- Downloads every icon image once (call at startup) so the first toast or window shows its icon.
+function Icons.preload()
+	local labels = {}
+	for _, group in ipairs(GROUPS) do
+		for _, asset in pairs((Icons :: any)[group]) do
+			local label = Instance.new("ImageLabel")
+			label.Image = asset
+			table.insert(labels, label)
+		end
+	end
+	task.spawn(function()
+		pcall(function()
+			game:GetService("ContentProvider"):PreloadAsync(labels)
+		end)
+		for _, label in ipairs(labels) do
+			label:Destroy()
+		end
+	end)
+end
+
+-- Fades an icon made by Icons.create (image or shape), e.g. for empty slots.
+function Icons.setFaded(holder: Instance, transparency: number)
+	for _, d in ipairs(holder:GetDescendants()) do
+		if d:IsA("ImageLabel") then
+			d.ImageTransparency = transparency
+		elseif d:IsA("Frame") then
+			d.BackgroundTransparency = transparency
+		end
+	end
 end
 
 return Icons

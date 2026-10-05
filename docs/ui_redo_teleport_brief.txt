@@ -1,0 +1,119 @@
+=====================================================================
+ FIGHT YOUR DESTINY - UI REDO (3D ICONS) + TELEPORT MENU
+=====================================================================
+Replaces the visual style of the UI built in step 1 (see docs/ui_hud_brief.txt for what the
+HUD must contain; none of those features are removed). The owner will send you a reference
+screenshot of another game's UI.
+
+RULES (unchanged)
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite).
+2. AT THE END: commit and push to https://github.com/Miieski/Fight-Your-Destiny (main) and
+   update HANDOFF.md.
+3. Mobile first, server authoritative, all ids/numbers from Config modules.
+
+---------------------------------------------------------------------
+ PART 1 - REDO THE UI WITH 3D-STYLE ICONS
+---------------------------------------------------------------------
+GOAL: keep the **fantasy wood** identity of Fight Your Destiny (dark wood panels, gold borders,
+gem accents, gold/steel buttons), but replace every flat icon with a **chunky, glossy, 3D-looking
+icon**.
+
+USE THE REFERENCE SCREENSHOT ONLY FOR:
+ - how the icons are drawn: rounded volume, soft highlights, a thick dark outline, a soft drop
+   shadow, bright saturated colors, slightly oversized so the icon dominates the button;
+ - how buttons are composed: big icon on top, bold label with a thick dark stroke under it, a
+   raised "base" edge under the button, red round notification badge on the corner;
+ - how currency pills look (round icon overlapping the left end of a pill, number inside).
+ DO NOT COPY: its blue winter color scheme, its panels, or its layout. Our colors stay wood/gold.
+
+HOW TO MAKE THE 3D ICONS (use Blender through the Blender connector)
+ 1. Create ONE Blender icon template file `Blender/Icons/_IconTemplate.blend`:
+    - orthographic or low-FOV camera at a fixed 3/4 angle, transparent background,
+    - 3-point lighting (soft key, fill, rim) with strong, readable highlights,
+    - a dark outline (Freestyle line set or an inverted-hull outline material),
+    - render size 512x512 PNG with alpha (the UI scales it down).
+ 2. Model each icon as a simple chunky stylized object (low-poly, rounded bevels), then render it
+    with the same template so ALL icons share the same camera, light and outline.
+ 3. Save each icon source as `Blender/Icons/<Group>/<id>.blend` and the render as
+    `Icons/<Group>/<id>.png`.
+ 4. Upload the PNGs to Roblox with the Studio MCP upload tool (or tell the owner which files to
+    upload manually) and store the asset ids in `GameClient/UI/Kit/Icons.luau`
+    (`Icons.<Group>.<id> = "rbxassetid://..."`). Never hard-code an id elsewhere.
+ 5. Build one icon first (for example Gold coin), show a screenshot to the owner, and continue
+    only after approval. Then do the rest one by one.
+
+ICONS NEEDED (group: ids)
+ - Menu: Inventory, Training, Shop, RebirthShop, Pets, Index, Quests, Team, Settings, Zones,
+   Hub, Rewards
+ - Currency & HUD: Gold, Diamond, RebirthCredit, Key, HealthHeart, ZoneBoost
+ - Stats: MaxHP, Attack, Defense, Speed, Crit, GoldGain
+ - Item types: Weapon, Helmet, Chest, Legs, Egg, Trophy, Pet
+ - Weapon categories: Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic, Whip
+ - Zones (12) and Sub-zones (48): see part 2
+ - UI marks: Lock, Check, Arrow, Plus, Close, Star
+
+UI KIT CHANGES
+ - Update `Button`, `IconButton`, `Slot`, `Badge`, currency pills and the menu buttons to use the
+   new icons; icons sit slightly above the label and have a subtle idle bob / press squash.
+ - Menu buttons: square wooden button with a raised base, large 3D icon, bold label with stroke;
+   label hidden (icon only) on small phones.
+ - Keep: segmented red HP bar, rarity border colors, toasts, windows with pop animation.
+ - Currency display: right-column style of the reference image (round icon overlapping a dark wooden
+   pill, white number with dark stroke, "+" on the right). The Gold pill is noticeably LONGER than
+   the Diamonds pill so large numbers fit, and the text auto-shrinks if still too long.
+ - Re-test at 1920x1080, 1280x720, phone and tablet emulators; take screenshots.
+
+---------------------------------------------------------------------
+ PART 2 - TELEPORT MENU
+---------------------------------------------------------------------
+OPENING: a "Zones" button in the HUD menu bar (and the hub portals open the same window).
+
+PAGE 1 - ZONES
+ - A **scrollable vertical list on the left side** of the window with one row per zone: the 12 zones
+   in progression order, preceded by a "Hub" row. Each row = zone icon + name + state.
+ - States: current location (highlighted), unlocked, locked (grayed, lock icon + requirement text),
+   coming soon (zone not built yet).
+ - Clicking a zone row goes to **Page 2** for that zone. The right side of Page 1 shows a large
+   preview (the zone icon big, its name, a short description and its boss name/icon).
+ - Smooth scrolling with touch drag and mouse wheel, rows >= 56 px high on phones.
+
+PAGE 2 - SUB-ZONES (for the chosen zone)
+ - A header with the zone name, its icon and a **Back** button to return to Page 1.
+ - 4 cards (one per sub-zone) with a sub-zone icon, name and state:
+   unlocked (green "Teleport" button), locked (gray, lock, price in Gold), boss room (red accent,
+   boss icon, "Boss Gate" teleport to the boss gate entrance, never directly into an arena).
+ - The sub-zone the player is in is marked "You are here".
+ - Hub: if the Hub row is chosen on Page 1, teleport immediately (no Page 2).
+
+TELEPORT RULES (server validates every one)
+ - Request: `Net.request("Teleport", zoneId, subZoneId)`; the server checks that the zone and
+   sub-zone are unlocked in the profile (`Zones`, `SubZones`), that the player is not in a boss arena,
+   not in combat (no damage taken in the last 5 s) and not on cooldown (3 s). Admin bypasses.
+ - Destination = `workspace.Zones.<ZoneId>.<ZoneId>_<n>.Entrance` (hub: `workspace.Hub.SpawnLocation`).
+ - Fade-to-black transition (0.25 s out, 0.25 s in), a teleport sound, a "Teleported to <name>" toast.
+ - Locked or missing destinations return a clear error toast ("Zone locked: needs boss key 1 and 1 Rebirth").
+ - Requirements text for locked zones follows DESIGN.md section 4 (key of the previous boss, Rebirth
+   count, previous zone redone).
+
+DATA: names, order, descriptions and icon ids come from `Config/Zones.luau`; unlock state from
+`State` (profile). Use `Admin setZone/unlock` commands to test every state.
+
+ZONE ICONS (12) - motif for the 3D icon (a small diorama, not a flat symbol)
+ 1 Plains: green hill, a tree and a windmill      7 Hell: red horned castle gate over lava
+ 2 Desert: pyramid and sun                        8 Heaven: floating island with a golden arch
+ 3 Jungle: stepped temple in vines                9 Realm of the Dead: gothic crypt and a tombstone
+ 4 Tundra: snowy peak with an ice crystal        10 Abyss: coral reef and a trident
+ 5 Cursed Swamp: witch cauldron and crooked tree 11 Mechanical City: cog and a robot head
+ 6 Volcano: erupting cone with lava              12 The Void: floating obsidian island and a purple crystal
+SUB-ZONE ICONS (48): a smaller diorama of each sub-zone's landmark as written in
+`docs/zone_design_document.txt` (for example Beach = palm + wrecked boat, Cave = rock mouth with a
+torch, Canyon = red cliffs and a stone bridge). Each zone's 4 icons share that zone's palette so they
+read as a family. Make them in the same Blender template, one by one.
+
+---------------------------------------------------------------------
+ ACCEPTANCE
+---------------------------------------------------------------------
+ - Screenshots at desktop, phone and tablet sizes of: HUD, menu bar, Zones page 1, Zones page 2.
+ - Every button reachable by touch (>= 44 px), nothing overlapping Roblox's own icons/joystick.
+ - Teleport works for unlocked destinations and refuses locked ones with a clear toast.
+ - No errors/warnings in the Output. Backup made first, everything pushed at the end.

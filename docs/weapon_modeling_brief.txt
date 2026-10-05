@@ -1,0 +1,106 @@
+=====================================================================
+ FIGHT YOUR DESTINY - WEAPON MODELING BRIEF (BLENDER)
+ 96 weapons: 8 categories x 12 zones, built ONE BY ONE
+=====================================================================
+Weapon list, names and categories: docs/weapon_system_document.txt (section 6).
+Use the Blender connector. Do not start this task until the owner says go.
+
+RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite).
+2. AT THE END of each category: commit and push to
+   https://github.com/Miieski/Fight-Your-Destiny (main) and update HANDOFF.md.
+3. Save the Blender file after EVERY weapon. Never leave unsaved work.
+4. Blender runs arbitrary Python: do not open unknown .blend files, and keep the project saved.
+
+---------------------------------------------------------------------
+ 1. STYLE
+---------------------------------------------------------------------
+ - Between **low-poly and realistic**: believable proportions and readable real-world shapes
+   (guards, grips, blades, strings, gems) with faceted, clean geometry and light bevels. Not cartoonish
+   and not photoreal.
+ - Each weapon must look like it belongs to its zone (see docs/zone_design_document.txt): materials,
+   colors and motifs (Plains = iron/wood, Desert = sandstone/gold, Tundra = ice/steel, Volcano =
+   obsidian/glowing magma, Void = dark crystal/purple glow, and so on). Rarity is NOT modeled;
+   rarity glow/aura/particles are added in Studio.
+ - Strong silhouette: a player must tell the category and zone at a glance, also from far away on a
+   phone screen.
+ - Budget: 500-3,000 triangles per weapon (Gauntlet and Magic up to 4,000). One mesh (or very few),
+   one material, one 512x512 or 1024x1024 texture set (color, plus metalness/roughness/normal if they
+   help). Clean UVs, no overlapping islands, no n-gons on the final mesh, applied transforms, correct
+   normals.
+ - Emissive parts (lava, magic gems, plasma) go on a separate emissive texture or material slot so
+   Studio can make them glow.
+
+---------------------------------------------------------------------
+ 2. SCALE, ORIGIN, ORIENTATION
+---------------------------------------------------------------------
+ - Build at real scale in meters, then plan 1 stud = 0.28 m. Approximate lengths in studs:
+   Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Gauntlet 1.8 (pair, one per hand) | Ranged 5 | Magic 6 |
+   Whip & Chain 6 (handle part).
+ - Origin at the **grip center** (where the hand holds it). Blade/head direction along one fixed axis.
+ - **Pilot first:** model the Plains Sword, export it, and let the owner import it into Studio and hold
+   it as a Tool. Fix the axis/scale convention until it holds correctly, write the convention in
+   `Blender/Weapons/README.txt`, and only then continue with the other weapons.
+
+---------------------------------------------------------------------
+ 3. FILE STRUCTURE (categorized by weapon type)
+---------------------------------------------------------------------
+```
+Blender/Weapons/
+  README.txt                       conventions, pilot result
+  weapons_manifest.csv             id, category, zone, triangles, status, notes
+  Sword/      01_plains_sword.blend ... 12_void_sword.blend
+  Spear/      01_plains_spear.blend ... 12_void_spear.blend
+  Heavy/      Dagger/      Gauntlet/      Ranged/      Magic/      Whip/   (same pattern)
+Blender_Exports/Weapons/<Category>/<number>_<id>.fbx          (for Studio import)
+Icons/Weapons/<Category>/<number>_<id>_icon.png               (512x512, transparent)
+```
+ - File id follows `docs/weapon_system_document.txt`: zone number + zone/category (for example
+   `07_hell_sword`, `12_void_whip`). The weapon's display name is stored in the manifest.
+ - One .blend per weapon, containing: the model, its materials/textures (packed or in a `textures/`
+   folder next to it), and a collection for the icon render setup.
+
+---------------------------------------------------------------------
+ 4. ONE BY ONE WORKFLOW (per weapon)
+---------------------------------------------------------------------
+ 1. Read the weapon's name, category, zone and element in the weapon document.
+ 2. Block out the silhouette, then add detail, bevels and materials.
+ 3. Render a 3-angle preview and **look at it yourself** (screenshot); fix proportions and noise.
+ 4. Check triangle count, UVs, normals, applied transforms, scale and origin.
+ 5. Texture/emissive pass, then re-check from far away (downscale the preview to 128 px).
+ 6. Save the .blend into its category folder, export the FBX, update `weapons_manifest.csv`.
+ 7. Render the **dedicated icon** (section 5).
+ 8. Only then start the next weapon. Never batch-generate several weapons at once.
+ Within a category, build in zone order 1 -> 12 so the weapons visibly progress in craftsmanship
+ and richness (the zone 12 weapon is the most elaborate).
+ Order of categories: Sword (also the pilot), Spear, Heavy, Dagger, Gauntlet, Ranged, Magic, Whip.
+ Checkpoints: after the pilot, then after every category, send the owner screenshots of the
+ 12 weapons together (a lineup) and wait for feedback before the next category.
+
+---------------------------------------------------------------------
+ 5. ICONS (one dedicated icon per weapon)
+---------------------------------------------------------------------
+ - Use the shared icon template `Blender/Icons/_IconTemplate.blend` from the UI redo (same camera
+   angle, 3-point lighting, outline) so weapon icons match the rest of the UI.
+ - The weapon is posed diagonally (hilt bottom-left, tip top-right) to fill the square; 512x512 PNG,
+   transparent background, no baked rarity frame (the UI adds the rarity border and glow).
+ - Save to `Icons/Weapons/<Category>/<number>_<id>_icon.png`. Upload through the Studio MCP upload
+   tool when available (otherwise list the files for the owner to upload) and store the asset id in
+   `Config/Weapons.luau` (`Icon` field). Never hard-code icon ids elsewhere.
+
+---------------------------------------------------------------------
+ 6. IMPORT INTO STUDIO
+---------------------------------------------------------------------
+ - The owner imports FBX files with Studio's 3D Importer (Asset Manager -> Bulk Import works for
+   many files at once), unless a safe route to import automatically is approved.
+ - Imported models become Tools under `ReplicatedStorage.Assets.Weapons.<WeaponId>` with a `Handle`
+   (MeshPart). Keep the Studio-side setup of Tools (Grip, attachments for VFX) for the gameplay step.
+
+---------------------------------------------------------------------
+ 7. CHECKLIST PER WEAPON
+---------------------------------------------------------------------
+ [ ] silhouette readable at 128 px      [ ] matches zone theme and category role
+ [ ] triangles within budget            [ ] clean UVs / normals / applied transforms
+ [ ] origin at grip, correct scale      [ ] emissive parts separated
+ [ ] .blend saved in category folder    [ ] FBX exported
+ [ ] icon rendered and saved            [ ] manifest row updated

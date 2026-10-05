@@ -144,7 +144,7 @@ local function makePill(id: string, order: number): Pill
 	track.Parent = bar
 
 	local label = Theme.text({ Name = "Amount", Font = "Number", Text = "0", TextSize = 28, Color = WHITE, StrokeThickness = 2, Align = "Right", AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3, Parent = track })
-	local plus = Icons.create("Plus", bar, { Position = UDim2.new(1, -PLUS_AREA / 2, 0.5, 0), Color = WHITE, ZIndex = 3 })
+	local plus = Icons.create("Plus", bar, { Position = UDim2.new(1, -PLUS_AREA / 2, 0.5, 0), Color = WHITE, ZIndex = 3, Flat = true })
 	plus.Name = "Plus"
 	local icon = Icons.create(config.Icon, row, { Position = UDim2.fromScale(0, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 

@@ -132,7 +132,7 @@ local function build(id: string): Built
 	bannerLimit.Parent = banner
 	Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -16, 0.86, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
 
-	Button.new({ Name = "Close", Style = "danger", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, OnClick = Window.close, Parent = frame })
+	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, OnClick = Window.close, Parent = frame })
 
 	local top = HEADER
 	local entry: Built = { frame = frame, pages = {}, tabs = nil, pop = pop, def = def }

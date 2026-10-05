@@ -14,15 +14,16 @@ function Badge.new(parent: Instance, size: number?): Badge
 	local dot = Instance.new("Frame")
 	dot.Name = "Badge"
 	dot.AnchorPoint = Vector2.new(0.5, 0.5)
-	dot.Position = UDim2.new(1, -6, 0, 6)
-	dot.Size = UDim2.fromOffset(size or 24, size or 24)
+	dot.Position = UDim2.new(1, -5, 0, 5)
+	dot.Size = UDim2.fromOffset(size or 27, size or 27)
 	dot.BackgroundColor3 = Theme.Colors.Badge
 	dot.BorderSizePixel = 0
 	dot.ZIndex = 10
 	dot.Visible = false
 	Theme.round(dot)
-	Theme.stroke(dot, Theme.Colors.Text, 2)
-	local label = Theme.text({ Name = "Count", Font = "Number", TextSize = 16, Size = UDim2.fromScale(0.86, 0.86), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11, Parent = dot })
+	Theme.gradient(dot, Color3.fromRGB(255, 92, 92), Theme.Colors.Badge)
+	Theme.stroke(dot, Theme.Colors.Ink, 2.5)
+	local label = Theme.text({ Name = "Count", Font = "Number", TextSize = 17, StrokeThickness = 2, Size = UDim2.fromScale(0.86, 0.86), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11, Parent = dot })
 	dot.Parent = parent
 	return setmetatable({ Instance = dot, Label = label }, Badge)
 end

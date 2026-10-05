@@ -26,7 +26,7 @@ Controls.Attack = attackEvent.Event
 Controls.Roll = rollEvent.Event
 Controls.Block = blockEvent.Event
 
-local ICONS = { Attack = "Sword", Roll = "Boost", Block = "Armor" }
+local ICONS = { Attack = "Sword", Roll = "Speed", Block = "Defense" }
 -- Layout editor toolbar: left part of the screen so it never covers the buttons being moved.
 local EDITOR = { Width = 560, Height = 120, MaxWidthFraction = 0.56, CenterX = 0.3, Top = 70 }
 

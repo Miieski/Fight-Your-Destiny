@@ -9,6 +9,7 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local State = require(script.Parent.Parent.State)
 local Kit = script.Parent.Kit
+local Icons = require(Kit.Icons)
 local Screens = require(Kit.Screens)
 local Slot = require(Kit.Slot)
 local Theme = require(Kit.Theme)
@@ -45,11 +46,7 @@ local function refreshWeapon()
 	-- the empty weapon icon is shown faded
 	local icon = weaponSlot.Box:FindFirstChild("Icon")
 	if icon and not def then
-		for _, part in ipairs(icon:GetChildren()) do
-			if part:IsA("Frame") then
-				part.BackgroundTransparency = 0.6
-			end
-		end
+		Icons.setFaded(icon, 0.55)
 	end
 end
 

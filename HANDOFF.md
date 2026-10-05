@@ -153,6 +153,22 @@ Work boss by boss and system by system with sub-agents:
 REVIEW. Brief: `docs/ui_hud_brief.txt`. Do NOT start CombatService (step 2 of the brief's section 8)
 until the owner says go. Screenshots: `docs/screenshots/ui_phase/` (1080p, 720p, phone, tablet).**
 
+**Night 2026-10-05 (owner asleep, `docs/NIGHT_LOG.md` is the live log): Part A of
+`docs/ui_redo_teleport_brief.txt` is done - every UI icon is a chunky glossy 3D render.**
+* Pipeline: `tools/blender/fyd_icons.py` (template: ortho 3/4 camera, 4 area lights, glossy coat
+  materials, post-process 14 px dark outline + soft drop shadow, 512 px PNG) + recipes
+  `fyd_icon_recipes.py` / `fyd_icon_recipes2.py`. Template `Blender/Icons/_IconTemplate.blend`,
+  sources `Blender/Icons/<Group>/<id>.blend`, renders `Icons/<Group>/<id>.png`, sheets in `Previews/Icons/`.
+  Run inside Blender (connector): `sys.path.insert(0, "<project>/tools/blender")`,
+  `I.setup_template()`, `I.make_icon(group, id, recipe)`.
+* 50 icons uploaded (Studio MCP `upload_image` reads URLs, so `python -m http.server 8765` serves the
+  project; batches of 5, bigger batches time out). Ids: `Icons/asset_ids.json` (`tools/icon_ids.py`)
+  and `GameClient/UI/Kit/Icons.luau` (`Icons.<Group>.<id>`, `Icons.asset(id)` with aliases for the
+  old ids, `Icons.preload()` at startup, `Flat = true` forces the old flat shape).
+* Kit: menu tiles = wooden button with a 6 px raised base, big bobbing 3D icon, squash on press,
+  bold cream label with a thick stroke; chunkier badges; window close = wood button with the red 3D X;
+  touch Roll/Block use the boot/shield icons. Screenshots: `docs/screenshots/ui_redo/`.
+
 **Owner decision 2026-10-05: the "Training" menu button and window are now "Stats". The Stats window
 will hold the WHOLE RPG system (HP, Attack, Defense, Speed, Crit, Gold Gain, their upgrades and the
 derived stats); see DESIGN.md section 3. Step 3 of the brief's plan is therefore "Stats window +

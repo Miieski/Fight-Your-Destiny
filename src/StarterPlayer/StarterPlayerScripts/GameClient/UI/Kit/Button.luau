@@ -1,7 +1,7 @@
 --!strict
 -- Beveled button: a darker base under the face; pressing moves the face down 2 px and scales to 0.96.
 --   local button = Button.new({ Text, Style = "primary"|"secondary"|"danger"|"wood", Size, Position,
---       AnchorPoint, Parent, LayoutOrder, Icon (Icons id), TextSize, OnClick, Name, ZIndex })
+--       AnchorPoint, Parent, LayoutOrder, Icon (Icons id), TextSize, OnClick, Name, ZIndex, Depth })
 --   button.Instance, button.Face, button.Label, button:SetText(), :SetEnabled(), :SetStyle()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -42,6 +42,7 @@ export type Button = typeof(setmetatable({} :: {
 }, Button))
 
 function Button.new(props: { [string]: any }): Button
+	local depth = props.Depth or DEPTH
 	local root = Instance.new("TextButton")
 	root.Name = props.Name or "Button"
 	root.Text = ""
@@ -68,7 +69,7 @@ function Button.new(props: { [string]: any }): Button
 
 	local face = Instance.new("Frame")
 	face.Name = "Face"
-	face.Size = UDim2.new(1, 0, 1, -DEPTH)
+	face.Size = UDim2.new(1, 0, 1, -depth)
 	face.BackgroundColor3 = Color3.new(1, 1, 1)
 	face.BorderSizePixel = 0
 	face.ZIndex = root.ZIndex
