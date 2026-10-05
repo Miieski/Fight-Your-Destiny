@@ -40,7 +40,7 @@ UI.Windows = {
 	RebirthShop = { Title = "Rebirth Shop", Size = Vector2.new(920, 600) },
 	Pets = { Title = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620) },
 	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620) },
-	Quests = { Title = "Quests", Tabs = { "Daily" } },
+	Quests = { Title = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600) },
 	Team = { Title = "Team" },
 	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Other" } },
 	Zones = { Title = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones

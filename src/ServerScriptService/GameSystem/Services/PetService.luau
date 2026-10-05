@@ -21,6 +21,7 @@ local RebirthShop = require(ReplicatedStorage.GameSystem.Config.RebirthShop)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local ShopService = require(script.Parent.ShopService)
+local RewardService = require(script.Parent.RewardService)
 
 local PetService = { Priority = 5 }
 
@@ -116,6 +117,7 @@ local function hatchOne(player: Player, profile: { [string]: any }, eggUid: stri
 	eggs[eggUid] = nil
 	DataService:Set(player, "Eggs", eggs)
 	local uid = addPet(player, profile, petId, tier)
+	RewardService.progress(player, "HatchEggs", 1)
 	return { uid = uid, petId = petId, rarity = tier, eggRarity = egg.rarity, lucky = lucky, zone = egg.zone }
 end
 
@@ -203,6 +205,7 @@ local function buyPremiumEgg(player: Player, zoneValue: any): (boolean, any)
 	local eggTier = ShopService.rollTier(random, 1)
 	local petId, tier, lucky = PetService.hatchRoll(random, zone.Index, eggTier, PetService.eggLuck(profile))
 	local uid = addPet(player, profile, petId, tier)
+	RewardService.progress(player, "HatchEggs", 1)
 	DataService:Save(player)
 	return true, { results = { { uid = uid, petId = petId, rarity = tier, eggRarity = eggTier, lucky = lucky, zone = zone.Index, premiumEgg = true } }, cost = price }
 end

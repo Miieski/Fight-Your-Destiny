@@ -19,6 +19,7 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local WeaponService = require(script.Parent.WeaponService)
+local RewardService = require(script.Parent.RewardService)
 
 local ShopService = { Priority = 5 }
 
@@ -208,6 +209,7 @@ local function buy(player: Player, weaponId: any): (boolean, any)
 		end
 	end)
 	DataService:Save(player)
+	RewardService.progress(player, "BuyWeapon", 1)
 	return true, result
 end
 

@@ -25,6 +25,8 @@ local PetService = require(script.Parent.PetService)
 local ArmorService = require(script.Parent.ArmorService)
 local BoostService = require(script.Parent.BoostService)
 local IndexService = require(script.Parent.IndexService)
+local RewardService = require(script.Parent.RewardService)
+local Quests = require(ReplicatedStorage.GameSystem.Config.Quests)
 local IndexBook = require(ReplicatedStorage.GameSystem.Config.IndexBook)
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
@@ -391,6 +393,49 @@ local COMMANDS: { [string]: Command } = {
 			IndexService:Discover(player, id, tier(rarity))
 		end
 		return true, `{#ids} Index entr{if #ids == 1 then "y" else "ies"} discovered`
+	end,
+	-- progressQuest(kind, n): quest progress as if the game system had reported it
+	progressQuest = function(player, kind, n)
+		if typeof(kind) ~= "string" or not Quests.ById[kind] then return false, "progressQuest(kind, n)" end
+		RewardService.progress(player, kind, tonumber(n) or 1)
+		return true, nil
+	end,
+	-- addPlaytime(minutes): play time of today (playtime gifts)
+	addPlaytime = function(player, minutes)
+		local n = tonumber(minutes)
+		if not n or n <= 0 or n > 1440 then return false, "addPlaytime(minutes)" end
+		RewardService:AddPlaytime(player, n * 60)
+		return true, `+{n} min played`
+	end,
+	-- setDaily(streak, daysAgo): the daily reward record (daysAgo 1 = claimed yesterday, so today continues the streak)
+	setDaily = function(player, streak, daysAgo)
+		local s, d = math.floor(tonumber(streak) or -1), math.floor(tonumber(daysAgo) or -1)
+		if s < 0 or s > #Quests.Daily or d < 0 then return false, "setDaily(streak 0..7, daysAgo)" end
+		DataService:Set(player, "Daily", { Streak = s, LastDay = if s == 0 then 0 else Quests.day(os.time()) - d })
+		return true, `Daily streak {s}, last claim {d} day(s) ago`
+	end,
+	-- resetQuests(): today's quests, play time and codes start again (tests)
+	resetQuests = function(player)
+		DataService:Set(player, "Quests", { Day = 0, List = {} })
+		DataService:Set(player, "Playtime", { Day = 0, Seconds = 0, Claimed = {} })
+		DataService:Set(player, "Codes", {})
+		return true, "Quests, play time and codes reset (quests regenerate on the next tick or claim)"
+	end,
+	-- simulateQuests(day?): the 3 quests of a UTC day (default today) and how often each kind comes in 365 days
+	simulateQuests = function(player, day)
+		local d = math.floor(tonumber(day) or Quests.day(os.time()))
+		local counts = {}
+		for i = 0, 364 do
+			for _, id in ipairs(Quests.forDay(d + i)) do
+				counts[id] = (counts[id] or 0) + 1
+			end
+		end
+		local lines = { `Day {d}: {table.concat(Quests.forDay(d), ", ")}` }
+		for _, kind in ipairs(Quests.Pool) do
+			table.insert(lines, `  {kind.Id}: {counts[kind.Id] or 0} / 365 days`)
+		end
+		print(table.concat(lines, "\n"))
+		return true, lines[1]
 	end,
 	-- clearIndex(): empties the Index and its claimed rewards (tests)
 	clearIndex = function(player)

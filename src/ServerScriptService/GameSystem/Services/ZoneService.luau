@@ -13,6 +13,7 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local Economy = require(ReplicatedStorage.GameSystem.Config.Economy)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local DataService = require(script.Parent.DataService)
+local RewardService = require(script.Parent.RewardService)
 local EnemyService = require(script.Parent.EnemyService)
 
 local ZoneService = { Priority = 4 }
@@ -149,6 +150,7 @@ local function tryUnlock(player: Player, subZone: SubZone)
 	unlocked[subZone.id] = true
 	DataService:Set(player, "SubZones", unlocked)
 	notify(player, `{Zones.ById[subZone.zoneId].SubZones[subZone.n]} unlocked!`, "reward")
+	RewardService.progress(player, "OpenSubZone", 1)
 end
 
 function ZoneService:LeaveArena(player: Player, stay: boolean?)

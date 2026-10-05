@@ -11,6 +11,8 @@ local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
+local IndexService = require(script.Parent.IndexService)
+local RewardService = require(script.Parent.RewardService)
 
 local EnemyService = { Priority = 3 }
 
@@ -142,8 +144,10 @@ function EnemyService:Damage(player: Player, state: EnemyState, amount: number):
 	if not state.alive then
 		return false
 	end
+	local dealt = math.min(state.hp, amount)
 	state.hp = math.max(0, state.hp - amount)
 	state.damage[player] = (state.damage[player] or 0) + amount
+	RewardService.progress(player, "DealDamage", dealt)
 	local info = state.model:FindFirstChild("Info")
 	if info then
 		local bar = info:FindFirstChild("Bar") :: any
@@ -160,7 +164,17 @@ function EnemyService:Damage(player: Player, state: EnemyState, amount: number):
 			best, bestDamage = who, dealt
 		end
 	end
-	DataService:AddGold(best, state.def.Gold * Playtest.GoldMultiplier)
+	local gold = state.def.Gold * Playtest.GoldMultiplier
+	DataService:AddGold(best, gold)
+	-- daily quests and the Index (docs/menu_systems_brief.txt D3, D4)
+	RewardService.progress(best, "KillEnemies", 1)
+	RewardService.progress(best, "EarnGold", gold)
+	if state.def.Role == "MiniBoss" then
+		RewardService.progress(best, "KillMiniBoss", 1)
+	elseif state.def.Role == "Boss" then
+		RewardService.progress(best, "BeatBoss", 1)
+	end
+	IndexService:Discover(best, state.def.Id)
 	deathEffect(state.model:GetPivot().Position + Vector3.new(0, 2.5, 0))
 	local group, def, cframe = state.group, state.def, state.cframe
 	remove(state)

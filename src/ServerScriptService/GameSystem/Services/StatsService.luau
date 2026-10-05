@@ -11,6 +11,7 @@ local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 local DataService = require(script.Parent.DataService)
+local RewardService = require(script.Parent.RewardService)
 
 local StatsService = { Priority = 3 }
 
@@ -83,6 +84,7 @@ local function train(player: Player, plan: any): (boolean, any)
 	DataService:Set(player, "Attributes", nextValues)
 	StatsService:Apply(player)
 	DataService:Save(player)
+	RewardService.progress(player, "SpendAttributes", cost)
 	return true, { Attributes = nextValues, Cost = cost }
 end
 

@@ -24,7 +24,12 @@ end
 
 local REGISTRY: { [string]: Entry } = {
 	Inventory = debugOnly("Inventory"), -- later: new loot not seen yet
-	Quests = debugOnly("Quests"), -- later: claimable quests
+	Quests = { Keys = { "DebugBadges", "Quests", "Daily", "Playtime" }, Count = function() -- quests, daily reward, gifts
+		local pages = script.Parent:FindFirstChild("Pages")
+		local page = pages and pages:FindFirstChild("QuestsPage")
+		local claimable = if page then (require(page) :: any).claimable() else 0
+		return math.max(debugCount("Quests"), claimable)
+	end },
 	Index = { Keys = { "DebugBadges", "Index", "IndexClaimed" }, Count = function() -- claimable Index rewards
 		return math.max(debugCount("Index"), IndexBook.claimable(State.get("Index"), State.get("IndexClaimed")))
 	end },

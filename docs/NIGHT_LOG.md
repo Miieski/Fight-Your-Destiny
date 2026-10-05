@@ -224,6 +224,22 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 14:40 PART D4 QUESTS done and pushed. `Config/Quests` (G = 2000 x 10^(Z-1); pool of 10 kinds, 3 a day picked
+  deterministically from the UTC day; targets in G / zone damage units; normal = 3 G, hard (mini-boss, boss,
+  trophies) = 2 Diamonds; all 3 claimed = +5 Diamonds with the 3rd claim; 7-day streak table; 6 playtime gifts),
+  `Config/Codes` (WELCOME 5 G + 5 Diamonds, DESTINY 10 Diamonds, BOSSKEY 10 G). `RewardService` rewritten:
+  ClaimQuest(i), ClaimDaily, ClaimGift(i), RedeemCode(code) (also used by the Settings code box), play time counted
+  on the server every 15 s, everything resets at 00:00 UTC; `RewardService.progress(player, kind, n)` is called by
+  EnemyService (kills, Gold from enemies, damage, mini-boss, boss; plus Index discovery of enemies on kill),
+  ZoneService (gate opened), PetService (hatches), ShopService (weapon bought), StatsService (Gold spent on
+  attributes); trophies later. Window `UI/Pages/QuestsPage` (Quests with progress bars and reset timer, Daily Reward
+  7 cards + claim / next-reward timer, Playtime Gifts with countdowns, Codes box). Menu badge = claimable quests +
+  today's daily + reached gifts. Admin progressQuest, addPlaytime, setDaily(streak, daysAgo), resetQuests,
+  simulateQuests(day). Tests: quest claims 6K / 6K / 2 + 5 Diamonds, second claim refused; daily: already claimed,
+  day 7 = 16K Gold + 15 Diamonds, missed day -> day 1, day 5 = premium egg; gifts: too early refused, 5 min and
+  45 min boost claimed, 60 min refused, twice refused; codes: lower case accepted, reuse refused, unknown refused.
+  Screenshots `docs/screenshots/menus/D4_*`.
+
 - 14:25 PART D3 INDEX done and pushed. `Config/IndexBook` (catalog: 96 weapons, 36 armor, 72 + 4 premium pets,
   168 enemies (11 + 2 minis + boss per zone), grouped by zone; best rarity, counts, rewards: 2 + zone Diamonds per
   zone of a tab, 100 per tab). `IndexService` ("ClaimIndexReward": complete, once, saved; `Discover`). Weapons now
@@ -367,5 +383,9 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 - Gold Boost stacking is capped at 24 hours of remaining time.
 - Index: the 4 premium pets are listed (own "Premium" group) but are not needed for the Pets tab reward (Robux
   only). Enemies have no models yet: skull icon (crown for bosses, red names for mini-bosses) until they exist.
+- Quests: the all-done bonus (+5 Diamonds) is paid automatically with the claim of the 3rd quest (no extra
+  button). "Earn G Gold" counts Gold from enemies only. Quest targets are fixed when the day's quests are made.
+- Daily reward day 5 "premium egg" = an egg of the highest unlocked zone with a rarity rolled with the shop odds,
+  added to the egg storage (auto-sold if full). Rewards in G use the player's G at claim time.
 
 ## Problems / missing
