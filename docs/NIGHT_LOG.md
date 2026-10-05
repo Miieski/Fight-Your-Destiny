@@ -5,6 +5,14 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 03:36 PART C - MAGIC category done and pushed (84/96). Builders `tools/blender/fyd_weapon_magic.py`
+  (6 studs = 1.68 m staffs, head on top along +Z, origin at the grip; 1080-2126 tris of the 4000 budget).
+  Each staff checked on its preview; fixes: shorter shaft for all staffs so the heads read at icon size,
+  Apprentice orb, Sandstorm vortex thicker, Shaman totem head 1.4x, Blizzard saturated cyan glow,
+  Eruption volcano bigger, Infernal Tome rebuilt as an OPEN book with runes, Lich skull + crown bigger,
+  Void orb/orbits bigger. Lineup `Previews/Weapons/Magic_lineup.png`. Icons uploaded (84 ids). Next: Whip
+  & Chain (`fyd_weapon_whips.py`, 6 studs handle part) - last category.
+
 - 03:29 PART C - RANGED category done and pushed (72/96). Builders `tools/blender/fyd_weapon_ranged.py`
   (5 studs = 1.4 m; shared bow / crossbow / gun parts; 680-1486 tris). Conventions per type written in
   `Blender/Weapons/README.txt` (bows: limbs on Z, string -X; crossbows: bolt +Z, prod across X; guns: muzzle
