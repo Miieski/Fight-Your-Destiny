@@ -1,0 +1,98 @@
+{
+ "id": "desert_sand_snake",
+ "rig": "Serpent",
+ "role": "normal",
+ "size": 6,
+ "sizeAxis": "length",
+ "rootCenter": [
+  -0.006,
+  0.438,
+  0.621
+ ],
+ "rootSize": [
+  0.803,
+  0.875,
+  6.0
+ ],
+ "parts": [
+  {
+   "name": "Seg1",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.397,
+    -1.117
+   ],
+   "glow": false
+  },
+  {
+   "name": "Seg2",
+   "parent": "Seg1",
+   "joint": [
+    0.0,
+    0.349,
+    -0.288
+   ],
+   "glow": false
+  },
+  {
+   "name": "Seg3",
+   "parent": "Seg2",
+   "joint": [
+    0.0,
+    0.301,
+    0.541
+   ],
+   "glow": false
+  },
+  {
+   "name": "Seg4",
+   "parent": "Seg3",
+   "joint": [
+    0.0,
+    0.254,
+    1.37
+   ],
+   "glow": false
+  },
+  {
+   "name": "Seg5",
+   "parent": "Seg4",
+   "joint": [
+    0.0,
+    0.206,
+    2.199
+   ],
+   "glow": false
+  },
+  {
+   "name": "Seg6",
+   "parent": "Seg5",
+   "joint": [
+    0.0,
+    0.159,
+    3.028
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Seg1",
+   "joint": [
+    0.0,
+    0.397,
+    -1.081
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 392,
+ "colors": [
+  "#e0c470",
+  "#f0e0b0",
+  "#6a5228",
+  "#121016",
+  "#f4f4f4",
+  "#d23a4a"
+ ]
+}

@@ -1,0 +1,96 @@
+{
+ "id": "desert_cliff_bandit",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 5.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.75,
+  -0.103
+ ],
+ "rootSize": [
+  2.298,
+  5.5,
+  2.092
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.358,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    3.944,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.857,
+    3.73,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.857,
+    3.73,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.322,
+    2.251,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.322,
+    2.251,
+    0.0
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 672,
+ "colors": [
+  "#6a4e30",
+  "#8a6640",
+  "#3a2a1a",
+  "#d8b04a",
+  "#c8a868",
+  "#c08a60",
+  "#121016",
+  "#f4f4f4",
+  "#ac7c56",
+  "#c8b490",
+  "#2a2018",
+  "#7a6040",
+  "#c0c4cc",
+  "#4a3422"
+ ]
+}

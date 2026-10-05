@@ -1,0 +1,103 @@
+{
+ "id": "desert_vulture",
+ "rig": "Bird",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.0,
+  0.035
+ ],
+ "rootSize": [
+  10.002,
+  4.0,
+  6.283
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.443,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    3.014,
+    -1.222
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingL",
+   "parent": "Body",
+   "joint": [
+    -0.896,
+    2.851,
+    -0.081
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingR",
+   "parent": "Body",
+   "joint": [
+    0.896,
+    2.851,
+    -0.081
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.525,
+    1.303
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -0.407,
+    1.629,
+    0.163
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    0.407,
+    1.629,
+    0.163
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 330,
+ "colors": [
+  "#5a3c28",
+  "#6a4a34",
+  "#e8e0d0",
+  "#121016",
+  "#f4f4f4",
+  "#e8d8b0",
+  "#dca8a0",
+  "#4a3020",
+  "#372418",
+  "#332116",
+  "#c8a888"
+ ]
+}

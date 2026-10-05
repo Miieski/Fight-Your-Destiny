@@ -1,0 +1,158 @@
+{
+ "id": "desert_scorpion",
+ "rig": "Arachnid",
+ "role": "normal",
+ "size": 3.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  1.74,
+  -0.019
+ ],
+ "rootSize": [
+  3.852,
+  3.5,
+  4.372
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    1.158,
+    -0.374
+   ],
+   "glow": false
+  },
+  {
+   "name": "Abdomen",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    1.308,
+    0.149
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL1",
+   "parent": "Body",
+   "joint": [
+    -0.411,
+    1.196,
+    -0.747
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR1",
+   "parent": "Body",
+   "joint": [
+    0.411,
+    1.196,
+    -0.747
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL2",
+   "parent": "Body",
+   "joint": [
+    -0.411,
+    1.196,
+    -0.448
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR2",
+   "parent": "Body",
+   "joint": [
+    0.411,
+    1.196,
+    -0.448
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL3",
+   "parent": "Body",
+   "joint": [
+    -0.411,
+    1.196,
+    -0.149
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR3",
+   "parent": "Body",
+   "joint": [
+    0.411,
+    1.196,
+    -0.149
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL4",
+   "parent": "Body",
+   "joint": [
+    -0.411,
+    1.196,
+    0.149
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR4",
+   "parent": "Body",
+   "joint": [
+    0.411,
+    1.196,
+    0.149
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Abdomen",
+   "joint": [
+    0.0,
+    1.495,
+    1.495
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -0.411,
+    1.046,
+    -0.747
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    0.411,
+    1.046,
+    -0.747
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 646,
+ "colors": [
+  "#d4ac66",
+  "#121016",
+  "#d8d0b8",
+  "#c39e5d",
+  "#8a6a3a",
+  "#3a2a18"
+ ]
+}

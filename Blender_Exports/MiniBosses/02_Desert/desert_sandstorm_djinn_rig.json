@@ -1,0 +1,93 @@
+{
+ "id": "desert_sandstorm_djinn",
+ "rig": "Floater",
+ "role": "mini",
+ "size": 9,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  4.231,
+  -0.003
+ ],
+ "rootSize": [
+  7.574,
+  9.0,
+  4.115
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    5.825,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    4.257,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail2",
+   "parent": "Tail",
+   "joint": [
+    0.0,
+    2.128,
+    0.448
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -1.904,
+    6.385,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    1.904,
+    6.385,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Body",
+   "joint": [
+    -0.0,
+    6.385,
+    -1.904
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 1528,
+ "colors": [
+  "#6a5ad8",
+  "#f0e8d8",
+  "#e02a6a",
+  "#8a7ae8",
+  "#5a4ac8",
+  "#5a4cb7",
+  "#7c6ae0",
+  "#4a3e97",
+  "#e0b040",
+  "#5f51c2",
+  "#fff0a0"
+ ]
+}

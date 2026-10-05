@@ -5,6 +5,13 @@ in Blender). The owner is asleep: no waiting for approval, decisions are logged 
 
 ## Status (newest first)
 
+- 22:12 MODELS ZONE 2 (DESERT) done and pushed: 11 mobs (scorpion with segmented tail and claws, sand snake,
+  vulture, jackal, crocodile 7 long, nomad bandit, sandstone golem after reference 5 with gold glyph crystals, royal
+  eagle, cliff bandit, mummy with glowing eyes, giant scarab), Anubis Guard (1,686), Sandstorm Djinn rising from a gold
+  lamp (1,528), Cursed Pharaoh after reference 7: faceted gold face plate, lapis-striped nemes draping on the
+  shoulders, uraeus, braided beard, broad collar, wraps, cape, crook staff with a glowing orb (3,768). Detail rule
+  refined (bosses / minis: plain blocks get one subdivision; birds got wing-tip and tail feathers), Plains minis and
+  boss rebuilt with it (troll 2,216, matriarch 2,328, golem 5,012). All 28 models "ok" in the manifest.
 - 03:45 NIGHT FINISHED. Parts A, B and C are done and pushed. Studio left open in Edit mode (no Play running),
   local icon server stopped. Waiting for the owner: FBX Bulk Import, the missing Part B tablet screenshot,
   review of the 8 weapon lineups.

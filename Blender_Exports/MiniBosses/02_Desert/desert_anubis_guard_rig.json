@@ -1,0 +1,101 @@
+{
+ "id": "desert_anubis_guard",
+ "rig": "Biped",
+ "role": "mini",
+ "size": 10,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  3.696,
+  -0.688
+ ],
+ "rootSize": [
+  4.107,
+  10.0,
+  3.227
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    3.26,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    5.453,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -1.505,
+    5.156,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    1.505,
+    5.156,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.578,
+    3.112,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.578,
+    3.112,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    0.0,
+    6.503,
+    -0.781
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 1686,
+ "colors": [
+  "#e0b040",
+  "#24242c",
+  "#2c58c0",
+  "#121016",
+  "#f4f4f4",
+  "#202027",
+  "#101014",
+  "#3a3a46",
+  "#ffd040"
+ ]
+}

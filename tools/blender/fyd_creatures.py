@@ -83,7 +83,9 @@ class Part:
 
     def box(self, c, size, color="#888888", rot=(0, 0, 0), taper=1.0, jit=0.0):
         """Box (size x, y, z); taper < 1 shrinks the top face (+y) for wedge-like blocks."""
-        cuts = self.model.detail if jit > 0 else 0  # jittered blocks become faceted slabs on big models
+        # big models: jittered blocks become faceted slabs, plain blocks get one subdivision (rounder silhouettes in
+        # the rest pose and the slight bends of the clips)
+        cuts = self.model.detail if jit > 0 else min(1, self.model.detail)
         self.prims.append(("box", dict(c=c, size=size, color=color, rot=rot, taper=taper, jit=jit, cuts=cuts)))
         return self
 

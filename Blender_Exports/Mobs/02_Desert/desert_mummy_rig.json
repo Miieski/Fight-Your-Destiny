@@ -1,0 +1,98 @@
+{
+ "id": "desert_mummy",
+ "rig": "Biped",
+ "role": "normal",
+ "size": 5.5,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.75,
+  -0.046
+ ],
+ "rootSize": [
+  2.438,
+  5.5,
+  1.634
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.416,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    4.042,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -0.879,
+    3.822,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    0.879,
+    3.822,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.329,
+    2.306,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.329,
+    2.306,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    0.0,
+    4.872,
+    -0.712
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 640,
+ "colors": [
+  "#e6dcc0",
+  "#b8a888",
+  "#121016",
+  "#f4f4f4",
+  "#cfc6ac",
+  "#ffe040"
+ ]
+}

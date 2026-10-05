@@ -1,0 +1,97 @@
+{
+ "id": "desert_crocodile",
+ "rig": "Quadruped",
+ "role": "normal",
+ "size": 7,
+ "sizeAxis": "length",
+ "rootCenter": [
+  0.0,
+  0.66,
+  -0.009
+ ],
+ "rootSize": [
+  2.453,
+  1.321,
+  7.0
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    0.717,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.717,
+    -1.509
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -0.679,
+    0.566,
+    -1.057
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    0.679,
+    0.566,
+    -1.057
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -0.679,
+    0.566,
+    0.981
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    0.679,
+    0.566,
+    0.981
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    0.717,
+    1.585
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 396,
+ "colors": [
+  "#7e8a50",
+  "#d8cc98",
+  "#55603a",
+  "#f4f4f4",
+  "#121016"
+ ]
+}

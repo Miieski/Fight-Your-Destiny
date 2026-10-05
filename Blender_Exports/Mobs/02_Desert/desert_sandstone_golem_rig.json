@@ -1,0 +1,105 @@
+{
+ "id": "desert_sandstone_golem",
+ "rig": "Golem",
+ "role": "normal",
+ "size": 8,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.018,
+  4.0,
+  0.127
+ ],
+ "rootSize": [
+  8.118,
+  8.0,
+  3.175
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    4.7,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    6.605,
+    -0.254
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Body",
+   "joint": [
+    -2.413,
+    6.097,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Body",
+   "joint": [
+    2.413,
+    6.097,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -1.08,
+    3.302,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    1.08,
+    3.302,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    7.43,
+    -1.169
+   ],
+   "glow": true
+  },
+  {
+   "name": "Glyphs_Glow",
+   "parent": "Body",
+   "joint": [
+    -0.0,
+    5.279,
+    0.392
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 314,
+ "colors": [
+  "#d4a868",
+  "#a87c46",
+  "#ffd040"
+ ]
+}

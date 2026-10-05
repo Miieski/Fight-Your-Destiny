@@ -1,0 +1,112 @@
+{
+ "id": "desert_cursed_pharaoh",
+ "rig": "BossBiped",
+ "role": "boss",
+ "size": 17,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.007,
+  6.742,
+  0.452
+ ],
+ "rootSize": [
+  7.148,
+  17.0,
+  5.43
+ ],
+ "parts": [
+  {
+   "name": "Torso",
+   "parent": null,
+   "joint": [
+    0.0,
+    5.686,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Torso",
+   "joint": [
+    0.0,
+    9.512,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmL",
+   "parent": "Torso",
+   "joint": [
+    -2.533,
+    8.995,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "ArmR",
+   "parent": "Torso",
+   "joint": [
+    2.533,
+    8.995,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Torso",
+   "joint": [
+    -0.969,
+    5.428,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Torso",
+   "joint": [
+    0.969,
+    5.428,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Eyes_Glow",
+   "parent": "Head",
+   "joint": [
+    -0.0,
+    11.737,
+    -2.117
+   ],
+   "glow": true
+  },
+  {
+   "name": "Orb_Glow",
+   "parent": "ArmR",
+   "joint": [
+    2.843,
+    13.234,
+    0.078
+   ],
+   "glow": true
+  }
+ ],
+ "triangles": 3768,
+ "colors": [
+  "#ddd0b0",
+  "#e0b040",
+  "#2c58c0",
+  "#a89870",
+  "#3a2a5a",
+  "#121016",
+  "#f4f4f4",
+  "#c99e39",
+  "#f0c040",
+  "#50e0ff"
+ ]
+}

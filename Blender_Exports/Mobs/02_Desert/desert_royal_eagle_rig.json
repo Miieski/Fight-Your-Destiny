@@ -1,0 +1,102 @@
+{
+ "id": "desert_royal_eagle",
+ "rig": "Bird",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  2.0,
+  -0.005
+ ],
+ "rootSize": [
+  8.895,
+  4.0,
+  5.299
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.034,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.508,
+    -1.017
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingL",
+   "parent": "Body",
+   "joint": [
+    -0.746,
+    2.373,
+    -0.068
+   ],
+   "glow": false
+  },
+  {
+   "name": "WingR",
+   "parent": "Body",
+   "joint": [
+    0.746,
+    2.373,
+    -0.068
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.102,
+    1.085
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL",
+   "parent": "Body",
+   "joint": [
+    -0.339,
+    1.356,
+    0.136
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR",
+   "parent": "Body",
+   "joint": [
+    0.339,
+    1.356,
+    0.136
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 322,
+ "colors": [
+  "#a8703a",
+  "#e8d8b0",
+  "#121016",
+  "#f4f4f4",
+  "#f0c040",
+  "#2c58c0",
+  "#f0ece0",
+  "#7a4e26",
+  "#5b3a1c",
+  "#55361a"
+ ]
+}

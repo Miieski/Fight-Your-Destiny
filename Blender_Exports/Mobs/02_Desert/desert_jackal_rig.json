@@ -1,0 +1,98 @@
+{
+ "id": "desert_jackal",
+ "rig": "Quadruped",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  -0.024,
+  2.0,
+  0.288
+ ],
+ "rootSize": [
+  1.559,
+  4.0,
+  6.482
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.167,
+    0.0
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.383,
+    -0.907
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFL",
+   "parent": "Body",
+   "joint": [
+    -0.474,
+    1.725,
+    -1.008
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegFR",
+   "parent": "Body",
+   "joint": [
+    0.474,
+    1.725,
+    -1.008
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBL",
+   "parent": "Body",
+   "joint": [
+    -0.474,
+    1.725,
+    1.1
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegBR",
+   "parent": "Body",
+   "joint": [
+    0.474,
+    1.725,
+    1.1
+   ],
+   "glow": false
+  },
+  {
+   "name": "Tail",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.387,
+    1.741
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 508,
+ "colors": [
+  "#c89a5e",
+  "#ecd6b0",
+  "#3a302a",
+  "#121016",
+  "#f4f4f4",
+  "#2a2420"
+ ]
+}

@@ -1,6 +1,7 @@
 """Batch runner: build creature models by id (headless Blender 5.x).
 
     blender --background --python tools/blender/run_creatures.py -- plains_boar plains_wild_wolf
+    blender --background --python tools/blender/run_creatures.py -- --prefix desert_ jungle_
     blender --background --python tools/blender/run_creatures.py -- --lineup Mobs 1 plains_boar plains_wild_wolf
 
 Every recipe module (fyd_recipes_*.py) exposes RECIPES = {id: function() -> fyd_creatures.Model}.
@@ -39,6 +40,8 @@ def main():
         recipes = registry()
         if args == ["--all"]:
             args = list(recipes.keys())
+        elif args and args[0] == "--prefix":  # e.g. --prefix desert_
+            args = [k for k in recipes if any(k.startswith(p) for p in args[1:])]
         for mid in args:
             try:
                 model = recipes[mid]()

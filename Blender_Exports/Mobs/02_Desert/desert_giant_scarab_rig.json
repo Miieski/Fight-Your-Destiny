@@ -1,0 +1,108 @@
+{
+ "id": "desert_giant_scarab",
+ "rig": "Insect",
+ "role": "normal",
+ "size": 4,
+ "sizeAxis": "height",
+ "rootCenter": [
+  0.0,
+  1.986,
+  -0.249
+ ],
+ "rootSize": [
+  8.482,
+  4.0,
+  7.474
+ ],
+ "parts": [
+  {
+   "name": "Body",
+   "parent": null,
+   "joint": [
+    0.0,
+    2.491,
+    0.399
+   ],
+   "glow": false
+  },
+  {
+   "name": "Head",
+   "parent": "Body",
+   "joint": [
+    0.0,
+    2.093,
+    -1.794
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL1",
+   "parent": "Body",
+   "joint": [
+    -1.794,
+    1.893,
+    -0.996
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR1",
+   "parent": "Body",
+   "joint": [
+    1.794,
+    1.893,
+    -0.996
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL2",
+   "parent": "Body",
+   "joint": [
+    -1.794,
+    1.893,
+    0.498
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR2",
+   "parent": "Body",
+   "joint": [
+    1.794,
+    1.893,
+    0.498
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegL3",
+   "parent": "Body",
+   "joint": [
+    -1.794,
+    1.893,
+    1.993
+   ],
+   "glow": false
+  },
+  {
+   "name": "LegR3",
+   "parent": "Body",
+   "joint": [
+    1.794,
+    1.893,
+    1.993
+   ],
+   "glow": false
+  }
+ ],
+ "triangles": 302,
+ "colors": [
+  "#2a8a80",
+  "#e0b040",
+  "#23756c",
+  "#121016",
+  "#f4f4f4",
+  "#1a4a46"
+ ]
+}

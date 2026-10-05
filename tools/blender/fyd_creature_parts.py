@@ -202,9 +202,14 @@ def bird(m, body, wing=None, belly=None, beak="#f0a030", legs="#e09030", head_r=
         else:
             wpart.box((s * (0.55 + span * 0.42), 1.75, 0.05), (span * 0.85, 0.12, 0.95), wing)
             wpart.box((s * (0.55 + span * 0.62), 1.75, 0.35), (span * 0.5, 0.1, 0.7), shade(wing, 0.75))
+            for k in range(3):  # primary feathers at the wing tip
+                wpart.cone((s * (0.55 + span * 0.8), 1.75, 0.1 + k * 0.25), (s * (0.55 + span * 1.05), 1.75, 0.35 + k * 0.32),
+                           0.1, 0.0, shade(wing, 0.7), segs=3)
         wings[name] = wpart
     t = m.part("Tail", "Body", joint=(0, 1.55, 0.8))
     t.box((0, 1.55, 1.25), (0.65, 0.1, 0.8), wing, taper=1.0)
+    for k in (-1, 0, 1):
+        t.cone((k * 0.2, 1.55, 1.5), (k * 0.35, 1.55, 1.95), 0.1, 0.0, shade(wing, 0.75), segs=3)
     lgs = {}
     for name, s in (("LegL", -1), ("LegR", 1)):
         lp = m.part(name, "Body", joint=(s * 0.25, 1.0, 0.1))
