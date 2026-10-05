@@ -439,6 +439,29 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 22:02 PART G - FINAL CHECKS done, task FINISHED (final backup `..._220112_after_enemies_task_*`).
+  1A silhouettes: screenshots 1A_1-6 (portals, reveal, Zones menu, Shop, Index, premium eggs). 1B: 916.3 damage /
+  650 Max HP in the Hub and zones 1-4 with the same loadout. Combat: 8 categories hit as specified, roll / block on
+  the server, death -35% Gold, starter weapon after `wipeForRebirth` (in Desert: Sand Scimitar). Enemies:
+  validateEnemies 0 mismatches, 10 alive per sub-zone + respawn 2 s, top dealer rewarded, drop rates 2 / 4 / 6%,
+  pause + despawn of empty sub-zones, lap of the 16 sub-zones with nobody stuck or under the ground. Boss rooms
+  (solo): gate, lobby, minis then boss, rewards, first-victory key, cleanup, return. Models: 88 / 88 in their
+  category / zone folders, manifest all "ok", clips baked + played in game, 21 lineups. Performance (phone
+  emulator, 20 enemies, 10 fighting): server heartbeat 0.12 ms, AnimPlayer 0.08 ms per frame for 20 rigs; the
+  client stayed at Studio's 36 fps cap with or without enemies (also 36 fps in the empty Hub). Output clean.
+  Owner import list: `Blender_Exports/CREATURES_IMPORT.md`. HANDOFF.md updated.
+
+  FINAL REPORT
+  Finished: rule changes (black "?" zones, zone-independent damage), player combat, enemy system with loot and
+  trophies, minimal boss rooms (no patterns), Blender pipeline + 88 models (56 enemies / minis / bosses, 24 pets,
+  8 NPCs) with shared clips, in-game animation player, FBX importer, hub NPCs.
+  Not finished / not verifiable here: boss rooms with 2-5 real players (Studio MCP runs one client); the imported
+  meshes themselves (they need the owner's Bulk Import - placeholders with the same joints and clips are used until
+  then); the Rebirth action (the Priest opens the Rebirth Shop); a tutorial window (the Guide gives tips + Quests).
+  Owner to do: Bulk Import of the 88 FBX (Meters) + `DevTools.EnemyModels.fromImport`, save the place
+  (File > Save), test a team boss fight with Clients and Servers.
+  Next step: the boss patterns of docs/boss_patterns_document.txt (hooks: Config/Bosses.Patterns,
+  BossService.OnEnrage).
 - 21:58 PART F - HUB NPCs done and pushed. 8 NPC models (Blender/NPC/Hub, reference 3 style, 1,592-1,920
   triangles, Idle / Wave / Talk): Guide (explorer hat, orange scarf, backpack, map), Blacksmith (apron, hammer),
   Trainer (headband, wrapped fists), Egg Keeper (straw hat, overalls, basket of eggs), Trophy Merchant (backpack of
