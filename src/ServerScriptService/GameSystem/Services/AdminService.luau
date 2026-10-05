@@ -33,6 +33,10 @@ local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
 local ZoneService = require(script.Parent.ZoneService)
+local EnemyService = require(script.Parent.EnemyService)
+local LootService = require(script.Parent.LootService)
+local Enemies = require(ReplicatedStorage.GameSystem.Config.Enemies)
+local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 
 local AdminService = { Priority = 6 }
 
@@ -308,6 +312,7 @@ local COMMANDS: { [string]: Command } = {
 		DataService:Set(player, "Armor", {})
 		DataService:Set(player, "EquippedArmor", {})
 		DataService:Set(player, "Eggs", {})
+		DataService:Set(player, "Trophies", {})
 		local pets, kept = {}, 0
 		for uid, pet in pairs(profile.Pets or {}) do
 			if pet.premium then
@@ -507,6 +512,103 @@ local COMMANDS: { [string]: Command } = {
 		if not humanoid then return false, nil end
 		humanoid.Health = humanoid.MaxHealth
 		return true, nil
+	end,
+	-- spawnEnemy(id): one enemy in front of the player (admin group: no respawn)
+	spawnEnemy = function(player, id)
+		local def = typeof(id) == "string" and Enemies.ById[id]
+		if not def or not def.Rig then return false, "spawnEnemy(id) - zones 1-4 ids, for example plains_boar" end
+		local state = EnemyService:SpawnNear(player, def)
+		return state ~= nil, if state then `{def.Name} spawned` else "No character"
+	end,
+	-- killAll(): every living enemy dies, credited to the player (rewards and respawns as usual)
+	killAll = function(player)
+		return true, `{EnemyService:KillAll(player)} enemies killed`
+	end,
+	-- validateEnemies(): Config/Enemies against docs/enemy_database.txt (ServerStorage.DevTools.EnemyDatabase, generated
+	-- by tools/gen_enemy_database.py): HP, DMG, Gold, loot item and type, ids both ways, and the Spawns markers.
+	validateEnemies = function(player)
+		local database = require(ServerStorage.DevTools.EnemyDatabase) :: any
+		local problems, checked = {}, 0
+		local function close(a: number, b: number): boolean
+			return math.abs(a - b) <= math.max(1e-9, math.abs(b) * 0.005)
+		end
+		for id, row in pairs(database) do
+			local def = Enemies.ById[id]
+			checked += 1
+			if not def then
+				table.insert(problems, `{id}: in the database, missing in Config/Enemies`)
+			else
+				if not close(def.MaxHP, row[1]) then table.insert(problems, `{id}: HP {def.MaxHP} vs {row[1]}`) end
+				if not close(def.Damage, row[2]) then table.insert(problems, `{id}: DMG {def.Damage} vs {row[2]}`) end
+				if not close(def.Gold, row[3]) then table.insert(problems, `{id}: Gold {def.Gold} vs {row[3]}`) end
+				if def.Loot and (def.Loot.Name ~= row[4] or def.Loot.Source ~= row[5]) then
+					table.insert(problems, `{id}: loot {def.Loot.Name} ({def.Loot.Source}) vs {row[4]} ({row[5]})`)
+				end
+			end
+		end
+		for id, def in pairs(Enemies.ById) do
+			if not database[id] then table.insert(problems, `{id}: in Config/Enemies, missing in the database`) end
+			if Zones.ById[def.ZoneId].Index <= 4 and not def.Rig then table.insert(problems, `{id}: no look / rig (zones 1-4)`) end
+		end
+		for _, zone in ipairs(Zones.List) do
+			if zone.Index <= 4 then
+				for n = 1, Zones.SUBZONE_COUNT do
+					local id = Zones.subZoneId(zone.Id, n)
+					local folder = workspace.Zones:FindFirstChild(zone.Id)
+					local spawns = folder and folder:FindFirstChild(id) and folder[id]:FindFirstChild("Spawns")
+					local wanted = {}
+					for _, def in ipairs(Enemies.BySubZone[id]) do wanted[def.Id] = 0 end
+					for _, point in ipairs(if spawns then spawns:GetChildren() else {}) do
+						local enemyId = point:GetAttribute("EnemyId")
+						if wanted[enemyId] == nil then
+							table.insert(problems, `{id}.Spawns.{point.Name}: unknown EnemyId {tostring(enemyId)}`)
+						else
+							wanted[enemyId] += 1
+						end
+					end
+					for enemyId, count in pairs(wanted) do
+						if count == 0 then table.insert(problems, `{id}: no spawn point for {enemyId} (random spots used)`) end
+					end
+				end
+			end
+		end
+		table.sort(problems)
+		print(`validateEnemies: {checked} database rows, {#problems} mismatch(es)`)
+		for _, line in ipairs(problems) do print("  " .. line) end
+		return #problems == 0, `{checked} enemies checked, {#problems} mismatch(es) (details in the Output)`
+	end,
+	-- simulateKills(id, n): n kill rolls with the player's Loot Luck, observed drop rate vs expected (nothing granted)
+	simulateKills = function(player, id, howMany)
+		local def = typeof(id) == "string" and Enemies.ById[id]
+		local n = math.floor(tonumber(howMany) or 10000)
+		if not def or not def.Loot or n < 1 or n > 1000000 then return false, "simulateKills(id, n) - zones 1-4 ids" end
+		local profile = DataService:Get(player)
+		local lootMult = if profile then Stats.compute(profile, { now = os.time() }).LootMult else 1
+		local chance = LootService.chance(def, lootMult)
+		local random, drops = Random.new(), 0
+		for _ = 1, n do
+			if random:NextNumber() < chance then drops += 1 end
+		end
+		local sd = math.sqrt(chance * (1 - chance) / n)
+		local z = if sd > 0 then (drops / n - chance) / sd else 0
+		local text = string.format("%s x%d: %d drops = %.3f%% (expected %.3f%%, Loot Luck x%.2f, %+.1f sd), item %s %s (%s)",
+			def.Id, n, drops, drops / n * 100, chance * 100, lootMult, z, Rarities.get(def.LootRarity).Name, def.Loot.Name, def.Loot.Kind)
+		print("simulateKills: " .. text)
+		return math.abs(z) < 4, text
+	end,
+	-- dropLoot(enemyId): grants that enemy's loot item as if it had dropped (egg / armor piece / head trophy)
+	dropLoot = function(player, id)
+		local def = typeof(id) == "string" and Enemies.ById[id]
+		if not def or not def.Loot then return false, "dropLoot(enemyId) - zones 1-4 ids" end
+		return true, `Granted: {LootService:Grant(player, def)} ({Rarities.get(def.LootRarity).Name} {def.Loot.Name})`
+	end,
+	-- giveTrophy(enemyId, rarity, count?): head trophies (auto-sold when the storage is full)
+	giveTrophy = function(player, id, rarity, howMany)
+		if typeof(id) ~= "string" or not Enemies.ById[id] then return false, "giveTrophy(enemyId, rarity, count?)" end
+		for _ = 1, math.clamp(math.floor(tonumber(howMany) or 1), 1, 200) do
+			LootService:GiveTrophy(player, id, tier(rarity), true)
+		end
+		return true, "Trophies given"
 	end,
 	-- godMode(on): enemies and bosses deal no damage to this player (not saved)
 	godMode = function(player, on)

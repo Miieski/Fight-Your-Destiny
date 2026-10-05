@@ -414,7 +414,7 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Eggs = {},                           -- [uid] = { zone = "Plains", rarity = 1 }
   Pets = {},                           -- [uid] = { id = "plains_pet1", rarity = 1, premium = false }
   EquippedPets = {},                   -- array of uids
-  Trophies = {},                       -- array of { enemyId = "plains_boar", rarity = 1 }
+  Trophies = {},                       -- [uid] = { id = "plains_boar", rarity = 1 } (head trophies, max 100)
   Index = {},                          -- [entryId] = true (kept)
   IndexClaimed = {},
   Boosts = {},                         -- [boostId] = expiresAt (os.time)

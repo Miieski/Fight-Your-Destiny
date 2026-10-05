@@ -81,8 +81,17 @@ local function weaponOf(player: Player): (any, any)
 	return weapon, WeaponCategories.ById[weapon.Category]
 end
 
+-- Ground point under the enemy's body (live position of its physics root).
 local function positionOf(enemy: any): Vector3
-	return enemy.position or enemy.model:GetPivot().Position
+	local root = enemy.root
+	if root then
+		return root.Position - Vector3.new(0, (enemy.halfHeight or 0) + (enemy.hover or 0), 0)
+	end
+	return enemy.model:GetPivot().Position
+end
+
+local function centerOf(enemy: any): Vector3
+	return if enemy.root then enemy.root.Position else positionOf(enemy) + Vector3.new(0, (enemy.height or 4) * 0.5, 0)
 end
 
 -- A client vector we can trust: a Vector3 with finite, sane coordinates.
@@ -115,7 +124,7 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, multipl
 		damage *= 1 + (stats.BossDamage or 0)
 	end
 	damage = math.max(1, math.floor(damage + 0.5))
-	local at = positionOf(enemy) + Vector3.new(0, (enemy.height or 4) + 1, 0)
+	local at = centerOf(enemy) + Vector3.new(0, (enemy.halfHeight or 2) + 1, 0)
 	EnemyService:Damage(player, enemy, damage)
 	Net.fire(player, "Hit", at, damage, crit)
 end
@@ -175,7 +184,7 @@ end
 local function firstOnRay(origin: Vector3, dir: Vector3, range: number): (any, number)
 	local best, bestAlong = nil, range
 	for _, enemy in ipairs(EnemyService:GetNear(origin, range)) do
-		local center = positionOf(enemy) + Vector3.new(0, (enemy.height or 4) * 0.5, 0)
+		local center = centerOf(enemy)
 		local offset = center - origin
 		local along = offset:Dot(dir)
 		if along > 0 and along < bestAlong then

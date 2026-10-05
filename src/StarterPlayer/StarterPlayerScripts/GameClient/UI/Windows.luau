@@ -9,6 +9,7 @@ local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local SettingsPage = require(script.Parent.Pages.SettingsPage)
 local ZonesPage = require(script.Parent.Pages.ZonesPage)
 local InventoryPage = require(script.Parent.Pages.InventoryPage)
+local TrophiesPage = require(script.Parent.Pages.TrophiesPage)
 local AttributesPage = require(script.Parent.Pages.AttributesPage)
 local WeaponShopPage = require(script.Parent.Pages.WeaponShopPage)
 local PetsPage = require(script.Parent.Pages.PetsPage)
@@ -60,8 +61,7 @@ local function inventory(ctx: any)
 	ArmorPage.build(ctx.Pages.Armor, ctx)
 	shortcut(ctx.Pages.Pets, "Your pets live in the Pets window.", "Pets")
 	shortcut(ctx.Pages.Eggs, "Your eggs are hatched in the Pets window.", "Eggs")
-	Theme.text({ Text = "Trophies drop from mini-bosses and bosses; sell them for Gold.", TextSize = 22, Wrapped = true, Size = UDim2.new(1, 0, 0, 56), LayoutOrder = 1, Parent = ctx.Pages.Trophies })
-	Window.placeholder(ctx.Pages.Trophies)
+	TrophiesPage.build(ctx.Pages.Trophies)
 end
 
 local BUILDERS = {

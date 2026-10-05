@@ -439,6 +439,36 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 
 ## Status (newest first)
 
+- 20:57 PART B (ENEMY SYSTEM) done and pushed.
+  `Config/Enemies` extended for zones 1-4 (Part F list): Tier, Rig, Height, colors, WalkSpeed (rig defaults,
+  mini / boss 10), Hover (flyers 4, fish and floaters lower), AggroRadius 30, AttackType (archers, bats, toxic frog,
+  shaman and ice spirit shoot), AttackRange, AttackCooldown 2, Telegraph (0.4 melee / 0.5 ranged / 0.5 mini /
+  1.0 boss), Loot (item, database type, kind Egg / Armor / Trophy), LootRarity (b = ceil(zone / 2) rule), AI
+  constants, loot chances, trophy storage and value. New `EnemyService`: 10 per sub-zone (4/3/3, 5/5) on the
+  Spawns points (random free spots in Area if a type has none), respawn 2 s later on a point 12+ studs from every
+  player, pause at once when the sub-zone is empty and despawn after 15 s; 10 Hz AI Idle (wander) / Chase /
+  Telegraph / Attack / Recover / Leash (60 studs, heal to full); movement = physics root moved by AlignPosition /
+  AlignOrientation (server owner, smooth on clients), raycast ground snap, steering around obstacles, separation
+  between enemies, PathfindingService only when stuck; melee cone hits, ranged shots (60 studs/s, range 40,
+  dodgeable), mini-boss heavy attack (1 s telegraph, x1.5, 6 s cooldown); knockback (normal only), Heavy stagger
+  (not bosses); top damage dealer (tie: last hit) gets Gold x Gold multiplier, quests, Index and the loot roll.
+  New `LootService` (2% / 4% / 6% x Loot Luck; Egg -> egg, Armor/Weapon -> armor piece of the zone, others -> head
+  trophy; Trophies storage 100 with auto-sell; SellTrophy / SellAllTrophies). New `Lib/EnemyRigs`: placeholder
+  models per rig family (Quadruped, Biped, Bird, Serpent, Arachnid, Crustacean, Insect, Fish, Amphibian, Golem,
+  Snowman, Floater, Gorilla, BossBiped) with Motor6D joints; imported models in `ServerStorage.Enemies.<id>` /
+  `Bosses.<id>` replace them automatically. Client `EnemyController`: HP bars (tier colors, shown within 30
+  studs or when hurt), white hit flash, red telegraph pulse (stronger with High-Contrast Telegraphs), procedural
+  walk / attack / hit / death animation through the joints, spawn fade-in, death fade, "+N" Gold and coin pop.
+  Inventory > Trophies tab (value, Sell, Sell All with confirm). Admin: spawnEnemy, killAll, validateEnemies,
+  simulateKills, giveTrophy, dropLoot (+ godMode, enemyHit from Part A). `tools/gen_enemy_database.py` turns
+  docs/enemy_database.txt into `ServerStorage.DevTools.EnemyDatabase` for validateEnemies.
+  Tests (Play): validateEnemies 168 rows, 0 mismatches. simulateKills: boar 1.966% (2%), Cave Troll 3.988% (4%),
+  Golem 6.034% (6%), Yeti with Loot Luck 3 2.437% (2.48%). Wolf: chase, telegraph, 5 damage per hit; kill -> +20
+  Gold (wolf Gold), respawn after 2 s; bats hover 4 studs and shoot (40 per hit); trophies 25 x Gold x rarityMult
+  (Djinn Rare 924K, Boar 400), Sell and Sell All clicked in the UI; dropLoot gives egg / armor / trophy with toasts.
+  Lap of all 16 sub-zones of zones 1-4 (player at 4 points of each Area): 10 alive everywhere, 0 outside the Area,
+  0 under the ground; empty sub-zones despawn. Output clean. Screenshots `2B_*`.
+  Next: Part C (boss rooms).
 - 20:27 PART A (PLAYER COMBAT) done and pushed.
   Server `CombatService` rewritten (the placeholder is gone): `Net.send("Attack", aimDir, aimPoint)` with the
   shapes of the new `Config/Combat` (Sword arc 120/6/3 targets, Spear line 10x3 pierce 4, Heavy arc 90/6 + slam 6
@@ -498,6 +528,19 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
   the i-frames).
 - On PC the character turns toward the aim (mouse) when it attacks; on touch toward the nearest enemy in reach
   (+4 studs).
+- Enemy config keeps the existing field names `MaxHP`, `Damage`, `Role` (used everywhere) and adds the brief's
+  `Tier` ("normal" | "mini" | "boss"); HP / DMG of the brief = MaxHP / Damage.
+- `profile.Trophies` is a map `[uid] = { id, rarity }` like the other inventories (DESIGN.md said array; updated),
+  storage 100 (same as armor), a new trophy when full is sold at once with a toast. The trophy of an enemy is
+  "<Enemy> Head" whatever the database item name (Corpse / Material / Trophy all become the head trophy, DESIGN 5).
+- Trophy sales do not count for the "Earn Gold from enemies" quest (only kills do).
+- Ranged enemies: archers, bats ("spit"), Toxic Frog (spit), Shaman (magic), Ice Spirit (ice shards). Flyers
+  (seagull, bat, vulture, eagles) hover 4 studs; fish 1.5; djinn 1, ice spirit 1.5.
+- Enemies do not collide with players (CanCollide off) so nobody gets stuck or pushed through walls; they keep
+  apart from each other with a separation force.
+- Mini-bosses are not knocked back but can be staggered by Heavy slams; bosses ignore both.
+- Monsters chase only players inside their leash (60 studs from their spawn); a hit from farther away still pulls
+  them, then they leash back if the attacker is out of range.
 
 ## Problems / missing
 

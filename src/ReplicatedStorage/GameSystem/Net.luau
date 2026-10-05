@@ -21,6 +21,7 @@ Net.EVENTS = {
 	"Projectile", -- origin, direction, speed, distance, style: a shot to draw (CombatService / EnemyService)
 	"Burst", -- position, radius, style: an area effect to draw (Magic, slams)
 	"Hurt", -- amount, kind ("hit" | "block" | "dodge"): damage taken by this player
+	"EnemyKilled", -- position, gold: this player got the kill reward (EnemyService)
 }
 
 local IS_SERVER = RunService:IsServer()
