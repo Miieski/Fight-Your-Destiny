@@ -6,7 +6,7 @@
 -- For every weapon it finds the import named like its file ("01_plains_sword") or like its id ("plains_sword"),
 -- then in ReplicatedStorage.Assets.Weapons.<WeaponId>:
 --   - the biggest imported MeshPart becomes the Handle (its mesh, textures and SurfaceAppearance come along); the
---     other parts are welded to it, parts named "...Glow..." become Neon;
+--     other parts are welded to it, the glow part (named "...Glow...", or untextured) becomes Neon;
 --   - the placeholder parts are removed; the Tool's attributes and its Grip rotation are kept, the Grip position moves
 --     to the model's true origin (Studio recenters imported meshes on their box: DevTools.WeaponPoints gives the box);
 --   - TipAttachment, BaseAttachment, MuzzleAttachment (Ranged / Magic) and ImpactAttachment (Heavy) are rebuilt at the
@@ -96,6 +96,18 @@ local function volume(part: BasePart): number
 	return part.Size.X * part.Size.Y * part.Size.Z
 end
 
+-- The "<id>_Glow" material: named so, or (the importer may name every split part after the Blender object "Weapon")
+-- a secondary part without texture maps (the glow material is a plain emissive color, "<id>_Main" has 3 maps).
+local function isGlow(part: BasePart): boolean
+	if string.find(string.lower(part.Name), "glow") then
+		return true
+	end
+	if part:FindFirstChildWhichIsA("SurfaceAppearance") then
+		return false
+	end
+	return not (part:IsA("MeshPart") and part.TextureID ~= "")
+end
+
 return function(searchRoot: Instance?): { [string]: { string } }
 	local Weapons = fresh(ReplicatedStorage.GameSystem.Config.Weapons :: ModuleScript)
 	local Points = fresh(DEVTOOLS:FindFirstChild("WeaponPoints") :: ModuleScript)
@@ -130,9 +142,11 @@ return function(searchRoot: Instance?): { [string]: { string } }
 			table.insert(wrongSize, `{weapon.Id} ({math.round(measured * 100) / 100} studs, expected {math.round(longest * 100) / 100})`)
 			continue
 		end
+		-- the Handle = the biggest textured part (the biggest part at all if none is textured)
 		local main = parts[1]
 		for _, part in ipairs(parts) do
-			if volume(part) > volume(main) then
+			local better = if isGlow(part) == isGlow(main) then volume(part) > volume(main) else isGlow(main)
+			if better then
 				main = part
 			end
 		end
@@ -164,7 +178,7 @@ return function(searchRoot: Instance?): { [string]: { string } }
 			if part ~= main then
 				local copy = part:Clone()
 				clearJoints(copy)
-				if string.find(string.lower(copy.Name), "glow") then
+				if isGlow(part) then
 					copy.Material = Enum.Material.Neon
 				end
 				prepare(copy)
