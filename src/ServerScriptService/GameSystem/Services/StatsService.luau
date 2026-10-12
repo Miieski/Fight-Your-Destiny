@@ -73,7 +73,7 @@ local function train(player: Player, plan: any): (boolean, any)
 		return false, "Nothing to train"
 	end
 	local level = Attributes.level(current)
-	local cost = Attributes.costOf(level, count, Stats.highestZone(profile))
+	local cost = Attributes.costOf(level, count)
 	if typeof(profile.Gold) ~= "number" or profile.Gold < cost then
 		return false, "Not enough Gold"
 	end

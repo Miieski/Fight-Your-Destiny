@@ -1083,3 +1083,39 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Max 12 Rebirths (DESIGN.md open question 3 default); after Rebirth 12 the tab shows "All Rebirths done!".
 - The menu badge counts unspent Rebirth Credits + 1 when a Rebirth is ready.
 
+# Attributes rebalance - 2026-10-12 evening (owner: "Make the Stats Upgrade more efficient as for each attribute level seems like a real upgrade. and up the rising price for each level set for getting max at the very end of the game.")
+
+## Status (newest first)
+
+- 18:30 DONE. Backups `..._181443_before_attribute_rebalance_*` and `..._after_attribute_rebalance_*`.
+  Before: the next point cost `100 x 10^(Z-1) x (1 + L/10)^1.5` (Z = highest zone): price and income both grew x10
+  per zone, so in EVERY zone a player plateaued around level ~46 / 320 and the max was out of reach everywhere; one
+  point gave little (Sword +1.8% damage per Strength point, Vigor +4% HP).
+  Now (`Config/Attributes`): next point = `round(400 x 1.1 ^ L)`, no zone factor - 400, 1,037 (L 10), 2,691 (L 20),
+  47K (L 50), 5.5M (L 100), 76B (L 200), 1.05Qa (L 300), 6.4Qa (L 319); all 320 points = 7.0e16 Gold.
+  Calibration, budget per zone = one Rebirth cost (31,250 x 10^(z-1)) x the Rebirth Gold multiplier x 1.5 (other
+  Gold bonuses): level reached 26 (zone 1), 54, 81, 108, 134, 161 (zone 6), 186, 212, 238, 263, 289, 314 (zone 12) -
+  the last points at the very end. After each Rebirth the previous zone's level costs only ~10% of the new zone's
+  budget, so the player quickly gets back to strength, then grows.
+  Per point (before soft cap, x RebirthPower): Vigor HP 4% -> 10%, regen 0.05% -> 0.1%/s; Mind Gold 2.5% -> 6%, roll
+  -0.7% -> -1.2%; Endurance Defense 1 -> 2, block 0.5 -> 1 pt, speed 0.4% -> 0.8%; damage scaling 0.03 -> 0.08 (Heavy /
+  Ranged / Magic S stat +9.6% per point, Sword +4.8% per Strength and per Dexterity); Dexterity attack speed 0.3% ->
+  0.5%; Intelligence proc 0.4 -> 0.8 pt, radius 0.5% -> 1%; Faith pets 1.2% -> 3%, healing 1.5% -> 3%; Arcane crit
+  0.25 -> 0.5 pt, crit damage 1.5% -> 3%, loot 0.5% -> 1%. Hard caps unchanged.
+  UI: each attribute row shows in green what its NEXT point gives (soft cap, Rebirth power and the equipped weapon's
+  scaling included, e.g. "+9.6% damage" for Strength with a hammer); the tooltip effects are generated from the
+  numbers + a line "Per point. Points above 20 count half. Rebirth power: every point x...".
+  Tested: `runStatsTests` 78/78 (expected values recomputed by hand); Play: Rare Stone Hammer, 5 Strength + 3 Vigor
+  pending -> Max HP 100 -> 130, next point 857, Confirm 4.57K Gold, server applied (level 8, MaxHealth 130, damage per
+  hit 55 -> 81 = +48%); Rebirths 4 + Vigor 20 -> rows "+19.2% damage", "+12% Gold", Vigor "+10% Max HP" (21st point,
+  soft cap x RP 2). Output clean. Studio = disk (pull 0 written).
+
+## Decisions taken without the owner
+
+- The point price no longer depends on the zone (the zone factor kept the reachable level flat in every zone);
+  it grows 10% per attribute level. CostBase 400 / CostGrowth 1.1 are the two tuning knobs in Config/Attributes.
+- Every per-point value about x2-2.5, hard caps unchanged (so some caps - block, attack speed, proc, radius - are
+  reached earlier, then the attribute's other effects keep growing). Soft cap (half above 20) and RebirthPower kept.
+- Quests "Spend Gold on attributes" (10 x the zone Gold unit) stay reachable: one point near the zone's level costs
+  about that much.
+

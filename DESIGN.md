@@ -154,15 +154,22 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 | Crit Chance | `Crit` | 5% | chance for x2 damage |
 | Gold Gain | `GoldGain` | +0% | % bonus to Gold earned |
 
-### Upgrade menu ("Training")
-* Opened from the HUD and from a trainer NPC in the hub. Each stat is bought with **Gold**
-  level by level (max 100 levels each).
-* Cost: `100 x 10^(zone - 1) x 1.15^level`, where `zone` is the highest zone the player has
-  unlocked (so prices follow the economy).
-* Effect per level: `base_per_level x (1 + 0.25 x rebirths)` - **each rebirth makes every
-  purchase stronger.** Base per level: MaxHP +6%, Attack +4%, Defense +1 point, Speed +0.5%
-  (cap +40%), Crit +0.3% (cap 60%), GoldGain +3%.
-* All stat levels reset to 0 on Rebirth.
+### Upgrade menu ("Stats" button -> Attributes window)
+* Superseded by the 8 attributes of `docs/menu_systems_brief.txt` Part A, **rebalanced 2026-10-12** (owner: "each
+  attribute level should feel like a real upgrade; max only at the very end of the game"). Numbers in
+  `Config/Attributes`; the window shows on each row what the NEXT point gives.
+* 8 attributes x 40 points (attribute level L up to 320). Points above 20 in one attribute count half (soft cap).
+* Price of the next point: `400 x 1.1 ^ L` Gold (x10 every ~24 levels). It does NOT depend on the zone: Gold income
+  grows x10 per zone, so the affordable level grows with the zones - about 26 in zone 1, 160 in zone 6, 314 in zone
+  12 when about one Rebirth cost of Gold (x the Rebirth Gold multiplier, x1.5 other bonuses) goes into attributes per
+  zone. All 320 points only at the very end of the game.
+* Per point (before the soft cap), x RebirthPower `1 + 0.25 x rebirths`: Vigor +10% Max HP, +0.1% HP/s regen; Mind
+  +6% Gold, -1.2% roll cooldown; Endurance +2 Defense, +1 pt block, +0.8% move speed; weapon damage +8% x the weapon's
+  scaling weight (Heavy / Ranged / Magic +9.6% for their S stat, Sword +4.8% each for Strength and Dexterity);
+  Dexterity +0.5% attack speed; Intelligence +0.8 pt element proc, +1% magic radius; Faith +3% pet power and healing;
+  Arcane +0.5 pt crit, +3% crit damage, +1% loot. Hard caps unchanged (block 85%, move +40%, attack speed +15%, proc
+  +16 pts, radius +25%, crit 60%, roll 0.6 s).
+* All attribute points reset to 0 on Rebirth (Respec: 5 + 2 x zone Diamonds, Gold not refunded).
 
 ### Armor (3 slots)
 * Slots: `Helmet`, `Chest` (plastron), `Legs` (jambieres).

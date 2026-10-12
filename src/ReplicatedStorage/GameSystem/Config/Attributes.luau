@@ -1,7 +1,13 @@
 --!strict
--- Attributes, Elden Ring style (docs/menu_systems_brief.txt Part A). 8 attributes, 0..MaxPoints points each,
--- bought one at a time with Gold. Effects use the EFFECTIVE points (soft cap) times RebirthPower; hard caps are
--- absolute (never multiplied). Every derived number is computed in Util/Stats.compute.
+-- Attributes, Elden Ring style (docs/menu_systems_brief.txt Part A, rebalanced 2026-10-12). 8 attributes,
+-- 0..MaxPoints points each, bought one at a time with Gold. Effects use the EFFECTIVE points (soft cap) times
+-- RebirthPower; hard caps are absolute (never multiplied). Every derived number is computed in Util/Stats.compute.
+--
+-- Price (owner 2026-10-12: "max at the very end of the game"): the next point costs CostBase x CostGrowth ^ L, L = the
+-- attribute level (total points bought). It does NOT follow the zone: Gold income grows x10 per zone, so the level a
+-- player can afford grows with the zones. Calibration (docs/NIGHT_LOG.md): spending about one Rebirth cost of a zone
+-- (x the Rebirth Gold multiplier, x1.5 for the other Gold bonuses) brings the level to ~26 in zone 1, ~160 in zone 6,
+-- ~314 in zone 12: the last points (320 = every attribute at 40) come at the very end of the game.
 export type Attribute = { Id: string, Name: string, Icon: string, Short: string, Effects: { string } }
 
 local Attributes = {}
@@ -11,52 +17,31 @@ Attributes.SoftCap = 20 -- points above this count half (Peff)
 Attributes.SoftCapRate = 0.5
 Attributes.RebirthPowerPerRebirth = 0.25 -- RebirthPower = 1 + 0.25 x Rebirths
 
--- Cost of the next point: round(CostBase x 10^(Z-1) x (1 + L / CostDivisor) ^ CostExponent)
--- L = total points already bought, Z = highest zone unlocked.
-Attributes.CostBase = 100
-Attributes.CostDivisor = 10
-Attributes.CostExponent = 1.5
+-- Cost of the next point: round(CostBase x CostGrowth ^ L), L = total points already bought (x10 every ~24 levels).
+Attributes.CostBase = 400
+Attributes.CostGrowth = 1.1
 -- Respec: every point back to 0 (no Gold refund) for RespecBase + RespecPerZone x Z Diamonds.
 Attributes.RespecBase = 5
 Attributes.RespecPerZone = 2
 
-Attributes.List = {
-	{ Id = "Vigor", Name = "Vigor", Icon = "MaxHP", Short = "Health", Effects = { "Max HP +4%", "HP regeneration out of combat +0.05% of Max HP per second" } },
-	{ Id = "Mind", Name = "Mind", Icon = "GoldGain", Short = "Fortune", Effects = { "Gold Gain +2.5%", "Roll cooldown -0.7% (base 1.5 s, floor 0.6 s)" } },
-	{ Id = "Endurance", Name = "Endurance", Icon = "Defense", Short = "Toughness", Effects = { "Defense +1", "Block reduction +0.5 pts (base 60%, cap 85%)", "Move speed +0.4% (cap +40% with pets)" } },
-	{ Id = "Strength", Name = "Strength", Icon = "Attack", Short = "Power", Effects = { "Damage of Strength weapons (Heavy S, Gauntlet A, Sword B, Spear B)" } },
-	{ Id = "Dexterity", Name = "Dexterity", Icon = "Speed", Short = "Skill", Effects = { "Damage of Dexterity weapons (Ranged S, Dagger A, Spear A, Sword B, Gauntlet B)", "Attack speed +0.3% (cap +15%)" } },
-	{ Id = "Intelligence", Name = "Intelligence", Icon = "Magic", Short = "Sorcery", Effects = { "Damage of Magic weapons (S)", "Element proc chance +0.4 pts (cap +16 pts)", "Magic area radius +0.5% (cap +25%)" } },
-	{ Id = "Faith", Name = "Faith", Icon = "Star", Short = "Devotion", Effects = { "Pet bonus effectiveness +1.2%", "Lifesteal and healing effects +1.5%" } },
-	{ Id = "Arcane", Name = "Arcane", Icon = "Crit", Short = "Luck", Effects = { "Crit chance +0.25 pts (base 5%, cap 60%)", "Crit damage +1.5% (base x2)", "Loot drop chance +0.5%", "Damage of Arcane weapons (Dagger C)" } },
-} :: { Attribute }
-
-Attributes.ById = {} :: { [string]: Attribute }
-Attributes.Ids = {} :: { string }
-for _, attribute in ipairs(Attributes.List) do
-	Attributes.ById[attribute.Id] = attribute
-	table.insert(Attributes.Ids, attribute.Id)
-end
-Attributes.MaxLevel = #Attributes.List * Attributes.MaxPoints -- 320
-
--- Per EFFECTIVE point (before RebirthPower). Fractions: 0.04 = +4%.
+-- Per EFFECTIVE point (before RebirthPower). Fractions: 0.10 = +10%.
 Attributes.PerPoint = {
-	VigorHP = 0.04,
-	VigorRegen = 0.0005, -- of Max HP per second, out of combat
-	MindGold = 0.025,
-	MindRoll = 0.007,
-	EnduranceDefense = 1.0, -- Defense points
-	EnduranceBlock = 0.005,
-	EnduranceSpeed = 0.004,
-	DexterityAttackSpeed = 0.003,
-	IntelligenceProc = 0.004,
-	IntelligenceRadius = 0.005,
-	FaithPets = 0.012,
-	FaithHealing = 0.015,
-	ArcaneCrit = 0.0025,
-	ArcaneCritDamage = 0.015,
-	ArcaneLoot = 0.005,
-	DamageScaling = 0.03, -- AttributeDamageMult = 1 + 0.03 x RP x sum(weight x Peff)
+	VigorHP = 0.10,
+	VigorRegen = 0.001, -- of Max HP per second, out of combat
+	MindGold = 0.06,
+	MindRoll = 0.012,
+	EnduranceDefense = 2.0, -- Defense points
+	EnduranceBlock = 0.01,
+	EnduranceSpeed = 0.008,
+	DexterityAttackSpeed = 0.005,
+	IntelligenceProc = 0.008,
+	IntelligenceRadius = 0.01,
+	FaithPets = 0.03,
+	FaithHealing = 0.03,
+	ArcaneCrit = 0.005,
+	ArcaneCritDamage = 0.03,
+	ArcaneLoot = 0.01,
+	DamageScaling = 0.08, -- AttributeDamageMult = 1 + 0.08 x RP x sum(weight x Peff)
 }
 
 -- Base values and absolute hard caps.
@@ -92,6 +77,95 @@ Attributes.Scaling = {
 } :: { [string]: { [string]: number } }
 Attributes.Grades = { { Min = 1.0, Letter = "S" }, { Min = 0.7, Letter = "A" }, { Min = 0.5, Letter = "B" }, { Min = 0.3, Letter = "C" }, { Min = 0, Letter = "D" } }
 
+-- 0.1 -> "10%", 0.012 -> "1.2%", 0.0005 -> "0.05%"
+local function pct(fraction: number): string
+	local text = string.format("%.2f", fraction * 100)
+	text = string.gsub(text, "0+$", "")
+	text = string.gsub(text, "%.$", "")
+	return text .. "%"
+end
+
+-- 2 -> "2", 2.5 -> "2.5"; percentage points: 0.005 -> "0.5"
+local function num(value: number): string
+	local text = string.format("%.2f", value)
+	text = string.gsub(text, "0+$", "")
+	return (string.gsub(text, "%.$", ""))
+end
+
+Attributes.pct = pct
+
+-- "Heavy +9.6%, Gauntlet +5.6%, ..." for one attribute (per point, before the soft cap and RebirthPower)
+local function damageList(id: string, k: number): string
+	local list = {}
+	for category, weights in pairs(Attributes.Scaling) do
+		if weights[id] then
+			table.insert(list, { category, weights[id] })
+		end
+	end
+	table.sort(list, function(a, b)
+		return if a[2] == b[2] then a[1] < b[1] else a[2] > b[2]
+	end)
+	local parts = {}
+	for _, pair in ipairs(list) do
+		table.insert(parts, `{pair[1]} +{pct(Attributes.PerPoint.DamageScaling * pair[2] * k)}`)
+	end
+	return table.concat(parts, ", ")
+end
+
+-- The effects of ONE point (per point, before the soft cap and RebirthPower), built from the numbers above.
+local function effectsOf(id: string): { string }
+	local p, base, caps = Attributes.PerPoint, Attributes.Base, Attributes.Caps
+	if id == "Vigor" then
+		return { `Max HP +{pct(p.VigorHP)}`, `HP regeneration out of combat +{pct(p.VigorRegen)} of Max HP per second` }
+	elseif id == "Mind" then
+		return { `Gold Gain +{pct(p.MindGold)}`, `Roll cooldown -{pct(p.MindRoll)} (base {num(base.RollCooldown)} s, floor {num(caps.RollCooldownFloor)} s)` }
+	elseif id == "Endurance" then
+		return {
+			`Defense +{num(p.EnduranceDefense)}`,
+			`Block reduction +{num(p.EnduranceBlock * 100)} pts (base {pct(base.Block)}, cap {pct(caps.Block)})`,
+			`Move speed +{pct(p.EnduranceSpeed)} (cap +{pct(caps.MoveSpeed)} with pets)`,
+		}
+	elseif id == "Strength" then
+		return { `Weapon damage: {damageList(id, 1)}` }
+	elseif id == "Dexterity" then
+		return { `Weapon damage: {damageList(id, 1)}`, `Attack speed +{pct(p.DexterityAttackSpeed)} (cap +{pct(caps.AttackSpeed)})` }
+	elseif id == "Intelligence" then
+		return {
+			`Weapon damage: {damageList(id, 1)}`,
+			`Element proc chance +{num(p.IntelligenceProc * 100)} pts (cap +{num(caps.ElementProc * 100)} pts)`,
+			`Magic area radius +{pct(p.IntelligenceRadius)} (cap +{pct(caps.MagicRadius)})`,
+		}
+	elseif id == "Faith" then
+		return { `Pet bonus effectiveness +{pct(p.FaithPets)}`, `Lifesteal and healing effects +{pct(p.FaithHealing)}` }
+	end
+	return {
+		`Crit chance +{num(p.ArcaneCrit * 100)} pts (base {pct(base.CritChance)}, cap {pct(caps.CritChance)})`,
+		`Crit damage +{pct(p.ArcaneCritDamage)} (base x{num(base.CritDamage)})`,
+		`Loot drop chance +{pct(p.ArcaneLoot)}`,
+		`Weapon damage: {damageList(id, 1)}`,
+	}
+end
+
+Attributes.List = {
+	{ Id = "Vigor", Name = "Vigor", Icon = "MaxHP", Short = "Health", Effects = {} },
+	{ Id = "Mind", Name = "Mind", Icon = "GoldGain", Short = "Fortune", Effects = {} },
+	{ Id = "Endurance", Name = "Endurance", Icon = "Defense", Short = "Toughness", Effects = {} },
+	{ Id = "Strength", Name = "Strength", Icon = "Attack", Short = "Power", Effects = {} },
+	{ Id = "Dexterity", Name = "Dexterity", Icon = "Speed", Short = "Skill", Effects = {} },
+	{ Id = "Intelligence", Name = "Intelligence", Icon = "Magic", Short = "Sorcery", Effects = {} },
+	{ Id = "Faith", Name = "Faith", Icon = "Star", Short = "Devotion", Effects = {} },
+	{ Id = "Arcane", Name = "Arcane", Icon = "Crit", Short = "Luck", Effects = {} },
+} :: { Attribute }
+
+Attributes.ById = {} :: { [string]: Attribute }
+Attributes.Ids = {} :: { string }
+for _, attribute in ipairs(Attributes.List) do
+	attribute.Effects = effectsOf(attribute.Id)
+	Attributes.ById[attribute.Id] = attribute
+	table.insert(Attributes.Ids, attribute.Id)
+end
+Attributes.MaxLevel = #Attributes.List * Attributes.MaxPoints -- 320
+
 function Attributes.grade(weight: number): string
 	for _, grade in ipairs(Attributes.Grades) do
 		if weight >= grade.Min - 1e-9 then
@@ -111,17 +185,47 @@ function Attributes.rebirthPower(rebirths: number): number
 	return 1 + Attributes.RebirthPowerPerRebirth * (rebirths or 0)
 end
 
-function Attributes.pointCost(level: number, zone: number): number
-	return math.round(Attributes.CostBase * 10 ^ (zone - 1) * (1 + level / Attributes.CostDivisor) ^ Attributes.CostExponent)
+-- Gold price of the next point at attribute level L.
+function Attributes.pointCost(level: number): number
+	return math.round(Attributes.CostBase * Attributes.CostGrowth ^ level)
 end
 
 -- Total Gold for `count` more points starting at level L.
-function Attributes.costOf(level: number, count: number, zone: number): number
+function Attributes.costOf(level: number, count: number): number
 	local total = 0
 	for i = 0, count - 1 do
-		total += Attributes.pointCost(level + i, zone)
+		total += Attributes.pointCost(level + i)
 	end
 	return total
+end
+
+-- What point number `nextPoint` (1..MaxPoints) of an attribute gives, for the row of the Attributes window: its
+-- main effect after the soft cap and RebirthPower. category = the equipped weapon's category (damage scaling).
+function Attributes.pointGain(id: string, nextPoint: number, rebirths: number, category: string?): string
+	if nextPoint > Attributes.MaxPoints then
+		return "Maxed"
+	end
+	local p = Attributes.PerPoint
+	local k = Attributes.rebirthPower(rebirths) * (if nextPoint > Attributes.SoftCap then Attributes.SoftCapRate else 1)
+	local weight = if category and Attributes.Scaling[category] then Attributes.Scaling[category][id] else nil
+	if weight then
+		return `+{pct(p.DamageScaling * weight * k)} damage`
+	elseif id == "Vigor" then
+		return `+{pct(p.VigorHP * k)} Max HP`
+	elseif id == "Mind" then
+		return `+{pct(p.MindGold * k)} Gold`
+	elseif id == "Endurance" then
+		return `+{num(p.EnduranceDefense * k)} Defense`
+	elseif id == "Dexterity" then
+		return `+{pct(p.DexterityAttackSpeed * k)} attack speed`
+	elseif id == "Intelligence" then
+		return `+{num(p.IntelligenceProc * k * 100)} pts element proc`
+	elseif id == "Faith" then
+		return `+{pct(p.FaithPets * k)} pet power`
+	elseif id == "Arcane" then
+		return `+{num(p.ArcaneCrit * k * 100)} pts crit`
+	end
+	return if category then "Your weapon does not scale with it" else "Damage of Strength weapons"
 end
 
 function Attributes.respecCost(zone: number): number

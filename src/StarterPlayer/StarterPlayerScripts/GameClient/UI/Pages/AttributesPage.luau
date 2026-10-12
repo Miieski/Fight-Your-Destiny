@@ -1,7 +1,7 @@
 --!strict
 -- Stats button -> Attributes window (docs/menu_systems_brief.txt A5), inspired by the Elden Ring status screen.
--- Left: the 8 attributes (points, bar to 40 with the soft-cap marker at 20, [-] [+] that change PENDING points,
--- hold to repeat, tap the name for its effects). Right: every derived stat "before -> after" (green = better)
+-- Left: the 8 attributes (points, what the next point gives, bar to 40 with the soft-cap marker at 20, [-] [+] that
+-- change PENDING points, hold to repeat, tap the name for its effects). Right: every derived stat "before -> after" (green = better)
 -- and the equipped weapon's damage and scaling grades. Bottom: Confirm (cost), Reset pending, Respec.
 -- The server decides everything (Net "TrainAttributes" / "RespecAttributes"); the numbers shown come from the
 -- shared Util/Stats.compute, so they match the server.
@@ -34,7 +34,7 @@ local REPEAT_DELAY = 0.4
 local REPEAT_EVERY = 0.08
 local DATA_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts", "Zones" }
 
-type Row = { points: TextLabel, fill: Frame, pendingFill: Frame, cost: TextLabel, minus: any, plus: any }
+type Row = { points: TextLabel, gain: TextLabel, fill: Frame, pendingFill: Frame, cost: TextLabel, minus: any, plus: any }
 type Line = { value: TextLabel }
 
 local pending: { [string]: number } = Attributes.empty()
@@ -124,10 +124,15 @@ local function refresh()
 	levelLabel.Text = if count > 0 then `Attribute Level: {level} -> {level + count} / {Attributes.MaxLevel}` else `Attribute Level: {level} / {Attributes.MaxLevel}`
 	local gold = State.get("Gold") or 0
 	goldLabel.Text = Format.number(gold)
-	local nextCost = Attributes.pointCost(level + count, zone)
+	local nextCost = Attributes.pointCost(level + count)
+	local equipped = (data.Weapons or {})[data.EquippedWeapon or ""]
+	local weaponDef = equipped and Weapons.ById[equipped.id]
+	local category = if weaponDef then weaponDef.Category else nil
 	for _, attribute in ipairs(Attributes.List) do
 		local row = rows[attribute.Id]
 		local have, add = current(attribute.Id), pending[attribute.Id]
+		-- what the NEXT point of this attribute gives (soft cap and Rebirth power included)
+		row.gain.Text = `{Attributes.pointGain(attribute.Id, have + add + 1, data.Rebirths or 0, category)}  (i)`
 		row.points.Text = if add > 0 then `{have} -> {have + add}` else tostring(have)
 		row.points.TextColor3 = if add > 0 then GREEN else Theme.Colors.Text
 		row.fill.Size = UDim2.fromScale(have / Attributes.MaxPoints, 1)
@@ -168,7 +173,7 @@ local function refresh()
 		weaponLine.TextColor3 = Theme.Colors.TextDim
 		gradesLine.Text = ""
 	end
-	local cost = Attributes.costOf(level, count, zone)
+	local cost = Attributes.costOf(level, count)
 	confirm:SetText(if count > 0 then `Confirm ({Format.number(cost)} Gold)` else "Confirm")
 	confirm:SetEnabled(count > 0 and not busy)
 	if count > 0 and not busy then
@@ -201,7 +206,7 @@ local function tooltip(attribute: any)
 	holder.Parent = root
 	overlay = holder -- remembered, so the X, a tap outside or closing the window removes it
 	local top = Theme.TOUCH + 16 -- the title row holds the close (X) button
-	local height = top + 14 + 34 * #attribute.Effects
+	local height = top + 14 + 34 * (#attribute.Effects + 1)
 	local panel = Panel.new({ Size = UDim2.fromOffset(math.min(520, root.AbsoluteSize.X / Theme.getScale() - 20), height), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 31, Parent = holder })
 	panel.Active = true -- a tap on the panel itself keeps it open; the X or a tap outside closes it
 	Icons.create(attribute.Icon, panel, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(14, 12), AnchorPoint = Vector2.zero, ZIndex = 32 })
@@ -210,6 +215,8 @@ local function tooltip(attribute: any)
 	for i, effect in ipairs(attribute.Effects) do
 		Theme.text({ Text = "- " .. effect, TextSize = 19, Wrapped = true, Align = "Left", Size = UDim2.new(1, -32, 0, 32), Position = UDim2.fromOffset(18, top + (i - 1) * 34), ZIndex = 32, Parent = panel })
 	end
+	local power = string.gsub(string.gsub(string.format("%.2f", Attributes.rebirthPower(State.get("Rebirths") or 0)), "0+$", ""), "%.$", "")
+	Theme.text({ Text = `Per point. Points above {Attributes.SoftCap} count half. Rebirth power: every point x{power}`, TextSize = 17, Wrapped = true, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -32, 0, 32), Position = UDim2.fromOffset(18, top + #attribute.Effects * 34), ZIndex = 32, Parent = panel })
 	Sfx.play("UIClick")
 end
 
@@ -266,7 +273,7 @@ local function doConfirm()
 		return
 	end
 	local data = snapshot()
-	local cost = Attributes.costOf(Attributes.level(data.Attributes), count, Stats.highestZone(data))
+	local cost = Attributes.costOf(Attributes.level(data.Attributes), count)
 	if (State.get("Gold") or 0) < cost then
 		Sfx.play("Denied")
 		Notifier.push({ Kind = "error", Text = "Not enough Gold" })
@@ -422,7 +429,7 @@ local function makeRow(attribute: any, order: number)
 	name.Parent = row
 	Icons.create(attribute.Icon, name, { Size = UDim2.new(0, 0, 0.76, 0), Position = UDim2.new(0, 6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
 	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 24, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -60, 0.55, 0), Position = UDim2.fromOffset(56, 4), Parent = name })
-	Theme.text({ Text = attribute.Short .. "  (i)", TextSize = 15, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -60, 0.32, 0), Position = UDim2.new(0, 56, 0.62, 0), Parent = name })
+	local gain = Theme.text({ Name = "Gain", Text = attribute.Short .. "  (i)", TextSize = 15, Color = Theme.Colors.Good, Align = "Left", Size = UDim2.new(1, -60, 0.32, 0), Position = UDim2.new(0, 56, 0.62, 0), Parent = name })
 	name.Activated:Connect(function()
 		tooltip(attribute)
 	end)
@@ -465,7 +472,7 @@ local function makeRow(attribute: any, order: number)
 	holdRepeat(plus, function()
 		change(attribute.Id, 1)
 	end)
-	rows[attribute.Id] = { points = points, fill = fill, pendingFill = pendingFill, cost = cost, minus = minus, plus = plus }
+	rows[attribute.Id] = { points = points, gain = gain, fill = fill, pendingFill = pendingFill, cost = cost, minus = minus, plus = plus }
 end
 
 local function statusLine(key: string, label: string, order: number)

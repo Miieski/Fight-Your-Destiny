@@ -149,6 +149,13 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-12 (evening): ATTRIBUTES REBALANCE (owner: "make each attribute level feel like a real upgrade; raise the
+price per level so the max comes at the very end of the game").** `Config/Attributes`: next point = `400 x 1.1 ^ L`
+(no zone factor any more; `pointCost(level)`, `costOf(level, count)`), per-point effects about x2-2.5 (Vigor +10% HP,
+Mind +6% Gold, Endurance +2 Defense, damage scaling 0.08 = +9.6% for an S stat), effect texts generated from the
+numbers, `Attributes.pointGain` = what the next point gives (shown in green on each row of the Attributes window).
+Calibration table in docs/NIGHT_LOG.md (level ~26 per zone, 314 at the end of zone 12). `DevTools.StatsTests` 78/78.
+
 **2026-10-12 (evening): REBIRTH (owner: "Create the rebirth functionality. Put it in the actual Rebirth Shop button.
 Rename it Rebirth; one tab the rebirth menu, another tab the rebirth shop").** The menu button and window are now
 "Rebirth" (window id `Rebirth`, tabs `Rebirth` / `Rebirth Shop`; the key action id stays `RebirthShop` so saved
