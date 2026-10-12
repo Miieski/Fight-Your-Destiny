@@ -49,6 +49,11 @@ Enemies.BOSS = { HpMult = 25, DamagePct = 0.07, GoldPct = 0.40 }
 -- docs/enemy_database.txt) x the multiplier of its tier (x the mini-boss heavy / boss attack multipliers below).
 -- Zone 1 examples: boss room normal 40 -> 20, mini-boss 240-336 -> 48-67, boss 1,400 -> 84.
 Enemies.DAMAGE_MULT = { normal = 0.5, mini = 0.2, boss = 0.06 } -- -50%, -80%, -94%
+-- Owner 2026-10-12: "reduce the enemy HP too". A spawned enemy's HP = its database HP (MaxHP) x the multiplier of its
+-- tier (x the boss-room group scaling). Gold per kill stays the database value, so enemies die faster for the same
+-- Gold. Zone 1 examples: Boar 80 -> 40, boss-room normals 800-960 -> 400-480, mini-bosses 4,000 / 5,600 -> 1,600 /
+-- 2,240, Golem 20,000 -> 5,000.
+Enemies.HP_MULT = { normal = 0.5, mini = 0.4, boss = 0.25 } -- -50%, -60%, -75%
 Enemies.RESPAWN_SECONDS = 2
 Enemies.ALIVE_PER_SUBZONE = 10
 Enemies.RESPAWN_MIN_PLAYER_DISTANCE = 12 -- a respawn point must be this far from every player

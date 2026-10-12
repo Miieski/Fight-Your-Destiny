@@ -149,6 +149,10 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-12 (night): ENEMY HP REDUCED.** `Config/Enemies.HP_MULT = { normal = 0.5, mini = 0.4, boss = 0.25 }` at
+spawn (EnemyService:Spawn); database HP and Gold per kill unchanged (faster kills, same Gold). Zone 1: Golem 20,000 ->
+5,000, mini-bosses 4,000 / 5,600 -> 1,600 / 2,240, normals -50%.
+
 **2026-10-12 (night): ENEMY DAMAGE REDUCED (owner: easier, playable for everyone).** `Config/Enemies.DAMAGE_MULT =
 { normal = 0.5, mini = 0.2, boss = 0.06 }` multiplies every enemy hit (EnemyService attack); the database damage values
 are unchanged (validateEnemies: 168 enemies, 0 mismatches). Zone 1: Golem 1,400 -> 84, mini-bosses 240 / 336 -> 48 / 67.

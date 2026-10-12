@@ -344,7 +344,8 @@ function EnemyService:Spawn(group: Group, def: any, at: Vector3, opts: { [string
 	orient.Responsiveness = 18
 	orient.CFrame = cframe.Rotation
 	orient.Parent = root
-	local maxHP = def.MaxHP * (options.hpMult or 1)
+	-- database HP x the tier's multiplier (Config/Enemies HP_MULT) x the boss-room group scaling
+	local maxHP = def.MaxHP * (Enemies.HP_MULT[def.Tier] or 1) * (options.hpMult or 1)
 	local size = root.Size
 	slotCounter += 1
 	local state: EnemyState = {

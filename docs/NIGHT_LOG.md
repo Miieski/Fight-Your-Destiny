@@ -1170,3 +1170,20 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Stronger cuts for mini-bosses and bosses than for normal enemies: their damage was a % of their own (5-25x larger)
   HP, so they one-shot everyone; normal enemies were only too hard deep in a zone. Tune with Enemies.DAMAGE_MULT.
 
+# Enemy HP - 2026-10-12 night (owner: "Reduce the Enemy HP too")
+
+## Status (newest first)
+
+- 22:05 DONE. Backups `..._before_enemy_hp_*` / `..._after_enemy_hp_*`. Studio = disk (pull 0 written).
+  `Config/Enemies` `HP_MULT = { normal = 0.5, mini = 0.4, boss = 0.25 }` (-50% / -60% / -75%), applied where every
+  enemy is spawned (`EnemyService:Spawn`, before the boss-room group scaling); health bars, the boss bar, the boss
+  reward share and the enrage threshold all read the spawned value. Database HP unchanged (it stays the base, like
+  the damage). Gold per kill unchanged (database Gold), so enemies die faster for the same Gold: more Gold per minute.
+  Measured in Play (Plains): Brown Bear 320 -> 160 HP (killed with a Common sword in under 17 s, paid its usual 64 Gold),
+  Cave Troll 4,000 -> 1,600, Crystal Spider Matriarch 5,600 -> 2,240, Golem 20,000 -> 5,000. Output clean.
+
+## Decisions taken without the owner
+
+- Gold per kill kept (not lowered with the HP): faster kills = faster Gold, which fits "easier". If the economy
+  goes too fast, lower GoldPct in Config/Enemies (database) or Playtest.GoldMultiplier.
+
