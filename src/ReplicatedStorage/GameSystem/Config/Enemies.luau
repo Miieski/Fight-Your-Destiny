@@ -54,7 +54,7 @@ Enemies.DAMAGE_MULT = { normal = 0.5, mini = 0.2, boss = 0.06 } -- -50%, -80%, -
 -- Gold. Zone 1 examples: Boar 80 -> 40, boss-room normals 800-960 -> 400-480, mini-bosses 4,000 / 5,600 -> 1,600 /
 -- 2,240, Golem 20,000 -> 5,000.
 Enemies.HP_MULT = { normal = 0.5, mini = 0.4, boss = 0.25 } -- -50%, -60%, -75%
-Enemies.RESPAWN_SECONDS = 2
+Enemies.RESPAWN_SECONDS = 6 -- a killed enemy comes back after this (owner 2026-10-12: 6 s, was 2 s)
 Enemies.ALIVE_PER_SUBZONE = 10
 Enemies.RESPAWN_MIN_PLAYER_DISTANCE = 12 -- a respawn point must be this far from every player
 

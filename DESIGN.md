@@ -264,7 +264,7 @@ redone after a Rebirth has its sub-zone prices reset.
   file is **Gold**.
 * **About 10 enemies are alive at once per sub-zone**, split across its 3 enemy types (boss
   room: the 2 normal enemy types, 2 mini-bosses, 1 boss).
-* An enemy **respawns 2 seconds after it dies**.
+* An enemy **respawns 6 seconds after it dies** (2 s until 2026-10-12; `Config/Enemies.RESPAWN_SECONDS`).
 * Enemies are shared by all players on the server in a sub-zone. The player who dealt the
   **most damage** to an enemy receives its Gold and its loot rolls.
 * Simple AI: idle -> notice player within an aggro radius -> chase -> attack with a telegraph ->

@@ -1187,3 +1187,9 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Gold per kill kept (not lowered with the HP): faster kills = faster Gold, which fits "easier". If the economy
   goes too fast, lower GoldPct in Config/Enemies (database) or Playtest.GoldMultiplier.
 
+
+# Enemy respawn - 2026-10-12 night (owner: "make the enemy respawn every 6 second instead of 2s")
+
+- 22:10 DONE. `Config/Enemies.RESPAWN_SECONDS` 2 -> 6 (the only respawn timer: EnemyService, after a kill). DESIGN.md
+  section 5 updated. Backups `..._before_respawn_6s_*` / `..._after_respawn_6s_*`. Play (Plains sub-zone 1): admin
+  killAll on 10 enemies -> none back at 5 s, first back at 6.04 s, all 10 back at 8 s. Studio = disk.
