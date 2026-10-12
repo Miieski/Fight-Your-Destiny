@@ -715,6 +715,19 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 12:50 PHASE 3 - SWORD category V2 done (12/12) and pushed. New pipeline `tools/blender/fyd_weapons2.py` +
+  `fyd_w2_parts.py` + `run_weapons2.py` (headless Blender on `Blender/Icons/_IconTemplate.blend`, same camera /
+  lights as the icons): blades with a real cross-section (`plate`: flat faces + ground edges, any outline incl.
+  serrations; `blade_mesh` diamond ridge), spiral-wrapped grips with ferrules, faceted pommels / gems / rivets,
+  1024 px bake with a subtle color variation (noise, wood grain) x baked AO (24 samples), same `_Main` / `_Glow`
+  materials. Each weapon is checked against its icon on `Previews/Weapons/<Cat>/<NN>_<id>_compare.png`
+  (icon | V2 from the icon's angle); the icons are NOT re-rendered. Attachment points (Tip, Base, Muzzle, Impact)
+  and bounds in Roblox studs go to `Blender/Weapons/weapons_v2_points.json` (for ApplyWeaponMeshes). Swords:
+  1606, 1582, 958, 1064, 866, 1218, 1394, 1566, 2538, 1662, 1234, 1360 triangles (budget 800-4,000), all at 4.5
+  studs. Fixes during the checks: Volcano guard back to a bar (the icon has a bar), Swamp / Dead notch count back to
+  the V1 count (the icons have fewer, deeper notches). Lineup `Previews/Weapons/Sword_lineup.png`. Old files in
+  `BackUP_Files/old_weapon_models_2026-10-12/`. The animation sub-agent runs in parallel (Studio is its own).
+
 - 12:08 PHASE 4 FRAMEWORK (main agent) - the hack & slash backbone and the contracts for the sub-agents
   (`docs/COMBAT_CONTRACTS.md`). Server (`CombatService`): every attack is the next step of the category combo of
   `Config/Combat` `Combos` (chosen on the server; per-step Impact, Damage, Finisher, Shape override, Knockback,
