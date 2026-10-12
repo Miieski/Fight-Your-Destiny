@@ -21,6 +21,11 @@
 -- cross-fade from the previous one, additive = hit reactions on top. Feet goals (legs) and hand targets (arms) are
 -- solved with two-bone IK per character, so the clips fit any R15 body. Characters farther than RANGE studs from the
 -- camera are not posed. No table is allocated per frame (CFrames only).
+-- Weapons: the held weapon's axis (Handle Base -> Tip), face (bows: toward the Muzzle, else the Handle's -Z) and grip
+-- are measured per Tool; clips aim them (RBlade, RFace) and can put the left hand on the weapon (LGrip: two hands).
+-- Clip sets per weapon style (Config/CombatAnimations Styles[WeaponId]: RangedCrossbow, RangedGun) fall back to the
+-- category; placeholder Tools (attribute Placeholder) always use the category's clips.
+-- attack's optional 5th argument aim (Vector3, the 3D aim direction) pitches the torso of AimPitch clips (Ranged, Magic).
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,6 +35,7 @@ local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
 local Data = require(ReplicatedStorage.GameSystem.Config.CombatAnimations)
 
 local Animations = {}
+local STYLES: { [string]: string } = Data.Styles or {}
 
 local RANGE = 150 -- studs from the camera
 local REF_HIP = 2 -- HipHeight the clip positions are authored for
@@ -41,12 +47,15 @@ local MOVE_SPEED = 1.5 -- studs / s: a character counts as moving above this (or
 local MOVE_LOCK = 0.35 -- seconds after an attack / roll start during which the lunge / dash speed is ignored
 local SPAWN_WINDOW = 3 -- a new character plays Shared_Spawn if its joints are ready within this many seconds
 local TWIST_MAX = math.rad(110) -- forearm twist toward the blade
+local AIM_PITCH_MAX = math.rad(40) -- torso pitch toward the attack's aim (AimPitch clips)
 
 local PI, TAU = math.pi, math.pi * 2
 local ZERO = Vector3.zero
 local HAND_BLADE = Vector3.new(0, 0, -1) -- weapon direction in the hand's frame until the Tool is measured
 local R_POLE = Vector3.new(0.7, -0.6, 0.4).Unit
 local L_POLE = Vector3.new(-0.7, -0.6, 0.4).Unit
+local DOWN = Vector3.new(0, -1, 0)
+local FACE_POINTS = { "MuzzleAttachment", "ImpactAttachment" }
 local sin, cos, atan2, acos, asin, sqrt, clamp, abs = math.sin, math.cos, math.atan2, math.acos, math.asin, math.sqrt, math.clamp, math.abs
 
 -- Channels: 1-15 joint rotations (radians, YXZ), then positions and IK goals.
@@ -54,6 +63,7 @@ local NAMES = {
 	"Root", "Waist", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow", "LWrist",
 	"RHip", "RKnee", "RAnkle", "LHip", "LKnee", "LAnkle",
 	"RootP", "RFoot", "LFoot", "RFootYaw", "LFootYaw", "RHand", "RBlade", "RPole", "LHand", "LBlade", "LPole",
+	"RFace", "LGrip",
 }
 local PARTS = {
 	"LowerTorso", "UpperTorso", "Head", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperArm", "LeftLowerArm",
@@ -62,23 +72,27 @@ local PARTS = {
 local NJ, NCH = 15, #NAMES
 local C_ROOTP, C_RFOOT, C_LFOOT, C_RYAW, C_LYAW = 16, 17, 18, 19, 20
 local C_RHAND, C_RBLADE, C_RPOLE, C_LHAND, C_LBLADE, C_LPOLE = 21, 22, 23, 24, 25, 26
+local C_RFACE, C_LGRIP = 27, 28 -- C_LGRIP is the last arm channel
 local LEGS = { Upper = 0, Stand = 1, Own = 2 }
 local EASE = { s = 0, l = 1, i = 2, o = 3, O = 4 }
 
 type Track = { times: { number }, values: { Vector3 }, eases: { number }, n: number }
 type Clip = {
 	name: string, length: number, loop: boolean, legs: number, additive: boolean, hold: boolean,
-	fadeIn: number, fadeOut: number, hit: number?, legIK: boolean, rArm: boolean, lArm: boolean,
+	fadeIn: number, fadeOut: number, hit: number?, legIK: boolean, rArm: boolean, lArm: boolean, aimPitch: boolean,
 	tracks: { Track | false },
 }
 type Slot = { clip: Clip?, t: number, w: number, fade: number, stopping: boolean, rate1: number, rate2: number, kind: string, dir: Vector3?, frozen: boolean }
 type Leg = { hipLocal: Vector3, rest: Vector3, l1: number, l2: number, goal: number, yaw: number, hip: number, knee: number, ankle: number }
-type Arm = { shoulder: Vector3, l1: number, l2: number, invF1: CFrame, invF2: CFrame, scale: number, blade: Vector3 }
+type Arm = {
+	shoulder: Vector3, l1: number, l2: number, invF1: CFrame, invF2: CFrame, scale: number, axis2: Vector3, palm: number,
+	wristInHand: Vector3, blade: Vector3, face: Vector3, weaponInv: CFrame, gripOffset: Vector3, grip: boolean,
+}
 type State = {
 	character: Model, isLocal: boolean, humanoid: Humanoid?, root: BasePart?,
 	joints: { any }, legs: { Leg }, rArm: Arm, lArm: Arm, pivot: CFrame, scale: number,
 	dirty: boolean, retryAt: number, ready: boolean, toolDirty: boolean, diedConn: RBXScriptConnection?, watched: Humanoid?,
-	category: string?, idle: Clip?, run: Clip?, stanceOn: boolean,
+	category: string?, style: string?, idle: Clip?, run: Clip?, stanceOn: boolean, aimPitch: number,
 	stanceW: number, standF: number, runF: number, idleT: number, runT: number,
 	act: Slot, prev: Slot, add: Slot,
 	hitStopUntil: number, blocking: boolean, dead: boolean, spawnUntil: number,
@@ -107,12 +121,12 @@ local function compile(name: string, def: { [string]: any }): Clip
 					vec = Vector3.new(0, math.rad(v[4] or 0), 0)
 				elseif c == C_RHAND or c == C_LHAND then
 					vec = Vector3.new(math.rad(v[1]), v[2], v[3])
-				elseif c == C_RBLADE or c == C_LBLADE then
+				elseif c == C_RBLADE or c == C_LBLADE or c == C_RFACE then
 					vec = Vector3.new(math.rad(v[1]), math.rad(v[2]), 0)
 				elseif c == C_RPOLE or c == C_LPOLE then
 					vec = Vector3.new(v[1], v[2], v[3]).Unit
 				else
-					vec = Vector3.new(v[1], v[2], v[3])
+					vec = Vector3.new(v[1] or 0, v[2] or 0, v[3] or 0)
 				end
 				table.insert(times, pose[1])
 				table.insert(values, vec)
@@ -141,7 +155,8 @@ local function compile(name: string, def: { [string]: any }): Clip
 		hit = def.Markers and def.Markers.Hit or nil,
 		legIK = not rawLegs,
 		rArm = tracks[C_RHAND] ~= false,
-		lArm = tracks[C_LHAND] ~= false,
+		lArm = tracks[C_LHAND] ~= false or tracks[C_LGRIP] ~= false,
+		aimPitch = def.AimPitch == true,
 		tracks = tracks,
 	}
 end
@@ -237,18 +252,29 @@ local function solveLegs(S: State, out: { Vector3 })
 	end
 end
 
--- One arm: wrist target (azimuth, height, radius) around the UpperTorso axis, optional weapon direction, pole.
-local function solveArm(arm: Arm, out: { Vector3 }, handC: number, bladeC: number, poleC: number, firstJ: number, clip: Clip, defaultPole: Vector3)
-	local hp = out[handC]
+-- Direction from { azimuth, elevation } (radians, UpperTorso frame: 0 = forward, +azimuth = left).
+local function direction(v: Vector3): Vector3
+	local ce = cos(v.Y)
+	return Vector3.new(-ce * sin(v.X), sin(v.Y), -ce * cos(v.X))
+end
+
+-- Wrist target from { azimuth, height above the shoulder joint, radius } around the UpperTorso axis.
+local function wristTarget(arm: Arm, hp: Vector3): Vector3
 	local k = arm.scale
+	return Vector3.new(-hp.Z * k * sin(hp.X), arm.shoulder.Y + hp.Y * k, -hp.Z * k * cos(hp.X))
+end
+
+-- One arm, UpperTorso frame: wrist target w, elbow pole, optional aim (direction of the held weapon's axis arm.blade)
+-- and face (direction of its face axis arm.face, i.e. the roll around aim). The forearm takes the twist (up to
+-- TWIST_MAX), the wrist the rest. Writes the three joint rotations from firstJ; returns the hand rotation and the
+-- wrist position reached.
+local function solveArm(arm: Arm, out: { Vector3 }, firstJ: number, w: Vector3, pole: Vector3, aim: Vector3?, face: Vector3?): (CFrame, Vector3)
 	local sp = arm.shoulder
-	local w = Vector3.new(-hp.Z * k * sin(hp.X), sp.Y + hp.Y * k, -hp.Z * k * cos(hp.X))
 	local sw = w - sp
 	local dist = math.max(1e-4, sw.Magnitude)
 	local dir = sw / dist
 	local l1, l2 = arm.l1, arm.l2
 	local d = clamp(dist, abs(l1 - l2) + 0.01, (l1 + l2) * 0.999)
-	local pole = if clip.tracks[poleC] then out[poleC] else defaultPole
 	local perp = pole - dir * pole:Dot(dir)
 	if perp.Magnitude < 1e-3 then
 		perp = Vector3.new(0, 0, 1) - dir * dir.Z
@@ -256,31 +282,38 @@ local function solveArm(arm: Arm, out: { Vector3 }, handC: number, bladeC: numbe
 	perp = perp.Unit
 	local a = acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1))
 	local e = sp + dir * (l1 * cos(a)) + perp * (l1 * sin(a))
-	local fa = (sp + dir * d) - e
+	local wrist = sp + dir * d
+	local fa = wrist - e
 	local hinge = perp:Cross(dir)
 	local rua = frame(e - sp, hinge) * arm.invF1
 	local rla = frame(fa, hinge) * arm.invF2
 	local hand = rla
-	if clip.tracks[bladeC] then
-		local bv = out[bladeC]
-		local ce = cos(bv.Y)
-		local b = Vector3.new(-ce * sin(bv.X), sin(bv.Y), -ce * cos(bv.X))
+	local fd = if aim and face and arm.face ~= ZERO then face - aim * face:Dot(aim) else ZERO
+	if aim and fd.Magnitude > 1e-3 then
+		-- full orientation (weapon axis on aim, face toward face); swing / twist split around the forearm
+		fd = fd.Unit
+		hand = CFrame.fromMatrix(ZERO, aim, fd, aim:Cross(fd)) * arm.weaponInv
+		local axis, angle = (rla:Inverse() * hand):ToAxisAngle()
+		local twist = wrap(2 * atan2(axis:Dot(arm.axis2) * sin(angle / 2), cos(angle / 2)))
+		rla *= CFrame.fromAxisAngle(arm.axis2, clamp(twist, -TWIST_MAX, TWIST_MAX))
+	elseif aim then
 		local axis = fa.Unit
 		local b0 = rla:VectorToWorldSpace(arm.blade)
-		local pb = b - axis * b:Dot(axis)
+		local pb = aim - axis * aim:Dot(axis)
 		local pb0 = b0 - axis * b0:Dot(axis)
 		if pb.Magnitude > 0.05 and pb0.Magnitude > 0.05 then
 			local twist = clamp(atan2(axis:Dot(pb0:Cross(pb)), pb0:Dot(pb)), -TWIST_MAX, TWIST_MAX)
 			rla = CFrame.fromAxisAngle(axis, twist) * rla
 			b0 = rla:VectorToWorldSpace(arm.blade)
 		end
-		local cross = b0:Cross(b)
+		local cross = b0:Cross(aim)
 		local m = cross.Magnitude
-		hand = if m > 1e-4 then CFrame.fromAxisAngle(cross / m, atan2(m, b0:Dot(b))) * rla else rla
+		hand = if m > 1e-4 then CFrame.fromAxisAngle(cross / m, atan2(m, b0:Dot(aim))) * rla else rla
 	end
 	out[firstJ] = Vector3.new(rua:ToEulerAnglesYXZ())
 	out[firstJ + 1] = Vector3.new((rua:Inverse() * rla):ToEulerAnglesYXZ())
 	out[firstJ + 2] = Vector3.new((rla:Inverse() * hand):ToEulerAnglesYXZ())
+	return hand, wrist
 end
 
 -- ------------------------------------------------------------------------------------------------
@@ -302,7 +335,10 @@ local function newLeg(goal: number, yaw: number, hip: number): Leg
 end
 
 local function newArm(): Arm
-	return { shoulder = ZERO, l1 = 0.5, l2 = 0.6, invF1 = CFrame.identity, invF2 = CFrame.identity, scale = 1, blade = HAND_BLADE }
+	return {
+		shoulder = ZERO, l1 = 0.5, l2 = 0.6, invF1 = CFrame.identity, invF2 = CFrame.identity, scale = 1, axis2 = DOWN, palm = 0.25,
+		wristInHand = ZERO, blade = HAND_BLADE, face = ZERO, weaponInv = CFrame.identity, gripOffset = ZERO, grip = false,
+	}
 end
 
 local function c0(joint: any): CFrame
@@ -377,6 +413,11 @@ local function rebuild(S: State)
 		arm.invF1 = frame(d1, Vector3.xAxis):Inverse()
 		arm.invF2 = frame(d2, Vector3.xAxis):Inverse()
 		arm.scale = (arm.l1 + arm.l2) / REF_ARM
+		arm.axis2 = if d2.Magnitude > 1e-4 then d2.Unit else DOWN
+		arm.wristInHand = c1(j[base + 2]).Position
+		local handPart = character:FindFirstChild(PARTS[base + 2])
+		local gripAt = handPart and handPart:FindFirstChild(if side == 1 then "RightGripAttachment" else "LeftGripAttachment")
+		arm.palm = if gripAt and gripAt:IsA("Attachment") then (gripAt.Position - arm.wristInHand).Magnitude else 0.25
 	end
 	S.toolDirty = true
 	if S.watched ~= humanoid then
@@ -393,10 +434,15 @@ local function rebuild(S: State)
 	end
 end
 
--- The weapon's direction in the right hand's frame (Handle Base -> Tip through the RightGrip weld).
+-- The held weapon in the right hand's frame (through the RightGrip weld): its axis (Handle Base -> Tip), its face
+-- (toward a Muzzle / Impact attachment beside the axis: bow arrow side, axe edge; else the Handle's front -Z:
+-- crossbow top, gun side, gauntlet back of the hand) and the Handle's origin from the wrist.
 local function measureTool(S: State)
 	S.toolDirty = false
-	S.rArm.blade = HAND_BLADE
+	local arm = S.rArm
+	arm.blade = HAND_BLADE
+	arm.face = ZERO
+	arm.grip = false
 	local character = S.character
 	local tool = character:FindFirstChildOfClass("Tool")
 	local handle = tool and tool:FindFirstChild("Handle")
@@ -409,13 +455,36 @@ local function measureTool(S: State)
 		S.toolDirty = true -- the grip weld comes a moment after the Tool
 		return
 	end
+	local inHand = grip.C0 * grip.C1:Inverse()
+	arm.gripOffset = inHand.Position - arm.wristInHand
+	arm.grip = true
 	local tip = handle:FindFirstChild("TipAttachment")
 	local base = handle:FindFirstChild("BaseAttachment")
-	if tip and base and tip:IsA("Attachment") and base:IsA("Attachment") then
-		local dir = (tip.Position - base.Position)
-		if dir.Magnitude > 1e-3 then
-			S.rArm.blade = (grip.C0 * grip.C1:Inverse()):VectorToWorldSpace(dir.Unit)
+	if not (tip and base and tip:IsA("Attachment") and base:IsA("Attachment")) then
+		return
+	end
+	local axis = tip.Position - base.Position
+	if axis.Magnitude < 1e-3 then
+		return
+	end
+	axis = axis.Unit
+	local front = Vector3.new(0, 0, -1)
+	for _, name in ipairs(FACE_POINTS) do
+		local point = handle:FindFirstChild(name)
+		if point and point:IsA("Attachment") then
+			local side = point.Position - base.Position
+			side -= axis * side:Dot(axis)
+			if side.Magnitude > 0.05 then
+				front = side
+				break
+			end
 		end
+	end
+	front -= axis * front:Dot(axis)
+	arm.blade = inHand:VectorToWorldSpace(axis)
+	if front.Magnitude > 1e-3 then
+		arm.face = inHand:VectorToWorldSpace(front.Unit)
+		arm.weaponInv = CFrame.fromMatrix(ZERO, arm.blade, arm.face, arm.blade:Cross(arm.face)):Inverse()
 	end
 end
 
@@ -472,24 +541,33 @@ onDied = function(S: State)
 	end
 end
 
--- Equipped Tool -> category stance; a new weapon plays its Equip clip.
+-- A clip of the held weapon's style (Styles[WeaponId], e.g. RangedRifle), else of its category.
+local function styled(S: State, suffix: string): Clip?
+	local style, category = S.style, S.category
+	return (if style then clips[style .. suffix] else nil) or (if category then clips[category .. suffix] else nil)
+end
+
+-- Equipped Tool -> category (and style) stance; a new weapon plays its Equip clip.
 local function refreshTool(S: State, added: boolean)
 	local tool = S.character:FindFirstChildOfClass("Tool")
 	local category = tool and tool:GetAttribute("Category")
+	local weaponId = tool and tool:GetAttribute("WeaponId")
 	local id: string? = if typeof(category) == "string" then category else nil
 	S.category = id
-	local idle = if id then clips[id .. "_Idle"] else nil
+	local placeholder = tool and tool:GetAttribute("Placeholder") == true
+	S.style = if id and not placeholder and typeof(weaponId) == "string" then STYLES[weaponId] else nil
+	local idle = if id then styled(S, "_Idle") else nil
 	S.stanceOn = idle ~= nil
-	if id and idle then
+	if idle then
 		if S.idle ~= idle then
 			S.idleT = 0
 		end
 		S.idle = idle
-		S.run = clips[id .. "_Run"]
+		S.run = styled(S, "_Run")
 	end
 	S.toolDirty = true
 	if added and id and S.ready and not S.dead then
-		local equip = clips[id .. "_Equip"]
+		local equip = styled(S, "_Equip")
 		local kind = if S.act.clip then S.act.kind else ""
 		if equip and kind ~= "spawn" and kind ~= "death" and kind ~= "attack" and kind ~= "roll" then
 			play(S, equip, 1, 1, "equip")
@@ -539,6 +617,8 @@ local function add(character: Model, spawned: boolean)
 		diedConn = nil,
 		watched = nil,
 		category = nil,
+		style = nil,
+		aimPitch = 0,
 		idle = nil,
 		run = nil,
 		stanceOn = false,
@@ -671,11 +751,26 @@ local function advance(slot: Slot, dt: number, sdt: number)
 end
 
 local function solveArms(S: State, clip: Clip, out: { Vector3 })
+	local tracks = clip.tracks
+	local rArm, lArm = S.rArm, S.lArm
+	local hand: CFrame?, wrist: Vector3? = nil, nil
 	if clip.rArm then
-		solveArm(S.rArm, out, C_RHAND, C_RBLADE, C_RPOLE, 4, clip, R_POLE)
+		hand, wrist = solveArm(rArm, out, 4, wristTarget(rArm, out[C_RHAND]), if tracks[C_RPOLE] then out[C_RPOLE] else R_POLE,
+			if tracks[C_RBLADE] then direction(out[C_RBLADE]) else nil, if tracks[C_RFACE] then direction(out[C_RFACE]) else nil)
 	end
 	if clip.lArm then
-		solveArm(S.lArm, out, C_LHAND, C_LBLADE, C_LPOLE, 7, clip, L_POLE)
+		local w = if tracks[C_LHAND] then wristTarget(lArm, out[C_LHAND]) else lArm.shoulder + DOWN
+		local aim = if tracks[C_LBLADE] then direction(out[C_LBLADE]) else nil
+		local g = out[C_LGRIP]
+		local weight = clamp(g.Y, 0, 1)
+		if hand and wrist and rArm.grip and weight > 0 then
+			-- left hand on the weapon, g.X studs along its axis from the right hand's grip
+			local axis = hand:VectorToWorldSpace(rArm.blade)
+			local point = wrist + hand:VectorToWorldSpace(rArm.gripOffset) + axis * g.X
+			w = w:Lerp(point + (lArm.shoulder - point).Unit * lArm.palm, weight)
+			aim = if aim then aim:Lerp(axis, weight).Unit else axis
+		end
+		solveArm(lArm, out, 7, w, if tracks[C_LPOLE] then out[C_LPOLE] else L_POLE, aim, nil)
 	end
 end
 
@@ -686,7 +781,7 @@ local function sampleInto(S: State, clip: Clip, t: number, out: { Vector3 }, low
 		local tr = tracks[c]
 		out[c] = if tr then sample(tr, t) else ZERO
 	end
-	for c = C_RHAND, C_LPOLE do
+	for c = C_RHAND, C_LGRIP do
 		local tr = tracks[c]
 		out[c] = if tr then sample(tr, t) else ZERO
 	end
@@ -748,6 +843,12 @@ local function actionLayer(S: State, slot: Slot)
 		yawAdd = atan2(-lv.X, -lv.Z)
 	end
 	sampleInto(S, clip, slot.t, scratchA, wL > 0, true, yawAdd, true)
+	local pitch = S.aimPitch
+	if clip.aimPitch and pitch ~= 0 then
+		-- aim up / down: the torso leans (the arms follow, their targets are torso-relative)
+		scratchA[2] += Vector3.new(pitch * 0.75, 0, 0)
+		scratchA[3] += Vector3.new(pitch * 0.25, 0, 0)
+	end
 	layer(scratchA, w, wL)
 end
 
@@ -826,7 +927,7 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 				scratchA[c] = scratchA[c]:Lerp(scratchB[c], runF)
 			end
 			if targets then
-				for c = C_RHAND, C_LPOLE do
+				for c = C_RHAND, C_LGRIP do
 					scratchA[c] = scratchA[c]:Lerp(scratchB[c], runF)
 				end
 				solveArms(S, idle, scratchA)
@@ -914,8 +1015,10 @@ local function fallback(character: Model, category: string)
 	end
 end
 
-function Animations.attack(character: Model, category: string, step: number, speed: number): number
-	local clip = clips[`{category}_Attack{step}`]
+function Animations.attack(character: Model, category: string, step: number, speed: number, aim: Vector3?): number
+	local S = states[character]
+	local style = if S and S.category == category then S.style else nil
+	local clip = (if style then clips[`{style}_Attack{step}`] else nil) or clips[`{category}_Attack{step}`]
 	if not clip then
 		fallback(character, category)
 		return 0
@@ -927,8 +1030,9 @@ function Animations.attack(character: Model, category: string, step: number, spe
 	local impact = (if def and typeof(def.Impact) == "number" then def.Impact else hit or 0) / sp
 	local rate1 = if hit and impact > 0 then hit / impact else sp
 	local length = if hit then impact + (clip.length - hit) / sp else clip.length / sp
-	local S = states[character]
 	if S and S.ready and not S.dead then
+		local unit = if typeof(aim) == "Vector3" and aim.Magnitude > 1e-3 then aim.Unit else nil
+		S.aimPitch = if unit then clamp(asin(clamp(unit.Y, -1, 1)), -AIM_PITCH_MAX, AIM_PITCH_MAX) else 0
 		play(S, clip, rate1, sp, "attack")
 	end
 	return length
@@ -956,7 +1060,7 @@ function Animations.block(character: Model, on: boolean)
 	end
 	S.blocking = on == true
 	if S.blocking then
-		local clip = if S.category then clips[S.category .. "_Block"] else nil
+		local clip = styled(S, "_Block")
 		if clip and S.ready and not S.dead then
 			play(S, clip, 1, 1, "block")
 		end
@@ -968,7 +1072,7 @@ end
 
 function Animations.blockHit(character: Model)
 	local S = states[character]
-	local clip = if S and S.category then clips[S.category .. "_BlockHit"] else nil
+	local clip = if S then styled(S, "_BlockHit") else nil
 	if S and clip and S.ready and not S.dead then
 		playAdditive(S, clip)
 	end
@@ -992,14 +1096,17 @@ function Animations.hurt(character: Model)
 end
 
 -- Dev hooks (Play, Client command bar; local attributes on a character, never replicated):
---   character:SetAttribute("AnimDebug", "Sword_Attack1@0.16")  holds that clip at that time ("" or nil releases)
+--   character:SetAttribute("AnimDebug", "Sword_Attack1@0.16")  holds that clip at that time ("" or nil releases);
+--                                                   "Ranged_Attack1@0.3@20" also pitches AimPitch clips by 20 deg
 --   character:SetAttribute("AnimProfile", os.clock())  -> attributes AnimCostMs (average update of ALL characters,
 --                                                        ms per frame since the previous request) and AnimChars
 debugAttribute = function(S: State)
 	local value = S.character:GetAttribute("AnimDebug")
-	local name, at = string.match(if typeof(value) == "string" then value else "", "^([%w_]+)@?([%d%.]*)$")
+	local name, at, pitch = string.match(if typeof(value) == "string" then value else "", "^([%w_]+)@?([%d%.]*)@?(%-?[%d%.]*)$")
 	local clip = if name then clips[name] else nil
 	if clip and S.ready then
+		refreshTool(S, false) -- re-reads the Tool (style, grip) for tests that change it locally
+		S.aimPitch = math.rad(tonumber(pitch) or 0)
 		play(S, clip, 1, 1, "debug")
 		S.act.w = 1
 		S.act.t = tonumber(at) or 0
