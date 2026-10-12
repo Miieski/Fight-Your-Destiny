@@ -149,6 +149,12 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-12 (night): BUG FIX "the character becomes invisible while attacking".** Camera occlusion is now
+`StarterPlayer.DevCameraOcclusionMode = Invisicam` (a PLACE property, not in git: keep it when saving the place) - the
+default Zoom mode pulled the camera into the head near trees / walls and the camera then hid the whole body. The
+animation engine can no longer keep or write a NaN pose (accumulator reset per frame, safe normalisation, guard +
+`AnimNaNSkips` attribute / one Output warning); the roll fade only undoes its own transparency. Details in NIGHT_LOG.
+
 **2026-10-12 (evening): ATTRIBUTES REBALANCE (owner: "make each attribute level feel like a real upgrade; raise the
 price per level so the max comes at the very end of the game").** `Config/Attributes`: next point = `400 x 1.1 ^ L`
 (no zone factor any more; `pointCost(level)`, `costOf(level, count)`), per-point effects about x2-2.5 (Vigor +10% HP,

@@ -539,15 +539,21 @@ local function dash(root: BasePart, dir: Vector3)
 	local character = root.Parent
 	if character then
 		local before: { [BasePart]: number } = {}
+		local faded: { [BasePart]: number } = {}
 		for _, part in ipairs(character:GetDescendants()) do
 			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" and part.Name ~= "BlockBubble" then
 				before[part] = part.LocalTransparencyModifier
 				part.LocalTransparencyModifier = math.max(part.LocalTransparencyModifier, 0.5)
+				faded[part] = part.LocalTransparencyModifier
 			end
 		end
 		task.delay(Combat.Roll.IFrames, function()
 			for part, value in pairs(before) do
-				part.LocalTransparencyModifier = value
+				-- undo only our own fade: if the camera changed it meanwhile (zoom in / out), the camera's value stays
+				-- (restoring a stale 1 used to leave the body hidden)
+				if part.Parent and part.LocalTransparencyModifier == faded[part] then
+					part.LocalTransparencyModifier = value
+				end
 			end
 		end)
 	end

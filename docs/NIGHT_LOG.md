@@ -1119,3 +1119,33 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Quests "Spend Gold on attributes" (10 x the zone Gold unit) stay reachable: one point near the zone's level costs
   about that much.
 
+# Bug fix - 2026-10-12 night (owner: "when you attacking, sometime the caracter become invisible"; screenshot: no body, camera at head height)
+
+## Status (newest first)
+
+- 20:56 FIXED. Backups `..._before_invisible_fix_*` / `..._after_invisible_fix_*`. Studio = disk (pull 0 written).
+  Not reproduced on open ground: a per-frame monitor over ~13,000 frames (Sword, Spear, Heavy, Dagger, Gauntlet,
+  Magic, rolls, block, zoom) never saw a NaN / flung part / hidden body. Three causes found and fixed:
+  1. CAMERA (matches the screenshot): Roblox's default occlusion ("Zoom") pulls the camera in front of any solid
+     object between it and the player (trees, rocks, fences, walls, NPC boxes); when that puts the camera at the
+     head, the default camera hides the whole character. Measured: a wall 1.6 studs behind the head -> camera 1.62
+     studs from the head, body 64% transparent (closer = fully hidden). Fix: `StarterPlayer.DevCameraOcclusionMode =
+     Invisicam` (obstacles fade instead): same wall -> camera stays at 18.4 studs, body fully visible, wall 75% see-
+     through (screenshot `docs/screenshots/bugfix/invisicam_wall_behind_player.jpg`). This is a PLACE property (not a
+     script): the owner must save the place for it to stay.
+  2. ANIMATION ENGINE (Controllers/Combat/Animations): the pose blend reused last frame's accumulator, so a single
+     NaN (a zero vector's .Unit in the left-hand grip blend or an elbow-pole fallback) stayed forever and, written to
+     the root joint, made the body vanish permanently. Fix: the first layer of every frame overwrites the
+     accumulator; NaN-safe normalisation (`unit(v, fallback)`) everywhere; a final guard never writes a NaN to a joint
+     (character attribute `AnimNaNSkips` + one Output warning naming the joint and clip, so a future case is visible);
+     a 0 Hit marker can no longer divide by zero.
+  3. ROLL FADE (CombatController): the dash restored the body's transparency captured at the start, so a camera
+     zoom change during the roll could restore a stale "hidden" value; it now only undoes its own fade.
+  Checks after the fix: wall test above, Heavy combo 6 s with 3 boars, Output clean.
+
+## Decisions taken without the owner
+
+- Camera occlusion switched from Zoom to Invisicam for the whole game (the usual choice for action games: the
+  player always stays visible; walls / trees between the camera and the player turn see-through). Revert: set
+  StarterPlayer.DevCameraOcclusionMode back to Zoom.
+

@@ -55,6 +55,13 @@ local HAND_BLADE = Vector3.new(0, 0, -1) -- weapon direction in the hand's frame
 local R_POLE = Vector3.new(0.7, -0.6, 0.4).Unit
 local L_POLE = Vector3.new(-0.7, -0.6, 0.4).Unit
 local DOWN = Vector3.new(0, -1, 0)
+
+-- v.Unit, or `fallback` when v is (almost) zero: a zero vector's .Unit is NaN, and a NaN written to a joint hides the
+-- whole body (bug 2026-10-12: the character vanished during attacks).
+local function unit(v: Vector3, fallback: Vector3): Vector3
+	local m = v.Magnitude
+	return if m > 1e-6 then v / m else fallback
+end
 local FACE_POINTS = { "MuzzleAttachment", "ImpactAttachment" }
 local sin, cos, atan2, acos, asin, sqrt, clamp, abs = math.sin, math.cos, math.atan2, math.acos, math.asin, math.sqrt, math.clamp, math.abs
 
@@ -124,7 +131,7 @@ local function compile(name: string, def: { [string]: any }): Clip
 				elseif c == C_RBLADE or c == C_LBLADE or c == C_RFACE then
 					vec = Vector3.new(math.rad(v[1]), math.rad(v[2]), 0)
 				elseif c == C_RPOLE or c == C_LPOLE then
-					vec = Vector3.new(v[1], v[2], v[3]).Unit
+					vec = unit(Vector3.new(v[1], v[2], v[3]), DOWN)
 				else
 					vec = Vector3.new(v[1] or 0, v[2] or 0, v[3] or 0)
 				end
@@ -214,7 +221,7 @@ end
 -- ------------------------------------------------------------------------------------------------
 -- Frame whose -Y runs along v and whose X is the hinge axis.
 local function frame(v: Vector3, axis: Vector3): CFrame
-	local y = -v.Unit
+	local y = -unit(v, DOWN)
 	local x = axis - y * axis:Dot(y)
 	local m = x.Magnitude
 	x = if m > 1e-4 then x / m else Vector3.xAxis
@@ -278,8 +285,11 @@ local function solveArm(arm: Arm, out: { Vector3 }, firstJ: number, w: Vector3, 
 	local perp = pole - dir * pole:Dot(dir)
 	if perp.Magnitude < 1e-3 then
 		perp = Vector3.new(0, 0, 1) - dir * dir.Z
+		if perp.Magnitude < 1e-3 then
+			perp = Vector3.xAxis - dir * dir.X -- the pole AND the wrist both straight ahead / behind
+		end
 	end
-	perp = perp.Unit
+	perp = unit(perp, Vector3.xAxis)
 	local a = acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1))
 	local e = sp + dir * (l1 * cos(a)) + perp * (l1 * sin(a))
 	local wrist = sp + dir * d
@@ -297,7 +307,7 @@ local function solveArm(arm: Arm, out: { Vector3 }, firstJ: number, w: Vector3, 
 		local twist = wrap(2 * atan2(axis:Dot(arm.axis2) * sin(angle / 2), cos(angle / 2)))
 		rla *= CFrame.fromAxisAngle(arm.axis2, clamp(twist, -TWIST_MAX, TWIST_MAX))
 	elseif aim then
-		local axis = fa.Unit
+		local axis = unit(fa, DOWN)
 		local b0 = rla:VectorToWorldSpace(arm.blade)
 		local pb = aim - axis * aim:Dot(axis)
 		local pb0 = b0 - axis * b0:Dot(axis)
@@ -320,6 +330,7 @@ end
 -- Per-character state
 -- ------------------------------------------------------------------------------------------------
 local states: { [Model]: State } = {}
+local nanSkips = 0 -- joints writes refused because of a NaN (debug attribute AnimNaNSkips)
 local list: { State } = {}
 
 local scratchA: { Vector3 } = table.create(NCH, ZERO)
@@ -767,8 +778,8 @@ local function solveArms(S: State, clip: Clip, out: { Vector3 })
 			-- left hand on the weapon, g.X studs along its axis from the right hand's grip
 			local axis = hand:VectorToWorldSpace(rArm.blade)
 			local point = wrist + hand:VectorToWorldSpace(rArm.gripOffset) + axis * g.X
-			w = w:Lerp(point + (lArm.shoulder - point).Unit * lArm.palm, weight)
-			aim = if aim then aim:Lerp(axis, weight).Unit else axis
+			w = w:Lerp(point + unit(lArm.shoulder - point, DOWN) * lArm.palm, weight)
+			aim = if aim then unit(aim:Lerp(axis, weight), axis) else axis -- aim opposite to the axis: zero at weight 0.5
 		end
 		solveArm(lArm, out, 7, w, if tracks[C_LPOLE] then out[C_LPOLE] else L_POLE, aim, nil)
 	end
@@ -813,16 +824,17 @@ local function layer(out: { Vector3 }, wU: number, wL: number)
 		local nc = 1 - (1 - covU) * (1 - wU)
 		local k = wU / nc
 		for c = 2, 9 do
-			acc[c] = acc[c]:Lerp(out[c], k)
+			acc[c] = if covU == 0 then out[c] else acc[c]:Lerp(out[c], k)
 		end
 		covU = nc
 	end
 	if wL > 0 then
 		local nc = 1 - (1 - covL) * (1 - wL)
 		local k = wL / nc
-		acc[1] = acc[1]:Lerp(out[1], k)
+		local first = covL == 0
+		acc[1] = if first then out[1] else acc[1]:Lerp(out[1], k)
 		for c = 10, C_ROOTP do
-			acc[c] = acc[c]:Lerp(out[c], k)
+			acc[c] = if first then out[c] else acc[c]:Lerp(out[c], k)
 		end
 		covL = nc
 	end
@@ -974,7 +986,18 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 				end
 				cf *= offset
 			end
-			joint.Transform = cf
+			-- never write a NaN: it would make the body vanish (the Animator's pose stays for this frame)
+			local p, l, r = cf.Position, cf.LookVector, cf.RightVector
+			local check = p.X + p.Y + p.Z + l.X + l.Y + l.Z + r.X + r.Y + r.Z
+			if check == check then
+				joint.Transform = cf
+			else
+				nanSkips += 1
+				S.character:SetAttribute("AnimNaNSkips", nanSkips) -- debug: should stay absent
+				if nanSkips == 1 then
+					warn(`Animations: refused a NaN pose (joint {PARTS[c]}, clip {if S.act.clip then S.act.clip.name else "stance"}) - please report`)
+				end
+			end
 		end
 	end
 end
@@ -1028,7 +1051,7 @@ function Animations.attack(character: Model, category: string, step: number, spe
 	local def = combo and combo[step]
 	local hit = clip.hit
 	local impact = (if def and typeof(def.Impact) == "number" then def.Impact else hit or 0) / sp
-	local rate1 = if hit and impact > 0 then hit / impact else sp
+	local rate1 = if hit and hit > 0 and impact > 0 then hit / impact else sp
 	local length = if hit then impact + (clip.length - hit) / sp else clip.length / sp
 	if S and S.ready and not S.dead then
 		local unit = if typeof(aim) == "Vector3" and aim.Magnitude > 1e-3 then aim.Unit else nil
