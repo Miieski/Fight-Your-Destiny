@@ -282,7 +282,7 @@ local function attackOnce(forced: Vector3?): boolean
 	lunge(root, dir, step.Lunge or 0, if assisted then point else nil)
 	local character = root.Parent :: Model
 	local speed = 1 + (stats().AttackSpeed or 0)
-	local length = Animations.attack(character, categoryId, comboStep, speed)
+	local length = Animations.attack(character, categoryId, comboStep, speed, if point then point - (root.Position + Vector3.new(0, 1.5, 0)) else nil)
 	finisherUntil = if step.Finisher then now + math.max(length, step.Impact / speed) else 0
 	local tool, rarity, element = toolInfo(character)
 	local ctx = {
@@ -372,13 +372,13 @@ local function onHit(position: Vector3, amount: number, crit: boolean, finisher:
 end
 
 -- Another player's swing (Net "Swing"): animation, trail and whoosh only.
-local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number)
+local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number, aim: Vector3?)
 	local character = attacker.Character
 	if attacker == player or not character or typeof(category) ~= "string" or typeof(step) ~= "number" then
 		return
 	end
 	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1)
+	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1, if typeof(aim) == "Vector3" then aim else nil)
 	local steps = Combat.Combos[category]
 	local tool, rarity, element = toolInfo(character)
 	local ctx = {
@@ -703,12 +703,13 @@ function CombatController:Start()
 	-- draw (a weapon Tool appears in the character) and death sounds of every player (the local one at full volume)
 	local function watchCharacter(owner: Player, character: Model)
 		local isLocal = owner == player
-		local function play(event: string, category: any)
+		local function play(event: string, category: any, rarity: any)
 			local root = character:FindFirstChild("HumanoidRootPart")
 			local position = if root and root:IsA("BasePart") then root.Position else nil
 			if isLocal or position then
 				Sfx.combat(event, {
 					Category = if typeof(category) == "string" then category else nil,
+					Rarity = if typeof(rarity) == "number" then rarity else nil,
 					IsLocal = isLocal,
 					Position = position,
 				})
@@ -716,13 +717,13 @@ function CombatController:Start()
 		end
 		character.ChildAdded:Connect(function(child)
 			if child:IsA("Tool") then
-				play("Equip", child:GetAttribute("Category"))
+				play("Equip", child:GetAttribute("Category"), child:GetAttribute("Rarity"))
 			end
 		end)
 		local humanoid = character:WaitForChild("Humanoid", 10)
 		if humanoid and humanoid:IsA("Humanoid") then
 			humanoid.Died:Connect(function()
-				play("Death", nil)
+				play("Death", nil, nil)
 			end)
 		end
 	end

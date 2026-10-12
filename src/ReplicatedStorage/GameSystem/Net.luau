@@ -15,7 +15,7 @@ Net.EVENTS = {
 	"Data", -- { [profileKey] = wholeValue }: patches of the player's own profile
 	"Notify", -- { Kind, Text, Icon?, Rarity? }: a toast (see GameClient/UI/Notifier)
 	"Hit", -- position, damage, isCrit, finisher, category: one of my hits landed (damage number, hit-stop, effects)
-	"Swing", -- attacker, category, step, dir, speed: another player swings (animation, trail, sound)
+	"Swing", -- attacker, category, step, dir, speed, aim?: another player swings (animation, trail, sound); aim = 3D aim direction
 	"Impact", -- position, category, isCrit, finisher, element?: another player's hit landed (impact effects)
 	"OpenWindow", -- windowId, arg?: the server asks the client to open a window (hub portals -> Zones)
 	"Team", -- { Id, Leader = userId, Members = { userId } } or nil: the player's team (TeamService)

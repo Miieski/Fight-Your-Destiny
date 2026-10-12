@@ -78,15 +78,16 @@ Hit taken while blocking: `Animations.blockHit`, `VFX.blockHit`, `Sfx.combat("Bl
 `Sfx.combat("Shot", { Position = origin, Style, Speed, Distance, Enemy })` (the shooter's own release / fire sound is its
 Swing: Shot is the projectile itself); Magic area and Heavy slam: Net "Burst" -> `VFX.burst` +
 `Sfx.combat("Burst", { Position, Radius, Style })`. Every player's character: a weapon Tool appearing ->
-`Sfx.combat("Equip", { Category, IsLocal, Position })`, Humanoid.Died -> `Sfx.combat("Death", { IsLocal, Position })`.
+`Sfx.combat("Equip", { Category, Rarity, IsLocal, Position })`, Humanoid.Died -> `Sfx.combat("Death", { IsLocal, Position })`.
 
 ## 5. APIs
 
 ### Animations (`GameClient/Controllers/Combat/Animations.luau`)
 ```
-Animations.attack(character: Model, category: string, step: number, speed: number): number
+Animations.attack(character: Model, category: string, step: number, speed: number, aim: Vector3?): number
     -- plays the step's clip; its "Hit" marker must sit at Combos[category][step].Impact / speed; returns the clip
     -- length in seconds at that speed (0 if none). The clip must fit in the category interval at speed x1.
+    -- aim (optional) = the 3D aim direction: pitches the torso of AimPitch clips (Ranged, Magic), capped at 40 deg
 Animations.cancel(character: Model)                 -- stop the attack clip (roll / block cancel the recovery)
 Animations.hitStop(character: Model, seconds: number) -- play the character's clips at Combat.Feel.HitStopSpeed
 Animations.block(character: Model, on: boolean)

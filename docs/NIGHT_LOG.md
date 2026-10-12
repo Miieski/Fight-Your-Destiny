@@ -715,6 +715,24 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 15:13 PHASE 4 - INTEGRATION patch 3 (main agent): aim pitch wired (Animation request) - local
+  `Animations.attack(..., aim)` toward the aimed point, Net "Swing" carries a 3D `aim` computed by the server from the
+  client's aim point (validated finite, 0.5-500 studs, else the flat direction) for other players; Equip sound ctx
+  gets the weapon Rarity (for the SFX round 2 rarity chime). Play: bow (Mythic) 3 clicks = 3 shots, 1 hit; staff 2
+  casts, 1 hit; Output clean. Request "Placeholder = false on real models" was already done by ApplyWeaponMeshes.
+
+- 15:10 PHASE 4 - ANIMATION ROUND 2 done by the Animation sub-agent (14:38-15:10, backups
+  `..._143837_animations_r2_before_*` / `..._151037_animations_r2_after_*`), reviewed and committed (ba168b6).
+  68 clips; every attack clip inside its interval, Hit marker = the step's Impact. Spear Thrust 0.80 / 0.18, Thrust2
+  0.80 / 0.18, PiercingLunge 0.95 / 0.24; Heavy OverheadSlam 1.70 / 0.45, WideSmash 1.80 / 0.40; Dagger 4 x 0.36 / 0.08 +
+  DoubleSlash 0.38 / 0.08 + Hit2 0.20; Gauntlet Jab 0.42 / 0.10, Cross 0.50 / 0.10, Uppercut (jumping) 0.52 / 0.16;
+  Ranged bow 0.65 / 0.05, crossbow and gun (styles per WeaponId, real meshes only) 0.60 / 0.05 with 14 deg recoil;
+  Magic Cast 0.90 / 0.30. Engine: weapon axis + face per Tool, left hand on the weapon axis (two-handed), styles,
+  aim pitch (max 40 deg). Play (server "Hit" times from the press): Spear 1.11 s apart, Heavy 0.51 s (3 boars),
+  Dagger 0.40 s rhythm with the double finisher, Gauntlet 0.556 s rhythm, bow 3 clicks = 3 shots, Magic 0.47 s
+  (3 boars); phone emulator Heavy and Dagger. Cost 0.026-0.036 ms / frame / character. Crossbow / gun poses checked
+  only with a client mock (real meshes not imported).
+
 - 14:34 PHASE 4 - SWORD PILOT VALIDATED END TO END (animation + VFX + SFX + hit-stop, main agent in Play, Hub, 3
   boars, Mythic sword). Integration patch 2: Equip / Death sounds for every player's character (Tool appears,
   Humanoid.Died), `Sfx.combat("Shot")` on Net "Projectile" and `Sfx.combat("Burst")` on Net "Burst" (SFX request; the
@@ -930,6 +948,11 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
   time, peak, length, brightness), not by ear. Hurt = a body thud (no voice, fits every avatar); Block raise = a
   "power up" whoomp matching the VFX energy bubble; the old Roll whoosh peaked after the 0.3 s roll and was replaced.
   Debug hook: `SoundService:SetAttribute("CombatSfxDebug", true)` -> attributes CombatSfxLog / CombatSfxActive.
+- Animations round 2: weapons stay on the right of the body so they read from the camera behind (spear past the
+  right hip, bow out on the right, staff thrust forward-right, the uppercut jumps so the fist rises beside the head).
+  Daggers are one blade in the right hand: "alternating hands" = alternating sides (forehand / backhand, right / left
+  stab) with the left hand countering. Bows are held in the right (Tool) hand, the left draws to the face. The
+  straight Jab / Cross run along the camera axis, so the lean + lunge (and the VFX fist shockwave) carry them.
 
 ## Problems / missing
 

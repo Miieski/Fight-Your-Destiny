@@ -149,6 +149,23 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-12: WEAPONS V2 + HACK & SLASH COMBAT (`docs/weapons_combat_brief.txt`, live log `docs/NIGHT_LOG.md`).**
+* Phase 1: the Whip & Chain category is gone (7 categories, 84 weapons; `DataService.migrate` cleans old profiles).
+* Phase 2: the HUD's 3 pet slots are 3 empty SKILL slots (`Config/Skills`, `SkillService`, `SkillController`,
+  `Kit/SkillSlot` with the cooldown sweep; keys Z / X / C, touch buttons around Attack). Skills come later.
+* Phase 3: the 84 weapon models rebuilt from their icons (see the Part C notes below and
+  `Blender_Exports/WEAPONS_IMPORT.md`); not imported yet (owner: Bulk Import + `DevTools.ApplyWeaponMeshes`).
+* Phase 4: combat framework by the main agent (`Config/Combat` Combos / Feel, `CombatService`, `CombatController`:
+  combos, hit-stop, aim assist 15 studs, lunge, cancels, combo counter, Net "Swing" / "Impact" / "Motion"), then
+  three sub-agents, each the only Studio user during its run, contract `docs/COMBAT_CONTRACTS.md`:
+  animations (`Controllers/Combat/Animations` engine on the joints after the Animator + `Config/CombatAnimations`
+  key-pose clips, option 2 = no assets to publish), VFX (`Controllers/VFX/*` pooled + `Config/CombatVFX` + assets
+  `ReplicatedStorage.Assets.VFX.Shared_*` / `<Category>_*`), SFX (`Util/Sfx` `Sfx.combat` + `Config/CombatSfx` +
+  licensed sounds in `Assets.Sounds.Combat`). Dev hooks: character `AnimDebug` / `AnimProfile`, workspace.VFX
+  `Freeze` / `Profile` / `LowFx` / `Test`, SoundService `CombatSfxDebug`. Sword pilot validated end to end
+  (screenshots `docs/screenshots/weapons_v2/combat_sword_*`); round 2 (the 6 other categories) and the reviewer pass:
+  see `docs/NIGHT_LOG.md`.
+
 **2026-10-05 (evening): ENEMIES / NPCs / PETS (`docs/enemies_npcs_pets_brief.txt`, zones 1-4) are DONE - rule
 changes, Parts A-F, final checks. NEXT STEP: the boss patterns (`docs/boss_patterns_document.txt`).**
 Log with every decision and test: `docs/NIGHT_LOG.md` ("Enemies, NPCs, pets task"). Screenshots

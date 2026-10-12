@@ -291,9 +291,17 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 		element = if weapon then weapon.Element else nil,
 	}
 	local origin = root.Position
+	-- the 3D aim (other players' Ranged / Magic aim pitch): toward the aimed point, else the flat direction
+	local aim = dir
+	if finite(aimPoint) then
+		local offset = aimPoint - (origin + Vector3.new(0, 1.5, 0))
+		if offset.Magnitude > 0.5 and offset.Magnitude < 500 then
+			aim = offset.Unit
+		end
+	end
 	for _, viewer in ipairs(visualTo(origin)) do
 		if viewer ~= player then
-			Net.fire(viewer, "Swing", player, id, index, dir, speed)
+			Net.fire(viewer, "Swing", player, id, index, dir, speed, aim)
 		end
 	end
 
