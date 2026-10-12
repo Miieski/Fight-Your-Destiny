@@ -715,6 +715,13 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 13:35 PHASE 3 - HEAVY category V2 done (12/12, each compared with its icon). Triangles: 1358, 1846, 1618, 1534, 1730, 1782, 1760, 2480, 2538, 2270, 2270, 1584; all 5 studs.
+  Every Heavy has an Impact point on its striking face / edge (in weapons_v2_points.json, for the ImpactAttachment).
+  Spiral wraps, ringed pommels, bevelled bands, plates for axe blades / wings / flukes / tombstone, extra details
+  (stone chips, lashing strands, obelisk glyphs, tree rings, rivets, strike-face stripes, gauge needle, stock balls).
+  Fixes during the checks: Gravedigger's Maul chains back to two dark bands (my small links read as dots), Void Maul
+  crystal head back to the V1 facet count (the rounder head hid the glowing core shown on the icon).
+
 - 13:10 PHASE 3 - SPEAR category V2 done (12/12, each compared with its icon). Triangles: 1368, 1740, 1414, 1384, 1614, 1776, 1640, 1996, 1578, 1506, 1768, 1624; all 8 studs.
   Diamond-ridged heads, pinned sockets with lips, spiral grip wraps, ringed butt caps, bevelled plates for the
   halberd blade / wings / feathers / rag / pennant. Fix during the checks: the Nomad Pike pennant back to a plain
