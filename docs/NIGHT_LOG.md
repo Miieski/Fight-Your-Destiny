@@ -715,6 +715,19 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 16:16 PHASE 4 - SFX ROUND 2 done by the SFX sub-agent (15:54-16:13, backups `..._155450_sfx_r2_before_*` /
+  `..._161340_sfx_r2_after_*`), reviewed and committed. 80 new licensed Pro Sound Effects sounds (115 in total, table in
+  docs/SOUND_KIT.md), no MISSING sound, all 115 load and play. Sfx.combat (same API): spec timing fields Lead / Hit /
+  At (layers inherit), Ranged sound by WeaponId (bow / crossbow / blowgun / gun), Shot = nothing for Own, a quiet whiz
+  for other players, a launch sound for enemies (EnemyFX), Burst by Style / element group (Hit = 0.3 so magic
+  explosions peak at the release), quiet rarity chime layered on Equip (RarityReveal 5-6, RarityLegendary 7-8),
+  material fallback to the shared sets, Burst / Shot within 10 studs count as the player's own. Play (seconds from the
+  request): Spear thrust peak +0.16 (marker 0.18, impact +0.206), Heavy slam whoosh peak +0.43, impact + Slam boom
+  +0.478, Dagger 0.4 s cycle with the two DoubleSlash slashes, Gauntlet 0.56 s, bow release peak +0.05 then redraw
+  at +0.14, crossbow / gun / blowgun checked with a mock Tool, Magic charge peaks at the release 0.30, all Burst styles
+  by direct calls; Sword regression OK; 0 sounds / 0 anchors left after 5 s. Owner: listen once (candidates to swap:
+  the bow release and the "Air Bolt Gun" gun shot).
+
 - 15:52 PHASE 4 - INTEGRATION patch 4 (main agent): Net "Projectile" carries the shooter Player (nil for enemy
   shots); VFX.shot ctx `Shooter`, Shot sound ctx `Shooter` / `Own` (VFX request 1: exact look and muzzle instead of
   matching by position; lets the SFX skip the shooter's own projectile sound). Play: a bow shot arrives with
@@ -983,3 +996,6 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - `screen_capture` does not show AlwaysOnTop BillboardGuis (damage numbers): they render in game (checked with
   AlwaysOnTop off for a moment). The Settings Low FX switch cannot be clicked through the MCP (dev override used).
 - godMode suppresses "Hurt" events: blocked-hit tests need godMode off for a moment.
+- Enemy heavy bursts (Burst Style "Enemy") reuse the player's slam sounds, so they follow the PlayerFX volume, not
+  EnemyFX (SFX note; separate enemy copies can be added later). "Cast" and "BlockBreak" are in the SFX contract but
+  nothing calls them yet (Magic uses Swing; no guard-break mechanic exists).

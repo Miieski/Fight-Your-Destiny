@@ -4,6 +4,7 @@
 -- ReplicatedStorage.Assets.Sounds (any sub-folder). Unknown names are ignored silently.
 local ContentProvider = game:GetService("ContentProvider")
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
@@ -88,12 +89,15 @@ end
 --   Sfx.combat(event, ctx?)   event = "Swing" | "Impact" | "Shot" | "Cast" | "Burst" | "Roll" | "Block" | "BlockHit"
 --                             | "BlockBreak" | "Hurt" | "Death" | "Equip"
 --                             ctx = { Category?, Step?, Finisher?, Crit?, Material? ("flesh" | "metal" | "stone"),
---                                     Speed? (Swing), IsLocal?, Position? (3D sound there; nil = heard at full volume) }
--- Config/CombatSfx maps event / category / step to sets of variants (no variant twice in a row, pitch +-5 %), times
--- the Swing whoosh to the step's hit, layers crit / finisher sounds. The Sound copies are pooled (no Clone once
--- warm), at most CombatSfx.Cap play at once (a new one stops the oldest), each one leaves SoundService / the
--- workspace when it has faded. Every sound goes through its Config/Audio group (PlayerFX). Unknown events and
--- missing sounds are ignored silently. Client only.
+--                                     Speed?, Tool? (Swing: the WeaponId picks bow / crossbow / gun / blowgun),
+--                                     Style? (Burst), Enemy? / Own? (Shot), Rarity? (Equip), IsLocal?,
+--                                     Position? (3D sound there; nil = heard at full volume) }
+-- Config/CombatSfx maps event / category / step / weapon style / burst style to sets of variants (no variant twice
+-- in a row, pitch +-5 %), times the Swing sounds to the step's hit (and the Magic burst to the release), layers crit /
+-- finisher / rarity sounds. The Sound copies are pooled (no Clone once warm), at most CombatSfx.Cap play at once (a
+-- new one stops the oldest), each one leaves SoundService / the workspace when it has faded. Every sound goes through
+-- its Config/Audio group (PlayerFX; enemy launches EnemyFX, the rarity chime UI). Unknown events and missing sounds
+-- are ignored silently. Client only.
 -- Dev hook (Play, Client command bar): SoundService:SetAttribute("CombatSfxDebug", true) -> every combat sound
 -- appends "time event name pitch volume delay skip 2D|3D" to the SoundService attribute "CombatSfxLog" (last 40) and
 -- writes the count playing to "CombatSfxActive".
@@ -265,23 +269,30 @@ local function pick(setName: string, set: { Variant }): Variant
 	return set[i]
 end
 
--- Plays a spec (and its layers). hitIn = seconds until the hit (Swing): the variant's Peak lands HitLead before it
--- (delayed, or with the start of the file skipped when the hit comes sooner than the peak; 0.05 s stay before it).
-local function playSpec(spec: { [string]: any }, volume: number, pitch: number, position: Vector3?, hitIn: number?, event: string)
+-- Plays a spec and its layers. hitIn = seconds from now until the hit the spec is timed to (nil: at once), lead = how
+-- long before that hit the variant's Peak lands (delayed, or with the start of the file skipped when the hit comes
+-- sooner than the peak; 0.05 s stay before it), speed divides the spec's own Hit / At times. Layers inherit hitIn and
+-- lead unless they set their own Hit / Lead / At.
+local function playSpec(spec: { [string]: any }, volume: number, pitch: number, position: Vector3?, hitIn: number?, lead: number, speed: number, event: string)
 	local setName = spec.Set
+	local myLead = if typeof(spec.Lead) == "number" then spec.Lead else lead
+	local myHit = if typeof(spec.Hit) == "number" then spec.Hit / speed else hitIn
+	local at = if typeof(spec.At) == "number" then spec.At / speed else nil
 	local set = if typeof(setName) == "string" then SETS[setName] else nil
 	if set and #set > 0 then
 		local variant = pick(setName, set)
 		local p = pitch * (spec.Pitch or 1) * (1 + rng:NextNumber(-CombatSfx.PitchRange, CombatSfx.PitchRange))
 		local v = volume * (spec.Volume or 1)
 		local delay, extra = 0, 0
-		if hitIn then
+		if at then
+			delay = at
+		elseif myHit then
 			local toPeak = variant.Peak - (variant.Start or 0)
-			local lead = hitIn - CombatSfx.HitLead - toPeak / p
-			if lead >= 0 then
-				delay = lead
+			local wait = myHit - myLead - toPeak / p
+			if wait >= 0 then
+				delay = wait
 			else
-				extra = math.min(-lead * p, math.max(0, toPeak - 0.05))
+				extra = math.min(-wait * p, math.max(0, toPeak - 0.05))
 			end
 		end
 		if delay > 0.01 then
@@ -293,7 +304,7 @@ local function playSpec(spec: { [string]: any }, volume: number, pitch: number, 
 	local also = spec.Also
 	if typeof(also) == "table" then
 		for _, layer in ipairs(also) do
-			playSpec(layer, volume, pitch, position, hitIn, event)
+			playSpec(layer, volume, pitch, position, myHit, myLead, speed, event)
 		end
 	end
 end
@@ -303,43 +314,72 @@ local function inRange(position: Vector3): boolean
 	return not camera or (camera.CFrame.Position - position).Magnitude <= CombatSfx.Range
 end
 
+-- A Burst / Shot this close to the local character is the player's own (its slam, its magic area, a shot at it).
+local function nearLocal(position: Vector3): boolean
+	local character = Players.LocalPlayer and Players.LocalPlayer.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	return root ~= nil and root:IsA("BasePart") and (root.Position - position).Magnitude <= CombatSfx.NearLocal
+end
+
+local EMPTY = table.freeze({})
+local CHIME = table.freeze({ Set = "RarityChime", Volume = CombatSfx.EquipChime.Volume })
+local CHIME_LEGENDARY = table.freeze({ Set = "RarityChimeLegendary", Volume = CombatSfx.EquipChime.Volume })
+
 function Sfx.combat(event: string, ctx: { [string]: any }?)
 	if not IS_CLIENT or typeof(event) ~= "string" then
 		return
 	end
-	local info = ctx or {}
+	local info = ctx or EMPTY :: any
 	local position: Vector3? = nil
+	local volume = 1
 	if info.IsLocal ~= true and typeof(info.Position) == "Vector3" then
 		position = info.Position
 		if not inRange(info.Position) then
 			return
 		end
+		if info.IsLocal == false or not ((event == "Burst" or event == "Shot") and nearLocal(info.Position)) then
+			volume = CombatSfx.RemoteVolume
+		end
 	end
-	local volume = if position then CombatSfx.RemoteVolume else 1
-	local categoryId = if typeof(info.Category) == "string" then info.Category else CombatSfx.DefaultCategory
-	local category = CombatSfx.Categories[categoryId] or CombatSfx.Categories[CombatSfx.DefaultCategory]
+	local lead = CombatSfx.HitLead
+	local requested = if typeof(info.Category) == "string" then info.Category else CombatSfx.DefaultCategory
+	local category = CombatSfx.Categories[requested] or CombatSfx.Categories[CombatSfx.DefaultCategory]
 	local entry = (category and category[event]) or CombatSfx.Shared[event]
 	if typeof(entry) ~= "table" then
 		return
 	end
 	if event == "Swing" then
-		local spec = entry.Finisher
+		local swing = entry
+		local styles = entry.Styles
+		if styles then
+			local tool = info.Tool
+			local weaponId = if typeof(tool) == "Instance" then tool:GetAttribute("WeaponId") else nil
+			local style = if typeof(weaponId) == "string" then CombatSfx.WeaponStyles[weaponId] else nil
+			if style and styles[style] then
+				swing = styles[style]
+			end
+		end
+		local spec = swing.Finisher
 		if info.Finisher ~= true or not spec then
-			local steps = entry.Steps
+			local steps = swing.Steps
 			local step = if typeof(info.Step) == "number" then math.max(1, math.floor(info.Step)) else 1
 			spec = steps and steps[(step - 1) % #steps + 1]
 		end
 		if spec then
-			local combo = Combat.Combos[categoryId] or Combat.Combos[CombatSfx.DefaultCategory]
+			local combo = Combat.Combos[requested] or Combat.Combos[CombatSfx.DefaultCategory]
 			local def = combo and (combo[if typeof(info.Step) == "number" then info.Step else 1] or combo[1])
 			local speed = if typeof(info.Speed) == "number" and info.Speed > 0 then info.Speed else 1
 			local impact = if def and typeof(def.Impact) == "number" then def.Impact else 0.15
-			playSpec(spec, volume, 1, position, impact / speed, event)
+			playSpec(spec, volume, 1, position, impact / speed, lead, speed, event)
 		end
 	elseif event == "Impact" then
-		local materials = entry.Materials or {}
+		local materials = entry.Materials or EMPTY
+		local shared = CombatSfx.Shared.Impact
+		local sharedMaterials = if shared and shared.Materials then shared.Materials else EMPTY
 		local material = if typeof(info.Material) == "string" then info.Material else CombatSfx.DefaultMaterial
-		local spec = materials[material] or materials[CombatSfx.DefaultMaterial]
+		local default = CombatSfx.DefaultMaterial
+		local spec = materials[material] or sharedMaterials[material] or materials[default] or sharedMaterials[default]
+		local base = volume
 		local pitch = 1
 		local finisher = if info.Finisher == true then entry.Finisher else nil
 		if finisher then
@@ -347,18 +387,36 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 			pitch = finisher.Pitch or 1
 			if finisher.Also then
 				for _, layer in ipairs(finisher.Also) do
-					playSpec(layer, volume, 1, position, nil, event)
+					playSpec(layer, volume, 1, position, nil, lead, 1, event)
 				end
 			end
 		end
 		if spec then
-			playSpec(spec, volume, pitch, position, nil, event)
+			playSpec(spec, volume, pitch, position, nil, lead, 1, event)
 		end
 		if info.Crit == true and entry.Crit then
-			playSpec(entry.Crit, if position then CombatSfx.RemoteVolume else 1, 1, position, nil, event)
+			playSpec(entry.Crit, base, 1, position, nil, lead, 1, event)
+		end
+	elseif event == "Shot" then
+		-- the player's own shot is heard through its Swing (release / fire)
+		local spec = if info.Own == true then nil elseif info.Enemy == true then entry.Enemy else entry.Player
+		if spec then
+			playSpec(spec, volume, 1, position, nil, lead, 1, event)
+		end
+	elseif event == "Burst" then
+		local styles = entry.Styles or EMPTY
+		local style = if typeof(info.Style) == "string" then info.Style else ""
+		local spec = styles[style] or styles[CombatSfx.StyleGroups[style] or ""] or styles[entry.Default or ""]
+		if spec then
+			playSpec(spec, volume, 1, position, nil, lead, 1, event)
 		end
 	else
-		playSpec(entry, volume, 1, position, nil, event)
+		playSpec(entry, volume, 1, position, nil, lead, 1, event)
+		local rarity = info.Rarity
+		local chime = CombatSfx.EquipChime
+		if event == "Equip" and typeof(rarity) == "number" and rarity >= chime.From then
+			playSpec(if rarity >= chime.Legendary then CHIME_LEGENDARY else CHIME, volume, 1, position, nil, lead, 1, event)
+		end
 	end
 end
 

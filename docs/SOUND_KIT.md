@@ -150,6 +150,97 @@ SourceCreator on each Sound. Played only through `Sfx.combat(event, ctx)` with t
 | Combat_Shared_Hurt3 | 9113527320 | Hurt | 0.51 |
 | Combat_Shared_Death | 9113475180 | Death (= old Death) | 0.70 |
 
+### Round 2 (Spear, Heavy, Dagger, Gauntlet, Ranged, Magic): 80 more sounds, 115 in total
+
+Same source, settings and rule (nothing auditioned by ear; candidates to swap first: the bow release = Crossbow Fire
+at pitch 0.85, the gun = Air Bolt Gun). Ranged sounds follow the Tool's WeaponId (bow / crossbow tundra hell dead /
+blowgun jungle / gun abyss mechanical); Burst by Style (element groups); a quiet RarityReveal (rarity 5-6) or
+RarityLegendary (7-8) layered on Equip; enemy launches in the EnemyFX group. Reused with a pitch change (no new
+asset): Spear crit / finisher / equip, Heavy metal / stone / crit, Dagger metal, Gauntlet metal / equip, Ranged crit.
+
+| Name | Asset id | Event | Volume |
+|---|---|---|---|
+| Combat_Spear_Thrust1 | 9113319325 | Spear swing steps 1-2 | 0.78 |
+| Combat_Spear_Thrust2 | 9125495641 | Spear swing steps 1-2 | 0.82 |
+| Combat_Spear_Thrust3 | 9120972321 | Spear swing steps 1-2 | 1.5 |
+| Combat_Spear_Pierce1 | 9125920178 | Spear PiercingLunge finisher | 1.33 |
+| Combat_Spear_Pierce2 | 9120995177 | Spear PiercingLunge finisher | 1.09 |
+| Combat_Spear_Stab1 | 9119748927 | Spear impact flesh | 1.63 |
+| Combat_Spear_Stab2 | 9114487004 | Spear impact flesh | 1.73 |
+| Combat_Spear_Stab3 | 9114487427 | Spear impact flesh | 2.6 |
+| Combat_Heavy_Swing1 | 9119227880 | Heavy OverheadSlam swing | 2.86 |
+| Combat_Heavy_Swing2 | 9119227910 | Heavy OverheadSlam swing | 3.33 |
+| Combat_Heavy_Swing3 | 9113305631 | Heavy OverheadSlam swing | 0.57 |
+| Combat_Heavy_Smash1 | 9120706815 | Heavy WideSmash finisher | 0.96 |
+| Combat_Heavy_Smash2 | 9120707899 | Heavy WideSmash finisher | 0.96 |
+| Combat_Heavy_SlamBoom1 | 9113551779 | Burst Slam / Enemy / Dark, finisher impact layer | 1.25 |
+| Combat_Heavy_SlamBoom2 | 9126009638 | Burst Slam / Enemy / Dark, finisher impact layer | 0.63 |
+| Combat_Heavy_SlamDebris1 | 9118613697 | slam layer, Earth burst | 0.36 |
+| Combat_Heavy_SlamDebris2 | 9118613863 | slam layer, Earth burst | 0.38 |
+| Combat_Heavy_HitFlesh1 | 9116488438 | Heavy impact flesh | 2.14 |
+| Combat_Heavy_HitFlesh2 | 9116488784 | Heavy impact flesh | 2.0 |
+| Combat_Heavy_HitFlesh3 | 9113523399 | Heavy impact flesh | 0.6 |
+| Combat_Heavy_Equip | 9113157053 | Heavy equip | 0.24 |
+| Combat_Dagger_Slash1 | 9114164739 | Dagger swing (5 steps + double slash) | 0.93 |
+| Combat_Dagger_Slash2 | 9114163805 | Dagger swing | 1.27 |
+| Combat_Dagger_Slash3 | 9119740811 | Dagger swing | 1.27 |
+| Combat_Dagger_Slash4 | 9119742184 | Dagger swing | 1.08 |
+| Combat_Dagger_HitFlesh1 | 9114482141 | Dagger impact flesh | 0.88 |
+| Combat_Dagger_HitFlesh2 | 9114482569 | Dagger impact flesh | 1.05 |
+| Combat_Dagger_HitFlesh3 | 9114482300 | Dagger impact flesh | 1.0 |
+| Combat_Dagger_Crit1 | 9116197039 | Dagger crit sting | 0.82 |
+| Combat_Dagger_Crit2 | 9116196826 | Dagger crit sting | 0.82 |
+| Combat_Dagger_Draw1 | 9116190959 | Dagger equip | 1.43 |
+| Combat_Dagger_Draw2 | 9116191739 | Dagger equip | 2.5 |
+| Combat_Gauntlet_Swing1 | 9120728815 | Gauntlet Jab / Cross swing | 0.6 |
+| Combat_Gauntlet_Swing2 | 9120729337 | Gauntlet Jab / Cross swing | 1.0 |
+| Combat_Gauntlet_Swing3 | 9120729412 | Gauntlet Jab / Cross swing | 0.64 |
+| Combat_Gauntlet_Upper1 | 9120729005 | Gauntlet Uppercut swing | 0.89 |
+| Combat_Gauntlet_Upper2 | 9120729339 | Gauntlet Uppercut swing | 0.65 |
+| Combat_Gauntlet_Hit1 | 9117969584 | Gauntlet impact flesh | 0.56 |
+| Combat_Gauntlet_Hit2 | 9117969990 | Gauntlet impact flesh | 0.45 |
+| Combat_Gauntlet_Hit3 | 9117970227 | Gauntlet impact flesh | 0.48 |
+| Combat_Gauntlet_HitHeavy1 | 9117970193 | Uppercut impact layer | 0.45 |
+| Combat_Gauntlet_HitHeavy2 | 9117969717 | Uppercut impact layer | 0.5 |
+| Combat_Gauntlet_Crit | 9126212438 | Gauntlet crit sting (crack) | 1.23 |
+| Combat_Ranged_BowRelease1 | 9114001456 | bow swing | 1.33 |
+| Combat_Ranged_BowRelease2 | 9114000974 | bow swing | 1.18 |
+| Combat_Ranged_BowWhoosh1 | 9113167619 | bow swing layer, Shot whiz, blowgun layer | 0.63 |
+| Combat_Ranged_BowWhoosh2 | 9113167193 | bow swing layer, Shot whiz, blowgun layer | 3.0 |
+| Combat_Ranged_BowDraw | 9125405903 | bow redraw at 0.14 s, Ranged equip | 2.0 |
+| Combat_Ranged_CrossbowRelease1 | 9114001369 | crossbow swing | 1.25 |
+| Combat_Ranged_CrossbowRelease2 | 9114000843 | crossbow swing | 1.25 |
+| Combat_Ranged_CrossbowKick | 9114003826 | crossbow swing layer | 0.75 |
+| Combat_Ranged_CrossbowReload | 9114004190 | crossbow reload at 0.3 s | 0.43 |
+| Combat_Ranged_GunShot1 | 9113051048 | gun swing (air bolt gun) | 0.76 |
+| Combat_Ranged_GunShot2 | 9113050696 | gun swing | 0.96 |
+| Combat_Ranged_GunShot3 | 9113052411 | gun swing | 0.7 |
+| Combat_Ranged_Blowgun1 | 9116405618 | blowgun swing | 0.86 |
+| Combat_Ranged_Blowgun2 | 9125640992 | blowgun swing | 1.5 |
+| Combat_Ranged_Hit1 | 9113161857 | Ranged impact (arrow arriving) | 0.42 |
+| Combat_Ranged_Hit2 | 9113160396 | Ranged impact | 0.67 |
+| Combat_Ranged_Hit3 | 9113160692 | Ranged impact | 1.14 |
+| Combat_Enemy_Launch1 | 9120629100 | Shot Enemy (EnemyFX) | 1.0 |
+| Combat_Enemy_Launch2 | 9120629317 | Shot Enemy (EnemyFX) | 1.13 |
+| Combat_Magic_Charge1 | 9125648149 | Magic swing, charge to the release | 0.78 |
+| Combat_Magic_Charge2 | 9125807267 | Magic swing, charge | 1.27 |
+| Combat_Magic_Cast1 | 9116421639 | Magic swing, release | 0.61 |
+| Combat_Magic_Cast2 | 9116421238 | Magic swing, release | 0.83 |
+| Combat_Magic_Hit1 | 9116423786 | Magic impact (also Magic equip) | 1.45 |
+| Combat_Magic_Hit2 | 9116422765 | Magic impact | 1.78 |
+| Combat_Magic_Hit3 | 9116424101 | Magic impact | 1.45 |
+| Combat_Magic_BurstArcane1 | 9116384485 | Burst Arcane / Nature / Dark / Holy / Earth / Poison | 0.61 |
+| Combat_Magic_BurstArcane2 | 9116385087 | Burst Arcane group | 1.15 |
+| Combat_Magic_BurstFire1 | 9117982785 | Burst Burn / Hellfire | 0.65 |
+| Combat_Magic_BurstFire2 | 9117982781 | Burst Burn / Hellfire | 0.97 |
+| Combat_Magic_BurstFrost1 | 9114856215 | Burst Frost | 0.81 |
+| Combat_Magic_BurstFrost2 | 9114856304 | Burst Frost | 1.03 |
+| Combat_Magic_BurstShock1 | 9114277338 | Burst Shock | 2.5 |
+| Combat_Magic_BurstShock2 | 9114277528 | Burst Shock | 1.67 |
+| Combat_Magic_BurstWater1 | 9119478063 | Burst Tidal, Poison layer | 1.76 |
+| Combat_Magic_BurstWater2 | 9120504377 | Burst Tidal, Poison layer | 1.76 |
+| Combat_Magic_HolyChime | 9116394876 | Holy burst layer, Magic crit sting | 2.5 |
+
 ## How to swap a sound
 
 Change `SoundId` to `rbxassetid://<new id>` on the Sound instance, keep its `Name`, and update the three
