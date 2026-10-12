@@ -280,6 +280,8 @@ CombatVFX.Roll = {
 	Interval = 0.06, -- seconds between two snapshots of the pose
 	Fade = 0.25, -- each ghost fades out over this
 	FeetDrop = 3, -- the dust goes this far below HumanoidRootPart when no ground is found
+	PrepareEvery = 1, -- s between two checks of the afterimage watcher (one character prepared per check)
+	PrepareAfter = 2, -- s a character must exist before its afterimages are prepared (its appearance loads first)
 }
 
 -- DAMAGE NUMBERS (VFX.damageNumber) -----------------------------------------------------------------------------

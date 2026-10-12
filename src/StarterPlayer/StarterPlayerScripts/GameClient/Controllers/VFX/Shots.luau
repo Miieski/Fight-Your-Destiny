@@ -1,8 +1,9 @@
 --!strict
 -- Projectiles and muzzle flashes (OWNER: the VFX sub-agent; Config/CombatVFX Shot, Ranged, Magic.Bolt).
---   Shots.shot(ctx)    VFX.shot = Net "Projectile" { Origin, Direction, Speed, Distance, Style } (Ranged shots, enemy
---                      shots). The shooter is the player whose root matches the server muzzle (root + 1.2 up + 1.5
---                      along the aim): its Tool gives the look (Config.Ranged.Kinds by WeaponId: Bow -> arrow,
+--   Shots.shot(ctx)    VFX.shot = Net "Projectile" { Origin, Direction, Speed, Distance, Style, Shooter? } (Ranged
+--                      shots, enemy shots). The shooter = ctx.Shooter (the Player; nil for enemy shots), else (older
+--                      callers) the player whose root matches the server muzzle (root + 1.2 up + 1.5 along the aim):
+--                      its Tool gives the look (Config.Ranged.Kinds by WeaponId: Bow -> arrow,
 --                      Crossbow -> bolt, Gun -> bullet; a Magic Tool -> orb) and the flight starts at the Tool's
 --                      MuzzleAttachment; enemy shots ("Enemy") and unknown shooters fly the orb. Spark on arrival.
 --   Shots.kind(tool) -> "Bow" | "Crossbow" | "Gun" | "Orb"
@@ -164,7 +165,14 @@ function Shots.shot(ctx: { [string]: any })
 	local looks = Config.Ranged.Looks
 	local look, muzzle = looks.Enemy, nil
 	if style ~= "Enemy" then
-		local character, tool = shooter(origin, unit)
+		local character: Model?, tool: Instance? = nil, nil
+		local from = ctx.Shooter
+		if typeof(from) == "Instance" and from:IsA("Player") then
+			character = from.Character
+			tool = if character then character:FindFirstChildOfClass("Tool") else nil
+		else
+			character, tool = shooter(origin, unit)
+		end
 		look = looks[Shots.kind(tool)] or looks.Orb
 		if character and tool then
 			muzzle = Anchors.attachment(tool, "MuzzleAttachment")

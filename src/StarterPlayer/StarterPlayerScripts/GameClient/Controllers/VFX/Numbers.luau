@@ -1,10 +1,11 @@
 --!strict
 -- Damage numbers (OWNER: the VFX sub-agent; Config/CombatVFX Numbers). Pooled BillboardGuis (template
--- ReplicatedStorage.Assets.VFX.Shared_DamageNumber) adorned to pooled Attachments in workspace.Terrain (parked with
--- Parent = nil when unused): pop scale-in with an overshoot, rise, fade; crits bigger, yellow and shaking.
+-- ReplicatedStorage.Assets.VFX.Shared_DamageNumber), each parented to and adorned by its own pooled Attachment in
+-- workspace.Terrain (parked with Parent = nil when unused). Nothing lives in PlayerGui, so a respawn (ResetOnSpawn)
+-- cannot delete them; an entry whose gui was destroyed anyway is dropped and rebuilt. Pop scale-in with an overshoot,
+-- rise, fade; crits bigger, yellow and shaking.
 --   Numbers.show(position, text, kind)   kind = "normal" | "crit" | "hurt" | "block" | "dodge"
 --   Numbers.prewarm()                    makes Config Numbers.Prewarm of them up front
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.GameSystem.Config.CombatVFX)
@@ -17,7 +18,6 @@ type Rec = { [string]: any }
 local CFG = Config.Numbers
 local all: { Rec } = {}
 local freeList: { Rec } = {}
-local guiFolder: Folder? = nil
 local rng = Random.new()
 
 local function park(rec: Rec)
@@ -55,16 +55,20 @@ local function step(rec: Rec, t: number): boolean
 	return true
 end
 
-local function folder(): Folder
-	local f = guiFolder
-	if f and f.Parent then
-		return f
+-- An entry is usable while its gui still sits under its anchor (a destroyed gui or anchor loses that link).
+local function valid(rec: Rec): boolean
+	return rec.gui.Parent == rec.anchor
+end
+
+-- Removes an unusable entry from the pool.
+local function drop(rec: Rec)
+	local i = table.find(all, rec)
+	if i then
+		table.remove(all, i)
 	end
-	local made = Instance.new("Folder")
-	made.Name = "DamageNumbers"
-	made.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-	guiFolder = made
-	return made
+	pcall(function()
+		rec.anchor:Destroy()
+	end)
 end
 
 local function make(): Rec?
@@ -86,28 +90,39 @@ local function make(): Rec?
 	gui.Adornee = anchor
 	gui.ClipsDescendants = false
 	gui.Enabled = false
-	gui.Parent = folder()
+	gui.ResetOnSpawn = false
+	gui.Parent = anchor
 	local rec: Rec = Runner.track({ gui = gui, label = label, pop = pop, stroke = stroke, anchor = anchor, base = Vector3.zero, size = 1, over = 1, shake = false, shook = false, done = park })
 	table.insert(all, rec)
 	return rec
 end
 
 local function take(): Rec?
-	local n = #freeList
-	if n > 0 then
+	while #freeList > 0 do
+		local n = #freeList
 		local rec = freeList[n]
 		freeList[n] = nil
-		return rec
+		if valid(rec) then
+			return rec
+		end
+		drop(rec)
 	end
 	if #all < CFG.Max then
 		return make()
 	end
 	-- all busy: reuse the oldest
 	local oldest: Rec? = nil
-	for _, rec in ipairs(all) do
-		if not oldest or rec.startAt < oldest.startAt then
+	for i = #all, 1, -1 do
+		local rec = all[i]
+		if not valid(rec) then
+			Runner.stop(rec)
+			drop(rec)
+		elseif not oldest or rec.startAt < oldest.startAt then
 			oldest = rec
 		end
+	end
+	if not oldest and #all < CFG.Max then
+		return make()
 	end
 	if oldest then
 		-- stop it without parking it: it is reused at once

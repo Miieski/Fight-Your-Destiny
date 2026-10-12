@@ -591,13 +591,7 @@ task.spawn(function()
 		end
 	end)
 end)
--- the local character's afterimages are made ahead of its first roll
-local function prepare(character: Model)
-	task.delay(1, Ghosts.prepare, character)
-end
-player.CharacterAppearanceLoaded:Connect(prepare)
-if player.Character and player:HasAppearanceLoaded() then
-	prepare(player.Character)
-end
+-- every player's afterimages are made ahead of their first roll (nearby characters, spread over frames)
+Ghosts.start()
 
 return VFX
