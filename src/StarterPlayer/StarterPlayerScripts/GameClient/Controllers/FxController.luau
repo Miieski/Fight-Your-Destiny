@@ -81,7 +81,7 @@ local fovBase: number? = nil
 
 function Fx.fovPulse(degrees: number, seconds: number)
 	local camera = workspace.CurrentCamera
-	if not camera or not Settings.get("ScreenShake") then
+	if not camera or not Settings.get("ScreenShake") or Settings.get("LowFx") == true then
 		return
 	end
 	if fovTween then

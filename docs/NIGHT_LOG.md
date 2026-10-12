@@ -715,6 +715,31 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 16:58 PHASE 4 - REVIEW FIXES done and verified in Play (backup `..._165823_after_review_fixes_*`).
+  Main agent (Net, Config/Enemies, EnemyService, CombatService, CombatController, FxController):
+  B1 Block handled with no minimum interval (a 30 ms press / release tap now ends with Blocking = false, WalkSpeed 16);
+  M1 the server answers every attack with Net "Combo" (step run, or its current step when refused) and the client
+  also waits for the server's rate check after a weapon change (Dagger -> Heavy mid-hold: D1 D2 D3 D4 H1 H2 H1, no
+  refusal); M2 an early attack / roll is booked at its due time (Ranged spam every 0.70 s: 7 of 10 accepted = 1.0
+  shot/s for a 1.2/s weapon); M3 knockback = a 0.22 s push with the AI off the body (normal hits 1.4-1.5 studs for
+  1.5, Sword finisher 6.8-8.3 for 9; was 1.0-1.3); M4 the shot ray starts at the chest (bow vs a bear 0.47-1.13
+  studs away: 4/4 hits); m1 no damage from a dead / gone attacker (projectile, area, melee); m2 the lunge / dash
+  push ends with the body stopped (roll 12.12 studs, was 16-21); m4 the melee strike point is clamped to the lunge x 1.5
+  + walking since the request + 2 studs; m5 the respawn reset also covers players already in the game; NIT FOV pulse
+  off with Low FX; NIT a player who joins sees the guard of someone already blocking.
+  VFX sub-agent (85933d3, 16:49-16:53): B2 damage numbers now survive any number of deaths (BillboardGuis on Terrain
+  anchors, lost entries rebuilt; died twice -> numbers still show), m6 other players' afterimages prepared ahead by a
+  watcher, one ghost per frame (roll after preparation: worst VFX frame 0.21 ms), Shots uses ctx.Shooter.
+
+- 16:30 PHASE 4 - REVIEWER sub-agent (16:17-16:30, no edits): 2 BLOCKER, 4 MAJOR, 6 MINOR, 7 NIT, all but the
+  "(code)" ones reproduced in Play. Verified OK: server authority (no attack during a roll, roll cooldown, no attack
+  while blocking, roll i-frames dodge, NaN / inf vectors refused), combo reset (1.7 s gap continues, 1.9 s resets),
+  Sword damage per step 47 / 47 / 55 / 72, all 7 categories in Play with their sounds and effects, hit-stop ~0.05 s
+  (finisher ~0.14 s), shake 0.3 s, FOV +5.6 deg on finishers only, Screen Shake off / Low FX respected, lunges 1.56 /
+  2.1 / 2.6 / 3.1 / 4.1 studs, attack speed 1.15 (Dagger 0.34-0.36 s), no leaks after idle or a death mid-swing.
+  Performance on the phone emulator with 10 enemies: VFX 0.006-0.063 ms avg / 0.65-0.84 ms worst (peak 25 of 48
+  effects), animations 0.029-0.035 ms, at most 8 of 12 sounds.
+
 - 16:16 PHASE 4 - SFX ROUND 2 done by the SFX sub-agent (15:54-16:13, backups `..._155450_sfx_r2_before_*` /
   `..._161340_sfx_r2_after_*`), reviewed and committed. 80 new licensed Pro Sound Effects sounds (115 in total, table in
   docs/SOUND_KIT.md), no MISSING sound, all 115 load and play. Sfx.combat (same API): spec timing fields Lead / Hit /
@@ -986,6 +1011,10 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
   Daggers are one blade in the right hand: "alternating hands" = alternating sides (forehand / backhand, right / left
   stab) with the left hand countering. Bows are held in the right (Tool) hand, the left draws to the face. The
   straight Jab / Cross run along the camera axis, so the lean + lunge (and the VFX fist shockwave) carry them.
+- Review m3 (a roll during the wind-up does not cancel the server strike) is kept as intended: the strike already
+  shown by its arc lands; the roll only cancels the recovery animation (brief 4A "Roll cancels any attack recovery").
+  Review NITs kept: after a respawn with Attack still held the player presses again (the hold resets on death); the
+  combo resets 0.8 s after the weapon is ready again (Config/Combat ComboReset comment), not 0.8 s after the press.
 
 ## Problems / missing
 
@@ -999,3 +1028,6 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Enemy heavy bursts (Burst Style "Enemy") reuse the player's slam sounds, so they follow the PlayerFX volume, not
   EnemyFX (SFX note; separate enemy copies can be added later). "Cast" and "BlockBreak" are in the SFX contract but
   nothing calls them yet (Magic uses Swing; no guard-break mechanic exists).
+- Not verified through the MCP (no second client): other players' swings, impacts, rolls, flinches, blocks,
+  projectiles and afterimages (code paths reviewed by reading). Roll i-frames are granted without a server movement
+  check (hardening left for later).

@@ -63,7 +63,7 @@ Never edit another owner's file. If you need a change there, write it in your re
 ## 4. Call order (what CombatController does)
 
 Local attack (one combo step): turn toward the aim (aim assist 15 studs) -> lunge -> `Animations.attack(...)` ->
-`VFX.swing(ctx)` -> `Sfx.combat("Swing", ctx)` -> `Net.send("Attack")`. When the server confirms a hit (Net "Hit"):
+`VFX.swing(ctx)` -> `Sfx.combat("Swing", ctx)` -> `Net.send("Attack")`; the server answers every request with Net "Combo" (category, step, accepted) and the client's step prediction follows it. When the server confirms a hit (Net "Hit"):
 `VFX.damageNumber`, `VFX.impact`, `Sfx.combat("Impact")`, combo counter, then (once per swing) `Animations.hitStop`,
 `Fx.shake`, `Fx.fovPulse` on finishers. Other players: Net "Swing" -> `Animations.attack` + `VFX.swing` +
 `Sfx.combat("Swing")` (IsLocal = false, ctx.Position = their root); Net "Impact" (with the weapon Element) ->

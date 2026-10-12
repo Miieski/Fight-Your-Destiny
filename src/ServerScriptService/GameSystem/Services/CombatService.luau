@@ -258,27 +258,33 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 		return
 	end
 	local state = stateOf(player)
+	-- a refused request: the client predicted a step, it learns the real one
+	local function refuse()
+		Net.fire(player, "Combo", state.comboCategory or "", state.combo, false)
+	end
 	if state.blocking then
-		return
+		return refuse()
 	end
 	local weapon, category = weaponOf(player)
 	local stats = CombatService:Stats(player)
 	if not stats then
-		return
+		return refuse()
 	end
 	local id = if category and Combat.Combos[category.Id] then category.Id else "Sword"
 	local speed = 1 + (stats.AttackSpeed or 0)
 	local hitsPerSecond = (if category then category.HitsPerSecond else 1) * speed
 	local now = os.clock()
 	if now < state.rollEnd then
-		return -- attacks cannot start during a roll
+		return refuse() -- attacks cannot start during a roll
 	end
 	if now - state.lastAttack < Combat.RateTolerance / hitsPerSecond then
-		return -- faster than the weapon allows
+		return refuse() -- faster than the weapon allows
 	end
-	state.lastAttack = now
+	-- an early request (network jitter tolerance) is booked at its due time, so the long-run rate stays the weapon's
+	state.lastAttack = math.max(now, state.lastAttack + 1 / hitsPerSecond)
 	local dir = if finite(aimDir) and aimDir.Magnitude > 0.01 then flat(aimDir) else flat(root.CFrame.LookVector)
 	local index = nextStep(state, id, now, 1 / hitsPerSecond)
+	Net.fire(player, "Combo", id, index, true)
 	local step = Combat.Combos[id][index]
 	local shape = SHAPES[id][index]
 	local impact = (step.Impact or shape.Impact) / speed
@@ -307,13 +313,16 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 
 	if shape.Kind == "Projectile" then
 		local muzzle = origin + Vector3.new(0, 1.2, 0) + dir * 1.5
-		local target, distance = firstOnRay(muzzle, dir, shape.Range)
+		local target, along = firstOnRay(origin + Vector3.new(0, 1.2, 0), dir, shape.Range + 1.5)
+		local distance = math.max(0.5, along - 1.5)
 		for _, viewer in ipairs(visualTo(origin)) do
 			Net.fire(viewer, "Projectile", muzzle, dir, shape.Speed, distance, if weapon then weapon.Element else "Physical", player)
 		end
 		if target then
 			task.delay(impact + distance / shape.Speed, function()
-				hit(player, target, stats, strike)
+				if rootOf(player) then
+					hit(player, target, stats, strike)
+				end
 			end)
 		end
 		return
@@ -330,6 +339,9 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 			Net.fire(viewer, "Burst", point, radius, if weapon then weapon.Element else "Arcane")
 		end
 		task.delay(impact, function()
+			if not rootOf(player) then
+				return
+			end
 			local targets = inCircle(point, radius)
 			for i = 1, math.min(#targets, shape.MaxTargets) do
 				hit(player, targets[i].enemy, stats, strike)
@@ -338,8 +350,16 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 		return
 	end
 	local function strikeNow()
-		local now2 = rootOf(player)
-		local from = if now2 then now2.Position else origin
+		local current, body = rootOf(player)
+		if not (current and body) then
+			return
+		end
+		local from = current.Position
+		local moved = Vector3.new(from.X - origin.X, 0, from.Z - origin.Z)
+		local limit = (step.Lunge or 0) * 1.5 + body.WalkSpeed * (os.clock() - now) + 2
+		if moved.Magnitude > limit then
+			from = Vector3.new(origin.X, from.Y, origin.Z) + moved.Unit * limit
+		end
 		local targets
 		if shape.Kind == "Line" then
 			targets = inLine(from, dir, shape.Length, shape.Width)
@@ -386,10 +406,11 @@ local function roll(player: Player, dir: any)
 		return
 	end
 	local now = os.clock()
-	if now - state.lastRoll < (stats.RollCooldown or 1.5) * Combat.RateTolerance then
+	local cooldown = stats.RollCooldown or 1.5
+	if now - state.lastRoll < cooldown * Combat.RateTolerance then
 		return
 	end
-	state.lastRoll = now
+	state.lastRoll = math.max(now, state.lastRoll + cooldown)
 	state.rollUntil = now + Combat.Roll.IFrames
 	state.rollEnd = now + Combat.Roll.Duration * Combat.RateTolerance
 	local d = if finite(dir) then flat(dir) else flat(root.CFrame.LookVector)
@@ -481,7 +502,7 @@ end
 function CombatService:Init()
 	Net.handle("Attack", attack, 0)
 	Net.handle("Roll", roll, 0.2)
-	Net.handle("Block", setBlocking, 0.05)
+	Net.handle("Block", setBlocking, 0)
 	-- stats change with the profile (weapon, attributes, pets, armor, upgrades, boosts)
 	DataService.Changed:Connect(function(player: Player, key: string)
 		local state = states[player]
@@ -501,7 +522,7 @@ function CombatService:Init()
 			loaded(player)
 		end
 	end
-	Players.PlayerAdded:Connect(function(player)
+	local function watchRespawn(player: Player)
 		player.CharacterAdded:Connect(function()
 			local state = states[player]
 			if state then
@@ -510,7 +531,11 @@ function CombatService:Init()
 			end
 			player:SetAttribute("Blocking", false)
 		end)
-	end)
+	end
+	for _, player in ipairs(Players:GetPlayers()) do
+		watchRespawn(player)
+	end
+	Players.PlayerAdded:Connect(watchRespawn)
 	Players.PlayerRemoving:Connect(function(player)
 		states[player] = nil
 	end)

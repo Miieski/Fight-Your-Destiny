@@ -81,6 +81,7 @@ export type EnemyState = {
 	nextWander: number,
 	wanderGoal: Vector3?,
 	staggerUntil: number,
+	knockUntil: number,
 	invulnerableUntil: number,
 	slot: number,
 	progressAt: number,
@@ -352,7 +353,7 @@ function EnemyService:Spawn(group: Group, def: any, at: Vector3, opts: { [string
 		radius = math.max(size.X, size.Z) / 2, halfHeight = halfHeight, height = halfHeight * 2, hover = hover, speed = speed,
 		home = floor, position = floor, facing = facing, damage = {}, lastHit = nil,
 		mode = "Idle", target = nil, untilTime = 0, nextAttack = 0, nextHeavy = os.clock() + 3, heavy = false,
-		nextWander = os.clock() + rng:NextNumber(1, 4), wanderGoal = nil, staggerUntil = 0,
+		nextWander = os.clock() + rng:NextNumber(1, 4), wanderGoal = nil, staggerUntil = 0, knockUntil = 0,
 		invulnerableUntil = options.invulnerable and os.clock() + options.invulnerable or 0,
 		slot = slotCounter, progressAt = os.clock(), progressPos = floor, path = nil, pathIndex = 1, pathing = false,
 	}
@@ -509,9 +510,13 @@ function EnemyService:Damage(player: Player, state: EnemyState, amount: number, 
 		local from = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
 		if from then
 			local away = flatUnit(state.root.Position - from.Position, -state.facing)
-			local floor = ground(state.position + away * (knockback or AI.Knockback))
+			local studs = knockback or AI.Knockback
+			local floor = ground(state.position + away * studs)
 			if floor then
+				-- a real push: fast enough to cover the distance, and the AI keeps off the body meanwhile (update)
 				state.align.Position = bodyHeight(state, floor)
+				state.align.MaxVelocity = math.max(state.speed, studs / AI.KnockSeconds)
+				state.knockUntil = os.clock() + AI.KnockSeconds
 			end
 		end
 	end
@@ -666,6 +671,13 @@ end
 local function update(state: EnemyState, now: number)
 	local def = state.def
 	state.position = state.root.Position - UP * (state.halfHeight + state.hover)
+	if state.knockUntil > 0 then
+		if now < state.knockUntil then
+			return -- being knocked back
+		end
+		state.knockUntil = 0
+		state.align.MaxVelocity = state.speed
+	end
 	if now < state.staggerUntil then
 		halt(state)
 		return

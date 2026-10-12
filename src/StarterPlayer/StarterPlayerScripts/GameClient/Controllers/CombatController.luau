@@ -55,6 +55,10 @@ local comboStep = 0
 local comboAt = -math.huge
 local comboCategory: string? = nil
 local lastHitStop = 0
+local lastSent = -math.huge -- mirrors the server's booking of my last attack (CombatService rate check)
+local sentAt = 0
+local pendingAttacks = 0 -- attack requests not answered yet (Net "Combo")
+local RATE_MARGIN = 0.02
 local statsCache: { [string]: any }? = nil
 
 local comboLabel: TextLabel? = nil
@@ -242,6 +246,10 @@ local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector
 	velocity.Parent = root
 	task.delay(FEEL.LungeSeconds, function()
 		velocity:Destroy()
+		if root.Parent then
+			local v = root.AssemblyLinearVelocity
+			root.AssemblyLinearVelocity = Vector3.new(0, v.Y, 0)
+		end
 	end)
 end
 
@@ -268,6 +276,9 @@ local function attackOnce(forced: Vector3?): boolean
 	local categoryId, shape = weapon()
 	local steps = Combat.Combos[categoryId]
 	local gap = interval()
+	if now - lastSent < gap * Combat.RateTolerance + RATE_MARGIN then
+		return false
+	end
 	-- the same step the server will pick (CombatService nextStep)
 	if comboCategory ~= categoryId or now - comboAt > gap + Combat.ComboReset then
 		comboStep = 0
@@ -299,8 +310,29 @@ local function attackOnce(forced: Vector3?): boolean
 	}
 	VFX.swing(ctx)
 	Sfx.combat("Swing", ctx)
+	if now - sentAt > 1.5 then
+		pendingAttacks = 0 -- an answer lost (death, respawn): start counting again
+	end
+	pendingAttacks += 1
+	sentAt = now
+	lastSent = math.max(now, lastSent + gap)
 	Net.send("Attack", dir, point)
 	return true
+end
+
+-- The server's answer to an attack request: the step it ran, or its current step when it refused (blocked, rolling,
+-- too fast). Once no other request is in flight the prediction follows the server again.
+local function onCombo(category: string, step: number, accepted: boolean)
+	pendingAttacks = math.max(0, pendingAttacks - 1)
+	if accepted ~= true then
+		finisherUntil = 0
+	end
+	if pendingAttacks == 0 and typeof(step) == "number" then
+		comboStep = step
+		if typeof(category) == "string" and category ~= "" then
+			comboCategory = category
+		end
+	end
 end
 
 -- Combo hit counter (center of the screen), fades FEEL.ComboCounterSeconds after the last hit.
@@ -498,6 +530,10 @@ local function dash(root: BasePart, dir: Vector3)
 	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
 	task.delay(Combat.Roll.Duration, function()
 		velocity:Destroy()
+		if root.Parent then
+			local v = root.AssemblyLinearVelocity
+			root.AssemblyLinearVelocity = Vector3.new(0, v.Y, 0)
+		end
 	end)
 	-- the body fades while invulnerable, then gets its own value back (1 = hidden in first person)
 	local character = root.Parent
@@ -618,6 +654,7 @@ end
 
 function CombatController:Start()
 	Net.on("Hit", onHit)
+	Net.on("Combo", onCombo)
 	Net.on("Swing", onSwing)
 	Net.on("Impact", onImpact)
 	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string, shooter: Player?)
@@ -696,13 +733,17 @@ function CombatController:Start()
 		if other == player then
 			return
 		end
-		other:GetAttributeChangedSignal("Blocking"):Connect(function()
+		local function apply()
 			local on = other:GetAttribute("Blocking") == true
 			if other.Character then
 				Animations.block(other.Character, on)
 				VFX.block({ Character = other.Character, On = on })
 			end
-		end)
+		end
+		other:GetAttributeChangedSignal("Blocking"):Connect(apply)
+		if other:GetAttribute("Blocking") == true then
+			task.defer(apply)
+		end
 	end
 	for _, other in ipairs(Players:GetPlayers()) do
 		watch(other)
@@ -755,6 +796,7 @@ function CombatController:Start()
 		comboStep = 0
 		finisherUntil = 0
 		rollingUntil = 0
+		pendingAttacks = 0
 	end)
 
 	makeComboCounter()

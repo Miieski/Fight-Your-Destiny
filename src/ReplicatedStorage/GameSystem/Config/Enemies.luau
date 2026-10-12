@@ -60,6 +60,7 @@ Enemies.AI = {
 	MeleeCone = 120, -- degrees in front of the enemy hit by a melee attack
 	MeleeReachBonus = 1.5, -- the player may be this much farther than AttackRange when the hit lands
 	Knockback = 1.5, -- studs, normal enemies only
+	KnockSeconds = 0.22, -- the push lasts this long (the AI leaves the body alone meanwhile)
 	ProjectileSpeed = 60,
 	ProjectileRadius = 3.5, -- a shot hits players this close to its impact point
 	StuckSeconds = 1.5, -- no progress for this long while chasing -> pathfinding fallback
