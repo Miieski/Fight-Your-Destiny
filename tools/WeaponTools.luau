@@ -9,7 +9,8 @@
 -- Blender (x, y, z) to Roblox (-x, z, y)... i.e. Blender +X becomes -X: a bow string drawn on Blender -X is
 -- on Roblox +X, a gauntlet's thumb on +X. Tool.Grip per category / ranged type: GRIPS below.
 -- Every Tool: attributes WeaponId, Category, Zone (1..12), Placeholder; TipAttachment and BaseAttachment
--- on the Handle (+ MuzzleAttachment for Ranged and Magic); parts unanchored, CanCollide off, Massless.
+-- on the Handle (+ MuzzleAttachment for Ranged and Magic, ImpactAttachment = the head's strike point for Heavy);
+-- parts unanchored, CanCollide off, Massless.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Studio's command bar / plugins cache required modules: load the configs from fresh copies so an edited
@@ -51,7 +52,7 @@ local PALETTE = {
 -- Placeholder shapes per category, in studs, in Handle space (+Y = head). Each part:
 -- { name, shape ("Block" | "Ball" | "Cyl" = cylinder along Y | "Diamond" = block turned 45 deg around Z),
 --   size, position, color role (1 blade, 2 handle, 3 accent neon), z rotation in degrees? }
--- Tip / Base: attachment positions; Muzzle: Ranged / Magic only. Lengths match Config/Weapons sizes
+-- Tip / Base: attachment positions; Muzzle: Ranged / Magic only; Impact: Heavy only (front face of the head). Lengths match Config/Weapons sizes
 -- of the real models (Sword 4.5, Spear 8, Heavy 5, Dagger 2, Gauntlet 1.8, Ranged 5, Magic 6).
 local V = Vector3.new
 local SHAPES = {
@@ -84,7 +85,7 @@ local SHAPES = {
 			{ "Head", "Block", V(1.6, 0.9, 0.9), V(0, 3.25, 0), 1 },
 			{ "Band", "Block", V(0.25, 0.92, 0.92), V(0, 3.25, 0), 3 },
 		},
-		Tip = V(0, 3.7, 0), Base = V(0, 2.8, 0),
+		Tip = V(0, 3.7, 0), Base = V(0, 2.8, 0), Impact = V(0, 3.25, -0.45),
 	},
 	Dagger = {
 		Parts = {
@@ -240,6 +241,7 @@ function WeaponTools.placeholder(weapon: any): Tool
 	attach(handle, "TipAttachment", shape.Tip)
 	attach(handle, "BaseAttachment", shape.Base)
 	attach(handle, "MuzzleAttachment", if WeaponCategories.ById[weapon.Category].Muzzle then shape.Muzzle else nil)
+	attach(handle, "ImpactAttachment", if weapon.Category == "Heavy" then shape.Impact else nil)
 	finishTool(tool, weapon, true)
 	return tool
 end
@@ -360,6 +362,9 @@ function WeaponTools.fromImport(source: Instance): ({ string }, { string })
 		attach(handle, "BaseAttachment", local_(origin:Lerp(top, 0.18)))
 		if WeaponCategories.ById[weapon.Category].Muzzle then
 			attach(handle, "MuzzleAttachment", local_(if weapon.Category == "Magic" then top else origin + Vector3.new(-0.3, 0.1, 0)))
+		end
+		if weapon.Category == "Heavy" then
+			attach(handle, "ImpactAttachment", local_(origin:Lerp(top, 0.85)))
 		end
 		finishTool(tool, weapon, false)
 		-- the hand holds the true origin; the rotation part comes from the grip tables

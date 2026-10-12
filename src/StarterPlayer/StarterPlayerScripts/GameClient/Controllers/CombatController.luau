@@ -1,11 +1,16 @@
 --!strict
--- Player combat on the client (docs/enemies_npcs_pets_brief.txt Part A): inputs with the aim, the swing and the
--- feedback. The server decides every hit and every damage (CombatService).
---   Melee weapons: hold Attack to swing at the weapon's rate. Ranged and Magic: one press = one shot (holding
---   repeats only with the Auto-Attack pass). Aim: the mouse on PC; the nearest enemy in reach on touch / gamepad.
---   Auto-Attack (pass + HUD toggle): attacks the nearest enemy in reach by itself.
---   Roll: a 12-stud dash (i-frames on the server). Block: shield bubble, half speed, no attacks.
-local Debris = game:GetService("Debris")
+-- Player combat on the client (docs/enemies_npcs_pets_brief.txt Part A, docs/weapons_combat_brief.txt 4A): inputs,
+-- aim, the hack & slash feel and the feedback. The server decides every hit and every damage (CombatService).
+--   Melee weapons: hold Attack to chain the category's combo (Config/Combat Combos) at the weapon's rate; the combo
+--   restarts after Combat.ComboReset s without attacking. Ranged and Magic: one press = one shot (holding repeats
+--   only with the Auto-Attack pass). Aim: the mouse on PC; melee turns toward the nearest enemy within
+--   Combat.Feel.AimAssistRange (on PC only within AimAssistAngle of the mouse); ranged on touch / gamepad: the
+--   nearest enemy in reach. Each attack lunges forward (step Lunge).
+--   Feel on a confirmed hit (Net "Hit"): hit-stop, camera shake, FOV pulse on finishers, combo counter.
+--   Roll: 12-stud dash (i-frames on the server); cancels the attack recovery; no attack during the roll.
+--   Block: shield bubble, half speed, no attacks; cancels the attack recovery except after a finisher.
+-- Hooks: Combat/Animations (animation sub-agent), VFX/VFX (VFX sub-agent), Sfx.combat (SFX sub-agent); contract in
+-- docs/COMBAT_CONTRACTS.md. Other players' swings and hits come as Net "Swing" / "Impact".
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -21,7 +26,10 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 
 local State = require(script.Parent.Parent.State)
 local Controls = require(script.Parent.ControlsController)
+local Fx = require(script.Parent.FxController)
 local Settings = require(script.Parent.SettingsController)
+local Animations = require(script.Parent.Combat.Animations)
+local VFX = require(script.Parent.VFX.VFX)
 local Kit = script.Parent.Parent.UI.Kit
 local Icons = require(Kit.Icons)
 local Screens = require(Kit.Screens)
@@ -30,22 +38,31 @@ local Theme = require(Kit.Theme)
 local CombatController = {}
 
 local player = Players.LocalPlayer
-local NUMBER_TIME = 0.7
+local FEEL = Combat.Feel
 local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts" }
-local COLORS = {
-	Hurt = Color3.fromRGB(255, 80, 70),
-	Block = Color3.fromRGB(130, 200, 255),
-	Dodge = Color3.fromRGB(200, 255, 200),
-	Bubble = Color3.fromRGB(120, 200, 255),
-}
-local rng = Random.new()
+local BUBBLE_COLOR = Color3.fromRGB(120, 200, 255)
+local HIT_STOP_GAP = 0.05 -- several enemies hit by one swing give one hit-stop
+local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
+local COMBO_COUNTER = { Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromOffset(220, 46), PopScale = 1.25, PopSeconds = 0.12, FadeSeconds = 0.3 }
 
 local holding = false
 local blocking = false
+local blockHeld = false
 local nextAttack = 0
 local nextRoll = 0
+local rollingUntil = 0
+local finisherUntil = 0
+local comboStep = 0
+local comboAt = -math.huge
+local comboCategory: string? = nil
+local lastHitStop = 0
 local statsCache: { [string]: any }? = nil
 local bubbles: { [Player]: BasePart } = {}
+
+local comboLabel: TextLabel? = nil
+local comboScale: UIScale? = nil
+local comboHits = 0
+local comboLastHit = 0
 
 local function flat(v: Vector3): Vector3
 	local f = Vector3.new(v.X, 0, v.Z)
@@ -64,13 +81,14 @@ local function stats(): { [string]: any }
 	return statsCache :: any
 end
 
-local function weapon(): (string, any)
+-- The equipped weapon: category id, its shape, the inventory item and the weapon definition.
+local function weapon(): (string, any, any, any)
 	local weapons = State.get("Weapons")
 	local uid = State.get("EquippedWeapon")
 	local item = typeof(weapons) == "table" and uid and weapons[uid]
 	local def = item and Weapons.ById[item.id]
-	local id = if def then def.Category else "Sword"
-	return id, Combat.Shapes[id] or Combat.Shapes.Sword
+	local id = if def and Combat.Combos[def.Category] then def.Category else "Sword"
+	return id, Combat.Shapes[id] or Combat.Shapes.Sword, item, def
 end
 
 local function interval(): number
@@ -107,9 +125,9 @@ local function rootPart(): (BasePart?, Humanoid?)
 	return nil, nil
 end
 
--- The nearest living enemy (a model with an EnemyId attribute in workspace.Enemies) within range;
--- enemies behind count 50% farther.
-local function nearestEnemy(origin: Vector3, range: number, forward: Vector3?): (Model?, Vector3?)
+-- The nearest living enemy (a model with an EnemyId attribute in workspace.Enemies) within range; enemies behind
+-- count 50% farther. minDot: only enemies within that cone around forward.
+local function nearestEnemy(origin: Vector3, range: number, forward: Vector3?, minDot: number?): (Model?, Vector3?)
 	local folder = workspace:FindFirstChild("Enemies")
 	if not folder then
 		return nil, nil
@@ -122,9 +140,12 @@ local function nearestEnemy(origin: Vector3, range: number, forward: Vector3?): 
 			local f = Vector3.new(offset.X, 0, offset.Z)
 			local distance = f.Magnitude
 			if distance <= range and math.abs(offset.Y) < 14 then
-				local score = if forward and distance > 0.1 and f.Unit:Dot(forward) < 0 then distance * 1.5 else distance
-				if score < bestScore then
-					best, bestScore, bestPosition = model, score, position
+				local dot = if forward and distance > 0.1 then f.Unit:Dot(forward) else 1
+				if not minDot or distance < Combat.CloseRange or dot >= minDot then
+					local score = if dot < 0 then distance * 1.5 else distance
+					if score < bestScore then
+						best, bestScore, bestPosition = model, score, position
+					end
 				end
 			end
 		end
@@ -164,36 +185,76 @@ local function mousePoint(root: BasePart): Vector3?
 	return nil
 end
 
-local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vector3?)
+-- Attack direction and aim point. Melee: aim assist toward the nearest enemy within FEEL.AimAssistRange.
+local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vector3?, boolean)
 	local point = forced
-	if not point and usesMouse() then
+	local mouse = point == nil and usesMouse()
+	if not point and mouse then
 		point = mousePoint(root)
 	end
-	if not point then
+	local assisted = false
+	if isMelee(shape) and not forced then
+		local wanted = if point then flat(point - root.Position) else flat(root.CFrame.LookVector)
+		local minDot = if mouse and point then math.cos(math.rad(FEEL.AimAssistAngle)) else nil
+		local _, position = nearestEnemy(root.Position, FEEL.AimAssistRange, wanted, minDot)
+		if position then
+			point = position
+			assisted = true
+		end
+	elseif not point then
 		local _, position = nearestEnemy(root.Position, reach(shape) + Combat.AimAssistBonus, flat(root.CFrame.LookVector))
 		point = position
+		assisted = position ~= nil
 	end
 	if point then
 		local offset = point - root.Position
 		if Vector3.new(offset.X, 0, offset.Z).Magnitude > 0.5 then
-			return flat(offset), point
+			return flat(offset), point, assisted or forced ~= nil
 		end
 	end
-	return flat(root.CFrame.LookVector), point
+	return flat(root.CFrame.LookVector), point, false
 end
 
-local function swing(shape: any)
-	local character = player.Character
-	local tool = character and character:FindFirstChildOfClass("Tool")
-	if tool then
-		-- the default Animate script plays toolslash / toollunge when this value appears in the tool
-		local value = Instance.new("StringValue")
-		value.Name = "toolanim"
-		value.Value = shape.Anim
-		value.Parent = tool
-		Debris:AddItem(value, 0.5)
+-- A short step forward with the swing (LinearVelocity impulse); it stops short of the aimed enemy.
+local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector3?)
+	if studs <= 0 then
+		return
 	end
-	Sfx.play("SwordSwing")
+	if target then
+		local distance = Vector3.new(target.X - root.Position.X, 0, target.Z - root.Position.Z).Magnitude
+		studs = math.min(studs, math.max(0, distance - LUNGE_KEEP_DISTANCE))
+		if studs <= 0.1 then
+			return
+		end
+	end
+	local attachment = root:FindFirstChild("RootAttachment") :: Attachment?
+	if not attachment then
+		return
+	end
+	local velocity = Instance.new("LinearVelocity")
+	velocity.Name = "AttackLunge"
+	velocity.Attachment0 = attachment
+	velocity.RelativeTo = Enum.ActuatorRelativeTo.World
+	velocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Plane
+	velocity.PrimaryTangentAxis = Vector3.xAxis
+	velocity.SecondaryTangentAxis = Vector3.zAxis
+	local speed = studs / FEEL.LungeSeconds
+	velocity.PlaneVelocity = Vector2.new(dir.X * speed, dir.Z * speed)
+	velocity.MaxForce = 1e6
+	velocity.Parent = root
+	task.delay(FEEL.LungeSeconds, function()
+		velocity:Destroy()
+	end)
+end
+
+local function toolInfo(character: Model): (Tool?, number?, string?)
+	local tool = character:FindFirstChildOfClass("Tool")
+	if not tool then
+		return nil, nil, nil
+	end
+	local def = Weapons.ById[tool:GetAttribute("WeaponId") or ""]
+	local rarity = tool:GetAttribute("Rarity")
+	return tool, if typeof(rarity) == "number" then rarity else nil, if def then def.Element else nil
 end
 
 -- One attack now if the weapon is ready. Returns true when it was sent.
@@ -203,143 +264,149 @@ local function attackOnce(forced: Vector3?): boolean
 		return false
 	end
 	local now = os.clock()
-	if now < nextAttack then
+	if now < nextAttack or now < rollingUntil then
 		return false
 	end
-	local _, shape = weapon()
-	local dir, point = aim(root, shape, forced)
-	nextAttack = now + interval()
+	local categoryId, shape = weapon()
+	local steps = Combat.Combos[categoryId]
+	local gap = interval()
+	-- the same step the server will pick (CombatService nextStep)
+	if comboCategory ~= categoryId or now - comboAt > gap + Combat.ComboReset then
+		comboStep = 0
+	end
+	comboStep = comboStep % #steps + 1
+	comboAt = now
+	comboCategory = categoryId
+	local step = steps[comboStep]
+	local dir, point, assisted = aim(root, shape, forced)
+	nextAttack = now + gap
 	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
-	swing(shape)
+	lunge(root, dir, step.Lunge or 0, if assisted then point else nil)
+	local character = root.Parent :: Model
+	local speed = 1 + (stats().AttackSpeed or 0)
+	local length = Animations.attack(character, categoryId, comboStep, speed)
+	finisherUntil = if step.Finisher then now + math.max(length, step.Impact / speed) else 0
+	local tool, rarity, element = toolInfo(character)
+	local ctx = {
+		Character = character,
+		Tool = tool,
+		Category = categoryId,
+		Step = comboStep,
+		Finisher = step.Finisher == true,
+		Direction = dir,
+		Rarity = rarity,
+		Element = element,
+		Speed = speed,
+		IsLocal = true,
+	}
+	VFX.swing(ctx)
+	Sfx.combat("Swing", ctx)
 	Net.send("Attack", dir, point)
 	return true
 end
 
-local function floating(position: Vector3, text: string, color: Color3, big: boolean)
-	local anchor = Instance.new("Part")
-	anchor.Anchored = true
-	anchor.CanCollide, anchor.CanQuery, anchor.CanTouch = false, false, false
-	anchor.Transparency = 1
-	anchor.Size = Vector3.one
-	anchor.Position = position + Vector3.new(rng:NextNumber(-1.5, 1.5), 0, rng:NextNumber(-1.5, 1.5))
-	local gui = Instance.new("BillboardGui")
-	gui.Size = if big then UDim2.fromScale(7, 2.6) else UDim2.fromScale(5, 1.8)
-	gui.AlwaysOnTop = true
-	gui.Parent = anchor
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.fromScale(1, 1)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.Fantasy
-	label.TextScaled = true
-	label.Text = text
-	label.TextColor3 = color
-	label.TextStrokeTransparency = 0
-	label.Parent = gui
-	anchor.Parent = workspace
-	TweenService:Create(gui, TweenInfo.new(NUMBER_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { StudsOffset = Vector3.new(0, 4, 0) }):Play()
-	TweenService:Create(label, TweenInfo.new(NUMBER_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
-	Debris:AddItem(anchor, NUMBER_TIME + 0.1)
-end
-
-local function burst(name: string, position: Vector3)
-	local assets = ReplicatedStorage:FindFirstChild("Assets")
-	local vfx = assets and assets.VFX:FindFirstChild(name)
-	if vfx and vfx:IsA("BasePart") then
-		local clone = vfx:Clone()
-		clone.CFrame = CFrame.new(position)
-		clone.Parent = workspace
-		for _, emitter in ipairs(clone:GetDescendants()) do
-			if emitter:IsA("ParticleEmitter") then
-				emitter:Emit(emitter:GetAttribute("EmitCount") or 8)
+-- Combo hit counter (center of the screen), fades FEEL.ComboCounterSeconds after the last hit.
+local function countHit()
+	local label, scale = comboLabel, comboScale
+	if not (label and scale) then
+		return
+	end
+	local now = os.clock()
+	if now - comboLastHit > FEEL.ComboCounterSeconds then
+		comboHits = 0
+	end
+	comboHits += 1
+	comboLastHit = now
+	if comboHits < 2 then
+		return
+	end
+	label.Text = `{comboHits} HITS`
+	label.TextTransparency = 0
+	label.Visible = true
+	scale.Scale = COMBO_COUNTER.PopScale
+	TweenService:Create(scale, TweenInfo.new(COMBO_COUNTER.PopSeconds, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	local hits = comboHits
+	task.delay(FEEL.ComboCounterSeconds, function()
+		if comboHits == hits and label.Visible then
+			local fade = TweenService:Create(label, TweenInfo.new(COMBO_COUNTER.FadeSeconds), { TextTransparency = 1 })
+			fade:Play()
+			fade.Completed:Wait()
+			if comboHits == hits then
+				label.Visible = false
 			end
 		end
-		Debris:AddItem(clone, 1.5)
-	end
+	end)
 end
 
-local function styleColor(style: any): Color3
-	return Combat.StyleColors[style] or Combat.StyleColors.Physical
+local function makeComboCounter()
+	local label = Theme.text({ Name = "ComboCounter", Font = "Title", Text = "", TextSize = 40, Color = Theme.Colors.Gold, Size = COMBO_COUNTER.Size, Position = COMBO_COUNTER.Position, AnchorPoint = Vector2.new(0.5, 0.5), Parent = Screens.hud() })
+	label.Visible = false
+	local scale = Instance.new("UIScale")
+	scale.Parent = label
+	comboLabel, comboScale = label, scale
 end
 
-local function groundBelow(position: Vector3): Vector3
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	local ignore = {}
-	for _, other in ipairs(Players:GetPlayers()) do
-		if other.Character then
-			table.insert(ignore, other.Character)
-		end
+-- A confirmed hit of mine: number, impact effects and sounds, hit-stop, shake, FOV pulse, combo counter.
+local function onHit(position: Vector3, amount: number, crit: boolean, finisher: boolean?, category: string?)
+	if Settings.get("DamageNumbers") ~= false then
+		VFX.damageNumber(position, Format.number(amount) .. (if crit then "!" else ""), if crit then "crit" else "normal")
 	end
-	local enemies = workspace:FindFirstChild("Enemies")
-	if enemies then
-		table.insert(ignore, enemies)
-	end
-	params.FilterDescendantsInstances = ignore
-	local result = workspace:Raycast(position + Vector3.new(0, 4, 0), Vector3.new(0, -24, 0), params)
-	return if result then result.Position else position
-end
-
-local function shot(origin: any, dir: any, speed: any, distance: any, style: any)
-	if typeof(origin) ~= "Vector3" or typeof(dir) ~= "Vector3" or typeof(speed) ~= "number" or typeof(distance) ~= "number" or speed <= 0 then
+	local mine = player.Character
+	local element = if mine then select(3, toolInfo(mine)) else nil
+	local ctx = { Position = position, Category = category, Crit = crit, Finisher = finisher == true, Element = element, IsLocal = true }
+	VFX.impact(ctx)
+	Sfx.combat("Impact", ctx)
+	countHit()
+	local now = os.clock()
+	if now - lastHitStop < HIT_STOP_GAP then
 		return
 	end
-	local color = styleColor(style)
-	local enemy = style == "Enemy"
-	local ball = Instance.new("Part")
-	ball.Shape = Enum.PartType.Ball
-	ball.Size = Vector3.one * (if enemy then 1.4 else 0.9)
-	ball.Material = Enum.Material.Neon
-	ball.Color = color
-	ball.Anchored = true
-	ball.CanCollide, ball.CanQuery, ball.CanTouch = false, false, false
-	ball.CastShadow = false
-	ball.CFrame = CFrame.new(origin)
-	local a0 = Instance.new("Attachment")
-	a0.Position = Vector3.new(0, 0.3, 0)
-	a0.Parent = ball
-	local a1 = Instance.new("Attachment")
-	a1.Position = Vector3.new(0, -0.3, 0)
-	a1.Parent = ball
-	local trail = Instance.new("Trail")
-	trail.Attachment0, trail.Attachment1 = a0, a1
-	trail.Color = ColorSequence.new(color)
-	trail.Transparency = NumberSequence.new(0.2, 1)
-	trail.Lifetime = 0.18
-	trail.LightEmission = 1
-	trail.Parent = ball
-	ball.Parent = workspace
-	local seconds = math.max(0.05, distance / speed)
-	local finish = origin + dir.Unit * distance
-	TweenService:Create(ball, TweenInfo.new(seconds, Enum.EasingStyle.Linear), { CFrame = CFrame.new(finish) }):Play()
-	task.delay(seconds, function()
-		burst("Hit_Spark", finish)
-		ball.Transparency = 1
-	end)
-	Debris:AddItem(ball, seconds + 0.3)
+	lastHitStop = now
+	local heavy = category == "Heavy"
+	local character = player.Character
+	if character then
+		Animations.hitStop(character, if finisher then FEEL.HitStop.Finisher elseif heavy then FEEL.HitStop.Heavy else FEEL.HitStop.Normal)
+	end
+	Fx.shake(if finisher then FEEL.Shake.Finisher elseif heavy then FEEL.Shake.Heavy else FEEL.Shake.Normal)
+	if finisher then
+		Fx.fovPulse(FEEL.FovPulse.Degrees, FEEL.FovPulse.Seconds)
+	end
 end
 
-local function area(position: any, radius: any, style: any)
-	if typeof(position) ~= "Vector3" or typeof(radius) ~= "number" then
+-- Another player's swing (Net "Swing"): animation, trail and whoosh only.
+local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number)
+	local character = attacker.Character
+	if attacker == player or not character or typeof(category) ~= "string" or typeof(step) ~= "number" then
 		return
 	end
-	local ground = groundBelow(position)
-	local disc = Instance.new("Part")
-	disc.Shape = Enum.PartType.Cylinder
-	disc.Material = Enum.Material.Neon
-	disc.Color = styleColor(style)
-	disc.Transparency = 0.3
-	disc.Anchored = true
-	disc.CanCollide, disc.CanQuery, disc.CanTouch = false, false, false
-	disc.CastShadow = false
-	disc.Size = Vector3.new(0.2, 1, 1)
-	disc.CFrame = CFrame.new(ground + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.rad(90))
-	disc.Parent = workspace
-	TweenService:Create(disc, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.new(0.2, radius * 2, radius * 2) }):Play()
-	task.delay(0.22, function()
-		TweenService:Create(disc, TweenInfo.new(0.3), { Transparency = 1 }):Play()
-	end)
-	Debris:AddItem(disc, 0.6)
-	burst("Hit_Spark", ground + Vector3.new(0, 1, 0))
+	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1)
+	local steps = Combat.Combos[category]
+	local tool, rarity, element = toolInfo(character)
+	local ctx = {
+		Character = character,
+		Tool = tool,
+		Category = category,
+		Step = step,
+		Finisher = steps and steps[step] and steps[step].Finisher == true or false,
+		Direction = if typeof(dir) == "Vector3" then dir else Vector3.new(0, 0, -1),
+		Rarity = rarity,
+		Element = element,
+		Speed = speed,
+		IsLocal = false,
+		Position = if root then root.Position else nil,
+	}
+	VFX.swing(ctx)
+	Sfx.combat("Swing", ctx)
+end
+
+local function onImpact(position: Vector3, category: string?, crit: boolean, finisher: boolean)
+	if typeof(position) ~= "Vector3" then
+		return
+	end
+	local ctx = { Position = position, Category = category, Crit = crit == true, Finisher = finisher == true, IsLocal = false }
+	VFX.impact(ctx)
+	Sfx.combat("Impact", ctx)
 end
 
 local function setBubble(target: Player, on: boolean)
@@ -358,7 +425,7 @@ local function setBubble(target: Player, on: boolean)
 	ball.Shape = Enum.PartType.Ball
 	ball.Size = Vector3.one * 7
 	ball.Material = Enum.Material.ForceField
-	ball.Color = COLORS.Bubble
+	ball.Color = BUBBLE_COLOR
 	ball.CanCollide, ball.CanQuery, ball.CanTouch = false, false, false
 	ball.Massless = true
 	ball.CastShadow = false
@@ -370,7 +437,7 @@ local function setBubble(target: Player, on: boolean)
 	bubbles[target] = ball
 end
 
-local function setBlocking(down: boolean)
+local function applyBlock(down: boolean)
 	if down == blocking then
 		return
 	end
@@ -380,9 +447,36 @@ local function setBlocking(down: boolean)
 	blocking = down
 	Net.send("Block", down)
 	setBubble(player, down)
-	if down then
-		Sfx.play("Block")
+	local character = player.Character
+	if character then
+		if down then
+			Animations.cancel(character)
+		end
+		Animations.block(character, down)
+		VFX.block({ Character = character, On = down })
 	end
+	if down then
+		Sfx.combat("Block", {})
+	end
+end
+
+-- Block cancels the attack recovery, except a finisher's: then it starts when the finisher is over.
+local function setBlocking(down: boolean)
+	blockHeld = down
+	if not down then
+		applyBlock(false)
+		return
+	end
+	local wait = finisherUntil - os.clock()
+	if wait <= 0 then
+		applyBlock(true)
+		return
+	end
+	task.delay(wait, function()
+		if blockHeld then
+			applyBlock(true)
+		end
+	end)
 end
 
 local function dash(root: BasePart, dir: Vector3)
@@ -402,7 +496,9 @@ local function dash(root: BasePart, dir: Vector3)
 	velocity.MaxForce = 1e6
 	velocity.Parent = root
 	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
-	Debris:AddItem(velocity, Combat.Roll.Duration)
+	task.delay(Combat.Roll.Duration, function()
+		velocity:Destroy()
+	end)
 	-- the body fades while invulnerable, then gets its own value back (1 = hidden in first person)
 	local character = root.Parent
 	if character then
@@ -431,11 +527,39 @@ local function roll()
 		return
 	end
 	nextRoll = now + (stats().RollCooldown or 1.5)
+	rollingUntil = now + Combat.Roll.Duration
+	finisherUntil = 0
 	local move = humanoid.MoveDirection
 	local dir = if move.Magnitude > 0.1 then flat(move) else flat(root.CFrame.LookVector)
 	Net.send("Roll", dir)
-	Sfx.play("Roll")
+	local character = root.Parent :: Model
+	Animations.cancel(character)
+	Animations.roll(character, dir)
+	local ctx = { Character = character, Direction = dir, IsLocal = true }
+	VFX.roll(ctx)
+	Sfx.combat("Roll", ctx)
 	dash(root, dir)
+end
+
+local function onHurt(amount: number, kind: string)
+	local root = rootPart()
+	if not root then
+		return
+	end
+	local character = root.Parent :: Model
+	local at = root.Position + Vector3.new(0, 3, 0)
+	if kind == "dodge" then
+		VFX.damageNumber(at, "Dodge", "dodge")
+	elseif kind == "block" then
+		Animations.blockHit(character)
+		VFX.blockHit({ Character = character, Position = at })
+		Sfx.combat("BlockHit", {})
+		VFX.damageNumber(at, "-" .. Format.number(amount), "block")
+	else
+		Animations.hurt(character)
+		Sfx.combat("Hurt", {})
+		VFX.damageNumber(at, "-" .. Format.number(amount), "hurt")
+	end
 end
 
 -- HUD toggle for the Auto-Attack pass: above the touch Attack button, or right of the hotbar on PC.
@@ -493,31 +617,16 @@ local function autoToggle()
 end
 
 function CombatController:Start()
-	Net.on("Hit", function(position: Vector3, amount: number, crit: boolean)
-		if Settings.get("DamageNumbers") ~= false then
-			floating(position, Format.number(amount) .. (if crit then "!" else ""), if crit then Color3.fromRGB(255, 201, 60) else Color3.new(1, 1, 1), crit)
-		end
-		Sfx.play(if crit then "Crit" else "Hit", position)
-		burst(if crit then "Crit_Spark" else "Hit_Spark", position - Vector3.new(0, 1.5, 0))
+	Net.on("Hit", onHit)
+	Net.on("Swing", onSwing)
+	Net.on("Impact", onImpact)
+	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string)
+		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style })
 	end)
-	Net.on("Projectile", shot)
-	Net.on("Burst", area)
-	Net.on("Hurt", function(amount: number, kind: string)
-		local root = rootPart()
-		if not root then
-			return
-		end
-		local at = root.Position + Vector3.new(0, 3, 0)
-		if kind == "dodge" then
-			floating(at, "Dodge", COLORS.Dodge, false)
-		elseif kind == "block" then
-			Sfx.play("Block")
-			floating(at, "-" .. Format.number(amount), COLORS.Block, false)
-		else
-			Sfx.play("Hurt")
-			floating(at, "-" .. Format.number(amount), COLORS.Hurt, false)
-		end
+	Net.on("Burst", function(position: Vector3, radius: number, style: string)
+		VFX.burst({ Position = position, Radius = radius, Style = style })
 	end)
+	Net.on("Hurt", onHurt)
 
 	for _, key in ipairs(STAT_KEYS) do
 		State.changed(key, function()
@@ -542,7 +651,7 @@ function CombatController:Start()
 			task.spawn(function()
 				while holding do
 					attackOnce()
-					task.wait(math.max(0.03, nextAttack - os.clock()))
+					task.wait(math.max(0.03, math.max(nextAttack, rollingUntil) - os.clock()))
 				end
 			end)
 		elseif not down then
@@ -569,13 +678,17 @@ function CombatController:Start()
 		end
 	end)
 
-	-- block bubbles of the other players (the local one is drawn on input)
+	-- block bubbles and guard poses of the other players (the local one is drawn on input)
 	local function watch(other: Player)
 		if other == player then
 			return
 		end
 		other:GetAttributeChangedSignal("Blocking"):Connect(function()
-			setBubble(other, other:GetAttribute("Blocking") == true)
+			local on = other:GetAttribute("Blocking") == true
+			setBubble(other, on)
+			if other.Character then
+				Animations.block(other.Character, on)
+			end
 		end)
 	end
 	for _, other in ipairs(Players:GetPlayers()) do
@@ -588,9 +701,14 @@ function CombatController:Start()
 	player.CharacterAdded:Connect(function()
 		holding = false
 		blocking = false
+		blockHeld = false
+		comboStep = 0
+		finisherUntil = 0
+		rollingUntil = 0
 		bubbles[player] = nil
 	end)
 
+	makeComboCounter()
 	task.spawn(autoToggle)
 end
 

@@ -1,9 +1,11 @@
 --!strict
--- Visual comfort settings: Low FX (fewer particles) and camera shake (Screen Shake + intensity).
+-- Visual comfort settings: Low FX (fewer particles, no camera shake) and camera shake (Screen Shake + intensity).
 --   Fx.shake(strength 0..1)
+--   Fx.fovPulse(degrees, seconds)   a short field-of-view kick (combo finishers); off with Screen Shake off
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Settings = require(script.Parent.SettingsController)
@@ -52,7 +54,7 @@ local function stopShake()
 end
 
 function Fx.shake(strength: number)
-	if not Settings.get("ScreenShake") or not humanoid then
+	if not Settings.get("ScreenShake") or Settings.get("LowFx") == true or not humanoid then
 		return
 	end
 	local amount = math.clamp(strength, 0, 1) * (Settings.get("ShakeIntensity") or 0) / 100 * UIConfig.Fx.ShakeMaxOffset
@@ -72,6 +74,31 @@ function Fx.shake(strength: number)
 			(humanoid :: Humanoid).CameraOffset = Vector3.new(rng:NextNumber(-a, a), rng:NextNumber(-a, a), rng:NextNumber(-a, a) * 0.5)
 		end)
 	end
+end
+
+local fovTween: Tween? = nil
+local fovBase: number? = nil
+
+function Fx.fovPulse(degrees: number, seconds: number)
+	local camera = workspace.CurrentCamera
+	if not camera or not Settings.get("ScreenShake") then
+		return
+	end
+	if fovTween then
+		fovTween:Cancel()
+	end
+	local base = fovBase or camera.FieldOfView
+	fovBase = base
+	camera.FieldOfView = base + degrees
+	local tween = TweenService:Create(camera, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { FieldOfView = base })
+	fovTween = tween
+	tween.Completed:Connect(function()
+		if fovTween == tween then
+			fovTween = nil
+			fovBase = nil
+		end
+	end)
+	tween:Play()
 end
 
 local function onCharacter(character: Model)

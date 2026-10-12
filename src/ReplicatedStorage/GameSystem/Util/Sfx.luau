@@ -78,4 +78,21 @@ function Sfx.play(name: string, position: Vector3?)
 	sound:Play()
 end
 
+-- Combat sounds (docs/weapons_combat_brief.txt 4D, contract in docs/COMBAT_CONTRACTS.md). OWNER of the mapping: the
+-- SFX sub-agent (Config/CombatSfx + the sounds in ReplicatedStorage.Assets.Sounds). CombatController calls only this.
+--   Sfx.combat(event, ctx?)   event = "Swing" | "Impact" | "Shot" | "Cast" | "Burst" | "Roll" | "Block" | "BlockHit"
+--                             | "BlockBreak" | "Hurt" | "Death" | "Equip"
+--                             ctx = { Category?, Step?, Finisher?, Crit?, Material? ("flesh" | "metal" | "stone"),
+--                                     Position? (3D sound there; nil = heard at full volume) }
+-- STUB until the SFX sub-agent delivers: the sounds the game already had.
+local STUB_SOUNDS = { Swing = "SwordSwing", Roll = "Roll", Block = "Block", BlockHit = "Block", Hurt = "Hurt" }
+
+function Sfx.combat(event: string, ctx: { [string]: any }?)
+	local info = ctx or {}
+	local name = if event == "Impact" then (if info.Crit then "Crit" else "Hit") else STUB_SOUNDS[event]
+	if name then
+		Sfx.play(name, info.Position)
+	end
+end
+
 return Sfx

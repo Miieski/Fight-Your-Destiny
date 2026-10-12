@@ -2,7 +2,8 @@
 -- Enemies (docs/enemies_npcs_pets_brief.txt Part B, DESIGN.md section 5). Server authoritative: spawning, a 10 Hz AI,
 -- movement, attacks, damage, Gold and loot. The client only draws them (Controllers/EnemyController).
 --   EnemyService:GetNear(position, range) -> { EnemyState }   living enemies around a point (CombatService)
---   EnemyService:Damage(player, state, amount) -> died        a hit decided by CombatService
+--   EnemyService:Damage(player, state, amount, knockback?) -> died   a hit decided by CombatService (knockback =
+--                                                             studs for a normal enemy; nil = AI.Knockback)
 --   EnemyService:Stagger(state, seconds)                      Heavy slam
 --   EnemyService:SetOccupied(occupied)                        ZoneService location loop: sub-zones with players
 --   EnemyService:CreateGroup(key, opts) / Spawn(group, def, position, opts?) / Intro(state, s) / EndGroup(key)   boss rooms
@@ -481,7 +482,7 @@ local function die(state: EnemyState)
 end
 
 -- A hit decided by CombatService. Returns true when the enemy died.
-function EnemyService:Damage(player: Player, state: EnemyState, amount: number): boolean
+function EnemyService:Damage(player: Player, state: EnemyState, amount: number, knockback: number?): boolean
 	if not state.alive or amount ~= amount or amount <= 0 then
 		return false
 	end
@@ -508,7 +509,7 @@ function EnemyService:Damage(player: Player, state: EnemyState, amount: number):
 		local from = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
 		if from then
 			local away = flatUnit(state.root.Position - from.Position, -state.facing)
-			local floor = ground(state.position + away * AI.Knockback)
+			local floor = ground(state.position + away * (knockback or AI.Knockback))
 			if floor then
 				state.align.Position = bodyHeight(state, floor)
 			end

@@ -159,6 +159,21 @@ local function remove(model: Model)
 	end
 end
 
+local function serverToClock(serverTime: number): number
+	return os.clock() + (serverTime - serverNow())
+end
+
+-- The attack clip for a telegraph: heavy -> Attack2, ranged -> Shoot, else Attack1 (when the rig has it).
+local function attackClip(entry: Entry): string
+	local anim = entry.anim
+	if entry.model:GetAttribute("Heavy") and anim:Has("Attack2") then
+		return "Attack2"
+	elseif entry.def.AttackType == "ranged" and anim:Has("Shoot") then
+		return "Shoot"
+	end
+	return "Attack1"
+end
+
 local function add(model: Instance)
 	if not model:IsA("Model") or entries[model] then
 		return
@@ -237,21 +252,6 @@ local function add(model: Instance)
 		end
 	end)
 	table.insert(entry.connections, connection)
-end
-
-local function serverToClock(serverTime: number): number
-	return os.clock() + (serverTime - serverNow())
-end
-
--- The attack clip for a telegraph: heavy -> Attack2, ranged -> Shoot, else Attack1 (when the rig has it).
-local function attackClip(entry: Entry): string
-	local anim = entry.anim
-	if entry.model:GetAttribute("Heavy") and anim:Has("Attack2") then
-		return "Attack2"
-	elseif entry.def.AttackType == "ranged" and anim:Has("Shoot") then
-		return "Shoot"
-	end
-	return "Attack1"
 end
 
 local function killPop(position: any, gold: any)

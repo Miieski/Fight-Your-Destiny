@@ -715,6 +715,24 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 12:08 PHASE 4 FRAMEWORK (main agent) - the hack & slash backbone and the contracts for the sub-agents
+  (`docs/COMBAT_CONTRACTS.md`). Server (`CombatService`): every attack is the next step of the category combo of
+  `Config/Combat` `Combos` (chosen on the server; per-step Impact, Damage, Finisher, Shape override, Knockback,
+  extra Hits), the combo restarts after 0.8 s (`ComboReset`), no attack during a roll, new Net events "Swing"
+  (to other players) and "Impact" (others' hits), "Hit" now carries finisher + category. `EnemyService:Damage`
+  takes a knockback distance (normal enemies only). Client (`CombatController` rewrite): combo prediction, aim
+  assist 15 studs (PC: within 70 deg of the mouse), lunge per step (stops 2.5 studs before the target), hit-stop /
+  shake / FOV pulse on confirmed hits (`Fx.fovPulse` new; Low FX now turns the shake off), roll and block cancel
+  rules (block waits for a finisher's recovery), combo hit counter ("N HITS", fades after 2 s), other players'
+  swings and impacts. Hook stubs that keep today's look until the sub-agents deliver:
+  `Controllers/Combat/Animations` (default tool animations), `Controllers/VFX/VFX` (the old shots / bursts / damage
+  numbers moved there), `Sfx.combat` (old sound names). Heavy Tools got their `ImpactAttachment` (placeholders +
+  DevTools WeaponTools for imports). Play test (2 boars, Sword held 5 s): hits 9 / 9 / 10 then the spin finisher hit
+  both boars (13 and a 26 crit), then the combo restarted; counter showed 7 HITS. Output clean.
+  FIXED an old bug found here: `EnemyController` called `attackClip` / `serverToClock` before they were defined
+  (Luau locals), so every enemy wind-up threw "attempt to call a nil value" and enemy attack animations never
+  played; the two functions moved above `add()`, wind-ups now play without errors.
+
 - 11:52 PHASE 2 DONE - HUD: the 3 pet slots are replaced by 3 SKILL slots (framework only). New: `Config/Skills`
   (empty list + schema in comments: Id, Name, Icon, Cooldown, Category, Animation, VFX, SFX, Cost, Element),
   `SkillService` (Net "UseSkill": slot 1-3 checked, answers "not available"; tested: 1 / 3 -> not available, 4 / 0 /
@@ -751,6 +769,14 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Decisions taken without the owner
 
+- Animation pipeline (4B): option (2), procedural keyframe data played on every client (Motor6D.Transform after
+  the Animator, like the creature AnimPlayer), driven by the Net "Swing" event for other players. Option (1) needs
+  the owner to publish each animation with the Animation Editor, which cannot be automated here.
+- Combo step multipliers keep each category's average close to x1 (the weapon document's DPS): Sword 0.85 / 0.85 /
+  1.0 / 1.3, Spear 0.9 / 0.9 / 1.2, Heavy 0.9 / 1.1, Dagger 0.9 x4 + 2 x 0.7, Gauntlet 1 / 1 / 2 (its documented x2).
+  The rate stays the weapon's HitsPerSecond; the clips are authored to fit in that interval.
+- Sub-agents run ONE at a time and each one is the only Studio user during its run; the main agent builds the
+  weapon models in Blender meanwhile (no Studio). Sub-agents do not commit; the main agent reviews and commits.
 - Skill keys Z / X / C were already the Index (X) and Stats (C) hotkeys of the editable keys: those two moved to
   N and U. A saved profile that still has the old Stats = C / Index = X gets "None" for them (the skill keys win,
   they come first in the list); the player can rebind them in Settings > Keys.
