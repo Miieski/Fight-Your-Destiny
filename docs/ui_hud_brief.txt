@@ -94,8 +94,14 @@ Layout guide (landscape). Keep clear of Roblox's top-left menu/chat icons, the m
    Slot with icon (ViewportFrame of the weapon model or a generated icon), weapon name, border and
    name colored by rarity. Tap opens Inventory (Weapons tab). Empty state: "No weapon" + prompt.
 
-5) EQUIPPED PETS - next to the weapon slot: 3 slots.
-   Rarity-colored borders; empty slots show a "+" and open the Pets window on tap.
+5) SKILL SLOTS - next to the weapon slot: 3 slots (they replaced the 3 pet slots on 2026-10-12,
+   docs/weapons_combat_brief.txt Phase 2; pets are equipped from the Pets window and the Equipment
+   screen). Wood/gold squares with a 3D lock when empty, key labels Z / X / C on PC (editable in
+   Settings > Keys; LB / RB / Y with a gamepad). On touch screens: 3 round buttons around the attack
+   button (movable in the layout editor), and the bottom row shows the weapon only. Ready for: an icon,
+   a cooldown sweep with the seconds left, a "not enough resource" shake, a rarity / element frame.
+   An empty slot shows the toast "Skills are coming soon". Code: UI/Kit/SkillSlot,
+   Controllers/SkillController, Config/Skills, SkillService (Net "UseSkill").
 
 6) MENU BUTTONS - left side column on PC; collapsible menu button on mobile.
    Buttons, in this order:

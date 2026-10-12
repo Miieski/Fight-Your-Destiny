@@ -94,10 +94,19 @@ held. A setting allows a more top-down angle.
 | Attack | mouse button 1 | big attack button (bottom right) | RT / R2 |
 | Block | mouse button 2 (hold) | block button (hold) | LT / L2 (hold) |
 | Roll/dodge | Q | roll button | B / Circle |
+| Skills 1-3 | Z / X / C | 3 skill buttons around the attack button | LB / RB / Y |
 | Open menus | hotkeys + buttons | HUD buttons | D-pad / menu |
 
 Use `ContextActionService` so actions map to touch buttons automatically. Buttons must be
 big, semi-transparent and movable in settings (position + size).
+
+**Skill slots (framework, 2026-10-12):** the HUD shows 3 skill slots next to the equipped weapon
+(the pet slots left the HUD; pets are equipped from the Pets window and the Equipment screen). Each
+slot is ready for an icon, a cooldown sweep with the seconds left, a "not enough resource" shake and a
+rarity / element frame; an empty slot shows a lock and the toast "Skills are coming soon". On touch
+screens they are 3 round buttons around the attack button (movable like the others). The skills come
+later: `Config/Skills` (empty list + schema), `SkillService` (`Net.request("UseSkill", slot)` answers
+"not available"), profile `EquippedSkills`.
 
 **Editable keys (PC):** every keyboard / mouse key is set in Settings > Keys (click a key, press
 the new one; a key taken by another action swaps with it; Reset puts the defaults back). Defaults:
@@ -425,6 +434,7 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Eggs = {},                           -- [uid] = { zone = "Plains", rarity = 1 }
   Pets = {},                           -- [uid] = { id = "plains_pet1", rarity = 1, premium = false }
   EquippedPets = {},                   -- array of uids
+  EquippedSkills = {},                 -- [slot 1..3] = skill id (Config/Skills; empty for now)
   Trophies = {},                       -- [uid] = { id = "plains_boar", rarity = 1 } (head trophies, max 100)
   Index = {},                          -- [entryId] = true (kept)
   IndexClaimed = {},

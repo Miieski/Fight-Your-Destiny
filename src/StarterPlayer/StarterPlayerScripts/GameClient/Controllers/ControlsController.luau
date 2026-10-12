@@ -1,8 +1,8 @@
 --!strict
 -- Player inputs. Keyboard, mouse and gamepad go through ContextActionService, with the keyboard and
 -- mouse keys taken from the KeyBindings setting (Settings > Keys; gamepad buttons are fixed). Touch
--- screens get three movable buttons (Attack, Roll, Block) placed from the ButtonLayout setting, with
--- an editor opened from Settings > Controls. In first person or Shift-Lock the cursor is free while a
+-- screens get movable buttons (Attack, Roll, Block and the 3 skill slots) placed from the ButtonLayout
+-- setting, with an editor opened from Settings > Controls. Skill uses go to SkillController. In first person or Shift-Lock the cursor is free while a
 -- window is open (Window's Modal backdrop) or while the Free Cursor key is held.
 --   Controls.Attack:Connect(fn(holding))  Controls.Roll:Connect(fn())  Controls.Block:Connect(fn(holding))
 --   Controls.editLayout()  Controls.capture(fn(keyName?))  Controls.keyLabel(keyName)
@@ -12,12 +12,15 @@ local UserInputService = game:GetService("UserInputService")
 
 local SettingsConfig = require(ReplicatedStorage.GameSystem.Config.Settings)
 local Settings = require(script.Parent.SettingsController)
+local SkillController = require(script.Parent.SkillController)
 local State = require(script.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.UI.Notifier)
 local Kit = script.Parent.Parent.UI.Kit
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
+local KeyLabel = require(Kit.KeyLabel)
 local Panel = require(Kit.Panel)
+local SkillSlot = require(Kit.SkillSlot)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 
@@ -34,14 +37,22 @@ local ICONS = { Attack = "Sword", Roll = "Speed", Block = "Defense" }
 -- Layout editor toolbar: left part of the screen so it never covers the buttons being moved.
 local EDITOR = { Width = 560, Height = 120, MaxWidthFraction = 0.56, CenterX = 0.3, Top = 70 }
 -- Fixed gamepad buttons, bound next to the player's keyboard / mouse key.
-local GAMEPAD = { Attack = Enum.KeyCode.ButtonR2, Roll = Enum.KeyCode.ButtonB, Block = Enum.KeyCode.ButtonL2 }
-local MOUSE_LABELS = { MouseButton1 = "Left Click", MouseButton2 = "Right Click", MouseButton3 = "Middle Click" }
-local KEY_LABELS = { LeftControl = "Left Ctrl", RightControl = "Right Ctrl", None = "None" }
+local GAMEPAD = {
+	Attack = Enum.KeyCode.ButtonR2,
+	Roll = Enum.KeyCode.ButtonB,
+	Block = Enum.KeyCode.ButtonL2,
+	Skill1 = Enum.KeyCode.ButtonL1,
+	Skill2 = Enum.KeyCode.ButtonR1,
+	Skill3 = Enum.KeyCode.ButtonY,
+}
+-- "Skill1" -> 1
+local SKILL_SLOT = { Skill1 = 1, Skill2 = 2, Skill3 = 3 }
 
 local root: Frame
 local toolbar: Frame
 local cursorButton: TextButton
 local buttons: { [string]: TextButton } = {}
+local highlights: { [string]: (boolean) -> () } = {} -- layout editor selection look of each button
 local layout: { [string]: any } = SettingsConfig.defaultLayout()
 local editing = false
 local selected: string? = nil
@@ -62,10 +73,8 @@ end
 local function refreshVisibility()
 	root.Visible = UserInputService.TouchEnabled or editing
 	toolbar.Visible = editing
-	for id, button in pairs(buttons) do
-		local stroke = button:FindFirstChild("Ring") :: UIStroke
-		stroke.Color = if editing and id == selected then Theme.Colors.Diamond else Theme.Colors.GoldLight
-		stroke.Thickness = if editing and id == selected then 5 else 3
+	for id, highlight in pairs(highlights) do
+		highlight(editing and id == selected)
 	end
 end
 
@@ -79,22 +88,39 @@ local function fire(id: string, down: boolean)
 		blockEvent:Fire(down)
 	elseif id == "Roll" and down then
 		rollEvent:Fire()
+	elseif SKILL_SLOT[id] and down then
+		task.spawn(SkillController.use, SKILL_SLOT[id])
 	end
 end
 
 local function makeButton(id: string)
-	local button = Instance.new("TextButton")
-	button.Name = id
-	button.Text = ""
-	button.AutoButtonColor = false
-	button.AnchorPoint = Vector2.new(0.5, 0.5)
-	button.BackgroundColor3 = Theme.Colors.WoodTop
-	button.BackgroundTransparency = 0.2
-	Theme.round(button)
-	local ring = Theme.stroke(button, Theme.Colors.GoldLight, 3)
-	ring.Name = "Ring"
-	Icons.create(ICONS[id], button, { Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.44) })
-	Theme.text({ Font = "Button", Text = id, TextSize = 16, Color = Theme.Colors.Gold, Size = UDim2.fromScale(0.8, 0.22), Position = UDim2.fromScale(0.5, 0.8), AnchorPoint = Vector2.new(0.5, 0.5), Parent = button })
+	local button: TextButton
+	if SKILL_SLOT[id] then
+		-- a round skill slot (lock when empty, cooldown sweep) that SkillController keeps up to date
+		local slot = SkillSlot.new({ Name = id, Round = true, AnchorPoint = Vector2.new(0.5, 0.5) })
+		button = slot.Instance
+		SkillController.register(SKILL_SLOT[id], slot, false)
+		highlights[id] = function(on: boolean)
+			slot:SetHighlight(on)
+		end
+	else
+		button = Instance.new("TextButton")
+		button.Name = id
+		button.Text = ""
+		button.AutoButtonColor = false
+		button.AnchorPoint = Vector2.new(0.5, 0.5)
+		button.BackgroundColor3 = Theme.Colors.WoodTop
+		button.BackgroundTransparency = 0.2
+		Theme.round(button)
+		local ring = Theme.stroke(button, Theme.Colors.GoldLight, 3)
+		ring.Name = "Ring"
+		Icons.create(ICONS[id], button, { Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.44) })
+		Theme.text({ Font = "Button", Text = id, TextSize = 16, Color = Theme.Colors.Gold, Size = UDim2.fromScale(0.8, 0.22), Position = UDim2.fromScale(0.5, 0.8), AnchorPoint = Vector2.new(0.5, 0.5), Parent = button })
+		highlights[id] = function(on: boolean)
+			ring.Color = if on then Theme.Colors.Diamond else Theme.Colors.GoldLight
+			ring.Thickness = if on then 5 else 3
+		end
+	end
 
 	local dragInput: InputObject? = nil
 	button.InputBegan:Connect(function(input)
@@ -184,19 +210,7 @@ local function nameOf(input: InputObject): string?
 end
 
 -- "Left Click", "Q" (the letter of the player's keyboard layout), "Left Alt", "None".
-function Controls.keyLabel(name: string): string
-	local fixed = MOUSE_LABELS[name] or KEY_LABELS[name]
-	if fixed then
-		return fixed
-	end
-	local ok, text = pcall(function()
-		return UserInputService:GetStringForKeyCode((Enum.KeyCode :: any)[name])
-	end)
-	if ok and typeof(text) == "string" and #text == 1 and text ~= " " then
-		return string.upper(text)
-	end
-	return (string.gsub(name, "(%l)(%u)", "%1 %2")) -- "LeftAlt" -> "Left Alt"
-end
+Controls.keyLabel = KeyLabel
 
 -- Waits for the next key or mouse button and calls done(name), or done(nil) on Escape / time-out. The
 -- pressed key does not trigger its own action meanwhile.
@@ -269,6 +283,10 @@ local function handler(action: SettingsConfig.KeyAction)
 		elseif id == "FreeCursor" then
 			if began or ended then
 				setCursorFree(began)
+			end
+		elseif SKILL_SLOT[id] then
+			if began and not Window.isOpen() then
+				task.spawn(SkillController.use, SKILL_SLOT[id])
 			end
 		elseif began then
 			press(action)

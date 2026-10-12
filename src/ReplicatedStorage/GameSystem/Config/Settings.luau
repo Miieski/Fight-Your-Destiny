@@ -48,11 +48,15 @@ Settings.Definitions = {
 
 -- Mobile action buttons: position = center of the button as a fraction of the screen,
 -- Size in UI design units (the HUD scale applies on top).
-Settings.BUTTON_IDS = { "Attack", "Roll", "Block" }
+Settings.BUTTON_IDS = { "Attack", "Roll", "Block", "Skill1", "Skill2", "Skill3" }
 Settings.BUTTON_LAYOUT_DEFAULT = {
 	Attack = { X = 0.80, Y = 0.60, Size = 88 },
 	Roll = { X = 0.74, Y = 0.86, Size = 64 },
 	Block = { X = 0.93, Y = 0.48, Size = 64 },
+	-- skills: an arc above-left of Attack, clear of Roblox's jump button (bottom-right)
+	Skill1 = { X = 0.665, Y = 0.66, Size = 60 },
+	Skill2 = { X = 0.69, Y = 0.43, Size = 60 },
+	Skill3 = { X = 0.80, Y = 0.31, Size = 60 },
 }
 Settings.BUTTON_SIZE = { Min = 56, Max = 140, Step = 8 }
 Settings.BUTTON_POSITION_MARGIN = 0.03 -- keep button centers this far from the screen edges
@@ -62,20 +66,23 @@ Settings.SAVE_DEBOUNCE_SECONDS = 0.5 -- client waits this long after the last ch
 -- ("MouseButton1/2/3", only for actions with Mouse = true) or "None". Gamepad buttons stay fixed
 -- (ControlsController). Window = the window the key opens and closes.
 export type KeyAction = { Id: string, Label: string, Group: string, Default: string, Mouse: boolean?, Window: string? }
-Settings.KEY_GROUPS = { "Combat", "Camera", "Menus" }
+Settings.KEY_GROUPS = { "Combat", "Skills", "Camera", "Menus" }
 Settings.KEY_ACTIONS = {
 	{ Id = "Attack", Label = "Attack", Group = "Combat", Default = "MouseButton1", Mouse = true },
 	{ Id = "Block", Label = "Block (hold)", Group = "Combat", Default = "MouseButton2", Mouse = true },
 	{ Id = "Roll", Label = "Roll", Group = "Combat", Default = "Q", Mouse = true },
 	{ Id = "AutoAttack", Label = "Auto-Attack on / off", Group = "Combat", Default = "R" },
+	{ Id = "Skill1", Label = "Skill 1", Group = "Skills", Default = "Z" },
+	{ Id = "Skill2", Label = "Skill 2", Group = "Skills", Default = "X" },
+	{ Id = "Skill3", Label = "Skill 3", Group = "Skills", Default = "C" },
 	{ Id = "FirstPerson", Label = "First Person on / off", Group = "Camera", Default = "V" },
 	{ Id = "FreeCursor", Label = "Free the cursor (hold)", Group = "Camera", Default = "LeftAlt" },
 	{ Id = "Inventory", Label = "Inventory", Group = "Menus", Default = "B", Window = "Inventory" },
-	{ Id = "Stats", Label = "Stats", Group = "Menus", Default = "C", Window = "Stats" },
+	{ Id = "Stats", Label = "Stats", Group = "Menus", Default = "U", Window = "Stats" },
 	{ Id = "Shop", Label = "Shop", Group = "Menus", Default = "G", Window = "Shop" },
 	{ Id = "RebirthShop", Label = "Rebirth Shop", Group = "Menus", Default = "Y", Window = "RebirthShop" },
 	{ Id = "Pets", Label = "Pets", Group = "Menus", Default = "P", Window = "Pets" },
-	{ Id = "Index", Label = "Index", Group = "Menus", Default = "X", Window = "Index" },
+	{ Id = "Index", Label = "Index", Group = "Menus", Default = "N", Window = "Index" },
 	{ Id = "Quests", Label = "Quests", Group = "Menus", Default = "J", Window = "Quests" },
 	{ Id = "Team", Label = "Team", Group = "Menus", Default = "T", Window = "Team" },
 	{ Id = "Zones", Label = "Zones", Group = "Menus", Default = "M", Window = "Zones" },

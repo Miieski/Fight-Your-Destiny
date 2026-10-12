@@ -24,7 +24,7 @@ local ROW_HEIGHT = 66
 local LABEL_WIDTH = 0.44
 local HEADER_HEIGHT = 40
 local KEY_BUTTON_WIDTH = 0.6 -- of the control area
-local KEYS_HELP = "Click a key, then press the new key or mouse button (Escape cancels). Gamepad: RT attack, LT block, B roll."
+local KEYS_HELP = "Click a key, then press the new key or mouse button (Escape cancels). Gamepad: RT attack, LT block, B roll, LB / RB / Y skills."
 local KEYS_NO_KEYBOARD = "Key bindings are for a keyboard and mouse. On a touch screen, move the buttons in Controls > Mobile Buttons."
 
 local function formatValue(definition: any, value: number): string

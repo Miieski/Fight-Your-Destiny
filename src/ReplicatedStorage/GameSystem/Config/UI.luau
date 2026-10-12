@@ -67,7 +67,7 @@ UI.Hud = {
 	PopScale = 1.15,
 	FloatSeconds = 0.9,
 	TitleCardSeconds = 2,
-	PetSlots = 3,
+	SkillSlot = 60, -- HUD skill slots next to the weapon slot (PC); touch buttons use Settings BUTTON_LAYOUT_DEFAULT
 }
 
 -- Gold and Diamonds bars (top-right, stacked in Order). Sizes in design units: Icon is the round

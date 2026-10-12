@@ -715,6 +715,19 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 11:52 PHASE 2 DONE - HUD: the 3 pet slots are replaced by 3 SKILL slots (framework only). New: `Config/Skills`
+  (empty list + schema in comments: Id, Name, Icon, Cooldown, Category, Animation, VFX, SFX, Cost, Element),
+  `SkillService` (Net "UseSkill": slot 1-3 checked, answers "not available"; tested: 1 / 3 -> not available, 4 / 0 /
+  1.5 / "x" -> invalid slot), profile `EquippedSkills = {}`, `UI/Kit/SkillSlot` (wood/gold slot or round touch
+  button, 3D lock when empty, key label, clockwise cooldown sweep with seconds, shake, rarity / element frame),
+  `Controllers/SkillController` (views per slot, use -> server, "Skills are coming soon" toast for an empty slot,
+  key labels follow Settings > Keys and switch to LB / RB / Y on a gamepad), `UI/Kit/KeyLabel` (key names, shared
+  with ControlsController). Keys: new actions Skill 1-3 = Z / X / C (Settings > Keys, group Skills); to keep the
+  defaults free, Stats moved C -> U and Index X -> N. Gamepad LB / RB / Y. Touch: the 3 skills are movable buttons
+  around Attack (Settings BUTTON_IDS + layout defaults; layout editor highlight per button), and on touch screens
+  the bottom row shows the weapon only. Screenshots `docs/screenshots/weapons_v2/P2_1-4` (desktop, phone, tablet,
+  cooldown sweep test). Output clean.
+
 - 11:45 PHASE 1 DONE - Whip & Chain removed (7 categories, 84 weapons). Backups first: Studio
   `BackUP_Files/FightYourDestiny_2026-10-12_113254_before_weapons_v2_*`, old weapon files (all .blend / .fbx / icons /
   previews / builders, incl. the 12 Whips) in `BackUP_Files/old_weapon_models_2026-10-12/` (git-ignored).
@@ -738,6 +751,10 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Decisions taken without the owner
 
+- Skill keys Z / X / C were already the Index (X) and Stats (C) hotkeys of the editable keys: those two moved to
+  N and U. A saved profile that still has the old Stats = C / Index = X gets "None" for them (the skill keys win,
+  they come first in the list); the player can rebind them in Settings > Keys.
+- On touch screens the skill slots are only the touch buttons around Attack (no duplicate row at the bottom).
 - The weapon icons were rendered from the current (v1) Blender models, and in Studio the 96 Tools are still the
   simple placeholders (the FBX files were never imported). So "new models from the icons" = rebuild each weapon
   with more detail (new budget 800-4,000 tris) while keeping its icon's silhouette, proportions and colors as the

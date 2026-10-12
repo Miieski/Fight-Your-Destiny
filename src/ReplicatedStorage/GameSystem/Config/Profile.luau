@@ -41,6 +41,7 @@ function Profile.new(): { [string]: any }
 		Eggs = {},
 		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, premium = false }
 		EquippedPets = {}, -- array of uids
+		EquippedSkills = {}, -- [slot 1..3] = skill id (Config/Skills); empty until the skills exist
 		Trophies = {},
 		Index = {},
 		IndexClaimed = {},

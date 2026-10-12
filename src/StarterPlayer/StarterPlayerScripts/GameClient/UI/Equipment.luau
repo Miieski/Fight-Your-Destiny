@@ -1,17 +1,20 @@
 --!strict
 -- HUD 4 + 5: the equipped weapon (icon, name and border in its rarity color; tap = Inventory >
--- Weapons; empty = "No weapon" + hint) and the pet slots (live 3D pet icon; empty = "+", tap = Pets window).
--- Bottom-center, clear of the joystick (left) and the action buttons (right).
+-- Weapons; empty = "No weapon" + hint) and the 3 skill slots (Kit/SkillSlot with the key label; tap = use;
+-- kept up to date by SkillController). On touch screens the skill slots are touch buttons next to Attack
+-- (ControlsController), so this row shows the weapon only. Pets are equipped from the Pets window and the
+-- Equipment screen. Bottom-center, clear of the joystick (left) and the action buttons (right).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local State = require(script.Parent.Parent.State)
+local SkillController = require(script.Parent.Parent.Controllers.SkillController)
 local Kit = script.Parent.Kit
 local Icons = require(Kit.Icons)
-local ModelIcon = require(Kit.ModelIcon)
 local Screens = require(Kit.Screens)
+local SkillSlot = require(Kit.SkillSlot)
 local Slot = require(Kit.Slot)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
@@ -19,13 +22,12 @@ local Window = require(Kit.Window)
 local Equipment = { Priority = 10 }
 
 local WEAPON_SLOT = 76
-local PET_SLOT = 60
+local SKILL_SLOT = UIConfig.Hud.SkillSlot
 local GAP = 8
 local NAME_HEIGHT = 28
 
 local nameLabel: TextLabel
 local weaponSlot: any
-local petSlots: { any } = {}
 
 local function refreshWeapon()
 	local weapons = State.get("Weapons") or {}
@@ -51,31 +53,14 @@ local function refreshWeapon()
 	end
 end
 
-local function refreshPets()
-	local pets = State.get("Pets") or {}
-	local equipped = State.get("EquippedPets") or {}
-	for index, slot in ipairs(petSlots) do
-		local pet = pets[equipped[index] or ""]
-		if pet then
-			slot:Set({ Icon = "Pet", Tier = Rarities.get(pet.rarity).Tier })
-			-- the pet's live 3D icon replaces the generic paw (Slot destroys it on the next Set / Clear)
-			if slot._icon then
-				slot._icon:Destroy()
-			end
-			slot._icon = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = slot.Box.ZIndex + 1, Parent = slot.Box })
-		else
-			slot:Clear("Plus")
-		end
-	end
-end
-
 function Equipment:Start()
 	local container = Instance.new("Frame")
 	container.Name = "Equipment"
 	container.BackgroundTransparency = 1
 	container.AnchorPoint = Vector2.new(0.5, 1)
 	container.Position = UDim2.new(0.5, 0, 1, -10)
-	local width = WEAPON_SLOT + UIConfig.Hud.PetSlots * (PET_SLOT + GAP) + 4
+	local skillCount = if Theme.isTouch() then 0 else Skills.SLOT_COUNT
+	local width = WEAPON_SLOT + skillCount * (SKILL_SLOT + GAP) + 4
 	container.Size = UDim2.fromOffset(width, WEAPON_SLOT + NAME_HEIGHT + 4)
 	container.Parent = Screens.hud()
 
@@ -99,17 +84,15 @@ function Equipment:Start()
 	weaponSlot = Slot.new({ Name = "Weapon", Size = WEAPON_SLOT, LayoutOrder = 0, Parent = row, OnClick = function()
 		Window.open("Inventory", "Weapons")
 	end })
-	for index = 1, UIConfig.Hud.PetSlots do
-		petSlots[index] = Slot.new({ Name = "Pet" .. index, Size = PET_SLOT, LayoutOrder = index, Parent = row, OnClick = function()
-			Window.open("Pets")
+	for index = 1, skillCount do
+		local slot = SkillSlot.new({ Name = "Skill" .. index, Size = SKILL_SLOT, LayoutOrder = index, Parent = row, OnActivate = function()
+			task.spawn(SkillController.use, index)
 		end })
+		SkillController.register(index, slot, true)
 	end
 	refreshWeapon()
-	refreshPets()
 	State.changed("Weapons", refreshWeapon)
 	State.changed("EquippedWeapon", refreshWeapon)
-	State.changed("Pets", refreshPets)
-	State.changed("EquippedPets", refreshPets)
 end
 
 return Equipment
