@@ -1,5 +1,7 @@
 # Pets V2 - plan (owner 2026-10-12: "draw inspiration from Steal an Egg - pets, textures, animations")
 
+**Status 2026-10-13 00:18: DONE** - 76 pets + 12 eggs generated, rigged and animated (see NIGHT_LOG "Pets V2").
+
 Owner's picks: redo all pet models, pet animations, mutations & sizes, new species list.
 Reference: the Roblox game **Steal an Egg** (July 2026): animal + fantasy pets per biome (Forest, Lake, Desert,
 Jungle, Snow, Volcano, Abyss Ocean, Prehistoric, Cosmic...), smooth cartoon look, mutations (Silver, Golden,

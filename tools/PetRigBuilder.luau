@@ -44,7 +44,8 @@ PetRigBuilder.KINDS = {
 	Frog = { Parts = "head, body, legs", Size = Vector3.new(2, 1.8, 2.2), Pose = "sitting on its folded legs" },
 }
 
--- [petId] = { kind, gait, description }  (gait: Walk | Hop | Fly | Swim | Float | Slither, Util/PetMotion)
+-- [petId] = { kind, gait, description, yaw? }  (gait: Walk | Hop | Fly | Swim | Float | Slither, Util/PetMotion;
+-- yaw = degrees to turn a model the generator made facing sideways, checked on the lineup)
 PetRigBuilder.SPECS = {
 	plains_pet1 = { "Quad", "Walk", "baby puppy dog, golden tan fur, white chest and white muzzle, floppy ears, small tail" },
 	plains_pet2 = { "Quad", "Walk", "baby fox, bright orange fur, white chest, white muzzle and white fluffy tail tip, black paws" },
@@ -104,13 +105,13 @@ PetRigBuilder.SPECS = {
 	abyss_pet2 = { "Fish", "Swim", "baby swordfish, blue back, silver belly, long pointy sword nose" },
 	abyss_pet3 = { "Fish", "Swim", "baby pufferfish, round yellow body with small spikes, white belly" },
 	abyss_pet4 = { "Fish", "Swim", "baby shark, grey blue skin, white belly, smiling with small teeth" },
-	abyss_pet5 = { "Fish", "Swim", "baby orca killer whale, black and white skin, white eye patch" },
+	abyss_pet5 = { "Fish", "Swim", "baby orca killer whale, black and white skin, white eye patch", 75 },
 	abyss_pet6 = { "Jelly", "Float", "baby kraken octopus, purple skin with pink spots, round head, eight curly tentacles" },
 	mechanical_pet1 = { "Quad", "Walk", "robot puppy, silver metal body, glowing cyan eyes, antenna ears, small tail" },
 	mechanical_pet2 = { "Spider", "Walk", "clockwork spider, brass bronze body with gears, eight thin metal legs, glowing eyes" },
 	mechanical_pet3 = { "Biped", "Walk", "little steam golem robot, copper and iron plates, small chimney on its back, glowing eyes" },
 	mechanical_pet4 = { "BipedTail", "Walk", "robot t-rex dinosaur, grey metal plates, red glowing eyes, tiny arms" },
-	mechanical_pet5 = { "Drone", "Fly", "little flying drone robot, round silver body, one big glowing cyan eye, two propellers" },
+	mechanical_pet5 = { "Drone", "Fly", "little flying drone robot, round silver body, one big glowing cyan eye, two propellers", 50 },
 	mechanical_pet6 = { "Quad", "Walk", "robot cat, gold brass metal body with gears, glowing green eyes" },
 	void_pet1 = { "Quad", "Walk", "baby cat with galaxy fur, dark purple and blue with pink stars, glowing paws" },
 	void_pet2 = { "Quad", "Walk", "baby shadow panther, black purple fur, glowing violet eyes, spikes along the back" },
@@ -267,10 +268,6 @@ end
 -- like the teddy bear cubs). Then the front legs become arms and the back legs become legs (two-legged rig).
 -- Returns true when it remapped the roles.
 local function uprightRemap(source: Model, pieces: { Piece }): boolean
-	local fl, fr, bl, br = findRole(pieces, "LegFL"), findRole(pieces, "LegFR"), findRole(pieces, "LegBL"), findRole(pieces, "LegBR")
-	if not (fl and fr and bl and br) then
-		return false
-	end
 	local frame = CFrame.new((source:GetBoundingBox()).Position) * source:GetPivot().Rotation
 	local function bottom(part: BasePart): number
 		local lo = boxIn(frame, part)
@@ -281,15 +278,27 @@ local function uprightRemap(source: Model, pieces: { Piece }): boolean
 		minY = math.min(minY, bottom(p.part))
 	end
 	local _, size = source:GetBoundingBox()
-	local frontUp = bottom(fl) > minY + 0.12 * size.Y and bottom(fr) > minY + 0.12 * size.Y
-	local backDown = bottom(bl) < minY + 0.08 * size.Y and bottom(br) < minY + 0.08 * size.Y
-	if not (frontUp and backDown) then
+	local function up(part: BasePart?): boolean
+		return part ~= nil and bottom(part) > minY + 0.12 * size.Y
+	end
+	local function down(part: BasePart?): boolean
+		return part ~= nil and bottom(part) < minY + 0.08 * size.Y
+	end
+	local fl, fr, bl, br = findRole(pieces, "LegFL"), findRole(pieces, "LegFR"), findRole(pieces, "LegBL"), findRole(pieces, "LegBR")
+	local map: { [string]: string }? = nil
+	if fl and fr and bl and br and up(fl) and up(fr) and down(bl) and down(br) then
+		map = { LegFL = "ArmL", LegFR = "ArmR", LegBL = "LegL", LegBR = "LegR" }
+	elseif up(findRole(pieces, "LegsF")) and down(findRole(pieces, "LegsB")) then
+		-- winged pets with paired legs (dragons, griffin): the front paws ride on the body
+		map = { LegsF = "" }
+	end
+	if not map then
 		return false
 	end
-	local map = { LegFL = "ArmL", LegFR = "ArmR", LegBL = "LegL", LegBR = "LegR" }
 	for _, p in ipairs(pieces) do
-		if p.role and map[p.role] then
-			p.role = map[p.role]
+		local to = p.role and map[p.role]
+		if to then
+			p.role = if to == "" then nil else to
 		end
 	end
 	return true
@@ -378,6 +387,9 @@ function PetRigBuilder.build(source: Model, petId: string): Model
 	assert(#pieces > 0, `{source.Name}: no MeshPart`)
 	local upright = uprightRemap(source, pieces)
 	local frame = facingFrame(source, pieces)
+	if spec[4] then
+		frame = frame * CFrame.Angles(0, math.rad(spec[4]), 0)
+	end
 
 	-- bounds in that frame -> Root at the bottom center, scale to the wanted height
 	local lo = Vector3.new(math.huge, math.huge, math.huge)
@@ -624,6 +636,100 @@ function PetRigBuilder.clearLineup()
 	if old then
 		old:Destroy()
 	end
+end
+
+-- Zone eggs (Pets V2): one AI mesh per zone (segmentation none), same convention as the procedural eggs of
+-- DevTools/PetModels - Root at the bottom, the rarity Ring kept from the old egg, 1.3 studs tall.
+PetRigBuilder.EGG_STYLE = "pet egg for a Roblox simulator game, smooth glossy stylized toy look, hand-painted texture"
+PetRigBuilder.EGGS = {
+	Plains = "green and cream egg with a leaf and flower pattern",
+	Desert = "sandy gold egg with blue hieroglyph stripes",
+	Jungle = "jungle green egg with leafy vines and yellow spots",
+	Tundra = "icy blue and white egg with a snowflake pattern",
+	Swamp = "murky green egg with lily pads and mud spots",
+	Volcano = "dark rock egg with glowing orange lava cracks",
+	Hell = "crimson red egg with black flame patterns",
+	Heaven = "white egg with a golden feather pattern",
+	Dead = "pale grey egg with green ghost swirls",
+	Abyss = "deep blue egg with coral and bubble patterns",
+	Mechanical = "silver metal egg with brass gears and rivets",
+	Void = "dark purple egg with glowing stars and galaxy swirls",
+}
+
+function PetRigBuilder.eggPrompt(zoneId: string): string
+	local theme = PetRigBuilder.EGGS[zoneId]
+	assert(theme, `no egg for {zoneId}`)
+	return `{theme}, {PetRigBuilder.EGG_STYLE}`
+end
+
+function PetRigBuilder.installEgg(source: Model, zoneId: string): string
+	local eggs = folder(folder(ReplicatedStorage, "Assets"), "Eggs")
+	local name = string.lower(zoneId)
+	local old = eggs:FindFirstChild(name)
+	local mesh = source:FindFirstChildWhichIsA("MeshPart", true)
+	assert(mesh, `{source.Name}: no MeshPart`)
+	local model = Instance.new("Model")
+	model.Name = name
+	local root = Instance.new("Part")
+	root.Name = "Root"
+	root.Size = Vector3.new(0.2, 0.2, 0.2)
+	root.CFrame = CFrame.new(0, 0.1, 0)
+	root.Transparency = 1
+	root.Anchored = true
+	root.CanCollide = false
+	root.CanQuery = false
+	root.CanTouch = false
+	root.Parent = model
+	model.PrimaryPart = root
+	local ring = old and old:FindFirstChild("Ring")
+	if ring then
+		ring:Clone().Parent = model
+	end
+	local shell = mesh:Clone()
+	shell:ClearAllChildren()
+	for attr in pairs(shell:GetAttributes()) do
+		shell:SetAttribute(attr, nil)
+	end
+	shell.Name = "Egg"
+	local s = 1.3 / math.max(mesh.Size.Y, 0.01)
+	shell.Size = mesh.Size * s
+	shell.CFrame = CFrame.new(0, 0.06 + shell.Size.Y / 2, 0) * mesh.CFrame.Rotation
+	shell.Anchored = true
+	shell.CanCollide = false
+	shell.CanQuery = false
+	shell.CanTouch = false
+	shell.Parent = model
+	model:SetAttribute("Height", math.round((0.06 + shell.Size.Y) * 100) / 100)
+	model:SetAttribute("PetV2", true)
+	if old then
+		old:Destroy()
+	end
+	model.Parent = eggs
+	local sources = folder(ServerStorage, "EggSources")
+	local oldSource = sources:FindFirstChild(name)
+	if oldSource and oldSource ~= source then
+		oldSource:Destroy()
+	end
+	source.Name = name
+	source.Parent = sources
+	return `egg {name}: {math.round(shell.Size.Y * 100) / 100} studs`
+end
+
+-- Installs every generated egg lying in Workspace (matched on the egg theme text).
+function PetRigBuilder.installGeneratedEggs(): string
+	local lines = {}
+	for _, item in ipairs(workspace:GetChildren()) do
+		if item:IsA("Model") and item:GetAttribute("RBX_AI_GENERATED") then
+			for zoneId, theme in pairs(PetRigBuilder.EGGS) do
+				local n = math.min(#theme, #item.Name, 60)
+				if n >= 20 and string.sub(item.Name, 1, n) == string.sub(theme, 1, n) then
+					table.insert(lines, PetRigBuilder.installEgg(item, zoneId))
+					break
+				end
+			end
+		end
+	end
+	return table.concat(lines, "\n")
 end
 
 function PetRigBuilder.missing(): { string }

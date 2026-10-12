@@ -1202,7 +1202,23 @@ the Roblox game Steal an Egg (July 2026): inspiration only, every model is gener
 
 ## Status (newest first)
 
-- 00:10 40 / 76 MODELS (zones 1-4 and 6 complete, Hell 5/6). Backup `..._petsv2_40_models_*`. Lineups
+- 00:18 PETS V2 DONE: 76 / 76 pet models + 12 eggs. Backup `..._after_pets_v2_*` (6 files). Studio = disk.
+  * Lineups of every zone + premium + eggs in `docs/screenshots/pets_v2/` (`lineup_01_plains.jpg` ... `lineup_12_void.jpg`,
+    `lineup_premium.jpg`, `eggs_12_zones.jpg`): all face the camera, textured, cute toy style.
+  * ~105 generations for 88 models (rejected by the check: 16, failed upload / moderation / overload: ~12). Fixes on
+    the way: upright four-legged toys rigged as two-legged walkers, paired legs (dragons) too; per-pet yaw for 2
+    models the generator made facing sideways (Mini Drone 50 deg, Baby Orca 75 deg - SPECS 4th field); frog kind.
+  * Eggs: `PetRigBuilder.installEgg` / `installGeneratedEggs` (one mesh per zone, old rarity ring kept,
+    ServerStorage.EggSources). Used by the hatch screen, Pets > Eggs, premium eggs, Diamond shop.
+  * Play tests: Owl (fly), Golden Sand Snake (slither), Rainbow Baby Kraken (float) following; happy jump on a kill
+    (body +1 stud); Bear Cub (two legs, legs +-29 deg walking), Huge Frog (hop, bigger), Celestial Clownfish
+    (swim, glow + stars); hatch screen with the Void egg -> Golden Baby Void Dragon (+48% = 32% x 1.5). Output clean.
+  * Cleaned: ServerStorage._PetRejects (16 rejected generations) and _PetTests removed; _PetSpares keeps 1 spare
+    Bear Cub. The models live in the place: ReplicatedStorage.Assets.Pets (76 rigs), Assets.Eggs (12),
+    ServerStorage.PetSources (76 raw) / EggSources (12) - THE OWNER MUST SAVE THE PLACE.
+  * Could be redone later (owner's call): Baby Mammoth (boxy; one retry was rejected), Baby Cerberus (side heads
+    stretched). `PetRigBuilder.prompt(id)` gives the prompt; generate, then `installGenerated()`.
+- 23:52 40 / 76 MODELS (zones 1-4 and 6 complete, Hell 5/6). Backup `..._petsv2_40_models_*`. Lineups
   `lineup_03_jungle.jpg`, `lineup_04_tundra.jpg`, `lineup_06_volcano.jpg`. Learned: 12 generations at once all fail
   ("Unable to generate Model") and asset publishing has a rate limit ("Too Many Requests"): batches of 6. The
   generator likes to stand four-legged animals up like toys (crocodile, axolotl, snow hare, lava gecko): the rig

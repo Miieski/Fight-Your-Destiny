@@ -306,7 +306,7 @@ redone after a Rebirth has its sub-zone prices reset.
     Premium pets never mutate. Shown on the hatch reveal, pet cards, details and the Index (best mutation).
   * Models: cartoon meshes from Studio's AI generator, rigged by `DevTools/PetRigBuilder` (pieces + joints),
     animated in code by `Util/PetMotion` (walk cycle, wings, swim, float, idle, happy jump on kills); mutation
-    looks by `Util/PetLook` (see-through metal / gold / rainbow / glowing shells).
+    looks by `Util/PetLook` (see-through metal / gold / rainbow / glowing shells). 12 zone eggs in the same style.
 * A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)
