@@ -715,6 +715,26 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 15:52 PHASE 4 - INTEGRATION patch 4 (main agent): Net "Projectile" carries the shooter Player (nil for enemy
+  shots); VFX.shot ctx `Shooter`, Shot sound ctx `Shooter` / `Own` (VFX request 1: exact look and muzzle instead of
+  matching by position; lets the SFX skip the shooter's own projectile sound). Play: a bow shot arrives with
+  style=Nature shooter=<the player>, Output clean. Not done (VFX optional request 2): firing the Magic "Burst" at the
+  release instead of the cast start - the VFX cast->burst link already holds the area until the release.
+
+- 15:49 PHASE 4 - VFX ROUND 2 done by the VFX sub-agent (15:15-15:48, backups `..._vfx_r2_before_*` /
+  `..._vfx_r2_after_*`), reviewed and committed (4897419). Spear pierce streak + thrust lines + rings (finisher second
+  ring), Heavy smash arc + ground cracks / chunks in the ground's colour at the ImpactAttachment + slam ring on the
+  server "Slam" burst, Dagger alternating arcs / stab streaks / DoubleSlash two arcs 0.12 s apart / crit X, Gauntlet
+  punch rings + lines (Uppercut stacked rings), Ranged muzzle flash + shot ring at the release 0.05 s + arrow / bolt /
+  bullet by WeaponId + arrival spark, Magic cast circle + charge orb at the call, bolt at 0.30 s, area ring at 0.36 s.
+  Swing config = a list of effects per step; trail lifetimes per category (Spear 0.16, Heavy 0.3, Dagger 0.12,
+  Gauntlet 0.1); trail widths match the V2 Base -> Tip lengths. Low FX: Heavy slam 16 -> 8 particles, 6 -> 3 chunks.
+  Phone emulator 6-7 boars: Dagger 0.037 ms avg / 0.34 worst (12 effects), Heavy 0.021 / 0.57 (17), Magic 0.055 /
+  0.42 (21); PC worst 0.59 ms; workspace.VFX empty after idle; Output clean. Screenshots (frozen, default camera):
+  `docs/screenshots/weapons_v2/combat_<category>_<step>.jpg` (+ side views, phone slam). Not seen in Play: crossbow /
+  gun projectile looks (the fake equip only gives the Plains bow). New VFX dev-hook commands: `shot[:style]`,
+  `burst:<style>`, `impact:<kind>:<category>`.
+
 - 15:13 PHASE 4 - INTEGRATION patch 3 (main agent): aim pitch wired (Animation request) - local
   `Animations.attack(..., aim)` toward the aimed point, Net "Swing" carries a 3D `aim` computed by the server from the
   client's aim point (validated finite, 0.5-500 studs, else the flat direction) for other players; Equip sound ctx

@@ -75,7 +75,7 @@ Roll: `Animations.cancel`, `Animations.roll`, `VFX.roll`, `Sfx.combat("Roll")`. 
 `Animations.block(true)`, `VFX.block`, `Sfx.combat("Block")`; off: `Animations.block(false)`, `VFX.block`.
 Hit taken while blocking: `Animations.blockHit`, `VFX.blockHit`, `Sfx.combat("BlockHit")`; otherwise
 `Animations.hurt`, `Sfx.combat("Hurt")`. Ranged / Magic / enemy shots: Net "Projectile" -> `VFX.shot` +
-`Sfx.combat("Shot", { Position = origin, Style, Speed, Distance, Enemy })` (the shooter's own release / fire sound is its
+`Sfx.combat("Shot", { Position = origin, Style, Speed, Distance, Enemy, Shooter, Own })` (VFX.shot ctx also gets `Shooter`: the Player, nil for enemies) (the shooter's own release / fire sound is its
 Swing: Shot is the projectile itself); Magic area and Heavy slam: Net "Burst" -> `VFX.burst` +
 `Sfx.combat("Burst", { Position, Radius, Style })`. Every player's character: a weapon Tool appearing ->
 `Sfx.combat("Equip", { Category, Rarity, IsLocal, Position })`, Humanoid.Died -> `Sfx.combat("Death", { IsLocal, Position })`.

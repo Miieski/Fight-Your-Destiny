@@ -620,10 +620,19 @@ function CombatController:Start()
 	Net.on("Hit", onHit)
 	Net.on("Swing", onSwing)
 	Net.on("Impact", onImpact)
-	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string)
-		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style })
+	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string, shooter: Player?)
+		local from = if typeof(shooter) == "Instance" and shooter:IsA("Player") then shooter else nil
+		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style, Shooter = from })
 		-- the shooter's own release / fire sound is the Swing; Shot is the projectile itself (enemy shots included)
-		Sfx.combat("Shot", { Position = origin, Style = style, Speed = speed, Distance = distance, Enemy = style == "Enemy" })
+		Sfx.combat("Shot", {
+			Position = origin,
+			Style = style,
+			Speed = speed,
+			Distance = distance,
+			Enemy = style == "Enemy",
+			Shooter = from,
+			Own = from == player,
+		})
 	end)
 	Net.on("Burst", function(position: Vector3, radius: number, style: string)
 		VFX.burst({ Position = position, Radius = radius, Style = style })

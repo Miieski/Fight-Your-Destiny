@@ -309,7 +309,7 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 		local muzzle = origin + Vector3.new(0, 1.2, 0) + dir * 1.5
 		local target, distance = firstOnRay(muzzle, dir, shape.Range)
 		for _, viewer in ipairs(visualTo(origin)) do
-			Net.fire(viewer, "Projectile", muzzle, dir, shape.Speed, distance, if weapon then weapon.Element else "Physical")
+			Net.fire(viewer, "Projectile", muzzle, dir, shape.Speed, distance, if weapon then weapon.Element else "Physical", player)
 		end
 		if target then
 			task.delay(impact + distance / shape.Speed, function()
