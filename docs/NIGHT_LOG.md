@@ -1202,6 +1202,14 @@ the Roblox game Steal an Egg (July 2026): inspiration only, every model is gener
 
 ## Status (newest first)
 
+- 00:10 40 / 76 MODELS (zones 1-4 and 6 complete, Hell 5/6). Backup `..._petsv2_40_models_*`. Lineups
+  `lineup_03_jungle.jpg`, `lineup_04_tundra.jpg`, `lineup_06_volcano.jpg`. Learned: 12 generations at once all fail
+  ("Unable to generate Model") and asset publishing has a rate limit ("Too Many Requests"): batches of 6. The
+  generator likes to stand four-legged animals up like toys (crocodile, axolotl, snow hare, lava gecko): the rig
+  builder now recognises it (front paws off the ground, back feet on it) and rigs them as two-legged walkers
+  (front legs = arms, attribute Upright) instead of rejecting them; `PetRigBuilder.retryRejects()` re-checks old
+  rejects. Frogs: 3 failed splits -> kind "Frog" (head, body, one legs piece). Baby Mammoth came out boxy: to
+  regenerate at the end if there is time.
 - 23:31 ZONES 1-2 MODELS DONE (12/12). Backup `..._petsv2_zones1-2_*`. Lineups `docs/screenshots/pets_v2/lineup_01_plains.jpg`,
   `lineup_02_desert.jpg`. Pipeline: generate_mesh (async, up to 12 at once, ~3-5 min) -> `PetRigBuilder.installGenerated()`,
   which now runs `PetRigBuilder.check()` first (all asked pieces present, left / right mirrored, legs under the body,

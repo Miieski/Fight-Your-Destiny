@@ -40,6 +40,8 @@ PetRigBuilder.KINDS = {
 	Jelly = { Parts = "body, tentacles", Size = Vector3.new(2, 2.4, 2), Pose = "floating, tentacles hanging below" },
 	Drone = { Parts = "body, left propeller, right propeller", Size = Vector3.new(2.4, 1.6, 2), Pose = "hovering" },
 	Cerberus = { Parts = "body, middle head, left head, right head, tail, front legs, back legs", Size = Vector3.new(2.6, 2.4, 2.8), Pose = "standing on four short legs" },
+	-- frogs: their splayed legs were split wrong 3 times; one "legs" piece riding on the body (the frog hops whole)
+	Frog = { Parts = "head, body, legs", Size = Vector3.new(2, 1.8, 2.2), Pose = "sitting on its folded legs" },
 }
 
 -- [petId] = { kind, gait, description }  (gait: Walk | Hop | Fly | Swim | Float | Slither, Util/PetMotion)
@@ -59,7 +61,7 @@ PetRigBuilder.SPECS = {
 	jungle_pet1 = { "BipedTail", "Walk", "baby monkey, brown fur, peach face and belly, big ears, long curly tail" },
 	jungle_pet2 = { "Quad", "Walk", "baby tiger cub, orange fur with black stripes, white belly and muzzle, striped tail" },
 	jungle_pet3 = { "Biped", "Walk", "baby gorilla, dark grey black fur, grey face and chest, long strong arms" },
-	jungle_pet4 = { "Quad", "Walk", "baby crocodile, green scaly skin, light yellow belly, long nose with little round teeth, ridged tail" },
+	jungle_pet4 = { "Quad", "Walk", "baby crocodile, long low body, green scaly skin, light yellow belly, long nose with little round teeth, ridged tail" },
 	jungle_pet5 = { "Bird", "Fly", "baby toucan, black feathers, white chest, huge bright orange and yellow beak" },
 	jungle_pet6 = { "Quad", "Walk", "baby chameleon, bright green skin with yellow and teal stripes, curled tail, big round eyes" },
 	tundra_pet1 = { "Biped", "Walk", "baby penguin, black back, white belly, small orange beak, orange feet, little flipper arms" },
@@ -69,7 +71,7 @@ PetRigBuilder.SPECS = {
 	tundra_pet5 = { "Quad", "Hop", "baby snow hare bunny, white fluffy fur, long ears with pink inside, pink nose, puffy tail" },
 	tundra_pet6 = { "Biped", "Walk", "baby yeti, white shaggy fur, light blue face and hands, two small horns" },
 	swamp_pet1 = { "Bird", "Walk", "baby duckling, fluffy yellow feathers, orange beak and orange feet" },
-	swamp_pet2 = { "QuadNoTail", "Hop", "baby frog, bright green skin, yellow belly, big round eyes on top of the head, wide smile" },
+	swamp_pet2 = { "Frog", "Hop", "baby frog, bright green skin, yellow belly, big round eyes on top of the head, wide smile" },
 	swamp_pet3 = { "Quad", "Walk", "baby turtle, green skin, brown hexagon patterned shell, stubby legs" },
 	swamp_pet4 = { "Fish", "Swim", "baby catfish, grey green skin, long whiskers, wide mouth, pale belly" },
 	swamp_pet5 = { "Flyer", "Fly", "baby firefly bug, dark body, glowing yellow green light on its tail, clear wings, little antennae" },
@@ -261,6 +263,38 @@ local function facingFrame(source: Model, pieces: { Piece }): CFrame
 	return if votes > 0 then frame * CFrame.Angles(0, math.pi, 0) else frame
 end
 
+-- Upright creatures: the generator often stands a four-legged animal up like a toy (front paws off the ground,
+-- like the teddy bear cubs). Then the front legs become arms and the back legs become legs (two-legged rig).
+-- Returns true when it remapped the roles.
+local function uprightRemap(source: Model, pieces: { Piece }): boolean
+	local fl, fr, bl, br = findRole(pieces, "LegFL"), findRole(pieces, "LegFR"), findRole(pieces, "LegBL"), findRole(pieces, "LegBR")
+	if not (fl and fr and bl and br) then
+		return false
+	end
+	local frame = CFrame.new((source:GetBoundingBox()).Position) * source:GetPivot().Rotation
+	local function bottom(part: BasePart): number
+		local lo = boxIn(frame, part)
+		return lo.Y
+	end
+	local minY = math.huge
+	for _, p in ipairs(pieces) do
+		minY = math.min(minY, bottom(p.part))
+	end
+	local _, size = source:GetBoundingBox()
+	local frontUp = bottom(fl) > minY + 0.12 * size.Y and bottom(fr) > minY + 0.12 * size.Y
+	local backDown = bottom(bl) < minY + 0.08 * size.Y and bottom(br) < minY + 0.08 * size.Y
+	if not (frontUp and backDown) then
+		return false
+	end
+	local map = { LegFL = "ArmL", LegFR = "ArmR", LegBL = "LegL", LegBR = "LegR" }
+	for _, p in ipairs(pieces) do
+		if p.role and map[p.role] then
+			p.role = map[p.role]
+		end
+	end
+	return true
+end
+
 local PAIRS = { { "LegFL", "LegFR" }, { "LegBL", "LegBR" }, { "LegL", "LegR" }, { "ArmL", "ArmR" }, { "WingL", "WingR" }, { "FinL", "FinR" }, { "ClawL", "ClawR" } }
 local LEGS = { "LegFL", "LegFR", "LegBL", "LegBR", "LegsF", "LegsB", "LegL", "LegR" }
 
@@ -273,6 +307,7 @@ function PetRigBuilder.check(source: Model, petId: string): { string }
 	assert(spec, `no spec for {petId}`)
 	local kind = spec[1]
 	local pieces = pieceList(source)
+	uprightRemap(source, pieces)
 	local issues = {}
 	for name in string.gmatch(PetRigBuilder.KINDS[kind].Parts, "[^,]+") do
 		local wanted = string.lower((string.gsub(name, "^%s+", "")))
@@ -341,6 +376,7 @@ function PetRigBuilder.build(source: Model, petId: string): Model
 	assert(species and spec, `unknown pet {petId}`)
 	local pieces = pieceList(source)
 	assert(#pieces > 0, `{source.Name}: no MeshPart`)
+	local upright = uprightRemap(source, pieces)
 	local frame = facingFrame(source, pieces)
 
 	-- bounds in that frame -> Root at the bottom center, scale to the wanted height
@@ -430,6 +466,7 @@ function PetRigBuilder.build(source: Model, petId: string): Model
 	local gait = spec[2]
 	model:SetAttribute("PetV2", true)
 	model:SetAttribute("Gait", gait)
+	model:SetAttribute("Upright", upright) -- a four-legged animal the generator stood up (front legs = arms)
 	model:SetAttribute("Flying", FLYING_GAITS[gait] == true)
 	model:SetAttribute("Body", species.Body)
 	model:SetAttribute("Height", math.round(size.Y * 100) / 100)
@@ -529,6 +566,24 @@ function PetRigBuilder.installGenerated(): string
 			else
 				done[found] = true
 				table.insert(lines, PetRigBuilder.install(item, found))
+			end
+		end
+	end
+	return table.concat(lines, "\n")
+end
+
+-- Checks the rejected models again (after a rule change) and installs the first good one of every pet that is
+-- still on its placeholder. One report line per installed pet.
+function PetRigBuilder.retryRejects(): string
+	local lines = {}
+	local rejects = ServerStorage:FindFirstChild("_PetRejects")
+	local pets = ReplicatedStorage.Assets.Pets
+	for _, item in ipairs(if rejects then rejects:GetChildren() else {}) do
+		local petId = string.match(item.Name, "^(.-)_%d+$")
+		local current = petId and pets:FindFirstChild(petId)
+		if petId and PetRigBuilder.SPECS[petId] and item:IsA("Model") and not (current and current:GetAttribute("PetV2")) then
+			if #PetRigBuilder.check(item, petId) == 0 then
+				table.insert(lines, PetRigBuilder.install(item, petId))
 			end
 		end
 	end
