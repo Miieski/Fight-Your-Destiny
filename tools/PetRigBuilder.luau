@@ -46,8 +46,8 @@ PetRigBuilder.KINDS = {
 PetRigBuilder.SPECS = {
 	plains_pet1 = { "Quad", "Walk", "baby puppy dog, golden tan fur, white chest and white muzzle, floppy ears, small tail" },
 	plains_pet2 = { "Quad", "Walk", "baby fox, bright orange fur, white chest, white muzzle and white fluffy tail tip, black paws" },
-	plains_pet3 = { "Quad", "Walk", "baby brown bear cub, chocolate brown fur, light tan muzzle and belly, round ears, tiny tail" },
-	plains_pet4 = { "Quad", "Walk", "baby boar piglet, pink brown fur with darker stripes, small white tusks, pig snout, tiny curly tail" },
+	plains_pet3 = { "Biped", "Walk", "baby brown bear cub, chocolate brown fur, light tan muzzle and belly, round ears, tiny tail" },
+	plains_pet4 = { "Quad", "Walk", "baby wild boar, brown fur with light stripes, round nose, two little white teeth, curly tail" }, -- "tusks" / "snout" failed moderation
 	plains_pet5 = { "Quad", "Walk", "baby raccoon, grey fur, black eye mask, bushy tail with black rings" },
 	plains_pet6 = { "Bird", "Fly", "baby owl, round fluffy brown and cream feathers, big round eyes, small ear tufts, tiny orange beak" },
 	desert_pet1 = { "Quad", "Walk", "baby fennec fox, pale sand fur, huge ears with pink inside, cream chest, bushy tail with a black tip" },
@@ -59,13 +59,13 @@ PetRigBuilder.SPECS = {
 	jungle_pet1 = { "BipedTail", "Walk", "baby monkey, brown fur, peach face and belly, big ears, long curly tail" },
 	jungle_pet2 = { "Quad", "Walk", "baby tiger cub, orange fur with black stripes, white belly and muzzle, striped tail" },
 	jungle_pet3 = { "Biped", "Walk", "baby gorilla, dark grey black fur, grey face and chest, long strong arms" },
-	jungle_pet4 = { "Quad", "Walk", "baby crocodile, green scaly skin, light yellow belly, long snout with little teeth, ridged tail" },
+	jungle_pet4 = { "Quad", "Walk", "baby crocodile, green scaly skin, light yellow belly, long nose with little round teeth, ridged tail" },
 	jungle_pet5 = { "Bird", "Fly", "baby toucan, black feathers, white chest, huge bright orange and yellow beak" },
 	jungle_pet6 = { "Quad", "Walk", "baby chameleon, bright green skin with yellow and teal stripes, curled tail, big round eyes" },
 	tundra_pet1 = { "Biped", "Walk", "baby penguin, black back, white belly, small orange beak, orange feet, little flipper arms" },
 	tundra_pet2 = { "Quad", "Walk", "baby sabertooth tiger cub, light tan fur with brown spots, two long white fangs, white belly" },
-	tundra_pet3 = { "Quad", "Walk", "baby polar bear cub, white fluffy fur, black nose, small round ears" },
-	tundra_pet4 = { "Quad", "Walk", "baby woolly mammoth, shaggy brown fur, curled white tusks, long trunk, big floppy ears" },
+	tundra_pet3 = { "Biped", "Walk", "baby polar bear cub, white fluffy fur, black nose, small round ears" },
+	tundra_pet4 = { "Quad", "Walk", "baby woolly mammoth, shaggy brown fur, long trunk, big floppy ears, little white horns" },
 	tundra_pet5 = { "Quad", "Hop", "baby snow hare bunny, white fluffy fur, long ears with pink inside, pink nose, puffy tail" },
 	tundra_pet6 = { "Biped", "Walk", "baby yeti, white shaggy fur, light blue face and hands, two small horns" },
 	swamp_pet1 = { "Bird", "Walk", "baby duckling, fluffy yellow feathers, orange beak and orange feet" },
@@ -95,7 +95,7 @@ PetRigBuilder.SPECS = {
 	dead_pet1 = { "Ghost", "Float", "little ghost, white glowing sheet body, round black eyes, tiny arms, wavy bottom edge" },
 	dead_pet2 = { "Quad", "Walk", "skeleton puppy made of white bones, glowing green eyes" },
 	dead_pet3 = { "Quad", "Walk", "mummy cat wrapped in beige bandages, one glowing green eye" },
-	dead_pet4 = { "Quad", "Walk", "zombie teddy bear, pale green fur, stitches, one button eye" },
+	dead_pet4 = { "Biped", "Walk", "zombie teddy bear, pale green fur, stitches, one button eye" },
 	dead_pet5 = { "Bird", "Fly", "baby raven, black feathers with purple shine, small black beak" },
 	dead_pet6 = { "Quad", "Walk", "baby ghost deer fawn, pale blue glowing see-through body, glowing green antlers" },
 	abyss_pet1 = { "Fish", "Swim", "baby clownfish, bright orange with three white stripes edged in black" },
@@ -207,13 +207,10 @@ local function closestInBox(lo: Vector3, hi: Vector3, point: Vector3): Vector3
 	return point:Max(lo):Min(hi)
 end
 
--- The rig of one generated model (not parented). petId gives the scale and the gait.
-function PetRigBuilder.build(source: Model, petId: string): Model
-	local species = Pets.ById[petId]
-	local spec = PetRigBuilder.SPECS[petId]
-	assert(species and spec, `unknown pet {petId}`)
-	-- pieces: the generator nests each MeshPart in a Model named after the piece
-	local pieces: { { part: MeshPart, label: string, role: string? } } = {}
+-- The generated pieces: the generator nests each MeshPart in a Model named after the piece.
+type Piece = { part: MeshPart, label: string, role: string? }
+local function pieceList(source: Model): { Piece }
+	local pieces: { Piece } = {}
 	for _, item in ipairs(source:GetDescendants()) do
 		if item:IsA("MeshPart") then
 			local parent = item.Parent
@@ -221,28 +218,130 @@ function PetRigBuilder.build(source: Model, petId: string): Model
 			table.insert(pieces, { part = item, label = label, role = PetRigBuilder.roleOf(label) })
 		end
 	end
-	assert(#pieces > 0, `{source.Name}: no MeshPart`)
-	local function find(role: string): MeshPart?
+	return pieces
+end
+
+local function findRole(pieces: { Piece }, role: string): MeshPart?
+	for _, p in ipairs(pieces) do
+		if p.role == role then
+			return p.part
+		end
+	end
+	return nil
+end
+
+-- average center of the pieces with these roles, in `frame` space
+local function centerOf(pieces: { Piece }, roles: { string }, frame: CFrame): Vector3?
+	local sum, n = Vector3.zero, 0
+	for _, p in ipairs(pieces) do
+		if p.role and table.find(roles, p.role) then
+			sum += frame:PointToObjectSpace(p.part.Position)
+			n += 1
+		end
+	end
+	return if n > 0 then sum / n else nil
+end
+
+-- The generator faces its pivot's -Z. Turned around only when the head (vs the body) and the front legs (vs the
+-- back legs) say the front is +Z: a mislabelled piece (a "tail" that is really the chest) must not flip it.
+local function facingFrame(source: Model, pieces: { Piece }): CFrame
+	local frame = source:GetPivot().Rotation
+	local _, size = source:GetBoundingBox()
+	local tol = 0.08 * math.max(size.X, size.Z)
+	local votes = 0
+	local head, body = centerOf(pieces, { "Head" }, frame), centerOf(pieces, { "Body" }, frame)
+	if head and body and math.abs(head.Z - body.Z) > tol then
+		votes += if head.Z > body.Z then 1 else -1
+	end
+	local front = centerOf(pieces, { "LegFL", "LegFR", "LegsF" }, frame)
+	local back = centerOf(pieces, { "LegBL", "LegBR", "LegsB" }, frame)
+	if front and back and math.abs(front.Z - back.Z) > tol then
+		votes += if front.Z > back.Z then 1 else -1
+	end
+	return if votes > 0 then frame * CFrame.Angles(0, math.pi, 0) else frame
+end
+
+local PAIRS = { { "LegFL", "LegFR" }, { "LegBL", "LegBR" }, { "LegL", "LegR" }, { "ArmL", "ArmR" }, { "WingL", "WingR" }, { "FinL", "FinR" }, { "ClawL", "ClawR" } }
+local LEGS = { "LegFL", "LegFR", "LegBL", "LegBR", "LegsF", "LegsB", "LegL", "LegR" }
+
+-- Sanity check of a generated model before it becomes a pet: every asked piece is there, left / right pieces
+-- mirror each other, legs hang under the body, front legs are in front, the tail is behind. Returns the
+-- problems ({} = good). The generator sometimes mislabels or splits pieces (half a tail named "back right leg"):
+-- such a model is generated again rather than animated wrong.
+function PetRigBuilder.check(source: Model, petId: string): { string }
+	local spec = PetRigBuilder.SPECS[petId]
+	assert(spec, `no spec for {petId}`)
+	local kind = spec[1]
+	local pieces = pieceList(source)
+	local issues = {}
+	for name in string.gmatch(PetRigBuilder.KINDS[kind].Parts, "[^,]+") do
+		local wanted = string.lower((string.gsub(name, "^%s+", "")))
+		local ok = false
 		for _, p in ipairs(pieces) do
-			if p.role == role then
-				return p.part
+			if string.lower((string.gsub(p.label, "_geom$", ""))) == wanted then
+				ok = true
 			end
 		end
-		return nil
-	end
-
-	-- facing: the generator looks along its pivot's -Z; turn when the head is clearly behind or beside the body
-	local frame = source:GetPivot().Rotation
-	local head, body, tail = find("Head"), find("Body"), find("Tail")
-	local from = tail or body
-	if head and from then
-		local rel = frame:VectorToObjectSpace(head.Position - from.Position)
-		if math.abs(rel.X) > math.abs(rel.Z) * 1.5 and math.abs(rel.X) > 0.15 then
-			frame = frame * CFrame.Angles(0, if rel.X > 0 then -math.pi / 2 else math.pi / 2, 0)
-		elseif rel.Z > 0.15 and rel.Z > math.abs(rel.X) then
-			frame = frame * CFrame.Angles(0, math.pi, 0)
+		if not ok then
+			table.insert(issues, `missing piece "{wanted}"`)
 		end
 	end
+	-- measured from the model's center, in its facing frame
+	local frame = CFrame.new((source:GetBoundingBox()).Position) * facingFrame(source, pieces)
+	local _, size = source:GetBoundingBox()
+	local w = math.max(size.X, size.Y, size.Z)
+	local function c(role: string): Vector3?
+		return centerOf(pieces, { role }, frame)
+	end
+	local function volume(role: string): number
+		local part = findRole(pieces, role)
+		return if part then part.Size.X * part.Size.Y * part.Size.Z else 0
+	end
+	for _, pair in ipairs(PAIRS) do
+		local a, b = c(pair[1]), c(pair[2])
+		if a and b then
+			if math.abs(a.X + b.X) > 0.15 * w or math.abs(a.Y - b.Y) > 0.12 * w or math.abs(a.Z - b.Z) > 0.15 * w then
+				table.insert(issues, `{pair[1]} / {pair[2]} not mirrored`)
+			end
+			local va, vb = volume(pair[1]), volume(pair[2])
+			if math.max(va, vb) > 2.5 * math.max(math.min(va, vb), 1e-4) then
+				table.insert(issues, `{pair[1]} / {pair[2]} sizes differ`)
+			end
+		end
+	end
+	local body = c("Body")
+	if body then
+		for _, role in ipairs(LEGS) do
+			local leg = c(role)
+			if leg and leg.Y > body.Y then
+				table.insert(issues, `{role} above the body center`)
+			end
+		end
+		local tail = c("Tail")
+		if tail and kind ~= "Snake" and tail.Z < body.Z - 0.05 * w then
+			table.insert(issues, "tail in front of the body")
+		end
+		local head = c("Head")
+		if head and head.Y < body.Y - 0.1 * w and kind ~= "Snake" then
+			table.insert(issues, "head below the body")
+		end
+	end
+	local front = centerOf(pieces, { "LegFL", "LegFR", "LegsF" }, frame)
+	local back = centerOf(pieces, { "LegBL", "LegBR", "LegsB" }, frame)
+	if front and back and front.Z > back.Z - 0.05 * w then
+		table.insert(issues, "front legs not in front of the back legs")
+	end
+	return issues
+end
+
+-- The rig of one generated model (not parented). petId gives the scale and the gait.
+function PetRigBuilder.build(source: Model, petId: string): Model
+	local species = Pets.ById[petId]
+	local spec = PetRigBuilder.SPECS[petId]
+	assert(species and spec, `unknown pet {petId}`)
+	local pieces = pieceList(source)
+	assert(#pieces > 0, `{source.Name}: no MeshPart`)
+	local frame = facingFrame(source, pieces)
 
 	-- bounds in that frame -> Root at the bottom center, scale to the wanted height
 	local lo = Vector3.new(math.huge, math.huge, math.huge)
@@ -392,6 +491,84 @@ function PetRigBuilder.rebuildAll(): string
 		end
 	end
 	return table.concat(lines, "\n")
+end
+
+-- Installs every AI-generated model lying in Workspace whose name starts like a pet's description
+-- (generate_mesh names the model after its prompt) and passes check(). One report line per model.
+function PetRigBuilder.installGenerated(): string
+	local lines = {}
+	local done: { [string]: boolean } = {}
+	for _, item in ipairs(workspace:GetChildren()) do
+		if item:IsA("Model") and item:GetAttribute("RBX_AI_GENERATED") then
+			local found: string? = nil
+			for petId, spec in pairs(PetRigBuilder.SPECS) do
+				local text = spec[3]
+				local n = math.min(#text, #item.Name, 60)
+				if n >= 20 and string.sub(item.Name, 1, n) == string.sub(text, 1, n) then
+					found = petId
+					break
+				end
+			end
+			if not found then
+				table.insert(lines, "no pet for: " .. item.Name)
+				continue
+			end
+			local issues = PetRigBuilder.check(item, found)
+			if #issues > 0 then
+				-- kept aside (ServerStorage._PetRejects) and generated again; install() forces one anyway
+				local rejects = folder(ServerStorage, "_PetRejects")
+				item.Name = `{found}_{#rejects:GetChildren() + 1}`
+				item.Parent = rejects
+				table.insert(lines, `REJECTED {found}: {table.concat(issues, "; ")}`)
+			elseif done[found] then
+				-- a second good candidate of the same pet: kept as a spare (ServerStorage._PetSpares)
+				local spares = folder(ServerStorage, "_PetSpares")
+				item.Name = `{found}_{#spares:GetChildren() + 1}`
+				item.Parent = spares
+				table.insert(lines, `spare {found}`)
+			else
+				done[found] = true
+				table.insert(lines, PetRigBuilder.install(item, found))
+			end
+		end
+	end
+	return table.concat(lines, "\n")
+end
+
+-- A row of a zone's pets ("Plains"... or "Premium") on a stand high above the map, for screenshots.
+-- Returns the camera position and the point to look at; PetRigBuilder.clearLineup() removes it.
+function PetRigBuilder.lineup(zoneId: string): (Vector3, Vector3)
+	PetRigBuilder.clearLineup()
+	local list = if zoneId == "Premium" then Pets.Premium else Pets.ByZone[zoneId]
+	assert(list, `unknown zone {zoneId}`)
+	local holder = Instance.new("Model")
+	holder.Name = "_PetLineup"
+	local base = Vector3.new(0, 400, 0)
+	local stand = Instance.new("Part")
+	stand.Anchored = true
+	stand.Size = Vector3.new(3.2 * #list + 2, 0.4, 5)
+	stand.CFrame = CFrame.new(base - Vector3.new(0, 0.2, 0))
+	stand.Color = Color3.fromRGB(205, 196, 178)
+	stand.Material = Enum.Material.SmoothPlastic
+	stand.Parent = holder
+	for i, species in ipairs(list) do
+		local source = ReplicatedStorage.Assets.Pets:FindFirstChild(species.Id)
+		if source then
+			local model = source:Clone()
+			model:ScaleTo(1.4)
+			model:PivotTo(CFrame.new(base + Vector3.new((i - (#list + 1) / 2) * 3.2, 0, 0)) * CFrame.Angles(0, math.rad(200), 0))
+			model.Parent = holder
+		end
+	end
+	holder.Parent = workspace
+	return base + Vector3.new(0, 2.2, 3.2 * #list * 0.62 + 3), base + Vector3.new(0, 1, 0)
+end
+
+function PetRigBuilder.clearLineup()
+	local old = workspace:FindFirstChild("_PetLineup")
+	if old then
+		old:Destroy()
+	end
 end
 
 function PetRigBuilder.missing(): { string }

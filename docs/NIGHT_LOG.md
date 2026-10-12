@@ -1202,6 +1202,16 @@ the Roblox game Steal an Egg (July 2026): inspiration only, every model is gener
 
 ## Status (newest first)
 
+- 23:31 ZONES 1-2 MODELS DONE (12/12). Backup `..._petsv2_zones1-2_*`. Lineups `docs/screenshots/pets_v2/lineup_01_plains.jpg`,
+  `lineup_02_desert.jpg`. Pipeline: generate_mesh (async, up to 12 at once, ~3-5 min) -> `PetRigBuilder.installGenerated()`,
+  which now runs `PetRigBuilder.check()` first (all asked pieces present, left / right mirrored, legs under the body,
+  front legs in front, tail behind) and puts failed models in ServerStorage._PetRejects (second good ones in
+  _PetSpares). Plains needed retries: Bear Cub (the generator always makes a standing teddy bear -> Bear Cub,
+  Polar Bear Cub and Zombie Bear are now upright "Biped" pets), Raccoon (half the tail labelled "back right leg"),
+  Owl (tail piece in front). The facing rule now trusts the generator (-Z) unless head AND legs disagree (a
+  mislabelled tail had turned 2 pets backwards). Moderation refused "boar piglet ... tusks ... snout" twice: prompt
+  is now "baby wild boar ... two little white teeth" (crocodile "snout" -> "nose", mammoth without "tusks").
+  Desert: 6/6 first try.
 - 23:15 CODE FOUNDATION DONE (models next). Backups `..._before_pets_v2_*` / `..._after_petsv2_code_*`. Studio = disk.
   * Found: the 24 Blender pets of 2026-10-05 were never imported (no manual import was done); Studio still had the 76
     part-built pets. Studio's AI mesh generator (MCP generate_mesh) makes textured cartoon meshes split into named
