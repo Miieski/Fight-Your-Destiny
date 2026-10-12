@@ -715,6 +715,11 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 13:10 PHASE 3 - SPEAR category V2 done (12/12, each compared with its icon). Triangles: 1368, 1740, 1414, 1384, 1614, 1776, 1640, 1996, 1578, 1506, 1768, 1624; all 8 studs.
+  Diamond-ridged heads, pinned sockets with lips, spiral grip wraps, ringed butt caps, bevelled plates for the
+  halberd blade / wings / feathers / rag / pennant. Fix during the checks: the Nomad Pike pennant back to a plain
+  triangle (the icon's shape). Lineup `Previews/Weapons/Spear_lineup.png`.
+
 - 12:50 PHASE 3 - SWORD category V2 done (12/12) and pushed. New pipeline `tools/blender/fyd_weapons2.py` +
   `fyd_w2_parts.py` + `run_weapons2.py` (headless Blender on `Blender/Icons/_IconTemplate.blend`, same camera /
   lights as the icons): blades with a real cross-section (`plate`: flat faces + ground edges, any outline incl.
