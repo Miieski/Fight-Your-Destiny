@@ -715,7 +715,7 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
-- 17:05 ALL PHASES DONE - FINAL REPORT (docs/weapons_combat_brief.txt).
+- 16:59 ALL PHASES DONE - FINAL REPORT (docs/weapons_combat_brief.txt).
   FINISHED: Phase 1 Whip & Chain removed everywhere (7 categories, 84 weapons, shop 7 tabs, Index 84, old profiles
   migrated; the only "Whip" left in the repo are history notes in the logs). Phase 2 HUD: 3 empty SKILL slots (Z / X /
   C, cooldown sweep ready, touch buttons on mobile; pets stay in the Pets window and Equipment). Phase 3: the 84
