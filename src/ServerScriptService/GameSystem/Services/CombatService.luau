@@ -143,7 +143,7 @@ local function visualTo(origin: Vector3): { Player }
 	return list
 end
 
-type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, knockback: any, category: string }
+type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, knockback: any, category: string, element: string? }
 
 -- One hit on one enemy: crit roll, Boss Slayer, knockback, the "Hit" number for the attacker and the "Impact" for
 -- the players around.
@@ -167,7 +167,7 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 	Net.fire(player, "Hit", at, damage, crit, strike.finisher, strike.category)
 	for _, viewer in ipairs(visualTo(at)) do
 		if viewer ~= player then
-			Net.fire(viewer, "Impact", at, strike.category, crit, strike.finisher)
+			Net.fire(viewer, "Impact", at, strike.category, crit, strike.finisher, strike.element)
 		end
 	end
 end
@@ -288,6 +288,7 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 		finisher = step.Finisher == true,
 		knockback = step.Knockback,
 		category = id,
+		element = if weapon then weapon.Element else nil,
 	}
 	local origin = root.Position
 	for _, viewer in ipairs(visualTo(origin)) do
@@ -383,6 +384,12 @@ local function roll(player: Player, dir: any)
 	state.lastRoll = now
 	state.rollUntil = now + Combat.Roll.IFrames
 	state.rollEnd = now + Combat.Roll.Duration * Combat.RateTolerance
+	local d = if finite(dir) then flat(dir) else flat(root.CFrame.LookVector)
+	for _, viewer in ipairs(visualTo(root.Position)) do
+		if viewer ~= player then
+			Net.fire(viewer, "Motion", player, "Roll", d)
+		end
+	end
 end
 
 local function setBlocking(player: Player, holding: any)
@@ -429,6 +436,14 @@ function CombatService:DamagePlayer(player: Player, raw: number, source: any?): 
 	amount = math.max(1, math.floor(amount + 0.5))
 	humanoid:TakeDamage(amount)
 	Net.fire(player, "Hurt", amount, kind)
+	local root = humanoid.Parent and humanoid.Parent:FindFirstChild("HumanoidRootPart")
+	if root and root:IsA("BasePart") then
+		for _, viewer in ipairs(visualTo(root.Position)) do
+			if viewer ~= player then
+				Net.fire(viewer, "Motion", player, if kind == "block" then "BlockHit" else "Hurt")
+			end
+		end
+	end
 	return amount
 end
 

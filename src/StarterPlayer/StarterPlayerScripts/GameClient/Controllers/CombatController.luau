@@ -40,7 +40,6 @@ local CombatController = {}
 local player = Players.LocalPlayer
 local FEEL = Combat.Feel
 local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts" }
-local BUBBLE_COLOR = Color3.fromRGB(120, 200, 255)
 local HIT_STOP_GAP = 0.05 -- several enemies hit by one swing give one hit-stop
 local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
 local COMBO_COUNTER = { Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromOffset(220, 46), PopScale = 1.25, PopSeconds = 0.12, FadeSeconds = 0.3 }
@@ -57,7 +56,6 @@ local comboAt = -math.huge
 local comboCategory: string? = nil
 local lastHitStop = 0
 local statsCache: { [string]: any }? = nil
-local bubbles: { [Player]: BasePart } = {}
 
 local comboLabel: TextLabel? = nil
 local comboScale: UIScale? = nil
@@ -400,41 +398,44 @@ local function onSwing(attacker: Player, category: string, step: number, dir: Ve
 	Sfx.combat("Swing", ctx)
 end
 
-local function onImpact(position: Vector3, category: string?, crit: boolean, finisher: boolean)
+local function onImpact(position: Vector3, category: string?, crit: boolean, finisher: boolean, element: string?)
 	if typeof(position) ~= "Vector3" then
 		return
 	end
-	local ctx = { Position = position, Category = category, Crit = crit == true, Finisher = finisher == true, IsLocal = false }
+	local ctx = {
+		Position = position,
+		Category = category,
+		Crit = crit == true,
+		Finisher = finisher == true,
+		Element = if typeof(element) == "string" then element else nil,
+		IsLocal = false,
+	}
 	VFX.impact(ctx)
 	Sfx.combat("Impact", ctx)
 end
 
-local function setBubble(target: Player, on: boolean)
-	local current = bubbles[target]
-	if current then
-		current:Destroy()
-		bubbles[target] = nil
-	end
-	local character = target.Character
+-- Another player's roll or hit reaction (Net "Motion"): animation, effects and sound only.
+local function onMotion(other: Player, kind: string, dir: Vector3?)
+	local character = other.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
-	if not (on and root and root:IsA("BasePart")) then
+	if other == player or not character or not (root and root:IsA("BasePart")) then
 		return
 	end
-	local ball = Instance.new("Part")
-	ball.Name = "BlockBubble"
-	ball.Shape = Enum.PartType.Ball
-	ball.Size = Vector3.one * 7
-	ball.Material = Enum.Material.ForceField
-	ball.Color = BUBBLE_COLOR
-	ball.CanCollide, ball.CanQuery, ball.CanTouch = false, false, false
-	ball.Massless = true
-	ball.CastShadow = false
-	ball.CFrame = root.CFrame
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0, weld.Part1 = root, ball
-	weld.Parent = ball
-	ball.Parent = character
-	bubbles[target] = ball
+	if kind == "Roll" then
+		local d = if typeof(dir) == "Vector3" then dir else root.CFrame.LookVector
+		Animations.cancel(character)
+		Animations.roll(character, d)
+		local ctx = { Character = character, Direction = d, IsLocal = false, Position = root.Position }
+		VFX.roll(ctx)
+		Sfx.combat("Roll", ctx)
+	elseif kind == "BlockHit" then
+		Animations.blockHit(character)
+		VFX.blockHit({ Character = character, Position = root.Position + Vector3.new(0, 3, 0) })
+		Sfx.combat("BlockHit", { Position = root.Position })
+	elseif kind == "Hurt" then
+		Animations.hurt(character)
+		Sfx.combat("Hurt", { Position = root.Position })
+	end
 end
 
 local function applyBlock(down: boolean)
@@ -446,7 +447,6 @@ local function applyBlock(down: boolean)
 	end
 	blocking = down
 	Net.send("Block", down)
-	setBubble(player, down)
 	local character = player.Character
 	if character then
 		if down then
@@ -627,6 +627,7 @@ function CombatController:Start()
 		VFX.burst({ Position = position, Radius = radius, Style = style })
 	end)
 	Net.on("Hurt", onHurt)
+	Net.on("Motion", onMotion)
 
 	for _, key in ipairs(STAT_KEYS) do
 		State.changed(key, function()
@@ -678,16 +679,16 @@ function CombatController:Start()
 		end
 	end)
 
-	-- block bubbles and guard poses of the other players (the local one is drawn on input)
+	-- guard poses and block bubbles (VFX.block) of the other players (the local one is drawn on input)
 	local function watch(other: Player)
 		if other == player then
 			return
 		end
 		other:GetAttributeChangedSignal("Blocking"):Connect(function()
 			local on = other:GetAttribute("Blocking") == true
-			setBubble(other, on)
 			if other.Character then
 				Animations.block(other.Character, on)
+				VFX.block({ Character = other.Character, On = on })
 			end
 		end)
 	end
@@ -695,9 +696,6 @@ function CombatController:Start()
 		watch(other)
 	end
 	Players.PlayerAdded:Connect(watch)
-	Players.PlayerRemoving:Connect(function(other)
-		bubbles[other] = nil
-	end)
 	player.CharacterAdded:Connect(function()
 		holding = false
 		blocking = false
@@ -705,7 +703,6 @@ function CombatController:Start()
 		comboStep = 0
 		finisherUntil = 0
 		rollingUntil = 0
-		bubbles[player] = nil
 	end)
 
 	makeComboCounter()

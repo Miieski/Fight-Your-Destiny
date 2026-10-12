@@ -715,6 +715,28 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 14:05 PHASE 4 - INTEGRATION after the two pilots (main agent, Studio): Net "Motion" (player, "Roll" | "Hurt" |
+  "BlockHit", dir?) from CombatService so other players see a roll, a flinch and a blocked hit (Animation request);
+  CombatController's own block bubble removed - `VFX.block` draws it for the local player and, from the "Blocking"
+  attribute, for the others (VFX request: two nested bubbles before); Net "Impact" now carries the weapon element
+  (other players' sparks are tinted). Play: right-click block = 1 bubble (0 left in the character), released = 0,
+  held attack kills a boar, Output clean. docs/COMBAT_CONTRACTS.md section 4 updated; docs/VFX_KIT.md marks
+  Hit_Spark / Crit_Spark / Block_Spark / Roll_Dust / Enemy_Death_Puff as no longer used by combat (kept).
+
+- 14:00 PHASE 4 - VFX PILOT (Sword + shared) done by the VFX sub-agent (13:11-13:59, backups `..._131130_vfx_before_*`
+  / `..._135900_vfx_after_*`), reviewed and committed by the main agent. `Controllers/VFX/` = VFX.luau (same API) +
+  Runner (pool, cap 48, per-frame runner, dev hooks), Colors, Trails, Arcs, Numbers, Ghosts; `Config/CombatVFX.luau`.
+  Assets in `ReplicatedStorage.Assets.VFX` (place file): Sword_SlashArc, Sword_SpinArc, Shared_WeaponTrail,
+  Shared_HitSpark, Shared_CritBurst, Shared_FinisherRing, Shared_BlockBubble, Shared_BlockSpark, Shared_RollDust,
+  Shared_Afterimage, Shared_Projectile, Shared_BurstDisc, Shared_DeathDissolve, Shared_DamageNumber.
+  Timings at speed x1 (trail on / off / arc): step 1-2 0.072 / 0.27 / 0.16 s, step 3 0.081 / 0.29 / 0.18 s, spin
+  finisher 0.121 / 0.44 / 0.22 s (measured on step 1: on 0.07-0.10, arc 0.16-0.18, off 0.27-0.28); a confirmed
+  local hit keeps the trail through the hit-stop. Rarity 1 = no trail + grey arc, 3 / 5 / 6 colored + element tint,
+  8 rainbow. Finisher rings capped 3 per 0.1 s. Roll = dust + 3 ghosts; block bubble + blocked-hit spark; enemy
+  death dissolve 0.45 s after "Dead". Low FX (dev override): 109 -> 65 particles, afterimages 1 -> 0. Idle 5 s:
+  workspace.VFX empty. Cost: 7 enemies attack held ~0.01 ms / frame, worst 0.74 ms (spin on 6 boars, after moving
+  the beam setup into the pool); phone emulator 0.0067 ms avg, 0.42 ms worst. Output clean.
+
 - 13:09 PHASE 4 - ANIMATION PILOT (Sword) done by the Animation sub-agent (12:07-13:03, backups
   `BackUP_Files/FightYourDestiny_2026-10-12_121037_animations_before_*` / `..._130329_animations_after_*`), reviewed
   and committed by the main agent. `Config/CombatAnimations.luau` (clip data: key poses, IK targets, markers) +
@@ -876,11 +898,21 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Death = a stagger then a limp hold (BreakJointsOnDeath is off and the body topples physically).
 - "Moving" = speed above 1.5 studs/s (or move input for the local player), ignored for 0.35 s after an attack or a
   roll so the lunge / dash do not switch the legs to the run cycle (MoveDirection alone stays 0 with MoveTo).
+- VFX arcs are Beams (FaceCamera, Bezier handles on a circle, revealed tail-to-head), not meshes: no mesh upload and
+  per-segment rarity gradients. LightEmission ~0.3 / Brightness 1.6 on trails and outer beams (fully additive glow
+  washed out on the bright Hub plaza); the finisher ring is beams too. The server's hit position is above the
+  enemy's head, so sparks are placed on the matching enemy body, pushed toward the camera. Melee categories without
+  their own arc config already get the rarity trail (Swing.Default).
+- VFX dev hooks (Play, Client command bar, attributes on workspace.VFX): `Freeze` (pause all effects for a
+  screenshot), `Profile = os.clock()` (writes CostMs, MaxMs, Peak, Clones, Emitted), `LowFx` (act as Low FX),
+  `Test` ("swing:<step>:<rarity>[:<element>]", "impact:crit", "roll", "block:on", "number:crit", "#n" to repeat).
 
 ## Problems / missing
 
-- Other players never see a roll or a hurt flinch yet: CombatController only animates the local ones (Animation
-  sub-agent request) -> main agent: replicate roll (direction) and hurt for other players.
+- FIXED 14:05: other players did not see a roll or a hurt flinch (Net "Motion" now).
 - Not testable in Studio solo: other players' swings / blocks / stances (code paths exist: Net "Swing", the
   "Blocking" attribute) -> reviewer pass with a 2-client local server.
 - Phone emulator: mouse clicks do not reach the touch buttons; attacks there were driven by the Auto-Attack toggle.
+- `screen_capture` does not show AlwaysOnTop BillboardGuis (damage numbers): they render in game (checked with
+  AlwaysOnTop off for a moment). The Settings Low FX switch cannot be clicked through the MCP (dev override used).
+- godMode suppresses "Hurt" events: blocked-hit tests need godMode off for a moment.

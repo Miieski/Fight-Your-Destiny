@@ -211,6 +211,8 @@ local function playBurst(prefab: BasePart, cframe: CFrame)
 end
 ```
 
+**Superseded for combat (2026-10-12):** the combat effects are now drawn by `GameClient/Controllers/VFX` (`Config/CombatVFX`, assets `Shared_*` / `<Category>_*` in `ReplicatedStorage.Assets.VFX`). `Hit_Spark`, `Crit_Spark`, `Block_Spark`, `Roll_Dust` and `Enemy_Death_Puff` below are no longer used by combat; they stay in the place for other uses.
+
 | Name | What it is | Size | Notes | Emitters (EmitCount) |
 |---|---|---|---|---|
 | `Hit_Spark` | White-yellow square sparks + star flash | about 4 across, 0.3 s | At the hit point | Sparks 10, Flash 1 |

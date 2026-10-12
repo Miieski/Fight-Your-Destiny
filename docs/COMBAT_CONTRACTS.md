@@ -66,7 +66,11 @@ Local attack (one combo step): turn toward the aim (aim assist 15 studs) -> lung
 `VFX.swing(ctx)` -> `Sfx.combat("Swing", ctx)` -> `Net.send("Attack")`. When the server confirms a hit (Net "Hit"):
 `VFX.damageNumber`, `VFX.impact`, `Sfx.combat("Impact")`, combo counter, then (once per swing) `Animations.hitStop`,
 `Fx.shake`, `Fx.fovPulse` on finishers. Other players: Net "Swing" -> `Animations.attack` + `VFX.swing` +
-`Sfx.combat("Swing")` (IsLocal = false, ctx.Position = their root); Net "Impact" -> `VFX.impact` + `Sfx.combat`.
+`Sfx.combat("Swing")` (IsLocal = false, ctx.Position = their root); Net "Impact" (with the weapon Element) ->
+`VFX.impact` + `Sfx.combat`; Net "Motion" (`player, kind, dir?`, kind "Roll" | "Hurt" | "BlockHit") ->
+`Animations.roll` + `VFX.roll` + `Sfx.combat("Roll")`, `Animations.hurt` + `Sfx.combat("Hurt")`, `Animations.blockHit` +
+`VFX.blockHit` + `Sfx.combat("BlockHit")` (ctx.Position = their root); their "Blocking" attribute -> `Animations.block` +
+`VFX.block`. The block bubble is drawn by `VFX.block` only (local and other players).
 Roll: `Animations.cancel`, `Animations.roll`, `VFX.roll`, `Sfx.combat("Roll")`. Block on: `Animations.cancel`,
 `Animations.block(true)`, `VFX.block`, `Sfx.combat("Block")`; off: `Animations.block(false)`, `VFX.block`.
 Hit taken while blocking: `Animations.blockHit`, `VFX.blockHit`, `Sfx.combat("BlockHit")`; otherwise
