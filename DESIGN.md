@@ -110,8 +110,8 @@ later: `Config/Skills` (empty list + schema), `SkillService` (`Net.request("UseS
 
 **Editable keys (PC):** every keyboard / mouse key is set in Settings > Keys (click a key, press
 the new one; a key taken by another action swaps with it; Reset puts the defaults back). Defaults:
-Attack left click, Block right click, Roll Q, Auto-Attack R, First Person V, Free Cursor Left Alt;
-menus Inventory B, Stats C, Shop G, Rebirth Shop Y, Pets P, Index X, Quests J, Team T, Zones M,
+Attack left click, Block right click, Roll Q, Auto-Attack R, skills Z / X / C, First Person V, Free Cursor
+Left Alt; menus Inventory B, Stats U, Shop G, Rebirth Y, Pets P, Index N, Quests J, Team T, Zones M,
 Settings K. Mouse buttons only for Attack, Block and Roll. Keys Roblox or the game already use
 (W A S D, arrows, Space, E, F, I, O, Shift, Escape, Tab, /, `, Enter, F2, F9-F12) are refused.
 Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
@@ -212,6 +212,12 @@ each Rebirth for the zone being redone (see below).
   `bonus(r) = 0.5 + 0.5 x (r - 1) / 11` -> +0.5 at Rebirth 1 rising to +1.0 at Rebirth 12.
   Total multiplier = `1 + sum of bonuses` (x10 after 12 Rebirths).
 * **Credits:** +3 Rebirth Credits per Rebirth (36 in total).
+* **Where (built 2026-10-12):** the **Rebirth** menu button (hotkey Y) opens the Rebirth window: tab
+  **Rebirth** (next Rebirth, requirements, rewards, what is lost / kept, Rebirth button + confirmation) and tab
+  **Rebirth Shop**. The Priest at the Rebirth Altar opens the Rebirth tab. Refused inside a boss arena and within
+  5 s of taking damage. After a Rebirth the player is sent to sub-zone 1 of zone r with a free Common sword of
+  that zone (starter weapon rule); reopening zone r's boss room ("redone") opens zone r + 1 (zone unlock chain
+  below). Rules in `Config/Rebirth`, server `RebirthService`, UI `UI/Pages/RebirthPage`.
 
 ### Rebirth Shop (spend credits, permanent)
 Defaults (1 credit per level):

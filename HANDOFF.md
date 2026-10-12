@@ -149,6 +149,15 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-12 (evening): REBIRTH (owner: "Create the rebirth functionality. Put it in the actual Rebirth Shop button.
+Rename it Rebirth; one tab the rebirth menu, another tab the rebirth shop").** The menu button and window are now
+"Rebirth" (window id `Rebirth`, tabs `Rebirth` / `Rebirth Shop`; the key action id stays `RebirthShop` so saved
+bindings survive, hotkey Y). Rules of DESIGN.md section 4 in `Config/Rebirth` (Max 12, +3 credits, cost 10 x the
+boss-gate price, `Rebirth.status(profile)`), server `RebirthService` (Net "Rebirth", `RebirthService:Wipe` = the reset,
+also used by admin `wipeForRebirth`), zone unlock chain in `ZoneService:CheckRedo` (reopening zone N's boss room after
+Rebirth N opens zone N + 1), UI `UI/Pages/RebirthPage`, badge = unspent credits + 1 when a Rebirth is ready. Admin:
+`giveKey(zone)`, `clearKeys()`, `rebirthReady()`. Screenshots `docs/screenshots/rebirth/`.
+
 **2026-10-12: WEAPONS V2 + HACK & SLASH COMBAT (`docs/weapons_combat_brief.txt`, live log `docs/NIGHT_LOG.md`).**
 * Phase 1: the Whip & Chain category is gone (7 categories, 84 weapons; `DataService.migrate` cleans old profiles).
 * Phase 2: the HUD's 3 pet slots are 3 empty SKILL slots (`Config/Skills`, `SkillService`, `SkillController`,

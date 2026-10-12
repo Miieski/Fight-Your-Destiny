@@ -1050,3 +1050,36 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - Not verified through the MCP (no second client): other players' swings, impacts, rolls, flinches, blocks,
   projectiles and afterimages (code paths reviewed by reading). Roll i-frames are granted without a server movement
   check (hardening left for later).
+
+# Rebirth window - 2026-10-12 evening (owner: "Create the rebirth functionality. Put it in the actual "rebirth shop" button. Rename it "Rebirth" and in this menu, it would have in one tab the rebirth menu and in another tab the rebirth shop.")
+
+## Status (newest first)
+
+- 17:55 DONE. Backups `BackUP_Files/FightYourDestiny_2026-10-12_174328_before_rebirth_*` and `..._after_rebirth_*`.
+  Menu button "Rebirth Shop" -> "Rebirth" (hotkey Y), window "Rebirth" with tabs **Rebirth** (new `UI/Pages/RebirthPage`)
+  and **Rebirth Shop** (the existing page). Rules (DESIGN.md section 4) in new `Config/Rebirth`; new `RebirthService`
+  (Net "Rebirth": checks next Rebirth <= 12, key of the zone-r boss, Gold >= 10 x the boss-gate price, not in a boss
+  arena, no damage in the last 5 s; then Rebirths + 1, +3 credits, the reset of `RebirthService:Wipe` (Gold, weapons,
+  armor, attribute points, eggs, non-premium pets, trophies), zone r's gates closed again, RedoneSinceRebirth cleared,
+  teleport to zone r sub-zone 1 with a free Common sword of zone r). `ZoneService:CheckRedo`: reopening zone N's boss
+  gate with Rebirths >= N marks it redone and opens zone N + 1 when the key of boss N is owned (the zone unlock
+  chain had no code before: only admin commands opened zones). Priest at the Rebirth Altar -> Rebirth tab, the hub
+  Rebirth Shop board -> Rebirth Shop tab. Badge = unspent credits + 1 when the next Rebirth is ready.
+  Tested in Play (desktop): menu tile "Rebirth", both tabs; locked state (Golem key / 31.25K Gold, button grey with
+  the reason); admin `rebirthReady` -> button gold, badge 1; confirmation; Rebirth 1 -> golden flash, toast
+  "Rebirth 1! +3 Rebirth Credits", sent to Plains with the Iron Shortsword, Rebirths 1, Gold 0, Diamonds 50 kept,
+  credits 3, Gold x1.5 / Attributes x1.25, next Rebirth shows "??? key" (Desert still hidden: no spoilers);
+  reopening the Plains boss gate -> "Desert unlocked! Travel there from the Zones menu." and the tab reveals the
+  Cursed Pharaoh key; server refusals: no key, not enough Gold, "You can't Rebirth during a fight". Phone emulator
+  (iPhone 17 Pro landscape): readable, lists and button fit. Output clean. Screenshots `docs/screenshots/rebirth/1-9`.
+
+## Decisions taken without the owner
+
+- After a Rebirth the player is teleported to the start of the zone being redone (zone r, sub-zone 1) and gets the
+  free Common sword of that zone (DESIGN.md starter-weapon rule "after a Rebirth wipe"), instead of the hub.
+- Rebirth works from the menu anywhere (owner's request), but not inside a boss arena or within 5 s of taking damage
+  (same rule as the teleport menu). The Gold cost is a threshold: all the Gold is reset anyway.
+- The keybinding action keeps its id `RebirthShop` (label "Rebirth") so players' saved bindings survive.
+- Max 12 Rebirths (DESIGN.md open question 3 default); after Rebirth 12 the tab shows "All Rebirths done!".
+- The menu badge counts unspent Rebirth Credits + 1 when a Rebirth is ready.
+

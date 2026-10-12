@@ -17,6 +17,7 @@ local ArmorPage = require(script.Parent.Pages.ArmorPage)
 local EquipmentPage = require(script.Parent.Pages.EquipmentPage)
 local DiamondShopPage = require(script.Parent.Pages.DiamondShopPage)
 local RebirthShopPage = require(script.Parent.Pages.RebirthShopPage)
+local RebirthPage = require(script.Parent.Pages.RebirthPage)
 local IndexPage = require(script.Parent.Pages.IndexPage)
 local QuestsPage = require(script.Parent.Pages.QuestsPage)
 local TeamUI = require(script.Parent.Team)
@@ -75,8 +76,9 @@ local BUILDERS = {
 	Index = IndexPage.build,
 	Quests = QuestsPage.build,
 	Team = TeamUI.buildPage,
-	RebirthShop = function(ctx: any)
-		RebirthShopPage.build(ctx.Pages.Main)
+	Rebirth = function(ctx: any)
+		RebirthPage.build(ctx.Pages.Rebirth)
+		RebirthShopPage.build(ctx.Pages["Rebirth Shop"])
 	end,
 	Zones = ZonesPage.build,
 }

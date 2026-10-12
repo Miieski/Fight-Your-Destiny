@@ -476,14 +476,14 @@ function CombatService:DamagePlayer(player: Player, raw: number, source: any?): 
 	return amount
 end
 
--- A free Common sword of the zone the player is in when they own no weapon at all.
-function CombatService:EnsureStarterWeapon(player: Player)
+-- A free Common sword of the zone the player is in (or of zoneId: RebirthService) when they own no weapon at all.
+function CombatService:EnsureStarterWeapon(player: Player, zoneId: string?)
 	local profile = DataService:Get(player)
 	if not profile or next(profile.Weapons or {}) ~= nil then
 		return
 	end
-	local zoneId = player:GetAttribute("CurrentZone")
-	local zone = if typeof(zoneId) == "string" then Zones.ById[zoneId] else nil
+	local where: any = zoneId or player:GetAttribute("CurrentZone")
+	local zone = if typeof(where) == "string" then Zones.ById[where] else nil
 	local weaponId = string.lower(if zone then zone.Id else "Plains") .. "_sword"
 	if not Weapons.ById[weaponId] then
 		weaponId = "plains_sword"

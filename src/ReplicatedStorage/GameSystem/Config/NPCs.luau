@@ -33,7 +33,7 @@ NPCs.List = {
 		Color = rgb(74, 106, 176), Accent = rgb(230, 200, 112), Hooked = true }, -- PetService already opens Pets > Eggs
 	{ Id = "npc_trophy_merchant", Name = "Trophy Merchant", Marker = "TrophyMerchant", Window = "Inventory", Tab = "Trophies",
 		Action = "Sell trophies", Color = rgb(122, 58, 138), Accent = rgb(122, 90, 54) },
-	{ Id = "npc_priest", Name = "Priest", Marker = "RebirthAltar", Window = "RebirthShop", Action = "Talk",
+	{ Id = "npc_priest", Name = "Priest", Marker = "RebirthAltar", Window = "Rebirth", Tab = "Rebirth", Action = "Rebirth",
 		Color = rgb(242, 238, 228), Accent = rgb(138, 90, 232) },
 	{ Id = "npc_gem_merchant", Name = "Gem Merchant", Marker = "DiamondShop", Window = "Shop", Tab = "Diamonds", Action = "Shop",
 		Color = rgb(42, 58, 138), Accent = rgb(224, 176, 64) },
@@ -44,7 +44,7 @@ NPCs.List = {
 -- Other hub objects with a prompt and no NPC: marker -> window, tab, action text
 NPCs.Boards = {
 	CodesBoard = { Window = "Quests", Tab = "Codes", Action = "Redeem codes", Name = "Codes Board" },
-	RebirthShop = { Window = "RebirthShop", Action = "Open", Name = "Rebirth Shop" },
+	RebirthShop = { Window = "Rebirth", Tab = "Rebirth Shop", Action = "Open", Name = "Rebirth Shop" },
 }
 
 NPCs.ById = {} :: { [string]: NPC }

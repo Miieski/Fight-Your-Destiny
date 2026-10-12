@@ -16,7 +16,7 @@ UI.Menu = {
 	{ Id = "Inventory", Label = "Inventory", Icon = "Inventory" },
 	{ Id = "Stats", Label = "Stats", Icon = "Stats" },
 	{ Id = "Shop", Label = "Shop", Icon = "Shop" },
-	{ Id = "RebirthShop", Label = "Rebirth Shop", Icon = "RebirthShop" },
+	{ Id = "Rebirth", Label = "Rebirth", Icon = "RebirthShop" }, -- tabs Rebirth + Rebirth Shop
 	{ Id = "Pets", Label = "Pets", Icon = "Pets" },
 	{ Id = "Index", Label = "Index", Icon = "Index" },
 	{ Id = "Quests", Label = "Quests", Icon = "Quests" },
@@ -37,7 +37,7 @@ UI.Windows = {
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
 	Stats = { Title = "Attributes", Size = Vector2.new(1080, 620) }, -- Attributes, Elden Ring style (UI/Pages/AttributesPage)
 	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },
-	RebirthShop = { Title = "Rebirth Shop", Size = Vector2.new(920, 600) },
+	Rebirth = { Title = "Rebirth", Tabs = { "Rebirth", "Rebirth Shop" }, Size = Vector2.new(940, 620) }, -- UI/Pages/RebirthPage + RebirthShopPage
 	Pets = { Title = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620) },
 	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620) },
 	Quests = { Title = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600) },
@@ -53,7 +53,7 @@ UI.WINDOW_START_SCALE = 0.9
 UI.BACKDROP_TRANSPARENCY = 0.45
 
 -- Red badges on menu buttons. Settings never shows one.
-UI.BadgeIds = { "Inventory", "Quests", "Index", "Pets", "RebirthShop", "Shop" }
+UI.BadgeIds = { "Inventory", "Quests", "Index", "Pets", "Rebirth", "Shop" }
 UI.BADGE_MAX_SHOWN = 9 -- above this the badge shows "9+"
 
 UI.Hud = {

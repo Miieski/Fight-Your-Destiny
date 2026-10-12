@@ -80,7 +80,7 @@ Settings.KEY_ACTIONS = {
 	{ Id = "Inventory", Label = "Inventory", Group = "Menus", Default = "B", Window = "Inventory" },
 	{ Id = "Stats", Label = "Stats", Group = "Menus", Default = "U", Window = "Stats" },
 	{ Id = "Shop", Label = "Shop", Group = "Menus", Default = "G", Window = "Shop" },
-	{ Id = "RebirthShop", Label = "Rebirth Shop", Group = "Menus", Default = "Y", Window = "RebirthShop" },
+	{ Id = "RebirthShop", Label = "Rebirth", Group = "Menus", Default = "Y", Window = "Rebirth" }, -- id kept for saved bindings
 	{ Id = "Pets", Label = "Pets", Group = "Menus", Default = "P", Window = "Pets" },
 	{ Id = "Index", Label = "Index", Group = "Menus", Default = "N", Window = "Index" },
 	{ Id = "Quests", Label = "Quests", Group = "Menus", Default = "J", Window = "Quests" },

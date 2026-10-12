@@ -33,6 +33,8 @@ local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
 local ZoneService = require(script.Parent.ZoneService)
+local RebirthService = require(script.Parent.RebirthService)
+local Rebirth = require(ReplicatedStorage.GameSystem.Config.Rebirth)
 local EnemyService = require(script.Parent.EnemyService)
 local LootService = require(script.Parent.LootService)
 local Enemies = require(ReplicatedStorage.GameSystem.Config.Enemies)
@@ -298,37 +300,42 @@ local COMMANDS: { [string]: Command } = {
 		DataService:Set(player, "RebirthCredits", n)
 		return true, `Rebirth Credits = {n}`
 	end,
+	-- giveKey(zone): the boss key of a zone (1-12 or id); clearKeys(): no key at all (Rebirth tests)
+	giveKey = function(player, zoneValue)
+		local zone = zoneOf(zoneValue) or Zones.List[math.floor(tonumber(zoneValue) or 0)]
+		local profile = DataService:Get(player)
+		if not (zone and profile) then return false, "giveKey(zone 1-12 or id)" end
+		local keys = table.clone(profile.Keys or {})
+		keys[zone.Id] = true
+		DataService:Set(player, "Keys", keys)
+		return true, `{zone.Boss} key given`
+	end,
+	clearKeys = function(player)
+		DataService:Set(player, "Keys", {})
+		return true, "Keys cleared"
+	end,
+	-- rebirthReady(): the boss key and the Gold of the next Rebirth (Rebirth tests)
+	rebirthReady = function(player)
+		local profile = DataService:Get(player)
+		if not profile then return false, nil end
+		local status = Rebirth.status(profile)
+		local zone = status.zone
+		if status.maxed or not zone then return false, "All Rebirths are done" end
+		local keys = table.clone(profile.Keys or {})
+		keys[zone.Id] = true
+		DataService:Set(player, "Keys", keys)
+		if (tonumber(profile.Gold) or 0) < status.cost then
+			DataService:Set(player, "Gold", status.cost)
+		end
+		return true, `Ready for Rebirth {status.next} ({zone.Boss} key + {Format.number(status.cost)} Gold)`
+	end,
 	-- wipeForRebirth(): the Rebirth reset of docs/menu_systems_brief.txt section 7, to test the rules before the
 	-- Rebirth system exists. Reset: Gold, Attributes, Weapons, Armor, Eggs, non-premium Pets and whatever was
 	-- equipped from them. Kept: Diamonds, Keys, premium pets, Index, Credits, Rebirth upgrades, boosts, settings,
 	-- passes (everything else is untouched).
 	wipeForRebirth = function(player)
-		local profile = DataService:Get(player)
-		if not profile then return false, nil end
-		DataService:Set(player, "Gold", 0)
-		DataService:Set(player, "Attributes", Attributes.empty())
-		DataService:Set(player, "Weapons", {})
-		DataService:Set(player, "EquippedWeapon", nil)
-		DataService:Set(player, "Armor", {})
-		DataService:Set(player, "EquippedArmor", {})
-		DataService:Set(player, "Eggs", {})
-		DataService:Set(player, "Trophies", {})
-		local pets, kept = {}, 0
-		for uid, pet in pairs(profile.Pets or {}) do
-			if pet.premium then
-				pets[uid] = pet
-				kept += 1
-			end
-		end
-		DataService:Set(player, "Pets", pets)
-		local equipped = {}
-		for _, uid in ipairs(profile.EquippedPets or {}) do
-			if pets[uid] then
-				table.insert(equipped, uid)
-			end
-		end
-		DataService:Set(player, "EquippedPets", equipped)
-		WeaponService:Refresh(player)
+		if not DataService:Get(player) then return false, nil end
+		local kept = RebirthService:Wipe(player)
 		return true, `Rebirth wipe done ({kept} premium pet{if kept == 1 then "" else "s"} kept)`
 	end,
 	-- giveEgg(zone, rarity, count?): zone = 1..12 or a zone id; loot eggs (auto-sold when the storage is full)

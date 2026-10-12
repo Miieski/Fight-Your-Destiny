@@ -86,6 +86,11 @@ local function setLocation(player: Player, zoneId: string, subZoneId: string)
 	end
 end
 
+-- "In a fight" = took damage in the last Zones.TELEPORT.CombatSeconds (menu teleports and Rebirth are refused).
+function ZoneService:InCombat(player: Player): boolean
+	return os.clock() - (lastDamage[player] or -math.huge) < Zones.TELEPORT.CombatSeconds
+end
+
 function ZoneService:ToHub(player: Player)
 	local hub = workspace:FindFirstChild("Hub")
 	local spawn = hub and hub:FindFirstChildOfClass("SpawnLocation")
@@ -124,6 +129,29 @@ function ZoneService:EnterZone(player: Player, zoneId: string)
 	end
 end
 
+-- Zone unlock chain (DESIGN.md section 4): reopening zone N's boss room after a Rebirth (Rebirths >= N) marks zone N
+-- "redone"; zone N + 1 opens with the key of boss N, at least N Rebirths and zone N redone since the last Rebirth
+-- (RebirthService clears RedoneSinceRebirth).
+function ZoneService:CheckRedo(player: Player, zoneId: string)
+	local profile = DataService:Get(player)
+	local zone = Zones.ById[zoneId]
+	if not (profile and zone) or (tonumber(profile.Rebirths) or 0) < zone.Index then
+		return
+	end
+	if not (profile.RedoneSinceRebirth or {})[zoneId] then
+		local redone = table.clone(profile.RedoneSinceRebirth or {})
+		redone[zoneId] = true
+		DataService:Set(player, "RedoneSinceRebirth", redone)
+	end
+	local nextZone = Zones.List[zone.Index + 1]
+	if nextZone and not profile.Zones[nextZone.Id] and (profile.Keys or {})[zoneId] then
+		local open = table.clone(profile.Zones)
+		open[nextZone.Id] = true
+		DataService:Set(player, "Zones", open)
+		notify(player, `{nextZone.Name} unlocked! Travel there from the Zones menu.`, "reward")
+	end
+end
+
 local function tryUnlock(player: Player, subZone: SubZone)
 	local profile = DataService:Get(player)
 	local root = rootOf(player)
@@ -149,6 +177,9 @@ local function tryUnlock(player: Player, subZone: SubZone)
 	DataService:Set(player, "SubZones", unlocked)
 	notify(player, `{Zones.ById[subZone.zoneId].SubZones[subZone.n]} unlocked!`, "reward")
 	RewardService.progress(player, "OpenSubZone", 1)
+	if subZone.n == Zones.BOSS_SUBZONE then
+		ZoneService:CheckRedo(player, subZone.zoneId)
+	end
 end
 
 -- Boss rooms (Part C) are run by BossService; these wrappers keep the old call sites (lazy require: BossService

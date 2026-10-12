@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local IndexBook = require(ReplicatedStorage.GameSystem.Config.IndexBook)
+local Rebirth = require(ReplicatedStorage.GameSystem.Config.Rebirth)
 local State = require(script.Parent.Parent.State)
 
 local Badges = {}
@@ -35,8 +36,10 @@ local REGISTRY: { [string]: Entry } = {
 	end },
 	Pets = debugOnly("Pets"), -- later: new pets
 	Shop = debugOnly("Shop"), -- later: new reward / daily
-	RebirthShop = { Keys = { "DebugBadges", "RebirthCredits" }, Count = function() -- unspent Rebirth Credits
-		return math.max(debugCount("RebirthShop"), tonumber(State.get("RebirthCredits")) or 0)
+	Rebirth = { Keys = { "DebugBadges", "RebirthCredits", "Rebirths", "Gold", "Keys" }, Count = function()
+		-- unspent Rebirth Credits, + 1 when the next Rebirth is ready
+		local ready = Rebirth.status({ Rebirths = State.get("Rebirths"), Gold = State.get("Gold"), Keys = State.get("Keys") }).ready
+		return math.max(debugCount("Rebirth"), (tonumber(State.get("RebirthCredits")) or 0) + (if ready then 1 else 0))
 	end },
 	Settings = { Keys = {}, Count = function()
 		return 0
