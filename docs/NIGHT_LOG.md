@@ -715,6 +715,14 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 15:05 PHASE 3 - MAGIC category V2 done (12/12, each compared with its icon). Triangles: 1844, 3076, 2576, 1726, 2182, 2050, 2284, 2370, 3070, 2538, 2774, 2500 (budget 5,000);
+  all 6 studs. Twist-free curling prongs, 20 x 12 orbs, snowflake side branches, cauldron chain links / handles,
+  vertebra spikes, skull teeth. Muzzle = the focus (orb / snowflake / tome / cauldron). Fix during the checks: the
+  Cauldron Staff brew read white (a flat emissive disc reflecting the sky, the cauldron cap level with it) -> the
+  cap sinks inside the pot and the brew is a shallow dome (green like the icon).
+  ALL 84 WEAPONS ARE V2: manifest {'v2': 84}, 810 - 3076 triangles, every .blend and .fbx replaced,
+  every model compared with its icon, 7 lineups in `Previews/Weapons/`.
+
 - 14:35 PHASE 3 - RANGED category V2 done (12/12, each compared with its icon). Triangles: 994, 1494, 1518, 1206, 1478, 1226, 1184, 1534, 1784, 1594, 1416, 1744; all 5 studs.
   Bow limbs with 12 segments on the twist-free tube, spiral grip wraps, string knots; crossbows with triggers and
   latches; guns with grip ridges, triggers, tank / barrel rings. Muzzle points: bows = the arrow rest, crossbows =
