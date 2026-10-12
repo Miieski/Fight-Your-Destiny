@@ -4,13 +4,17 @@
 -- is a Clone() of it, so a grid of 60 pets never rebuilds models.
 --   ModelIcon.pet(petId, props?), ModelIcon.egg(zoneIndex, tier?, props?), ModelIcon.armor(id, tier, props?)
 --       -> ViewportFrame (armor = the procedural piece of Util/ArmorLook, built on an invisible body)
---   props = { Size, Position, AnchorPoint, ZIndex, Parent, Silhouette (black shape, locked items), Name }
---   ModelIcon.turntable(view, seconds?) -> stop(): slow spin, drag to turn (detail previews)
+--   props = { Size, Position, AnchorPoint, ZIndex, Parent, Silhouette (black shape, locked items), Name,
+--             Mutation (pets: Config/PetMutations id, drawn with Util/PetLook) }
+--   ModelIcon.turntable(view, seconds?) -> stop(): slow spin, drag to turn (detail previews); Pets V2 rigs also
+--       play their idle animation (Util/PetMotion)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local ArmorLook = require(ReplicatedStorage.GameSystem.Util.ArmorLook)
+local PetLook = require(ReplicatedStorage.GameSystem.Util.PetLook)
+local PetMotion = require(ReplicatedStorage.GameSystem.Util.PetMotion)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
@@ -26,7 +30,7 @@ local function source(folder: string, name: string): Model?
 	return if model and model:IsA("Model") then model else nil
 end
 
-local function build(model: Model?, tier: number?, zoom: number): ViewportFrame
+local function build(model: Model?, tier: number?, zoom: number, decorate: ((Model) -> ())?): ViewportFrame
 	local view = Instance.new("ViewportFrame")
 	view.BackgroundTransparency = 1
 	view.Ambient = Color3.fromRGB(175, 168, 160)
@@ -49,6 +53,9 @@ local function build(model: Model?, tier: number?, zoom: number): ViewportFrame
 			item.Color = rarity.Color
 			item.Transparency = 0.15
 		end
+	end
+	if decorate then
+		decorate(clone)
 	end
 	clone:PivotTo(CFrame.Angles(0, YAW, 0))
 	clone.Parent = view
@@ -85,8 +92,12 @@ local function instance(key: string, make: () -> ViewportFrame, props: { [string
 end
 
 function ModelIcon.pet(petId: string, props: { [string]: any }?): ViewportFrame
-	return instance("pet:" .. petId, function()
-		return build(source("Pets", petId), nil, 1.12)
+	local mutation = props and props.Mutation
+	local key = if typeof(mutation) == "string" and mutation ~= "" then `pet:{petId}:{mutation}` else "pet:" .. petId
+	return instance(key, function()
+		return build(source("Pets", petId), nil, 1.12, function(clone: Model)
+			PetLook.apply(clone, mutation, { Static = true })
+		end)
 	end, props)
 end
 
@@ -137,6 +148,7 @@ function ModelIcon.turntable(view: ViewportFrame, seconds: number?): () -> ()
 	local offset = pivot:ToObjectSpace(model:GetPivot())
 	local yaw, dragging, lastX = 0, false, 0
 	local period = seconds or 8
+	local motion = PetMotion.new(model)
 	local conns = {}
 	table.insert(conns, view.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -161,7 +173,12 @@ function ModelIcon.turntable(view: ViewportFrame, seconds: number?): () -> ()
 		if not dragging then
 			yaw += dt * math.pi * 2 / period
 		end
-		model:PivotTo(pivot * CFrame.Angles(0, yaw, 0) * offset)
+		local cf = pivot * CFrame.Angles(0, yaw, 0) * offset
+		if motion then
+			motion:step(cf, dt, 0, os.clock())
+		else
+			model:PivotTo(cf)
+		end
 	end))
 	return function()
 		for _, conn in ipairs(conns) do

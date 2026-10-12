@@ -1,7 +1,8 @@
 --!strict
 -- The hatch screen (docs/menu_systems_brief.txt B1). The server already hatched (PetService); this only shows
 -- it: the egg wobbles faster and faster, cracks, bursts, and the pet pops out with its rarity banner (the case
--- opening's effects, CaseOpening.burst), name, species, zone, stats and bonus. Buttons: Equip (when a slot is
+-- opening's effects, CaseOpening.burst), name, species, zone, stats and bonus; a mutation / size (Pets V2,
+-- Config/PetMutations) gets its own callout ("GOLDEN!", "HUGE RAINBOW!") and look. Buttons: Equip (when a slot is
 -- free), the caller's "next" action (Hatch next / Buy again), Close. Several results (Hatch All) end on a
 -- summary grid with Equip Best. A tap on the egg skips to the reveal. Fast Open shortens the wobble.
 --   Hatching.play(results, { NextText?, OnNext? })   results = the "results" list of HatchEgg / HatchAll / BuyPremiumEgg
@@ -11,6 +12,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
 local PetRarities = require(ReplicatedStorage.GameSystem.Config.PetRarities)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
@@ -120,11 +122,44 @@ local function equippedCount(): number
 	return #(State.get("EquippedPets") or {})
 end
 
+-- the stored-pet shape of a hatch result (Config/PetMutations helpers read it)
+local function asPet(result: any): { [string]: any }
+	return { id = result.petId, rarity = result.rarity, mutation = result.mutation, size = result.size }
+end
+
+-- "HUGE GOLDEN! x2.4" over the bottom of the pet picture, in the mutation's color (size only: gold), with a
+-- bounce; nil for a plain pet
+local function callout(show: Show, result: any): TextLabel?
+	local prefix = PetMutations.prefix(asPet(result))
+	if prefix == "" then
+		return nil
+	end
+	local mutation = PetMutations.get(result.mutation)
+	local size = if Theme.isCompact() then 24 else 32
+	local label = Theme.text({ Name = "Callout", Font = "Title", Text = `{string.upper(prefix)}! {PetMutations.multText(asPet(result))}`, TextSize = size, Color = if mutation then mutation.Color else Theme.Colors.Gold, StrokeThickness = 2, Size = UDim2.new(1.4, 0, 0, size + 8), Position = UDim2.new(0.5, 0, 1, -2), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 8, Parent = show.stageHolder })
+	local bounce = Instance.new("UIScale")
+	bounce.Scale = 1.6
+	bounce.Parent = label
+	TweenService:Create(bounce, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	if mutation and mutation.Id == "Rainbow" then
+		local gradient = Instance.new("UIGradient")
+		gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 90, 90)),
+			ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 230, 90)),
+			ColorSequenceKeypoint.new(0.66, Color3.fromRGB(90, 220, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 255)),
+		})
+		gradient.Parent = label
+		label.TextColor3 = Color3.new(1, 1, 1)
+	end
+	return label
+end
+
 -- one pet: the model pops out, rarity banner, values
 local function revealOne(show: Show, result: any)
 	local species = Pets.ById[result.petId]
 	local rarity = Rarities.get(result.rarity)
-	local view = ModelIcon.pet(result.petId, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = 4, Parent = show.stage })
+	local view = ModelIcon.pet(result.petId, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = 4, Parent = show.stage, Mutation = result.mutation })
 	local pop = Instance.new("UIScale")
 	pop.Scale = 0.2
 	pop.Parent = view
@@ -132,10 +167,12 @@ local function revealOne(show: Show, result: any)
 	show.stopSpin = ModelIcon.turntable(view, 7)
 	local banner = info(show, rarity.Name, if Theme.isCompact() then 30 else 40, nil, 1, "Title")
 	Theme.paintRarity(banner, result.rarity)
+	callout(show, result)
 	local zone = Zones.List[result.zone]
-	info(show, species.Name, if Theme.isCompact() then 24 else 30, Theme.Colors.Gold, 2, "Title")
+	info(show, Pets.displayName(asPet(result)), if Theme.isCompact() then 24 else 30, Theme.Colors.Gold, 2, "Title")
 	info(show, `{species.Role} - {if species.Premium then "Premium" else (zone and ZoneVisibility.displayName(zone.Id) or "")}`, 18, Theme.Colors.TextDim, 3)
-	local lines, bonus = Pets.describe(result.petId, result.rarity, Hatching.petEffect())
+	-- the values include the mutation x size boost
+	local lines, bonus = Pets.describe(result.petId, result.rarity, Hatching.petEffect() * PetMutations.mult(asPet(result)))
 	info(show, table.concat(lines, "   "), 20, nil, 4)
 	info(show, `Bonus: {bonus}`, 19, Theme.Colors.Good, 5)
 	if result.lucky then
@@ -164,7 +201,7 @@ local function revealMany(show: Show)
 	local banner = info(show, `{#show.results} pets hatched!`, if compact then 26 else 34, Theme.Colors.Gold, 1, "Title")
 	banner.LayoutOrder = 1
 	local best = Rarities.get(show.best.rarity)
-	local bestLine = info(show, `Best: {best.Name} {Pets.ById[show.best.petId].Name}`, 20, nil, 2, "Button")
+	local bestLine = info(show, `Best: {best.Name} {Pets.displayName(asPet(show.best))}`, 20, nil, 2, "Button")
 	Theme.paintRarity(bestLine, show.best.rarity)
 	local grid = Instance.new("ScrollingFrame")
 	grid.Name = "Summary"
@@ -190,7 +227,10 @@ local function revealMany(show: Show)
 	grid.Parent = show.info
 	local sorted = table.clone(show.results)
 	table.sort(sorted, function(a, b)
-		return a.rarity > b.rarity
+		if a.rarity ~= b.rarity then
+			return a.rarity > b.rarity
+		end
+		return PetMutations.rank(asPet(a)) > PetMutations.rank(asPet(b))
 	end)
 	for index, result in ipairs(sorted) do
 		local cell = Instance.new("Frame")
@@ -200,9 +240,14 @@ local function revealMany(show: Show)
 		Theme.corner(cell, 6)
 		local stroke = Theme.stroke(cell, Theme.Colors.GoldDark, 2.5)
 		Theme.paintRarity(stroke, result.rarity)
-		ModelIcon.pet(result.petId, { Size = UDim2.new(1, -6, 1, -26), Position = UDim2.new(0.5, 0, 0, 3), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 5, Parent = cell })
+		ModelIcon.pet(result.petId, { Size = UDim2.new(1, -6, 1, -26), Position = UDim2.new(0.5, 0, 0, 3), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 5, Parent = cell, Mutation = result.mutation })
 		local name = Theme.text({ Font = "Button", Text = Rarities.get(result.rarity).Name, TextSize = 14, Size = UDim2.new(1, -4, 0, 20), Position = UDim2.new(0.5, 0, 1, -2), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 5, Parent = cell })
 		Theme.paintRarity(name, result.rarity)
+		local prefix = PetMutations.prefix(asPet(result))
+		if prefix ~= "" then
+			local mutation = PetMutations.get(result.mutation)
+			Theme.text({ Font = "Button", Text = prefix, TextSize = 12, Color = if mutation then mutation.Color else Theme.Colors.Gold, Size = UDim2.new(1, -4, 0, 16), Position = UDim2.new(0.5, 0, 0, 2), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 6, Parent = cell })
+		end
 		cell.Parent = grid
 	end
 	local equip = show.buttons.Equip
@@ -223,7 +268,9 @@ local function reveal(show: Show)
 	show.cracks:ClearAllChildren()
 	local tier = show.best.rarity
 	Sfx.play("PetHatch")
-	Sfx.play(if tier >= Rarities.LEGENDARY_SOUND_FROM then "RarityLegendary" else "RarityReveal")
+	-- a mutation always gets the big reveal sound
+	local mutated = PetMutations.get(show.best.mutation) ~= nil
+	Sfx.play(if tier >= Rarities.LEGENDARY_SOUND_FROM or mutated then "RarityLegendary" else "RarityReveal")
 	CaseOpening.burst(show.fx, show.modal, tier)
 	if #show.results == 1 then
 		revealOne(show, show.results[1])
@@ -248,7 +295,7 @@ function Hatching.play(results: { any }, options: Options?)
 	local opts = options or {}
 	local best = results[1]
 	for _, result in ipairs(results) do
-		if result.rarity > best.rarity then
+		if result.rarity > best.rarity or (result.rarity == best.rarity and PetMutations.rank(asPet(result)) > PetMutations.rank(asPet(best))) then
 			best = result
 		end
 	end

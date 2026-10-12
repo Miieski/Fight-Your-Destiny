@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
+local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local RebirthShop = require(ReplicatedStorage.GameSystem.Config.RebirthShop)
 local WeaponRarities = require(ReplicatedStorage.GameSystem.Config.WeaponRarities)
@@ -82,6 +83,33 @@ return function(count: number?, seed: number?): (string, number)
 		maxZ = math.max(maxZ, math.abs(z))
 		line(string.format("Loot eggs, Egg Luck level %d: %.2f%% one tier rarer (expected %.0f%%, %+.1f sd), %d wrong tiers, %d Secret eggs above Secret.",
 			luckLevel, shifted / n * 100, luck * 100, z, wrong, secretUp))
+	end
+	-- 3. mutations and sizes (Pets V2): each one at its Config/PetMutations chance, independent of the rarity
+	do
+		local mutations, sizes = {}, {}
+		for i = 1, n do
+			local _, _, _, mutation, size = PetService.hatchRoll(rng, 1 + (i % 12), 1 + (i % 8), 0)
+			if mutation then
+				mutations[mutation] = (mutations[mutation] or 0) + 1
+			end
+			if size then
+				sizes[size] = (sizes[size] or 0) + 1
+			end
+		end
+		local parts = {}
+		for _, entry in ipairs(PetMutations.List) do
+			local got = (mutations[entry.Id] or 0) / n
+			local z = zScore(got, entry.Chance, n)
+			maxZ = math.max(maxZ, math.abs(z))
+			table.insert(parts, string.format("%s %.3f%% (exp %.2f%%, %+.1f sd)", entry.Name, got * 100, entry.Chance * 100, z))
+		end
+		for _, entry in ipairs(PetMutations.Sizes) do
+			local got = (sizes[entry.Id] or 0) / n
+			local z = zScore(got, entry.Chance, n)
+			maxZ = math.max(maxZ, math.abs(z))
+			table.insert(parts, string.format("%s %.3f%% (exp %.2f%%, %+.1f sd)", entry.Name, got * 100, entry.Chance * 100, z))
+		end
+		line("Mutations / sizes over " .. n .. " hatches: " .. table.concat(parts, ", "))
 	end
 	line(string.format("Largest gap: %.2f standard errors (|z| < 4 expected over all lines).", maxZ))
 	return table.concat(lines, "\n"), maxZ

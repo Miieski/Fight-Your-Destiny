@@ -1,16 +1,24 @@
 --!strict
--- Pets that follow their owner (docs/menu_systems_brief.txt B4). Client-side visuals only: the server lists
--- each player's first equipped pets in the "FollowPets" attribute ("petId:tier,petId:tier"); this clones the
--- models (ReplicatedStorage.Assets.Pets) into a local folder and moves them every frame with PivotTo.
--- Walkers hop along the ground behind the owner, flyers float with a gentle bob. No collision, no physics.
--- Other players' pets: only within Follow.ViewDistance studs, at most 3 per player, hidden when Low FX is on and
--- more than Follow.CrowdPlayers players are nearby. Epic and rarer pets get a soft light in their rarity color.
+-- Pets that follow their owner (docs/menu_systems_brief.txt B4, Pets V2 docs/pets_v2_plan.md). Client-side visuals
+-- only: the server lists each player's first equipped pets in the "FollowPets" attribute
+-- ("petId:tier" or "petId:tier:Mutation:Size"); this clones the models (ReplicatedStorage.Assets.Pets) into a
+-- local folder, scales them by their size (Big / Huge, Config/PetMutations), dresses them in their mutation look
+-- (Util/PetLook) and moves them every frame. V2 rigs are animated piece by piece (Util/PetMotion: walk cycle,
+-- wings, tail, idle, a happy jump when the owner kills an enemy); the procedural placeholders are moved whole
+-- with PivotTo (walkers hop). Flyers / swimmers / floaters stay in the air with a gentle bob. No collision, no
+-- physics. Other players' pets: only within Follow.ViewDistance studs, at most 3 per player, hidden when Low FX
+-- is on and more than Follow.CrowdPlayers players are nearby. Epic and rarer pets get a soft light in their
+-- rarity color.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Net = require(ReplicatedStorage.GameSystem.Net)
+local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
 local PetRarities = require(ReplicatedStorage.GameSystem.Config.PetRarities)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local PetLook = require(ReplicatedStorage.GameSystem.Util.PetLook)
+local PetMotion = require(ReplicatedStorage.GameSystem.Util.PetMotion)
 local Settings = require(script.Parent.SettingsController)
 
 local PetFollowController = { Priority = 30 }
@@ -18,7 +26,18 @@ local PetFollowController = { Priority = 30 }
 local FOLLOW = PetRarities.Follow
 local LIGHT_FROM = Rarities.GLOW_FROM
 
-type Pet = { model: Model, flying: boolean, position: Vector3, facing: Vector3, phase: number, height: number }
+type Pet = {
+	model: Model,
+	flying: boolean,
+	hops: boolean,
+	position: Vector3,
+	facing: Vector3,
+	phase: number,
+	height: number,
+	spread: number,
+	motion: any,
+	look: PetLook.Look?,
+}
 type Owner = { key: string, pets: { Pet }, visible: boolean }
 
 local owners: { [Player]: Owner } = {}
@@ -35,15 +54,17 @@ local function clear(owner: Owner)
 	table.clear(owner.pets)
 end
 
-local function makePet(id: string, tier: number, index: number): Pet?
+local function makePet(id: string, tier: number, index: number, mutation: string?, size: string?): Pet?
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	local source = assets and assets:FindFirstChild("Pets") and assets.Pets:FindFirstChild(id)
 	if not source then
 		return nil
 	end
 	local model = source:Clone() :: Model
-	if FOLLOW.Scale ~= 1 then
-		model:ScaleTo(FOLLOW.Scale)
+	local sizeScale = PetMutations.scale(size)
+	local scale = FOLLOW.Scale * sizeScale
+	if scale ~= 1 then
+		model:ScaleTo(scale)
 	end
 	local low = Settings.get("LowFx") == true
 	for _, item in ipairs(model:GetDescendants()) do
@@ -59,15 +80,27 @@ local function makePet(id: string, tier: number, index: number): Pet?
 		light.Brightness = 0.9
 		light.Parent = model.PrimaryPart
 	end
+	local look = PetLook.apply(model, mutation, { LowFx = low })
+	-- the rest pose is recorded after the scale and the shells, before the model moves
+	local motion = PetMotion.new(model)
+	if motion then
+		motion.phase = index * 1.7
+	end
 	model.Parent = folder
-	local _, size = model:GetBoundingBox()
+	local _, box = model:GetBoundingBox()
+	local gait = model:GetAttribute("Gait")
 	return {
 		model = model,
 		flying = model:GetAttribute("Flying") == true,
+		-- V2 walkers walk with their legs; hoppers and the old placeholders hop
+		hops = gait == nil or gait == "Hop",
 		position = Vector3.new(0, -1000, 0),
 		facing = Vector3.new(0, 0, -1),
 		phase = index * 1.7,
-		height = size.Y,
+		height = box.Y,
+		spread = 1 + (sizeScale - 1) * 0.6, -- big pets walk a little farther out
+		motion = motion,
+		look = look,
 	}
 end
 
@@ -86,9 +119,9 @@ local function rebuild(player: Player, owner: Owner)
 		if #owner.pets >= PetRarities.MaxFollowing then
 			break
 		end
-		local id, tier = string.match(entry, "^([%w_]+):(%d+)$")
+		local id, tier, mutation, size = string.match(entry, "^([%w_]+):(%d+):?(%a*):?(%a*)$")
 		if id then
-			local pet = makePet(id, tonumber(tier) or 1, #owner.pets + 1)
+			local pet = makePet(id, tonumber(tier) or 1, #owner.pets + 1, if mutation ~= "" then mutation else nil, if size ~= "" then size else nil)
 			if pet then
 				table.insert(owner.pets, pet)
 				if not owner.visible then
@@ -170,18 +203,21 @@ local function step(dt: number)
 		local flat = Vector3.new(look.X, 0, look.Z)
 		flat = if flat.Magnitude > 0.01 then flat.Unit else Vector3.new(0, 0, -1)
 		local basis = CFrame.lookAt(Vector3.new(root.Position.X, 0, root.Position.Z), Vector3.new(root.Position.X, 0, root.Position.Z) + flat)
-		local moving = root.AssemblyLinearVelocity.Magnitude > 2
+		local velocity = root.AssemblyLinearVelocity
+		local ownerSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+		local moving = ownerSpeed > 2
 		for index, pet in ipairs(owner.pets) do
-			local offset = FOLLOW.Offsets[index] or FOLLOW.Offsets[#FOLLOW.Offsets]
+			local offset = (FOLLOW.Offsets[index] or FOLLOW.Offsets[#FOLLOW.Offsets]) * pet.spread
 			local spot = basis * offset
 			local ground = if player == localPlayer or index == 1 then groundY(Vector3.new(spot.X, root.Position.Y, spot.Z), feet) else feet
 			local y = ground
 			if pet.flying then
 				y += FOLLOW.FlyHeight + math.sin(now * FOLLOW.BobSpeed + pet.phase) * FOLLOW.BobHeight
-			elseif moving then
+			elseif moving and pet.hops then
 				y += math.abs(math.sin(now * FOLLOW.HopSpeed + pet.phase)) * FOLLOW.HopHeight
 			end
 			local target = Vector3.new(spot.X, y, spot.Z)
+			local before = pet.position
 			if (pet.position - target).Magnitude > FOLLOW.TeleportDistance then
 				pet.position = target
 			else
@@ -195,7 +231,17 @@ local function step(dt: number)
 			if pet.facing.Magnitude < 0.01 then
 				pet.facing = flat
 			end
-			pet.model:PivotTo(CFrame.lookAt(pet.position, pet.position + pet.facing))
+			local cf = CFrame.lookAt(pet.position, pet.position + pet.facing)
+			if pet.motion then
+				local moved = Vector3.new(pet.position.X - before.X, 0, pet.position.Z - before.Z).Magnitude
+				local speed = if dt > 0 and moved < FOLLOW.TeleportDistance then moved / dt else 0
+				pet.motion:step(cf, dt, math.max(speed, if moving then ownerSpeed * 0.8 else 0), now)
+			else
+				pet.model:PivotTo(cf)
+			end
+			if pet.look then
+				pet.look.update(now)
+			end
 		end
 	end
 end
@@ -221,6 +267,18 @@ function PetFollowController:Start()
 		for player, owner in pairs(owners) do
 			owner.key = "\0"
 			rebuild(player, owner)
+		end
+	end)
+	-- the owner's pets jump for joy at each kill
+	Net.on("EnemyKilled", function()
+		local owner = owners[Players.LocalPlayer]
+		if owner then
+			local now = os.clock()
+			for _, pet in ipairs(owner.pets) do
+				if pet.motion then
+					pet.motion:cheer(now)
+				end
+			end
 		end
 	end)
 	RunService.RenderStepped:Connect(step)

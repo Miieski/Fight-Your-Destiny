@@ -1,7 +1,10 @@
 --!strict
--- The 72 zone pets (6 per zone) and 4 premium pets (docs/menu_systems_brief.txt B2-B4). Slot roles are the same
--- in every zone (stats + bonus); Body / colors / accessories drive the procedural models
--- (ServerStorage.DevTools.PetModels -> ReplicatedStorage.Assets.Pets.<PetId>). Ids: "<zone lower>_pet<slot>".
+-- The 72 zone pets (6 per zone) and 4 premium pets (docs/menu_systems_brief.txt B2-B4; species list V2 after
+-- Steal an Egg, docs/pets_v2_plan.md, owner 2026-10-12). Slot roles are the same in every zone (stats + bonus).
+-- Models: ReplicatedStorage.Assets.Pets.<PetId> - the AI-generated rigs of DevTools/PetRigBuilder; Body / colors /
+-- accessories only drive the procedural placeholders (DevTools/PetModels). Ids: "<zone lower>_pet<slot>".
+-- A stored pet is { id, rarity, premium, locked, mutation?, size? } (Config/PetMutations).
+local PetMutations = require(script.Parent.PetMutations)
 local PetRarities = require(script.Parent.PetRarities)
 local Rarities = require(script.Parent.Rarities)
 local Zones = require(script.Parent.Zones)
@@ -54,99 +57,99 @@ local hex = Color3.fromHex
 -- Crystal, Glow, Gear, Laser, Teeth, Tentacles, Shell, Mask, Snout.
 local SPECIES = {
 	Plains = {
+		{ "Puppy", "Quadruped", "#D9A066", "#FFFFFF", { "Ears", "Tail" }, 1 },
+		{ "Fox Kit", "Quadruped", "#F07F2A", "#FFFFFF", { "BigEars", "Tail" }, 1 },
+		{ "Bear Cub", "Quadruped", "#8A5A33", "#D9B48A", { "Ears" }, 1.1 },
 		{ "Boar Piglet", "Quadruped", "#E8A3A3", "#8A5A33", { "Tusks", "Snout" }, 1 },
-		{ "Wolf Pup", "Quadruped", "#9AA0A8", "#E8E8E8", { "Ears", "Tail" }, 1 },
-		{ "Baby Bear", "Quadruped", "#8A5A33", "#D9B48A", { "Ears" }, 1.1 },
-		{ "Seagull Chick", "Bird", "#F2F2F2", "#F5C542", {}, 0.9 },
-		{ "Crab Buddy", "Insect", "#E0503A", "#F5D0B0", { "Claws" }, 0.9 },
-		{ "Spider Hatchling", "Insect", "#3A3036", "#B04A4A", { "Spots" }, 0.85 },
+		{ "Raccoon", "Quadruped", "#8C8C94", "#2A2A30", { "Ears", "Tail" }, 0.95 },
+		{ "Owl", "Bird", "#9A7048", "#F2E2C0", { "Ears" }, 1 },
 	},
 	Desert = {
-		{ "Jackal Pup", "Quadruped", "#D9A45A", "#7A5230", { "BigEars", "Tail" }, 1 },
-		{ "Scorpion Cub", "Insect", "#E0A030", "#7A3E16", { "Claws", "Stinger" }, 0.95 },
-		{ "Baby Croc", "Quadruped", "#5E8A3A", "#C9D98A", { "LongSnout", "Spikes" }, 1 },
-		{ "Desert Eaglet", "Bird", "#8A5A33", "#F2E2C0", {}, 1 },
-		{ "Scarab Beetle", "Insect", "#1FA59A", "#E2B04A", { "Shell" }, 0.85 },
+		{ "Fennec Fox", "Quadruped", "#E8C48A", "#FFF4E0", { "BigEars", "Tail" }, 0.95 },
+		{ "Scorpion", "Insect", "#E0A030", "#7A3E16", { "Claws", "Stinger" }, 0.95 },
+		{ "Baby Camel", "Quadruped", "#D9A45A", "#F2E2C0", { "Ears" }, 1.1 },
 		{ "Sand Snake", "Fish", "#D9B77A", "#8A5A33", { "Spots" }, 1 },
+		{ "Jerboa", "Quadruped", "#E0B880", "#FFFFFF", { "BigEars", "Tail" }, 0.85 },
+		{ "Royal Sphinx", "Quadruped", "#E8C25A", "#1FA59A", { "Ears", "Crown" }, 1.05 },
 	},
 	Jungle = {
 		{ "Monkey", "Biped", "#8A5A33", "#E8C9A0", { "Ears", "Tail" }, 1 },
-		{ "Jaguar Cub", "Quadruped", "#E09A2E", "#3A2414", { "Ears", "Spots", "Tail" }, 1 },
-		{ "Frog Prince", "Blob", "#5ACB4A", "#F1C40F", { "Crown" }, 0.9 },
-		{ "Piranha Pal", "Fish", "#C0392B", "#9AA0A8", { "Teeth", "Fins" }, 0.9 },
-		{ "Green Viper", "Fish", "#2E8B3A", "#9AD94A", { "Teeth" }, 1 },
-		{ "Totem Spirit", "Biped", "#A0703F", "#1FA59A", { "Mask", "Glow" }, 1 },
+		{ "Tiger Cub", "Quadruped", "#F08A2A", "#2A1A10", { "Ears", "Spots", "Tail" }, 1 },
+		{ "Baby Gorilla", "Biped", "#3A3A40", "#8A8A90", {}, 1.1 },
+		{ "Crocodile", "Quadruped", "#5E8A3A", "#C9D98A", { "LongSnout", "Spikes" }, 1.05 },
+		{ "Toucan", "Bird", "#26222A", "#FF9A2A", {}, 1 },
+		{ "Chameleon", "Quadruped", "#5ACB4A", "#F1C40F", { "Spikes", "Tail" }, 0.95 },
 	},
 	Tundra = {
-		{ "Snow Owl", "Bird", "#F2F4F8", "#C9D3DC", { "Ears" }, 1 },
-		{ "Arctic Fox", "Quadruped", "#F2F4F8", "#9FB4C6", { "BigEars", "Tail" }, 1 },
+		{ "Penguin", "Biped", "#26262E", "#FFFFFF", {}, 0.95 },
+		{ "Sabertooth Cub", "Quadruped", "#E0B070", "#FFFFFF", { "Ears", "Tusks", "Tail" }, 1.05 },
 		{ "Polar Bear Cub", "Quadruped", "#F5F5F0", "#C9D3DC", { "Ears" }, 1.1 },
+		{ "Baby Mammoth", "Quadruped", "#8A5A3A", "#F2E8D8", { "BigEars", "Tusks" }, 1.15 },
+		{ "Snow Hare", "Quadruped", "#F2F4F8", "#FFB0C0", { "BigEars" }, 0.85 },
 		{ "Baby Yeti", "Biped", "#E8F0F8", "#7CC8EE", { "Horns" }, 1.1 },
-		{ "Ice Eaglet", "Bird", "#7CC8EE", "#E8F0F8", { "Crystal" }, 1 },
-		{ "White Wolf Pup", "Quadruped", "#E8EEF2", "#7CC8EE", { "Ears", "Tail" }, 1 },
 	},
 	Swamp = {
-		{ "Leech Buddy", "Blob", "#3E5A2E", "#8A9A4A", { "Teeth" }, 0.85 },
-		{ "Black Kitten", "Quadruped", "#26222A", "#F1C40F", { "Ears", "Tail" }, 0.9 },
-		{ "Mud Golemite", "Biped", "#5A4630", "#6E9A3A", { "Leaves" }, 1.1 },
-		{ "Baby Treant", "Biped", "#6E4A2A", "#5ACB4A", { "Leaves", "Antlers" }, 1.1 },
-		{ "Crow", "Bird", "#26222A", "#7A4AA0", {}, 1 },
-		{ "Little Wisp", "Blob", "#9AFF6A", "#F1FF8A", { "Glow" }, 0.8 },
+		{ "Duckling", "Bird", "#F5D442", "#FF9A2A", {}, 0.85 },
+		{ "Frog", "Blob", "#5ACB4A", "#F1E08A", {}, 0.9 },
+		{ "Turtle", "Quadruped", "#6E9A3A", "#8A6A3A", { "Shell" }, 1 },
+		{ "Catfish", "Fish", "#6A7A6A", "#C9C0A0", { "Fins" }, 1 },
+		{ "Firefly", "Insect", "#3A3A2A", "#F1FF8A", { "Wings", "Glow" }, 0.8 },
+		{ "Axolotl", "Quadruped", "#FFB0D0", "#FF5A9A", { "Tail", "Spots" }, 0.95 },
 	},
 	Volcano = {
-		{ "Ash Lizard", "Quadruped", "#6A6A70", "#FF6A1F", { "Spikes", "Tail" }, 1 },
-		{ "Fire Bat", "Bird", "#3A2428", "#FF6A1F", { "BatWings", "Ears" }, 0.9 },
-		{ "Rock Worm", "Fish", "#5A4834", "#FF6A1F", { "Spikes" }, 1 },
-		{ "Lava Crab", "Insect", "#2A2224", "#FF6A1F", { "Claws", "Glow" }, 0.95 },
-		{ "Salamander", "Quadruped", "#E04A2A", "#FFC23A", { "Spots", "Tail" }, 1 },
-		{ "Ember Sprite", "Blob", "#FF8A2A", "#FFE070", { "Flame" }, 0.8 },
+		{ "Lava Frog", "Blob", "#3A2A2A", "#FF6A1F", { "Spots" }, 0.9 },
+		{ "Lava Gecko", "Quadruped", "#E04A2A", "#FFC23A", { "Spots", "Tail" }, 0.95 },
+		{ "Baby Triceratops", "Quadruped", "#6A8A4A", "#E8D8B0", { "Horns", "Tail" }, 1.1 },
+		{ "Baby T-Rex", "Biped", "#5E8A3A", "#E8D8A0", { "Teeth", "Tail" }, 1.1 },
+		{ "Pterodactyl", "Bird", "#C0603A", "#F2C8A0", {}, 1 },
+		{ "Phoenix Chick", "Bird", "#FF5A3A", "#FFD040", { "Flame" }, 0.95 },
 	},
 	Hell = {
-		{ "Cinder Imp", "Biped", "#C0302A", "#2A1A1A", { "Horns", "BatWings", "Tail" }, 1 },
+		{ "Imp", "Biped", "#C0302A", "#2A1A1A", { "Horns", "BatWings", "Tail" }, 1 },
 		{ "Hellhound Pup", "Quadruped", "#2A1A1A", "#E0302A", { "Horns", "Flame" }, 1.05 },
-		{ "Baby Gargoyle", "Biped", "#6A6A70", "#3A3A40", { "Horns", "BatWings" }, 1.05 },
-		{ "Flame Skull", "Blob", "#EFE6CC", "#FF5A20", { "Flame" }, 0.85 },
-		{ "Infernal Kitten", "Quadruped", "#8A1A1A", "#FF8A2A", { "Ears", "Horns", "Tail" }, 0.9 },
-		{ "Brimstone Beetle", "Insect", "#2A2224", "#F1C40F", { "Shell", "Horns" }, 0.9 },
+		{ "Gargoyle", "Biped", "#6A6A70", "#3A3A40", { "Horns", "BatWings" }, 1.05 },
+		{ "Flaming Bull", "Quadruped", "#8A2A1A", "#FF8A2A", { "Horns", "Flame" }, 1.1 },
+		{ "Fire Bat", "Bird", "#3A2428", "#FF6A1F", { "BatWings", "Ears" }, 0.9 },
+		{ "Baby Cerberus", "Quadruped", "#2A1A1A", "#FF5A20", { "Ears", "Spikes", "Tail" }, 1.1 },
 	},
 	Heaven = {
-		{ "Glowing Bird", "Bird", "#FFE070", "#FFFFFF", { "Glow" }, 1 },
-		{ "Cherub", "Biped", "#FFE8D8", "#FFFFFF", { "Wings", "Halo" }, 1 },
-		{ "Baby Griffin", "Quadruped", "#E8C25A", "#FFFFFF", { "Wings", "Tail" }, 1.1 },
-		{ "Celestial Fawn", "Quadruped", "#F2E2C0", "#FFE070", { "Antlers", "Spots" }, 1.05 },
-		{ "Cloud Puff", "Blob", "#FFFFFF", "#BFE6FF", {}, 0.9 },
 		{ "Halo Bunny", "Quadruped", "#FFFFFF", "#FFB0D0", { "BigEars", "Halo" }, 0.9 },
+		{ "Baby Griffin", "Quadruped", "#E8C25A", "#FFFFFF", { "Wings", "Tail" }, 1.1 },
+		{ "Cloud Lamb", "Quadruped", "#FFFFFF", "#BFE6FF", { "Ears" }, 1 },
+		{ "Pegasus Foal", "Quadruped", "#FFFFFF", "#BFE6FF", { "Wings", "Tail" }, 1.1 },
+		{ "Swan", "Bird", "#FFFFFF", "#FF9A2A", {}, 1 },
+		{ "Unicorn Foal", "Quadruped", "#FFFFFF", "#FF9AD8", { "Horns", "Tail", "Glow" }, 1.1 },
 	},
 	Dead = {
 		{ "Little Ghost", "Blob", "#E8F0F0", "#7CFFB0", { "Glow" }, 0.9 },
-		{ "Bone Rat", "Quadruped", "#E6DCC0", "#3A3440", { "Ears", "Tail" }, 0.85 },
-		{ "Mini Skeleton", "Biped", "#EFE6CC", "#7CFFB0", {}, 1 },
-		{ "Baby Ghoul", "Biped", "#8A9A8A", "#3A3440", { "Teeth" }, 1 },
-		{ "Grave Kitten", "Quadruped", "#5A5A66", "#7CFFB0", { "Ears", "Tail" }, 0.9 },
-		{ "Spooky Bat", "Bird", "#3A2A4A", "#B05BFF", { "BatWings", "Ears" }, 0.9 },
+		{ "Bone Pup", "Quadruped", "#E6DCC0", "#3A3440", { "Ears", "Tail" }, 0.95 },
+		{ "Mummy Cat", "Quadruped", "#E8E0C8", "#7CFFB0", { "Ears", "Tail" }, 0.95 },
+		{ "Zombie Bear", "Quadruped", "#6A8A5A", "#3A3440", { "Ears", "Teeth" }, 1.1 },
+		{ "Raven", "Bird", "#26222A", "#7A4AA0", {}, 1 },
+		{ "Spectral Stag", "Quadruped", "#BFE8FF", "#7CFFB0", { "Antlers", "Glow" }, 1.1 },
 	},
 	Abyss = {
-		{ "Jellyfish", "Fish", "#FF8AC8", "#5FFFF0", { "Tentacles", "Glow" }, 0.9 },
+		{ "Clownfish", "Fish", "#FF8A2A", "#FFFFFF", { "Fins" }, 0.85 },
+		{ "Swordfish", "Fish", "#3A6AA0", "#C9D3DC", { "Fins" }, 1 },
+		{ "Pufferfish", "Fish", "#F1D06A", "#FFFFFF", { "Spikes" }, 0.9 },
 		{ "Baby Shark", "Fish", "#7A8A9A", "#F2F4F8", { "Fins", "Teeth" }, 1 },
-		{ "Armor Crab", "Insect", "#1FA59A", "#FF7FAB", { "Claws", "Shell" }, 1 },
-		{ "Octopus", "Blob", "#9A4AC0", "#FF8AC8", { "Tentacles" }, 0.95 },
-		{ "Seahorse", "Fish", "#F1C40F", "#FF8A2A", { "Fins" }, 0.9 },
-		{ "Anglerfish", "Fish", "#1F2A4A", "#5FFFF0", { "Lure", "Teeth" }, 1 },
+		{ "Baby Orca", "Fish", "#1A1A22", "#FFFFFF", { "Fins" }, 1.05 },
+		{ "Baby Kraken", "Blob", "#9A4AC0", "#FF8AC8", { "Tentacles" }, 1 },
 	},
 	Mechanical = {
-		{ "Mini Drone", "Mech", "#9AA4B2", "#3FE6FF", { "Antennae" }, 0.9 },
-		{ "Robo Rat", "Mech", "#6A7480", "#FF8A2A", { "Ears", "Tail" }, 0.85 },
+		{ "Robo Pup", "Mech", "#9AA4B2", "#3FE6FF", { "Ears", "Tail" }, 0.95 },
 		{ "Clockwork Spider", "Insect", "#B08A4A", "#3A3F48", { "Gear" }, 0.9 },
-		{ "Slime Bot", "Blob", "#5ACB4A", "#9AA4B2", { "Antennae", "Glow" }, 0.9 },
+		{ "Steam Golem", "Biped", "#8A6A4A", "#3A3F48", { "Gear" }, 1.1 },
+		{ "Mecha Rex", "Mech", "#6A7480", "#FF3030", { "Teeth", "Tail" }, 1.1 },
+		{ "Mini Drone", "Mech", "#9AA4B2", "#3FE6FF", { "Antennae" }, 0.9 },
 		{ "Gear Cat", "Mech", "#C9A04A", "#3A3F48", { "Ears", "Gear" }, 0.95 },
-		{ "Laser Bot", "Mech", "#3A3F48", "#FF3030", { "Laser" }, 1 },
 	},
 	Void = {
-		{ "Shadow Wisp", "Blob", "#2A1E3D", "#B05BFF", { "Glow" }, 0.85 },
-		{ "Void Stalker Pup", "Quadruped", "#2A1E3D", "#B05BFF", { "Ears", "Spikes", "Tail" }, 1.05 },
-		{ "Obsidian Golemite", "Biped", "#2A2224", "#B05BFF", { "Crystal" }, 1.1 },
-		{ "Crystal Butterfly", "Insect", "#B05BFF", "#5FFFF0", { "Wings", "Antennae" }, 0.9 },
-		{ "Rift Cat", "Quadruped", "#4A2A6A", "#FF5AD8", { "Ears", "Tail", "Glow" }, 0.95 },
+		{ "Galaxy Cat", "Quadruped", "#2A1E5D", "#FF5AD8", { "Ears", "Tail", "Glow" }, 0.95 },
+		{ "Void Stalker", "Quadruped", "#2A1E3D", "#B05BFF", { "Ears", "Spikes", "Tail" }, 1.05 },
+		{ "Cosmic Gorilla", "Biped", "#3A2A6A", "#5FFFF0", { "Glow" }, 1.15 },
+		{ "Cosmic Gecko", "Quadruped", "#4A2A8A", "#5FFFF0", { "Spots", "Tail" }, 1 },
+		{ "Nebula Jellyfish", "Fish", "#B05BFF", "#5FFFF0", { "Tentacles", "Glow" }, 0.9 },
 		{ "Baby Void Dragon", "Quadruped", "#2A1E3D", "#B05BFF", { "Horns", "BatWings", "Tail", "Spikes" }, 1.15 },
 	},
 }
@@ -208,18 +211,32 @@ function Pets.bonusValue(tier: number): number
 	return Pets.mainValue(tier) * PetRarities.BonusShare
 end
 
--- Equip Best score (in % points): main stats x weights + bonus x 0.5.
-function Pets.powerScore(id: string, tier: number): number
+-- Equip Best score (in % points): main stats x weights + bonus x 0.5. mult = PetMutations.mult(pet) (1 if omitted).
+function Pets.powerScore(id: string, tier: number, mult: number?): number
 	local species = Pets.ById[id]
 	if not species then
 		return 0
 	end
-	local main = Pets.mainValue(tier) * 100
+	local m = mult or 1
+	local main = Pets.mainValue(tier) * 100 * m
 	local score = 0
 	for _, stat in ipairs(species.Stats) do
 		score += main * (PetRarities.PowerWeights[stat] or 1)
 	end
-	return score + Pets.bonusValue(tier) * 100 * PetRarities.BonusWeight
+	return score + Pets.bonusValue(tier) * 100 * m * PetRarities.BonusWeight
+end
+
+-- Equip Best score of a stored pet (mutation and size included).
+function Pets.petScore(pet: { [string]: any }): number
+	return Pets.powerScore(pet.id, pet.rarity, PetMutations.mult(pet))
+end
+
+-- "Huge Golden Fox Kit" (size and mutation before the species name).
+function Pets.displayName(pet: { [string]: any }): string
+	local species = Pets.ById[pet.id]
+	local name = if species then species.Name else tostring(pet.id)
+	local prefix = PetMutations.prefix(pet)
+	return if prefix ~= "" then `{prefix} {name}` else name
 end
 
 local function percent(value: number): string
@@ -244,11 +261,11 @@ function Pets.describe(id: string, tier: number, mult: number?): ({ string }, st
 	return lines, `+{percent(Pets.bonusValue(tier) * m)}% {Pets.BONUS_NAMES[species.Bonus]}`
 end
 
--- Gold for releasing a pet / auto-selling an egg (zone 0 = premium -> zone 1 values).
-function Pets.releaseValue(id: string, tier: number): number
+-- Gold for releasing a pet / auto-selling an egg (zone 0 = premium -> zone 1 values). mult = PetMutations.mult(pet).
+function Pets.releaseValue(id: string, tier: number, mult: number?): number
 	local species = Pets.ById[id]
 	local zone = math.max(1, species and species.Zone or 1)
-	return Rarities.get(tier).DamageMult * PetRarities.ReleaseBase * 10 ^ (zone - 1)
+	return Rarities.get(tier).DamageMult * PetRarities.ReleaseBase * 10 ^ (zone - 1) * (mult or 1)
 end
 
 function Pets.eggSellValue(zone: number, tier: number): number

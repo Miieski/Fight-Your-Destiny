@@ -600,7 +600,7 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 				if slot._icon then
 					slot._icon:Destroy()
 				end
-				slot._icon = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = slot.Box.ZIndex + 1, Parent = slot.Box })
+				slot._icon = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = slot.Box.ZIndex + 1, Parent = slot.Box, Mutation = pet.mutation })
 			else
 				slot:Clear("Plus")
 			end

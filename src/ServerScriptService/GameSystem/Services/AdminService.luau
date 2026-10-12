@@ -29,6 +29,7 @@ local RewardService = require(script.Parent.RewardService)
 local Quests = require(ReplicatedStorage.GameSystem.Config.Quests)
 local IndexBook = require(ReplicatedStorage.GameSystem.Config.IndexBook)
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
+local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
@@ -352,11 +353,16 @@ local COMMANDS: { [string]: Command } = {
 		end
 		return true, `{n} {Rarities.get(tier(rarity)).Name} {zone.Name} egg{if n == 1 then "" else "s"}` .. (if sold > 0 then ` ({sold} auto-sold)` else "")
 	end,
-	-- givePet(petId, rarity): premium pets keep their fixed rarity
-	givePet = function(player, petId, rarity)
-		if typeof(petId) ~= "string" or not Pets.ById[petId] then return false, "givePet(petId, rarity)" end
-		local uid = PetService:GivePet(player, petId, tier(rarity))
-		return uid ~= nil, `{Pets.ById[petId].Name} added`
+	-- givePet(petId, rarity, mutation?, size?): premium pets keep their fixed rarity and never mutate
+	-- (mutation Silver / Golden / Rainbow / Celestial, size Big / Huge - Config/PetMutations)
+	givePet = function(player, petId, rarity, mutation, size)
+		if typeof(petId) ~= "string" or not Pets.ById[petId] then return false, "givePet(petId, rarity, mutation?, size?)" end
+		if (mutation ~= nil and mutation ~= "" and not PetMutations.get(mutation)) or (size ~= nil and size ~= "" and not PetMutations.getSize(size)) then
+			return false, "mutation = Silver | Golden | Rainbow | Celestial, size = Big | Huge"
+		end
+		local uid = PetService:GivePet(player, petId, tier(rarity), mutation, size)
+		local prefix = PetMutations.prefix({ mutation = mutation, size = size })
+		return uid ~= nil, `{if prefix ~= "" then prefix .. " " else ""}{Pets.ById[petId].Name} added`
 	end,
 	-- giveArmor(id, rarity, count?) or giveArmor(zone, rarity) = the full set of a zone (zone = 1..12 or a zone id)
 	giveArmor = function(player, what, rarity, howMany)

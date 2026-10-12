@@ -87,6 +87,17 @@ StatsTests.cases = {
 		context = { now = NOW },
 		expected = { Defense = 26.4, DamageReduction = 26.4 / 126.4, MaxHP = 132, BossDamage = 0.08 },
 	},
+	-- Pets V2: mutation x size multiply the main stats and the bonus (Config/PetMutations)
+	{
+		name = "8b Huge Golden Legendary Hunter (x2.4) + Silver Epic Guardian (x1.2)",
+		data = {
+			Attributes = attrs({}), Rebirths = 0,
+			Pets = { a = { id = "plains_pet2", rarity = 5, mutation = "Golden", size = "Huge" }, b = { id = "plains_pet3", rarity = 4, mutation = "Silver" } },
+			EquippedPets = { "a", "b" },
+		},
+		context = { now = NOW },
+		expected = { DamageBonus = 0.16 * 2.4, MoveSpeed = 0.16 * 2.4, CritDamage = 2 * (1 + 0.04 * 2.4), MaxHP = 100 * (1 + 0.11 * 1.2), RegenFraction = 0.11 * 0.25 * 1.2 * 0.05 },
+	},
 	-- Part C: armor (HP = 100 x 10^(Z-1) x share x rarityMult, Defense 3 x tier, Zone Boost in its zone, set +10%)
 	{
 		name = "9 Legendary Plains set (3/3) standing in Plains: Zone Boost 40% x 1.1",

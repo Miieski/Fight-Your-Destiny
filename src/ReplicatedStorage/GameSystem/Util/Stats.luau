@@ -7,6 +7,7 @@ local Config = script.Parent.Parent.Config
 local Attributes = require(Config.Attributes)
 local Balance = require(Config.Balance)
 local Boosts = require(Config.Boosts)
+local PetMutations = require(Config.PetMutations)
 local Rarities = require(Config.Rarities)
 local RebirthShop = require(Config.RebirthShop)
 local Weapons = require(Config.Weapons)
@@ -72,11 +73,13 @@ function Stats.petTotals(data: Data): { [string]: number }
 		local pet = owned[uid]
 		local species = pet and Pets.ById[pet.id]
 		if species then
-			local main = Pets.mainValue(pet.rarity)
+			-- mutation x size (Config/PetMutations; 1 for plain pets)
+			local mult = PetMutations.mult(pet)
+			local main = Pets.mainValue(pet.rarity) * mult
 			for _, stat in ipairs(species.Stats) do
 				totals[stat] += main
 			end
-			totals[species.Bonus] += Pets.bonusValue(pet.rarity)
+			totals[species.Bonus] += Pets.bonusValue(pet.rarity) * mult
 		end
 	end
 	return totals

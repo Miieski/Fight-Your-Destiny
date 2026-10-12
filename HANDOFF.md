@@ -149,6 +149,12 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-12 (night): PETS V2 IN PROGRESS (owner: inspired by Steal an Egg).** Plan `docs/pets_v2_plan.md`. Done:
+new species list, mutations & sizes (`Config/PetMutations`), animation in code (`Util/PetMotion`), mutation looks
+(`Util/PetLook`), rig builder + generation prompts (`DevTools/PetRigBuilder`). Models: Studio AI generator
+(generate_mesh) -> `PetRigBuilder.install(model, petId)`; `PetRigBuilder.missing()` lists pets still on the
+part-built placeholders. Generated sources live in ServerStorage.PetSources (save the place).
+
 **2026-10-12 (night): ENEMY RESPAWN 6 s.** `Config/Enemies.RESPAWN_SECONDS = 6` (was 2): a killed enemy comes back
 6 s after its death (EnemyService). Tested in Play: first respawn at 6.04 s.
 

@@ -39,11 +39,12 @@ function Profile.new(): { [string]: any }
 		Armor = {}, -- [uid] = { id = "plains_helmet", rarity = 1, locked = false } (Config/Armor)
 		EquippedArmor = {}, -- { Helmet = uid, Chest = uid, Legs = uid }
 		Eggs = {},
-		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, premium = false }
+		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, premium = false, locked = false, mutation?, size? }
 		EquippedPets = {}, -- array of uids
 		EquippedSkills = {}, -- [slot 1..3] = skill id (Config/Skills); empty until the skills exist
 		Trophies = {},
 		Index = {},
+		IndexMutations = {}, -- [petId] = best mutation order hatched (Config/PetMutations, Pets V2)
 		IndexClaimed = {},
 		Boosts = {},
 		Passes = {},

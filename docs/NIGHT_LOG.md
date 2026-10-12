@@ -1193,3 +1193,43 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - 22:10 DONE. `Config/Enemies.RESPAWN_SECONDS` 2 -> 6 (the only respawn timer: EnemyService, after a kill). DESIGN.md
   section 5 updated. Backups `..._before_respawn_6s_*` / `..._after_respawn_6s_*`. Play (Plains sub-zone 1): admin
   killAll on 10 enemies -> none back at 5 s, first back at 6.04 s, all 10 back at 8 s. Studio = disk.
+
+# Pets V2 - 2026-10-12 night (owner: "For pets, you can draw inspiration from Steel and Egg - pets, textures, animations")
+
+Owner's choices (asked): redo all pet models, pet animations, mutations & sizes, new species list; AI mesh generator
+for the models; species list, mutation / size odds as proposed. Plan: `docs/pets_v2_plan.md`. "Steel and Egg" =
+the Roblox game Steal an Egg (July 2026): inspiration only, every model is generated new.
+
+## Status (newest first)
+
+- 23:15 CODE FOUNDATION DONE (models next). Backups `..._before_pets_v2_*` / `..._after_petsv2_code_*`. Studio = disk.
+  * Found: the 24 Blender pets of 2026-10-05 were never imported (no manual import was done); Studio still had the 76
+    part-built pets. Studio's AI mesh generator (MCP generate_mesh) makes textured cartoon meshes split into named
+    pieces, saved as assets on the account logged in to Studio - no import needed. Test: baby fox, ~3-4 min.
+  * `Config/Pets`: new species list (same ids, so owned pets keep working; placeholders rebuilt to the new colors).
+  * `Config/PetMutations` (new): mutations / sizes, roll, mult, prefix ("Huge Golden"), multText. `PetService`
+    rolls them at every egg hatch (loot and premium eggs; premium Robux pets never), stores `mutation` / `size`
+    on the pet, FollowPets "id:tier:Mutation:Size", Index `IndexMutations[petId]` = best mutation (new profile key).
+    `Util/Stats`, Equip Best, release value use the multiplier. Admin `givePet(id, rarity, mutation?, size?)`.
+  * `Util/PetLook` (new): see-through shells over textured meshes (Silver metal, Golden foil + sparkles, Rainbow
+    cycling colors + sparkles, Celestial neon + force field + stars + light); placeholders are tinted.
+  * `Util/PetMotion` (new): animation in code from the piece names (BulkMoveTo, anchored, no Animator): walk cycle
+    (diagonal legs +-29 deg measured), body bounce, head look-around / nod, tail wag (+-17 idle, +-31 walking),
+    wings flap, fins, swim / slither / float gaits, happy jump + fast wag on each kill (EnemyKilled).
+  * `DevTools/PetRigBuilder` (new): generation prompts for all 76 pets (kinds, part lists, gaits), rig builder
+    (orients the model, Root at the feet, scale 1.4 x species Scale, Joint attachments), install / rebuild /
+    missing; raw generated models kept in ServerStorage.PetSources.
+  * Client: followers (V2 rigs animated, size scale, mutation look), ModelIcon (mutation look, idle animation in
+    the turntable), hatch screen ("HUGE RAINBOW! x3.2" over the pet, values include the boost), Pets window
+    (mutation tag on cards, detail line, release value), Index (best mutation tag), Equipment slots.
+  * Tests (Play): Fox Kit rig follows and animates; 3 Fox Kits (plain, Big Golden, Huge Rainbow) screenshot;
+    hatch reveal Huge Golden / Huge Rainbow fit; Pets window cards; simulateEggs 200,000: Silver 8.01%, Golden
+    3.98%, Rainbow 0.90%, Celestial 0.105%, Big 9.0%, Huge 0.99% (largest gap 2.39 sd); runStatsTests 83/83 (new
+    case 8b: Huge Golden x2.4 + Silver x1.2). Output clean.
+
+## Decisions taken without the owner
+
+- Rarity stays per hatch (our 8 tiers from the egg), not per species as in Steal an Egg: our pets give stats.
+- The meme ("brainrot") pets of Steal an Egg are left out (they do not fit a fantasy fighting game).
+- Mutation / size multipliers also raise the release value (a Huge Golden pet sells for x2.4).
+

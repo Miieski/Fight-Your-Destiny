@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local IndexBook = require(ReplicatedStorage.GameSystem.Config.IndexBook)
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
@@ -106,7 +107,13 @@ local function entryCell(entry: any, order: number, cell: Vector2): Frame
 	local iconSize = UDim2.new(1, -10, 1, -(if entry.Kind == "enemy" then 30 else 38))
 	local iconPos = UDim2.new(0.5, 0, 0, 4)
 	if entry.Kind == "pet" then
-		ModelIcon.pet(entry.Id, { Size = iconSize, Position = iconPos, AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Silhouette = not found, Parent = frame })
+		-- the best mutation ever hatched of this species (Pets V2) shows on the icon and as a tag
+		local order = (State.get("IndexMutations") or {})[entry.Id]
+		local mutation = if found and typeof(order) == "number" then PetMutations.List[order] else nil
+		ModelIcon.pet(entry.Id, { Size = iconSize, Position = iconPos, AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Silhouette = not found, Parent = frame, Mutation = if mutation then mutation.Id else nil })
+		if mutation then
+			Theme.text({ Font = "Button", Text = mutation.Name, TextSize = 12, Color = mutation.Color, Size = UDim2.new(1, -6, 0, 14), Position = UDim2.fromOffset(3, 3), Align = "Left", ZIndex = 5, Parent = frame })
+		end
 	elseif entry.Kind == "armor" then
 		ModelIcon.armor(entry.Id, if found and best and best > 0 then best else 1, { Size = iconSize, Position = iconPos, AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Silhouette = not found, Parent = frame })
 	else
@@ -253,6 +260,7 @@ function IndexPage.build(ctx: any)
 			show()
 		end
 		State.changed("Index", changed)
+		State.changed("IndexMutations", changed)
 		State.changed("Zones", changed)
 		State.changed("IndexClaimed", changed)
 		task.defer(show)

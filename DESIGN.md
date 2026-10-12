@@ -297,9 +297,17 @@ redone after a Rebirth has its sub-zone prices reset.
   | +2% | +4% | +7% | +11% | +16% | +23% | +32% | +45% |
 * The common bonus uses 25% of the main-stat value of the same rarity (default).
 * Pets are lost on Rebirth, **except premium pets bought with Robux**.
-* A pet follows the player visually (small low-poly companion, no collision, light on
-  performance: max 3 followers).
-* The full pet list (suggested 6 per zone = 72 species) is still to be written.
+* **Pets V2 (owner 2026-10-12, inspired by the Roblox game Steal an Egg; `docs/pets_v2_plan.md`):**
+  * 72 species (6 per zone, same stat roles per slot) + 4 premium, list in `Config/Pets` (zone 1: Puppy,
+    Fox Kit, Bear Cub, Boar Piglet, Raccoon, Owl; Volcano mixes in baby dinosaurs; Abyss = sea animals).
+  * Every egg hatch also rolls a **mutation** - Silver x1.2 (8%), Golden x1.5 (4%), Rainbow x2 (0.9%),
+    Celestial x3 (0.1%) - and a **size** - Big x1.25 (9%), Huge x1.6 (1%), drawn 1.35x / 1.8x bigger.
+    Both multiply the pet's main stats, bonus, Equip Best score and release value (`Config/PetMutations`).
+    Premium pets never mutate. Shown on the hatch reveal, pet cards, details and the Index (best mutation).
+  * Models: cartoon meshes from Studio's AI generator, rigged by `DevTools/PetRigBuilder` (pieces + joints),
+    animated in code by `Util/PetMotion` (walk cycle, wings, swim, float, idle, happy jump on kills); mutation
+    looks by `Util/PetLook` (see-through metal / gold / rainbow / glowing shells).
+* A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)
 Full rules in `docs/weapon_system_document.txt`: 7 categories x 12 zones = 84 weapons, random
