@@ -258,8 +258,15 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
   (`Weapons.ById[id].Icon`). `tools/weapon_icon_table.py` prints the table from `Icons/asset_ids.json`.
 * Per-type conventions (gauntlet = one right-hand piece, ranged bow/crossbow/gun)
   are in `Blender/Weapons/README.txt`. Lineups: `Previews/Weapons/<Category>_lineup.png`.
-* The FBX files (84 since 2026-10-12) are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions =
-  Meters). After import: Tools under `ReplicatedStorage.Assets.Weapons.<WeaponId>` (gameplay step).
+* **2026-10-12: WEAPONS V2** - the 84 models were rebuilt from their icons (`tools/blender/fyd_weapons2.py`,
+  `fyd_w2_parts.py`, builders `fyd_w2_<category>.py`, runner `run_weapons2.py`; compare sheets
+  `Previews/Weapons/<Cat>/<NN>_<id>_compare.png`; V1 files in `BackUP_Files/old_weapon_models_2026-10-12/`). The .blend
+  and .fbx files were replaced in place; measured points in `Blender/Weapons/weapons_v2_points.json` ->
+  `tools/WeaponPoints.luau` + `tools/WeaponBounds.luau` (DevTools).
+* The FBX files are NOT imported in Studio yet. Owner: `Blender_Exports/WEAPONS_IMPORT.md` (Bulk Import in Meters, then
+  `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()`, which swaps each mesh into the existing Tool
+  `ReplicatedStorage.Assets.Weapons.<WeaponId>`, keeps attributes + grip rotation and rebuilds Tip / Base / Muzzle /
+  Impact attachments).
 
 **Owner request 2026-10-05 (noon): "Zone Sign" setting (Settings > Display, default on) hides the top-center zone
 banner (the Zone Boost badge takes its place; the title card when entering a sub-zone still shows). On PC (no touch

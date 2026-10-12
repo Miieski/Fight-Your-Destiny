@@ -5,6 +5,24 @@ category (fyd_weapon_swords.py, ...). Every .blend here is the SOURCE OF TRUTH: 
 convention below needs a fix after the first import in Studio, change export_fbx() in
 fyd_weapons.py and re-export every FBX in one pass from these .blend files (the "Weapon" object).
 
+WEAPONS V2 (2026-10-12, docs/weapons_combat_brief.txt Phase 3) - THE CURRENT MODELS
+- All 84 weapons (Whip & Chain removed) were rebuilt with tools/blender/fyd_weapons2.py + fyd_w2_parts.py + one
+  builder per category (fyd_w2_swords.py, fyd_w2_spears.py, fyd_w2_heavy.py, fyd_w2_daggers.py,
+  fyd_w2_gauntlets.py, fyd_w2_ranged.py, fyd_w2_magic.py), each one compared side by side with its icon:
+  Previews/Weapons/<Category>/<NN>_<id>_compare.png (icon | V2 from the icon's angle), _preview.png (3 angles),
+  Previews/Weapons/<Category>_lineup.png. The icons were NOT re-rendered (they stay the reference).
+- Same convention as below (meters, origin = grip, head +Z, front -Y, category length, FBX Y up / -Z forward).
+  Richer geometry (beveled / diamond / hexagonal sections, wrapped grips, rivets), 810-3,076 triangles,
+  1024 px baked maps (color with subtle variation x baked AO, metalness, roughness) packed in the .blend and
+  embedded in the FBX, "<id>_Main" + optional "<id>_Glow".
+- weapons_v2_points.json: per weapon, the mesh box (center, size) and the attachment points Tip, Base, Muzzle
+  (Ranged / Magic), Impact (Heavy), in Roblox studs relative to the grip (Roblox X = -Blender X, Y = Blender Z,
+  Z = Blender Y). Generated Luau copies: tools/WeaponPoints.luau and tools/WeaponBounds.luau (DevTools).
+- Run headless: blender -b Blender/Icons/_IconTemplate.blend --python tools/blender/run_weapons2.py --
+  <Category> <zone indexes...>   (or -- --lineup <Category>).
+- The V1 .blend / .fbx files are kept in BackUP_Files/old_weapon_models_2026-10-12/.
+- IMPORT: Blender_Exports/WEAPONS_IMPORT.md (Bulk Import in Meters, then DevTools.ApplyWeaponMeshes).
+
 AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05; all weapons follow it; not yet
 imported in Studio by the owner)
 - Built in METERS at real scale, then every weapon is scaled so its longest side is exactly the
@@ -40,7 +58,8 @@ ONE .blend PER WEAPON
 
 BUDGETS: 500-3,000 triangles (Gauntlet and Magic up to 4,000). Rarity is NOT modeled.
 
-IN STUDIO (weapon Tools, 2026-10-05)
+IN STUDIO (weapon Tools, 2026-10-05; for the V2 files use DevTools.ApplyWeaponMeshes, see
+Blender_Exports/WEAPONS_IMPORT.md - it updates the existing Tools in place and uses the measured points)
 - Until the FBX files are imported, ReplicatedStorage.Assets.Weapons holds 84 PLACEHOLDER Tools (simple parts per
   category, zone colors, attribute Placeholder = true) so the shop, case opening and equipping already work.
 - After the Bulk Import (File Dimensions = Meters), put the imported models in one folder (any place, e.g.
