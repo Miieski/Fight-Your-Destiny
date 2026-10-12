@@ -11,11 +11,13 @@
 --                                    Calling it again on a running record restarts it.
 --   Runner.track(record)             makes a non-pooled record runnable (weapon trails, damage numbers, ghosts)
 --   Runner.onMake(fn)                fn(fx) runs once for every new clone (prewarm included): per-clone setup
---   Runner.emit(fx, factor?)         Emit every ParticleEmitter of the clone (Config.Emit counts x factor x Low FX)
+--   Runner.emit(fx, factor?, counts?) Emit every ParticleEmitter of the clone (Config.Emit counts, or counts[emitter
+--                                    name] when given, x factor x Low FX)
 --   Runner.tint(fx, color?)          recolor the Config.Tint emitters (nil = their own color)
 --   Runner.sequence(color)           cached ColorSequence of one color
 --   Runner.template(name)            the asset under ReplicatedStorage.Assets.VFX (or nil)
---   Runner.near(position)  Runner.ground(position, up?, depth?)  Runner.folder()  Runner.lowFx()  Runner.measure(t0)
+--   Runner.near(position)  Runner.ground(position, up?, depth?) -> (point?, color?)  Runner.folder()  Runner.lowFx()
+--   Runner.measure(t0)  Runner.full() (at the global cap)
 -- Dev hooks (Play, Client command bar), attributes set locally on workspace.VFX:
 --   Freeze = true          pauses every effect (particles too) for a screenshot; false resumes
 --   LowFx = true           behaves as if the Low FX setting were on (test without the settings window)
@@ -118,7 +120,7 @@ local function make(name: string): Fx?
 	local counts = Config.Emit[name]
 	local tints = Config.Tint[name]
 	local fx: Fx = {
-		name = name, inst = inst, part = part, child = {}, emitters = {}, counts = {}, tinted = {}, baseColors = {},
+		name = name, inst = inst, part = part, child = {}, emitters = {}, counts = {}, emitterNames = {}, tinted = {}, baseColors = {},
 		pooled = true, capped = true, slot = 0, begun = false, startAt = 0, endAt = 0, begin = false, step = false,
 		done = false, particleLife = 0, tintColor = false,
 	}
@@ -127,6 +129,7 @@ local function make(name: string): Fx?
 		fx.child[d.Name] = d
 		if d:IsA("ParticleEmitter") then
 			table.insert(fx.emitters, d)
+			table.insert(fx.emitterNames, d.Name)
 			local n = counts and counts[d.Name] or d:GetAttribute("EmitCount")
 			table.insert(fx.counts, if typeof(n) == "number" then n else 4)
 			if tints and tints[d.Name] then
@@ -270,11 +273,11 @@ function Runner.stop(fx: Fx)
 	end
 end
 
-function Runner.emit(fx: Fx, factor: number?)
+function Runner.emit(fx: Fx, factor: number?, override: { [string]: number }?)
 	local k = (factor or 1) * (if devLow or Settings.get("LowFx") == true then Config.LowFx.EmitFactor else 1)
-	local emitters, counts = fx.emitters, fx.counts
+	local emitters, counts, names = fx.emitters, fx.counts, fx.emitterNames
 	for i = 1, #emitters do
-		local n = counts[i] * k
+		local n = (if override then override[names[i]] or 0 else counts[i]) * k
 		if n > 0 then
 			local m = math.max(1, math.floor(n + 0.5))
 			emitters[i]:Emit(m)
@@ -308,8 +311,12 @@ params.IgnoreWater = true
 params.RespectCanCollide = true
 local filterAt = -math.huge
 
--- Ground point below position (characters, enemies and effects ignored), or nil.
-function Runner.ground(position: Vector3, up: number?, depth: number?): Vector3?
+function Runner.full(): boolean
+	return capped >= Config.MaxActive
+end
+
+-- Ground point below position (characters, enemies and effects ignored) and the ground's color, or nil.
+function Runner.ground(position: Vector3, up: number?, depth: number?): (Vector3?, Color3?)
 	local now = os.clock()
 	if now - filterAt > 2 then
 		filterAt = now
@@ -327,7 +334,18 @@ function Runner.ground(position: Vector3, up: number?, depth: number?): Vector3?
 	end
 	local top = up or 1
 	local result = workspace:Raycast(position + Vector3.new(0, top, 0), Vector3.new(0, -(top + (depth or 10)), 0), params)
-	return if result then result.Position else nil
+	if not result then
+		return nil, nil
+	end
+	local hit = result.Instance
+	local color: Color3? = nil
+	if hit:IsA("Terrain") then
+		local ok, c = pcall(hit.GetMaterialColor, hit, result.Material)
+		color = if ok then c else nil
+	elseif hit:IsA("BasePart") then
+		color = hit.Color
+	end
+	return result.Position, color
 end
 
 local function update(dt: number)

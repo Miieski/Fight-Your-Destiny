@@ -2,7 +2,7 @@
 -- Weapon trails (OWNER: the VFX sub-agent; Config/CombatVFX Trail, Weapon, Swing). One Trail per equipped Tool,
 -- cloned once from ReplicatedStorage.Assets.VFX.Shared_WeaponTrail between the Tool's BaseAttachment and
 -- TipAttachment (found by name anywhere in the Tool, never by part names), colored by rarity (Colors.weapon) and
--- enabled only during the swing.
+-- enabled only during the swing. Config Trail, with the Tool's category overrides from Config TrailByCategory.
 --   Trails.swing(tool, palette, onDelay, offDelay)   on at now + onDelay, off at now + offDelay (no trail for Common)
 --   Trails.extend(character, seconds)                 a confirmed hit: keep the trail on through the hit-stop (once)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -51,10 +51,12 @@ local function setup(tool: Instance): Rec
 		return rec
 	end
 	local cfg = Config.Trail
+	local category = tool:GetAttribute("Category")
+	local over = if typeof(category) == "string" then Config.TrailByCategory[category] else nil
 	local trail = source:Clone() :: Trail
 	trail.Attachment0 = base
 	trail.Attachment1 = tip
-	trail.Lifetime = cfg.Lifetime
+	trail.Lifetime = if over and over.Lifetime then over.Lifetime else cfg.Lifetime
 	trail.MinLength = cfg.MinLength
 	trail.LightEmission = cfg.LightEmission
 	trail.Brightness = cfg.Brightness

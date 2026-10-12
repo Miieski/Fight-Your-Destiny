@@ -14,16 +14,24 @@
 --   VFX.block(ctx)        ctx = { Character, On }
 --   VFX.blockHit(ctx)     ctx = { Character, Position? }
 --   VFX.damageNumber(position, text, kind)   kind = "normal" | "crit" | "hurt" | "block" | "dodge"
--- Swing: the weapon Trail (Trails, rarity color + element tint) from the end of the wind-up to the end of the
--- follow-through, and the category's arc (Arcs) at the hit = Combat.Combos[category][step].Impact / speed after the
--- call (Config/CombatVFX Swing). Impact: sparks on the enemy's body toward the camera (crit burst, finisher beam ring); a
--- confirmed local hit keeps the trail on through the hit-stop. Block: a shield bubble following the character.
--- Roll: dust puff + afterimages (Ghosts; none with Low FX). Enemy death: a dissolve (workspace.Enemies "Dead").
--- Everything is pooled (Runner) under workspace.VFX; Low FX halves the Emit counts.
+-- Swing (Config/CombatVFX Swing[category][step]): the weapon Trail (Trails: rarity color + element tint) from TrailOn x
+-- the time to the hit to TrailOff s after it, and the step's Effects, each timed on a hit of the step (Hit 0 = the
+-- call, 1 = Combos Impact, 2 = the first of Combos Hits) + Delay, all divided by the speed:
+--   Kind "Arc" (Arcs: arcs, rings, straight streaks), "Lines" (Streaks: speed lines), "Ground" (Ground: cracks +
+--   chunks), "Flash" (Shots.flash: muzzle flash by weapon type), "Charge" (Casts.charge: the Magic orb). Effects sit on
+--   anchors (Anchors: root, feet, hand, Tool Tip / Muzzle / Impact attachments) read at their start, so they follow
+--   the animation's pose at the hit. Magic casts are remembered (Casts) so the area burst follows the release.
+-- Impact: sparks on the enemy's body toward the camera (crit burst, finisher beam ring, Dagger crit cross); a
+-- confirmed local hit keeps the trail on through the hit-stop. Shot: Shots (arrow / bolt / bullet / orb by the
+-- shooter's weapon). Burst: "Slam" = Heavy shockwave ring, "Enemy" = disc, an element / "Arcane" = Magic area
+-- (Casts). Block: a shield bubble following the character. Roll: dust puff + afterimages (Ghosts; none with Low FX).
+-- Enemy death: a dissolve (workspace.Enemies "Dead"). Everything is pooled (Runner) under workspace.VFX; Low FX halves
+-- the Emit counts, speed lines and chunks.
 -- Dev hook (Play, Client command bar), plays an effect on the local character:
---   workspace.VFX:SetAttribute("Test", "swing:<step>:<rarity>[:<element>]" | "impact:normal|crit|finisher" | "roll"
+--   workspace.VFX:SetAttribute("Test", "swing:<step>:<rarity>[:<element>]" (the equipped Tool's category)
+--     | "impact:normal|crit|finisher[:<element>[:<category>]]" | "shot[:<style>]" | "burst:<style>" | "roll"
 --     | "block:on|off" | "blockhit" | "number:<kind>")   (append "#n" to send the same command again)
--- Runner has the Freeze and Profile hooks.
+-- Runner has the Freeze, Profile and LowFx hooks.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -35,6 +43,10 @@ local Runner = require(script.Parent.Runner)
 local Colors = require(script.Parent.Colors)
 local Trails = require(script.Parent.Trails)
 local Arcs = require(script.Parent.Arcs)
+local Streaks = require(script.Parent.Streaks)
+local Ground = require(script.Parent.Ground)
+local Shots = require(script.Parent.Shots)
+local Casts = require(script.Parent.Casts)
 local Numbers = require(script.Parent.Numbers)
 local Ghosts = require(script.Parent.Ghosts)
 
@@ -103,8 +115,17 @@ function VFX.play(name: string, cframe: CFrame, options: { [string]: any }?)
 end
 
 -- ------------------------------------------------------------------------------------------------
--- Swing: trail + arc
+-- Swing: trail + the step's effects
 -- ------------------------------------------------------------------------------------------------
+local function paletteOf(effect: any, weapon: Colors.Palette, element: string?): Colors.Palette
+	if effect.Palette == "Element" then
+		return Colors.flat(Colors.style(element or "Arcane"))
+	elseif effect.Color then
+		return Colors.flat(effect.Color)
+	end
+	return weapon
+end
+
 function VFX.swing(ctx: { [string]: any })
 	local started = os.clock()
 	local character = ctx.Character
@@ -122,9 +143,40 @@ function VFX.swing(ctx: { [string]: any })
 			local impact = (if def and typeof(def.Impact) == "number" then def.Impact else 0.15) / speed
 			local palette = Colors.weapon(ctx.Rarity, ctx.Element)
 			local tool = ctx.Tool or character:FindFirstChildOfClass("Tool")
-			Trails.swing(tool, palette, impact * spec.TrailOn, impact + spec.TrailOff / speed)
-			if spec.Arc then
-				Arcs.play(spec.Arc, character, flat(ctx.Direction) or root.CFrame.LookVector, palette, impact)
+			local dir = flat(ctx.Direction) or flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
+			local element = if typeof(ctx.Element) == "string" then ctx.Element else nil
+			if spec.TrailOn then
+				Trails.swing(tool, palette, impact * spec.TrailOn, impact + spec.TrailOff / speed)
+			end
+			local effects = spec.Effects
+			if effects then
+				local hits = def and def.Hits
+				for _, effect in ipairs(effects) do
+					local hit = effect.Hit or 1
+					local at = impact
+					if hit == 0 then
+						at = 0
+					elseif hit >= 2 and hits and hits[hit - 1] then
+						at = hits[hit - 1] / speed
+					end
+					local delay = math.max(0, at + (effect.Delay or 0) / speed)
+					local kind = effect.Kind or "Arc"
+					if kind == "Arc" then
+						local extra = if effect.HoldToHit then math.max(0, impact - delay) else 0
+						Arcs.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool, extra)
+					elseif kind == "Lines" then
+						Streaks.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool)
+					elseif kind == "Ground" then
+						Ground.play(effect, character, dir, delay, tool)
+					elseif kind == "Flash" then
+						Shots.flash(effect, character, dir, delay, tool)
+					elseif kind == "Charge" then
+						Casts.charge(effect, character, tool, Colors.style(element or "Arcane"), math.max(0, impact - delay))
+					end
+				end
+			end
+			if category == "Magic" then
+				Casts.record(character, tool, impact, Colors.style(element or "Arcane"))
 			end
 		end
 	end
@@ -174,8 +226,10 @@ function VFX.impact(ctx: { [string]: any })
 	local position = ctx.Position
 	if typeof(position) == "Vector3" and Runner.near(position) then
 		local cfg = Config.Impact
-		local cf = CFrame.new(impactPoint(position))
+		local at = impactPoint(position)
+		local cf = CFrame.new(at)
 		local tint = Colors.weapon(1, ctx.Element).spark
+		local category = ctx.Category
 		if ctx.Finisher then
 			if started - ringWindow > cfg.FinisherWindow then
 				ringWindow, ringCount = started, 0
@@ -187,88 +241,38 @@ function VFX.impact(ctx: { [string]: any })
 				Arcs.playAt(ring, cf, Colors.flat(if element then ring.Color:Lerp(element, ring.Tint) else ring.Color), 0)
 			end
 		end
-		playEffect(if ctx.Crit then cfg.Crit else cfg.Normal, cf, tint)
+		if ctx.Crit then
+			playEffect(cfg.Crit, cf, tint, cfg.CritEmit[category] or 1)
+			local cross = cfg.CritCross[category]
+			local camera = workspace.CurrentCamera
+			if cross and camera then
+				-- a quick X slash mark facing the camera
+				local face = CFrame.lookAt(at, camera.CFrame.Position)
+				local palette = Colors.flat(cfg.CritCrossColor)
+				Arcs.playAt(cross, face * CFrame.Angles(0, 0, math.rad(45)) * CFrame.Angles(math.rad(90), 0, 0), palette, 0)
+				Arcs.playAt(cross, face * CFrame.Angles(0, 0, math.rad(-45)) * CFrame.Angles(math.rad(90), 0, 0), palette, cross.Second)
+			end
+		else
+			playEffect(cfg.Normal, cf, tint, cfg.CategoryEmit[category] or 1)
+		end
 		if ctx.IsLocal then
 			local hitStop = Combat.Feel.HitStop
-			Trails.extend(player.Character, if ctx.Finisher then hitStop.Finisher elseif ctx.Category == "Heavy" then hitStop.Heavy else hitStop.Normal)
+			Trails.extend(player.Character, if ctx.Finisher then hitStop.Finisher elseif category == "Heavy" then hitStop.Heavy else hitStop.Normal)
 		end
 	end
 	Runner.measure(started)
 end
 
 -- ------------------------------------------------------------------------------------------------
--- Shots (projectile + trail, spark on arrival) and bursts (ground disc)
+-- Shots and bursts
 -- ------------------------------------------------------------------------------------------------
-local function shotBegin(fx: Fx): boolean
-	local part = fx.part
-	part.CFrame = CFrame.new(fx.origin)
-	part.Transparency = 0
-	local trail = fx.child.Trail
-	if trail then
-		trail:Clear()
-		trail.Enabled = true
-	end
-	fx.arrived = false
-	return true
-end
-
-local function shotStep(fx: Fx, t: number): boolean
-	if fx.arrived then
-		return true
-	end
-	if t < fx.travel then
-		fx.part.Position = fx.origin + fx.dir * (fx.speed * t)
-	else
-		fx.arrived = true
-		fx.part.Position = fx.finish
-		fx.part.Transparency = 1
-		local trail = fx.child.Trail
-		if trail then
-			trail.Enabled = false
-		end
-		playEffect(Config.Shot.Spark, CFrame.new(fx.finish), fx.color)
-	end
-	return true
-end
-
-local function shotDone(fx: Fx)
-	local trail = fx.child.Trail
-	if trail then
-		trail.Enabled = false
-	end
-end
-
 function VFX.shot(ctx: { [string]: any })
 	local started = os.clock()
-	local origin, dir, speed, distance = ctx.Origin, ctx.Direction, ctx.Speed, ctx.Distance
-	if typeof(origin) == "Vector3" and typeof(dir) == "Vector3" and typeof(speed) == "number" and typeof(distance) == "number" and speed > 0 and dir.Magnitude > 1e-3 then
-		local cfg = Config.Shot
-		local unit = dir.Unit
-		local finish = origin + unit * distance
-		if Runner.near(origin) or Runner.near(finish) then
-			local fx = Runner.acquire(cfg.Asset)
-			if fx and fx.part then
-				local color = Colors.style(ctx.Style)
-				local size = if ctx.Style == "Enemy" then cfg.EnemySize else cfg.Size
-				fx.part.Size = Vector3.new(size, size, size)
-				fx.part.Color = color
-				local trail = fx.child.Trail
-				if trail then
-					trail.Color = Runner.sequence(color)
-				end
-				fx.origin, fx.dir, fx.speed, fx.finish, fx.color = origin, unit, speed, finish, color
-				fx.travel = math.max(cfg.MinTime, distance / speed)
-				fx.done = shotDone
-				Runner.run(fx, 0, fx.travel + cfg.TrailLife, shotBegin, shotStep)
-			elseif fx then
-				Runner.release(fx)
-			end
-		end
-	end
+	Shots.shot(ctx)
 	Runner.measure(started)
 end
 
-local function burstBegin(fx: Fx): boolean
+local function discBegin(fx: Fx): boolean
 	local part = fx.part
 	part.CFrame = CFrame.new(fx.center) * CFrame.Angles(0, 0, math.pi / 2)
 	part.Size = Vector3.new(0.2, 1, 1)
@@ -276,7 +280,7 @@ local function burstBegin(fx: Fx): boolean
 	return true
 end
 
-local function burstStep(fx: Fx, t: number): boolean
+local function discStep(fx: Fx, t: number): boolean
 	local cfg = Config.Burst
 	if t < cfg.Grow then
 		local k = t / cfg.Grow
@@ -293,21 +297,29 @@ end
 
 function VFX.burst(ctx: { [string]: any })
 	local started = os.clock()
-	local position, radius = ctx.Position, ctx.Radius
+	local position, radius, style = ctx.Position, ctx.Radius, ctx.Style
 	if typeof(position) == "Vector3" and typeof(radius) == "number" and Runner.near(position) then
-		local cfg = Config.Burst
 		local ground = Runner.ground(position, 4, 20) or position
-		local color = Colors.style(ctx.Style)
-		local fx = Runner.acquire(cfg.Asset)
-		if fx and fx.part then
-			fx.part.Color = color
-			fx.radius = math.max(0.5, radius)
-			fx.center = ground + Vector3.new(0, 0.15, 0)
-			Runner.run(fx, 0, cfg.Grow + cfg.Fade, burstBegin, burstStep)
-		elseif fx then
-			Runner.release(fx)
+		if style == "Slam" then
+			-- Heavy slam: the shockwave ring over the slam area (cracks and chunks come with the swing)
+			local slam = Config.Slam
+			Arcs.playAt(slam.Ring, CFrame.new(ground + Vector3.new(0, slam.Lift, 0)), Colors.flat(slam.Color), 0, radius)
+		elseif style == "Enemy" then
+			local cfg = Config.Burst
+			local fx = Runner.acquire(cfg.Asset)
+			if fx and fx.part then
+				fx.part.Color = Colors.style(style)
+				fx.radius = math.max(0.5, radius)
+				fx.center = ground + Vector3.new(0, 0.15, 0)
+				Runner.run(fx, 0, cfg.Grow + cfg.Fade, discBegin, discStep)
+			elseif fx then
+				Runner.release(fx)
+			end
+			playEffect(cfg.Spark, CFrame.new(ground + UP), Colors.style(style))
+		elseif not Casts.burst(position, radius, style) then
+			-- a Magic area without a known cast: at once
+			Casts.area(ground, radius, Colors.style(style or "Arcane"), 0)
 		end
-		playEffect(cfg.Spark, CFrame.new(ground + UP), color)
 	end
 	Runner.measure(started)
 end
@@ -517,10 +529,10 @@ local function test(command: string)
 	end
 	local args = string.split(string.split(command, "#")[1], ":")
 	local what = args[1]
-	local look = root.CFrame.LookVector
+	local look = flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
 	local front = root.Position + look * 5
+	local tool = character:FindFirstChildOfClass("Tool")
 	if what == "swing" then
-		local tool = character:FindFirstChildOfClass("Tool")
 		local category = tool and tool:GetAttribute("Category") or "Sword"
 		local stepIndex = tonumber(args[2]) or 1
 		local combo = Combat.Combos[category]
@@ -531,7 +543,11 @@ local function test(command: string)
 			Element = if args[4] and args[4] ~= "" then args[4] else nil, Speed = 1, IsLocal = true,
 		})
 	elseif what == "impact" then
-		VFX.impact({ Position = front + Vector3.new(0, 3, 0), Crit = args[2] == "crit", Finisher = args[2] == "finisher", Element = args[3], IsLocal = false })
+		VFX.impact({ Position = front + Vector3.new(0, 3, 0), Crit = args[2] == "crit", Finisher = args[2] == "finisher", Element = args[3], Category = args[4], IsLocal = false })
+	elseif what == "shot" then
+		VFX.shot({ Origin = root.Position + Vector3.new(0, 1.2, 0) + look * 1.5, Direction = look, Speed = 120, Distance = 30, Style = args[2] or "Nature" })
+	elseif what == "burst" then
+		VFX.burst({ Position = root.Position + look * 10, Radius = 6, Style = args[2] or "Arcane" })
 	elseif what == "roll" then
 		VFX.roll({ Character = character, Direction = look, IsLocal = true })
 	elseif what == "block" then
