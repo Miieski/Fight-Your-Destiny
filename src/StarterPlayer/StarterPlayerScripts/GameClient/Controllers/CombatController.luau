@@ -622,9 +622,12 @@ function CombatController:Start()
 	Net.on("Impact", onImpact)
 	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string)
 		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style })
+		-- the shooter's own release / fire sound is the Swing; Shot is the projectile itself (enemy shots included)
+		Sfx.combat("Shot", { Position = origin, Style = style, Speed = speed, Distance = distance, Enemy = style == "Enemy" })
 	end)
 	Net.on("Burst", function(position: Vector3, radius: number, style: string)
 		VFX.burst({ Position = position, Radius = radius, Style = style })
+		Sfx.combat("Burst", { Position = position, Radius = radius, Style = style })
 	end)
 	Net.on("Hurt", onHurt)
 	Net.on("Motion", onMotion)
@@ -696,6 +699,45 @@ function CombatController:Start()
 		watch(other)
 	end
 	Players.PlayerAdded:Connect(watch)
+
+	-- draw (a weapon Tool appears in the character) and death sounds of every player (the local one at full volume)
+	local function watchCharacter(owner: Player, character: Model)
+		local isLocal = owner == player
+		local function play(event: string, category: any)
+			local root = character:FindFirstChild("HumanoidRootPart")
+			local position = if root and root:IsA("BasePart") then root.Position else nil
+			if isLocal or position then
+				Sfx.combat(event, {
+					Category = if typeof(category) == "string" then category else nil,
+					IsLocal = isLocal,
+					Position = position,
+				})
+			end
+		end
+		character.ChildAdded:Connect(function(child)
+			if child:IsA("Tool") then
+				play("Equip", child:GetAttribute("Category"))
+			end
+		end)
+		local humanoid = character:WaitForChild("Humanoid", 10)
+		if humanoid and humanoid:IsA("Humanoid") then
+			humanoid.Died:Connect(function()
+				play("Death", nil)
+			end)
+		end
+	end
+	local function watchCharacters(owner: Player)
+		owner.CharacterAdded:Connect(function(character)
+			task.spawn(watchCharacter, owner, character)
+		end)
+		if owner.Character then
+			task.spawn(watchCharacter, owner, owner.Character)
+		end
+	end
+	for _, other in ipairs(Players:GetPlayers()) do
+		watchCharacters(other)
+	end
+	Players.PlayerAdded:Connect(watchCharacters)
 	player.CharacterAdded:Connect(function()
 		holding = false
 		blocking = false

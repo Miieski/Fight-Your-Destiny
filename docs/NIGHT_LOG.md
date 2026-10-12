@@ -715,6 +715,25 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 14:34 PHASE 4 - SWORD PILOT VALIDATED END TO END (animation + VFX + SFX + hit-stop, main agent in Play, Hub, 3
+  boars, Mythic sword). Integration patch 2: Equip / Death sounds for every player's character (Tool appears,
+  Humanoid.Died), `Sfx.combat("Shot")` on Net "Projectile" and `Sfx.combat("Burst")` on Net "Burst" (SFX request; the
+  round 2 sets will fill them). Measured: Equip -> Draw sound on the weapon change; held attack = one step per 1.0 s,
+  whoosh delayed 0.02-0.09 s so its peak lands 0.02 s before the Hit marker, Impact sound when the server confirms
+  (~0.15 s after the request), spin finisher on 2 boars = 2 flesh hits + 2 HitHeavy layers, variants never repeat.
+  Cost: VFX 0.006 ms / frame (worst 0.43 ms, peak 10 effects), animation 0.027 ms / frame. Output clean. Combo
+  screenshots (frozen with the AnimDebug / VFX Freeze hooks at each step's hit): `docs/screenshots/weapons_v2/
+  combat_sword_1_right_slash.jpg`, `_2_left_slash`, `_3_rising_slash`, `_4_spin_finisher`.
+
+- 14:30 PHASE 4 - SFX PILOT (Sword + shared + registry) done by the SFX sub-agent (14:06-14:30, backups
+  `..._140654_sfx_before_*` / `..._143006_sfx_after_*`), reviewed and committed. `Util/Sfx.luau` (Sfx.combat: pooled
+  voices, cap 12, no variant twice in a row, pitch +-5 %, whoosh peak timed to the hit, finisher / crit layers, 3D
+  for other players at 0.8 volume within 150 studs, preload + prewarm), `Config/CombatSfx.luau`, `Config/Audio.luau`
+  (35 Combat_* -> PlayerFX). 35 licensed Pro Sound Effects sounds in `Assets.Sounds.Combat` (table in
+  docs/SOUND_KIT.md). Tested: 4-step rotation, no repeats, cap 12 under 40 impacts in 1.2 s (0 new clones on the
+  second burst), metal / stone sets, other players simulated with a Position, Roll, Block raise + clink, BlockHit /
+  Hurt with godMode off, 0 sounds and 0 anchors left after 5 s. Nothing auditioned by ear (owner to listen once).
+
 - 14:05 PHASE 4 - INTEGRATION after the two pilots (main agent, Studio): Net "Motion" (player, "Roll" | "Hurt" |
   "BlockHit", dir?) from CombatService so other players see a roll, a flinch and a blocked hit (Animation request);
   CombatController's own block bubble removed - `VFX.block` draws it for the local player and, from the "Blocking"
@@ -906,6 +925,11 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 - VFX dev hooks (Play, Client command bar, attributes on workspace.VFX): `Freeze` (pause all effects for a
   screenshot), `Profile = os.clock()` (writes CostMs, MaxMs, Peak, Clones, Emitted), `LowFx` (act as Low FX),
   `Test` ("swing:<step>:<rarity>[:<element>]", "impact:crit", "roll", "block:on", "number:crit", "#n" to repeat).
+- SFX: only the Roblox-licensed Pro Sound Effects catalog (`AssetService:SearchAudio`); the Toolbox `search_asset`
+  results included user uploads ripped from other games, avoided. Sounds were chosen by measurement (loudness over
+  time, peak, length, brightness), not by ear. Hurt = a body thud (no voice, fits every avatar); Block raise = a
+  "power up" whoomp matching the VFX energy bubble; the old Roll whoosh peaked after the 0.3 s roll and was replaced.
+  Debug hook: `SoundService:SetAttribute("CombatSfxDebug", true)` -> attributes CombatSfxLog / CombatSfxActive.
 
 ## Problems / missing
 
