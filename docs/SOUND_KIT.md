@@ -103,6 +103,53 @@ Only "War Drums Of The North" is authored as a seamless loop; the others restart
 | Ambience_Mechanical | 9112839813 | Oil Refinery Ambience 1 (SFX) | ProSoundEffects | 31.5 | yes | machine hum + hiss, authored loop; alt 9112839913, 9118069484 (Reactor throbbing drone, 68 s) |
 | Ambience_Void | 9126058563 | Synth Drone Continuous Multi- Tone Modulatin (SFX) | ProSoundEffects | 55.5 | yes | alt 9119423099 (Spaceship mellow drone), 9113948291 (Cosmic Longing) |
 
+## Combat (2026-10-12, hack & slash, SFX sub-agent)
+
+Folder `ReplicatedStorage.Assets.Sounds.Combat`, all from the licensed ProSoundEffects catalog (found with
+`AssetService:SearchAudio`), group PlayerFX, RollOff InverseTapered 10-150 studs, attributes SourceAssetId / SourceName /
+SourceCreator on each Sound. Played only through `Sfx.combat(event, ctx)` with the mapping in `Config/CombatSfx`
+(variants, no repeat, pitch +-5 %, cap 12, whoosh peak timed to the hit). Volumes are loudness-matched by measurement:
+**nothing was auditioned by ear - the owner should listen to each one once.** The old SFX `SwordSwing`, `Hit`, `Crit`,
+`Block`, `Roll` are no longer used by combat (kept; Notifier still uses `Hurt`).
+
+| Name | Asset id | Event | Volume |
+|---|---|---|---|
+| Combat_Sword_Swing1 | 9119698838 | Swing steps 1-2 | 0.90 |
+| Combat_Sword_Swing2 | 9119698772 | Swing steps 1-2 | 1.00 |
+| Combat_Sword_Swing3 | 9119691969 | Swing steps 1-2 | 0.86 |
+| Combat_Sword_Rise1 | 9126013005 | Swing step 3 (RisingSlash) | 0.75 |
+| Combat_Sword_Rise2 | 9119691895 | Swing step 3 | 0.90 |
+| Combat_Sword_Rise3 | 9119698849 | Swing step 3 | 1.20 |
+| Combat_Sword_Spin1 | 9126229805 | Swing finisher (SpinSlash) | 0.58 |
+| Combat_Sword_Spin2 | 9126229716 | Swing finisher | 0.57 |
+| Combat_Sword_HitFlesh1 | 9114482303 | Impact flesh | 1.08 |
+| Combat_Sword_HitFlesh2 | 9114482566 | Impact flesh | 1.13 |
+| Combat_Sword_HitFlesh3 | 9114482142 | Impact flesh | 1.24 |
+| Combat_Sword_HitMetal1 | 9119746759 | Impact metal | 0.49 |
+| Combat_Sword_HitMetal2 | 9119072660 | Impact metal | 0.34 |
+| Combat_Sword_HitMetal3 | 9119072674 | Impact metal | 0.56 |
+| Combat_Sword_HitStone1 | 9113225488 | Impact stone | 0.39 |
+| Combat_Sword_HitStone2 | 9113225186 | Impact stone | 0.41 |
+| Combat_Sword_HitStone3 | 9113225486 | Impact stone | 0.30 |
+| Combat_Sword_HitHeavy | 9113514932 | Impact finisher layer | 0.83 |
+| Combat_Sword_Crit1 | 9116197252 | Impact crit sting | 0.47 |
+| Combat_Sword_Crit2 | 9116197044 | Impact crit sting | 0.84 |
+| Combat_Sword_Draw1 | 9119742750 | Equip | 0.75 |
+| Combat_Sword_Draw2 | 9119743888 | Equip | 0.80 |
+| Combat_Shared_Roll1 | 9120742710 | Roll | 0.94 |
+| Combat_Shared_Roll2 | 9120742903 | Roll | 0.65 |
+| Combat_Shared_BlockRaise | 9117886252 | Block (bubble forms) | 0.70 |
+| Combat_Shared_BlockClink | 9119072890 | Block layer | 0.42 |
+| Combat_Shared_BlockHit1 | 9119075617 | BlockHit (= old Block) | 0.76 |
+| Combat_Shared_BlockHit2 | 9119075637 | BlockHit | 1.38 |
+| Combat_Shared_BlockHit3 | 9119075623 | BlockHit | 1.47 |
+| Combat_Shared_BlockBreak | 9119074309 | BlockBreak | 0.67 |
+| Combat_Shared_BlockShatter | 9114590645 | BlockBreak layer | 0.45 |
+| Combat_Shared_Hurt1 | 9113485306 | Hurt (body thud, no voice) | 0.96 |
+| Combat_Shared_Hurt2 | 9113527137 | Hurt | 0.45 |
+| Combat_Shared_Hurt3 | 9113527320 | Hurt | 0.51 |
+| Combat_Shared_Death | 9113475180 | Death (= old Death) | 0.70 |
+
 ## How to swap a sound
 
 Change `SoundId` to `rbxassetid://<new id>` on the Sound instance, keep its `Name`, and update the three
