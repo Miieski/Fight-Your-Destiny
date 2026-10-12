@@ -715,6 +715,11 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 14:15 PHASE 3 - GAUNTLET category V2 done (12/12, each compared with its icon). Triangles: 2060, 2912, 2324, 2184, 2304, 2010, 2236, 2308, 2436, 2288, 2556, 2742 (budget
+  5,000); all 1.8 studs, one right-hand gauntlet each (mirror in Studio). Two-part curled fingers and thumb, rimmed
+  cuffs, riveted plates, twist-free horns / claws / coral, sun rays, piston seals. Tip = the knuckles' striking
+  point, Base = the wrist. No fix needed.
+
 - 13:55 PHASE 3 - DAGGER category V2 done (12/12, each compared with its icon). Triangles: 900, 1220, 930, 810, 968, 1030, 1276, 1302, 1296, 1258, 976, 1186; all 2 studs.
   Fixes during the checks: the Hunter's Knife was under the 800 minimum (660) -> second ferrule and rounder grip /
   pommel / lanyard ring (900); the fang and tooth blades ended in a twisted "flag" (fyd_icons.tube flips its frame
