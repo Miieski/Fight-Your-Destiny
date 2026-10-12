@@ -715,6 +715,12 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 13:55 PHASE 3 - DAGGER category V2 done (12/12, each compared with its icon). Triangles: 900, 1220, 930, 810, 968, 1030, 1276, 1302, 1296, 1258, 976, 1186; all 2 studs.
+  Fixes during the checks: the Hunter's Knife was under the 800 minimum (660) -> second ferrule and rounder grip /
+  pommel / lanyard ring (900); the fang and tooth blades ended in a twisted "flag" (fyd_icons.tube flips its frame
+  near vertical) -> new twist-free `fyd_w2_parts.tube` (rotation-minimizing frames); Ghoul Fang / Feather Dagger
+  notch count back to the V1 count.
+
 - 13:35 PHASE 3 - HEAVY category V2 done (12/12, each compared with its icon). Triangles: 1358, 1846, 1618, 1534, 1730, 1782, 1760, 2480, 2538, 2270, 2270, 1584; all 5 studs.
   Every Heavy has an Impact point on its striking face / edge (in weapons_v2_points.json, for the ImpactAttachment).
   Spiral wraps, ringed pommels, bevelled bands, plates for axe blades / wings / flukes / tombstone, extra details

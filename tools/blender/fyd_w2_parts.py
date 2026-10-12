@@ -207,6 +207,34 @@ def socketed_gem(r, gem_material, rim_material, loc, rot=(90, 0, 0)):
     return gem(r, gem_material, loc)
 
 
+def tube(points, r, material, segs=8, scale=(1, 1, 1), smooth=False, name="Tube"):
+    """A tube along a polyline with rotation-minimizing frames: no twist where the path turns near vertical
+    (fyd_icons.tube flips its frame there, which pinches the thin end of fangs and horns)."""
+    bm = bmesh.new()
+    pts = [Vector(p) for p in points]
+    n = len(pts)
+    tangents = [(pts[min(i + 1, n - 1)] - pts[max(i - 1, 0)]).normalized() for i in range(n)]
+    ref = Vector((0, 0, 1)) if abs(tangents[0].z) < 0.9 else Vector((1, 0, 0))
+    u = tangents[0].cross(ref).normalized()
+    rings = []
+    for i, (p, t) in enumerate(zip(pts, tangents)):
+        u = u - t * u.dot(t)
+        if u.length < 1e-6:
+            u = t.cross(ref)
+        u.normalize()
+        v = t.cross(u).normalized()
+        rr = r[i] if isinstance(r, (list, tuple)) else r
+        rings.append([bm.verts.new(p + (u * math.cos(2 * math.pi * j / segs) + v * math.sin(2 * math.pi * j / segs)) * rr)
+                      for j in range(segs)])
+    for a, b in zip(rings, rings[1:]):
+        for j in range(segs):
+            bm.faces.new((a[j], a[(j + 1) % segs], b[(j + 1) % segs], b[j]))
+    bm.faces.new(list(reversed(rings[0])))
+    bm.faces.new(rings[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return I._finish(bm, name, material, smooth=smooth, bevel=0.0, scale=scale)
+
+
 def spike(base, tip, r, material, segs=8):
     b, t = Vector(base), Vector(tip)
     d = t - b
