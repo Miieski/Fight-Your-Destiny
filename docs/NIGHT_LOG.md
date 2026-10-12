@@ -1149,3 +1149,24 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
   player always stays visible; walls / trees between the camera and the player turn see-through). Revert: set
   StarterPlayer.DevCameraOcclusionMode back to Zoom.
 
+# Enemy damage - 2026-10-12 night (owner: "Reduce all the damage for All Enemies (Enemy, Mini Boss and Boss) for making the game easier and playable for everyone")
+
+## Status (newest first)
+
+- 21:47 DONE. Backups `..._before_enemy_damage_*` / `..._after_enemy_damage_*`. Studio = disk (pull 0 written).
+  Before: an enemy hit = its database damage = HP x 5% (normal) / 6% (mini-boss) / 7% (boss), mini-boss heavy x1.5.
+  Zone 1: boss-room normals 40-48, mini-bosses 240 / 336 (heavy 360 / 504), the Golem 1,400 per hit - a fresh
+  player (100 HP) died in 1-2 hits to anything in the boss room, a geared one (~400 HP) in 1-2 mini / boss hits.
+  Now `Config/Enemies` `DAMAGE_MULT = { normal = 0.5, mini = 0.2, boss = 0.06 }` (-50% / -80% / -94%), applied in
+  `EnemyService` attack (the one path of every enemy, mini-boss and boss hit, melee, ranged and heavy). The database
+  numbers (docs/enemy_database.txt, `validateEnemies`) are unchanged: they stay the base, the multiplier is the
+  difficulty knob. Same ratios in every zone (enemy damage and player HP both scale x10 per zone).
+  Measured in Play (Plains, Vigor 40 = 400 HP, no defense): Brown Bear 16 -> 8 per hit; Cave Troll 48 (heavy 72),
+  Crystal Spider Matriarch 67 (heavy 101); Golem 84 (was 1,400). A geared player now takes ~17-20 boss-room normal
+  hits, ~6-10 mini-boss hits (heavy ~4-5), ~5-6 boss hits (~14 while blocking). Output clean.
+
+## Decisions taken without the owner
+
+- Stronger cuts for mini-bosses and bosses than for normal enemies: their damage was a % of their own (5-25x larger)
+  HP, so they one-shot everyone; normal enemies were only too hard deep in a zone. Tune with Enemies.DAMAGE_MULT.
+

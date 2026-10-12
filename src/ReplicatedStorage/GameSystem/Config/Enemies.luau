@@ -44,6 +44,11 @@ Enemies.BOSS_ROOM_HP_MULT = { 1.0, 1.2 } -- the boss room only has the standard 
 Enemies.NORMAL = { DamagePct = 0.05, GoldPct = 0.20 }
 Enemies.MINI_BOSS = { HpMult = { 5, 7 }, DamagePct = 0.06, GoldPct = 0.30 }
 Enemies.BOSS = { HpMult = 25, DamagePct = 0.07, GoldPct = 0.40 }
+-- Difficulty (owner 2026-10-12: "reduce all the damage of all enemies, mini-bosses and bosses, easier and playable for
+-- everyone"). A hit on a player = the enemy's database damage (Damage = HP x DamagePct, kept as in
+-- docs/enemy_database.txt) x the multiplier of its tier (x the mini-boss heavy / boss attack multipliers below).
+-- Zone 1 examples: boss room normal 40 -> 20, mini-boss 240-336 -> 48-67, boss 1,400 -> 84.
+Enemies.DAMAGE_MULT = { normal = 0.5, mini = 0.2, boss = 0.06 } -- -50%, -80%, -94%
 Enemies.RESPAWN_SECONDS = 2
 Enemies.ALIVE_PER_SUBZONE = 10
 Enemies.RESPAWN_MIN_PLAYER_DISTANCE = 12 -- a respawn point must be this far from every player

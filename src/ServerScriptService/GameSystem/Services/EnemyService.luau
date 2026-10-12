@@ -597,7 +597,9 @@ end
 local function attack(state: EnemyState, now: number)
 	local def = state.def
 	local heavy = state.heavy
-	local raw = def.Damage * (if heavy then Enemies.MINI_ATTACK.HeavyMult elseif def.Tier == "boss" then Enemies.BOSS_ATTACK.Mult else 1)
+	-- database damage x the tier's difficulty multiplier (Config/Enemies DAMAGE_MULT) x the attack's multiplier
+	local raw = def.Damage * (Enemies.DAMAGE_MULT[def.Tier] or 1)
+		* (if heavy then Enemies.MINI_ATTACK.HeavyMult elseif def.Tier == "boss" then Enemies.BOSS_ATTACK.Mult else 1)
 	state.nextAttack = now + (def.AttackCooldown or Enemies.DEFAULTS.AttackCooldown)
 	if heavy then
 		state.nextHeavy = now + Enemies.MINI_ATTACK.HeavyCooldown
