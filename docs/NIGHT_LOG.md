@@ -715,6 +715,13 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 14:35 PHASE 3 - RANGED category V2 done (12/12, each compared with its icon). Triangles: 994, 1494, 1518, 1206, 1478, 1226, 1184, 1534, 1784, 1594, 1416, 1744; all 5 studs.
+  Bow limbs with 12 segments on the twist-free tube, spiral grip wraps, string knots; crossbows with triggers and
+  latches; guns with grip ridges, triggers, tank / barrel rings. Muzzle points: bows = the arrow rest, crossbows =
+  the bolt tip, guns / blowgun = the barrel end. Fix during the checks: Pulse Rifle body panels darkened (they read
+  as grey blocks). ICON NOTE for the owner: the Plague Bow and Starfall Bow icons show pinched limbs near the tips,
+  an artifact of the old tube helper (frame flip); the V2 models are clean. The icons were not changed.
+
 - 14:15 PHASE 3 - GAUNTLET category V2 done (12/12, each compared with its icon). Triangles: 2060, 2912, 2324, 2184, 2304, 2010, 2236, 2308, 2436, 2288, 2556, 2742 (budget
   5,000); all 1.8 studs, one right-hand gauntlet each (mirror in Studio). Two-part curled fingers and thumb, rimmed
   cuffs, riveted plates, twist-free horns / claws / coral, sun rays, piston seals. Tip = the knuckles' striking
