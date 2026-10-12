@@ -162,9 +162,14 @@ Work boss by boss and system by system with sub-agents:
   key-pose clips, option 2 = no assets to publish), VFX (`Controllers/VFX/*` pooled + `Config/CombatVFX` + assets
   `ReplicatedStorage.Assets.VFX.Shared_*` / `<Category>_*`), SFX (`Util/Sfx` `Sfx.combat` + `Config/CombatSfx` +
   licensed sounds in `Assets.Sounds.Combat`). Dev hooks: character `AnimDebug` / `AnimProfile`, workspace.VFX
-  `Freeze` / `Profile` / `LowFx` / `Test`, SoundService `CombatSfxDebug`. Sword pilot validated end to end
-  (screenshots `docs/screenshots/weapons_v2/combat_sword_*`); round 2 (the 6 other categories) and the reviewer pass:
-  see `docs/NIGHT_LOG.md`.
+  `Freeze` / `Profile` / `LowFx` / `Test`, SoundService `CombatSfxDebug`. ALL 7 CATEGORIES DONE (68 clips, per-category
+  VFX, 115 licensed sounds), reviewed by a reviewer sub-agent and every BLOCKER / MAJOR fixed and re-verified in Play
+  (Net "Combo" resync, rate booked at the due time, real knockback, point-blank shots, damage numbers after respawn).
+  Screenshots `docs/screenshots/weapons_v2/combat_<category>_<step>.jpg`. Open: other players' view not testable
+  through the MCP (no second client), crossbow / gun looks need the real meshes, nothing auditioned by ear.
+* OWNER TO DO: Bulk Import of the 84 weapon FBX + `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()`
+  (`Blender_Exports/WEAPONS_IMPORT.md`), listen to the combat sounds once (`docs/SOUND_KIT.md` Combat section), File >
+  Save to File As for the .rbxl. No animation to publish (procedural pipeline, option 2).
 
 **2026-10-05 (evening): ENEMIES / NPCs / PETS (`docs/enemies_npcs_pets_brief.txt`, zones 1-4) are DONE - rule
 changes, Parts A-F, final checks. NEXT STEP: the boss patterns (`docs/boss_patterns_document.txt`).**

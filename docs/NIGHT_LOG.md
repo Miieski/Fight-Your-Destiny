@@ -715,6 +715,25 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 17:05 ALL PHASES DONE - FINAL REPORT (docs/weapons_combat_brief.txt).
+  FINISHED: Phase 1 Whip & Chain removed everywhere (7 categories, 84 weapons, shop 7 tabs, Index 84, old profiles
+  migrated; the only "Whip" left in the repo are history notes in the logs). Phase 2 HUD: 3 empty SKILL slots (Z / X /
+  C, cooldown sweep ready, touch buttons on mobile; pets stay in the Pets window and Equipment). Phase 3: the 84
+  weapon models rebuilt in Blender from their icons, each compared side by side (`Previews/Weapons/<Cat>/*_compare.png`),
+  .blend + .fbx replaced (V1 in `BackUP_Files/old_weapon_models_2026-10-12/`), manifest 84 x v2, lineups, measured
+  points -> `DevTools.WeaponPoints` + `ApplyWeaponMeshes`. Phase 4 hack & slash: combos for the 7 categories (68
+  procedural clips), VFX per category, 115 licensed sounds, hit-stop, shake, FOV pulse, lunge, aim assist, cancels,
+  afterimage dash, enemy knockback, combo counter, server authoritative, pooled and capped, Low FX; reviewer pass +
+  fixes; phone emulator with 10 enemies ~0.1 ms of combat script per frame.
+  NOT FINISHED / NOT VERIFIED: the FBX are not imported (owner step, Studio has no MCP importer); other players' view
+  of the combat (no second client through the MCP); crossbow / gun animation + VFX looks need the real meshes; no
+  sound was auditioned by ear; the real touch Attack button was not pressed in the emulator (Auto-Attack path tested).
+  OWNER: (1) Asset Manager > Bulk Import of `Blender_Exports/Weapons/<Category>/*.fbx` with File Dimensions = Meters,
+  then `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()` (`Blender_Exports/WEAPONS_IMPORT.md`); (2) no
+  animation to publish (option 2, procedural); (3) missing sounds: none - listen once, candidates to swap: the bow
+  release and the gun shot; (4) icon note: the Plague Bow and Starfall Bow icons show pinched limbs (old helper), the
+  V2 models are clean; (5) File > Save to File As for the .rbxl.
+
 - 16:58 PHASE 4 - REVIEW FIXES done and verified in Play (backup `..._165823_after_review_fixes_*`).
   Main agent (Net, Config/Enemies, EnemyService, CombatService, CombatController, FxController):
   B1 Block handled with no minimum interval (a 30 ms press / release tap now ends with Blocking = false, WalkSpeed 16);
