@@ -715,6 +715,23 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
 
 ## Status (newest first)
 
+- 13:09 PHASE 4 - ANIMATION PILOT (Sword) done by the Animation sub-agent (12:07-13:03, backups
+  `BackUP_Files/FightYourDestiny_2026-10-12_121037_animations_before_*` / `..._130329_animations_after_*`), reviewed
+  and committed by the main agent. `Config/CombatAnimations.luau` (clip data: key poses, IK targets, markers) +
+  `Controllers/Combat/Animations.luau` (engine, contract API unchanged). Clips: Sword_Idle (2.4 s loop), Sword_Run
+  (0.7 s, upper body), Sword_Equip 0.5, Sword_Attack1 RightSlash 0.80 s (Hit 0.16), Attack2 LeftSlash 0.80 (0.16),
+  Attack3 RisingSlash 0.85 (0.18), Attack4 SpinSlash = jumping 360 0.95 (0.22), Sword_Block (raise 0.13 + hold),
+  Sword_BlockHit 0.28 (additive), Shared_Roll 0.42, Shared_Hit 0.30 (additive), Shared_Death 0.6 + hold,
+  Shared_Spawn 0.6. Tested in Play: the 4-step combo loops every 1.0 s next to 3 boars (finisher hits all 3, combo
+  counter 12 HITS), hit-stop measured on the sword arm (1000-3000 deg/s -> 20-40 deg/s for ~60 ms, ~120 ms on the
+  finisher), Q at 0.47 s cancels the recovery into the roll, block holds / releases in ~0.1 s, run keeps the default
+  legs, equip, flinch, death + spawn (sampled), phone emulator combo. Cost 0.025-0.034 ms / frame / character.
+  Main agent after the review: V2 `WeaponBounds`, `WeaponPoints`, `ApplyWeaponMeshes` pushed into
+  `ServerStorage.DevTools` (Studio and disk now identical: ExportScripts + pull = 0 written); ApplyWeaponMeshes
+  dry-run (84 not found, nothing changed) and a functional test on plains_sword with a fake import (Handle, Neon
+  glow part, grip (0, -1.672, 0) = the true origin, Tip at the blade top, Base at the hilt, attributes) then the
+  placeholder Tool restored.
+
 - 12:46 PHASE 3 - STUDIO SIDE prepared (not run: the owner imports the FBX). `tools/ApplyWeaponMeshes.luau`
   (DevTools): finds each import by file name (`01_plains_sword`) or id, swaps the mesh into
   `ReplicatedStorage.Assets.Weapons.<WeaponId>.Handle` (biggest part = Handle, others welded, `_Glow` parts Neon),
@@ -847,3 +864,23 @@ Owner's order: delete the Whip weapons, rebuild the weapon models from their ico
   simple placeholders (the FBX files were never imported). So "new models from the icons" = rebuild each weapon
   with more detail (new budget 800-4,000 tris) while keeping its icon's silhouette, proportions and colors as the
   target. Importing the FBX (owner) is what makes the in-game weapons look like the icons.
+- Animation engine (Animation sub-agent): this place uses the avatar joint upgrade (AnimationConstraint joints, no
+  Motor6D); the engine supports both. It writes the joints in RunService.PreSimulation (after the Animator), reads
+  back the Animator's Transform and blends over it by weight; layers = base stance (Idle / Run by movement, root and
+  legs only while standing still so the default walk / run / jump legs stay) + one action clip with a cross-fade +
+  additive reactions (Hit, BlockHit never interrupt a swing or the guard). Hands and feet are two-bone IK, the blade
+  direction is measured from the Tool (Base -> Tip attachments through RightGrip), so the V2 meshes need no data
+  change. The wind-up is stretched so the Hit marker lands exactly at Combos[cat][step].Impact / speed.
+- The owner's avatar has a big head that hides what is held in front: the stance holds the sword out on the right,
+  wind-ups go over the shoulders; the contact frames are in front of the body (the VFX trail carries the arc).
+- Death = a stagger then a limp hold (BreakJointsOnDeath is off and the body topples physically).
+- "Moving" = speed above 1.5 studs/s (or move input for the local player), ignored for 0.35 s after an attack or a
+  roll so the lunge / dash do not switch the legs to the run cycle (MoveDirection alone stays 0 with MoveTo).
+
+## Problems / missing
+
+- Other players never see a roll or a hurt flinch yet: CombatController only animates the local ones (Animation
+  sub-agent request) -> main agent: replicate roll (direction) and hurt for other players.
+- Not testable in Studio solo: other players' swings / blocks / stances (code paths exist: Net "Swing", the
+  "Blocking" attribute) -> reviewer pass with a 2-client local server.
+- Phone emulator: mouse clicks do not reach the touch buttons; attacks there were driven by the Auto-Attack toggle.
