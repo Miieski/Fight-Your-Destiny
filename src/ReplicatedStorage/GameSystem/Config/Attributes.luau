@@ -25,10 +25,10 @@ Attributes.List = {
 	{ Id = "Mind", Name = "Mind", Icon = "GoldGain", Short = "Fortune", Effects = { "Gold Gain +2.5%", "Roll cooldown -0.7% (base 1.5 s, floor 0.6 s)" } },
 	{ Id = "Endurance", Name = "Endurance", Icon = "Defense", Short = "Toughness", Effects = { "Defense +1", "Block reduction +0.5 pts (base 60%, cap 85%)", "Move speed +0.4% (cap +40% with pets)" } },
 	{ Id = "Strength", Name = "Strength", Icon = "Attack", Short = "Power", Effects = { "Damage of Strength weapons (Heavy S, Gauntlet A, Sword B, Spear B)" } },
-	{ Id = "Dexterity", Name = "Dexterity", Icon = "Speed", Short = "Skill", Effects = { "Damage of Dexterity weapons (Ranged S, Dagger A, Spear A, Sword B, Gauntlet B, Whip B)", "Attack speed +0.3% (cap +15%)" } },
+	{ Id = "Dexterity", Name = "Dexterity", Icon = "Speed", Short = "Skill", Effects = { "Damage of Dexterity weapons (Ranged S, Dagger A, Spear A, Sword B, Gauntlet B)", "Attack speed +0.3% (cap +15%)" } },
 	{ Id = "Intelligence", Name = "Intelligence", Icon = "Magic", Short = "Sorcery", Effects = { "Damage of Magic weapons (S)", "Element proc chance +0.4 pts (cap +16 pts)", "Magic area radius +0.5% (cap +25%)" } },
 	{ Id = "Faith", Name = "Faith", Icon = "Star", Short = "Devotion", Effects = { "Pet bonus effectiveness +1.2%", "Lifesteal and healing effects +1.5%" } },
-	{ Id = "Arcane", Name = "Arcane", Icon = "Crit", Short = "Luck", Effects = { "Crit chance +0.25 pts (base 5%, cap 60%)", "Crit damage +1.5% (base x2)", "Loot drop chance +0.5%", "Damage of Arcane weapons (Dagger C, Whip B)" } },
+	{ Id = "Arcane", Name = "Arcane", Icon = "Crit", Short = "Luck", Effects = { "Crit chance +0.25 pts (base 5%, cap 60%)", "Crit damage +1.5% (base x2)", "Loot drop chance +0.5%", "Damage of Arcane weapons (Dagger C)" } },
 } :: { Attribute }
 
 Attributes.ById = {} :: { [string]: Attribute }
@@ -89,7 +89,6 @@ Attributes.Scaling = {
 	Gauntlet = { Strength = 0.7, Dexterity = 0.5 },
 	Ranged = { Dexterity = 1.2 },
 	Magic = { Intelligence = 1.2 },
-	Whip = { Dexterity = 0.6, Arcane = 0.6 },
 } :: { [string]: { [string]: number } }
 Attributes.Grades = { { Min = 1.0, Letter = "S" }, { Min = 0.7, Letter = "A" }, { Min = 0.5, Letter = "B" }, { Min = 0.3, Letter = "C" }, { Min = 0, Letter = "D" } }
 

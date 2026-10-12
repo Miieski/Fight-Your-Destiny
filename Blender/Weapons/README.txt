@@ -5,11 +5,11 @@ category (fyd_weapon_swords.py, ...). Every .blend here is the SOURCE OF TRUTH: 
 convention below needs a fix after the first import in Studio, change export_fbx() in
 fyd_weapons.py and re-export every FBX in one pass from these .blend files (the "Weapon" object).
 
-AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05; all 96 weapons follow it; not yet
+AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05; all weapons follow it; not yet
 imported in Studio by the owner)
 - Built in METERS at real scale, then every weapon is scaled so its longest side is exactly the
   category length of the brief (1 stud = 0.28 m):
-    Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Gauntlet 1.8 (one hand) | Ranged 5 | Magic 6 | Whip 6 studs
+    Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Gauntlet 1.8 (one hand) | Ranged 5 | Magic 6 studs
 - ORIGIN = grip center (where the hand holds the weapon).
 - In Blender the blade / head points along +Z (up) and the front of the weapon faces -Y.
 - GAUNTLET exception: ONE right-hand gauntlet per zone (mirror it in Studio, scale X -1, for the left
@@ -18,9 +18,6 @@ imported in Studio by the owner)
 - RANGED: origin = the hand grip, longest side along Z. Bows: limbs along Z, string on -X, arrows fly
   towards +X. Crossbows: bolt points +Z, prod spans X, trigger grip hangs towards +Y. Guns and the blowgun:
   muzzle +Z, pistol grip towards -X. Set Tool.Grip per weapon type in Studio.
-- WHIP & CHAIN: origin = handle grip, handle along Z, then a stylized S-curved lash/chain rising along +Z
-  (6 studs in total). It reads as a whip in icons and in the hand; for a moving lash in Studio, keep the
-  handle and drive a rope/Beam from the handle tip instead of the rigid lash.
 - FBX export: Y up, -Z forward (Blender defaults), apply unit scale, scale 1.0, textures embedded.
   -> In Roblox the blade points along +Y (up), the origin is the grip.
 - IMPORT (owner): Studio > Asset Manager > Bulk Import (or 3D Importer), choose FILE DIMENSIONS =
@@ -44,7 +41,7 @@ ONE .blend PER WEAPON
 BUDGETS: 500-3,000 triangles (Gauntlet and Magic up to 4,000). Rarity is NOT modeled.
 
 IN STUDIO (weapon Tools, 2026-10-05)
-- Until the FBX files are imported, ReplicatedStorage.Assets.Weapons holds 96 PLACEHOLDER Tools (simple parts per
+- Until the FBX files are imported, ReplicatedStorage.Assets.Weapons holds 84 PLACEHOLDER Tools (simple parts per
   category, zone colors, attribute Placeholder = true) so the shop, case opening and equipping already work.
 - After the Bulk Import (File Dimensions = Meters), put the imported models in one folder (any place, e.g.
   workspace.ImportedWeapons) and run in the command bar:
@@ -55,6 +52,6 @@ IN STUDIO (weapon Tools, 2026-10-05)
   Category, Zone, Placeholder = false. It returns (built, skipped) and warns when a model has the wrong length.
   require(...).missing() lists the weapons that still use a placeholder.
 - Tool.Grip (R15, measured in Play): identity = the head points straight up out of the fist with the front facing
-  forward (swords, spears, heavies, daggers, staffs, whips). Bows: limbs up, string toward the body. Crossbows
+  forward (swords, spears, heavies, daggers, staffs). Bows: limbs up, string toward the body. Crossbows
   (tundra, hell, dead) and guns / blowgun (jungle, abyss, mechanical): muzzle forward. Gauntlets: knuckles forward,
   back of the hand up. The FBX export maps Blender +X to Roblox -X (bow strings and gauntlet thumbs are on +X).

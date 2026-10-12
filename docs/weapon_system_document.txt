@@ -1,13 +1,13 @@
 =====================================================================
  FIGHT YOUR DESTINY - WEAPON SYSTEM DOCUMENT
- 8 categories x 12 weapons = 96 weapons (one per category per zone)
+ 7 categories x 12 weapons = 84 weapons (one per category per zone)
 =====================================================================
 
 ---------------------------------------------------------------------
  1. CORE RULES
 ---------------------------------------------------------------------
-- There are 8 weapon categories. Each category has exactly 12 weapons,
-  one for each zone. So every zone has 8 weapons of its own (96 total).
+- There are 7 weapon categories. Each category has exactly 12 weapons,
+  one for each zone. So every zone has 7 weapons of its own (84 total).
 - Every weapon belongs to ONE zone. A weapon's zone sets its base
   damage, so a Legendary weapon from the Void is far stronger than a
   Legendary weapon from the Plains.
@@ -50,12 +50,10 @@ the difference is in HOW they play (reach, area, speed, safety).
    |                   |          |          |       | projectile.
  7 | Magic (staff)     |   0.8    |   1.0    |  35   | Area damage in a small radius
    |                   |          |          |       | around the target.
- 8 | Whip & Chain      |   0.9    |   1.1    |  12   | Wide frontal sweep that hits
-   |                   |          |          |       | everything in the cone.
 
 Approximate DPS per hit-rate (Common, relative to Sword = 10 in zone 1):
     Sword 10 | Spear 10.8 | Heavy 10 | Dagger 10 (+crits) | Gauntlet 10.8
-    Ranged 9.6 | Magic 8 (but area) | Whip 9.9 (but wide)
+    Ranged 9.6 | Magic 8 (but area)
 
 Ranged and Magic have slightly lower single-target DPS because they are
 safer and have range or area.
@@ -120,7 +118,7 @@ ZONE ELEMENT (optional flavor; works in every zone)
 ---------------------------------------------------------------------
  5. SHOP
 ---------------------------------------------------------------------
-- The shop has one tab per unlocked zone, with the 8 weapons of that
+- The shop has one tab per unlocked zone, with the 7 weapons of that
   zone. Zones that are locked show their weapons grayed out.
 - Buying a weapon: the player pays the zone price in COINS and receives
   that weapon with a RANDOM rarity (odds in section 3), rolled on the
@@ -160,23 +158,23 @@ Damage shown is for a COMMON weapon. Multiply by the rarity multiplier
 (section 3) and apply the Zone Boost when in the home zone.
 
 Reference table for a zone's base damage:
-    Zone | Sword | Spear | Heavy | Dagger | Gauntlet | Ranged | Magic | Whip
-    -----+-------+-------+-------+--------+----------+--------+-------+------
-     1   |  10   |  12   |  25   |   4    |    6     |   8    |   8   |   9
-     2   | 100   | 120   | 250   |  40    |   60     |  80    |  80   |  90
-     3   |  1K   | 1.2K  | 2.5K  | 400    |  600     | 800    | 800   | 900
-     4   | 10K   | 12K   | 25K   |  4K    |   6K     |  8K    |  8K   |  9K
-     5   |100K   |120K   |250K   | 40K    |  60K     | 80K    | 80K   | 90K
-     6   |  1M   | 1.2M  | 2.5M  | 400K   | 600K     | 800K   | 800K  | 900K
-     7   | 10M   | 12M   | 25M   |  4M    |   6M     |  8M    |  8M   |  9M
-     8   |100M   |120M   |250M   | 40M    |  60M     | 80M    | 80M   | 90M
-     9   |  1B   | 1.2B  | 2.5B  | 400M   | 600M     | 800M   | 800M  | 900M
-    10   | 10B   | 12B   | 25B   |  4B    |   6B     |  8B    |  8B   |  9B
-    11   |100B   |120B   |250B   | 40B    |  60B     | 80B    | 80B   | 90B
-    12   |  1T   | 1.2T  | 2.5T  | 400B   | 600B     | 800B   | 800B  | 900B
+    Zone | Sword | Spear | Heavy | Dagger | Gauntlet | Ranged | Magic
+    -----+-------+-------+-------+--------+----------+--------+-------
+     1   |  10   |  12   |  25   |   4    |    6     |   8    |   8
+     2   | 100   | 120   | 250   |  40    |   60     |  80    |  80
+     3   |  1K   | 1.2K  | 2.5K  | 400    |  600     | 800    | 800
+     4   | 10K   | 12K   | 25K   |  4K    |   6K     |  8K    |  8K
+     5   |100K   |120K   |250K   | 40K    |  60K     | 80K    | 80K
+     6   |  1M   | 1.2M  | 2.5M  | 400K   | 600K     | 800K   | 800K
+     7   | 10M   | 12M   | 25M   |  4M    |   6M     |  8M    |  8M
+     8   |100M   |120M   |250M   | 40M    |  60M     | 80M    | 80M
+     9   |  1B   | 1.2B  | 2.5B  | 400M   | 600M     | 800M   | 800M
+    10   | 10B   | 12B   | 25B   |  4B    |   6B     |  8B    |  8B
+    11   |100B   |120B   |250B   | 40B    |  60B     | 80B    | 80B
+    12   |  1T   | 1.2T  | 2.5T  | 400B   | 600B     | 800B   | 800B
 
 Names (category order: Sword, Spear, Heavy, Dagger, Gauntlet, Ranged,
-Magic, Whip & Chain):
+Magic):
 
 ZONE 1 - PLAINS (element: Nature)
   Sword      | Iron Shortsword
@@ -186,7 +184,6 @@ ZONE 1 - PLAINS (element: Nature)
   Gauntlet   | Leather Knuckles
   Ranged     | Hunting Bow
   Magic      | Apprentice Staff
-  Whip       | Vine Whip
 
 ZONE 2 - DESERT (element: Sand)
   Sword      | Sand Scimitar
@@ -196,7 +193,6 @@ ZONE 2 - DESERT (element: Sand)
   Gauntlet   | Desert Wraps
   Ranged     | Desert Recurve Bow
   Magic      | Sandstorm Staff
-  Whip       | Scarab Whip
 
 ZONE 3 - JUNGLE (element: Poison)
   Sword      | Jungle Machete
@@ -206,7 +202,6 @@ ZONE 3 - JUNGLE (element: Poison)
   Gauntlet   | Jaguar Claws
   Ranged     | Poison Blowgun
   Magic      | Shaman Totem Staff
-  Whip       | Liana Whip
 
 ZONE 4 - TUNDRA (element: Frost)
   Sword      | Frostbrand Blade
@@ -216,7 +211,6 @@ ZONE 4 - TUNDRA (element: Frost)
   Gauntlet   | Frost Knuckles
   Ranged     | Frostbite Crossbow
   Magic      | Blizzard Staff
-  Whip       | Frozen Chain
 
 ZONE 5 - CURSED SWAMP (element: Curse)
   Sword      | Rotwood Sword
@@ -226,7 +220,6 @@ ZONE 5 - CURSED SWAMP (element: Curse)
   Gauntlet   | Mud Fists
   Ranged     | Plague Bow
   Magic      | Cauldron Staff
-  Whip       | Leech Whip
 
 ZONE 6 - VOLCANO (element: Burn)
   Sword      | Magma Blade
@@ -236,7 +229,6 @@ ZONE 6 - VOLCANO (element: Burn)
   Gauntlet   | Magma Gauntlets
   Ranged     | Flame Bow
   Magic      | Eruption Staff
-  Whip       | Lava Chain
 
 ZONE 7 - HELL (element: Hellfire)
   Sword      | Demon Blade
@@ -246,7 +238,6 @@ ZONE 7 - HELL (element: Hellfire)
   Gauntlet   | Demon Fists
   Ranged     | Soulfire Crossbow
   Magic      | Infernal Tome Staff
-  Whip       | Soul Chain
 
 ZONE 8 - HEAVEN (element: Holy)
   Sword      | Radiant Longsword
@@ -256,7 +247,6 @@ ZONE 8 - HEAVEN (element: Holy)
   Gauntlet   | Angelic Gauntlets
   Ranged     | Dawn Bow
   Magic      | Seraph Staff
-  Whip       | Radiant Whip
 
 ZONE 9 - REALM OF THE DEAD (element: Soul Drain)
   Sword      | Deathbringer Sword
@@ -266,7 +256,6 @@ ZONE 9 - REALM OF THE DEAD (element: Soul Drain)
   Gauntlet   | Bone Knuckles
   Ranged     | Bone Crossbow
   Magic      | Lich Staff
-  Whip       | Spine Whip
 
 ZONE 10 - ABYSS (element: Tidal)
   Sword      | Tidal Sword
@@ -276,7 +265,6 @@ ZONE 10 - ABYSS (element: Tidal)
   Gauntlet   | Pearl Gauntlets
   Ranged     | Harpoon Gun
   Magic      | Tidecaller Staff
-  Whip       | Tentacle Whip
 
 ZONE 11 - MECHANICAL CITY (element: Shock)
   Sword      | Plasma Sword
@@ -286,7 +274,6 @@ ZONE 11 - MECHANICAL CITY (element: Shock)
   Gauntlet   | Power Gauntlets
   Ranged     | Pulse Rifle
   Magic      | Tesla Coil Staff
-  Whip       | Electro Whip
 
 ZONE 12 - THE VOID (element: Gravity)
   Sword      | Voidforged Blade
@@ -296,7 +283,6 @@ ZONE 12 - THE VOID (element: Gravity)
   Gauntlet   | Singularity Gauntlets
   Ranged     | Starfall Bow
   Magic      | Void Staff
-  Whip       | Rift Chain
 
 ---------------------------------------------------------------------
  7. WORKED EXAMPLES
@@ -328,7 +314,7 @@ a Desert weapon for good results. This is the intended progression.
 CONFIG MODULES (keep every number in config, never hard-coded)
     Config/WeaponCategories.luau   category multipliers, speed, range, special
     Config/WeaponRarities.luau     multipliers, zone boost, proc chance, odds
-    Config/Weapons.luau            96 entries: id, name, category, zone, model
+    Config/Weapons.luau            84 entries: id, name, category, zone, model
     Config/Zones.luau              zone base damage, element, shop price
 
 INVENTORY ENTRY
@@ -346,13 +332,13 @@ SERVER RESPONSIBILITIES
 CLIENT RESPONSIBILITIES
     - Shop UI, reveal animation, inventory, equip, "Zone Boost" icon.
     - Attack animations and VFX (VFX plugin, Toolbox, Blender if needed);
-      one attack animation set per CATEGORY is enough (8 sets), and each
+      one attack animation set per CATEGORY is enough (7 sets), and each
       weapon model reuses its category animations.
     - Tool models: reuse a mesh per category and change color, size and
       particles per zone. Rarity can add glow, aura and trail.
 
-ASSET PLAN (to avoid making 96 unique models by hand)
-    - 8 base animation sets (one per category).
+ASSET PLAN (to avoid making 84 unique models by hand)
+    - 7 base animation sets (one per category).
     - 12 zone color/material themes applied to the base meshes.
     - 8 rarity glow/aura levels.
     - Unique custom models only for the Secret rarity or for the first

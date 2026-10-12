@@ -48,7 +48,7 @@ ICONS NEEDED (group: ids)
  - Currency & HUD: Gold, Diamond, RebirthCredit, Key, HealthHeart, ZoneBoost
  - Stats: MaxHP, Attack, Defense, Speed, Crit, GoldGain
  - Item types: Weapon, Helmet, Chest, Legs, Egg, Trophy, Pet
- - Weapon categories: Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic, Whip
+ - Weapon categories: Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic
  - Zones (12) and Sub-zones (48): see part 2
  - UI marks: Lock, Check, Arrow, Plus, Close, Star
 

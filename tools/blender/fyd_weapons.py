@@ -30,25 +30,25 @@ MANIFEST = os.path.join(BLEND_DIR, "weapons_manifest.csv")
 
 STUD = 0.28
 TEX = 512
-LENGTH_STUDS = {"Sword": 4.5, "Spear": 8, "Heavy": 5, "Dagger": 2, "Gauntlet": 1.8, "Ranged": 5, "Magic": 6, "Whip": 6}
+LENGTH_STUDS = {"Sword": 4.5, "Spear": 8, "Heavy": 5, "Dagger": 2, "Gauntlet": 1.8, "Ranged": 5, "Magic": 6}
 TRI_BUDGET = {"Gauntlet": 4000, "Magic": 4000}
 # icon outline (px at 512): thinner for long thin weapons so the outline does not swallow them
-OUTLINE = {"Sword": 14, "Spear": 8, "Heavy": 11, "Dagger": 14, "Gauntlet": 14, "Ranged": 9, "Magic": 9, "Whip": 10}
-CATEGORIES = ["Sword", "Spear", "Heavy", "Dagger", "Gauntlet", "Ranged", "Magic", "Whip"]
+OUTLINE = {"Sword": 14, "Spear": 8, "Heavy": 11, "Dagger": 14, "Gauntlet": 14, "Ranged": 9, "Magic": 9}
+CATEGORIES = ["Sword", "Spear", "Heavy", "Dagger", "Gauntlet", "Ranged", "Magic"]
 ZONES = ["Plains", "Desert", "Jungle", "Tundra", "Swamp", "Volcano", "Hell", "Heaven", "Dead", "Abyss", "Mechanical", "Void"]
 NAMES = {
-    "Plains": ["Iron Shortsword", "Hunter's Spear", "Stone Hammer", "Hunter's Knife", "Leather Knuckles", "Hunting Bow", "Apprentice Staff", "Vine Whip"],
-    "Desert": ["Sand Scimitar", "Nomad Pike", "Obelisk Hammer", "Scorpion Dagger", "Desert Wraps", "Desert Recurve Bow", "Sandstorm Staff", "Scarab Whip"],
-    "Jungle": ["Jungle Machete", "Tribal Spear", "Totem Club", "Venom Fang", "Jaguar Claws", "Poison Blowgun", "Shaman Totem Staff", "Liana Whip"],
-    "Tundra": ["Frostbrand Blade", "Icicle Lance", "Glacier Axe", "Ice Shard Dagger", "Frost Knuckles", "Frostbite Crossbow", "Blizzard Staff", "Frozen Chain"],
-    "Swamp": ["Rotwood Sword", "Witch Hunter Spear", "Swamp Maul", "Toad Tooth Dagger", "Mud Fists", "Plague Bow", "Cauldron Staff", "Leech Whip"],
-    "Volcano": ["Magma Blade", "Obsidian Spear", "Lava Hammer", "Ember Dagger", "Magma Gauntlets", "Flame Bow", "Eruption Staff", "Lava Chain"],
-    "Hell": ["Demon Blade", "Infernal Halberd", "Doom Axe", "Imp Claw Dagger", "Demon Fists", "Soulfire Crossbow", "Infernal Tome Staff", "Soul Chain"],
-    "Heaven": ["Radiant Longsword", "Celestial Lance", "Judgment Hammer", "Feather Dagger", "Angelic Gauntlets", "Dawn Bow", "Seraph Staff", "Radiant Whip"],
-    "Dead": ["Deathbringer Sword", "Grave Pike", "Gravedigger's Maul", "Ghoul Fang", "Bone Knuckles", "Bone Crossbow", "Lich Staff", "Spine Whip"],
-    "Abyss": ["Tidal Sword", "Deepsea Trident", "Kraken Anchor", "Angler Dagger", "Pearl Gauntlets", "Harpoon Gun", "Tidecaller Staff", "Tentacle Whip"],
-    "Mechanical": ["Plasma Sword", "Electro Lance", "Hydraulic Hammer", "Nano Dagger", "Power Gauntlets", "Pulse Rifle", "Tesla Coil Staff", "Electro Whip"],
-    "Void": ["Voidforged Blade", "Void Piercer", "Void Maul", "Rift Dagger", "Singularity Gauntlets", "Starfall Bow", "Void Staff", "Rift Chain"],
+    "Plains": ["Iron Shortsword", "Hunter's Spear", "Stone Hammer", "Hunter's Knife", "Leather Knuckles", "Hunting Bow", "Apprentice Staff"],
+    "Desert": ["Sand Scimitar", "Nomad Pike", "Obelisk Hammer", "Scorpion Dagger", "Desert Wraps", "Desert Recurve Bow", "Sandstorm Staff"],
+    "Jungle": ["Jungle Machete", "Tribal Spear", "Totem Club", "Venom Fang", "Jaguar Claws", "Poison Blowgun", "Shaman Totem Staff"],
+    "Tundra": ["Frostbrand Blade", "Icicle Lance", "Glacier Axe", "Ice Shard Dagger", "Frost Knuckles", "Frostbite Crossbow", "Blizzard Staff"],
+    "Swamp": ["Rotwood Sword", "Witch Hunter Spear", "Swamp Maul", "Toad Tooth Dagger", "Mud Fists", "Plague Bow", "Cauldron Staff"],
+    "Volcano": ["Magma Blade", "Obsidian Spear", "Lava Hammer", "Ember Dagger", "Magma Gauntlets", "Flame Bow", "Eruption Staff"],
+    "Hell": ["Demon Blade", "Infernal Halberd", "Doom Axe", "Imp Claw Dagger", "Demon Fists", "Soulfire Crossbow", "Infernal Tome Staff"],
+    "Heaven": ["Radiant Longsword", "Celestial Lance", "Judgment Hammer", "Feather Dagger", "Angelic Gauntlets", "Dawn Bow", "Seraph Staff"],
+    "Dead": ["Deathbringer Sword", "Grave Pike", "Gravedigger's Maul", "Ghoul Fang", "Bone Knuckles", "Bone Crossbow", "Lich Staff"],
+    "Abyss": ["Tidal Sword", "Deepsea Trident", "Kraken Anchor", "Angler Dagger", "Pearl Gauntlets", "Harpoon Gun", "Tidecaller Staff"],
+    "Mechanical": ["Plasma Sword", "Electro Lance", "Hydraulic Hammer", "Nano Dagger", "Power Gauntlets", "Pulse Rifle", "Tesla Coil Staff"],
+    "Void": ["Voidforged Blade", "Void Piercer", "Void Maul", "Rift Dagger", "Singularity Gauntlets", "Starfall Bow", "Void Staff"],
 }
 
 

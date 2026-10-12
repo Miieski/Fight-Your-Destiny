@@ -14,7 +14,6 @@ Combat.Shapes = {
 	Gauntlet = { Kind = "Cone", Angle = 90, Radius = 5, MaxTargets = 3, Impact = 0.1, Anim = "Lunge", Combo = 3, ComboReset = 1.4, FinisherMult = 2 },
 	Ranged = { Kind = "Projectile", Speed = 120, Range = 60, MaxTargets = 1, Impact = 0.05, Anim = "Lunge" },
 	Magic = { Kind = "AoE", Range = 35, Radius = 6, MaxTargets = 20, Impact = 0.3, Anim = "Lunge" },
-	Whip = { Kind = "Cone", Angle = 100, Radius = 12, MaxTargets = 6, Impact = 0.2, Anim = "Slash" },
 }
 
 -- An enemy closer than this counts as "in front" whatever the angle (hugging enemies).

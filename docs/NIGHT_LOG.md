@@ -706,3 +706,39 @@ ALL THREE PARTS ARE DONE (96/96 weapons, 96/96 weapon icons). Nothing left to re
 - Not verifiable through the MCP: that the cursor is really unlocked while a window is open in first person (the
   simulated mouse moves even when locked). Uses Roblox's documented GuiButton.Modal; to check by hand: V, then K,
   the cursor must move over the Settings window.
+
+# Weapons V2 + hack & slash combat - 2026-10-12 (docs/weapons_combat_brief.txt)
+
+Owner's order: delete the Whip weapons, rebuild the weapon models from their icons (Blender, replace
+`Blender_Exports/Weapons`), then the brief: Phase 1 remove Whip & Chain, Phase 2 skill slots in the HUD, Phase 3 the
+84 models, Phase 4 hack & slash combat with sub-agents (animations, VFX, SFX, reviewer).
+
+## Status (newest first)
+
+- 11:45 PHASE 1 DONE - Whip & Chain removed (7 categories, 84 weapons). Backups first: Studio
+  `BackUP_Files/FightYourDestiny_2026-10-12_113254_before_weapons_v2_*`, old weapon files (all .blend / .fbx / icons /
+  previews / builders, incl. the 12 Whips) in `BackUP_Files/old_weapon_models_2026-10-12/` (git-ignored).
+  Removed with `git rm`: `Blender/Weapons/Whip/`, `Blender_Exports/Weapons/Whip/`, `Icons/Weapons/Whip/`,
+  `Icons/Categories/Whip.png`, `Blender/Icons/Categories/Whip.blend`, `Previews/Weapons/Whip/` + lineup,
+  `tools/blender/fyd_weapon_whips.py`; the Whip rows of `weapons_manifest.csv`, `weapons_bounds.json`,
+  `Icons/asset_ids.json`. Code: `Config/WeaponCategories`, `Config/Weapons` (icons + names), `Config/Combat` (shape),
+  `Config/Attributes` (A3 scaling row + effect texts), `UI/Kit/Icons`, DevTools `WeaponTools` / `WeaponBounds`,
+  `fyd_weapons.py`, `fyd_icon_recipes2.py`. Studio: the 12 Whip Tools destroyed (84 left). Shop, Index, case
+  opening, inventory and admin lists are built from the category list, so they follow. Migration in `DataService`
+  (on load): a weapon whose id no longer exists is removed, refunded at its zone's shop price in Gold, unequipped,
+  and its Index entry dropped (tested on a fake profile: 2 Whips -> +1,001,000 Gold, sword kept). Docs: weapon
+  system document (7 categories, 84 weapons, table without the Whip column), DESIGN.md, HANDOFF.md,
+  menu_systems_brief (A3 table, Index 84), weapon_modeling_brief, weapon_shop_brief, ui_redo_teleport_brief,
+  enemies brief, Blender/Weapons/README.txt. Play test: Shop shows 7 category tabs, Weapons.List = 84, Index weapons
+  = 84, no "Whip" text in the Stats window, Output clean (only the usual DataStore notice).
+  Search report (`git grep -i whip`): left on purpose = the "removed on 2026-10-12" notes (DESIGN, HANDOFF,
+  DataService migration), enemy loot names "Monkey Tail Whip" / "Electric Eel Whip" (enemy database items, not the
+  category), and the history in this log. "Chain" is left only where unrelated (Shock "chain lightning", decor
+  chains in zone kits, boss "Soul Chains" pattern, a chain on two staffs / one maul).
+
+## Decisions taken without the owner
+
+- The weapon icons were rendered from the current (v1) Blender models, and in Studio the 96 Tools are still the
+  simple placeholders (the FBX files were never imported). So "new models from the icons" = rebuild each weapon
+  with more detail (new budget 800-4,000 tris) while keeping its icon's silhouette, proportions and colors as the
+  target. Importing the FBX (owner) is what makes the in-game weapons look like the icons.

@@ -111,22 +111,6 @@
    -0.1615
   ]
  },
- "abyss_whip": {
-  "materials": [
-   "abyss_whip_Main",
-   "abyss_whip_Glow"
-  ],
-  "max": [
-   0.1106,
-   0.0318,
-   1.4715
-  ],
-  "min": [
-   -0.1229,
-   -0.0373,
-   -0.2085
-  ]
- },
  "dead_dagger": {
   "materials": [
    "dead_dagger_Main",
@@ -239,22 +223,6 @@
    -0.1727
   ]
  },
- "dead_whip": {
-  "materials": [
-   "dead_whip_Main",
-   "dead_whip_Glow"
-  ],
-  "max": [
-   0.1284,
-   0.0365,
-   1.4511
-  ],
-  "min": [
-   -0.1368,
-   -0.0434,
-   -0.2289
-  ]
- },
  "desert_dagger": {
   "materials": [
    "desert_dagger_Main"
@@ -359,21 +327,6 @@
    -0.1132,
    -0.0338,
    -0.1586
-  ]
- },
- "desert_whip": {
-  "materials": [
-   "desert_whip_Main"
-  ],
-  "max": [
-   0.1491,
-   0.031,
-   1.459
-  ],
-  "min": [
-   -0.11,
-   -0.0407,
-   -0.221
   ]
  },
  "heaven_dagger": {
@@ -488,22 +441,6 @@
    -0.171
   ]
  },
- "heaven_whip": {
-  "materials": [
-   "heaven_whip_Main",
-   "heaven_whip_Glow"
-  ],
-  "max": [
-   0.1604,
-   0.029,
-   1.4449
-  ],
-  "min": [
-   -0.1174,
-   -0.029,
-   -0.2351
-  ]
- },
  "hell_dagger": {
   "materials": [
    "hell_dagger_Main",
@@ -616,22 +553,6 @@
    -0.1727
   ]
  },
- "hell_whip": {
-  "materials": [
-   "hell_whip_Main",
-   "hell_whip_Glow"
-  ],
-  "max": [
-   0.1525,
-   0.04,
-   1.4976
-  ],
-  "min": [
-   -0.1209,
-   -0.04,
-   -0.1824
-  ]
- },
  "jungle_dagger": {
   "materials": [
    "jungle_dagger_Main",
@@ -738,21 +659,6 @@
    -0.0799,
    -0.0258,
    -0.1827
-  ]
- },
- "jungle_whip": {
-  "materials": [
-   "jungle_whip_Main"
-  ],
-  "max": [
-   0.1146,
-   0.036,
-   1.3988
-  ],
-  "min": [
-   -0.1188,
-   -0.0485,
-   -0.2812
   ]
  },
  "mechanical_dagger": {
@@ -867,22 +773,6 @@
    -0.1563
   ]
  },
- "mechanical_whip": {
-  "materials": [
-   "mechanical_whip_Main",
-   "mechanical_whip_Glow"
-  ],
-  "max": [
-   0.1212,
-   0.037,
-   1.4935
-  ],
-  "min": [
-   -0.1084,
-   -0.0402,
-   -0.1865
-  ]
- },
  "plains_dagger": {
   "materials": [
    "plains_dagger_Main"
@@ -987,21 +877,6 @@
    -0.1226,
    -0.028,
    -0.1624
-  ]
- },
- "plains_whip": {
-  "materials": [
-   "plains_whip_Main"
-  ],
-  "max": [
-   0.1291,
-   0.0321,
-   1.4791
-  ],
-  "min": [
-   -0.1366,
-   -0.0321,
-   -0.2009
   ]
  },
  "swamp_dagger": {
@@ -1116,22 +991,6 @@
    -0.1586
   ]
  },
- "swamp_whip": {
-  "materials": [
-   "swamp_whip_Main",
-   "swamp_whip_Glow"
-  ],
-  "max": [
-   0.1406,
-   0.0335,
-   1.4881
-  ],
-  "min": [
-   -0.1092,
-   -0.0335,
-   -0.1919
-  ]
- },
  "tundra_dagger": {
   "materials": [
    "tundra_dagger_Main",
@@ -1242,22 +1101,6 @@
    -0.1382,
    -0.0216,
    -0.1771
-  ]
- },
- "tundra_whip": {
-  "materials": [
-   "tundra_whip_Main",
-   "tundra_whip_Glow"
-  ],
-  "max": [
-   0.1558,
-   0.0509,
-   1.4673
-  ],
-  "min": [
-   -0.1097,
-   -0.0638,
-   -0.2127
   ]
  },
  "void_dagger": {
@@ -1372,22 +1215,6 @@
    -0.1789
   ]
  },
- "void_whip": {
-  "materials": [
-   "void_whip_Main.001",
-   "void_whip_Glow.001"
-  ],
-  "max": [
-   0.1543,
-   0.0906,
-   1.4557
-  ],
-  "min": [
-   -0.1392,
-   -0.0906,
-   -0.2243
-  ]
- },
  "volcano_dagger": {
   "materials": [
    "volcano_dagger_Main",
@@ -1498,22 +1325,6 @@
    -0.1139,
    -0.0228,
    -0.1522
-  ]
- },
- "volcano_whip": {
-  "materials": [
-   "volcano_whip_Main",
-   "volcano_whip_Glow"
-  ],
-  "max": [
-   0.1831,
-   0.0518,
-   1.4812
-  ],
-  "min": [
-   -0.1257,
-   -0.0642,
-   -0.1988
   ]
  }
 }

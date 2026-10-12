@@ -268,7 +268,7 @@ def circle_points(r, n=32, start=0.0, arc=360.0, cx=0.0, cz=0.0):
 
 
 def tube(points, r, material, segs=12, **kw):
-    """Round tube along a polyline of 3D points (vines, ropes, whips, handles)."""
+    """Round tube along a polyline of 3D points (vines, ropes, handles)."""
     bm = bmesh.new()
     rings = []
     pts = [Vector(p) for p in points]

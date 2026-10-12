@@ -78,7 +78,7 @@ Server-authoritative; rules from DESIGN.md section 2 and docs/weapon_system_docu
    Heavy: arc 90 deg radius 6 + small ground slam AoE radius 6, target stagger 0.3 s | Dagger: arc 60 deg radius 4,
    single target (+20% crit chance on top) | Gauntlet: cone 90 deg radius 5, 3-hit combo, 3rd hit x2 damage |
    Ranged: projectile 120 studs/s, range 60, hits the first enemy | Magic: projectile or targeted AoE at the aim point
-   within range 35, radius 6 (x (1 + Magic radius bonus)), hits all inside | Whip & Chain: cone 100 deg radius 12, up to 6 targets.
+   within range 35, radius 6 (x (1 + Magic radius bonus)), hits all inside
  - **Damage per hit** = formula in menu_systems_brief.txt A4 with `Util/Stats.compute` (shared), with NO zone factor (rule 1B).
  - Roll: key Q / button / B, 0.35 s invulnerability, 12 studs, cooldown 1.5 s (Mind reduces, floor 0.6 s).
    Block: hold mouse 2 / button / LT, reduces damage 60% (+Endurance, cap 85%), movement -50%, cannot attack.

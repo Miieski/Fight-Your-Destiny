@@ -1,0 +1,169 @@
+=====================================================================
+ FIGHT YOUR DESTINY - WEAPONS V2 + HACK & SLASH COMBAT
+ 1) Remove the Whip category  2) New weapon models from the icons  3) Combat animations, VFX, SFX
+ 4) Skill slots in the HUD (replace the pet slots)
+=====================================================================
+GOAL OF THE GAME FEEL: a **hack and slash** on Roblox. Fast, responsive, juicy melee combos with
+strong feedback. Use **Blox Fruits** as a feel reference ONLY (combo rhythm, dash, slash trails,
+hit-stop, big readable VFX, damage numbers). Do not copy its assets, names, effects or UI; everything
+must be original and match Fight Your Destiny's low-poly fantasy style.
+
+READ FIRST: DESIGN.md, HANDOFF.md (3b), docs/weapon_system_document.txt, docs/weapon_modeling_brief.txt,
+docs/weapon_shop_brief.txt, docs/menu_systems_brief.txt, docs/ui_hud_brief.txt,
+docs/enemies_npcs_pets_brief.txt (combat section), Blender/Weapons/README.txt,
+Blender/Weapons/weapons_manifest.csv, the icons in Icons/Weapons/.
+
+RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite). Before overwriting any
+   weapon model, copy the old .blend/.fbx files into `BackUP_Files/old_weapon_models_<date>/`.
+2. Commit and push to https://github.com/Miieski/Fight-Your-Destiny (main) after EACH phase and after each
+   weapon category. Check `git status`: no .rbxl/.rbxm/backup staged, no secrets.
+3. Keep docs/NIGHT_LOG.md and Blender/Weapons/weapons_manifest.csv updated after every finished item.
+4. Server authoritative (damage, hits, cooldowns); the client only plays animations/VFX/SFX. All numbers in Config.
+5. Mobile first. If something fails twice: log it, skip, continue. Keep Studio open and visible.
+6. Deleting files: after the backup, delete with git (`git rm`). If the tools cannot delete files on the owner's
+   computer, move them to a `_to_delete/` folder and list them in the final report.
+
+---------------------------------------------------------------------
+ PHASE 1 - DELETE THE WHIP & CHAIN CATEGORY (do first)
+---------------------------------------------------------------------
+Weapon categories become 7 (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic) = **84 weapons**.
+Remove EVERYTHING related to Whip & Chain, then verify with a project-wide search for "Whip", "whip" and
+"Chain" (ignore unrelated words):
+ - Blender: `Blender/Weapons/Whip/` (.blend files), `Blender_Exports/Weapons/Whip/` (.fbx), `Icons/Weapons/Whip/`
+   (icons), the Whip rows in `weapons_manifest.csv`, and the Whip category icon in the UI icons.
+ - Config: Whip entries in `Config/Weapons.luau`, `WeaponCategories.luau`, icon tables, Index entries.
+ - Studio: the 12 Whip Tools in `ReplicatedStorage.Assets.Weapons` and any Whip-related models/attributes.
+ - UI/systems: the Whip tab in the Weapon Shop (7 category tabs left), Inventory filters, case-opening pools,
+   Index counts (weapons 96 -> 84), the Attributes scaling table (remove the Whip row; the other rows stay),
+   admin commands, validation scripts.
+ - Docs: update `docs/weapon_system_document.txt` (8 -> 7 categories, 96 -> 84 weapons, remove the Whip table row,
+   the Whip names and the Whip mentions), `DESIGN.md` (weapon categories list, ids, counts),
+   `docs/menu_systems_brief.txt` (A3 scaling table, Index counts), `docs/weapon_modeling_brief.txt`,
+   `docs/weapon_shop_brief.txt`, HANDOFF.md.
+ - Players who already own a Whip weapon (test accounts): migrate it safely (remove it, refund its zone price in Gold)
+   so nothing breaks on load. The game is not public yet, so a simple migration is enough.
+ - Commit: "Remove Whip & Chain category".
+
+---------------------------------------------------------------------
+ PHASE 2 - HUD: REPLACE THE 3 PET SLOTS WITH 3 SKILL SLOTS (small, do right after Phase 1)
+---------------------------------------------------------------------
+ - In the HUD (bottom, next to the equipped weapon slot) the 3 "+" pet slots are REMOVED and replaced by **3 skill slots**.
+   Pets stay equipped from the Pets window and the Equipment screen (their slots there do not change).
+ - The skills themselves will be developed LATER, so build only the empty framework:
+   * 3 square slots in the wood/gold style with a 3D lock icon and an empty-skill look, keybind labels **Z, X, C** on PC
+     (gamepad: LB / RB / Y) and 3 touch buttons on mobile placed next to the attack button (>= 44 px, not overlapping Roblox's controls).
+   * Each slot is ready for: an icon, a **cooldown sweep overlay** with seconds text, a "not enough resource" shake,
+     and a rarity/element frame. Tapping an empty slot shows the toast "Skills are coming soon".
+   * `Config/Skills.luau` (empty list with the schema in comments: Id, Name, Icon, Cooldown, Category, Animation, VFX, SFX),
+     a `SkillService` stub with `Net.request("UseSkill", slot)` that validates the slot and returns "not available", and a
+     profile field `EquippedSkills = { nil, nil, nil }`.
+   * Update docs/ui_hud_brief.txt (item 5) and DESIGN.md accordingly.
+ - Commit: "HUD: skill slots replace pet slots".
+
+---------------------------------------------------------------------
+ PHASE 3 - NEW 3D WEAPON MODELS FROM THE ICONS (Blender, main agent)
+---------------------------------------------------------------------
+The current weapon models are replaced. The reference for each new model is **its icon**
+(`Icons/Weapons/<Category>/<number>_<id>_icon.png`, a 3D render of the weapon).
+ - For each of the 84 weapons: open the icon (Read), study the silhouette, proportions, shapes, materials, colors, glow parts and
+   small motifs, and **rebuild the weapon in Blender so the model matches the icon as closely as possible** from the same 3/4 angle.
+   After modeling, render the new model from the icon's camera angle and compare it with the icon side by side; iterate until it is
+   faithful (shape, proportions, color palette, emissive parts).
+ - Style: between low-poly and realistic (faceted, clean bevels), per docs/weapon_modeling_brief.txt. Budget 800-4,000 triangles
+   (up to 5,000 for Magic and Gauntlet). One mesh, one material/texture set (1024 max), emissive parts separated, clean UVs,
+   transforms applied, origin at the grip center, same axis/scale convention as Blender/Weapons/README.txt (keep it, do not change it).
+ - Keep the same file names and structure so nothing else breaks:
+   `Blender/Weapons/<Category>/<NN>_<id>.blend` (source of truth, overwritten after the backup) and
+   **`Blender_Exports/Weapons/<Category>/<NN>_<id>.fbx` replaced with the new model**
+   (the owner's path: `Roblox Project\Fight Your Destiny\Blender_Exports\Weapons`).
+ - Build ONE weapon at a time and check it yourself with screenshots before the next one. Category order: Sword, Spear, Heavy, Dagger,
+   Gauntlet, Ranged, Magic; zones 1 -> 12 inside a category. After each category save a lineup image in `Previews/Weapons/` and push.
+ - Update `weapons_manifest.csv` (triangles, status "v2"). Do not change the icons unless a model reveals a real mistake in an icon
+   (then note it in NIGHT_LOG.md and ask the owner in the final report).
+ - **Studio side:** the owner re-imports the FBX files (Asset Manager -> Bulk Import). Prepare a Luau helper
+   `tools/ApplyWeaponMeshes.luau` that, after the import, finds each imported MeshPart by its file name and swaps the mesh into the matching
+   `ReplicatedStorage.Assets.Weapons.<WeaponId>.Handle`, keeping the Grip, attributes and attachments (`TipAttachment`, `BaseAttachment`,
+   `MuzzleAttachment`), and prints a report of any weapon that is missing or mismatched. Until the re-import is done, the current Tools keep working.
+ - Every Tool must expose the attachments the VFX need: `TipAttachment` (blade tip / head), `BaseAttachment` (hilt), `MuzzleAttachment`
+   (Ranged and Magic), and for Heavy also `ImpactAttachment` at the head's strike point.
+
+---------------------------------------------------------------------
+ PHASE 4 - HACK & SLASH COMBAT: ANIMATIONS, VFX, SFX (sub-agents)
+---------------------------------------------------------------------
+USE SUB-AGENTS. Brief each one with this document and the existing combat code. Rules: at most 2 sub-agents running at the same time
+(usage limits), only ONE agent controls Studio at a time, strict file ownership, each returns a report with the exact APIs/names it created,
+and a reviewer sub-agent checks everything at the end (feel, performance, server validation).
+ - **Animation sub-agent** (owns `Animations/`, `GameClient/Controllers/Combat/Animations.luau`, `Config/CombatAnimations.luau`)
+ - **VFX sub-agent** (owns `ReplicatedStorage/Assets/VFX/`, `GameClient/Controllers/VFX/`, `Config/CombatVFX.luau`)
+ - **SFX sub-agent** (owns the sound registry in `Util/Sfx.luau`, `Config/CombatSfx.luau`, sound assets)
+ The main agent integrates (`CombatService`, input, hit-stop, camera) and keeps the server logic.
+ The sub-agents can start with the CURRENT weapon models (attachment names are fixed) so nothing has to be redone when the new models arrive.
+
+4A. COMBAT FEEL (applies to all weapons)
+ - **Combo chain on the attack input (M1):** each press/hold continues the combo; the combo index resets after 0.8 s without attacking; the last hit
+   is a finisher with a bigger effect, more knockback and a longer hit-stop.
+ - **Hit-stop:** on a confirmed hit, freeze the attacker's animation speed to 0.05 for 0.04-0.08 s (0.12 s for finishers and Heavy). Client-side feel only.
+ - **Camera:** small shake on hit (scaled by weapon, Settings toggle respected), short FOV pulse on finishers.
+ - **Lunge:** each attack steps the player forward 2-4 studs (Dagger 1.5, Heavy 3, Spear 4) with a smooth LinearVelocity impulse; **aim assist:** the
+   attack turns toward the nearest enemy within 15 studs (essential on mobile).
+ - **Cancel rules:** Roll cancels any attack recovery; Block cancels the recovery of everything except finishers; attacks cannot start during a roll.
+ - **Dash/roll:** 12 studs, i-frames per DESIGN.md, an afterimage trail (3 ghost copies fading in 0.25 s), dust puff, whoosh.
+ - **Animation speed** scales with the weapon's hits/sec and the Dexterity attack-speed bonus (cap +15%).
+ - **Enemy reactions:** short flinch animation, knockback (not for mini-bosses/bosses), damage numbers pop (crits bigger, yellow, with a small shake),
+   combo hit counter near the crosshair/HUD that fades after 2 s.
+ - **Server:** hit detection stays on the server (shapes from the combat section of docs/enemies_npcs_pets_brief.txt). The server fires a `Shot`/`Hit`
+   event so other players see the swing, trail and impact. Animation/VFX/SFX never decide damage.
+ - Performance: pooled VFX objects, no per-frame allocations, a global cap on simultaneous effects, Low FX setting halves particles and disables
+   afterimages and shakes.
+
+4B. ANIMATIONS (7 categories; R15 avatar). Per category provide:
+ Idle (stance with the weapon) | Run (holding the weapon) | Equip (draw) | Attack combo | Block (hold, guard pose) | Block-hit reaction.
+ Shared set: Roll (forward/back/left/right or one directional animation), Hit reaction, Death, Spawn/respawn.
+ | Category | Combo | Feel |
+ |---|---|---|
+ | Sword | 4 hits: right slash, left slash, rising slash, finisher spinning slash (small AoE) | fluid, balanced |
+ | Spear | 3 hits: thrust, thrust, long lunging thrust that pierces | long reach, forward lunges |
+ | Heavy | 2 hits: overhead slam with ground shockwave, wide horizontal smash | slow, heavy, big hit-stop and shake |
+ | Dagger | 5 fast hits alternating hands, finisher double-slash | very fast, tiny lunges, crit sparks |
+ | Gauntlet | 3 hits: jab, cross, uppercut/ground pound (3rd hit x2 damage) | punchy, rhythmic |
+ | Ranged | one shot per click: bow draw and release or gun fire with recoil, quick aim stance | precise, no combo, short recovery |
+ | Magic | one cast per click: staff raise, cast circle, release (projectile or area) | readable casting pose |
+ - Pipeline: first run a **pilot** with the Sword combo end to end (animation + trail + sound + hit-stop), validate the feel, and then do the other
+   categories. Choose the most reliable animation pipeline and write the decision in docs/NIGHT_LOG.md:
+   (1) real Roblox animation assets (KeyframeSequence authored in Studio, the owner publishes them with the Animation Editor, ids stored in
+   `Config/CombatAnimations.luau`), which replicate natively; or (2) procedural keyframe data played by an `AnimPlayer` module on each client (Motor6D),
+   driven by replicated attributes, if publishing cannot be automated tonight. Animation events/markers at the exact hit frame trigger hits, VFX and SFX.
+ - Each animation: 24-60 fps keyframes, correct priority (Action), looped flags, weight/fade times, no foot sliding, readable anticipation, strong poses.
+ - Naming: `<Category>_Idle`, `<Category>_Run`, `<Category>_Attack1..N`, `<Category>_Block`, `Shared_Roll`, ...
+
+4C. VFX (inspired by the Blox Fruits feel but original)
+ - Per category: **slash arcs** (Sword/Dagger: crescent meshes + Trails from `TipAttachment`), **thrust lines and a pierce streak** (Spear), **ground cracks and
+   shockwave rings with debris** (Heavy), **impact bursts and fist shockwaves** (Gauntlet), **muzzle flash, arrow/bullet trails, impact sparks** (Ranged),
+   **cast circle, charged orb, projectile with trail, area burst** (Magic).
+ - Shared: hit sparks (flash + a few shards), crit burst, block spark and shield flash, roll dust and afterimage, enemy hit flash, death dissolve,
+   damage-number style, weapon trail color by **rarity** (Common none, Uncommon green ... Secret rainbow), subtle zone-element tint of the trail
+   (Plains green, Desert gold, Jungle lime, Tundra icy blue; the rest later).
+ - Store every effect under `ReplicatedStorage/Assets/VFX/<Category>_<Name>`; played through one `VFX.play(name, cframe, options)` helper, pooled,
+   with Low FX variants. Mobile-friendly particle counts.
+
+4D. SFX
+ - Per category: swing whoosh (3 pitch variants per hit of the combo), finisher whoosh, impact on flesh/metal/stone (3 variants each), crit sting,
+   Heavy slam boom, Dagger quick slashes, Gauntlet punches, bow draw/release and gun shot, magic charge/cast/explosion.
+ - Shared: roll whoosh, block clang, block break, hurt, death, level of rarity chime reuse, UI unaffected.
+ - Use free, public audio from the Toolbox (sanitize and verify each plays; Roblox restricts private audio), pitch variation +-5%, never repeat the same
+   variant twice in a row, route all sounds through the existing SoundGroups (PlayerFX volume), and cap simultaneous sounds. List any missing sounds
+   in the final report.
+
+---------------------------------------------------------------------
+ ACCEPTANCE
+---------------------------------------------------------------------
+ - No "Whip" left anywhere (search report), shop shows 7 tabs, Index counts 84 weapons, docs updated, owner-facing counts correct.
+ - HUD shows 3 skill slots (no pet slots), with keybinds on PC and touch buttons on mobile, no overlap with Roblox controls; screenshots at
+   desktop/phone/tablet sizes.
+ - All 84 new models exist (.blend + .fbx replaced), each compared side by side with its icon, manifest updated, lineups saved.
+ - Combat feel: for each of the 7 categories, a short screen recording or GIF-style screenshot sequence of the full combo with trails, hit-stop, SFX
+   (note the timings in NIGHT_LOG.md); aim assist works on mobile; roll/block cancels as specified; Low FX works.
+ - Server validation intact (no client-decided damage); no errors/warnings in the Output; smooth on the phone emulator with 10 enemies around.
+ - FINAL REPORT (short): what is finished, what is not, decisions taken, the files I must re-import (FBX via Asset Manager -> Bulk Import, then run
+   `ApplyWeaponMeshes`), animations I must publish (if pipeline 1), missing sounds.

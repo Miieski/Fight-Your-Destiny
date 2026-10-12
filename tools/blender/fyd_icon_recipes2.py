@@ -302,23 +302,6 @@ def Magic():
     I.cyl(0.12, 0.14, gold(), segs=14, loc=(0, 0, -1.9), parent=root)
 
 
-def Whip():
-    pts, radii = [], []
-    n = 80
-    for i in range(n):
-        t = i / (n - 1)
-        a = t * 3.6 * math.pi
-        r = 1.0 - 0.72 * t
-        pts.append((r * math.cos(a), 0.06 * math.sin(t * 9), r * math.sin(a) * 0.85))
-        radii.append(0.13 - 0.085 * t)
-    I.tube(pts, radii, leather(), segs=12)
-    # handle continues from the outer end of the coil, down to the bottom-right
-    I.tube([(1.0, 0.0, 0.0), (1.12, -0.05, -0.45), (1.22, -0.1, -1.05)], [0.15, 0.17, 0.17], leather_dark(), segs=14)
-    I.torus(0.17, 0.05, gold(), rsegs=8, loc=(1.11, -0.05, -0.4), rot=(0, 15, 0))
-    I.sphere(0.21, gold(), loc=(1.24, -0.1, -1.16))
-    pose_all(I.empty("Whip", rot=(0, 0, 6)))
-
-
 # ----------------------------------------------------------------------------------------------------
 # UI MARKS
 # ----------------------------------------------------------------------------------------------------
@@ -367,7 +350,7 @@ RECIPES = {
     "Items": {"Weapon": Weapon, "Helmet": Helmet, "Chest": Chest, "Legs": Legs, "Egg": Egg, "Trophy": Trophy,
               "Pet": Pet},
     "Categories": {"Sword": Sword, "Spear": Spear, "Heavy": Heavy, "Dagger": Dagger, "Gauntlet": Gauntlet,
-                   "Ranged": Ranged, "Magic": Magic, "Whip": Whip},
+                   "Ranged": Ranged, "Magic": Magic},
     "Marks": {"Lock": Lock, "Check": Check, "Arrow": Arrow, "Plus": Plus, "Close": Close, "Star": Star},
 }
 

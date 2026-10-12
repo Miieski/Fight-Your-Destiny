@@ -5,7 +5,7 @@ then the design documents in `docs/`:
 - `docs/enemy_database.txt` - stats, rewards, loot and diamonds (source of truth for numbers)
 - `docs/zone_design_document.txt` - look and layout of every zone
 - `docs/boss_patterns_document.txt` - boss attack patterns, tools and workflow
-- `docs/weapon_system_document.txt` - 96 weapons, rarity, zone damage scaling, zone boost, shop
+- `docs/weapon_system_document.txt` - 84 weapons, rarity, zone damage scaling, zone boost, shop
 
 ## 1. What this is
 
@@ -32,8 +32,8 @@ an NPC combat game with a zone-progression and rebirth loop.
   trophy). Drop chance: 2% normal enemies (identical for all), 4% mini-bosses, 6% bosses.
   8 rarity tiers: Common, Uncommon, Rare, Epic, Legendary, Mythic, Divine, Secret.
   Stronger enemy = rarer loot (see section 1 of `enemy_database.txt` for the exact rule).
-* **Weapons:** 8 categories (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic, Whip &
-  Chain) x 12 zones = 96 weapons. Each weapon belongs to a zone; damage = zone base x category x
+* **Weapons:** 7 categories (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic) x 12 zones
+  = 84 weapons (the Whip & Chain category was removed on 2026-10-12). Each weapon belongs to a zone; damage = zone base x category x
   rarity, plus a Zone Boost when used in its home zone. Bought in the shop with a RANDOM rarity.
 * **Rebirth (superseded - see DESIGN.md section 4):** resets Gold, weapons, armor, stats, eggs
   and pets, keeps diamonds and boss keys (old text follows),
@@ -252,13 +252,13 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
   (Y up, textures embedded) and updates the manifest. `lineup(category)` makes `Previews/Weapons/<Cat>_lineup.png`.
 * Builders: one module per category, `fyd_weapon_swords.py`, `fyd_weapon_spears.py`, `fyd_weapon_heavy.py`,
   `fyd_weapon_daggers.py`, `fyd_weapon_gauntlets.py`, `fyd_weapon_ranged.py`,
-  `fyd_weapon_magic.py`, `fyd_weapon_whips.py`
+  `fyd_weapon_magic.py` (the Whip builder was deleted with the category)
   (`BUILDERS[zone_index - 1]`), shared parts in `fyd_weapon_parts.py`. Convention in `Blender/Weapons/README.txt`.
 * Icons uploaded; ids in `Config/Weapons.luau` between `-- ICONS BEGIN` / `-- ICONS END`
   (`Weapons.ById[id].Icon`). `tools/weapon_icon_table.py` prints the table from `Icons/asset_ids.json`.
-* Per-type conventions (gauntlet = one right-hand piece, ranged bow/crossbow/gun, whip = handle + rigid lash)
+* Per-type conventions (gauntlet = one right-hand piece, ranged bow/crossbow/gun)
   are in `Blender/Weapons/README.txt`. Lineups: `Previews/Weapons/<Category>_lineup.png`.
-* The 96 FBX files are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions =
+* The FBX files (84 since 2026-10-12) are NOT imported in Studio yet (owner: Asset Manager -> Bulk Import, File Dimensions =
   Meters). After import: Tools under `ReplicatedStorage.Assets.Weapons.<WeaponId>` (gameplay step).
 
 **Owner request 2026-10-05 (noon): "Zone Sign" setting (Settings > Display, default on) hides the top-center zone
@@ -279,7 +279,7 @@ decisions and tests in `docs/NIGHT_LOG.md`, screenshots `docs/screenshots/weapon
   Uid/Rarity + rarity light/outline, re-given on respawn). Admin: lockZone, giveWeapon, forceRarity, setPity,
   resetWeapons (+ an Admin panel "Weapons" tab).
 * Client: `UI/Pages/WeaponShopPage`, `UI/CaseOpening`, `UI/Pages/InventoryPage`; Kit/Window has a phone layout.
-* Tools: 96 PLACEHOLDER Tools in `ReplicatedStorage.Assets.Weapons` until the FBX import; then
+* Tools: 84 PLACEHOLDER Tools (96 before the Whip removal) in `ReplicatedStorage.Assets.Weapons` until the FBX import; then
   `require(game.ServerStorage.DevTools.WeaponTools).fromImport(folder)` (see Blender/Weapons/README.txt).
   `DevTools.WeaponRollSim` = the 100,000-roll check (`docs/weapon_roll_simulation.txt`).
 * NOT done (not in this brief): damage/combat with the weapon, diamond reroll, salvage, weapon lock.
@@ -307,7 +307,7 @@ What was built (all in `src/`, mirrored from Studio):
   `Net.request("Admin", cmd, ...)` (setGold, addGold, setDiamonds, addDiamonds, notify, setZone,
   unlockAll, equipWeaponFake, equipArmorFake, equipPetFake, clearEquipment, damageSelf, heal, setBadge).
   `RewardService` is a stub (`RedeemCode` -> "Codes are not available yet").
-* **New configs:** `Config/Rarities, Weapons (96), Economy, Products, Settings, Profile, Audio, UI`.
+* **New configs:** `Config/Rarities, Weapons (84), Economy, Products, Settings, Profile, Audio, UI`.
 * **UI Kit** (`GameClient/UI/Kit/`): Theme (colors, fonts, screen scaling), Panel, Button, IconButton,
   Bar, Slot, Tabs, Slider, Toggle, Badge, Toast, Window, Icons (placeholder shapes; put image ids in
   `Icons.Assets`), Screens.

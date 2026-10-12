@@ -12,6 +12,8 @@ local RunService = game:GetService("RunService")
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Profile = require(ReplicatedStorage.GameSystem.Config.Profile)
 local Settings = require(ReplicatedStorage.GameSystem.Config.Settings)
+local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
+local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
 local DataService = { Priority = 1 }
 
@@ -51,6 +53,43 @@ local function reconcile(target: Data, defaults: Data)
 		elseif typeof(default) == "table" and typeof(current) == "table" and next(default) ~= nil then
 			reconcile(current, default)
 		end
+	end
+end
+
+-- Weapons whose id no longer exists (the Whip & Chain category was removed on 2026-10-12) leave the inventory:
+-- refunded at their zone's shop price in Gold, unequipped, and their Index entries dropped.
+local ZONE_BY_PREFIX: { [string]: any } = {}
+for _, zone in ipairs(Zones.List) do
+	ZONE_BY_PREFIX[string.lower(zone.Id)] = zone
+end
+local REMOVED_CATEGORY_SUFFIX = "_whip"
+
+local function migrate(profile: Data)
+	local refund, removed = 0, 0
+	for uid, item in pairs(profile.Weapons or {}) do
+		local id = if typeof(item) == "table" then item.id else nil
+		if not (typeof(id) == "string" and Weapons.ById[id]) then
+			profile.Weapons[uid] = nil
+			removed += 1
+			local zone = if typeof(id) == "string" then ZONE_BY_PREFIX[string.match(id, "^(%l+)_") or ""] else nil
+			if zone then
+				refund += Weapons.price(zone.Index)
+			end
+			if profile.EquippedWeapon == uid then
+				profile.EquippedWeapon = nil
+			end
+		end
+	end
+	for id in pairs(profile.Index or {}) do
+		if typeof(id) == "string" and string.sub(id, -#REMOVED_CATEGORY_SUFFIX) == REMOVED_CATEGORY_SUFFIX then
+			profile.Index[id] = nil
+		end
+	end
+	if refund > 0 then
+		profile.Gold = (profile.Gold or 0) + refund
+	end
+	if removed > 0 then
+		print(`DataService: {removed} removed weapon(s) taken out of a profile, {refund} Gold refunded`)
 	end
 end
 
@@ -106,6 +145,7 @@ local function load(player: Player): Data?
 		elseif not locked then
 			local profile = if typeof(result) == "table" and typeof(result.Profile) == "table" then result.Profile else Profile.new()
 			reconcile(profile, Profile.new())
+			migrate(profile)
 			return profile
 		end
 		if not player.Parent then

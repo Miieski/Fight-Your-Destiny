@@ -28,3 +28,7 @@ Previews/Weapons/*/_tmp/
 *.blend1
 Previews/**/_tmp/
 tools/blender/_last_run.json
+
+# Old model copies kept before an overwrite (large binaries)
+BackUP_Files/old_*/
+_to_delete/

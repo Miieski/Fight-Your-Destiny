@@ -108,7 +108,7 @@ Settings K. Mouse buttons only for Attack, Block and Roll. Keys Roblox or the ga
 Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 
 ### Attack rules
-* **Melee categories** (Sword, Spear, Heavy, Dagger, Gauntlet, Whip & Chain): **hold** the
+* **Melee categories** (Sword, Spear, Heavy, Dagger, Gauntlet): **hold** the
   attack input to attack continuously at the weapon's attack speed.
 * **Ranged and Magic categories**: **one press = one shot** (click/tap). Holding does not
   auto-fire (unless the player owns the Auto-Attack pass).
@@ -280,7 +280,7 @@ redone after a Rebirth has its sub-zone prices reset.
 * The full pet list (suggested 6 per zone = 72 species) is still to be written.
 
 ## 6. Weapons (reference)
-Full rules in `docs/weapon_system_document.txt`: 8 categories x 12 zones = 96 weapons, random
+Full rules in `docs/weapon_system_document.txt`: 7 categories x 12 zones = 84 weapons, random
 rarity on purchase, damage = zone base x category x rarity, Zone Boost in the home zone.
 Changes for this design:
 * Weapons are bought with **Gold** at the hub weapon shop.
@@ -479,9 +479,9 @@ ReplicatedStorage.Assets
 
 **Ids:** Zones `Plains, Desert, Jungle, Tundra, Swamp, Volcano, Hell, Heaven, Dead, Abyss,
 Mechanical, Void`. Sub-zone `<ZoneId>_1.._4`. Weapons `<zoneId lower>_<category>` (for example
-`plains_sword`, `void_whip`). Armor `<zoneId lower>_<helmet|chest|legs>`. Rarities (1..8):
+`plains_sword`, `void_magic`). Armor `<zoneId lower>_<helmet|chest|legs>`. Rarities (1..8):
 `Common, Uncommon, Rare, Epic, Legendary, Mythic, Divine, Secret`. Stats `MaxHP, Attack, Defense,
-Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic, Whip`.
+Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic` (Whip & Chain removed on 2026-10-12).
 
 ## 13. Admin panel (owner only)
 
@@ -519,7 +519,7 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
 
 * **Batches of 3 zones.** Batch 1: Hub + Plains, Desert, Jungle. Batch 2: Tundra, Swamp, Volcano.
   Batch 3: Hell, Heaven, Dead. Batch 4: Abyss, Mechanical, Void.
-* **All 96 weapons and 36 armor pieces are built from the start** (config + models). Items of
+* **All 84 weapons and 36 armor pieces are built from the start** (config + models). Items of
   zones that are not released yet stay hidden from shops/loot until their batch ships.
 * The full loop (kill -> unlock -> boss -> key -> Rebirth -> redo -> next zone) must work on
   Plains before building anything else.

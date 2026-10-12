@@ -52,7 +52,7 @@ local PALETTE = {
 -- { name, shape ("Block" | "Ball" | "Cyl" = cylinder along Y | "Diamond" = block turned 45 deg around Z),
 --   size, position, color role (1 blade, 2 handle, 3 accent neon), z rotation in degrees? }
 -- Tip / Base: attachment positions; Muzzle: Ranged / Magic only. Lengths match Config/Weapons sizes
--- of the real models (Sword 4.5, Spear 8, Heavy 5, Dagger 2, Gauntlet 1.8, Ranged 5, Magic 6, Whip 6).
+-- of the real models (Sword 4.5, Spear 8, Heavy 5, Dagger 2, Gauntlet 1.8, Ranged 5, Magic 6).
 local V = Vector3.new
 local SHAPES = {
 	Sword = {
@@ -126,23 +126,11 @@ local SHAPES = {
 		},
 		Tip = V(0, 4.13, 0), Base = V(0, 3.2, 0), Muzzle = V(0, 3.75, 0),
 	},
-	Whip = { -- handle + an S-curved lash rising along +Y
-		Parts = {
-			{ "Grip", "Cyl", V(0.28, 1.2, 0.28), V(0, 0, 0), 2 },
-			{ "Pommel", "Ball", V(0.34, 0.34, 0.34), V(0, -0.68, 0), 1 },
-			{ "Lash1", "Block", V(0.2, 1.2, 0.2), V(0.12, 1.15, 0), 1, -12 },
-			{ "Lash2", "Block", V(0.17, 1.2, 0.17), V(0.24, 2.3, 0), 1, 6 },
-			{ "Lash3", "Block", V(0.14, 1.2, 0.14), V(0.0, 3.4, 0), 1, 22 },
-			{ "Lash4", "Block", V(0.11, 1.2, 0.11), V(-0.38, 4.45, 0), 1, 14 },
-			{ "Cracker", "Ball", V(0.2, 0.2, 0.2), V(-0.55, 5.1, 0), 3 },
-		},
-		Tip = V(-0.55, 5.15, 0), Base = V(0, 0.62, 0),
-	},
 }
 
 -- Tool.Grip: how the Handle sits in the hand (R15 RightGripAttachment, measured in Play on 2026-10-05).
 -- Identity = the head points up out of the fist (arm forward, toolnone pose) with the front facing forward:
--- good for swords, spears, heavies, daggers, staffs and whips. The others turn the Handle in the hand:
+-- good for swords, spears, heavies, daggers, and staffs. The others turn the Handle in the hand:
 local function turn(right: Vector3, up: Vector3, back: Vector3): CFrame
 	-- the hand-space directions of the Handle's +X, +Y, +Z; Tool.Grip is the inverse of that rotation
 	return CFrame.fromMatrix(Vector3.zero, right, up, back):Inverse()
