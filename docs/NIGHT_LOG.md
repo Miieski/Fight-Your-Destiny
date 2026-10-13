@@ -1310,3 +1310,48 @@ details behind an (i)); Stats "+" buys at once; hide advanced details; filters b
   to play. The confirm dialogs (Respec, Release, Sell, Rebirth, Kick) keep their sentence too (safety).
 - Item and pet names, rarity names, zone names and the Rebirth number stay written (names, not sentences).
 - The Settings rows keep their short labels (the pictures alone could not tell "Music" from "UI" volume).
+
+# Pet Bonus Stats, weapon selling, new hatching - 2026-10-13 (owner: "Remove the weapon reroll feature and add the ability to sell a weapon for gold. For pets, assign them random stats (Bonus Stats) as shown in this image ... determined at the time of hatching ... Also improves the egg-hatching animation")
+
+Owner's choices (asked): 3 items like the image (Crown, Accessory, Aura, each with its rarity and a stat, visible
+on the pet, Power and Worth on the card); old pets get theirs too; weapon sells for 20% of its price x rarity;
+hatching "big and flashy". Backups `..._before_pet_traits_*` / `..._after_pet_traits_*` (6 files each).
+
+## Status (newest first)
+
+- 19:13 DONE. Studio = disk (pull: 162 scripts, 0 written). Screenshots `docs/screenshots/pet_traits/`.
+  * Weapon Reroll removed: ShopService (RerollWeapon / RerollChoice), Weapons.rerollPrice, CaseOpening's Keep new /
+    Keep old ending, the Diamond shop section. New `Weapons.sellValue` (20% of the shop price x rarity damage
+    multiplier: Common Plains 200, Rare 440, Legendary 1.1K), `WeaponService` "SellWeapon" (owned, not the equipped
+    one), Inventory > Weapons: red trash button + coin price on every copy but the equipped one, Epic+ confirm.
+  * `Config/PetTraits` (new): slots, 8 items per slot (one per rarity), odds, stat pool and values, roll, totals,
+    worth multiplier, gear key. `PetService` rolls them in addPet (every hatch, premium eggs, admin) and once for
+    every owned pet without items when the profile loads; hatch results carry `traits`; FollowPets is now
+    "id:tier:mutation:size:gear". `Config/Pets.petScore` (Equip Best) adds the items, new `Pets.power` / `Pets.worth`
+    (release value x items). `Util/Stats.petTotals` adds the items of equipped pets (Faith applies, not the
+    mutation). Admin `givePet(id, rarity, mutation?, size?, itemTier?)`.
+  * Items on the pets: 16 AI-generated meshes (generate_mesh, ~24 tries: the first Leaf Crown, Hermit's Crescent,
+    halo and medal were redone) in `ReplicatedStorage.Assets.PetGear` (raw copies + rejects in
+    ServerStorage.PetGearSources); 8 particle auras; `Util/PetGear` puts the crown on the head, the accessory at
+    the neck (rings around it, bow / medal / pendant / scarf in front), the aura around the body (followers only),
+    sparkles on Legendary+ items; the halo is neon gold. Tuned on 8 body types (puppy, bear, raccoon, scorpion,
+    crocodile, penguin, turtle, bird): neck rings 78% of the head width, max 32% of its height.
+  * UI: `Kit/TraitCard` (slot picture, RARITY, item name, stat picture + number); pet details = Power (lightning)
+    and Worth (coin) chips + the 3 cards (the column scrolls on phones); grid cells show 3 rarity dots; icons and
+    followers wear the items. 4 new Blender icons: Clover (Luck), Collar (Accessory), Aura, AllStats.
+  * Hatching (`UI/Hatching`): egg drop with bounce, stronger wobble + squash, glow and 12 turning rays that take
+    the pet's rarity colour in the last third, stage tremble, shell chips at each crack, white flash, burst,
+    confetti (24 + 10 x tier pieces), panel shake from Legendary, the pet pops in with a hop, the 3 items pop in
+    one by one (Epic+ item = reveal sound); Hatch All: cells pop in one after another with their item dots.
+  * Tests (Play): admin pets with items of tier 2 / 5 / 7 / 8 -> followers wear crowns / halo / collars, 3 auras;
+    pet details (Golden Bear Cub: Angel Halo +24% Luck, Diamond Collar +29% Gold, Holy Aura +6.8% All, Power 1.78K,
+    Worth 9.45K); single hatches (Legendary, Mythic) and Hatch All x6; weapon sell Rare (instant, +440) and
+    Legendary (confirm, +1.1K); the equipped weapon has no sell button; Diamond shop without the reroll.
+    Output: no errors (only the Studio DataStore notice).
+
+## Decisions taken without the owner
+
+- The item is fixed by its rarity (a Divine crown is always the Angel Halo): the look on the pet tells the rarity.
+  The stat is random. Item rarity does not depend on the pet's rarity or Egg Luck.
+- Item values are not multiplied by the mutation / size (those boost the species stats), but Faith boosts them.
+- Premium (Robux) pets roll items too (they never mutate).

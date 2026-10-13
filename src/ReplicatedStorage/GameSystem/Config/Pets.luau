@@ -3,8 +3,9 @@
 -- Steal an Egg, docs/pets_v2_plan.md, owner 2026-10-12). Slot roles are the same in every zone (stats + bonus).
 -- Models: ReplicatedStorage.Assets.Pets.<PetId> - the AI-generated rigs of DevTools/PetRigBuilder; Body / colors /
 -- accessories only drive the procedural placeholders (DevTools/PetModels). Ids: "<zone lower>_pet<slot>".
--- A stored pet is { id, rarity, premium, locked, mutation?, size? } (Config/PetMutations).
+-- A stored pet is { id, rarity, premium, locked, mutation?, size?, traits? } (Config/PetMutations, Config/PetTraits).
 local PetMutations = require(script.Parent.PetMutations)
+local PetTraits = require(script.Parent.PetTraits)
 local PetRarities = require(script.Parent.PetRarities)
 local Rarities = require(script.Parent.Rarities)
 local Zones = require(script.Parent.Zones)
@@ -226,9 +227,23 @@ function Pets.powerScore(id: string, tier: number, mult: number?): number
 	return score + Pets.bonusValue(tier) * 100 * m * PetRarities.BonusWeight
 end
 
--- Equip Best score of a stored pet (mutation and size included).
+-- Equip Best score of a stored pet (mutation, size and Bonus Stats items included).
 function Pets.petScore(pet: { [string]: any }): number
-	return Pets.powerScore(pet.id, pet.rarity, PetMutations.mult(pet))
+	local score = Pets.powerScore(pet.id, pet.rarity, PetMutations.mult(pet))
+	for stat, value in pairs(PetTraits.totals(pet)) do
+		score += value * 100 * (PetRarities.PowerWeights[stat] or PetRarities.BonusWeight)
+	end
+	return score
+end
+
+-- The "Power" number shown on the pet card (Equip Best score x 10).
+function Pets.power(pet: { [string]: any }): number
+	return math.floor(Pets.petScore(pet) * 10 + 0.5)
+end
+
+-- The "Worth" of a stored pet: its release value with the mutation / size and the Bonus Stats items.
+function Pets.worth(pet: { [string]: any }): number
+	return math.floor(Pets.releaseValue(pet.id, pet.rarity, PetMutations.mult(pet)) * PetTraits.worthMult(pet) + 0.5)
 end
 
 -- "Huge Golden Fox Kit" (size and mutation before the species name).

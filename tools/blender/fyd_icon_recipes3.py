@@ -204,10 +204,50 @@ def Up():
     I.extrude(pts, 0.45, green(), bevel=0.1, parent=root)
 
 
+# --- pet Bonus Stats (owner 2026-10-13): Luck, the Accessory and Aura slots, "All stats" ----------------------
+def Clover():
+    root = I.empty("Clover", rot=(0, 0, 8))
+    leaf = M("CloverGreen", "#3DCB5A", rough=0.3, coat=1.0)
+    for a in (45, 135, 225, 315):
+        r = math.radians(a)
+        I.sphere(0.5, leaf, loc=(0.42 * math.cos(r), 0, 0.42 * math.sin(r) + 0.15), scale=(1, 0.42, 1), parent=root)
+    I.sphere(0.2, M("CloverDeep", "#1F9A3C", rough=0.3, coat=1.0), loc=(0, -0.12, 0.15), scale=(1, 0.5, 1),
+             parent=root)
+    I.box(0.14, 0.14, 0.9, M("CloverStem", "#1F9A3C", rough=0.35, coat=0.8), loc=(0.18, 0, -0.62), rot=(0, -20, 0),
+          bevel=0.05, parent=root)
+
+
+def Collar():
+    root = I.empty("Collar", rot=(-25, 0, 8))
+    I.torus(0.8, 0.17, red(), segs=48, rsegs=12, rot=(90, 0, 0), parent=root)
+    I.box(0.3, 0.24, 0.3, gold_deep(), loc=(0, -0.05, -0.8), bevel=0.05, parent=root)
+    I.sphere(0.36, gold(), loc=(0, -0.2, -1.2), parent=root)
+    I.box(0.08, 0.1, 0.18, black(), loc=(0, -0.52, -1.3), bevel=0.02, parent=root)
+
+
+def Aura():
+    root = I.empty("Aura", rot=(0, 0, 8))
+    swirl = M("AuraViolet", "#B36BFF", rough=0.2, coat=1.0, emit=0.6)
+    for i, r in enumerate((0.95, 0.65, 0.36)):
+        ring_arrow(swirl if i != 1 else M("AuraPink", "#FF7AD9", rough=0.2, coat=1.0, emit=0.6), r=r, w=0.16,
+                   arc=250, start=40 + i * 110, head=0.0001, depth=0.3, parent=root)
+    I.extrude(I.star_points(4, 0.32, 0.11), 0.3, M("AuraSpark", "#FFF3A6", rough=0.2, coat=1.0, emit=1.0),
+              loc=(0, -0.3, 0), parent=root)
+
+
+def AllStats():
+    root = I.empty("AllStats", rot=(0, 0, 8))
+    colors = ("#FF4D5A", "#FF9E1F", "#FFD23A", "#3DCB5A", "#2E9BFF", "#B36BFF")
+    for i, c in enumerate(colors):
+        I.extrude(I.star_points(5, 1.0 - i * 0.14, (1.0 - i * 0.14) * 0.46), 0.18,
+                  M(f"Rainbow{i}", c, rough=0.25, coat=1.0), loc=(0, -0.1 * i, 0), parent=root)
+
+
 RECIPES = {
     "Ui": {
         "Clock": Clock, "Gift": Gift, "Calendar": Calendar, "Ticket": Ticket, "Speaker": Speaker, "Music": Music,
         "Eye": Eye, "Gamepad": Gamepad, "Keyboard": Keyboard, "Funnel": Funnel, "Sort": Sort, "Dice": Dice,
         "Trash": Trash, "Reset": Reset, "Invite": Invite, "MapPin": MapPin, "Up": Up,
+        "Clover": Clover, "Collar": Collar, "Aura": Aura, "AllStats": AllStats,
     },
 }

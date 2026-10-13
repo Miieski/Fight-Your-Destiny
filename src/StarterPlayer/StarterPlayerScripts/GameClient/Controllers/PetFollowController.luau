@@ -18,6 +18,8 @@ local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
 local PetRarities = require(ReplicatedStorage.GameSystem.Config.PetRarities)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local PetLook = require(ReplicatedStorage.GameSystem.Util.PetLook)
+local PetGear = require(ReplicatedStorage.GameSystem.Util.PetGear)
+local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
 local PetMotion = require(ReplicatedStorage.GameSystem.Util.PetMotion)
 local Settings = require(script.Parent.SettingsController)
 
@@ -54,7 +56,7 @@ local function clear(owner: Owner)
 	table.clear(owner.pets)
 end
 
-local function makePet(id: string, tier: number, index: number, mutation: string?, size: string?): Pet?
+local function makePet(id: string, tier: number, index: number, mutation: string?, size: string?, gear: string?): Pet?
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	local source = assets and assets:FindFirstChild("Pets") and assets.Pets:FindFirstChild(id)
 	if not source then
@@ -81,6 +83,8 @@ local function makePet(id: string, tier: number, index: number, mutation: string
 		light.Parent = model.PrimaryPart
 	end
 	local look = PetLook.apply(model, mutation, { LowFx = low })
+	-- the Bonus Stats items: crown, accessory, aura (Util/PetGear)
+	PetGear.apply(model, PetTraits.parseGearKey(gear), { LowFx = low })
 	-- the rest pose is recorded after the scale and the shells, before the model moves
 	local motion = PetMotion.new(model)
 	if motion then
@@ -119,9 +123,10 @@ local function rebuild(player: Player, owner: Owner)
 		if #owner.pets >= PetRarities.MaxFollowing then
 			break
 		end
-		local id, tier, mutation, size = string.match(entry, "^([%w_]+):(%d+):?(%a*):?(%a*)$")
+		-- "id:tier:mutation:size:gear" (older servers: "id:tier" or "id:tier:mutation:size")
+		local id, tier, mutation, size, gear = string.match(entry, "^([%w_]+):(%d+):?(%a*):?(%a*):?(%d*)$")
 		if id then
-			local pet = makePet(id, tonumber(tier) or 1, #owner.pets + 1, if mutation ~= "" then mutation else nil, if size ~= "" then size else nil)
+			local pet = makePet(id, tonumber(tier) or 1, #owner.pets + 1, if mutation ~= "" then mutation else nil, if size ~= "" then size else nil, gear)
 			if pet then
 				table.insert(owner.pets, pet)
 				if not owner.visible then

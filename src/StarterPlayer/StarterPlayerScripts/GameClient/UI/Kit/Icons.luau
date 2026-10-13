@@ -155,6 +155,10 @@ Icons.Ui = {
 	Ticket = "rbxassetid://70602877771733",
 	Trash = "rbxassetid://123173564925260",
 	Up = "rbxassetid://107778515573736",
+	Clover = "rbxassetid://133317399962428",
+	Collar = "rbxassetid://113809942294528",
+	Aura = "rbxassetid://100855409651468",
+	AllStats = "rbxassetid://117709214014554",
 }
 -- Realistic wood textures + iron corner (tools/blender/fyd_ui_textures.py, Icons/UiTex/<id>.png): Kit/Panel.
 Icons.Tex = {

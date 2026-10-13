@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
+local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
 local PetRarities = require(ReplicatedStorage.GameSystem.Config.PetRarities)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
@@ -31,6 +32,7 @@ local Chips = require(Kit.Chips)
 local Filter = require(Kit.Filter)
 local Icons = require(Kit.Icons)
 local Info = require(Kit.Info)
+local TraitCard = require(Kit.TraitCard)
 local ModelIcon = require(Kit.ModelIcon)
 local Panel = require(Kit.Panel)
 local Theme = require(Kit.Theme)
@@ -232,7 +234,7 @@ detail = function(uid: string)
 		return
 	end
 	local small = Theme.isCompact()
-	local panel = openOverlay(Vector2.new(800, 470))
+	local panel = openOverlay(Vector2.new(820, 540))
 	local h = panel.AbsoluteSize.Y / Theme.getScale()
 	local side = math.min(h - 32, if small then 230 else 320)
 	local holder = Instance.new("Frame")
@@ -244,11 +246,26 @@ detail = function(uid: string)
 	Theme.corner(holder, 8)
 	Theme.paintRarity(Theme.stroke(holder, Theme.Colors.GoldDark, 3), pet.rarity)
 	holder.Parent = panel
-	local view = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.94, 0.94), ZIndex = 23, Parent = holder, Mutation = pet.mutation })
+	local view = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.94, 0.94), ZIndex = 23, Parent = holder, Mutation = pet.mutation, Gear = PetTraits.gearKey(pet) })
 	overlayStop = ModelIcon.turntable(view, 9)
 
 	local text = if small then 16 else 19
-	local info = column(panel, UDim2.fromOffset(side + 32, 14), UDim2.new(1, -(side + 48 + Theme.TOUCH), 1, -(Theme.TOUCH + 36)))
+	-- the info column scrolls (phones: the 3 Bonus Stats items do not always fit)
+	local info = Instance.new("ScrollingFrame")
+	info.BackgroundTransparency = 1
+	info.BorderSizePixel = 0
+	info.Position = UDim2.fromOffset(side + 32, 14)
+	info.Size = UDim2.new(1, -(side + 48 + Theme.TOUCH), 1, -(Theme.TOUCH + 36))
+	info.CanvasSize = UDim2.new()
+	info.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	info.ScrollBarThickness = 5
+	info.ScrollBarImageColor3 = Theme.Colors.GoldLight
+	info.ZIndex = 22
+	local infoList = Instance.new("UIListLayout")
+	infoList.Padding = UDim.new(0, 4)
+	infoList.SortOrder = Enum.SortOrder.LayoutOrder
+	infoList.Parent = info
+	info.Parent = panel
 	line(info, Pets.displayName(pet), 1, Theme.Colors.Gold, if small then 24 else 30, "Title")
 	Theme.paintRarity(line(info, Rarities.get(pet.rarity).Name, 2, nil, if small then 18 else 22, "Button"), pet.rarity)
 	local mult = Hatching.petEffect()
@@ -265,18 +282,38 @@ detail = function(uid: string)
 		local mutation = PetMutations.get(pet.mutation)
 		line(info, `{PetMutations.prefix(pet)} {PetMutations.multText(pet)}`, 4, if mutation then mutation.Color else Theme.Colors.Gold, text - 1, "Button")
 	end
+	-- Power and Worth (like the reference card), then the 3 Bonus Stats items (Config/PetTraits)
+	local scoreRow = Chips.row(info, { LayoutOrder = 5, ZIndex = 23 })
+	Chips.chip(scoreRow, "Boost", Format.number(Pets.power(pet)), { Height = chipH, LayoutOrder = 1, ZIndex = 23 })
+	if not species.Premium then
+		Chips.chip(scoreRow, "Gold", Format.number(Pets.worth(pet)), { Height = chipH, LayoutOrder = 2, ZIndex = 23 })
+	end
+	for i, slot in ipairs(PetTraits.SLOTS) do
+		local trait = PetTraits.get(pet, slot)
+		if trait then
+			TraitCard.new(info, slot, trait, { Size = UDim2.new(1, -8, 0, if small then 46 else 56), Compact = small, ZIndex = 23, LayoutOrder = 5 + i })
+		end
+	end
 	local details = { `{species.Role} - {if species.Premium then "Premium pet" else zoneName(species.Zone)}` }
 	for _, stat in ipairs(lines) do
 		table.insert(details, stat)
 	end
 	table.insert(details, `Bonus: {bonus} ({Pets.BONUS_TEXT[species.Bonus]})`)
+	for _, slot in ipairs(PetTraits.SLOTS) do
+		local trait = PetTraits.get(pet, slot)
+		if trait then
+			local stat = PetTraits.STATS[trait.stat]
+			table.insert(details, `{slot}: {Rarities.get(PetTraits.tier(trait)).Name} {PetTraits.item(slot, trait).Name}, {PetTraits.percentText(PetTraits.value(trait))} {stat.Name}`)
+		end
+	end
+	table.insert(details, `Power {Format.number(Pets.power(pet))}: the score Equip Best uses (stats, bonus and items).`)
 	if petMult > 1.0001 then
 		table.insert(details, `{PetMutations.prefix(pet)}: stats {PetMutations.multText(pet)} (included).`)
 	end
 	if mult > 1.0001 then
 		table.insert(details, string.format("Faith makes your pets %.1f%% stronger (included).", (mult - 1) * 100))
 	end
-	table.insert(details, if species.Premium then "Premium: kept on Rebirth, cannot be released." else `Release value: {Format.number(Pets.releaseValue(pet.id, pet.rarity, petMult))} Gold`)
+	table.insert(details, if species.Premium then "Premium: kept on Rebirth, cannot be released." else `Worth (release value): {Format.number(Pets.worth(pet))} Gold`)
 	Button.new({ Name = "Info", Style = "wood", Icon = "Info", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -(Theme.TOUCH + 16), 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 24, Parent = panel, OnClick = function()
 		closeOverlay()
 		Info.show(overlayParent :: GuiObject, Pets.displayName(pet), details)
@@ -313,7 +350,7 @@ detail = function(uid: string)
 			detail(uid)
 		end
 	end })
-	local release = Button.new({ Name = "Release", Text = if species.Premium then "" else Format.number(Pets.releaseValue(pet.id, pet.rarity, petMult)), Icon = "Trash", Style = if pet.locked or species.Premium then "disabled" else "danger", Size = UDim2.fromOffset(width + 60, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
+	local release = Button.new({ Name = "Release", Text = if species.Premium then "" else Format.number(Pets.worth(pet)), Icon = "Trash", Style = if pet.locked or species.Premium then "disabled" else "danger", Size = UDim2.fromOffset(width + 60, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
 		if pet.locked then
 			Notifier.push({ Kind = "error", Text = "Unlock this pet first" })
 			return
@@ -323,7 +360,7 @@ detail = function(uid: string)
 		end
 		Window.confirm({
 			Title = "Release pet?",
-			Text = `Release {Rarities.get(pet.rarity).Name} {Pets.displayName(pet)} for {Format.number(Pets.releaseValue(pet.id, pet.rarity, petMult))} Gold? This cannot be undone.`,
+			Text = `Release {Rarities.get(pet.rarity).Name} {Pets.displayName(pet)} for {Format.number(Pets.worth(pet))} Gold? This cannot be undone.`,
 			ConfirmText = "Release",
 			CancelText = "Keep",
 			OnConfirm = function()
@@ -547,7 +584,7 @@ local function petCell(entry: Entry, order: number): TextButton
 	cell.ZIndex = 3
 	Theme.corner(cell, 8)
 	Theme.paintRarity(Theme.stroke(cell, Theme.Colors.GoldDark, 3), entry.pet.rarity)
-	ModelIcon.pet(entry.pet.id, { Size = UDim2.new(1, -8, 1, -34), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = cell, Mutation = entry.pet.mutation })
+	ModelIcon.pet(entry.pet.id, { Size = UDim2.new(1, -8, 1, -34), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = cell, Mutation = entry.pet.mutation, Gear = PetTraits.gearKey(entry.pet) })
 	local name = Theme.text({ Font = "Button", Text = entry.species.Name, TextSize = 16, Size = UDim2.new(1, -8, 0, 22), Position = UDim2.new(0.5, 0, 1, -5), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = cell })
 	Theme.paintRarity(name, entry.pet.rarity)
 	-- mutation / size tag above the name ("Huge Golden")
@@ -559,6 +596,35 @@ local function petCell(entry: Entry, order: number): TextButton
 	if entry.equipped then
 		badge(cell, "Check", Theme.Colors.Good, UDim2.fromOffset(4, 4), Vector2.zero)
 	end
+	-- the 3 Bonus Stats items as dots in their rarity colours (top middle)
+	local dots = Instance.new("Frame")
+	dots.Name = "Items"
+	dots.BackgroundTransparency = 1
+	dots.Size = UDim2.fromOffset(42, 12)
+	dots.Position = UDim2.new(0.5, 0, 0, 6)
+	dots.AnchorPoint = Vector2.new(0.5, 0)
+	dots.ZIndex = 5
+	local dotList = Instance.new("UIListLayout")
+	dotList.FillDirection = Enum.FillDirection.Horizontal
+	dotList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	dotList.Padding = UDim.new(0, 3)
+	dotList.SortOrder = Enum.SortOrder.LayoutOrder
+	dotList.Parent = dots
+	for i, slot in ipairs(PetTraits.SLOTS) do
+		local trait = PetTraits.get(entry.pet, slot)
+		if trait then
+			local dot = Instance.new("Frame")
+			dot.Size = UDim2.fromOffset(11, 11)
+			dot.LayoutOrder = i
+			dot.BackgroundColor3 = Rarities.get(PetTraits.tier(trait)).Color
+			dot.ZIndex = 6
+			Theme.round(dot)
+			Theme.stroke(dot, Theme.Colors.Ink, 1)
+			Theme.paintRarity(dot, PetTraits.tier(trait))
+			dot.Parent = dots
+		end
+	end
+	dots.Parent = cell
 	if entry.pet.locked then
 		badge(cell, "Lock", Theme.Colors.WoodLight, UDim2.new(1, -4, 0, 4), Vector2.new(1, 0))
 	elseif entry.species.Premium then
@@ -654,7 +720,7 @@ local function buildPets(page: ScrollingFrame)
 			elseif pet then
 				slot.BackgroundColor3 = if pet.rarity == #Rarities.List then Rarities.SECRET_CORE else Theme.Colors.WoodInset
 				Theme.paintRarity(stroke, pet.rarity)
-				ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = 4, Parent = slot, Mutation = pet.mutation })
+				ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = 4, Parent = slot, Mutation = pet.mutation, Gear = PetTraits.gearKey(pet) })
 			else
 				slot.BackgroundColor3 = Theme.Colors.WoodInset
 				Icons.create("Plus", slot, { Size = UDim2.fromScale(0.4, 0.4), ZIndex = 4 })

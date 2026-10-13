@@ -68,6 +68,8 @@ function Stats.petTotals(data: Data): { [string]: number }
 		return totals
 	end
 	local Pets = require(module) :: any
+	local traitsModule = Config:FindFirstChild("PetTraits")
+	local PetTraits = if traitsModule then require(traitsModule) :: any else nil
 	local owned = data.Pets or {}
 	for _, uid in ipairs(data.EquippedPets or {}) do
 		local pet = owned[uid]
@@ -80,6 +82,12 @@ function Stats.petTotals(data: Data): { [string]: number }
 				totals[stat] += main
 			end
 			totals[species.Bonus] += Pets.bonusValue(pet.rarity) * mult
+			-- Bonus Stats items (Config/PetTraits): not multiplied by the mutation / size
+			if PetTraits then
+				for stat, value in pairs(PetTraits.totals(pet)) do
+					totals[stat] = (totals[stat] or 0) + value
+				end
+			end
 		end
 	end
 	return totals

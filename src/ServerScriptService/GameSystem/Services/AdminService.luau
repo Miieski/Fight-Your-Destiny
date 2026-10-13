@@ -353,14 +353,15 @@ local COMMANDS: { [string]: Command } = {
 		end
 		return true, `{n} {Rarities.get(tier(rarity)).Name} {zone.Name} egg{if n == 1 then "" else "s"}` .. (if sold > 0 then ` ({sold} auto-sold)` else "")
 	end,
-	-- givePet(petId, rarity, mutation?, size?): premium pets keep their fixed rarity and never mutate
-	-- (mutation Silver / Golden / Rainbow / Celestial, size Big / Huge - Config/PetMutations)
-	givePet = function(player, petId, rarity, mutation, size)
-		if typeof(petId) ~= "string" or not Pets.ById[petId] then return false, "givePet(petId, rarity, mutation?, size?)" end
+	-- givePet(petId, rarity, mutation?, size?, itemTier?): premium pets keep their fixed rarity and never mutate
+	-- (mutation Silver / Golden / Rainbow / Celestial, size Big / Huge - Config/PetMutations); itemTier 1..8 = its 3
+	-- Bonus Stats items all of that rarity (Config/PetTraits; rolled when omitted)
+	givePet = function(player, petId, rarity, mutation, size, itemTier)
+		if typeof(petId) ~= "string" or not Pets.ById[petId] then return false, "givePet(petId, rarity, mutation?, size?, itemTier?)" end
 		if (mutation ~= nil and mutation ~= "" and not PetMutations.get(mutation)) or (size ~= nil and size ~= "" and not PetMutations.getSize(size)) then
 			return false, "mutation = Silver | Golden | Rainbow | Celestial, size = Big | Huge"
 		end
-		local uid = PetService:GivePet(player, petId, tier(rarity), mutation, size)
+		local uid = PetService:GivePet(player, petId, tier(rarity), mutation, size, if itemTier ~= nil then tier(itemTier) else nil)
 		local prefix = PetMutations.prefix({ mutation = mutation, size = size })
 		return uid ~= nil, `{if prefix ~= "" then prefix .. " " else ""}{Pets.ById[petId].Name} added`
 	end,

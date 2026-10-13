@@ -3,6 +3,7 @@
 -- (file "01_plains_sword" -> "plains_sword"). Each entry: Id, Name, Category, Zone (1..12), ZoneId, Icon (asset
 -- id; nil -> the UI shows the category icon) and Element (the zone's element, weapon doc section 4).
 -- Weapons.ByCategory[categoryId] = the category's 12 weapons in zone order 1 -> 12.
+local Rarities = require(script.Parent.Rarities)
 local WeaponCategories = require(script.Parent.WeaponCategories)
 local Zones = require(script.Parent.Zones)
 
@@ -145,15 +146,17 @@ function Weapons.idOf(zoneId: string, categoryId: string): string
 end
 
 -- Shop price of the weapons of a zone (weapon doc section 5): 1K, 10K, ... 100T Gold.
--- Shop > Diamonds: Weapon Reroll price (docs/menu_systems_brief.txt D1): 5 + 2 x zone Diamonds.
-Weapons.REROLL_BASE = 5
-Weapons.REROLL_PER_ZONE = 2
-function Weapons.rerollPrice(zone: number): number
-	return Weapons.REROLL_BASE + Weapons.REROLL_PER_ZONE * zone
-end
-
 function Weapons.price(zone: number): number
 	return Weapons.SHOP_BASE_PRICE * 10 ^ (zone - 1)
+end
+
+-- Selling a weapon (owner 2026-10-13, replaces the Weapon Reroll): 20% of its shop price x the rarity's damage
+-- multiplier (a Common Plains weapon bought for 1,000 sells for 200, a Rare one for 440).
+Weapons.SELL_SHARE = 0.2
+function Weapons.sellValue(weaponId: string, tier: number): number
+	local weapon = Weapons.ById[weaponId]
+	local zone = if weapon then weapon.Zone else 1
+	return math.floor(Weapons.price(zone) * Weapons.SELL_SHARE * Rarities.get(tier).DamageMult + 0.5)
 end
 
 Weapons.ById = {} :: { [string]: Weapon }

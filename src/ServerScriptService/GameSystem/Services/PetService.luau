@@ -6,6 +6,8 @@
 --   Net.request("EquipPet" | "UnequipPet" | "ReleasePet", uid), ("LockPet", uid, bool), ("EquipBestPets")
 -- Hatch = { uid, petId, rarity, eggRarity, lucky (Egg Luck made it one tier rarer), zone, mutation?, size? }.
 -- Every egg hatch also rolls a mutation and a size (Config/PetMutations, Pets V2); premium pets never mutate.
+-- Every new pet rolls its 3 Bonus Stats items (Config/PetTraits: Crown, Accessory, Aura); pets owned before that
+-- update get theirs once when the profile loads.
 -- PetService:GiveEgg (loot, admin) auto-sells the egg when the egg storage is full.
 -- The first equipped pets are listed in the player attribute "FollowPets" ("id:tier,id:tier:Mutation:Size", the
 -- last two fields only when the pet has one) for the client-side followers (GameClient/Controllers/PetFollowController).
@@ -17,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local PetMutations = require(ReplicatedStorage.GameSystem.Config.PetMutations)
+local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
 local PetRarities = require(ReplicatedStorage.GameSystem.Config.PetRarities)
 local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
@@ -28,7 +31,7 @@ local RewardService = require(script.Parent.RewardService)
 
 local PetService = { Priority = 5 }
 
-export type Hatch = { uid: string, petId: string, rarity: number, eggRarity: number, lucky: boolean, zone: number, mutation: string?, size: string? }
+export type Hatch = { uid: string, petId: string, rarity: number, eggRarity: number, lucky: boolean, zone: number, mutation: string?, size: string?, traits: any? }
 
 local random = Random.new()
 local MAX_TIER = #Rarities.List
@@ -88,7 +91,8 @@ function PetService:UpdateFollowers(player: Player)
 			if pet and Pets.ById[pet.id] then
 				local mutation = if PetMutations.get(pet.mutation) then pet.mutation else ""
 				local size = if PetMutations.getSize(pet.size) then pet.size else ""
-				table.insert(list, if mutation == "" and size == "" then `{pet.id}:{pet.rarity}` else `{pet.id}:{pet.rarity}:{mutation}:{size}`)
+				-- "id:tier:mutation:size:gear" (gear = the Bonus Stats items' tiers, Config/PetTraits.gearKey)
+				table.insert(list, `{pet.id}:{pet.rarity}:{mutation}:{size}:{PetTraits.gearKey(pet)}`)
 				if #list >= PetRarities.MaxFollowing then
 					break
 				end
@@ -118,10 +122,11 @@ local function markIndex(player: Player, profile: { [string]: any }, petId: stri
 end
 
 -- Adds a hatched pet (storage already checked by the caller). mutation / size: Config/PetMutations ids or nil.
-local function addPet(player: Player, profile: { [string]: any }, petId: string, tier: number, premium: boolean?, mutation: string?, size: string?): string
+-- Its Bonus Stats items are rolled here (traitTier: admin / tests, every item of that rarity). Returns uid, traits.
+local function addPet(player: Player, profile: { [string]: any }, petId: string, tier: number, premium: boolean?, mutation: string?, size: string?, traitTier: number?): (string, any)
 	local uid = HttpService:GenerateGUID(false)
 	local owned = table.clone(profile.Pets)
-	local pet: { [string]: any } = { id = petId, rarity = tier, premium = premium == true, locked = false }
+	local pet: { [string]: any } = { id = petId, rarity = tier, premium = premium == true, locked = false, traits = PetTraits.roll(random, traitTier) }
 	if not premium then
 		pet.mutation = if PetMutations.get(mutation) then mutation else nil
 		pet.size = if PetMutations.getSize(size) then size else nil
@@ -129,7 +134,7 @@ local function addPet(player: Player, profile: { [string]: any }, petId: string,
 	owned[uid] = pet
 	DataService:Set(player, "Pets", owned)
 	markIndex(player, profile, petId, tier, pet.mutation)
-	return uid
+	return uid, pet.traits
 end
 
 local function hatchOne(player: Player, profile: { [string]: any }, eggUid: string): Hatch
@@ -138,9 +143,9 @@ local function hatchOne(player: Player, profile: { [string]: any }, eggUid: stri
 	local eggs = table.clone(profile.Eggs)
 	eggs[eggUid] = nil
 	DataService:Set(player, "Eggs", eggs)
-	local uid = addPet(player, profile, petId, tier, false, mutation, size)
+	local uid, traits = addPet(player, profile, petId, tier, false, mutation, size)
 	RewardService.progress(player, "HatchEggs", 1)
-	return { uid = uid, petId = petId, rarity = tier, eggRarity = egg.rarity, lucky = lucky, zone = egg.zone, mutation = mutation, size = size }
+	return { uid = uid, petId = petId, rarity = tier, eggRarity = egg.rarity, lucky = lucky, zone = egg.zone, mutation = mutation, size = size, traits = traits }
 end
 
 local function validEgg(egg: any): boolean
@@ -226,10 +231,10 @@ local function buyPremiumEgg(player: Player, zoneValue: any): (boolean, any)
 	DataService:Set(player, "Diamonds", profile.Diamonds - price)
 	local eggTier = ShopService.rollTier(random, 1)
 	local petId, tier, lucky, mutation, size = PetService.hatchRoll(random, zone.Index, eggTier, PetService.eggLuck(profile))
-	local uid = addPet(player, profile, petId, tier, false, mutation, size)
+	local uid, traits = addPet(player, profile, petId, tier, false, mutation, size)
 	RewardService.progress(player, "HatchEggs", 1)
 	DataService:Save(player)
-	return true, { results = { { uid = uid, petId = petId, rarity = tier, eggRarity = eggTier, lucky = lucky, zone = zone.Index, premiumEgg = true, mutation = mutation, size = size } }, cost = price }
+	return true, { results = { { uid = uid, petId = petId, rarity = tier, eggRarity = eggTier, lucky = lucky, zone = zone.Index, premiumEgg = true, mutation = mutation, size = size, traits = traits } }, cost = price }
 end
 
 local function setEquipped(player: Player, list: { string })
@@ -303,7 +308,7 @@ local function releasePet(player: Player, uid: any): (boolean, any)
 	if pet.premium then
 		return false, "Premium pets cannot be released"
 	end
-	local gold = Pets.releaseValue(pet.id, pet.rarity, PetMutations.mult(pet))
+	local gold = Pets.worth(pet)
 	local owned = table.clone(profile.Pets)
 	owned[uid] = nil
 	local list = table.clone(profile.EquippedPets or {})
@@ -379,15 +384,15 @@ function PetService:GiveEgg(player: Player, zone: number, tier: number, quiet: b
 	return true, "added"
 end
 
--- Admin / tests: a pet straight into the storage (ignores the storage limit); mutation / size optional.
-function PetService:GivePet(player: Player, petId: string, tier: number?, mutation: string?, size: string?): string?
+-- Admin / tests: a pet straight into the storage (ignores the storage limit); mutation / size / item tier optional.
+function PetService:GivePet(player: Player, petId: string, tier: number?, mutation: string?, size: string?, traitTier: number?): string?
 	local profile = DataService:Get(player)
 	local species = Pets.ById[petId]
 	if not profile or not species then
 		return nil
 	end
 	local rarity = if species.Premium then species.Rarity :: number else math.clamp(math.floor(tier or 1), 1, MAX_TIER)
-	return addPet(player, profile, petId, rarity, species.Premium, mutation, size)
+	return (addPet(player, profile, petId, rarity, species.Premium, mutation, size, traitTier))
 end
 
 -- Robux purchase of a premium pet (MarketplaceService receipt handler): always granted, even when the storage
@@ -426,6 +431,25 @@ function PetService:Init()
 			end
 			if #list ~= #(profile.EquippedPets or {}) then
 				DataService:Set(player, "EquippedPets", list)
+			end
+			-- pets from before the Bonus Stats update roll their 3 items once (Config/PetTraits)
+			local missing = false
+			for _, pet in pairs(profile.Pets or {}) do
+				if typeof(pet) == "table" and not PetTraits.has(pet) then
+					missing = true
+					break
+				end
+			end
+			if missing then
+				local owned = table.clone(profile.Pets)
+				for uid, pet in pairs(owned) do
+					if typeof(pet) == "table" and not PetTraits.has(pet) then
+						local copy = table.clone(pet)
+						copy.traits = PetTraits.roll(random)
+						owned[uid] = copy
+					end
+				end
+				DataService:Set(player, "Pets", owned)
 			end
 		end
 		PetService:UpdateFollowers(player)

@@ -207,7 +207,8 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 * **Gold:** from killing enemies, selling trophies, quests and rewards. Lost partially on death
   (35%) and entirely on Rebirth. Values scale x10 per zone.
 * **Diamonds:** premium currency. Dropped ONLY by mini-bosses and bosses, and sold for Robux.
-  **Kept on Rebirth.** Uses: weapon rarity reroll, premium eggs, Gold boosts, skins.
+  **Kept on Rebirth.** Uses: premium eggs, Gold boosts, skins (the weapon rarity reroll was removed on
+  2026-10-13).
 * **Rebirth Credits:** earned on Rebirth (3 each), spent in the Rebirth Shop.
 * **Boss Keys:** one per boss (12). **Kept on Rebirth.**
 
@@ -324,6 +325,21 @@ redone after a Rebirth has its sub-zone prices reset.
   * Models: cartoon meshes from Studio's AI generator, rigged by `DevTools/PetRigBuilder` (pieces + joints),
     animated in code by `Util/PetMotion` (walk cycle, wings, swim, float, idle, happy jump on kills); mutation
     looks by `Util/PetLook` (see-through metal / gold / rainbow / glowing shells). 12 zone eggs in the same style.
+  * **Bonus Stats (owner 2026-10-13, after a "Rare Celestial Axolotl" card):** every pet rolls 3 items at hatching
+    (pets owned before get theirs once on join) - a **Crown**, an **Accessory** and an **Aura**. Each item has its
+    own rarity (Common 50%, Uncommon 25%, Rare 13%, Epic 7%, Legendary 3.3%, Mythic 1.2%, Divine 0.4%, Secret
+    0.1%) and one random stat: Damage, Max HP, Defense, Speed, Gold, Luck, Crit Damage or All (all six at once,
+    smaller). Value = the stat's Common value (2% / 1.5% speed / 2.5% Gold / 3% crit / 0.7% All) x the rarity
+    (x1 .. x14) x a roll of 0.8-1.2. So a pet's stats = its species and rarity + mutation / size + its items.
+    The item IS the slot's item of that rarity (Leaf Crown .. Rainbow Crown, Bandana .. Star Pendant, Aura of
+    Dust .. Cosmic Aura): the pet wears it (AI-made crowns / collars, particle auras, `Util/PetGear`), so the look
+    tells the rarity. Items raise the release value ("Worth", +10% per tier above Common) and the "Power" score
+    (Equip Best). Shown on the pet card (Power, Worth, 3 item cards like the reference), as rarity dots in the
+    grid, and popping in one by one on the hatch reveal. Rules: `Config/PetTraits`.
+  * **Hatching (big and flashy, 2026-10-13):** the egg drops in and bounces, shakes harder and harder while a
+    glow and turning light rays build up (in the pet's rarity colour near the end), shell chips fly at each
+    crack; then a white flash, the rarity burst, confetti (more for rarer pets), a screen shake from Legendary;
+    the pet pops in with a hop and its items pop in. Tap to skip; Fast Open shortens it; Low FX drops the extras.
 * A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)
@@ -331,8 +347,10 @@ Full rules in `docs/weapon_system_document.txt`: 7 categories x 12 zones = 84 we
 rarity on purchase, damage = zone base x category x rarity, Zone Boost in the home zone.
 Changes for this design:
 * Weapons are bought with **Gold** at the hub weapon shop.
-* The diamond **rarity reroll** stays.
-* **Weapons are lost on Rebirth.** A weapon whose rarity was improved with diamonds is also lost.
+* **No rarity reroll** (removed 2026-10-13). Instead a weapon can be **sold for Gold** (Inventory > Weapons, red
+  trash button): 20% of its shop price x the rarity's damage multiplier (Common Plains 200, Rare 440). The
+  equipped weapon cannot be sold; Epic and better ask first.
+* **Weapons are lost on Rebirth.**
 * No weapon level / no weapon upgrades.
 * Weapons never drop from enemies.
 
@@ -442,7 +460,7 @@ src/StarterPlayer/StarterPlayerScripts/GameClient/
 `DataService` (profile, DataStore, session lock, autosave 90 s) - `StatsService` (derived stats) -
 `CombatService` (player attacks, roll, block, validation) - `EnemyService` (spawn, AI, damage
 tracking, drops) - `BossService` (arenas, groups, patterns, rewards) - `ZoneService` (unlocks,
-gates, teleports, death respawn) - `ShopService` (weapons, training, premium eggs, rerolls) -
+gates, teleports, death respawn) - `ShopService` (weapons, training, premium eggs) -
 `LootService` (drops, trophies) - `PetService` - `ArmorService` - `RebirthService` -
 `RewardService` (daily, playtime, quests, codes, boosts, AFK/offline) - `LeaderboardService` -
 `TeamService` - `MarketService` (Robux products) - `TutorialService` - `AdminService`.
@@ -470,7 +488,8 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Armor = {},                          -- [uid] = { id = "plains_helmet", slot = "Helmet", rarity = 1 }
   EquippedArmor = {},                  -- { Helmet = uid, Chest = uid, Legs = uid }
   Eggs = {},                           -- [uid] = { zone = "Plains", rarity = 1 }
-  Pets = {},                           -- [uid] = { id = "plains_pet1", rarity = 1, premium = false }
+  Pets = {},                           -- [uid] = { id = "plains_pet1", rarity = 1, premium = false, mutation?, size?,
+                                       --   traits = { Crown = { rarity, stat, roll }, Accessory = {..}, Aura = {..} } }
   EquippedPets = {},                   -- array of uids
   EquippedSkills = {},                 -- [slot 1..3] = skill id (Config/Skills; empty for now)
   Trophies = {},                       -- [uid] = { id = "plains_boar", rarity = 1 } (head trophies, max 100)

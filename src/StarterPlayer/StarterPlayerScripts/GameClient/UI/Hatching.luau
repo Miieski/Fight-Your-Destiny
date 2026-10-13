@@ -5,6 +5,10 @@
 -- Config/PetMutations) gets its own callout ("GOLDEN!", "HUGE RAINBOW!") and look. Buttons: Equip (when a slot is
 -- free), the caller's "next" action (Hatch next / Buy again), Close. Several results (Hatch All) end on a
 -- summary grid with Equip Best. A tap on the egg skips to the reveal. Fast Open shortens the wobble.
+-- Big and flashy (owner 2026-10-13): the egg drops in and bounces, shakes harder and harder while a glow and
+-- turning light rays build up (in the pet's rarity colour near the end), shell chips fly at every crack, then a
+-- white flash, the rarity burst, confetti (more for rarer pets) and a screen shake from Legendary; the pet pops
+-- in and its 3 Bonus Stats items (Config/PetTraits) pop in one by one. Low FX: no rays, chips, confetti or shake.
 --   Hatching.play(results, { NextText?, OnNext? })   results = the "results" list of HatchEgg / HatchAll / BuyPremiumEgg
 --   Hatching.isActive()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,6 +23,7 @@ local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
+local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
 local State = require(script.Parent.Parent.State)
 local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local CaseOpening = require(script.Parent.CaseOpening)
@@ -27,6 +32,7 @@ local Kit = script.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
 local Chips = require(Kit.Chips)
+local TraitCard = require(Kit.TraitCard)
 local ModelIcon = require(Kit.ModelIcon)
 local Panel = require(Kit.Panel)
 local Theme = require(Kit.Theme)
@@ -46,7 +52,12 @@ type Show = {
 	info: Frame,
 	buttons: { [string]: any },
 	conn: RBXScriptConnection?,
+	spinConn: RBXScriptConnection?,
 	stopSpin: (() -> ())?,
+	panel: GuiObject,
+	halo: Frame,
+	rays: Frame?,
+	stageBase: UDim2,
 	revealed: boolean,
 	results: { any },
 	best: any,
@@ -54,6 +65,15 @@ type Show = {
 }
 
 local root: Frame? = nil
+local DROP_SECONDS = 0.45 -- the egg's fall at the start
+-- effects (defined below reveal's helpers)
+local makeRays: (GuiObject) -> Frame
+local setRays: (Frame, Color3, number) -> ()
+local whiteFlash: (any, number) -> ()
+local confetti: (any, number) -> ()
+local shake: (GuiObject, number, number) -> ()
+local itemCards: (any, { [string]: any }, number) -> ()
+local itemDots: (GuiObject, { [string]: any }) -> ()
 local current: Show? = nil
 
 function Hatching.isActive(): boolean
@@ -92,6 +112,9 @@ local function close()
 	if show.conn then
 		show.conn:Disconnect()
 	end
+	if show.spinConn then
+		show.spinConn:Disconnect()
+	end
 	if show.stopSpin then
 		show.stopSpin()
 	end
@@ -114,6 +137,32 @@ local function crackLines(show: Show, step: number)
 		line.Parent = show.cracks
 	end
 	Sfx.play("EggCrack")
+	-- shell chips fly off
+	if Settings.get("LowFx") ~= true then
+		for _ = 1, 3 + step do
+			local chip = Instance.new("Frame")
+			chip.AnchorPoint = Vector2.new(0.5, 0.5)
+			chip.Position = UDim2.fromScale(0.5 + rng:NextNumber(-0.1, 0.1), 0.45 + rng:NextNumber(-0.15, 0.1))
+			chip.Size = UDim2.fromOffset(rng:NextInteger(7, 13), rng:NextInteger(6, 11))
+			chip.Rotation = rng:NextNumber(0, 360)
+			chip.BackgroundColor3 = Color3.fromRGB(250, 240, 220)
+			chip.BorderSizePixel = 0
+			chip.ZIndex = 7
+			Theme.corner(chip, 3)
+			chip.Parent = show.cracks
+			local angle = rng:NextNumber(0, math.pi * 2)
+			local distance = rng:NextNumber(70, 140)
+			local tween = TweenService:Create(chip, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(chip.Position.X.Scale, math.cos(angle) * distance, chip.Position.Y.Scale, math.sin(angle) * distance + 40),
+				Rotation = chip.Rotation + rng:NextNumber(-240, 240),
+				BackgroundTransparency = 1,
+			})
+			tween.Completed:Connect(function()
+				chip:Destroy()
+			end)
+			tween:Play()
+		end
+	end
 end
 
 local function info(show: Show, text: string, size: number, color: Color3?, order: number, font: string?): TextLabel
@@ -126,7 +175,7 @@ end
 
 -- the stored-pet shape of a hatch result (Config/PetMutations helpers read it)
 local function asPet(result: any): { [string]: any }
-	return { id = result.petId, rarity = result.rarity, mutation = result.mutation, size = result.size }
+	return { id = result.petId, rarity = result.rarity, mutation = result.mutation, size = result.size, traits = result.traits }
 end
 
 -- "HUGE GOLDEN! x2.4" over the bottom of the pet picture, in the mutation's color (size only: gold), with a
@@ -161,11 +210,23 @@ end
 local function revealOne(show: Show, result: any)
 	local species = Pets.ById[result.petId]
 	local rarity = Rarities.get(result.rarity)
-	local view = ModelIcon.pet(result.petId, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = 4, Parent = show.stage, Mutation = result.mutation })
+	local view = ModelIcon.pet(result.petId, { Size = UDim2.fromScale(0.92, 0.92), ZIndex = 4, Parent = show.stage, Mutation = result.mutation, Gear = PetTraits.gearKey(asPet(result)) })
 	local pop = Instance.new("UIScale")
-	pop.Scale = 0.2
+	pop.Scale = 0.1
 	pop.Parent = view
-	TweenService:Create(pop, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	TweenService:Create(pop, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	-- a happy hop once it is out
+	task.delay(0.55, function()
+		if view.Parent then
+			local up = TweenService:Create(view, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = UDim2.new(0.5, 0, 0.5, -18) })
+			up.Completed:Connect(function()
+				if view.Parent then
+					TweenService:Create(view, TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.5) }):Play()
+				end
+			end)
+			up:Play()
+		end
+	end)
 	show.stopSpin = ModelIcon.turntable(view, 7)
 	local banner = info(show, rarity.Name, if Theme.isCompact() then 30 else 40, nil, 1, "Title")
 	Theme.paintRarity(banner, result.rarity)
@@ -183,6 +244,7 @@ local function revealOne(show: Show, result: any)
 	if result.lucky then
 		info(show, "Lucky!", 22, Theme.Colors.Gold, 6, "Button") -- Egg Luck made it one rarity higher
 	end
+	itemCards(show, asPet(result), 5)
 	local equip = show.buttons.Equip
 	equip.Instance.Visible = true
 	if equippedCount() >= Hatching.slots() then
@@ -244,18 +306,197 @@ local function revealMany(show: Show)
 		Theme.corner(cell, 6)
 		local stroke = Theme.stroke(cell, Theme.Colors.GoldDark, 2.5)
 		Theme.paintRarity(stroke, result.rarity)
-		ModelIcon.pet(result.petId, { Size = UDim2.new(1, -6, 1, -26), Position = UDim2.new(0.5, 0, 0, 3), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 5, Parent = cell, Mutation = result.mutation })
+		ModelIcon.pet(result.petId, { Size = UDim2.new(1, -6, 1, -26), Position = UDim2.new(0.5, 0, 0, 3), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 5, Parent = cell, Mutation = result.mutation, Gear = PetTraits.gearKey(asPet(result)) })
 		local name = Theme.text({ Font = "Button", Text = Rarities.get(result.rarity).Name, TextSize = 14, Size = UDim2.new(1, -4, 0, 20), Position = UDim2.new(0.5, 0, 1, -2), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 5, Parent = cell })
 		Theme.paintRarity(name, result.rarity)
 		local prefix = PetMutations.prefix(asPet(result))
 		if prefix ~= "" then
 			local mutation = PetMutations.get(result.mutation)
-			Theme.text({ Font = "Button", Text = prefix, TextSize = 12, Color = if mutation then mutation.Color else Theme.Colors.Gold, Size = UDim2.new(1, -4, 0, 16), Position = UDim2.new(0.5, 0, 0, 2), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 6, Parent = cell })
+			Theme.text({ Font = "Button", Text = prefix, TextSize = 12, Color = if mutation then mutation.Color else Theme.Colors.Gold, Size = UDim2.new(1, -4, 0, 16), Position = UDim2.new(0.5, 0, 0, 14), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 6, Parent = cell })
 		end
+		itemDots(cell, asPet(result))
+		local cellPop = Instance.new("UIScale")
+		cellPop.Scale = 0
+		cellPop.Parent = cell
+		task.delay(0.05 * (index - 1), function()
+			TweenService:Create(cellPop, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+		end)
 		cell.Parent = grid
 	end
 	local equip = show.buttons.Equip
 	equip.Instance.Visible = true -- the check equips the best pets
+end
+
+-- 12 light rays turning around the stage's middle (each ray is twice as long and only its top half shows)
+makeRays = function(parent: GuiObject): Frame
+	local rays = Instance.new("Frame")
+	rays.Name = "Rays"
+	rays.AnchorPoint = Vector2.new(0.5, 0.5)
+	rays.Position = UDim2.fromScale(0.5, 0.5)
+	rays.Size = UDim2.fromScale(1.6, 1.6)
+	rays.BackgroundTransparency = 1
+	rays.ZIndex = 3
+	for i = 1, 12 do
+		local ray = Instance.new("Frame")
+		ray.Name = "Ray"
+		ray.AnchorPoint = Vector2.new(0.5, 0.5)
+		ray.Position = UDim2.fromScale(0.5, 0.5)
+		ray.Size = UDim2.new(0, 26, 1, 0)
+		ray.Rotation = i * 30
+		ray.BackgroundColor3 = Theme.Colors.GoldFace
+		ray.BackgroundTransparency = 1
+		ray.BorderSizePixel = 0
+		ray.ZIndex = 3
+		local fade = Instance.new("UIGradient")
+		fade.Rotation = 90
+		fade.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(0.5, 0.75), NumberSequenceKeypoint.new(0.5001, 1), NumberSequenceKeypoint.new(1, 1) })
+		fade.Parent = ray
+		ray.Parent = rays
+	end
+	rays.Parent = parent
+	return rays
+end
+
+setRays = function(rays: Frame, color: Color3, transparency: number)
+	for _, ray in ipairs(rays:GetChildren()) do
+		if ray:IsA("Frame") then
+			ray.BackgroundColor3 = color
+			ray.BackgroundTransparency = transparency
+		end
+	end
+end
+
+-- a white flash over the whole screen (stronger for rarer pets)
+whiteFlash = function(show: Show, tier: number)
+	local flash = Instance.new("Frame")
+	flash.Name = "Flash"
+	flash.AnchorPoint = Vector2.new(0.5, 0.5)
+	flash.Position = UDim2.fromScale(0.5, 0.5)
+	flash.Size = UDim2.fromScale(4, 4)
+	flash.BackgroundColor3 = Color3.new(1, 1, 1)
+	flash.BackgroundTransparency = if tier >= Rarities.GLOW_FROM then 0 else 0.35
+	flash.BorderSizePixel = 0
+	flash.ZIndex = 40
+	flash.Parent = show.modal
+	local tween = TweenService:Create(flash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 })
+	tween.Completed:Connect(function()
+		flash:Destroy()
+	end)
+	tween:Play()
+end
+
+-- confetti falling over the panel (more for rarer pets)
+local CONFETTI_COLORS = { Color3.fromRGB(255, 90, 100), Color3.fromRGB(255, 200, 60), Color3.fromRGB(90, 220, 120), Color3.fromRGB(80, 170, 255), Color3.fromRGB(200, 110, 255), Color3.new(1, 1, 1) }
+confetti = function(show: Show, tier: number)
+	local rng = Random.new()
+	local rarityColor = Rarities.get(tier).Color
+	for _ = 1, 24 + tier * 10 do
+		local piece = Instance.new("Frame")
+		piece.AnchorPoint = Vector2.new(0.5, 0.5)
+		local x = rng:NextNumber(0.05, 0.95)
+		piece.Position = UDim2.fromScale(x, rng:NextNumber(-0.25, -0.02))
+		piece.Size = UDim2.fromOffset(rng:NextInteger(7, 12), rng:NextInteger(12, 20))
+		piece.Rotation = rng:NextNumber(0, 360)
+		piece.BackgroundColor3 = if rng:NextNumber() < 0.35 then rarityColor else CONFETTI_COLORS[rng:NextInteger(1, #CONFETTI_COLORS)]
+		piece.BorderSizePixel = 0
+		piece.ZIndex = 30
+		piece.Parent = show.panel
+		local time = rng:NextNumber(1.4, 2.4)
+		local tween = TweenService:Create(piece, TweenInfo.new(time, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+			Position = UDim2.fromScale(x + rng:NextNumber(-0.12, 0.12), 1.08),
+			Rotation = piece.Rotation + rng:NextNumber(-540, 540),
+		})
+		tween.Completed:Connect(function()
+			piece:Destroy()
+		end)
+		task.delay(rng:NextNumber(0, 0.35), function()
+			tween:Play()
+		end)
+	end
+end
+
+-- a short shake of a frame
+shake = function(target: GuiObject, power: number, seconds: number)
+	local base = target.Position
+	local rng = Random.new()
+	task.spawn(function()
+		local stop = os.clock() + seconds
+		while os.clock() < stop and target.Parent do
+			local k = (stop - os.clock()) / seconds
+			target.Position = base + UDim2.fromOffset(rng:NextNumber(-power, power) * k, rng:NextNumber(-power, power) * k)
+			task.wait(0.03)
+		end
+		target.Position = base
+	end)
+end
+
+-- the 3 Bonus Stats items as cards in a row, popping in one after the other (rarer items: a sound and a flash)
+itemCards = function(show: Show, pet: { [string]: any }, order: number)
+	if not PetTraits.has(pet) then
+		return
+	end
+	local compact = Theme.isCompact()
+	local row = Instance.new("Frame")
+	row.Name = "Items"
+	row.BackgroundTransparency = 1
+	row.Size = UDim2.new(1, 0, 0, if compact then 48 else 60)
+	row.LayoutOrder = order
+	row.ZIndex = 4
+	local list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Horizontal
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	list.Padding = UDim.new(0, 6)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Parent = row
+	row.Parent = show.info
+	for i, slot in ipairs(PetTraits.SLOTS) do
+		local trait = PetTraits.get(pet, slot)
+		if trait then
+			local card = TraitCard.new(row, slot, trait, { Size = UDim2.new(1 / 3, -6, 1, 0), Compact = compact, ZIndex = 5, LayoutOrder = i })
+			local scale = Instance.new("UIScale")
+			scale.Scale = 0
+			scale.Parent = card
+			task.delay(0.45 + (i - 1) * 0.3, function()
+				if not card.Parent then
+					return
+				end
+				local tier = PetTraits.tier(trait)
+				Sfx.play(if tier >= Rarities.GLOW_FROM then "RarityReveal" else "UIClick")
+				TweenService:Create(scale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+			end)
+		end
+	end
+end
+
+-- the 3 items as small dots in their rarity colours (summary cells)
+itemDots = function(parent: GuiObject, pet: { [string]: any })
+	local dots = Instance.new("Frame")
+	dots.Name = "Items"
+	dots.BackgroundTransparency = 1
+	dots.Size = UDim2.fromOffset(40, 11)
+	dots.Position = UDim2.new(0.5, 0, 0, 3)
+	dots.AnchorPoint = Vector2.new(0.5, 0)
+	dots.ZIndex = 6
+	local list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Horizontal
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	list.Padding = UDim.new(0, 3)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Parent = dots
+	for i, slot in ipairs(PetTraits.SLOTS) do
+		local trait = PetTraits.get(pet, slot)
+		if trait then
+			local dot = Instance.new("Frame")
+			dot.Size = UDim2.fromOffset(10, 10)
+			dot.LayoutOrder = i
+			dot.ZIndex = 7
+			Theme.round(dot)
+			Theme.stroke(dot, Theme.Colors.Ink, 1)
+			Theme.paintRarity(dot, PetTraits.tier(trait))
+			dot.Parent = dots
+		end
+	end
+	dots.Parent = parent
 end
 
 local function reveal(show: Show)
@@ -269,7 +510,31 @@ local function reveal(show: Show)
 	end
 	show.stage:ClearAllChildren()
 	show.cracks:ClearAllChildren()
+	show.stageHolder.Position = show.stageBase
 	local tier = show.best.rarity
+	local low = Settings.get("LowFx") == true
+	whiteFlash(show, tier)
+	if not low then
+		confetti(show, tier)
+		if tier >= Rarities.LEGENDARY_SOUND_FROM then
+			shake(show.panel, 6 + tier, 0.4)
+		end
+	end
+	-- the glow stays in the pet's colour; the rays keep turning slowly from Epic
+	show.halo.BackgroundColor3 = Rarities.get(tier).Color
+	show.halo.BackgroundTransparency = 0.55
+	show.halo.Size = UDim2.fromScale(1.05, 1.05)
+	local rays = show.rays
+	if rays then
+		if tier >= Rarities.GLOW_FROM and not low then
+			setRays(rays, Rarities.get(tier).Color, 0.45)
+			show.spinConn = RunService.RenderStepped:Connect(function(dt)
+				rays.Rotation += dt * 18
+			end)
+		else
+			rays.Visible = false
+		end
+	end
 	Sfx.play("PetHatch")
 	-- a mutation always gets the big reveal sound
 	local mutated = PetMutations.get(show.best.mutation) ~= nil
@@ -323,7 +588,7 @@ function Hatching.play(results: { any }, options: Options?)
 	dim.Parent = modal
 
 	local width = math.min(if compact then 760 else 820, screen.X * 0.96)
-	local height = math.min(if compact then 360 else 600, screen.Y * 0.96)
+	local height = math.min(if compact then 360 else 660, screen.Y * 0.96)
 	local panel = Panel.new({ Name = "Panel", Size = UDim2.fromOffset(width, height), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2, Parent = modal })
 	local popIn = Instance.new("UIScale")
 	popIn.Scale = 0.9
@@ -360,6 +625,11 @@ function Hatching.play(results: { any }, options: Options?)
 	halo.ZIndex = 3
 	Theme.round(halo)
 	halo.Parent = stageHolder
+	-- light rays behind the egg (they build up with the wobble)
+	local rays: Frame? = nil
+	if Settings.get("LowFx") ~= true then
+		rays = makeRays(stageHolder)
+	end
 	local stage = Instance.new("Frame")
 	stage.Name = "Model"
 	stage.BackgroundTransparency = 1
@@ -456,27 +726,52 @@ function Hatching.play(results: { any }, options: Options?)
 		buttons[name].Instance.Visible = false
 	end
 
-	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, stopSpin = nil, revealed = false, results = results, best = best, options = opts }
+	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, spinConn = nil, stopSpin = nil, panel = panel, halo = halo, rays = rays, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
 	current = show
 	stageHolder.Activated:Connect(function()
 		reveal(show)
 	end)
 
-	-- the egg: rocks around its base, faster and wider, cracks at 35 / 60 / 82 %
+	-- the egg drops in and bounces, then rocks around its base, faster and wider, cracks at 35 / 60 / 82 %
 	local eggView = ModelIcon.egg(best.zone, if best.premiumEgg then nil else best.eggRarity, { Size = UDim2.fromScale(0.86, 0.86), ZIndex = 4, Parent = stage })
+	local fast = Settings.get("FastOpen") == true
+	local low = Settings.get("LowFx") == true
+	local drop = if fast then 0 else DROP_SECONDS
+	if drop > 0 then
+		eggView.Position = UDim2.fromScale(0.5, -0.6)
+		TweenService:Create(eggView, TweenInfo.new(drop, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.5) }):Play()
+	end
+	local squash = Instance.new("UIScale")
+	squash.Parent = eggView
 	local egg = eggView:FindFirstChildOfClass("Model")
 	local base = egg and egg:GetPivot()
-	local duration = if Settings.get("FastOpen") then PetRarities.FastHatchSeconds else PetRarities.HatchSeconds
-	local start = os.clock()
+	local duration = if fast then PetRarities.FastHatchSeconds else PetRarities.HatchSeconds
+	local start = os.clock() + drop
 	local phase = 0
 	local crackSteps = { 0.35, 0.6, 0.82 }
 	local nextCrack = 1
+	local tease = Rarities.get(best.rarity).Color -- the glow turns to the pet's colour near the end
+	local shakeRng = Random.new()
 	show.conn = RunService.RenderStepped:Connect(function(dt)
-		local u = math.min((os.clock() - start) / duration, 1)
-		phase += dt * (2 + 9 * u) * math.pi * 2
+		local u = math.clamp((os.clock() - start) / duration, 0, 1)
+		phase += dt * (2 + 11 * u) * math.pi * 2
 		if egg and base then
-			local angle = math.sin(phase) * (0.06 + 0.3 * u)
+			local angle = math.sin(phase) * (0.08 + 0.38 * u)
 			egg:PivotTo(base * CFrame.Angles(0, 0, angle))
+		end
+		squash.Scale = 1 + math.sin(phase * 0.5) * 0.05 * u
+		-- glow: grows, brightens, and takes the pet's colour in the last third
+		halo.Size = UDim2.fromScale(0.95 + 0.3 * u, 0.95 + 0.3 * u)
+		halo.BackgroundTransparency = 0.8 - 0.45 * u
+		halo.BackgroundColor3 = Theme.Colors.GoldFace:Lerp(tease, math.clamp((u - 0.6) / 0.4, 0, 1))
+		if rays then
+			rays.Rotation += dt * (30 + 120 * u)
+			setRays(rays, Theme.Colors.GoldFace:Lerp(tease, math.clamp((u - 0.6) / 0.4, 0, 1)), 1 - 0.75 * u)
+		end
+		-- the whole stage trembles more and more
+		if not low and u > 0.2 then
+			local power = (u - 0.2) * (u - 0.2) * 10
+			stageHolder.Position = show.stageBase + UDim2.fromOffset(shakeRng:NextNumber(-power, power), shakeRng:NextNumber(-power, power))
 		end
 		if nextCrack <= #crackSteps and u >= crackSteps[nextCrack] then
 			crackLines(show, nextCrack)

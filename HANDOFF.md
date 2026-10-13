@@ -149,6 +149,12 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-13: PET BONUS STATS, WEAPON SELLING, NEW HATCHING.** Every pet has 3 rolled items (Crown, Accessory,
+Aura; own rarity + random stat; `Config/PetTraits`) that it wears (`Util/PetGear`, meshes in
+`ReplicatedStorage.Assets.PetGear` - **in the place only: save it**); pet card shows Power / Worth / item cards
+(`Kit/TraitCard`). Weapon Reroll removed; weapons sell for Gold (`Weapons.sellValue`, Net "SellWeapon"). Hatching
+rebuilt "big and flashy" (`UI/Hatching`). Details in NIGHT_LOG and DESIGN.md (pets, weapons).
+
 **2026-10-13: KID-FRIENDLY UI (owner: "understandable for a 5 years old, avoid text, more visual").** Realistic wood
 (Blender textures `Icons/UiTex`, `Kit/Panel.wood`, `UI/WoodSkin`), 17 new "Ui" icons, pictures on every window title /
 tab, and sentences replaced by pictures + numbers in every window. New kit pieces: `Kit/Chips` (icon + number),

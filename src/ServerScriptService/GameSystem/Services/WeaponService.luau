@@ -3,6 +3,7 @@
 -- player owns that copy; the player then holds a clone of ReplicatedStorage.Assets.Weapons.<WeaponId> with
 -- the attributes Uid and Rarity and a rarity tint (light from Uncommon, outline from Epic). The Tool is given
 -- again after every respawn. No combat logic here.
+-- Net.request("SellWeapon", uid) sells one copy for Weapons.sellValue Gold (not the equipped one).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -109,7 +110,33 @@ function WeaponService:Refresh(player: Player)
 	WeaponService:Give(player)
 end
 
+-- Sells one owned copy for Gold (owner 2026-10-13). The equipped weapon cannot be sold.
+local function sell(player: Player, uid: any): (boolean, any)
+	if typeof(uid) ~= "string" then
+		return false, "Bad request"
+	end
+	local profile = DataService:Get(player)
+	if not profile then
+		return false, "Profile not loaded"
+	end
+	local item = profile.Weapons[uid]
+	if not (item and Weapons.ById[item.id]) then
+		return false, "You don't own this weapon"
+	end
+	if profile.EquippedWeapon == uid then
+		return false, "Equip another weapon first"
+	end
+	local gold = Weapons.sellValue(item.id, item.rarity)
+	local owned = table.clone(profile.Weapons)
+	owned[uid] = nil
+	DataService:Set(player, "Weapons", owned)
+	DataService:AddGold(player, gold)
+	DataService:Save(player)
+	return true, { gold = gold }
+end
+
 function WeaponService:Init()
+	Net.handle("SellWeapon", sell, 0.1)
 	Net.handle("EquipWeapon", function(player: Player, uid: any)
 		if uid ~= nil and typeof(uid) ~= "string" then
 			return false, "Bad request"

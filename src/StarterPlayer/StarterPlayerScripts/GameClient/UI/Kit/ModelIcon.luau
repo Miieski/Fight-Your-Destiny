@@ -5,7 +5,8 @@
 --   ModelIcon.pet(petId, props?), ModelIcon.egg(zoneIndex, tier?, props?), ModelIcon.armor(id, tier, props?)
 --       -> ViewportFrame (armor = the procedural piece of Util/ArmorLook, built on an invisible body)
 --   props = { Size, Position, AnchorPoint, ZIndex, Parent, Silhouette (black shape, locked items), Name,
---             Mutation (pets: Config/PetMutations id, drawn with Util/PetLook) }
+--             Mutation (pets: Config/PetMutations id, drawn with Util/PetLook),
+--             Gear (pets: Config/PetTraits.gearKey, the crown / accessory drawn with Util/PetGear) }
 --   ModelIcon.turntable(view, seconds?) -> stop(): slow spin, drag to turn (detail previews); Pets V2 rigs also
 --       play their idle animation (Util/PetMotion)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,6 +15,8 @@ local RunService = game:GetService("RunService")
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local ArmorLook = require(ReplicatedStorage.GameSystem.Util.ArmorLook)
 local PetLook = require(ReplicatedStorage.GameSystem.Util.PetLook)
+local PetGear = require(ReplicatedStorage.GameSystem.Util.PetGear)
+local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
 local PetMotion = require(ReplicatedStorage.GameSystem.Util.PetMotion)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
@@ -93,10 +96,18 @@ end
 
 function ModelIcon.pet(petId: string, props: { [string]: any }?): ViewportFrame
 	local mutation = props and props.Mutation
-	local key = if typeof(mutation) == "string" and mutation ~= "" then `pet:{petId}:{mutation}` else "pet:" .. petId
+	local gear = props and props.Gear -- PetTraits.gearKey(pet): the crown and accessory on the model
+	local key = "pet:" .. petId
+	if typeof(mutation) == "string" and mutation ~= "" then
+		key ..= ":" .. mutation
+	end
+	if typeof(gear) == "string" and gear ~= "" then
+		key ..= ":g" .. gear
+	end
 	return instance(key, function()
 		return build(source("Pets", petId), nil, 1.12, function(clone: Model)
 			PetLook.apply(clone, mutation, { Static = true })
+			PetGear.apply(clone, PetTraits.parseGearKey(gear), { Static = true })
 		end)
 	end, props)
 end
