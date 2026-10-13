@@ -16,6 +16,7 @@ local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 local ZoneVisibility = require(Kit.ZoneVisibility)
@@ -72,7 +73,15 @@ local function flash()
 	tween:Play()
 end
 
-function RebirthPage.build(page: ScrollingFrame)
+-- what a Rebirth takes and keeps, as pictures (kid-friendly UI); the words are behind the (i)
+local ITEM_ICONS = {
+	Gold = "Gold", Weapons = "Sword", Armor = "Chest", ["Attribute points"] = "Stats", Eggs = "Egg",
+	["Pets (premium pets are kept)"] = "Pets", Trophies = "Trophy", Diamonds = "Diamond", ["Boss keys"] = "Key",
+	["Rebirth Credits and upgrades"] = "RebirthCredit", ["Premium pets"] = "Crown", Index = "Index",
+	["Boosts and passes"] = "Boost", ["Unlocked zones"] = "Zones",
+}
+
+function RebirthPage.build(page: ScrollingFrame, ctx: any?)
 	local small = Theme.isCompact()
 	local busy = false
 	local rowH = if small then 54 else 62
@@ -166,10 +175,11 @@ function RebirthPage.build(page: ScrollingFrame)
 	local creditsText = rewardCell("RebirthCredit", 1)
 	local goldText = rewardCell("Gold", 2)
 	local powerText = rewardCell("Stats", 3)
-	local zoneText = rewardCell("Zones", 4)
+	local zoneText = rewardCell("Reset", 4) -- this zone starts again
 
 	-- lost / kept
-	local listH = (if small then 17 else 19) * math.max(#Rebirth.Lost, #Rebirth.Kept) + 46
+	local itemSize = if small then 40 else 50
+	local listH = (if small then 2 else 1) * (itemSize + 6) + 52 -- 7 pictures: one row (phones: two)
 	local lists = card(page, "LostKept", listH, 4)
 	lists.BackgroundTransparency = 1
 	for _, child in ipairs(lists:GetChildren()) do
@@ -186,8 +196,34 @@ function RebirthPage.build(page: ScrollingFrame)
 		Theme.corner(box, 8)
 		Theme.stroke(box, Theme.Colors.GoldDark, 2)
 		box.Parent = lists
-		Theme.text({ Font = "Title", Text = heading, TextSize = if small then 20 else 23, Color = color, Align = "Left", Size = UDim2.new(1, -20, 0, 30), Position = UDim2.fromOffset(12, 6), ZIndex = 3, Parent = box })
-		Theme.text({ Text = "- " .. table.concat(items, "\n- "), TextSize = if small then 15 else 17, Color = Theme.Colors.TextDim, Align = "Left", Wrapped = true, Size = UDim2.new(1, -24, 1, -40), Position = UDim2.fromOffset(12, 36), ZIndex = 3, Parent = box }).TextYAlignment = Enum.TextYAlignment.Top
+		-- red X = lost, green check = kept; then the pictures
+		local mark = Instance.new("Frame")
+		mark.Size = UDim2.fromOffset(34, 34)
+		mark.Position = UDim2.fromOffset(10, 8)
+		mark.BackgroundColor3 = color
+		mark.ZIndex = 3
+		Theme.round(mark)
+		Theme.stroke(mark, Theme.Colors.Ink, 1.5)
+		Icons.create(if col == 0 then "Close" else "Check", mark, { Size = UDim2.fromScale(0.72, 0.72), ZIndex = 4 })
+		mark.Parent = box
+		if ctx then
+			Info.button({ Parent = box, Frame = ctx.Frame, Title = heading, Lines = items, Size = 34, Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, PopupSize = Vector2.new(520, 360) })
+		end
+		local grid = Instance.new("Frame")
+		grid.BackgroundTransparency = 1
+		grid.Size = UDim2.new(1, -20, 1, -50)
+		grid.Position = UDim2.fromOffset(10, 46)
+		grid.ZIndex = 3
+		local layout = Instance.new("UIGridLayout")
+		layout.CellSize = UDim2.fromOffset(itemSize, itemSize)
+		layout.CellPadding = UDim2.fromOffset(6, 6)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Parent = grid
+		for i, item in ipairs(items) do
+			local holder = Icons.create(ITEM_ICONS[item] or "Star", grid, { ZIndex = 4 })
+			holder.LayoutOrder = i
+		end
+		grid.Parent = box
 	end
 	listBox("You lose", Rebirth.Lost, 0, Theme.Colors.Bad)
 	listBox("You keep", Rebirth.Kept, 1, Theme.Colors.Good)
@@ -237,9 +273,9 @@ function RebirthPage.build(page: ScrollingFrame)
 	local function refresh()
 		local rebirths = math.max(0, math.floor(tonumber(State.get("Rebirths")) or 0))
 		status = Rebirth.status({ Rebirths = rebirths, Gold = State.get("Gold"), Keys = State.get("Keys") })
-		goldPill.Text = `Gold x{times(Rebirth.goldMultiplier(rebirths))}`
-		powerPill.Text = `Attributes x{times(Rebirth.power(rebirths))}`
-		done.Text = `Rebirths done: {rebirths} / {Rebirth.Max}`
+		goldPill.Text = `x{times(Rebirth.goldMultiplier(rebirths))}`
+		powerPill.Text = `x{times(Rebirth.power(rebirths))}`
+		done.Text = `{rebirths} / {Rebirth.Max}`
 		local zone = status.zone
 		local maxed = status.maxed or zone == nil
 		needs.Visible = not maxed
@@ -254,22 +290,22 @@ function RebirthPage.build(page: ScrollingFrame)
 		end
 		heading.Text = `Rebirth {status.next}`
 		local boss = ZoneVisibility.bossName(zone.Id)
-		keyLabel.Text = `{boss} key`
-		keyStatus.Text = if status.hasKey then "Owned" else `Defeat the {boss} in {ZoneVisibility.displayName(zone.Id)}`
+		keyLabel.Text = boss
+		keyStatus.Text = "" -- the check / lock says it
 		keyStatus.TextColor3 = if status.hasKey then Theme.Colors.Good else Theme.Colors.TextDim
 		setMark(keyMark, status.hasKey)
-		goldLabel.Text = `{Format.number(status.cost)} Gold`
+		goldLabel.Text = Format.number(status.cost)
 		goldStatus.Text = `{Format.number(math.min(status.gold, status.cost))} / {Format.number(status.cost)}`
 		goldStatus.TextColor3 = if status.enoughGold then Theme.Colors.Good else Theme.Colors.TextDim
 		fill.Size = UDim2.fromScale(math.clamp(status.gold / math.max(1, status.cost), 0, 1), 1)
 		setMark(goldMark, status.enoughGold)
-		creditsText.Text = `+{Rebirth.CreditsPerRebirth} Rebirth Credits`
-		goldText.Text = `Gold x{times(Rebirth.goldMultiplier(rebirths))}  >  x{times(Rebirth.goldMultiplier(rebirths + 1))}`
-		powerText.Text = `Attributes x{times(Rebirth.power(rebirths))}  >  x{times(Rebirth.power(rebirths + 1))}`
-		zoneText.Text = `{ZoneVisibility.displayName(zone.Id)} restarts: redo it to open the next zone`
+		creditsText.Text = `+{Rebirth.CreditsPerRebirth}`
+		goldText.Text = `x{times(Rebirth.goldMultiplier(rebirths))}  >  x{times(Rebirth.goldMultiplier(rebirths + 1))}`
+		powerText.Text = `x{times(Rebirth.power(rebirths))}  >  x{times(Rebirth.power(rebirths + 1))}`
+		zoneText.Text = ZoneVisibility.displayName(zone.Id)
 		button:SetText(`Rebirth {status.next}`)
 		button:SetStyle(if status.ready then "primary" else "disabled")
-		reason.Text = if status.ready then "Ready! Your character restarts stronger." else status.reason or ""
+		reason.Text = if status.ready then "" else status.reason or ""
 	end
 	refresh()
 	for _, key in ipairs({ "Rebirths", "Gold", "Keys", "Zones" }) do

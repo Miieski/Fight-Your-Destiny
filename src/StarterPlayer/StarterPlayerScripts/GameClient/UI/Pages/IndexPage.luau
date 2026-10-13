@@ -43,15 +43,14 @@ local function claim(rewardId: string)
 end
 
 local function rewardButton(parent: Instance, reward: any, size: UDim2, position: UDim2, anchor: Vector2)
-	local text, style
+	-- kid-friendly UI: diamond + number (green = claim now), a check once claimed
+	local text, style, icon = `{reward.Diamonds}`, "disabled", "Diamond"
 	if reward.Claimed then
-		text, style = "Claimed", "disabled"
+		text, icon = "", "Check"
 	elseif reward.Complete then
-		text, style = `Claim {reward.Diamonds}`, "go"
-	else
-		text, style = `{reward.Diamonds}`, "disabled"
+		style = "go"
 	end
-	local button = Button.new({ Text = text, Icon = "Diamond", Style = style, TextSize = 20, Size = size, Position = position, AnchorPoint = anchor, ZIndex = 3, Parent = parent, OnClick = function()
+	local button = Button.new({ Text = text, Icon = icon, Style = style, TextSize = 20, Size = size, Position = position, AnchorPoint = anchor, ZIndex = 3, Parent = parent, OnClick = function()
 		if reward.Complete and not reward.Claimed then
 			claim(reward.Id)
 		elseif not reward.Complete then
@@ -62,7 +61,7 @@ local function rewardButton(parent: Instance, reward: any, size: UDim2, position
 end
 
 local function percent(have: number, total: number): string
-	return `{have}/{total} ({math.floor(have / math.max(total, 1) * 100)}%)`
+	return `{have}/{total}`
 end
 
 local function pips(parent: Instance, best: number)
@@ -160,7 +159,7 @@ local function buildTab(page: ScrollingFrame, tab: string)
 	Theme.corner(summary, 8)
 	Theme.stroke(summary, Theme.Colors.GoldLight, 2)
 	summary.Parent = page
-	Theme.text({ Font = "Title", Text = `{tab}: {percent(tabReward.Have, tabReward.Total)}`, TextSize = if small then 22 else 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.5, 0, 0, 30), Position = UDim2.fromOffset(14, 6), ZIndex = 3, Parent = summary })
+	Theme.text({ Font = "Title", Text = percent(tabReward.Have, tabReward.Total), TextSize = if small then 22 else 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.5, 0, 0, 30), Position = UDim2.fromOffset(14, 6), ZIndex = 3, Parent = summary })
 	local bar = Instance.new("Frame")
 	bar.BackgroundColor3 = Theme.Colors.WoodLine
 	bar.Size = UDim2.new(0.5, -20, 0, 12)
@@ -174,7 +173,6 @@ local function buildTab(page: ScrollingFrame, tab: string)
 	fill.ZIndex = 4
 	Theme.corner(fill, 6)
 	fill.Parent = bar
-	Theme.text({ Text = `Whole tab: {IndexBook.TabReward} Diamonds`, TextSize = 16, Color = Theme.Colors.TextDim, Align = "Right", Size = UDim2.new(0.25, 0, 0, 24), Position = UDim2.new(0.75, -16, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = summary })
 	rewardButton(summary, tabReward, UDim2.new(0.24, 0, 0, Theme.TOUCH), UDim2.new(1, -8, 0.5, 0), Vector2.new(1, 0.5))
 
 	-- zone groups
@@ -219,8 +217,6 @@ local function buildTab(page: ScrollingFrame, tab: string)
 			if reward then
 				rewardButton(head, reward, UDim2.new(0.28, 0, 1, 0), UDim2.new(1, 0, 0, 0), Vector2.new(1, 0))
 			end
-		else
-			Theme.text({ Text = "Robux pets (no reward)", TextSize = 15, Color = Theme.Colors.TextDim, Align = "Right", Size = UDim2.new(0.3, 0, 1, 0), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 4, Parent = head })
 		end
 		local grid = Instance.new("Frame")
 		grid.BackgroundTransparency = 1

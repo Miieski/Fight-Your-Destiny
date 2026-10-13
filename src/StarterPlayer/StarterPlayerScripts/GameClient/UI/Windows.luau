@@ -43,9 +43,9 @@ local function shop(ctx: any)
 end
 
 -- Inventory: Equipment (default), Weapons, Armor, Pets and Eggs (shortcuts to the Pets window), Trophies.
-local function shortcut(page: ScrollingFrame, text: string, tab: string)
-	Theme.text({ Text = text, TextSize = 22, Wrapped = true, Size = UDim2.new(1, 0, 0, 56), LayoutOrder = 1, Parent = page })
-	Button.new({ Text = "Open Pets", Icon = "Pets", Style = "primary", Size = UDim2.fromOffset(240, Theme.TOUCH), LayoutOrder = 2, Parent = page, OnClick = function()
+local function shortcut(page: ScrollingFrame, _text: string, tab: string, icon: string)
+	-- a big picture button (kid-friendly UI): it opens the Pets window on that tab
+	Button.new({ Name = "Open", Icon = icon, Style = "primary", Size = UDim2.fromOffset(160, 96), LayoutOrder = 2, Parent = page, OnClick = function()
 		Window.open("Pets", tab)
 	end })
 	-- choosing the tab jumps straight to the Pets window
@@ -60,8 +60,8 @@ local function inventory(ctx: any)
 	EquipmentPage.build(ctx.Pages.Equipment, ctx)
 	InventoryPage.buildWeapons(ctx.Pages.Weapons)
 	ArmorPage.build(ctx.Pages.Armor, ctx)
-	shortcut(ctx.Pages.Pets, "Your pets live in the Pets window.", "Pets")
-	shortcut(ctx.Pages.Eggs, "Your eggs are hatched in the Pets window.", "Eggs")
+	shortcut(ctx.Pages.Pets, "Your pets live in the Pets window.", "Pets", "Pets")
+	shortcut(ctx.Pages.Eggs, "Your eggs are hatched in the Pets window.", "Eggs", "Egg")
 	TrophiesPage.build(ctx.Pages.Trophies)
 end
 
@@ -69,7 +69,7 @@ local BUILDERS = {
 	Shop = shop,
 	Inventory = inventory,
 	Stats = function(ctx: any)
-		AttributesPage.build(ctx.Pages.Main)
+		AttributesPage.build(ctx.Pages.Main, ctx)
 	end,
 	Settings = SettingsPage.build,
 	Pets = PetsPage.build,
@@ -77,8 +77,8 @@ local BUILDERS = {
 	Quests = QuestsPage.build,
 	Team = TeamUI.buildPage,
 	Rebirth = function(ctx: any)
-		RebirthPage.build(ctx.Pages.Rebirth)
-		RebirthShopPage.build(ctx.Pages["Rebirth Shop"])
+		RebirthPage.build(ctx.Pages.Rebirth, ctx)
+		RebirthShopPage.build(ctx.Pages["Rebirth Shop"], ctx)
 	end,
 	Zones = ZonesPage.build,
 }
@@ -97,7 +97,7 @@ end
 function Windows:Init()
 	for id, def in pairs(UIConfig.Windows) do
 		if id ~= "Admin" then
-			Window.define(id, { Title = def.Title, Tabs = def.Tabs, Size = def.Size, Build = BUILDERS[id] or function(ctx)
+			Window.define(id, { Title = def.Title, Icon = def.Icon, Tabs = def.Tabs, TabIcons = def.TabIcons, TabLabels = def.TabLabels, Size = def.Size, Build = BUILDERS[id] or function(ctx)
 				placeholders(ctx, def.Intro)
 			end })
 		end

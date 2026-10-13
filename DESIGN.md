@@ -73,6 +73,23 @@ instead of inventing a parallel convention.
 * **Windows:** open with a quick pop (scale 0.9 -> 1, Back Out 0.2 s) over a dimmed backdrop;
   a close (X) button in the top-right corner.
 
+### UI for young players (owner 2026-10-13: "understandable for a 5 years old kid, avoid text, more visual")
+* **Realistic wood:** panels, insets and light boards use tiling wood textures (Blender, `Icons/UiTex`:
+  WoodPanel / WoodInset / WoodLight) with iron corner brackets (`Kit/Panel.wood`, `UI/WoodSkin` dresses every
+  inset frame automatically); buttons have a glossy highlight. Same sizes as before.
+* **Icons first:** every window title, tab and menu button has a picture (window titles and the small labels
+  under the menu buttons stay). Sentences become pictures + numbers: `Kit/Chips` (heart 107, coin 6K,
+  clock 7:57), check = done / equipped / owned, lock = closed, lock + skull + Rebirth = "beat the boss and
+  Rebirth", gift = claim, grey gift = not yet, clock + time = wait, trash + coin price = sell / release,
+  dice = odds, pin = teleport / you are here, star = best.
+* **Details behind the (i):** full stat lists, odds, pity counters, rules and descriptions open from a blue
+  (i) button (`Kit/Info`); tapping a quest's, attribute's or upgrade's picture shows what it does.
+* **One funnel for filters:** every filter and sort of a list sits behind one funnel button (`Kit/Filter`)
+  that opens rows of picture tiles (zone pictures, rarity colours, sort pictures); a red dot shows when a
+  filter is on.
+* **Stats:** the + button buys one point at once (price on the button; hold to repeat; quick taps are sent
+  together); no confirm step.
+
 ### Audio
 Music per zone (calm in the hub and early zones, intense for bosses); short, punchy SFX for
 hits, rolls, blocks, UI clicks, drops, rarity reveals. All sounds are played by name through a

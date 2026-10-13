@@ -25,7 +25,9 @@ local PetsPage = require(script.Parent.PetsPage)
 local Kit = script.Parent.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local ModelIcon = require(Kit.ModelIcon)
 local Overlay = require(Kit.Overlay)
 local Theme = require(Kit.Theme)
@@ -57,7 +59,9 @@ local function clock(seconds: number): string
 end
 DiamondShopPage.clock = clock
 
-local function section(page: Instance, order: number, title: string, text: string?, height: number): Frame
+-- A section: its picture and title; the explaining sentence is behind an (i) (kid-friendly UI, owner 2026-10-13).
+local windowFrame: GuiObject? = nil
+local function section(page: Instance, order: number, title: string, text: string?, height: number, icon: string?): Frame
 	local frame = Instance.new("Frame")
 	frame.Name = title
 	frame.BackgroundColor3 = Theme.Colors.WoodTop
@@ -66,9 +70,14 @@ local function section(page: Instance, order: number, title: string, text: strin
 	frame.ZIndex = 2
 	Theme.corner(frame, 8)
 	Theme.stroke(frame, Theme.Colors.GoldDark, 2)
-	Theme.text({ Font = "Title", Text = title, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.4, 0, 0, 32), Position = UDim2.fromOffset(14, 6), ZIndex = 3, Parent = frame })
-	if text then
-		Theme.text({ Text = text, TextSize = 17, Color = Theme.Colors.TextDim, Align = "Left", Wrapped = true, Size = UDim2.new(0.6, -24, 0, 34), Position = UDim2.new(0.4, 0, 0, 4), ZIndex = 3, Parent = frame })
+	local x = 14
+	if icon then
+		Icons.create(icon, frame, { Size = UDim2.fromOffset(38, 38), Position = UDim2.fromOffset(10, 3), AnchorPoint = Vector2.zero, ZIndex = 3 })
+		x = 54
+	end
+	Theme.text({ Font = "Title", Text = title, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.5, 0, 0, 32), Position = UDim2.fromOffset(x, 6), ZIndex = 3, Parent = frame })
+	if text and windowFrame then
+		Info.button({ Parent = frame, Frame = windowFrame, Title = title, Lines = { text }, Size = 36, Position = UDim2.new(1, -8, 0, 5), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, PopupSize = Vector2.new(560, 240) })
 	end
 	frame.Parent = page
 	return frame
@@ -129,8 +138,11 @@ local function chooseWeapon(parent: GuiObject)
 		local x = rowH + 4
 		local name = Theme.text({ Font = "Button", Text = entry.weapon.Name, TextSize = 20, Align = "Left", Size = UDim2.new(0.5, -x, 0, 26), Position = UDim2.fromOffset(x, 6), ZIndex = 23, Parent = row })
 		Theme.paintRarity(name, entry.item.rarity)
-		Theme.text({ Text = `{rarity.Name} - {ZoneVisibility.displayName(entry.weapon.ZoneId)}{if State.get("EquippedWeapon") == entry.uid then "  (equipped)" else ""}`, TextSize = 15, Align = "Left", Color = Theme.Colors.TextDim, Size = UDim2.new(0.5, -x, 0, 20), Position = UDim2.fromOffset(x, 34), ZIndex = 23, Parent = row })
-		Button.new({ Text = `Reroll  {price}`, Icon = "Diamond", Style = if (State.get("Diamonds") or 0) >= price then "primary" else "disabled", TextSize = 20, Size = UDim2.new(0.34, 0, 0, Theme.TOUCH), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 23, Parent = row, OnClick = function()
+		ZoneVisibility.icon(entry.weapon.ZoneId, entry.weapon.ZoneId, row, { Size = UDim2.fromOffset(26, 26), Position = UDim2.fromOffset(x, 34), AnchorPoint = Vector2.zero, ZIndex = 23 })
+		if State.get("EquippedWeapon") == entry.uid then
+			Icons.create("Check", row, { Size = UDim2.fromOffset(26, 26), Position = UDim2.fromOffset(x + 32, 34), AnchorPoint = Vector2.zero, ZIndex = 23 })
+		end
+		Button.new({ Text = `{price}`, Icon = "Diamond", Style = if (State.get("Diamonds") or 0) >= price then "primary" else "disabled", TextSize = 20, Size = UDim2.new(0.34, 0, 0, Theme.TOUCH), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 23, Parent = row, OnClick = function()
 			if CaseOpening.isActive() then
 				return
 			end
@@ -152,6 +164,7 @@ end
 
 function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 	local small = Theme.isCompact()
+	windowFrame = ctx.Frame
 	-- top: Diamonds + Get Diamonds
 	local top = Instance.new("Frame")
 	top.Name = "Top"
@@ -170,10 +183,8 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 	box.Parent = top
 	Icons.create("Diamond", box, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, -8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 	local diamonds = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Right", Size = UDim2.new(1, -48, 1, -6), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 4, Parent = box })
-	if not small then
-		Theme.text({ Text = "Robux diamond packs are sold in the hub.", TextSize = 18, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -520, 0, 26), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3, Parent = top })
-	end
-	Button.new({ Name = "GetDiamonds", Text = UIConfig.Text.GetDiamonds, Icon = "Diamond", Style = "primary", Size = UDim2.fromOffset(240, Theme.TOUCH), Position = UDim2.new(1, -4, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = top, OnClick = function()
+	-- "+ Diamonds" (the Robux packs are sold in the hub; the confirm dialog says it)
+	Button.new({ Name = "GetDiamonds", Text = "+", Icon = "Diamond", Style = "go", TextSize = 34, Size = UDim2.fromOffset(110, Theme.TOUCH), Position = UDim2.new(1, -4, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = top, OnClick = function()
 		Window.confirm({
 			Title = UIConfig.Text.GetDiamonds,
 			Text = UIConfig.Text.GetDiamondsInfo,
@@ -188,7 +199,7 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 
 	-- premium eggs
 	local eggH = if small then 176 else 206
-	local eggs = section(page, 2, "Premium Eggs", "A random pet of the zone, rarity rolled like the weapon shop.", eggH + 48)
+	local eggs = section(page, 2, "Premium Eggs", "A random pet of the zone, rarity rolled like the weapon shop.", eggH + 48, "Egg")
 	local strip = Instance.new("ScrollingFrame")
 	strip.BackgroundTransparency = 1
 	strip.BorderSizePixel = 0
@@ -208,17 +219,17 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 	strip.Parent = eggs
 
 	-- weapon reroll
-	local reroll = section(page, 3, "Weapon Reroll", "Pay 5 + 2 x zone Diamonds for a new rarity roll. Keep the new one or the old one.", Theme.TOUCH + 56)
-	Button.new({ Name = "ChooseWeapon", Text = "Choose a weapon", Icon = "Sword", Style = "primary", Size = UDim2.fromOffset(280, Theme.TOUCH), Position = UDim2.new(0, 14, 0, 44), ZIndex = 3, Parent = reroll, OnClick = function()
+	local reroll = section(page, 3, "Weapon Reroll", "Pay 5 + 2 x zone Diamonds for a new rarity roll. Keep the new one or the old one.", Theme.TOUCH + 56, "Dice")
+	Button.new({ Name = "ChooseWeapon", Text = "", Icon = "Sword", Style = "primary", Size = UDim2.fromOffset(140, Theme.TOUCH), Position = UDim2.new(0, 14, 0, 44), ZIndex = 3, Parent = reroll, OnClick = function()
 		chooseWeapon(ctx.Frame)
 	end })
 
 	-- gold boost
-	local boost = section(page, 4, "Gold Boost x2", "Double Gold for a while. Buying more adds time.", Theme.TOUCH + 64)
-	local status = Theme.text({ Font = "Number", Text = "", TextSize = 19, Align = "Left", Color = Theme.Colors.Good, Size = UDim2.new(0.3, 0, 0, Theme.TOUCH), Position = UDim2.new(0, 14, 0, 46), ZIndex = 3, Parent = boost })
+	local boost = section(page, 4, "Gold Boost x2", "Double Gold for a while. Buying more adds time.", Theme.TOUCH + 108, "GoldGain")
+	local status = Chips.chip(boost, "Clock", "-", { Height = 42, Position = UDim2.new(0, 14, 0, 90 + Theme.TOUCH / 2), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	local packs = Instance.new("Frame")
 	packs.BackgroundTransparency = 1
-	packs.Size = UDim2.new(0.7, -14, 0, Theme.TOUCH)
+	packs.Size = UDim2.new(0.7, -14, 0, Theme.TOUCH + 44)
 	packs.Position = UDim2.new(1, -10, 0, 46)
 	packs.AnchorPoint = Vector2.new(1, 0)
 	packs.ZIndex = 3
@@ -231,7 +242,14 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 	packs.Parent = boost
 	local packButtons = {}
 	for index, pack in ipairs(Boosts.Packs) do
-		packButtons[index] = Button.new({ Text = `{pack.Minutes} min  {pack.Price}`, Icon = "Diamond", Style = "primary", TextSize = 20, Size = UDim2.new(1 / #Boosts.Packs, -8, 1, 0), LayoutOrder = index, ZIndex = 4, Parent = packs, OnClick = function()
+		local cell = Instance.new("Frame")
+		cell.BackgroundTransparency = 1
+		cell.Size = UDim2.new(1 / #Boosts.Packs, -8, 1, 0)
+		cell.LayoutOrder = index
+		cell.ZIndex = 4
+		cell.Parent = packs
+		Chips.chip(cell, "Clock", `{pack.Minutes}m`, { Height = 36, Position = UDim2.new(0.5, 0, 0, 0), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4 })
+		packButtons[index] = Button.new({ Text = `{pack.Price}`, Icon = "Diamond", Style = "primary", TextSize = 24, Size = UDim2.new(1, 0, 0, Theme.TOUCH), Position = UDim2.new(0, 0, 1, 0), AnchorPoint = Vector2.new(0, 1), ZIndex = 4, Parent = cell, OnClick = function()
 			if (State.get("Diamonds") or 0) < pack.Price then
 				Sfx.play("Denied")
 				Notifier.push({ Kind = "error", Text = "Not enough Diamonds" })
@@ -247,7 +265,7 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 
 	-- skins
 	local skinsH = if small then 120 else 150
-	local skins = section(page, 5, "Skins", "Weapon and character skins are coming soon.", skinsH + 48)
+	local skins = section(page, 5, "Skins", "Weapon and character skins are coming soon.", skinsH + 48, "Star")
 	local skinRow = Instance.new("Frame")
 	skinRow.BackgroundTransparency = 1
 	skinRow.Position = UDim2.fromOffset(10, 44)
@@ -273,7 +291,7 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 			image.ImageColor3 = Color3.new(0, 0, 0)
 		end
 		Theme.text({ Font = "Title", Text = "?", TextSize = 34, Size = UDim2.fromScale(0.5, 0.4), Position = UDim2.fromScale(0.5, 0.42), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5, StrokeThickness = 2, Parent = card })
-		Theme.text({ Text = UIConfig.Text.ComingSoon, TextSize = 15, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -6, 0, 20), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
+		Icons.create("Clock", card, { Size = UDim2.fromOffset(26, 26), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4 }) -- coming soon
 		card.Parent = skinRow
 	end
 
@@ -307,7 +325,10 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 					PetsPage.buyPremium(zone)
 				end })
 			else
-				Theme.text({ Text = ZoneVisibility.requirement(zone.Id, true), TextSize = 15, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
+				-- lock + skull (beat the boss) + Rebirth pictures instead of a sentence
+				for i, iconId in ipairs({ "Lock", "Skull", "RebirthShop" }) do
+					Icons.create(iconId, card, { Size = UDim2.fromOffset(34, 34), Position = UDim2.new(0.5, (i - 2) * 38, 1, -10), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4 })
+				end
 			end
 			card.Parent = strip
 		end
@@ -329,8 +350,7 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 		while true do
 			if page.Visible then
 				local left = Boosts.remaining(State.get("Boosts"), "GoldX2", os.time())
-				status.Text = if left > 0 then `Active: {clock(left)} left` else "Not active"
-				status.TextColor3 = if left > 0 then Theme.Colors.Good else Theme.Colors.TextDim
+				status:Set(if left > 0 then clock(left) else "-", if left > 0 then Theme.Colors.Good else Theme.Colors.TextDim)
 			end
 			task.wait(1)
 		end

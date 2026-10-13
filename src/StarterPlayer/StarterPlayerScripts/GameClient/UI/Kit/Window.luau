@@ -1,7 +1,8 @@
 --!strict
 -- Window manager: one window open at a time over a dim backdrop; pop animation (0.9 -> 1, Back Out),
 -- X button top-right, optional tabs, scrolling pages. Windows never exceed 90% of the screen.
---   Window.define(id, { Title, Tabs?, Size?: Vector2, Build = function(ctx) end })
+--   Window.define(id, { Title, Icon?, Tabs?, TabIcons?, TabLabels?, Size?: Vector2, Build = function(ctx) end })
+--       Icon = an Icons id drawn left of the title; TabIcons / TabLabels = { [tab] = icon id / short label }
 --       ctx = { Frame, Pages = { [tab or "Main"] = ScrollingFrame }, Tabs?, Select(tab) }
 --   Window.open(id, tab?), Window.close(), Window.toggle(id, tab?), Window.isOpen(id?)
 --   Window.confirm({ Title, Text, ConfirmText, CancelText, OnConfirm })
@@ -20,7 +21,7 @@ local Theme = require(script.Parent.Theme)
 
 local Window = {}
 
-type Definition = { Title: string, Tabs: { string }?, Size: Vector2?, Build: ((any) -> ())? }
+type Definition = { Title: string, Icon: string?, Tabs: { string }?, TabIcons: { [string]: string }?, TabLabels: { [string]: string }?, Size: Vector2?, Build: ((any) -> ())? }
 type Built = { frame: Frame, pages: { [string]: ScrollingFrame }, tabs: any?, pop: UIScale, def: Definition, banner: Frame, content: Frame }
 
 local HEADER = 74
@@ -171,7 +172,13 @@ local function build(id: string): Built
 	local bannerLimit = Instance.new("UISizeConstraint")
 	bannerLimit.MaxSize = Vector2.new(380, 50)
 	bannerLimit.Parent = banner
-	Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -16, 0.86, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
+	if def.Icon then
+		-- the window's picture first, the word after it (kid-friendly, owner 2026-10-13)
+		Icons.create(def.Icon, banner, { Size = UDim2.new(0, 0, 1.25, 0), Position = UDim2.new(0, 6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 5 })
+		Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -78, 0.86, 0), Position = UDim2.new(0.5, 30, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
+	else
+		Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -16, 0.86, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
+	end
 
 	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, OnClick = Window.close, Parent = frame })
 
@@ -179,6 +186,8 @@ local function build(id: string): Built
 	if def.Tabs then
 		entry.tabs = Tabs.new({
 			Tabs = def.Tabs,
+			Icons = def.TabIcons,
+			Labels = def.TabLabels,
 			Size = UDim2.new(1, -24, 0, Theme.TOUCH),
 			Position = UDim2.fromOffset(12, HEADER),
 			OnSelect = function(name: string)

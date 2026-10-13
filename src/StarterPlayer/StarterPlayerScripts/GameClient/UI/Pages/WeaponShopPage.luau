@@ -25,7 +25,9 @@ local Kit = script.Parent.Parent.Kit
 local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local Panel = require(Kit.Panel)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
@@ -50,7 +52,7 @@ type Card = {
 	price: TextLabel,
 	owned: TextLabel,
 	ownedBadge: Frame,
-	unlock: TextLabel,
+	unlock: Frame,
 	buy: any,
 	locked: boolean?,
 }
@@ -163,7 +165,6 @@ local function preview(weapon: any)
 	Theme.corner(view, 8)
 	Theme.stroke(view, Theme.Colors.GoldDark, 2)
 	view.Parent = panel
-	Theme.text({ Text = "Drag to turn", TextSize = 16, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 23, Parent = view })
 
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	local source = assets and assets:FindFirstChild("Weapons") and assets.Weapons:FindFirstChild(weapon.Id)
@@ -213,19 +214,30 @@ local function preview(weapon: any)
 	local common, best = WeaponRarities.get(1), WeaponRarities.get(#WeaponRarities.List)
 	local zone = Zones.ById[weapon.ZoneId]
 	local small = Theme.isCompact() -- phones: smaller lines so the Buy button keeps its own space
-	local text = if small then 15 else 19
 	local info = column(panel, UDim2.fromOffset(side + 32, 14), UDim2.new(1, -side - 48 - Theme.TOUCH, 1, -Theme.TOUCH - 40))
 	line(info, weapon.Name, 1, Theme.Colors.Gold, if small then 24 else 30).FontFace = Theme.Fonts.Title
-	line(info, `{category.Name} - {category.Shape}: {category.Special}`, 2, Theme.Colors.TextDim, text - 1)
-	line(info, `Damage per hit (Common): {Format.number(Stats.weaponDamage(weapon.Id, 1))}`, 3, nil, text)
-	line(info, `Hits per second: {category.HitsPerSecond}   |   Range: {category.Range} studs`, 4, nil, text)
-	line(info, `Element: {weapon.Element} - {Weapons.ELEMENT_EFFECTS[weapon.Element] or ""}`, 5, nil, text)
-	line(info, `Proc chance: {math.round(common.ElementProc * 100)}% (Common) to {math.round(best.ElementProc * 100)}% (Secret)`, 6, Theme.Colors.TextDim, text - 2)
+	-- pictures + numbers (kid-friendly UI, owner 2026-10-13); the sentences are behind the (i)
+	local chipH = if small then 34 else 44
+	local chipRow = Chips.row(info, { LayoutOrder = 2, ZIndex = 23 })
+	Chips.chip(chipRow, "Attack", Format.number(Stats.weaponDamage(weapon.Id, 1)), { Height = chipH, LayoutOrder = 1, ZIndex = 23 })
+	Chips.chip(chipRow, "Speed", `{category.HitsPerSecond}/s`, { Height = chipH, LayoutOrder = 2, ZIndex = 23 })
+	Chips.chip(chipRow, "Arrow", tostring(category.Range), { Height = chipH, LayoutOrder = 3, ZIndex = 23 })
+	local details = {
+		`{category.Name} - {category.Shape}: {category.Special}`,
+		`Damage per hit (Common): {Format.number(Stats.weaponDamage(weapon.Id, 1))}`,
+		`Hits per second: {category.HitsPerSecond}   |   Range: {category.Range} studs`,
+		`Element: {weapon.Element} - {Weapons.ELEMENT_EFFECTS[weapon.Element] or ""}`,
+		`Proc chance: {math.round(common.ElementProc * 100)}% (Common) to {math.round(best.ElementProc * 100)}% (Secret)`,
+	}
 	if Balance.ZoneBoostEnabled then
-		line(info, `Zone Boost in {ZoneVisibility.displayName(zone.Id)}: +{math.round(common.ZoneBoost * 100)}% (Common) to +{math.round(best.ZoneBoost * 100)}% (Secret)`, 7, nil, text)
+		table.insert(details, `Zone Boost in {ZoneVisibility.displayName(zone.Id)}: +{math.round(common.ZoneBoost * 100)}% (Common) to +{math.round(best.ZoneBoost * 100)}% (Secret)`)
 	end
-	line(info, `Price: {Format.number(Weapons.price(weapon.Zone))} Gold - rarity rolled on purchase`, 8, Theme.Colors.Gold, text)
-	local buyButton = Button.new({ Name = "Buy", Text = "Buy", Icon = "Gold", Style = "primary", Size = UDim2.fromOffset(if small then 180 else 220, Theme.TOUCH), Position = UDim2.new(1, -16, 1, -14), AnchorPoint = Vector2.new(1, 1), ZIndex = 23, Parent = panel, OnClick = function()
+	table.insert(details, `Price: {Format.number(Weapons.price(weapon.Zone))} Gold - rarity rolled on purchase`)
+	Button.new({ Name = "Info", Style = "wood", Icon = "Info", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -(Theme.TOUCH + 16), 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 24, Parent = panel, OnClick = function()
+		closeOverlay()
+		Info.show(overlayParent :: GuiObject, weapon.Name, details)
+	end })
+	local buyButton = Button.new({ Name = "Buy", Text = Format.number(Weapons.price(weapon.Zone)), Icon = "Gold", Style = "primary", Size = UDim2.fromOffset(if small then 180 else 220, Theme.TOUCH), Position = UDim2.new(1, -16, 1, -14), AnchorPoint = Vector2.new(1, 1), ZIndex = 23, Parent = panel, OnClick = function()
 		buy(weapon)
 	end })
 	if (State.get("Gold") or 0) < Weapons.price(weapon.Zone) then
@@ -301,10 +313,28 @@ end
 
 -- Tapping a locked card: only the zone's requirements, never the weapon.
 local function lockedTip(weapon: any)
-	local panel = openOverlay(Vector2.new(480, 230))
-	-- no spoilers: neither the weapon nor its zone (ZoneVisibility)
+	local panel = openOverlay(Vector2.new(480, 260))
+	-- no spoilers: neither the weapon nor its zone (ZoneVisibility). Pictures: lock = beat the boss + Rebirth
 	Theme.text({ Font = "Title", Text = `{LOCKED} - {ZoneVisibility.displayName(weapon.ZoneId)}`, TextSize = 30, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 12), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
-	Theme.text({ Text = `This weapon belongs to a locked zone.\n{ZoneVisibility.requirement(weapon.ZoneId)}`, TextSize = 20, Wrapped = true, Size = UDim2.new(1, -40, 1, -80), Position = UDim2.new(0.5, 0, 0, 62), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
+	local how = Instance.new("Frame")
+	how.BackgroundTransparency = 1
+	how.Size = UDim2.new(1, -40, 0, 84)
+	how.Position = UDim2.new(0.5, 0, 0, 64)
+	how.AnchorPoint = Vector2.new(0.5, 0)
+	how.ZIndex = 23
+	local list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Horizontal
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	list.VerticalAlignment = Enum.VerticalAlignment.Center
+	list.Padding = UDim.new(0, 14)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Parent = how
+	for i, icon in ipairs({ "Lock", "Skull", "RebirthShop" }) do
+		local holder = Icons.create(icon, how, { Size = UDim2.fromOffset(72, 72), ZIndex = 24 })
+		holder.LayoutOrder = i
+	end
+	how.Parent = panel
+	Theme.text({ Text = ZoneVisibility.requirement(weapon.ZoneId), TextSize = 17, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -40, 0, 50), Position = UDim2.new(0.5, 0, 0, 156), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -332,9 +362,10 @@ local function refreshCard(card: Card)
 		end
 	end
 	card.price.Text = if open then Format.number(Weapons.price(weapon.Zone)) else LOCKED
+	card.buy:SetText(if open then Format.number(Weapons.price(weapon.Zone)) else "")
 	local count = if open then ownedCount(weapon.Id) else 0
 	card.ownedBadge.Visible = count > 0
-	card.owned.Text = `Owned: {count}`
+	card.owned.Text = `x{count}`
 	card.unlock.Visible = not open
 	card.buy.Instance.Visible = open
 	if open then
@@ -385,7 +416,7 @@ local function layoutCard(card: Card)
 		name.AnchorPoint, zoneRow.AnchorPoint, priceRow.AnchorPoint = Vector2.zero, Vector2.zero, Vector2.zero
 		name.TextXAlignment = Enum.TextXAlignment.Left
 		name.Position, name.Size = UDim2.fromOffset(x, 8), UDim2.new(1, -(x + 6), 0, 24)
-		zoneRow.Position, zoneRow.Size = UDim2.fromOffset(x, 34), UDim2.new(1, -(x + 6), 0, 22)
+		zoneRow.Position, zoneRow.Size = UDim2.fromOffset(x, 34), UDim2.fromOffset(28, 28)
 		priceRow.Position, priceRow.Size = UDim2.fromOffset(x, 58), UDim2.new(1, -(x + 6), 0, 24)
 		card.ownedBadge.Position = UDim2.fromOffset(4, 4)
 		card.ownedBadge.AnchorPoint = Vector2.zero
@@ -396,8 +427,9 @@ local function layoutCard(card: Card)
 		iconBox.Size = UDim2.fromScale(0.39, 0.39)
 		name.AnchorPoint, zoneRow.AnchorPoint, priceRow.AnchorPoint = Vector2.new(0.5, 0), Vector2.new(0.5, 0), Vector2.new(0.5, 0)
 		name.TextXAlignment = Enum.TextXAlignment.Center
-		name.Position, name.Size = UDim2.new(0.5, 0, 1, -(Theme.TOUCH + 88)), UDim2.new(1, -12, 0, 24)
-		zoneRow.Position, zoneRow.Size = UDim2.new(0.5, 0, 1, -(Theme.TOUCH + 62)), UDim2.new(1, -12, 0, 22)
+		name.Position, name.Size = UDim2.new(0.5, 0, 1, -(Theme.TOUCH + 44)), UDim2.new(1, -12, 0, 26)
+		zoneRow.Position, zoneRow.Size = UDim2.fromOffset(8, 8), UDim2.fromOffset(34, 34)
+		zoneRow.AnchorPoint = Vector2.zero
 		priceRow.Position, priceRow.Size = UDim2.new(0.5, 0, 1, -(Theme.TOUCH + 38)), UDim2.new(1, -12, 0, 24)
 		card.ownedBadge.Position = UDim2.new(1, -6, 0, 6)
 		card.ownedBadge.AnchorPoint = Vector2.new(1, 0)
@@ -459,24 +491,44 @@ local function makeCard(weapon: any, parent: Instance, order: number): Card
 	Theme.corner(ownedBadge, 12)
 	Theme.stroke(ownedBadge, Theme.Colors.GoldDark, 1.5)
 	ownedBadge.Parent = frame
-	local owned = Theme.text({ Font = "Button", Text = "", TextSize = 15, Size = UDim2.new(1, -8, 1, -4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = ownedBadge })
+	ownedBadge.Size = UDim2.fromOffset(64, 28)
+	Icons.create("Check", ownedBadge, { Size = UDim2.fromOffset(24, 24), Position = UDim2.new(0, 4, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
+	local owned = Theme.text({ Font = "Number", Text = "", TextSize = 17, Size = UDim2.new(1, -32, 1, -4), Position = UDim2.new(0, 28, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4, Parent = ownedBadge })
 
 	-- name, zone and price rows sit right above the Buy button
 	local name = Theme.text({ Name = "WeaponName", Font = "Button", Text = "", TextSize = 19, Parent = frame })
 	local zoneRow = Instance.new("Frame")
 	zoneRow.BackgroundTransparency = 1
 	zoneRow.Parent = frame
-	local zoneIcon = ZoneVisibility.icon(weapon.ZoneId, weapon.ZoneId, zoneRow, { Size = UDim2.fromOffset(24, 24), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
-	zoneIcon.Name = "ZoneIcon"
-	Theme.text({ Name = "ZoneName", Text = ZoneVisibility.displayName(weapon.ZoneId), TextSize = 16, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -30, 1, 0), Position = UDim2.fromOffset(30, 0), Parent = zoneRow })
+	local zoneIcon = ZoneVisibility.icon(weapon.ZoneId, weapon.ZoneId, zoneRow, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5) })
+	zoneIcon.Name = "ZoneIcon" -- the zone's picture only (kid-friendly UI: no zone name on the card)
 	local priceRow = Instance.new("Frame")
 	priceRow.BackgroundTransparency = 1
 	priceRow.Parent = frame
 	Icons.create("Gold", priceRow, { Size = UDim2.fromOffset(26, 26), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
 	local price = Theme.text({ Font = "Number", Text = "", TextSize = 20, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -32, 1, 0), Position = UDim2.fromOffset(32, 0), Parent = priceRow })
+	priceRow.Visible = false -- the price is on the Buy button
 
-	local unlock = Theme.text({ Text = ZoneVisibility.requirement(weapon.ZoneId, true), TextSize = 16, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), Parent = frame })
-	local buyButton = Button.new({ Name = "Buy", Text = "Buy", Style = "primary", Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), Parent = frame, OnClick = function()
+	-- locked: lock + skull (beat the boss) + Rebirth pictures instead of a sentence
+	local unlock = Instance.new("Frame")
+	unlock.Name = "Unlock"
+	unlock.BackgroundTransparency = 1
+	unlock.Size = UDim2.new(1, -16, 0, Theme.TOUCH)
+	unlock.Position = UDim2.new(0.5, 0, 1, -8)
+	unlock.AnchorPoint = Vector2.new(0.5, 1)
+	local unlockList = Instance.new("UIListLayout")
+	unlockList.FillDirection = Enum.FillDirection.Horizontal
+	unlockList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	unlockList.VerticalAlignment = Enum.VerticalAlignment.Center
+	unlockList.Padding = UDim.new(0, 6)
+	unlockList.SortOrder = Enum.SortOrder.LayoutOrder
+	unlockList.Parent = unlock
+	for i, iconId in ipairs({ "Lock", "Skull", "RebirthShop" }) do
+		local holder = Icons.create(iconId, unlock, { Size = UDim2.fromOffset(Theme.TOUCH - 8, Theme.TOUCH - 8), ZIndex = 2 })
+		holder.LayoutOrder = i
+	end
+	unlock.Parent = frame
+	local buyButton = Button.new({ Name = "Buy", Text = "0", Icon = "Gold", Style = "primary", TextSize = 30, Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), Parent = frame, OnClick = function()
 		buy(weapon)
 	end })
 	local card: Card = { weapon = weapon, frame = frame, iconBox = iconBox, zoneRow = zoneRow, priceRow = priceRow, image = image, marks = marks, name = name, price = price, owned = owned, ownedBadge = ownedBadge, unlock = unlock, buy = buyButton, locked = nil }
@@ -625,7 +677,7 @@ local function layout()
 		layoutCard(card)
 	end
 	for _, child in ipairs(headerFrame:GetChildren()) do
-		if child:IsA("GuiObject") and child.Name ~= "Odds" and child.Name ~= "Info" then
+		if child:IsA("GuiObject") and child.Name ~= "Odds" and child.Name ~= "Info" and child.Name ~= "Pity" then
 			child.Visible = not compact
 		end
 	end
@@ -716,14 +768,18 @@ function WeaponShopPage.build(page: ScrollingFrame, ctx: any)
 	local pity2Label = Theme.text({ Text = "", TextSize = 15, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -520, 0, 18), Position = UDim2.new(0.5, 0, 0.5, 13), AnchorPoint = Vector2.new(0.5, 0.5), Parent = header })
 	local infoLabel = Theme.text({ Name = "Info", Font = "Button", Text = "", TextSize = 17, Align = "Left", Parent = header })
 	infoLabel.Visible = false
-	Button.new({ Name = "Odds", Text = "Odds", Icon = "Info", Style = "secondary", Size = UDim2.fromOffset(150, CONFIG.HeaderHeight - 8), Position = UDim2.new(1, -4, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = header, OnClick = odds })
+	-- kid-friendly UI: the pity counters are in the Odds popup (the dice), not written in the header
+	pityLabel.Name, pity2Label.Name = "Pity", "Pity"
+	pityLabel.Visible = false
+	pity2Label.Visible = false
+	Button.new({ Name = "Odds", Text = "", Icon = "Dice", Style = "secondary", Size = UDim2.fromOffset(CONFIG.HeaderHeight + 10, CONFIG.HeaderHeight - 8), Position = UDim2.new(1, -4, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = header, OnClick = odds })
 	local epic, legendary = WeaponRarities.Pity[1], WeaponRarities.Pity[2]
 	local function pityText()
 		local a = `{math.min(State.get(epic.Key) or 0, epic.After)}/{epic.After}`
 		local b = `{math.min(State.get(legendary.Key) or 0, legendary.After)}/{legendary.After}`
 		pityLabel.Text = `Your pity: {a}`
 		pity2Label.Text = `{legendary.Label}: {b}`
-		infoLabel.Text = `Gold {Format.number(State.get("Gold") or 0)}    |    Your pity: {a}    |    {legendary.Label}: {b}`
+		infoLabel.Text = `Gold {Format.number(State.get("Gold") or 0)}`
 	end
 	State.observe("Gold", function(value)
 		goldLabel.Text = Format.number(value or 0)

@@ -14,6 +14,7 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
 local Panel = require(Kit.Panel)
 local Screens = require(Kit.Screens)
@@ -116,19 +117,21 @@ local function buildTeamTab(page: ScrollingFrame, ctx: any)
 	local me = Players.LocalPlayer
 	local team = current
 	if not team then
-		Theme.text({ Text = `You are not in a team. Create one, or accept an invite. Up to {Teams.MaxMembers} players fight bosses together.`, TextSize = 21, Wrapped = true, Size = UDim2.new(1, -8, 0, 60), LayoutOrder = 1, Parent = page })
-		Button.new({ Name = "CreateTeam", Text = "Create Team", Icon = "Team", Style = "go", Size = UDim2.fromOffset(280, Theme.TOUCH), LayoutOrder = 2, Parent = page, OnClick = function()
+		-- kid-friendly UI: the team picture, "+" = create a team, the letter = invite players
+		local pic = Icons.create("Team", page, { Size = UDim2.fromOffset(90, 90) })
+		pic.LayoutOrder = 1
+		Button.new({ Name = "CreateTeam", Icon = "Plus", Style = "go", Size = UDim2.fromOffset(200, Theme.TOUCH + 8), LayoutOrder = 2, Parent = page, OnClick = function()
 			if request("TeamCreate") then
 				Sfx.play("UIClick")
 			end
 		end })
-		Button.new({ Text = "Invite players", Style = "secondary", Size = UDim2.fromOffset(280, Theme.TOUCH), LayoutOrder = 3, Parent = page, OnClick = function()
+		Button.new({ Name = "InvitePlayers", Icon = "Invite", Style = "secondary", Size = UDim2.fromOffset(200, Theme.TOUCH + 8), LayoutOrder = 3, Parent = page, OnClick = function()
 			ctx.Select("Invite")
 		end })
 		return
 	end
 	local leader = team.Leader == me.UserId
-	Theme.text({ Font = "Title", Text = `Your team ({#team.Members}/{Teams.MaxMembers})`, TextSize = 28, Color = Theme.Colors.Gold, Size = UDim2.new(1, -8, 0, 36), LayoutOrder = 0, Parent = page })
+	Theme.text({ Font = "Title", Text = `{#team.Members}/{Teams.MaxMembers}`, TextSize = 28, Color = Theme.Colors.Gold, Size = UDim2.new(1, -8, 0, 36), LayoutOrder = 0, Parent = page })
 	local rowH = if Theme.isCompact() then 64 else 76
 	for index, userId in ipairs(team.Members) do
 		local player = Players:GetPlayerByUserId(userId)
@@ -141,10 +144,14 @@ local function buildTeamTab(page: ScrollingFrame, ctx: any)
 			name.TextColor3 = Theme.Colors.Gold
 		end
 		if player then
-			Theme.text({ Text = `Rebirth {player:GetAttribute("Rebirths") or 0}   |   {zoneText(player)}`, TextSize = 17, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(0.5, -x, 0, 22), Position = UDim2.fromOffset(x, 38), ZIndex = 3, Parent = row })
+			-- Rebirths and where they are, as chips
+			local info = Chips.row(row, { Size = UDim2.new(0.6, -x, 0, 0), ZIndex = 3 })
+			info.Position = UDim2.fromOffset(x, 36)
+			Chips.chip(info, "RebirthShop", tostring(player:GetAttribute("Rebirths") or 0), { Height = 28, LayoutOrder = 1 })
+			Chips.chip(info, "MapPin", zoneText(player), { Height = 28, LayoutOrder = 2 })
 		end
 		if leader and userId ~= me.UserId then
-			Button.new({ Name = "Kick", Text = "Kick", Style = "danger", TextSize = 20, Size = UDim2.fromOffset(140, Theme.TOUCH), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = row, OnClick = function()
+			Button.new({ Name = "Kick", Icon = "Close", Style = "danger", Size = UDim2.fromOffset(90, Theme.TOUCH), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = row, OnClick = function()
 				Window.confirm({ Title = "Kick?", Text = `Remove {if player then player.DisplayName else "this player"} from the team?`, ConfirmText = "Kick", CancelText = "Cancel", OnConfirm = function()
 					request("TeamKick", userId)
 				end })
@@ -165,17 +172,17 @@ local function buildTeamTab(page: ScrollingFrame, ctx: any)
 	list.Parent = bar
 	bar.Parent = page
 	if leader then
-		Button.new({ Text = "Invite players", Icon = "Plus", Style = "primary", Size = UDim2.fromOffset(240, Theme.TOUCH), LayoutOrder = 1, Parent = bar, OnClick = function()
+		Button.new({ Name = "InvitePlayers", Icon = "Invite", Style = "primary", Size = UDim2.fromOffset(140, Theme.TOUCH), LayoutOrder = 1, Parent = bar, OnClick = function()
 			ctx.Select("Invite")
 		end })
 	end
-	Button.new({ Name = "Leave", Text = "Leave", Style = "secondary", Size = UDim2.fromOffset(200, Theme.TOUCH), LayoutOrder = 2, Parent = bar, OnClick = function()
+	Button.new({ Name = "Leave", Text = "Leave", Icon = "Arrow", Style = "secondary", Size = UDim2.fromOffset(180, Theme.TOUCH), LayoutOrder = 2, Parent = bar, OnClick = function()
 		if request("TeamLeave") then
 			Sfx.play("UIClick")
 		end
 	end })
 	if leader then
-		Button.new({ Name = "Disband", Text = "Disband", Style = "danger", Size = UDim2.fromOffset(200, Theme.TOUCH), LayoutOrder = 3, Parent = bar, OnClick = function()
+		Button.new({ Name = "Disband", Text = "Disband", Icon = "Trash", Style = "danger", Size = UDim2.fromOffset(180, Theme.TOUCH), LayoutOrder = 3, Parent = bar, OnClick = function()
 			Window.confirm({ Title = "Disband the team?", Text = "Every member leaves the team.", ConfirmText = "Disband", CancelText = "Cancel", OnConfirm = function()
 				request("TeamDisband")
 			end })
@@ -202,9 +209,11 @@ local function buildInviteTab(page: ScrollingFrame)
 		end
 		return a.distance < b.distance
 	end)
-	Theme.text({ Text = `Friends first, then players near you. An invite lasts {Teams.InviteSeconds} seconds.`, TextSize = 18, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -8, 0, 28), LayoutOrder = 0, Parent = page })
 	if #entries == 0 then
-		Theme.text({ Text = "No other players in this server yet.", TextSize = 22, Size = UDim2.new(1, -8, 0, 50), LayoutOrder = 1, Parent = page })
+		-- nobody else here yet: a faded team picture
+		local pic = Icons.create("Team", page, { Size = UDim2.fromOffset(80, 80) })
+		pic.LayoutOrder = 1
+		Icons.setFaded(pic, 0.5)
 		return
 	end
 	local team = current
@@ -216,11 +225,17 @@ local function buildInviteTab(page: ScrollingFrame)
 		portrait(row, player.UserId, rowH - 14, UDim2.new(0, 8, 0.5, 0))
 		local x = rowH + 4
 		Theme.text({ Font = "Button", Text = player.DisplayName, TextSize = 21, Align = "Left", Size = UDim2.new(0.45, -x, 0, 26), Position = UDim2.fromOffset(x, 6), ZIndex = 3, Parent = row })
-		local where = if entry.distance < math.huge then `{math.floor(entry.distance)} studs` else "far away"
-		Theme.text({ Text = `{if entry.friend then "Friend  |  " else ""}{zoneText(player)}  |  {where}`, TextSize = 16, Color = if entry.friend then Theme.Colors.Good else Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(0.5, -x, 0, 20), Position = UDim2.fromOffset(x, 36), ZIndex = 3, Parent = row })
+		-- friend = a star, then where they are
+		local info = Chips.row(row, { Size = UDim2.new(0.6, -x, 0, 0), ZIndex = 3 })
+		info.Position = UDim2.fromOffset(x, 34)
+		if entry.friend then
+			Icons.create("Star", info, { Size = UDim2.fromOffset(26, 26), ZIndex = 4 }).LayoutOrder = 1
+		end
+		Chips.chip(info, "MapPin", zoneText(player), { Height = 26, LayoutOrder = 2 })
 		local inTeam = player:GetAttribute("TeamId") ~= nil
 		local mine = team ~= nil and player:GetAttribute("TeamId") == team.Id
-		local button = Button.new({ Text = if mine then "In your team" elseif inTeam then "In a team" else "Invite", Style = if canInvite and not inTeam then "go" else "disabled", TextSize = 20, Size = UDim2.fromOffset(170, Theme.TOUCH), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = row, OnClick = function()
+		-- pictures: letter = invite, check = already in your team, team = in another team
+		local button = Button.new({ Icon = if mine then "Check" elseif inTeam then "Team" else "Invite", Style = if canInvite and not inTeam then "go" else "disabled", Size = UDim2.fromOffset(110, Theme.TOUCH), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = row, OnClick = function()
 			if inTeam or not canInvite then
 				return
 			end
@@ -277,7 +292,7 @@ local function showNext()
 	panel.Active = true
 	portrait(panel, invite.from, 64, UDim2.new(0, 16, 0, 52))
 	Theme.text({ Text = `{invite.name} invites you to their team`, TextSize = 22, Wrapped = true, Align = "Left", Size = UDim2.new(1, -110, 0, 56), Position = UDim2.fromOffset(92, 10), ZIndex = 3, Parent = panel })
-	local timer = Theme.text({ Font = "Number", Text = "", TextSize = 16, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -110, 0, 20), Position = UDim2.fromOffset(92, 66), ZIndex = 3, Parent = panel })
+	local timer = Chips.chip(panel, "Clock", "", { Height = 28, Position = UDim2.fromOffset(92, 64), ZIndex = 3 })
 	local done = false
 	local function finish(accept: boolean?)
 		if done then
@@ -295,10 +310,10 @@ local function showNext()
 		end
 		showNext()
 	end
-	Button.new({ Name = "Accept", Text = "Accept", Style = "go", Size = UDim2.new(0.5, -24, 0, Theme.TOUCH), Position = UDim2.new(0, 16, 1, -12), AnchorPoint = Vector2.new(0, 1), ZIndex = 3, Parent = panel, OnClick = function()
+	Button.new({ Name = "Accept", Icon = "Check", Style = "go", Size = UDim2.new(0.5, -24, 0, Theme.TOUCH), Position = UDim2.new(0, 16, 1, -12), AnchorPoint = Vector2.new(0, 1), ZIndex = 3, Parent = panel, OnClick = function()
 		finish(true)
 	end })
-	Button.new({ Name = "Decline", Text = "Decline", Style = "secondary", Size = UDim2.new(0.5, -24, 0, Theme.TOUCH), Position = UDim2.new(1, -16, 1, -12), AnchorPoint = Vector2.new(1, 1), ZIndex = 3, Parent = panel, OnClick = function()
+	Button.new({ Name = "Decline", Icon = "Close", Style = "secondary", Size = UDim2.new(0.5, -24, 0, Theme.TOUCH), Position = UDim2.new(1, -16, 1, -12), AnchorPoint = Vector2.new(1, 1), ZIndex = 3, Parent = panel, OnClick = function()
 		finish(false)
 	end })
 	Sfx.play("UIOpen")
@@ -309,7 +324,7 @@ local function showNext()
 				finish(nil) -- expired: nothing to send
 				return
 			end
-			timer.Text = `Expires in {math.ceil(left)} s`
+			timer:Set(`{math.ceil(left)}`)
 			task.wait(0.25)
 		end
 	end)

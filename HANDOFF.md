@@ -149,6 +149,13 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-13: KID-FRIENDLY UI (owner: "understandable for a 5 years old, avoid text, more visual").** Realistic wood
+(Blender textures `Icons/UiTex`, `Kit/Panel.wood`, `UI/WoodSkin`), 17 new "Ui" icons, pictures on every window title /
+tab, and sentences replaced by pictures + numbers in every window. New kit pieces: `Kit/Chips` (icon + number),
+`Kit/Info` (the (i) popup for details), `Kit/Filter` (one funnel for all filters / sorts of a list). Stats: the +
+buys one point at once (no confirm). Rules in DESIGN.md "UI for young players"; screenshots `docs/screenshots/ui_kids/`.
+When adding UI: no sentences on screen - a picture + number chip, a picture button, details in an (i).
+
 **2026-10-12/13 (night): PETS V2 DONE (owner: inspired by Steal an Egg).** Plan `docs/pets_v2_plan.md`, log in NIGHT_LOG.
 New species list; mutations & sizes (`Config/PetMutations`: Silver / Golden / Rainbow / Celestial, Big / Huge);
 76 AI-generated cartoon pets (Studio generate_mesh) rigged by `DevTools/PetRigBuilder` and animated in code by

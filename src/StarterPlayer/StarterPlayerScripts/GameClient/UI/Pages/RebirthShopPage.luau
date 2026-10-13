@@ -13,13 +13,14 @@ local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local Theme = require(Kit.Theme)
 
 local RebirthShopPage = {}
 
 type Row = { level: TextLabel, bonus: TextLabel, pips: { Frame }, buy: any }
 
-function RebirthShopPage.build(page: ScrollingFrame)
+function RebirthShopPage.build(page: ScrollingFrame, ctx: any?)
 	local small = Theme.isCompact()
 	local busy = false
 	local header = Instance.new("Frame")
@@ -38,7 +39,9 @@ function RebirthShopPage.build(page: ScrollingFrame)
 	box.Parent = header
 	Icons.create("RebirthCredit", box, { Size = UDim2.fromOffset(44, 44), Position = UDim2.new(0, -8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 2 })
 	local credits = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Right", Size = UDim2.new(1, -52, 1, -6), Position = UDim2.new(1, -12, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 2, Parent = box })
-	Theme.text({ Text = "Rebirth Credits come from Rebirths. Upgrades are kept forever.", TextSize = 18, Wrapped = true, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, -(if small then 230 else 270), 1, -4), Position = UDim2.new(1, -4, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = header })
+	if ctx then
+		Info.button({ Parent = header, Frame = ctx.Frame, Title = "Rebirth Shop", Lines = { "Rebirth Credits come from Rebirths.", "Upgrades are kept forever." }, Size = Theme.TOUCH, Position = UDim2.new(1, -4, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), PopupSize = Vector2.new(520, 220) })
+	end
 
 	local rows: { [string]: Row } = {}
 	local rowH = if small then 76 else 86
@@ -51,10 +54,22 @@ function RebirthShopPage.build(page: ScrollingFrame)
 		Theme.corner(frame, 8)
 		Theme.stroke(frame, Theme.Colors.GoldDark, 2)
 		frame.Parent = page
-		Icons.create(upgrade.Icon, frame, { Size = UDim2.fromOffset(rowH - 16, rowH - 16), Position = UDim2.fromOffset(10, 8), AnchorPoint = Vector2.zero, ZIndex = 2 })
+		-- the picture: tap = what it does (kid-friendly UI: no sentence on the row)
+		local pic = Instance.new("TextButton")
+		pic.Text = ""
+		pic.AutoButtonColor = false
+		pic.BackgroundTransparency = 1
+		pic.Size = UDim2.fromOffset(rowH - 16, rowH - 16)
+		pic.Position = UDim2.fromOffset(10, 8)
+		pic.ZIndex = 2
+		pic.Parent = frame
+		Icons.create(upgrade.Icon, pic, { ZIndex = 2 })
+		pic.Activated:Connect(function()
+			Sfx.play("UIClick")
+			Notifier.push({ Kind = "info", Text = upgrade.Effect, Icon = upgrade.Icon })
+		end)
 		local x = rowH + 4
-		Theme.text({ Font = "Title", Text = upgrade.Name, TextSize = if small then 22 else 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.34, -x, 0, 30), Position = UDim2.fromOffset(x, 6), ZIndex = 2, Parent = frame })
-		Theme.text({ Text = upgrade.Effect, TextSize = 16, Color = Theme.Colors.TextDim, Align = "Left", Wrapped = true, Size = UDim2.new(0.34, -x, 0, rowH - 40), Position = UDim2.fromOffset(x, 36), ZIndex = 2, Parent = frame })
+		Theme.text({ Font = "Title", Text = upgrade.Name, TextSize = if small then 22 else 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.34, -x, 0, 30), Position = UDim2.new(0, x, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 2, Parent = frame })
 		-- level pips
 		local pipsFrame = Instance.new("Frame")
 		pipsFrame.BackgroundTransparency = 1
@@ -79,7 +94,7 @@ function RebirthShopPage.build(page: ScrollingFrame)
 		end
 		local level = Theme.text({ Font = "Number", Text = "", TextSize = 18, Align = "Left", Size = UDim2.new(0.16, 0, 0, 24), Position = UDim2.new(0.34, 0, 0, 40), ZIndex = 2, Parent = frame })
 		local bonus = Theme.text({ Font = "Number", Text = "", TextSize = 18, Color = Theme.Colors.Good, Align = "Left", Size = UDim2.new(0.18, 0, 0, 24), Position = UDim2.new(0.5, 0, 0, 40), ZIndex = 2, Parent = frame })
-		local buy = Button.new({ Text = `Buy  {RebirthShop.CostPerLevel}`, Icon = "RebirthCredit", Style = "primary", TextSize = 20, Size = UDim2.new(0.28, -16, 0, Theme.TOUCH), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 2, Parent = frame, OnClick = function()
+		local buy = Button.new({ Text = `{RebirthShop.CostPerLevel}`, Icon = "RebirthCredit", Style = "primary", TextSize = 26, Size = UDim2.new(0.28, -16, 0, Theme.TOUCH), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 2, Parent = frame, OnClick = function()
 			if busy then
 				return
 			end
@@ -99,21 +114,21 @@ function RebirthShopPage.build(page: ScrollingFrame)
 
 	local function refresh()
 		local have = math.floor(tonumber(State.get("RebirthCredits")) or 0)
-		credits.Text = `{have} credit{if have == 1 then "" else "s"}`
+		credits.Text = tostring(have)
 		local levels = State.get("RebirthUpgrades") or {}
 		for _, upgrade in ipairs(RebirthShop.List) do
 			local row = rows[upgrade.Id]
 			local lv = math.clamp(math.floor(tonumber(levels[upgrade.Id]) or 0), 0, upgrade.Max)
-			row.level.Text = `Lv {lv} / {upgrade.Max}`
+			row.level.Text = `{lv}/{upgrade.Max}`
 			row.bonus.Text = `+{math.round(RebirthShop.bonus(levels, upgrade.Id) * 100)}%`
 			for i, pip in ipairs(row.pips) do
 				pip.BackgroundColor3 = if i <= lv then Theme.Colors.Gold else Theme.Colors.WoodInset
 			end
 			if lv >= upgrade.Max then
-				row.buy:SetText("Max")
+				row.buy:SetText("MAX")
 				row.buy:SetStyle("disabled")
 			else
-				row.buy:SetText(`Buy  {RebirthShop.CostPerLevel}`)
+				row.buy:SetText(`{RebirthShop.CostPerLevel}`)
 				row.buy:SetStyle(if have >= RebirthShop.CostPerLevel then "primary" else "disabled")
 			end
 		end

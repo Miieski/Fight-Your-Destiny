@@ -20,7 +20,10 @@ local Kit = script.Parent.Parent.Kit
 local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
+local Filter = require(Kit.Filter)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local ModelIcon = require(Kit.ModelIcon)
 local Overlay = require(Kit.Overlay)
 local Theme = require(Kit.Theme)
@@ -151,15 +154,23 @@ function ArmorPage.detail(uid: string)
 	local info = column(panel, UDim2.fromOffset(side + 32, 14), UDim2.new(1, -(side + 48 + Theme.TOUCH), 1, -(Theme.TOUCH + 36)))
 	line(info, piece.Name, 1, Theme.Colors.Gold, if small then 24 else 30, "Title")
 	Theme.paintRarity(line(info, rarity.Name, 2, nil, if small then 18 else 22, "Button"), item.rarity)
-	line(info, `{piece.Slot} - {zoneName(piece.ZoneId)}`, 3, Theme.Colors.TextDim, text - 2)
 	local hp, defense = Armor.baseHP(item.id, item.rarity), Armor.baseDefense(item.rarity)
-	line(info, `Max HP +{Format.number(math.floor(hp + 0.5))}   |   Defense +{defense}`, 4, nil, text)
+	-- pictures + numbers (kid-friendly UI, owner 2026-10-13); the sentences are behind the (i)
+	local chipRow = Chips.row(info, { LayoutOrder = 3, ZIndex = 23 })
+	local chipH = if small then 34 else 42
+	Chips.chip(chipRow, "MaxHP", `+{Format.number(math.floor(hp + 0.5))}`, { Height = chipH, LayoutOrder = 1, ZIndex = 23 })
+	Chips.chip(chipRow, "Defense", `+{defense}`, { Height = chipH, LayoutOrder = 2, ZIndex = 23 })
+	local _ = text
 	local boost = rarity.ZoneBoost
+	local details = { `{piece.Slot} - {zoneName(piece.ZoneId)}`, `Max HP +{Format.number(math.floor(hp + 0.5))}   |   Defense +{defense}` }
 	if Balance.ZoneBoostEnabled then
-		line(info, `In {zoneName(piece.ZoneId)}: Zone Boost +{math.round(boost * 100)}% -> +{Format.number(math.floor(hp * (1 + boost) + 0.5))} HP, +{math.floor(defense * (1 + boost) * 10 + 0.5) / 10} Defense`, 5, Theme.Colors.Good, text - 1)
+		table.insert(details, `In {zoneName(piece.ZoneId)}: Zone Boost +{math.round(boost * 100)}% -> +{Format.number(math.floor(hp * (1 + boost) + 0.5))} HP, +{math.floor(defense * (1 + boost) * 10 + 0.5) / 10} Defense`)
 	end
-	line(info, `Full {zoneName(piece.ZoneId)} set: +10% Max HP{if Balance.ZoneBoostEnabled then " and +10% Zone Boost" else ""}`, 6, Theme.Colors.TextDim, text - 3)
-	line(info, `Sell value: {Format.number(Armor.sellValue(item.id, item.rarity))} Gold`, 7, Theme.Colors.Gold, text - 2)
+	table.insert(details, `Full {zoneName(piece.ZoneId)} set: +10% Max HP{if Balance.ZoneBoostEnabled then " and +10% Zone Boost" else ""}`)
+	table.insert(details, `Sell value: {Format.number(Armor.sellValue(item.id, item.rarity))} Gold`)
+	Button.new({ Name = "Info", Style = "wood", Icon = "Info", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -(Theme.TOUCH + 16), 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 24, Parent = panel, OnClick = function()
+		Info.show(overlayParent :: GuiObject, piece.Name, details)
+	end })
 
 	local row = Instance.new("Frame")
 	row.BackgroundTransparency = 1
@@ -175,22 +186,23 @@ function ArmorPage.detail(uid: string)
 	list.Parent = row
 	row.Parent = panel
 	local worn = ArmorPage.equippedSlot(uid)
-	local width = if small then 130 else 160
-	Button.new({ Text = if worn then "Unequip" else "Equip", Style = if worn then "secondary" else "go", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 1, ZIndex = 23, Parent = row, OnClick = function()
+	local width = if small then 96 else 120
+	-- pictures: check = wear, X = take off, lock, trash + Gold value = sell
+	Button.new({ Name = if worn then "Unequip" else "Equip", Icon = if worn then "Close" else "Check", Style = if worn then "secondary" else "go", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 1, ZIndex = 23, Parent = row, OnClick = function()
 		local ok = if worn then request("UnequipArmor", worn) else request("EquipArmor", uid)
 		if ok then
 			Sfx.play("UIClick")
 			ArmorPage.detail(uid)
 		end
 	end })
-	Button.new({ Text = if item.locked then "Unlock" else "Lock", Icon = "Lock", Style = "secondary", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 2, ZIndex = 23, Parent = row, OnClick = function()
+	Button.new({ Name = if item.locked then "Unlock" else "Lock", Icon = "Lock", Style = if item.locked then "primary" else "secondary", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 2, ZIndex = 23, Parent = row, OnClick = function()
 		local ok = request("LockArmor", uid, not item.locked)
 		if ok then
 			Sfx.play("UIClick")
 			ArmorPage.detail(uid)
 		end
 	end })
-	Button.new({ Text = "Sell", Icon = "Gold", Style = if item.locked or worn then "disabled" else "danger", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
+	local sell = Button.new({ Name = "Sell", Text = Format.number(Armor.sellValue(item.id, item.rarity)), Icon = "Trash", Style = if item.locked or worn then "disabled" else "danger", Size = UDim2.fromOffset(width + 60, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
 		if item.locked then
 			Notifier.push({ Kind = "error", Text = "Unlock this piece first" })
 			return
@@ -213,6 +225,8 @@ function ArmorPage.detail(uid: string)
 			end,
 		})
 	end })
+	sell.Label.Size = UDim2.new(1, -86, 0.78, 0) -- room for the coin
+	Icons.create("Gold", sell.Face, { Size = UDim2.new(0, 0, 0.66, 0), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = sell.Instance.ZIndex })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -285,7 +299,7 @@ function ArmorPage.picker(slot: string)
 		return a.uid < b.uid
 	end)
 	if #entries == 0 then
-		Theme.text({ Text = `No {string.lower(slot)} yet. Armor drops from enemies.`, TextSize = 22, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 60), ZIndex = 23, Parent = list })
+		Icons.create(Armor.SLOT_ICONS[slot] or "Chest", list, { Size = UDim2.fromOffset(64, 64), ZIndex = 23 }) -- none yet (armor drops from enemies)
 		return
 	end
 	local rowH = if small then 70 else 84
@@ -321,8 +335,16 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Armor tab
 ----------------------------------------------------------------------------------------------------
-local function slotLabel(): string
-	return if filter.slot == 0 then "Slot: All" else `Slot: {Armor.SLOTS[filter.slot]}`
+-- the funnel's choices (Kit/Filter): slot pictures and sort pictures
+local function filterGroups(): { any }
+	local slots = { { Value = 0, Text = "All" } }
+	for i, slot in ipairs(Armor.SLOTS) do
+		table.insert(slots, { Value = i, Icon = Armor.SLOT_ICONS[slot] })
+	end
+	return {
+		{ Icon = "Chest", Options = slots, Get = function() return filter.slot end, Set = function(v) filter.slot = v end },
+		{ Icon = "Sort", Options = { { Value = 1, Icon = "Star" }, { Value = 2, Icon = "Zones" }, { Value = 3, Icon = "Attack" } }, Get = function() return filter.sort end, Set = function(v) filter.sort = v end },
+	}
 end
 
 function ArmorPage.build(page: ScrollingFrame, ctx: any)
@@ -342,16 +364,12 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 	list.SortOrder = Enum.SortOrder.LayoutOrder
 	list.Parent = header
 	local refresh: () -> ()
-	local slotButton = Button.new({ Text = slotLabel(), Style = "secondary", TextSize = 20, Size = UDim2.fromOffset(if small then 150 else 200, Theme.TOUCH), LayoutOrder = 1, ZIndex = 3, Parent = header, OnClick = function()
-		filter.slot = (filter.slot + 1) % (#Armor.SLOTS + 1)
+	-- every filter and sort behind one funnel (owner: "filters behind one icon")
+	local funnel = Filter.button({ Parent = header, Frame = ctx.Frame, Groups = filterGroups(), OnChange = function()
 		refresh()
-	end })
-	local sortButton = Button.new({ Text = `Sort: {SORTS[filter.sort]}`, Style = "secondary", TextSize = 20, Size = UDim2.fromOffset(if small then 150 else 200, Theme.TOUCH), LayoutOrder = 2, ZIndex = 3, Parent = header, OnClick = function()
-		filter.sort = filter.sort % #SORTS + 1
-		refresh()
-	end })
-	local storage = Theme.text({ Font = "Number", Text = "", TextSize = 20, Size = UDim2.fromOffset(if small then 80 else 110, 28), LayoutOrder = 3, ZIndex = 3, Parent = header })
-	Button.new({ Text = if small then "Best" else "Equip Best", Icon = "Star", Style = "go", Size = UDim2.fromOffset(if small then 120 else 190, Theme.TOUCH), LayoutOrder = 4, ZIndex = 3, Parent = header, OnClick = function()
+	end, Size = Theme.TOUCH, LayoutOrder = 1, ZIndex = 3 })
+	local storage = Chips.chip(header, "Chest", "0", { Height = if small then 36 else 42, LayoutOrder = 3, ZIndex = 3 })
+	Button.new({ Name = "EquipBest", Text = "Best", Icon = "Star", Style = "go", Size = UDim2.fromOffset(if small then 120 else 150, Theme.TOUCH), LayoutOrder = 4, ZIndex = 3, Parent = header, OnClick = function()
 		if request("EquipBestArmor") then
 			Sfx.play("UIClick")
 			Notifier.push({ Kind = "info", Text = "Best armor equipped for this zone", Icon = "Chest" })
@@ -383,10 +401,9 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 	grid.Parent = page
 
 	refresh = function()
-		slotButton:SetText(slotLabel())
-		sortButton:SetText(`Sort: {SORTS[filter.sort]}`)
+		funnel.Refresh()
 		local owned = State.get("Armor") or {}
-		storage.Text = `{count(owned)}/{Armor.Storage}`
+		storage:Set(`{count(owned)}/{Armor.Storage}`)
 		local scroll = grid.CanvasPosition
 		for _, child in ipairs(grid:GetChildren()) do
 			if child:IsA("GuiObject") then

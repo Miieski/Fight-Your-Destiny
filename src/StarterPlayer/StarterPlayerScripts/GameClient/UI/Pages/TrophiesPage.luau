@@ -15,6 +15,7 @@ local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
 local Slot = require(Kit.Slot)
 local Theme = require(Kit.Theme)
@@ -67,10 +68,15 @@ function TrophiesPage.build(page: ScrollingFrame)
 	header.Size = UDim2.new(1, -8, 0, HEADER)
 	header.LayoutOrder = 1
 	header.Parent = page
-	local summary = Theme.text({ Name = "Summary", Text = "", TextSize = 22, Align = "Left", Wrapped = true, Size = UDim2.new(1, -250, 1, 0), Parent = header })
+	-- trophy count and total value as pictures + numbers (kid-friendly UI)
+	local summary = Chips.row(header, { Name = "Summary", Size = UDim2.new(1, -250, 0, 0) })
+	summary.Position = UDim2.new(0, 0, 0.5, 0)
+	summary.AnchorPoint = Vector2.new(0, 0.5)
+	local countChip = Chips.chip(summary, "Trophy", "0", { Height = 42, LayoutOrder = 1 })
+	local valueChip = Chips.chip(summary, "Gold", "0", { Height = 42, LayoutOrder = 2 })
 	local busy = false
 	local confirmUntil = 0
-	local sellAll = Button.new({ Name = "SellAll", Text = "Sell All", Icon = "Gold", Style = "go", Size = UDim2.fromOffset(230, Theme.TOUCH), Position = UDim2.new(1, 0, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = header })
+	local sellAll = Button.new({ Name = "SellAll", Text = "All", Icon = "Gold", Style = "go", Size = UDim2.fromOffset(170, Theme.TOUCH), Position = UDim2.new(1, 0, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = header })
 
 	local grid = Instance.new("Frame")
 	grid.Name = "Grid"
@@ -118,14 +124,14 @@ function TrophiesPage.build(page: ScrollingFrame)
 		for _, entry in ipairs(list) do
 			total += entry.value
 		end
-		summary.Text = `Trophies: {#list} / {Enemies.TROPHY_STORAGE}   Total value: {Format.number(total)} Gold`
+		countChip:Set(`{#list}/{Enemies.TROPHY_STORAGE}`)
+		valueChip:Set(Format.number(total))
 		sellAll.Instance.Visible = #list > 0
 		if #list == 0 then
 			local empty = Instance.new("Frame")
 			empty.BackgroundTransparency = 1
 			empty.Size = UDim2.fromOffset(CELL.X * 3, CELL.Y * 0.7)
 			Icons.create("Trophy", empty, { Size = UDim2.fromOffset(70, 70), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0) })
-			Theme.text({ Text = "No trophies yet. Enemies sometimes drop their head trophy; sell them here or at the Trophy Merchant.", TextSize = 20, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 60), Position = UDim2.fromOffset(0, 86), Parent = empty })
 			empty.Parent = grid
 			return
 		end
@@ -151,14 +157,14 @@ function TrophiesPage.build(page: ScrollingFrame)
 	sellAll.Instance.Activated:Connect(function()
 		if os.clock() < confirmUntil then
 			confirmUntil = 0
-			sellAll:SetText("Sell All")
+			sellAll:SetText("All")
 			sell(nil)
 		else
 			confirmUntil = os.clock() + CONFIRM_SECONDS
-			sellAll:SetText("Tap to confirm")
+			sellAll:SetText("OK?")
 			task.delay(CONFIRM_SECONDS, function()
 				if os.clock() >= confirmUntil then
-					sellAll:SetText("Sell All")
+					sellAll:SetText("All")
 				end
 			end)
 		end

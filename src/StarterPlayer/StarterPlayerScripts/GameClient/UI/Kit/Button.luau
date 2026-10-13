@@ -1,5 +1,6 @@
 --!strict
--- Beveled button: a darker base under the face; pressing moves the face down 2 px and scales to 0.96.
+-- Beveled button: a darker base under the face, a glossy top highlight; pressing moves the face down 2 px and
+-- scales to 0.96.
 --   local button = Button.new({ Text, Style = "primary"|"secondary"|"danger"|"wood"|"go", Size, Position,
 --       AnchorPoint, Parent, LayoutOrder, Icon (Icons id), TextSize, OnClick, Name, ZIndex, Depth })
 --   button.Instance, button.Face, button.Label, button:SetText(), :SetEnabled(), :SetStyle()
@@ -78,6 +79,21 @@ function Button.new(props: { [string]: any }): Button
 	local gradient = Theme.gradient(face, Color3.new(1, 1, 1), Color3.new(1, 1, 1))
 	local stroke = Theme.stroke(face, Theme.Colors.Ink, 2)
 	face.Parent = root
+	-- glossy highlight on the top half (realistic look, owner 2026-10-13); under the icon and the label
+	local shine = Instance.new("Frame")
+	shine.Name = "Shine"
+	shine.BackgroundColor3 = Color3.new(1, 1, 1)
+	shine.BackgroundTransparency = 0.55
+	shine.BorderSizePixel = 0
+	shine.Position = UDim2.fromOffset(3, 3)
+	shine.Size = UDim2.new(1, -6, 0.46, -2)
+	shine.ZIndex = root.ZIndex
+	Theme.corner(shine, Theme.CORNER - 2)
+	local fade = Instance.new("UIGradient")
+	fade.Rotation = 90
+	fade.Transparency = NumberSequence.new(0.35, 1)
+	fade.Parent = shine
+	shine.Parent = face
 
 	local hasIcon = props.Icon ~= nil
 	local hasText = props.Text ~= nil and props.Text ~= ""

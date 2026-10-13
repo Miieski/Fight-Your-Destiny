@@ -6,7 +6,8 @@
 --   Eggs: owned eggs stacked by zone and rarity, Hatch / Hatch All (free) -> the hatch screen (UI/Hatching).
 --   Premium Eggs: one egg per zone for Diamonds (locked zones: black silhouette with "?"), Odds, the species.
 -- Every action is a server request (PetService); the pages redraw from the replicated profile.
--- Phones: one header row (slots, Best, Filters popup) so the grid keeps most of the height.
+-- Kid-friendly UI (owner 2026-10-13): one header row (slots, storage, one funnel for every filter and sort, Best);
+-- the detail panel shows pictures + numbers, the sentences are behind its (i).
 --   PetsPage.build(ctx)   (Windows.luau)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -26,7 +27,10 @@ local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
+local Filter = require(Kit.Filter)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local ModelIcon = require(Kit.ModelIcon)
 local Panel = require(Kit.Panel)
 local Theme = require(Kit.Theme)
@@ -37,6 +41,7 @@ local PetsPage = {}
 local SLOT_MAX = PetRarities.Slots + PetRarities.ExtraSlots
 local SORTS = { "Rarity", "Zone", "Power" }
 local PREMIUM_ZONE = -1
+local STAT_ICONS = { Gold = "GoldGain", HP = "MaxHP", Attack = "Attack", Speed = "Speed", Defense = "Defense" }
 
 local overlayParent: GuiObject? = nil
 local overlay: Frame? = nil
@@ -241,29 +246,41 @@ detail = function(uid: string)
 	holder.Parent = panel
 	local view = ModelIcon.pet(pet.id, { Size = UDim2.fromScale(0.94, 0.94), ZIndex = 23, Parent = holder, Mutation = pet.mutation })
 	overlayStop = ModelIcon.turntable(view, 9)
-	Theme.text({ Text = "Drag to turn", TextSize = 15, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 18), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 24, Parent = holder })
 
 	local text = if small then 16 else 19
 	local info = column(panel, UDim2.fromOffset(side + 32, 14), UDim2.new(1, -(side + 48 + Theme.TOUCH), 1, -(Theme.TOUCH + 36)))
 	line(info, Pets.displayName(pet), 1, Theme.Colors.Gold, if small then 24 else 30, "Title")
 	Theme.paintRarity(line(info, Rarities.get(pet.rarity).Name, 2, nil, if small then 18 else 22, "Button"), pet.rarity)
-	line(info, `{species.Role} - {if species.Premium then "Premium pet" else zoneName(species.Zone)}`, 3, Theme.Colors.TextDim, text - 2)
 	local mult = Hatching.petEffect()
 	local petMult = PetMutations.mult(pet)
 	local lines, bonus = Pets.describe(pet.id, pet.rarity, mult * petMult)
-	for i, stat in ipairs(lines) do
-		line(info, stat, 3 + i, nil, text)
+	-- pictures + numbers ("+12%" next to the stat's picture); the sentences are behind the (i)
+	local chipRow = Chips.row(info, { LayoutOrder = 3, ZIndex = 23 })
+	local chipH = if small then 34 else 42
+	for i, stat in ipairs(species.Stats) do
+		Chips.chip(chipRow, STAT_ICONS[stat] or "Star", string.match(lines[i] or "", "^(%S+)") or "", { Height = chipH, LayoutOrder = i, ZIndex = 23 })
 	end
-	line(info, `Bonus: {bonus}`, 6, Theme.Colors.Good, text)
-	line(info, `({Pets.BONUS_TEXT[species.Bonus]})`, 7, Theme.Colors.TextDim, text - 3)
+	Chips.chip(chipRow, "Star", string.match(bonus, "^(%S+)") or "", { Height = chipH, LayoutOrder = 10, ZIndex = 23, TextColor = Theme.Colors.Good })
 	if petMult > 1.0001 then
 		local mutation = PetMutations.get(pet.mutation)
-		line(info, `{PetMutations.prefix(pet)}: stats {PetMutations.multText(pet)} (included).`, 8, if mutation then mutation.Color else Theme.Colors.Gold, text - 3, "Button")
+		line(info, `{PetMutations.prefix(pet)} {PetMutations.multText(pet)}`, 4, if mutation then mutation.Color else Theme.Colors.Gold, text - 1, "Button")
+	end
+	local details = { `{species.Role} - {if species.Premium then "Premium pet" else zoneName(species.Zone)}` }
+	for _, stat in ipairs(lines) do
+		table.insert(details, stat)
+	end
+	table.insert(details, `Bonus: {bonus} ({Pets.BONUS_TEXT[species.Bonus]})`)
+	if petMult > 1.0001 then
+		table.insert(details, `{PetMutations.prefix(pet)}: stats {PetMutations.multText(pet)} (included).`)
 	end
 	if mult > 1.0001 then
-		line(info, string.format("Faith makes your pets %.1f%% stronger (included).", (mult - 1) * 100), 9, Theme.Colors.TextDim, text - 3)
+		table.insert(details, string.format("Faith makes your pets %.1f%% stronger (included).", (mult - 1) * 100))
 	end
-	line(info, if species.Premium then "Premium: kept on Rebirth, cannot be released." else `Release value: {Format.number(Pets.releaseValue(pet.id, pet.rarity, petMult))} Gold`, 10, Theme.Colors.Gold, text - 2)
+	table.insert(details, if species.Premium then "Premium: kept on Rebirth, cannot be released." else `Release value: {Format.number(Pets.releaseValue(pet.id, pet.rarity, petMult))} Gold`)
+	Button.new({ Name = "Info", Style = "wood", Icon = "Info", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -(Theme.TOUCH + 16), 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 24, Parent = panel, OnClick = function()
+		closeOverlay()
+		Info.show(overlayParent :: GuiObject, Pets.displayName(pet), details)
+	end })
 
 	-- buttons
 	local row = Instance.new("Frame")
@@ -280,22 +297,23 @@ detail = function(uid: string)
 	list.Parent = row
 	row.Parent = panel
 	local equipped = table.find(State.get("EquippedPets") or {}, uid) ~= nil
-	local width = if small then 130 else 160
-	Button.new({ Text = if equipped then "Unequip" else "Equip", Style = if equipped then "secondary" else "go", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 1, ZIndex = 23, Parent = row, OnClick = function()
+	local width = if small then 96 else 120
+	-- pictures: check = equip, X = unequip, lock, trash + Gold value = release
+	Button.new({ Name = if equipped then "Unequip" else "Equip", Icon = if equipped then "Close" else "Check", Style = if equipped then "secondary" else "go", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 1, ZIndex = 23, Parent = row, OnClick = function()
 		local ok = request(if equipped then "UnequipPet" else "EquipPet", uid)
 		if ok then
 			Sfx.play("UIClick")
 			detail(uid)
 		end
 	end })
-	Button.new({ Text = if pet.locked then "Unlock" else "Lock", Icon = "Lock", Style = "secondary", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 2, ZIndex = 23, Parent = row, OnClick = function()
+	Button.new({ Name = if pet.locked then "Unlock" else "Lock", Icon = "Lock", Style = if pet.locked then "primary" else "secondary", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 2, ZIndex = 23, Parent = row, OnClick = function()
 		local ok = request("LockPet", uid, not pet.locked)
 		if ok then
 			Sfx.play("UIClick")
 			detail(uid)
 		end
 	end })
-	local release = Button.new({ Text = "Release", Style = if pet.locked or species.Premium then "disabled" else "danger", Size = UDim2.fromOffset(width, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
+	local release = Button.new({ Name = "Release", Text = if species.Premium then "" else Format.number(Pets.releaseValue(pet.id, pet.rarity, petMult)), Icon = "Trash", Style = if pet.locked or species.Premium then "disabled" else "danger", Size = UDim2.fromOffset(width + 60, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
 		if pet.locked then
 			Notifier.push({ Kind = "error", Text = "Unlock this pet first" })
 			return
@@ -318,6 +336,10 @@ detail = function(uid: string)
 			end,
 		})
 	end })
+	if not species.Premium then
+		release.Label.Size = UDim2.new(1, -86, 0.78, 0) -- room for the coin
+		Icons.create("Gold", release.Face, { Size = UDim2.new(0, 0, 0.66, 0), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = release.Instance.ZIndex })
+	end
 	release.Instance.Visible = true
 end
 
@@ -434,27 +456,35 @@ local function zoneOptions(): { number }
 	return options
 end
 
-local function zoneLabel(): string
-	if filter.zone == 0 then
-		return "Zone: All"
-	elseif filter.zone == PREMIUM_ZONE then
-		return "Zone: Premium"
+-- the funnel's choices (Kit/Filter): zone pictures, rarity colours, sort pictures
+local zoneGroupOptions: { any } = {}
+local function refreshZoneOptions()
+	table.clear(zoneGroupOptions)
+	for _, value in ipairs(zoneOptions()) do
+		if value == 0 then
+			table.insert(zoneGroupOptions, { Value = 0, Text = "All" })
+		elseif value == PREMIUM_ZONE then
+			table.insert(zoneGroupOptions, { Value = PREMIUM_ZONE, Icon = "Diamond" })
+		else
+			local zone = Zones.List[value]
+			table.insert(zoneGroupOptions, { Value = value, Icon = ZoneVisibility.displayIcon(zone and zone.Id) })
+		end
 	end
-	return `Zone: {zoneName(filter.zone)}`
+	if table.find(zoneOptions(), filter.zone) == nil then
+		filter.zone = 0
+	end
 end
 
-local function rarityLabel(): string
-	return if filter.rarity == 0 then "Rarity: All" else `Rarity: {Rarities.get(filter.rarity).Name}`
-end
-
-local function sortLabel(): string
-	return `Sort: {SORTS[filter.sort]}`
-end
-
-local function cycleZone()
-	local options = zoneOptions()
-	local at = table.find(options, filter.zone) or 0
-	filter.zone = options[at % #options + 1]
+local function filterGroups(): { any }
+	local rarityOptions = { { Value = 0, Text = "All" } }
+	for tier, rarity in ipairs(Rarities.List) do
+		table.insert(rarityOptions, { Value = tier, Color = rarity.Color })
+	end
+	return {
+		{ Icon = "Zones", Options = zoneGroupOptions, Get = function() return filter.zone end, Set = function(v) filter.zone = v end },
+		{ Icon = "Star", Options = rarityOptions, Get = function() return filter.rarity end, Set = function(v) filter.rarity = v end },
+		{ Icon = "Sort", Options = { { Value = 1, Icon = "Star" }, { Value = 2, Icon = "Zones" }, { Value = 3, Icon = "Attack" } }, Get = function() return filter.sort end, Set = function(v) filter.sort = v end },
+	}
 end
 
 local function entries(): { Entry }
@@ -541,35 +571,6 @@ local function petCell(entry: Entry, order: number): TextButton
 	return cell
 end
 
-local function filtersPopup()
-	local panel = openOverlay(Vector2.new(420, 300))
-	Theme.text({ Font = "Title", Text = "Filters", TextSize = 30, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
-	local list = column(panel, UDim2.fromOffset(20, 60), UDim2.new(1, -40, 1, -70))
-	local layout = list:FindFirstChildOfClass("UIListLayout") :: UIListLayout
-	layout.Padding = UDim.new(0, 8)
-	local buttons = {}
-	local function sync()
-		buttons.zone:SetText(zoneLabel())
-		buttons.rarity:SetText(rarityLabel())
-		buttons.sort:SetText(sortLabel())
-	end
-	buttons.zone = Button.new({ Text = zoneLabel(), Style = "secondary", Size = UDim2.new(1, 0, 0, Theme.TOUCH), LayoutOrder = 1, ZIndex = 23, Parent = list, OnClick = function()
-		cycleZone()
-		sync()
-		refreshPets()
-	end })
-	buttons.rarity = Button.new({ Text = rarityLabel(), Style = "secondary", Size = UDim2.new(1, 0, 0, Theme.TOUCH), LayoutOrder = 2, ZIndex = 23, Parent = list, OnClick = function()
-		filter.rarity = (filter.rarity + 1) % (#Rarities.List + 1)
-		sync()
-		refreshPets()
-	end })
-	buttons.sort = Button.new({ Text = sortLabel(), Style = "secondary", Size = UDim2.new(1, 0, 0, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = list, OnClick = function()
-		filter.sort = filter.sort % #SORTS + 1
-		sync()
-		refreshPets()
-	end })
-end
-
 local function buildPets(page: ScrollingFrame)
 	fixedPage(page)
 	local small = Theme.isCompact()
@@ -578,7 +579,7 @@ local function buildPets(page: ScrollingFrame)
 	local header = Instance.new("Frame")
 	header.Name = "Header"
 	header.BackgroundTransparency = 1
-	header.Size = UDim2.new(1, 0, 0, if small then rowH else rowH + 8 + Theme.TOUCH)
+	header.Size = UDim2.new(1, 0, 0, rowH)
 	header.ZIndex = 2
 	header.Parent = page
 
@@ -611,48 +612,20 @@ local function buildPets(page: ScrollingFrame)
 		slotButtons[i] = slot
 	end
 
-	local bestW = if small then 112 else 190
-	Button.new({ Name = "EquipBest", Text = if small then "Best" else "Equip Best", Icon = "Star", Style = "go", Size = UDim2.fromOffset(bestW, Theme.TOUCH), Position = UDim2.new(1, 0, 0, (rowH - Theme.TOUCH) / 2), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = function()
+	local bestW = if small then 112 else 150
+	Button.new({ Name = "EquipBest", Text = "Best", Icon = "Star", Style = "go", Size = UDim2.fromOffset(bestW, Theme.TOUCH), Position = UDim2.new(1, 0, 0, (rowH - Theme.TOUCH) / 2), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = function()
 		local ok = request("EquipBestPets")
 		if ok then
 			Sfx.play("UIClick")
 			Notifier.push({ Kind = "info", Text = "Best pets equipped", Icon = "Pets" })
 		end
 	end })
-	local storage = Theme.text({ Name = "Storage", Font = "Number", Text = "", TextSize = 20, Align = "Right", Size = UDim2.fromOffset(110, 28), Position = UDim2.new(1, -(bestW + 10), 0, rowH / 2), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = header })
-
-	local filterButtons: { [string]: any } = {}
-	if small then
-		filterButtons.popup = Button.new({ Name = "Filters", Text = "Filters", Style = "secondary", Size = UDim2.fromOffset(110, Theme.TOUCH), Position = UDim2.new(1, -(bestW + 8), 0, (rowH - Theme.TOUCH) / 2), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = filtersPopup })
-		storage.Position = UDim2.new(1, -(bestW + 8 + 110 + 8), 0, rowH / 2)
-		storage.Size = UDim2.fromOffset(70, 26)
-		storage.TextSize = 18
-	else
-		local row = Instance.new("Frame")
-		row.Name = "Filters"
-		row.BackgroundTransparency = 1
-		row.Size = UDim2.new(1, 0, 0, Theme.TOUCH)
-		row.Position = UDim2.fromOffset(0, rowH + 8)
-		row.ZIndex = 2
-		local list = Instance.new("UIListLayout")
-		list.FillDirection = Enum.FillDirection.Horizontal
-		list.Padding = UDim.new(0, 8)
-		list.SortOrder = Enum.SortOrder.LayoutOrder
-		list.Parent = row
-		row.Parent = header
-		filterButtons.zone = Button.new({ Text = zoneLabel(), Style = "secondary", TextSize = 20, Size = UDim2.fromOffset(220, Theme.TOUCH), LayoutOrder = 1, ZIndex = 3, Parent = row, OnClick = function()
-			cycleZone()
-			refreshPets()
-		end })
-		filterButtons.rarity = Button.new({ Text = rarityLabel(), Style = "secondary", TextSize = 20, Size = UDim2.fromOffset(220, Theme.TOUCH), LayoutOrder = 2, ZIndex = 3, Parent = row, OnClick = function()
-			filter.rarity = (filter.rarity + 1) % (#Rarities.List + 1)
-			refreshPets()
-		end })
-		filterButtons.sort = Button.new({ Text = sortLabel(), Style = "secondary", TextSize = 20, Size = UDim2.fromOffset(200, Theme.TOUCH), LayoutOrder = 3, ZIndex = 3, Parent = row, OnClick = function()
-			filter.sort = filter.sort % #SORTS + 1
-			refreshPets()
-		end })
-	end
+	-- every filter and sort behind one funnel (owner: "filters behind one icon")
+	refreshZoneOptions()
+	local funnel = Filter.button({ Parent = header, Frame = overlayParent, Groups = filterGroups(), OnChange = function()
+		refreshPets()
+	end, Size = Theme.TOUCH, Position = UDim2.new(1, -(bestW + 8), 0, (rowH - Theme.TOUCH) / 2), AnchorPoint = Vector2.new(1, 0), ZIndex = 3 })
+	local storage = Chips.chip(header, "Pets", "0", { Name = "Storage", Height = if small then 36 else 42, Position = UDim2.new(1, -(bestW + Theme.TOUCH + 18), 0, rowH / 2), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3 })
 
 	local cellSize = if small then Vector2.new(100, 124) else Vector2.new(118, 146)
 	local grid = gridFrame(page, header.Size.Y.Offset + 6, cellSize)
@@ -703,12 +676,9 @@ local function buildPets(page: ScrollingFrame)
 
 	refreshPets = function()
 		paintSlots()
-		storage.Text = `{count(State.get("Pets"))}/{PetRarities.PetStorage}`
-		if filterButtons.zone then
-			filterButtons.zone:SetText(zoneLabel())
-			filterButtons.rarity:SetText(rarityLabel())
-			filterButtons.sort:SetText(sortLabel())
-		end
+		storage:Set(`{count(State.get("Pets"))}/{PetRarities.PetStorage}`)
+		refreshZoneOptions()
+		funnel.Refresh()
 		local scroll = grid.CanvasPosition
 		clearGrid(grid)
 		local layout = grid:FindFirstChildOfClass("UIGridLayout") :: UIGridLayout
@@ -716,7 +686,7 @@ local function buildPets(page: ScrollingFrame)
 		local list = entries()
 		if #list == 0 then
 			local any = count(State.get("Pets")) > 0
-			emptyNote(grid, "Pets", if any then "No pet matches these filters." else "No pets yet. Hatch eggs at the Egg Station or in the Eggs tab!", Vector2.new(420, 140))
+			emptyNote(grid, if any then "Funnel" else "Egg", "", Vector2.new(420, 100)) -- a picture: empty filter / hatch eggs
 			return
 		end
 		for index, entry in ipairs(list) do
@@ -789,7 +759,7 @@ hatchStack = function(zone: number?, rarity: number?)
 	local ok, result = request("HatchEgg", pick.uids[1])
 	if ok and typeof(result) == "table" then
 		Window.close()
-		Hatching.play(result.results, { NextText = "Hatch next", OnNext = function()
+		Hatching.play(result.results, { OnNext = function()
 			hatchStack(pick.zone, pick.rarity)
 		end })
 	end
@@ -820,10 +790,7 @@ local function buildEggs(page: ScrollingFrame)
 	header.Parent = page
 	Icons.create("Egg", header, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	local countLabel = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Left", Size = UDim2.fromOffset(150, 30), Position = UDim2.new(0, 46, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3, Parent = header })
-	if not small then
-		Theme.text({ Text = "Eggs drop from enemies. Hatching is free.", TextSize = 18, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -460, 0, 26), Position = UDim2.new(0.5, -20, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3, Parent = header })
-	end
-	local all = Button.new({ Name = "HatchAll", Text = "Hatch All", Icon = "Egg", Style = "primary", Size = UDim2.fromOffset(if small then 170 else 210, Theme.TOUCH), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = hatchAll })
+	local all = Button.new({ Name = "HatchAll", Text = "All", Icon = "Egg", Style = "primary", Size = UDim2.fromOffset(if small then 130 else 150, Theme.TOUCH), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = hatchAll })
 	-- phones: wide cards (egg on the left, names on its right, Hatch under them) so a whole card fits the height
 	local cellSize = if small then Vector2.new(196, 134) else Vector2.new(150, 206)
 	local grid = gridFrame(page, Theme.TOUCH + 8, cellSize)
@@ -836,7 +803,7 @@ local function buildEggs(page: ScrollingFrame)
 		local layout = grid:FindFirstChildOfClass("UIGridLayout") :: UIGridLayout
 		layout.CellSize = UDim2.fromOffset(cellSize.X, cellSize.Y)
 		if #list == 0 then
-			emptyNote(grid, "Egg", "No eggs yet. Enemies drop eggs; premium eggs are in the Premium Eggs tab.", Vector2.new(440, 140))
+			emptyNote(grid, "Egg", "", Vector2.new(440, 100)) -- eggs drop from enemies
 			return
 		end
 		local iconH = if small then 66 else 100
@@ -853,12 +820,12 @@ local function buildEggs(page: ScrollingFrame)
 				ModelIcon.egg(stack.zone, stack.rarity, { Size = UDim2.fromOffset(iconH, iconH), Position = UDim2.fromOffset(6, 4), AnchorPoint = Vector2.zero, ZIndex = 4, Parent = cell })
 				local tierLabel = Theme.text({ Font = "Button", Text = rarity.Name, TextSize = 18, Align = "Left", Size = UDim2.new(1, -(iconH + 16), 0, 22), Position = UDim2.fromOffset(iconH + 10, 12), ZIndex = 4, Parent = cell })
 				Theme.paintRarity(tierLabel, stack.rarity)
-				Theme.text({ Text = `{zoneName(stack.zone)} Egg`, TextSize = 16, Align = "Left", Wrapped = true, Size = UDim2.new(1, -(iconH + 16), 0, 36), Position = UDim2.fromOffset(iconH + 10, 34), ZIndex = 4, Parent = cell })
+				ZoneVisibility.icon(ZoneVisibility.displayIcon(Zones.List[stack.zone] and Zones.List[stack.zone].Id), Zones.List[stack.zone] and Zones.List[stack.zone].Id, cell, { Size = UDim2.fromOffset(30, 30), Position = UDim2.fromOffset(iconH + 10, 38), AnchorPoint = Vector2.zero, ZIndex = 4 })
 			else
 				ModelIcon.egg(stack.zone, stack.rarity, { Size = UDim2.fromOffset(iconH, iconH), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = cell })
 				local tierLabel = Theme.text({ Font = "Button", Text = rarity.Name, TextSize = 16, Size = UDim2.new(1, -8, 0, 18), Position = UDim2.new(0.5, 0, 0, iconH + 6), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = cell })
 				Theme.paintRarity(tierLabel, stack.rarity)
-				Theme.text({ Text = `{zoneName(stack.zone)} Egg`, TextSize = 16, Size = UDim2.new(1, -8, 0, 18), Position = UDim2.new(0.5, 0, 0, iconH + 24), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = cell })
+				ZoneVisibility.icon(ZoneVisibility.displayIcon(Zones.List[stack.zone] and Zones.List[stack.zone].Id), Zones.List[stack.zone] and Zones.List[stack.zone].Id, cell, { Size = UDim2.fromOffset(26, 26), Position = UDim2.fromOffset(6, 6), AnchorPoint = Vector2.zero, ZIndex = 5 })
 			end
 			if #stack.uids > 1 then
 				local tag = Instance.new("Frame")
@@ -872,7 +839,7 @@ local function buildEggs(page: ScrollingFrame)
 				Theme.text({ Font = "Number", Text = `x{#stack.uids}`, TextSize = 16, Size = UDim2.new(1, -6, 1, -4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 6, Parent = tag })
 				tag.Parent = cell
 			end
-			Button.new({ Text = "Hatch", Style = "go", TextSize = 20, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = cell, OnClick = function()
+			Button.new({ Name = "Hatch", Icon = "Egg", Style = "go", Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = cell, OnClick = function()
 				hatchStack(stack.zone, stack.rarity)
 			end })
 			cell.Parent = grid
@@ -903,7 +870,7 @@ buyPremium = function(zone: any)
 	if ok and typeof(result) == "table" then
 		Sfx.play("Purchase")
 		Window.close()
-		Hatching.play(result.results, { NextText = `Buy again ({price})`, OnNext = function()
+		Hatching.play(result.results, { NextText = `{price}`, OnNext = function()
 			buyPremium(zone)
 		end })
 	end
@@ -929,10 +896,8 @@ local function buildPremium(page: ScrollingFrame)
 	box.Parent = header
 	Icons.create("Diamond", box, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, -8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 	local diamonds = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Right", Size = UDim2.new(1, -48, 1, -6), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 4, Parent = box })
-	if not small then
-		Theme.text({ Text = "Rarity rolled like the weapon shop. Tap an egg to see its pets.", TextSize = 18, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -440, 0, 26), Position = UDim2.new(0.5, 10, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3, Parent = header })
-	end
-	Button.new({ Name = "Odds", Text = "Odds", Icon = "Info", Style = "secondary", Size = UDim2.fromOffset(150, Theme.TOUCH), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = odds })
+	Info.button({ Parent = header, Frame = overlayParent, Title = "Premium Eggs", Lines = { "Rarity rolled like the weapon shop.", "Tap an egg to see its pets." }, Size = Theme.TOUCH, Position = UDim2.new(1, -(Theme.TOUCH + 76), 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, PopupSize = Vector2.new(520, 220) })
+	Button.new({ Name = "Odds", Icon = "Dice", Style = "secondary", Size = UDim2.fromOffset(68, Theme.TOUCH), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = odds })
 	local cellSize = if small then Vector2.new(150, 176) else Vector2.new(176, 226)
 	local grid = gridFrame(page, Theme.TOUCH + 8, cellSize)
 
@@ -975,7 +940,10 @@ local function buildPremium(page: ScrollingFrame)
 				end })
 				buy.Instance.Name = "Buy"
 			else
-				Theme.text({ Text = ZoneVisibility.requirement(zone.Id, true), TextSize = 16, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = card })
+				-- lock + skull (beat the boss) + Rebirth pictures instead of a sentence
+				for i, iconId in ipairs({ "Lock", "Skull", "RebirthShop" }) do
+					Icons.create(iconId, card, { Size = UDim2.fromOffset(36, 36), Position = UDim2.new(0.5, (i - 2) * 40, 1, -10), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4 })
+				end
 			end
 			card.Activated:Connect(function()
 				if open then

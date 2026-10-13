@@ -1267,3 +1267,46 @@ the Roblox game Steal an Egg (July 2026): inspiration only, every model is gener
 - The meme ("brainrot") pets of Steal an Egg are left out (they do not fit a fantasy fighting game).
 - Mutation / size multipliers also raise the release value (a Huge Golden pet sells for x2.4).
 
+
+# Kid-friendly UI - 2026-10-13 (owner: "Make the UI easier to understand ... for a 5 years old kid. Try to avoid text and become more visual")
+
+Owner's choices (asked): keep our wood look but more realistic; icons first (window titles and menu labels stay,
+details behind an (i)); Stats "+" buys at once; hide advanced details; filters behind one icon. Sizes unchanged.
+
+## Status (newest first)
+
+- 18:14 KID UI DONE. Backup `..._after_ui_kids_*` (6 files). Studio = disk (pull: 159 scripts, 0 written).
+  Screenshots `docs/screenshots/ui_kids/` (01-19 at 1080p, 20-22 on an iPhone 17 Pro in landscape, 10 too).
+  * New art (Blender, headless): 17 "Ui" icons (Clock, Gift, Calendar, Ticket, Speaker, Music, Eye, Gamepad,
+    Keyboard, Funnel, Sort, Dice, Trash, Reset, Invite, MapPin, Up; `tools/blender/fyd_icon_recipes3.py`,
+    `run_icons.py`) and 4 tiling textures (WoodPanel, WoodInset, WoodLight, IronCorner;
+    `tools/blender/fyd_ui_textures.py`), uploaded, ids in `Kit/Icons` (`Icons.Ui`, `Icons.Tex`) and
+    `Icons/asset_ids.json`.
+  * Kit: `Panel.wood` (texture + shading + iron corners), `UI/WoodSkin` (every WoodInset frame gets the inset
+    texture), glossy buttons, picture tabs / window titles (`Config/UI.Windows` Icon, TabIcons, TabLabels),
+    `Kit/Chips` (icon + number), `Kit/Info` (the (i) popup), `Kit/Filter` (one funnel, picture tiles).
+  * Pages: Stats (cards: big picture, points, bar, "+ price" buys one point at once, hold repeats; Gold chip,
+    key stats as chips, full list + weapon scaling in the (i), respec = reset + diamond price), Equipment (stats
+    chips + (i), rebirth chip, "Best" / "All" buttons), Weapon shop (price on the Buy button, zone picture,
+    check + count, lock + skull + Rebirth on locked cards, dice = odds with the pity, preview chips + (i)),
+    Diamond shop (section pictures + (i), clock timers, "+ diamonds"), Pets (one header row, funnel for zone /
+    rarity / sort, storage chip, detail chips + (i), check / lock / trash + value buttons, egg button to hatch),
+    Quests (picture + progress bar + reward chips + gift / check button, tap the picture for the sentence, clock
+    timer, 3 checks -> diamonds bonus; daily days as numbers + chips; gifts with clock chips), Rebirth (numbers
+    only, lose / keep as pictures with red X / green check + (i)), Rebirth shop (tap the picture for the effect),
+    Zones (pin / lock / clock instead of status words; sub-zone buttons pin / skull / check / lock, gate price
+    chip, skull tag), Index (diamond / check buttons, x/y), Settings (a picture on every row, hints hidden,
+    reset / edit / redeem pictures, key help in an (i)), Trophies (count + value chips), Inventory weapons (green
+    check), Armor (funnel for slot / sort, chips + (i), picture buttons), Team (pictures, chips, picture
+    buttons), hatch screen (chips, check / egg / X buttons).
+  * Tests (Play, 1080p): Stats + bought 3 points by taps and 18 by holding 2 s (server accepted every batch, Gold
+    went down, no "Too fast"), (i) list; Equipment; Shop both tabs; Pets funnel + detail; Quests 3 tabs; Rebirth;
+    Zones list + sub-zones; Settings; Team; Index; Armor + detail; hatching a single egg. Phone (iPhone 17 Pro
+    landscape): Stats, Pets, Equipment + stats drawer, Daily. Output: no errors (only the Studio DataStore notice).
+
+## Decisions taken without the owner
+
+- Gold, quest and shop toasts (Notifier) keep their short sentences: they appear for a moment and are not needed
+  to play. The confirm dialogs (Respec, Release, Sell, Rebirth, Kick) keep their sentence too (safety).
+- Item and pet names, rarity names, zone names and the Rebirth number stay written (names, not sentences).
+- The Settings rows keep their short labels (the pictures alone could not tell "Music" from "UI" volume).

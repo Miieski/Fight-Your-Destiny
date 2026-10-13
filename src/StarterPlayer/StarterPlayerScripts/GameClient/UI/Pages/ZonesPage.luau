@@ -16,6 +16,7 @@ local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Fade = require(Kit.Fade)
 local Icons = require(Kit.Icons)
 local ZoneVisibility = require(Kit.ZoneVisibility)
@@ -29,8 +30,8 @@ local LIST_WIDTH = 0.44 -- share of the content width used by the zone list
 local ROW_HEIGHT = 72 -- design units (57 px on the smallest phone scale)
 local HEADER_HEIGHT = 60
 
-type Row = { row: TextButton, stroke: UIStroke, gradient: UIGradient, icon: Frame, title: TextLabel, status: TextLabel, lock: Frame }
-type Card = { frame: Frame, stroke: UIStroke, iconSlot: Frame, icon: Frame?, title: TextLabel, status: TextLabel, button: any, boss: Frame }
+type Row = { row: TextButton, stroke: UIStroke, gradient: UIGradient, icon: Frame, title: TextLabel, status: TextLabel, lock: Frame, pin: Frame, soon: Frame }
+type Card = { frame: Frame, stroke: UIStroke, iconSlot: Frame, icon: Frame?, title: TextLabel, status: TextLabel, button: any, boss: Frame, pics: { [string]: Frame }, gate: any }
 
 local rows: { [string]: Row } = {}
 local cards: { Card } = {}
@@ -91,9 +92,10 @@ local function setPreview(id: string)
 		preview.iconId = id
 	end
 	preview.title.Text = if isHub then "Hub" else `Zone {zone.Index} - {ZoneVisibility.displayName(id)}`
-	preview.description.Text = if isHub then UIConfig.Text.HubDescription elseif ZoneVisibility.isRevealed(id) then ZoneVisibility.description(id) else ZoneVisibility.requirement(id)
+	-- kid-friendly UI: no description sentence; a hidden zone keeps its short "how to open"
+	preview.description.Text = if isHub or ZoneVisibility.isRevealed(id) then "" else ZoneVisibility.requirement(id)
 	preview.bossRow.Visible = not isHub
-	preview.boss.Text = if zone then `Boss: {ZoneVisibility.bossName(id)}` else ""
+	preview.boss.Text = if zone then ZoneVisibility.bossName(id) else "" -- next to the skull
 end
 
 local function paintRow(id: string)
@@ -118,6 +120,8 @@ local function paintRow(id: string)
 	entry.status.Text = text
 	entry.status.TextColor3 = if state == "here" then colors.Good elseif state == "locked" then colors.Bad else colors.TextDim
 	entry.lock.Visible = state == "locked"
+	entry.pin.Visible = state == "here"
+	entry.soon.Visible = state == "soon"
 	if id ~= HUB then
 		entry.title.Text = ZoneVisibility.displayName(id)
 		local hidden = not ZoneVisibility.isRevealed(id)
@@ -158,7 +162,13 @@ local function makeRow(parent: Instance, id: string, name: string, order: number
 	local textLeft = ROW_HEIGHT + 4
 	local title = Theme.text({ Name = "Title", Font = "Title", Text = name, TextSize = 26, Align = "Left", Color = Theme.Colors.Gold, Size = UDim2.new(1, -(textLeft + 44), 0.48, 0), Position = UDim2.new(0, textLeft, 0, 6), Parent = row })
 	local status = Theme.text({ Name = "Status", Text = "", TextSize = 18, Align = "Left", Color = Theme.Colors.TextDim, Size = UDim2.new(1, -(textLeft + 44), 0.34, 0), Position = UDim2.new(0, textLeft, 0.56, 0), Parent = row })
+	-- kid-friendly UI: the name in the middle, a picture on the right instead of the status words
+	status.Visible = false
+	title.Size = UDim2.new(1, -(textLeft + 50), 1, 0)
+	title.Position = UDim2.fromOffset(textLeft, 0)
 	local lock = Icons.create("Lock", row, { Size = UDim2.fromOffset(34, 34), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5) })
+	local pin = Icons.create("MapPin", row, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(1, -6, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5) })
+	local soon = Icons.create("Clock", row, { Size = UDim2.fromOffset(34, 34), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5) })
 	row.MouseEnter:Connect(function()
 		setPreview(id)
 	end)
@@ -177,7 +187,7 @@ local function makeRow(parent: Instance, id: string, name: string, order: number
 		end
 	end)
 	row.Parent = parent
-	rows[id] = { row = row, stroke = stroke, gradient = gradient, icon = icon, title = title, status = status, lock = lock }
+	rows[id] = { row = row, stroke = stroke, gradient = gradient, icon = icon, title = title, status = status, lock = lock, pin = pin, soon = soon }
 end
 
 -- page 2: sub-zone cards ------------------------------------------------------------------------------
@@ -197,30 +207,30 @@ local function paintCard(card: Card, zoneId: string, n: number)
 	card.stroke.Color = if isBoss then colors.DangerLight elseif here then colors.Gold else colors.GoldDark
 	card.stroke.Thickness = if isBoss or here then 3.5 else 2.5
 	local button = card.button
+	-- kid-friendly UI: the button shows a picture (pin = go there, skull = boss gate, check = you are here,
+	-- lock = closed); a closed gate shows its Gold price as a chip
+	local pic = "Lock"
+	card.status.Text = ""
+	card.gate.Instance.Visible = false
 	if not zoneOpen(zoneId) then
-		card.status.Text = UIConfig.Text.ZoneLocked
-		card.status.TextColor3 = colors.Bad
-		button:SetText("Locked")
 		button:SetStyle("secondary")
 		button:SetEnabled(false)
 	elseif here then
-		card.status.Text = UIConfig.Text.YouAreHere
-		card.status.TextColor3 = colors.Good
-		button:SetText(UIConfig.Text.YouAreHere)
+		pic = "Check"
 		button:SetStyle("primary")
 		button:SetEnabled(false)
 	elseif open then
-		card.status.Text = if isBoss then "Boss room entrance" else "Unlocked"
-		card.status.TextColor3 = colors.TextDim
-		button:SetText(if isBoss then UIConfig.Text.BossGate else UIConfig.Text.Teleport)
+		pic = if isBoss then "Skull" else "MapPin"
 		button:SetStyle(if isBoss then "danger" else "go")
 		button:SetEnabled(true)
 	else
-		card.status.Text = `Gate: {Format.number(Zones.subZonePrice(zoneId, n))} Gold`
-		card.status.TextColor3 = colors.Bad
-		button:SetText("Locked")
+		card.gate:Set(Format.number(Zones.subZonePrice(zoneId, n)))
+		card.gate.Instance.Visible = true
 		button:SetStyle("secondary")
 		button:SetEnabled(false)
+	end
+	for name, holder in pairs(card.pics) do
+		holder.Visible = name == pic
 	end
 	Icons.setFaded(card.icon :: Frame, if open then 0 else 0.5)
 end
@@ -252,16 +262,22 @@ local function makeCard(parent: Instance, n: number): Card
 	boss.Position = UDim2.fromOffset(6, 6)
 	Theme.corner(boss, 6)
 	Theme.stroke(boss, Theme.Colors.GoldLight, 1.5)
-	Theme.text({ Font = "Button", Text = "BOSS", TextSize = 18, Size = UDim2.fromScale(1, 0.9), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Parent = boss })
+	boss.Size = UDim2.fromOffset(40, 34)
+	Icons.create("Skull", boss, { Size = UDim2.fromScale(0.85, 0.85) })
 	boss.Parent = frame
 	local card: Card
-	local button = Button.new({ Text = UIConfig.Text.Teleport, Style = "go", TextSize = 22, Size = UDim2.new(1, -14, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -7), AnchorPoint = Vector2.new(0.5, 1), Parent = frame, OnClick = function()
+	local button = Button.new({ Name = "Go", Style = "go", Size = UDim2.new(1, -14, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -7), AnchorPoint = Vector2.new(0.5, 1), Parent = frame, OnClick = function()
 		if shownZone then
 			teleport(shownZone, n)
 		end
 	end })
+	local pics = {}
+	for _, name in ipairs({ "MapPin", "Skull", "Check", "Lock" }) do
+		pics[name] = Icons.create(name, button.Face, { Size = UDim2.new(0, 0, 0.74, 0), ZIndex = button.Instance.ZIndex })
+	end
+	local gate = Chips.chip(frame, "Gold", "", { Height = 32, Position = UDim2.new(0.5, 0, 0.65, 0), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
 	frame.Parent = parent
-	card = { frame = frame, stroke = stroke, iconSlot = iconSlot, icon = nil, title = title, status = status, button = button, boss = boss }
+	card = { frame = frame, stroke = stroke, iconSlot = iconSlot, icon = nil, title = title, status = status, button = button, boss = boss, pics = pics, gate = gate }
 	return card
 end
 

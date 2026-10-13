@@ -28,7 +28,9 @@ local Kit = script.Parent.Parent.Kit
 local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local ModelIcon = require(Kit.ModelIcon)
 local Overlay = require(Kit.Overlay)
 local Slot = require(Kit.Slot)
@@ -392,7 +394,8 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 	local bannerH = if small then 30 else 40
 	local nameLabel = banner(center, UDim2.new(1, -20, 0, bannerH), UDim2.new(0.5, 0, 0, 2))
 	local viewer = makeViewer(center, UDim2.new(1, 0, 1, -(bannerH + 6)), UDim2.fromOffset(0, bannerH + 6))
-	Theme.text({ Text = "Drag to turn - tap to pause", TextSize = 14, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 18), Position = UDim2.new(0.5, 0, 1, -2), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 4, Parent = center })
+	-- Rebirths: a chip under the banner (kid-friendly UI: picture + number instead of "Rebirth 3")
+	local rebirthChip = Chips.chip(center, "RebirthShop", "0", { Height = if small then 30 else 38, Position = UDim2.fromOffset(6, bannerH + 8), ZIndex = 7 })
 
 	-- right: weapon + pets
 	local rightX = centerX + centerW + 10
@@ -440,12 +443,42 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 		column.Position = UDim2.fromOffset(10, 8)
 		column.ZIndex = 23
 		local list = Instance.new("UIListLayout")
-		list.Padding = UDim.new(0, 4)
+		list.Padding = UDim.new(0, 8)
 		list.SortOrder = Enum.SortOrder.LayoutOrder
 		list.Parent = column
 		column.Parent = parent
 		return column
 	end
+	-- the full text, behind the (i)
+	local function statsDetail(): { string }
+		local zone = currentZone()
+		local out = Stats.compute(snapshot(), { zoneId = zone, now = os.time() })
+		local armor = Armor.totals(snapshot(), zone)
+		local lines = {
+			`Max HP: {Format.number(math.floor(out.MaxHP + 0.5))}`,
+			string.format("Defense: %s (-%d%% damage)", Format.number(math.floor(out.Defense * 10 + 0.5) / 10), math.floor(out.DamageReduction * 100 + 0.5)),
+			`Armor: +{Format.number(math.floor(armor.HP + 0.5))} HP, +{math.floor(armor.Defense * 10 + 0.5) / 10} Defense`,
+		}
+		local zoneDef = zone and Zones.ById[zone]
+		if Balance.ZoneBoostEnabled then
+			local parts = {}
+			for _, slot in ipairs(Armor.SLOTS) do
+				local per = armor.PerSlot[slot]
+				table.insert(parts, `{slot} {if per == nil then "-" elseif per.Boosted then "ON" else "off"}`)
+			end
+			table.insert(lines, `Zone Boost{if zoneDef then ` ({ZoneVisibility.displayName(zoneDef.Id)})` else ""}: {table.concat(parts, ", ")}`)
+		end
+		if armor.SetZone then
+			local full = armor.SetCount >= Armor.SetSize
+			table.insert(lines, `{ZoneVisibility.displayName(armor.SetZone)} set {armor.SetCount}/{Armor.SetSize}{if full then (if Balance.ZoneBoostEnabled then " (+10% Max HP, +10% Zone Boost)" else " (+10% Max HP)") else ""}`)
+		else
+			table.insert(lines, "No set bonus (wear 3 pieces of one zone)")
+		end
+		table.insert(lines, if out.WeaponDamage > 0 then `Weapon damage per hit: {Format.number(math.floor(out.WeaponDamage + 0.5))}` else "No weapon equipped")
+		table.insert(lines, string.format("Move speed +%d%%   Crit x%.2f", math.floor(out.MoveSpeed * 100 + 0.5), out.CritDamage))
+		return lines
+	end
+	-- on the screen: pictures and numbers (kid-friendly UI, owner 2026-10-13)
 	local function fillStats(column: Frame)
 		for _, child in ipairs(column:GetChildren()) do
 			if child:IsA("GuiObject") then
@@ -456,31 +489,25 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 		local out = Stats.compute(snapshot(), { zoneId = zone, now = os.time() })
 		local armor = Armor.totals(snapshot(), zone)
 		local order = 0
-		local function add(text: string, color: Color3?, size: number?, font: string?)
+		local function chip(icon: string, text: string, color: Color3?)
 			order += 1
-			Theme.text({ Font = font or "Body", Text = text, TextSize = size or 19, Wrapped = true, Align = "Left", Color = color, Size = UDim2.new(1, 0, 0, (size or 19) + 9), LayoutOrder = order, ZIndex = 24, Parent = column })
+			Chips.chip(column, icon, text, { Height = 42, LayoutOrder = order, ZIndex = 24, TextColor = color })
 		end
-		add("Stats", Theme.Colors.Gold, 26, "Title")
-		add(`Max HP: {Format.number(math.floor(out.MaxHP + 0.5))}`)
-		add(string.format("Defense: %s (-%d%% damage)", Format.number(math.floor(out.Defense * 10 + 0.5) / 10), math.floor(out.DamageReduction * 100 + 0.5)))
-		add(`Armor: +{Format.number(math.floor(armor.HP + 0.5))} HP, +{math.floor(armor.Defense * 10 + 0.5) / 10} Defense`, Theme.Colors.TextDim, 17)
-		local zoneDef = zone and Zones.ById[zone]
-		local parts = {}
-		for _, slot in ipairs(Armor.SLOTS) do
-			local per = armor.PerSlot[slot]
-			table.insert(parts, `{slot} {if per == nil then "-" elseif per.Boosted then "ON" else "off"}`)
-		end
-		if Balance.ZoneBoostEnabled then
-			add(`Zone Boost{if zoneDef then ` ({ZoneVisibility.displayName(zoneDef.Id)})` else ""}: {table.concat(parts, ", ")}`, nil, 17)
-		end
-		if armor.SetZone then
-			local full = armor.SetCount >= Armor.SetSize
-			add(`{ZoneVisibility.displayName(armor.SetZone)} set {armor.SetCount}/{Armor.SetSize}{if full then (if Balance.ZoneBoostEnabled then " (+10% Max HP, +10% Zone Boost)" else " (+10% Max HP)") else ""}`, if full then Theme.Colors.Good else Theme.Colors.TextDim, 17)
-		else
-			add("No set bonus (wear 3 pieces of one zone)", Theme.Colors.TextDim, 17)
-		end
-		add(if out.WeaponDamage > 0 then `Weapon damage per hit: {Format.number(math.floor(out.WeaponDamage + 0.5))}` else "No weapon equipped", nil, 18)
-		add(string.format("Move speed +%d%%   Crit x%.2f", math.floor(out.MoveSpeed * 100 + 0.5), out.CritDamage), Theme.Colors.TextDim, 16)
+		order += 1
+		local head = Instance.new("Frame")
+		head.BackgroundTransparency = 1
+		head.Size = UDim2.new(1, 0, 0, 46)
+		head.LayoutOrder = order
+		head.ZIndex = 24
+		Icons.create("Stats", head, { Size = UDim2.fromOffset(44, 44), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 25 })
+		Info.button({ Parent = head, Frame = ctx.Frame, Title = "Stats", Lines = statsDetail, Size = 40, Position = UDim2.new(1, 0, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 25 })
+		head.Parent = column
+		chip("MaxHP", Format.number(math.floor(out.MaxHP + 0.5)))
+		chip("Defense", Format.number(math.floor(out.Defense * 10 + 0.5) / 10))
+		chip("Attack", if out.WeaponDamage > 0 then Format.number(math.floor(out.WeaponDamage + 0.5)) else "-")
+		chip("Speed", `+{math.floor(out.MoveSpeed * 100 + 0.5)}%`)
+		local full = armor.SetZone ~= nil and armor.SetCount >= Armor.SetSize
+		chip("Chest", `{if armor.SetZone then armor.SetCount else 0}/{Armor.SetSize}`, if full then Theme.Colors.Good else nil)
 	end
 	local statsPanel: Frame? = nil
 	if not small then
@@ -518,14 +545,15 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 		buttonList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	end
 	buttons.Parent = page
-	local buttonW = if small then UDim2.new(1, 0, 0, Theme.TOUCH) else UDim2.fromOffset(250, Theme.TOUCH)
-	Button.new({ Name = "EquipBestArmor", Text = if small then "Best Armor" else "Equip Best Armor", Icon = "Star", Style = "go", TextSize = 20, Size = buttonW, LayoutOrder = 1, ZIndex = 3, Parent = buttons, OnClick = function()
+	local buttonW = if small then UDim2.new(1, 0, 0, Theme.TOUCH) else UDim2.fromOffset(190, Theme.TOUCH)
+	-- short words + pictures (kid-friendly UI): star = best armor, X = take all armor off
+	Button.new({ Name = "EquipBestArmor", Text = "Best", Icon = "Star", Style = "go", TextSize = 20, Size = buttonW, LayoutOrder = 1, ZIndex = 3, Parent = buttons, OnClick = function()
 		if request("EquipBestArmor") then
 			Sfx.play("UIClick")
 			Notifier.push({ Kind = "info", Text = "Best armor equipped for this zone", Icon = "Chest" })
 		end
 	end })
-	Button.new({ Name = "UnequipAll", Text = "Unequip All", Style = "secondary", TextSize = 20, Size = buttonW, LayoutOrder = 2, ZIndex = 3, Parent = buttons, OnClick = function()
+	Button.new({ Name = "UnequipAll", Text = "All", Icon = "Close", Style = "secondary", TextSize = 20, Size = buttonW, LayoutOrder = 2, ZIndex = 3, Parent = buttons, OnClick = function()
 		if next(State.get("EquippedArmor") or {}) == nil then
 			Notifier.push({ Kind = "info", Text = "No armor worn" })
 			return
@@ -536,7 +564,7 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 	end })
 	if small then
 		Button.new({ Name = "StatsDrawer", Text = "Stats", Icon = "Stats", Style = "primary", TextSize = 20, Size = buttonW, LayoutOrder = 3, ZIndex = 3, Parent = buttons, OnClick = function()
-			local panel = Overlay.open(ctx.Frame, Vector2.new(520, 360))
+			local panel = Overlay.open(ctx.Frame, Vector2.new(320, 400))
 			local column = statsColumn(panel)
 			column.Size = UDim2.new(1, -(Theme.TOUCH + 30), 1, -16)
 			fillStats(column)
@@ -566,7 +594,7 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 				if icon then
 					Icons.setFaded(icon, 0.55)
 				end
-				entry.label.Text = if small then "" else "Empty"
+				entry.label.Text = "" -- the faded slot picture says it
 			end
 		end
 		-- weapon
@@ -583,7 +611,7 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 			Theme.paintRarity(weaponName, weapon.rarity)
 		else
 			weaponSlot:Clear("Sword")
-			weaponName.Text = "No weapon"
+			weaponName.Text = ""
 			weaponName.TextColor3 = Theme.Colors.TextDim
 		end
 		-- pets
@@ -607,7 +635,9 @@ function EquipmentPage.build(page: ScrollingFrame, ctx: any)
 		end
 		-- name banner
 		local rebirths = State.get("Rebirths") or 0
-		nameLabel.Text = `{Players.LocalPlayer.DisplayName}  -  Rebirth {rebirths}`
+		nameLabel.Text = Players.LocalPlayer.DisplayName
+		rebirthChip:Set(tostring(rebirths))
+		rebirthChip.Instance.Visible = rebirths > 0
 		if statsPanel then
 			fillStats(statsLines)
 		end

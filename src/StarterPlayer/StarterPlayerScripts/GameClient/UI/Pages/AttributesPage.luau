@@ -1,10 +1,11 @@
 --!strict
--- Stats button -> Attributes window (docs/menu_systems_brief.txt A5), inspired by the Elden Ring status screen.
--- Left: the 8 attributes (points, what the next point gives, bar to 40 with the soft-cap marker at 20, [-] [+] that
--- change PENDING points, hold to repeat, tap the name for its effects). Right: every derived stat "before -> after" (green = better)
--- and the equipped weapon's damage and scaling grades. Bottom: Confirm (cost), Reset pending, Respec.
--- The server decides everything (Net "TrainAttributes" / "RespecAttributes"); the numbers shown come from the
--- shared Util/Stats.compute, so they match the server.
+-- Stats window (docs/menu_systems_brief.txt A5), kid-friendly version (owner 2026-10-13: "understandable for a 5 years
+-- old, avoid text"; "+ buys at once"; advanced details behind the (i)).
+-- Top: level chip, Gold chip, (i) = the full stat list + weapon scaling, Respec (reset icon + Diamond price).
+-- Then the key stats as icon + number chips. Then one card per attribute: big icon (tap = what it does), points,
+-- bar to 40 with the soft-cap marker, and a big green "+ (coin) price" button that trains ONE point right away
+-- (hold to repeat; quick taps are sent together so the server is not flooded).
+-- The server decides everything (Net "TrainAttributes" / "RespecAttributes"); numbers come from Util/Stats.compute.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -19,42 +20,39 @@ local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local Panel = require(Kit.Panel)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 
 local AttributesPage = {}
 
-local ROW_HEIGHT = 64
-local HEADER_HEIGHT = 46
+local TOP = 52
 local GREEN = Color3.fromRGB(110, 235, 120)
-local RED = Color3.fromRGB(255, 110, 100)
 local REPEAT_DELAY = 0.4
-local REPEAT_EVERY = 0.08
+local REPEAT_EVERY = 0.12
+local SEND_DELAY = 0.25 -- taps within this time are trained together
+local SEND_GAP = 0.35 -- the server takes one TrainAttributes every 0.3 s
 local DATA_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts", "Zones" }
 
-type Row = { points: TextLabel, gain: TextLabel, fill: Frame, pendingFill: Frame, cost: TextLabel, minus: any, plus: any }
-type Line = { value: TextLabel }
+type Card = { points: TextLabel, gain: TextLabel, fill: Frame, plus: any }
 
-local pending: { [string]: number } = Attributes.empty()
-local rows: { [string]: Row } = {}
-local lines: { [string]: Line } = {}
-local weaponTitle: TextLabel
-local weaponLine: TextLabel
-local gradesLine: TextLabel
-local levelLabel: TextLabel
-local goldLabel: TextLabel
-local confirm: any
-local reset: any
+local queued: { [string]: number } = Attributes.empty() -- bought, not sent yet
+local target: { [string]: number } = {} -- sent: the points the server will show once it has trained them
+local sending = false
+local sendScheduled = false
+local lastSent = -math.huge
+local cards: { [string]: Card } = {}
+local chips: { [string]: any } = {}
+local levelChip: any
+local goldChip: any
 local respec: any
-local busy = false
 local root: Frame
-local left: ScrollingFrame
-local right: ScrollingFrame
-local statusToggle: any
-local showStatus = false -- phones: one column at a time
+local grid: ScrollingFrame
 local overlay: Frame? = nil
+local windowFrame: GuiObject
 
 -- data ------------------------------------------------------------------------------------------------
 local function snapshot(): { [string]: any }
@@ -65,16 +63,34 @@ local function snapshot(): { [string]: any }
 	return data
 end
 
-local function pendingCount(): number
+local function count(t: { [string]: number }): number
 	local n = 0
-	for _, v in pairs(pending) do
+	for _, v in pairs(t) do
 		n += v
 	end
 	return n
 end
 
-local function current(id: string): number
+local function have(id: string): number
 	return ((State.get("Attributes") or {})[id] or 0)
+end
+
+-- points bought on this screen that the saved data does not show yet
+local function waiting(id: string): number
+	return queued[id] + math.max(0, (target[id] or 0) - have(id))
+end
+
+local function waitingCount(): number
+	local n = 0
+	for _, attribute in ipairs(Attributes.List) do
+		n += waiting(attribute.Id)
+	end
+	return n
+end
+
+-- Gold left once the waiting points are paid
+local function goldLeft(): number
+	return (State.get("Gold") or 0) - Attributes.costOf(Attributes.level(State.get("Attributes")), waitingCount())
 end
 
 local function pct(x: number, decimals: number?): string
@@ -83,108 +99,108 @@ local function pct(x: number, decimals: number?): string
 	return text .. "%"
 end
 
--- { key, label, format(stats) -> string, value(stats) -> number, higherIsBetter }
-local STATUS = {
-	{ "MaxHP", "Max HP", function(s) return Format.number(math.floor(s.MaxHP + 0.5)) end, function(s) return s.MaxHP end, true },
-	{ "Regen", "HP regen (out of combat)", function(s) return Format.number(math.floor(s.RegenPerSecond * 10 + 0.5) / 10) .. "/s" end, function(s) return s.RegenPerSecond end, true },
-	{ "Defense", "Defense", function(s) return `{Format.number(math.floor(s.Defense * 10 + 0.5) / 10)} ({pct(s.DamageReduction)} less damage)` end, function(s) return s.Defense end, true },
-	{ "Block", "Block reduction", function(s) return pct(s.Block) end, function(s) return s.Block end, true },
-	{ "MoveSpeed", "Move speed", function(s) return "+" .. pct(s.MoveSpeed) end, function(s) return s.MoveSpeed end, true },
-	{ "Roll", "Roll cooldown", function(s) return string.format("%.2f s", s.RollCooldown) end, function(s) return -s.RollCooldown end, true },
-	{ "AttackSpeed", "Attack speed", function(s) return "+" .. pct(s.AttackSpeed) end, function(s) return s.AttackSpeed end, true },
-	{ "Gold", "Gold gain", function(s) return "x" .. string.format("%.2f", s.GoldMult) end, function(s) return s.GoldMult end, true },
-	{ "Crit", "Crit chance", function(s) return pct(s.CritChance, 2) end, function(s) return s.CritChance end, true },
-	{ "CritDamage", "Crit damage", function(s) return "x" .. string.format("%.2f", s.CritDamage) end, function(s) return s.CritDamage end, true },
-	{ "Loot", "Loot luck", function(s) return "+" .. pct(s.LootMult - 1) end, function(s) return s.LootMult end, true },
-	{ "Proc", "Element proc", function(s) return "+" .. pct(s.ElementProcBonus) end, function(s) return s.ElementProcBonus end, true },
-	{ "Radius", "Magic radius", function(s) return "+" .. pct(s.MagicRadius) end, function(s) return s.MagicRadius end, true },
-	{ "PetEffect", "Pet effectiveness", function(s) return "+" .. pct(s.PetEffectiveness - 1) end, function(s) return s.PetEffectiveness end, true },
-	{ "Healing", "Lifesteal & healing", function(s) return "+" .. pct(s.HealingBonus) end, function(s) return s.HealingBonus end, true },
+local function context()
+	return { zoneId = Players.LocalPlayer:GetAttribute("CurrentZone"), now = os.time() }
+end
+
+-- the stats as the player will have them once the queued points land
+local function planned(): ({ [string]: any }, any)
+	local data = snapshot()
+	local plan = table.clone(data.Attributes or Attributes.empty())
+	for _, attribute in ipairs(Attributes.List) do
+		plan[attribute.Id] = (plan[attribute.Id] or 0) + waiting(attribute.Id)
+	end
+	data.Attributes = plan
+	return data, Stats.compute(data, context())
+end
+
+-- chips: { key, icon, value(stats) -> string }
+local CHIPS = {
+	{ "MaxHP", "MaxHP", function(s) return Format.number(math.floor(s.MaxHP + 0.5)) end },
+	{ "Defense", "Defense", function(s) return Format.number(math.floor(s.Defense * 10 + 0.5) / 10) end },
+	{ "Damage", "Attack", function(s) return if s.WeaponId then Format.number(s.WeaponDamage) else "-" end },
+	{ "Speed", "Speed", function(s) return "+" .. pct(s.MoveSpeed) end },
+	{ "Gold", "GoldGain", function(s) return "x" .. string.format("%.2f", s.GoldMult) end },
+	{ "Crit", "Crit", function(s) return pct(s.CritChance, 1) end },
 }
+
+-- the full list, behind the (i)
+local function detailLines(): { string }
+	local _, s = planned()
+	local lines = {
+		`Max HP: {Format.number(math.floor(s.MaxHP + 0.5))}`,
+		`HP regen (out of combat): {Format.number(math.floor(s.RegenPerSecond * 10 + 0.5) / 10)}/s`,
+		`Defense: {Format.number(math.floor(s.Defense * 10 + 0.5) / 10)} ({pct(s.DamageReduction)} less damage)`,
+		`Block reduction: {pct(s.Block)}`,
+		`Move speed: +{pct(s.MoveSpeed)}`,
+		`Roll cooldown: {string.format("%.2f s", s.RollCooldown)}`,
+		`Attack speed: +{pct(s.AttackSpeed)}`,
+		`Gold gain: x{string.format("%.2f", s.GoldMult)}`,
+		`Crit chance: {pct(s.CritChance, 2)}`,
+		`Crit damage: x{string.format("%.2f", s.CritDamage)}`,
+		`Loot luck: +{pct(s.LootMult - 1)}`,
+		`Element proc: +{pct(s.ElementProcBonus)}`,
+		`Magic radius: +{pct(s.MagicRadius)}`,
+		`Pet effectiveness: +{pct(s.PetEffectiveness - 1)}`,
+		`Lifesteal and healing: +{pct(s.HealingBonus)}`,
+	}
+	if s.WeaponId then
+		local weapon = Weapons.ById[s.WeaponId]
+		table.insert(lines, `Weapon: {Rarities.get(s.WeaponRarity).Name} {weapon.Name}, {Format.number(s.WeaponDamage)} per hit`)
+		local parts = {}
+		for _, pair in ipairs(Stats.grades(weapon.Category)) do
+			table.insert(parts, `{pair[1]} {pair[2]}`)
+		end
+		table.insert(lines, `Scaling: {table.concat(parts, " / ")}`)
+	end
+	table.insert(lines, `Each point costs more Gold than the last. Points above {Attributes.SoftCap} count half.`)
+	return lines
+end
 
 -- refresh ---------------------------------------------------------------------------------------------
 local function refresh()
 	if not root then
 		return
 	end
-	local data = snapshot()
-	local zone = Stats.highestZone(data)
-	local level = Attributes.level(data.Attributes)
-	local count = pendingCount()
-	local context = { zoneId = Players.LocalPlayer:GetAttribute("CurrentZone"), now = os.time() }
-	local before = Stats.compute(data, context)
-	local planned = table.clone(data.Attributes or Attributes.empty())
-	for id, v in pairs(pending) do
-		planned[id] = (planned[id] or 0) + v
+	for id, points in pairs(target) do
+		if have(id) >= points then
+			target[id] = nil -- the server has it
+		end
 	end
-	local afterData = table.clone(data)
-	afterData.Attributes = planned
-	local after = Stats.compute(afterData, context)
-
-	levelLabel.Text = if count > 0 then `Attribute Level: {level} -> {level + count} / {Attributes.MaxLevel}` else `Attribute Level: {level} / {Attributes.MaxLevel}`
-	local gold = State.get("Gold") or 0
-	goldLabel.Text = Format.number(gold)
-	local nextCost = Attributes.pointCost(level + count)
+	local data, stats = planned()
+	local level = Attributes.level(data.Attributes)
+	levelChip:Set(`{level}/{Attributes.MaxLevel}`)
+	local gold = goldLeft()
+	goldChip:Set(Format.number(math.max(0, gold)))
+	local price = Attributes.pointCost(level)
 	local equipped = (data.Weapons or {})[data.EquippedWeapon or ""]
 	local weaponDef = equipped and Weapons.ById[equipped.id]
 	local category = if weaponDef then weaponDef.Category else nil
 	for _, attribute in ipairs(Attributes.List) do
-		local row = rows[attribute.Id]
-		local have, add = current(attribute.Id), pending[attribute.Id]
-		-- what the NEXT point of this attribute gives (soft cap and Rebirth power included)
-		row.gain.Text = `{Attributes.pointGain(attribute.Id, have + add + 1, data.Rebirths or 0, category)}  (i)`
-		row.points.Text = if add > 0 then `{have} -> {have + add}` else tostring(have)
-		row.points.TextColor3 = if add > 0 then GREEN else Theme.Colors.Text
-		row.fill.Size = UDim2.fromScale(have / Attributes.MaxPoints, 1)
-		row.pendingFill.Position = UDim2.fromScale(have / Attributes.MaxPoints, 0)
-		row.pendingFill.Size = UDim2.fromScale(add / Attributes.MaxPoints, 1)
-		local full = have + add >= Attributes.MaxPoints
-		row.cost.Text = if full then "MAX" else `Next: {Format.number(nextCost)}`
-		row.plus:SetEnabled(not full and not busy)
-		row.minus:SetEnabled(add > 0 and not busy)
-	end
-	for _, spec in ipairs(STATUS) do
-		local line = lines[spec[1]]
-		local a, b = spec[3](before), spec[3](after)
-		local va, vb = spec[4](before), spec[4](after)
-		if a == b then
-			line.value.Text = a
-			line.value.TextColor3 = Theme.Colors.Text
+		local card = cards[attribute.Id]
+		local points = data.Attributes[attribute.Id] or 0
+		card.points.Text = tostring(points)
+		card.points.TextColor3 = if waiting(attribute.Id) > 0 then GREEN else Theme.Colors.Text
+		card.gain.Text = Attributes.pointGain(attribute.Id, points + 1, data.Rebirths or 0, category)
+		card.fill.Size = UDim2.fromScale(points / Attributes.MaxPoints, 1)
+		local full = points >= Attributes.MaxPoints
+		if full then
+			card.plus:SetText("MAX")
+			card.plus:SetEnabled(false)
 		else
-			line.value.Text = `{a}  ->  {b}`
-			line.value.TextColor3 = if (vb > va) == spec[5] then GREEN else RED
+			card.plus:SetText(Format.number(price))
+			card.plus:SetEnabled(true)
+			card.plus:SetStyle(if gold >= price then "go" else "disabled")
 		end
 	end
-	-- equipped weapon
-	if before.WeaponId then
-		local weapon = Weapons.ById[before.WeaponId]
-		weaponTitle.Text = `Equipped weapon: {Rarities.get(before.WeaponRarity).Name} {weapon.Name}`
-		local a, b = Format.number(before.WeaponDamage), Format.number(after.WeaponDamage)
-		weaponLine.Text = if a == b then `Damage per hit: {a}` else `Damage per hit: {a}  ->  {b}`
-		weaponLine.TextColor3 = if after.WeaponDamage > before.WeaponDamage + 1e-9 then GREEN else Theme.Colors.Text
-		local parts = {}
-		for _, pair in ipairs(Stats.grades(weapon.Category)) do
-			table.insert(parts, `{pair[1]} {pair[2]}`)
-		end
-		gradesLine.Text = `Scaling: {table.concat(parts, "  /  ")}`
-	else
-		weaponTitle.Text = "Equipped weapon: none"
-		weaponLine.Text = "Equip a weapon to see its damage here"
-		weaponLine.TextColor3 = Theme.Colors.TextDim
-		gradesLine.Text = ""
+	for _, spec in ipairs(CHIPS) do
+		chips[spec[1]]:Set(spec[3](stats))
 	end
-	local cost = Attributes.costOf(level, count)
-	confirm:SetText(if count > 0 then `Confirm ({Format.number(cost)} Gold)` else "Confirm")
-	confirm:SetEnabled(count > 0 and not busy)
-	if count > 0 and not busy then
-		confirm:SetStyle(if gold >= cost then "go" else "disabled") -- still pressable: it explains why
-	end
-	reset:SetEnabled(count > 0 and not busy)
-	respec:SetText(`Respec ({Attributes.respecCost(zone)} Diamonds)`)
-	respec:SetEnabled(level > 0 and not busy)
+	respec:SetText(tostring(Attributes.respecCost(Stats.highestZone(data))))
+	respec:SetEnabled(level > 0)
 end
 
--- tooltip ---------------------------------------------------------------------------------------------
+-- tooltip (tap on an attribute's picture) ---------------------------------------------------------------
 local function closeOverlay()
 	if overlay then
 		overlay:Destroy()
@@ -205,12 +221,12 @@ local function tooltip(attribute: any)
 	holder.Activated:Connect(closeOverlay)
 	holder.Parent = root
 	overlay = holder -- remembered, so the X, a tap outside or closing the window removes it
-	local top = Theme.TOUCH + 16 -- the title row holds the close (X) button
+	local top = Theme.TOUCH + 16
 	local height = top + 14 + 34 * (#attribute.Effects + 1)
 	local panel = Panel.new({ Size = UDim2.fromOffset(math.min(520, root.AbsoluteSize.X / Theme.getScale() - 20), height), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 31, Parent = holder })
-	panel.Active = true -- a tap on the panel itself keeps it open; the X or a tap outside closes it
-	Icons.create(attribute.Icon, panel, { Size = UDim2.fromOffset(44, 44), Position = UDim2.fromOffset(14, 12), AnchorPoint = Vector2.zero, ZIndex = 32 })
-	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -(66 + Theme.TOUCH + 16), 0, 40), Position = UDim2.fromOffset(66, 14), ZIndex = 32, Parent = panel })
+	panel.Active = true
+	Icons.create(attribute.Icon, panel, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset(14, 8), AnchorPoint = Vector2.zero, ZIndex = 32 })
+	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -(74 + Theme.TOUCH + 16), 0, 40), Position = UDim2.fromOffset(74, 14), ZIndex = 32, Parent = panel })
 	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 33, OnClick = closeOverlay, Parent = panel })
 	for i, effect in ipairs(attribute.Effects) do
 		Theme.text({ Text = "- " .. effect, TextSize = 19, Wrapped = true, Align = "Left", Size = UDim2.new(1, -32, 0, 32), Position = UDim2.fromOffset(18, top + (i - 1) * 34), ZIndex = 32, Parent = panel })
@@ -220,24 +236,66 @@ local function tooltip(attribute: any)
 	Sfx.play("UIClick")
 end
 
--- actions ---------------------------------------------------------------------------------------------
-local function change(id: string, delta: number)
-	if busy then
+-- training (+ buys at once) -----------------------------------------------------------------------------
+local send: () -> ()
+
+local function schedule()
+	if sendScheduled then
 		return
 	end
-	local have = current(id)
-	local nextValue = math.clamp(pending[id] + delta, 0, Attributes.MaxPoints - have)
-	if nextValue ~= pending[id] then
-		pending[id] = nextValue
-		Sfx.play("UIClick")
-		refresh()
+	sendScheduled = true
+	task.delay(math.max(SEND_DELAY, SEND_GAP - (os.clock() - lastSent)), send)
+end
+
+send = function()
+	sendScheduled = false
+	if sending or count(queued) == 0 then
+		return
+	end
+	sending = true
+	lastSent = os.clock()
+	local plan = {}
+	for _, attribute in ipairs(Attributes.List) do
+		local id = attribute.Id
+		if queued[id] > 0 then
+			plan[id] = queued[id]
+			target[id] = have(id) + waiting(id)
+		end
+	end
+	queued = Attributes.empty()
+	local called, ok, result = pcall(Net.request, "TrainAttributes", plan)
+	sending = false
+	if not (called and ok) then
+		target = {}
+		Sfx.play("Denied")
+		Notifier.push({ Kind = "error", Text = if called and typeof(result) == "string" then result else "Training failed" })
+	end
+	refresh()
+	if count(queued) > 0 then
+		schedule()
 	end
 end
 
-local function holdRepeat(button: any, fn: () -> ())
+local function buy(id: string): boolean
+	if have(id) + waiting(id) >= Attributes.MaxPoints then
+		return false
+	end
+	local price = Attributes.pointCost(Attributes.level(State.get("Attributes")) + waitingCount())
+	if goldLeft() < price then
+		Sfx.play("Denied")
+		Notifier.push({ Kind = "error", Text = "Not enough Gold", Icon = "Gold" })
+		return false
+	end
+	queued[id] += 1
+	Sfx.play("LevelUp")
+	refresh()
+	schedule()
+	return true
+end
+
+local function holdRepeat(button: any, fn: () -> boolean)
 	local token = 0
 	local lastPointer = -math.huge
-	-- keyboard / gamepad: the button's normal click (a mouse or touch press is already handled below)
 	button:OnClick(function()
 		if os.clock() - lastPointer > 0.6 then
 			fn()
@@ -248,10 +306,14 @@ local function holdRepeat(button: any, fn: () -> ())
 			lastPointer = os.clock()
 			token += 1
 			local mine = token
-			fn()
+			if not fn() then
+				return
+			end
 			task.delay(REPEAT_DELAY, function()
 				while token == mine and button.Instance.Parent do
-					fn()
+					if not fn() then
+						break
+					end
 					task.wait(REPEAT_EVERY)
 				end
 			end)
@@ -267,57 +329,24 @@ local function holdRepeat(button: any, fn: () -> ())
 	end)
 end
 
-local function doConfirm()
-	local count = pendingCount()
-	if busy or count == 0 then
-		return
-	end
-	local data = snapshot()
-	local cost = Attributes.costOf(Attributes.level(data.Attributes), count)
-	if (State.get("Gold") or 0) < cost then
-		Sfx.play("Denied")
-		Notifier.push({ Kind = "error", Text = "Not enough Gold" })
-		return
-	end
-	busy = true
-	refresh()
-	local plan = {}
-	for id, v in pairs(pending) do
-		if v > 0 then
-			plan[id] = v
-		end
-	end
-	local called, ok, result = pcall(Net.request, "TrainAttributes", plan)
-	busy = false
-	if called and ok then
-		pending = Attributes.empty()
-		Sfx.play("LevelUp")
-		Notifier.push({ Kind = "reward", Text = `Trained {count} point{if count == 1 then "" else "s"} for {Format.number(result.Cost)} Gold`, Icon = "Stats" })
-	else
-		Sfx.play("Denied")
-		Notifier.push({ Kind = "error", Text = if called and typeof(result) == "string" then result else "Training failed" })
-	end
-	refresh()
-end
-
 local function doRespec()
-	local zone = Stats.highestZone(snapshot())
-	local cost = Attributes.respecCost(zone)
+	local cost = Attributes.respecCost(Stats.highestZone(snapshot()))
 	Window.confirm({
-		Title = "Respec",
-		Text = `Reset every attribute to 0 for {cost} Diamonds? The Gold you spent is NOT refunded.`,
-		ConfirmText = "Respec",
-		CancelText = "Cancel",
+		Title = "Start over?",
+		Text = `All points back to 0 for {cost} Diamonds. The Gold you spent is NOT given back.`,
+		ConfirmText = "Yes",
+		CancelText = "No",
 		OnConfirm = function()
 			if (State.get("Diamonds") or 0) < cost then
 				Sfx.play("Denied")
-				Notifier.push({ Kind = "error", Text = "Not enough Diamonds" })
+				Notifier.push({ Kind = "error", Text = "Not enough Diamonds", Icon = "Diamond" })
 				return
 			end
 			local called, ok, result = pcall(Net.request, "RespecAttributes")
 			if called and ok then
-				pending = Attributes.empty()
-				Notifier.push({ Kind = "info", Text = `Attributes reset for {result.Cost} Diamonds`, Icon = "Stats" })
+				queued = Attributes.empty()
+				target = {}
+				Notifier.push({ Kind = "info", Text = `Points reset for {result.Cost} Diamonds`, Icon = "Reset" })
 			else
 				Notifier.push({ Kind = "error", Text = if called and typeof(result) == "string" then result else "Respec failed" })
 			end
@@ -332,128 +361,52 @@ local function layout()
 		return
 	end
 	local compact = Theme.isCompact()
-	local header = root:FindFirstChild("Header") :: Frame
-	local bottom = root:FindFirstChild("Bottom") :: Frame
-	if compact then
-		-- phones: the buttons share the header row; one column at a time (Status button swaps)
-		header.Size = UDim2.new(1, 0, 0, Theme.TOUCH)
-		bottom.Position = UDim2.new(1, 0, 0, 0)
-		bottom.AnchorPoint = Vector2.new(1, 0)
-		bottom.Size = UDim2.new(0.66, 0, 0, Theme.TOUCH)
-		levelLabel.Size = UDim2.new(0.34, -8, 0.5, 0)
-		levelLabel.Position = UDim2.fromOffset(6, 0)
-		goldLabel.Parent.Position = UDim2.new(0, 6, 0.5, 2)
-		goldLabel.Parent.AnchorPoint = Vector2.zero
-		goldLabel.Parent.Size = UDim2.new(0.3, -8, 0.5, -4)
-		local top = Theme.TOUCH + 8
-		for _, column in ipairs({ left, right }) do
-			column.Position = UDim2.fromOffset(0, top)
-			column.Size = UDim2.new(1, 0, 1, -top)
-		end
-		left.Visible = not showStatus
-		right.Visible = showStatus
-		statusToggle.Instance.Visible = true
-		statusToggle:SetText(if showStatus then "Points" else "Status")
-		statusToggle.Instance.Size = UDim2.new(0.2, -6, 1, 0)
-		respec.Instance.Size = UDim2.new(0.28, -6, 1, 0)
-		reset.Instance.Size = UDim2.new(0.2, -6, 1, 0)
-		confirm.Instance.Size = UDim2.new(0.32, -6, 1, 0)
-		respec:SetText(respec.Label.Text)
-	else
-		header.Size = UDim2.new(1, 0, 0, HEADER_HEIGHT)
-		bottom.Position = UDim2.new(0, 0, 1, 0)
-		bottom.AnchorPoint = Vector2.new(0, 1)
-		bottom.Size = UDim2.new(1, 0, 0, Theme.TOUCH)
-		levelLabel.Size = UDim2.new(0.6, 0, 1, -8)
-		levelLabel.Position = UDim2.fromOffset(10, 4)
-		goldLabel.Parent.Position = UDim2.new(1, -8, 0.5, 0)
-		goldLabel.Parent.AnchorPoint = Vector2.new(1, 0.5)
-		goldLabel.Parent.Size = UDim2.fromOffset(220, 36)
-		local top = HEADER_HEIGHT + 8
-		local below = Theme.TOUCH + 10
-		left.Position = UDim2.fromOffset(0, top)
-		left.Size = UDim2.new(0.56, -6, 1, -(top + below))
-		right.Position = UDim2.new(0.56, 6, 0, top)
-		right.Size = UDim2.new(0.44, -6, 1, -(top + below))
-		left.Visible = true
-		right.Visible = true
-		statusToggle.Instance.Visible = false
-		respec.Instance.Size = UDim2.new(0.3, -6, 1, 0)
-		reset.Instance.Size = UDim2.new(0.22, -6, 1, 0)
-		confirm.Instance.Size = UDim2.new(0.3, -6, 1, 0)
-	end
+	local gridLayout = grid:FindFirstChildOfClass("UIGridLayout") :: UIGridLayout
+	local width = grid.AbsoluteSize.X / Theme.getScale() - 18
+	local columns = if compact then 2 else 4
+	gridLayout.CellSize = UDim2.fromOffset(math.floor((width - (columns - 1) * 10) / columns), if compact then 150 else 170)
 end
 
-local function column(name: string): ScrollingFrame
-	local frame = Instance.new("ScrollingFrame")
-	frame.Name = name
-	frame.BackgroundColor3 = Theme.Colors.WoodTop
-	frame.BackgroundTransparency = 0.3
-	frame.BorderSizePixel = 0
-	frame.CanvasSize = UDim2.new()
-	frame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	frame.ScrollingDirection = Enum.ScrollingDirection.Y
-	frame.ScrollBarThickness = 6
-	frame.ScrollBarImageColor3 = Theme.Colors.GoldLight
-	Theme.corner(frame, 6)
-	local list = Instance.new("UIListLayout")
-	list.Padding = UDim.new(0, 6)
-	list.SortOrder = Enum.SortOrder.LayoutOrder
-	list.Parent = frame
-	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 6)
-	padding.PaddingBottom = UDim.new(0, 6)
-	padding.PaddingLeft = UDim.new(0, 6)
-	padding.PaddingRight = UDim.new(0, 12)
-	padding.Parent = frame
-	frame.Parent = root
-	return frame
-end
-
-local function makeRow(attribute: any, order: number)
-	local row = Instance.new("Frame")
-	row.Name = attribute.Id
-	row.BackgroundColor3 = Theme.Colors.WoodInset
-	row.Size = UDim2.new(1, 0, 0, ROW_HEIGHT)
-	row.LayoutOrder = order
-	Theme.corner(row, 6)
-	Theme.stroke(row, Theme.Colors.WoodLine, 1.5)
-	row.Parent = left
-	-- name: tap for the effects
-	local name = Instance.new("TextButton")
-	name.Name = "Name"
-	name.Text = ""
-	name.AutoButtonColor = false
-	name.BackgroundTransparency = 1
-	name.Size = UDim2.new(0.34, 0, 1, 0)
-	name.Parent = row
-	Icons.create(attribute.Icon, name, { Size = UDim2.new(0, 0, 0.76, 0), Position = UDim2.new(0, 6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) })
-	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 24, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -60, 0.55, 0), Position = UDim2.fromOffset(56, 4), Parent = name })
-	local gain = Theme.text({ Name = "Gain", Text = attribute.Short .. "  (i)", TextSize = 15, Color = Theme.Colors.Good, Align = "Left", Size = UDim2.new(1, -60, 0.32, 0), Position = UDim2.new(0, 56, 0.62, 0), Parent = name })
-	name.Activated:Connect(function()
+local function makeCard(attribute: any, order: number)
+	local card = Instance.new("Frame")
+	card.Name = attribute.Id
+	card.BackgroundColor3 = Theme.Colors.WoodInset
+	card.LayoutOrder = order
+	Theme.corner(card, 8)
+	Theme.stroke(card, Theme.Colors.GoldDark, 2)
+	card.Parent = grid
+	-- the picture: tap for what it does
+	local pic = Instance.new("TextButton")
+	pic.Name = "Picture"
+	pic.Text = ""
+	pic.AutoButtonColor = false
+	pic.BackgroundTransparency = 1
+	pic.Size = UDim2.fromOffset(70, 70)
+	pic.Position = UDim2.fromOffset(6, 6)
+	pic.ZIndex = 3
+	pic.Parent = card
+	Icons.create(attribute.Icon, pic, { ZIndex = 3 })
+	pic.Activated:Connect(function()
 		tooltip(attribute)
 	end)
-	local points = Theme.text({ Name = "Points", Font = "Number", Text = "0", TextSize = 26, Size = UDim2.new(0.17, 0, 0.7, 0), Position = UDim2.new(0.34, 0, 0.15, 0), Parent = row })
+	local points = Theme.text({ Name = "Points", Font = "Number", Text = "0", TextSize = 40, Size = UDim2.new(1, -86, 0, 44), Position = UDim2.fromOffset(80, 8), ZIndex = 3, Parent = card })
+	local gain = Theme.text({ Name = "Gain", Text = "", TextSize = 15, Color = Theme.Colors.Good, Size = UDim2.new(1, -86, 0, 20), Position = UDim2.fromOffset(80, 52), ZIndex = 3, Parent = card })
 	-- bar 0..40 with the soft-cap marker
 	local track = Instance.new("Frame")
 	track.Name = "Bar"
 	track.BackgroundColor3 = Theme.Colors.WoodLine
-	track.Size = UDim2.new(0.49, -(2 * Theme.TOUCH + 22), 0, 14)
-	track.Position = UDim2.new(0.51, 4, 0.5, -10)
-	track.AnchorPoint = Vector2.new(0, 0.5)
-	Theme.corner(track, 7)
-	track.Parent = row
+	track.Size = UDim2.new(1, -16, 0, 12)
+	track.Position = UDim2.new(0, 8, 0, 84)
+	track.ZIndex = 3
+	Theme.corner(track, 6)
+	track.Parent = card
 	local fill = Instance.new("Frame")
 	fill.Name = "Fill"
 	fill.BackgroundColor3 = Theme.Colors.GoldLight
 	fill.BorderSizePixel = 0
-	Theme.corner(fill, 7)
+	fill.ZIndex = 3
+	Theme.corner(fill, 6)
 	fill.Parent = track
-	local pendingFill = Instance.new("Frame")
-	pendingFill.Name = "Pending"
-	pendingFill.BackgroundColor3 = GREEN
-	pendingFill.BorderSizePixel = 0
-	pendingFill.Parent = track
 	local marker = Instance.new("Frame")
 	marker.Name = "SoftCap"
 	marker.BackgroundColor3 = Theme.Colors.Text
@@ -461,38 +414,25 @@ local function makeRow(attribute: any, order: number)
 	marker.AnchorPoint = Vector2.new(0.5, 0.5)
 	marker.Position = UDim2.fromScale(Attributes.SoftCap / Attributes.MaxPoints, 0.5)
 	marker.Size = UDim2.new(0, 3, 1, 8)
-	marker.ZIndex = 2
+	marker.ZIndex = 4
 	marker.Parent = track
-	local cost = Theme.text({ Name = "Cost", Text = "", TextSize = 15, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(0.49, -(2 * Theme.TOUCH + 22), 0, 18), Position = UDim2.new(0.51, 4, 0.5, 6), Parent = row })
-	local minus = Button.new({ Name = "Minus", Text = "-", Style = "secondary", TextSize = 34, Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -(Theme.TOUCH + 10), 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = row })
-	local plus = Button.new({ Name = "Plus", Text = "+", Style = "primary", TextSize = 34, Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -4, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = row })
-	holdRepeat(minus, function()
-		change(attribute.Id, -1)
-	end)
+	-- + (coin) price: buys one point now
+	local plus = Button.new({ Name = "Plus", Text = "0", Icon = "Plus", Style = "go", TextSize = 32, Size = UDim2.new(1, -16, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 3, Parent = card })
+	plus.Label.Size = UDim2.new(1, -88, 0.78, 0) -- room for the coin on the right
+	Icons.create("Gold", plus.Face, { Size = UDim2.new(0, 0, 0.7, 0), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 4 })
 	holdRepeat(plus, function()
-		change(attribute.Id, 1)
+		return buy(attribute.Id)
 	end)
-	rows[attribute.Id] = { points = points, gain = gain, fill = fill, pendingFill = pendingFill, cost = cost, minus = minus, plus = plus }
+	cards[attribute.Id] = { points = points, gain = gain, fill = fill, plus = plus }
 end
 
-local function statusLine(key: string, label: string, order: number)
-	local line = Instance.new("Frame")
-	line.Name = key
-	line.BackgroundTransparency = 1
-	line.Size = UDim2.new(1, 0, 0, 26)
-	line.LayoutOrder = order
-	line.Parent = right
-	Theme.text({ Text = label, TextSize = 18, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(0.46, 0, 1, 0), Parent = line })
-	local value = Theme.text({ Font = "Number", Text = "", TextSize = 18, Align = "Right", Size = UDim2.new(0.54, 0, 1, 0), Position = UDim2.fromScale(0.46, 0), Parent = line })
-	lines[key] = { value = value }
-end
-
-function AttributesPage.build(page: ScrollingFrame)
+function AttributesPage.build(page: ScrollingFrame, ctx: any?)
 	for _, child in ipairs(page:GetChildren()) do
 		if child:IsA("UIListLayout") or child:IsA("UIPadding") then
 			child:Destroy()
 		end
 	end
+	windowFrame = if ctx then ctx.Frame else page
 	page.ScrollingEnabled = false
 	page.AutomaticCanvasSize = Enum.AutomaticSize.None
 	page.CanvasSize = UDim2.new()
@@ -504,61 +444,80 @@ function AttributesPage.build(page: ScrollingFrame)
 	root.Position = UDim2.fromOffset(6, 6)
 	root.Parent = page
 
+	-- top: level, Gold, (i), respec
 	local header = Instance.new("Frame")
 	header.Name = "Header"
-	header.BackgroundColor3 = Theme.Colors.WoodTop
-	Theme.corner(header, 6)
+	header.BackgroundTransparency = 1
+	header.Size = UDim2.new(1, 0, 0, TOP)
 	header.Parent = root
-	levelLabel = Theme.text({ Name = "Level", Font = "Title", Text = "", TextSize = 28, Color = Theme.Colors.Gold, Align = "Left", Parent = header })
-	local goldBox = Instance.new("Frame")
-	goldBox.Name = "Gold"
-	goldBox.BackgroundColor3 = Theme.Colors.WoodInset
-	Theme.corner(goldBox, 18)
-	Theme.stroke(goldBox, Theme.Colors.GoldDark, 2)
-	goldBox.Parent = header
-	Icons.create("Gold", goldBox, { Size = UDim2.new(0, 0, 1.1, 0), Position = UDim2.new(0, -6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 2 })
-	goldLabel = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Right", Size = UDim2.new(1, -44, 1, -6), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Parent = goldBox })
+	local left = Instance.new("UIListLayout")
+	left.FillDirection = Enum.FillDirection.Horizontal
+	left.VerticalAlignment = Enum.VerticalAlignment.Center
+	left.Padding = UDim.new(0, 10)
+	left.SortOrder = Enum.SortOrder.LayoutOrder
+	left.Parent = header
+	levelChip = Chips.chip(header, "Up", "0/0", { Height = 44, LayoutOrder = 1 })
+	goldChip = Chips.chip(header, "Gold", "0", { Height = 44, LayoutOrder = 2 })
+	local actions = Instance.new("Frame")
+	actions.BackgroundTransparency = 1
+	actions.AnchorPoint = Vector2.new(1, 0)
+	actions.Position = UDim2.new(1, 0, 0, 0)
+	actions.Size = UDim2.new(0, 260, 1, 0)
+	actions.Parent = root
+	local right = Instance.new("UIListLayout")
+	right.FillDirection = Enum.FillDirection.Horizontal
+	right.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	right.VerticalAlignment = Enum.VerticalAlignment.Center
+	right.Padding = UDim.new(0, 8)
+	right.SortOrder = Enum.SortOrder.LayoutOrder
+	right.Parent = actions
+	actions.Size = UDim2.new(0, 260, 0, TOP)
+	respec = Button.new({ Name = "Respec", Text = "7", Icon = "Reset", Style = "danger", TextSize = 30, Size = UDim2.fromOffset(130, Theme.TOUCH), LayoutOrder = 1, Parent = actions, OnClick = doRespec })
+	respec.Label.Size = UDim2.new(1, -84, 0.78, 0)
+	Icons.create("Diamond", respec.Face, { Size = UDim2.new(0, 0, 0.66, 0), Position = UDim2.new(1, -6, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 2 })
+	Info.button({ Parent = actions, Frame = windowFrame, Title = "All stats", Lines = detailLines, Size = Theme.TOUCH, LayoutOrder = 2, PopupSize = Vector2.new(640, 520) })
 
-	left = column("Points")
-	right = column("Status")
+	-- stats as icon + number
+	local chipRow = Chips.row(root, { Name = "Stats", ZIndex = 3 })
+	chipRow.Position = UDim2.fromOffset(0, TOP + 4)
+	for i, spec in ipairs(CHIPS) do
+		chips[spec[1]] = Chips.chip(chipRow, spec[2], "", { Height = 40, LayoutOrder = i })
+	end
+
+	-- one card per attribute
+	grid = Instance.new("ScrollingFrame")
+	grid.Name = "Cards"
+	grid.BackgroundTransparency = 1
+	grid.BorderSizePixel = 0
+	grid.CanvasSize = UDim2.new()
+	grid.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	grid.ScrollingDirection = Enum.ScrollingDirection.Y
+	grid.ScrollBarThickness = 6
+	grid.ScrollBarImageColor3 = Theme.Colors.GoldLight
+	local top = TOP + 56
+	grid.Position = UDim2.fromOffset(0, top)
+	grid.Size = UDim2.new(1, 0, 1, -top)
+	local gridLayout = Instance.new("UIGridLayout")
+	gridLayout.CellPadding = UDim2.fromOffset(10, 10)
+	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	gridLayout.Parent = grid
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, 4)
+	pad.PaddingLeft = UDim.new(0, 4)
+	pad.PaddingRight = UDim.new(0, 12)
+	pad.PaddingBottom = UDim.new(0, 8)
+	pad.Parent = grid
+	grid.Parent = root
 	for index, attribute in ipairs(Attributes.List) do
-		makeRow(attribute, index)
+		makeCard(attribute, index)
 	end
-	Theme.text({ Font = "Title", Text = "Status", TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, 0, 0, 32), LayoutOrder = 0, Parent = right })
-	for index, spec in ipairs(STATUS) do
-		statusLine(spec[1], spec[2], index)
-	end
-	local divider = Instance.new("Frame")
-	divider.BackgroundColor3 = Theme.Colors.GoldDark
-	divider.BorderSizePixel = 0
-	divider.Size = UDim2.new(1, 0, 0, 2)
-	divider.LayoutOrder = 50
-	divider.Parent = right
-	weaponTitle = Theme.text({ Font = "Button", Text = "", TextSize = 19, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, 0, 0, 26), LayoutOrder = 51, Parent = right })
-	weaponLine = Theme.text({ Font = "Number", Text = "", TextSize = 18, Align = "Left", Size = UDim2.new(1, 0, 0, 24), LayoutOrder = 52, Parent = right })
-	gradesLine = Theme.text({ Text = "", TextSize = 17, Color = Theme.Colors.TextDim, Align = "Left", Size = UDim2.new(1, 0, 0, 24), LayoutOrder = 53, Parent = right })
-
-	local bottom = Instance.new("Frame")
-	bottom.Name = "Bottom"
-	bottom.BackgroundTransparency = 1
-	bottom.Parent = root
-	local list = Instance.new("UIListLayout")
-	list.FillDirection = Enum.FillDirection.Horizontal
-	list.HorizontalAlignment = Enum.HorizontalAlignment.Right
-	list.Padding = UDim.new(0, 8)
-	list.SortOrder = Enum.SortOrder.LayoutOrder
-	list.Parent = bottom
-	statusToggle = Button.new({ Name = "StatusToggle", Text = "Status", Style = "wood", TextSize = 20, Size = UDim2.new(0.22, -6, 1, 0), LayoutOrder = 0, Parent = bottom, OnClick = function()
-		showStatus = not showStatus
-		layout()
-	end })
-	respec = Button.new({ Name = "Respec", Text = "Respec", Icon = "Diamond", Style = "danger", TextSize = 20, Size = UDim2.new(0.3, -6, 1, 0), LayoutOrder = 1, Parent = bottom, OnClick = doRespec })
-	reset = Button.new({ Name = "Reset", Text = "Reset pending", Style = "secondary", TextSize = 20, Size = UDim2.new(0.22, -6, 1, 0), LayoutOrder = 2, Parent = bottom, OnClick = function()
-		pending = Attributes.empty()
-		Sfx.play("UIClick")
-		refresh()
-	end })
-	confirm = Button.new({ Name = "Confirm", Text = "Confirm", Icon = "Gold", Style = "go", TextSize = 20, Size = UDim2.new(0.3, -6, 1, 0), LayoutOrder = 3, Parent = bottom, OnClick = doConfirm })
+	-- the chip row wraps on small screens: the cards start under it
+	chipRow:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		local h = chipRow.AbsoluteSize.Y / Theme.getScale()
+		grid.Position = UDim2.fromOffset(0, TOP + h + 12)
+		grid.Size = UDim2.new(1, 0, 1, -(TOP + h + 12))
+	end)
+	grid:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
 
 	layout()
 	Theme.Changed:Connect(layout)
@@ -568,8 +527,6 @@ function AttributesPage.build(page: ScrollingFrame)
 	Window.Closed:Connect(function(id)
 		if id == "Stats" then
 			closeOverlay()
-			pending = Attributes.empty() -- pending points are only a plan: closing drops them
-			refresh()
 		end
 	end)
 	refresh()

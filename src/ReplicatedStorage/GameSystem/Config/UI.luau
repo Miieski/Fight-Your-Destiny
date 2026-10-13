@@ -32,18 +32,31 @@ UI.MenuGrid = { Columns = 2, Tile = 58, Gap = 5, PcTile = 80, PcGap = 6 }
 UI.CornerButton = { Size = Vector2.new(210, 68), Margin = 16, TextSize = 32 }
 
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
+-- Kid-friendly (owner 2026-10-13): Icon is drawn left of the title, every tab shows TabIcons[tab] with the short
+-- TabLabels[tab] (or its name). Icon ids: UI/Kit/Icons.
 UI.Windows = {
-	Inventory = { Title = "Inventory", Tabs = { "Equipment", "Weapons", "Armor", "Pets", "Eggs", "Trophies" }, Size = Vector2.new(1080, 620) },
+	Inventory = { Title = "Inventory", Icon = "Inventory", Tabs = { "Equipment", "Weapons", "Armor", "Pets", "Eggs", "Trophies" }, Size = Vector2.new(1080, 620),
+		TabIcons = { Equipment = "Helmet", Weapons = "Sword", Armor = "Chest", Pets = "Pets", Eggs = "Egg", Trophies = "Trophy" },
+		TabLabels = { Equipment = "Me" } },
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
-	Stats = { Title = "Attributes", Size = Vector2.new(1080, 620) }, -- Attributes, Elden Ring style (UI/Pages/AttributesPage)
-	Shop = { Title = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600) },
-	Rebirth = { Title = "Rebirth", Tabs = { "Rebirth", "Rebirth Shop" }, Size = Vector2.new(940, 620) }, -- UI/Pages/RebirthPage + RebirthShopPage
-	Pets = { Title = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620) },
-	Index = { Title = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620) },
-	Quests = { Title = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600) },
-	Team = { Title = "Team", Tabs = { "Team", "Invite" }, Size = Vector2.new(900, 580) },
-	Settings = { Title = "Settings", Tabs = { "Audio", "Display", "Controls", "Keys", "Other" } },
-	Zones = { Title = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
+	Stats = { Title = "Stats", Icon = "Stats", Size = Vector2.new(1080, 620) }, -- attributes (UI/Pages/AttributesPage)
+	Shop = { Title = "Shop", Icon = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600),
+		TabIcons = { Weapons = "Sword", Diamonds = "Diamond" } },
+	Rebirth = { Title = "Rebirth", Icon = "RebirthShop", Tabs = { "Rebirth", "Rebirth Shop" }, Size = Vector2.new(940, 620), -- UI/Pages/RebirthPage + RebirthShopPage
+		TabIcons = { Rebirth = "RebirthShop", ["Rebirth Shop"] = "RebirthCredit" }, TabLabels = { ["Rebirth Shop"] = "Shop" } },
+	Pets = { Title = "Pets", Icon = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620),
+		TabIcons = { Pets = "Pets", Eggs = "Egg", ["Premium Eggs"] = "Diamond" }, TabLabels = { ["Premium Eggs"] = "Premium" } },
+	Index = { Title = "Index", Icon = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620),
+		TabIcons = { Weapons = "Sword", Armor = "Chest", Pets = "Pets", Enemies = "Skull" } },
+	Quests = { Title = "Quests", Icon = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600),
+		TabIcons = { Quests = "Quests", ["Daily Reward"] = "Calendar", ["Playtime Gifts"] = "Gift", Codes = "Ticket" },
+		TabLabels = { ["Daily Reward"] = "Daily", ["Playtime Gifts"] = "Gifts" } },
+	Team = { Title = "Team", Icon = "Team", Tabs = { "Team", "Invite" }, Size = Vector2.new(900, 580),
+		TabIcons = { Team = "Team", Invite = "Invite" } },
+	Settings = { Title = "Settings", Icon = "Settings", Tabs = { "Audio", "Display", "Controls", "Keys", "Other" },
+		TabIcons = { Audio = "Speaker", Display = "Eye", Controls = "Gamepad", Keys = "Keyboard", Other = "Settings" },
+		TabLabels = { Audio = "Sound", Display = "Screen" } },
+	Zones = { Title = "Zones", Icon = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
 	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test", "Weapons" }, Size = Vector2.new(760, 520) },
 }
 UI.WINDOW_SIZE = Vector2.new(700, 500)

@@ -74,8 +74,7 @@ function InventoryPage.buildWeapons(page: ScrollingFrame)
 			empty.BackgroundTransparency = 1
 			empty.Size = UDim2.fromOffset(CELL.X * 3, CELL.Y)
 			Icons.create("Sword", empty, { Size = UDim2.fromOffset(70, 70), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0) })
-			Theme.text({ Text = "No weapons yet", TextSize = 24, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 86), Parent = empty })
-			Button.new({ Text = "Open the Shop", Icon = "Shop", Style = "primary", Size = UDim2.fromOffset(230, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), Parent = empty, OnClick = function()
+			Button.new({ Name = "OpenShop", Icon = "Shop", Style = "primary", Size = UDim2.fromOffset(150, Theme.TOUCH + 16), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), Parent = empty, OnClick = function()
 				Window.open("Shop", "Weapons")
 			end })
 			empty.Parent = page
@@ -109,13 +108,13 @@ function InventoryPage.buildWeapons(page: ScrollingFrame)
 			if entry.uid == equipped then
 				local badge = Instance.new("Frame")
 				badge.BackgroundColor3 = Theme.Colors.Good
-				badge.Size = UDim2.fromOffset(92, 22)
+				badge.Size = UDim2.fromOffset(30, 30) -- a green check (kid-friendly UI)
 				badge.Position = UDim2.new(0.5, 0, 0, 0)
 				badge.AnchorPoint = Vector2.new(0.5, 0)
 				badge.ZIndex = 4
-				Theme.corner(badge, 11)
+				Theme.corner(badge, 15)
 				Theme.stroke(badge, Theme.Colors.Ink, 1.5)
-				Theme.text({ Font = "Button", Text = "Equipped", TextSize = 15, Size = UDim2.new(1, -6, 1, -2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5, Parent = badge })
+				Icons.create("Check", badge, { Size = UDim2.fromScale(0.8, 0.8), ZIndex = 5 })
 				badge.Parent = cell
 				name.TextColor3 = Theme.Colors.Gold
 			end

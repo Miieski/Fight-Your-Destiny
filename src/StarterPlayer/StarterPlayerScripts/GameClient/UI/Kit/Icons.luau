@@ -136,12 +136,40 @@ Icons.SubZones = {
 	Volcano_4 = "rbxassetid://96827613411523",
 }
 
+-- Kid-friendly UI icons (owner 2026-10-13, tools/blender/fyd_icon_recipes3.py, Icons/Ui/<id>.png).
+Icons.Ui = {
+	Calendar = "rbxassetid://104636752922087",
+	Clock = "rbxassetid://123872865728216",
+	Dice = "rbxassetid://120753023589191",
+	Eye = "rbxassetid://83761330657116",
+	Funnel = "rbxassetid://120309246881524",
+	Gamepad = "rbxassetid://98138552556164",
+	Gift = "rbxassetid://111893285169953",
+	Invite = "rbxassetid://78334067412335",
+	Keyboard = "rbxassetid://110754243947960",
+	MapPin = "rbxassetid://99898140940490",
+	Music = "rbxassetid://85234454329424",
+	Reset = "rbxassetid://109835844675554",
+	Sort = "rbxassetid://74767964884264",
+	Speaker = "rbxassetid://93023240228864",
+	Ticket = "rbxassetid://70602877771733",
+	Trash = "rbxassetid://123173564925260",
+	Up = "rbxassetid://107778515573736",
+}
+-- Realistic wood textures + iron corner (tools/blender/fyd_ui_textures.py, Icons/UiTex/<id>.png): Kit/Panel.
+Icons.Tex = {
+	IronCorner = "rbxassetid://139561957073102",
+	WoodInset = "rbxassetid://80816013746152",
+	WoodLight = "rbxassetid://125306183924707",
+	WoodPanel = "rbxassetid://79607230035855",
+}
+
 -- Older UI ids that now point at a 3D icon.
 local ALIASES = {
-	Heart = "HealthHeart", Boost = "ZoneBoost", Armor = "Chest", Gift = "Rewards", Training = "Stats",
+	Heart = "HealthHeart", Boost = "ZoneBoost", Armor = "Chest", Training = "Stats",
 	Admin = "Crown", Menu = "MenuLines",
 }
-local GROUPS = { "Menu", "Currency", "Stats", "Items", "Categories", "Marks", "Zones", "SubZones" }
+local GROUPS = { "Menu", "Currency", "Stats", "Items", "Categories", "Marks", "Ui", "Zones", "SubZones" }
 
 -- The rendered icons keep a transparent margin (outline + shadow), so the image is drawn a bit larger
 -- than its holder to fill the same space as the old flat shapes.

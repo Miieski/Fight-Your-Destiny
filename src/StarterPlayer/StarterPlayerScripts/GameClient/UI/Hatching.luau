@@ -26,9 +26,11 @@ local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local ModelIcon = require(Kit.ModelIcon)
 local Panel = require(Kit.Panel)
 local Theme = require(Kit.Theme)
+local STAT_ICONS = { Gold = "GoldGain", HP = "MaxHP", Attack = "Attack", Speed = "Speed", Defense = "Defense" }
 
 local Hatching = {}
 
@@ -170,19 +172,21 @@ local function revealOne(show: Show, result: any)
 	callout(show, result)
 	local zone = Zones.List[result.zone]
 	info(show, Pets.displayName(asPet(result)), if Theme.isCompact() then 24 else 30, Theme.Colors.Gold, 2, "Title")
-	info(show, `{species.Role} - {if species.Premium then "Premium" else (zone and ZoneVisibility.displayName(zone.Id) or "")}`, 18, Theme.Colors.TextDim, 3)
-	-- the values include the mutation x size boost
+	local _ = zone
+	-- the values include the mutation x size boost; shown as pictures + numbers (kid-friendly UI)
 	local lines, bonus = Pets.describe(result.petId, result.rarity, Hatching.petEffect() * PetMutations.mult(asPet(result)))
-	info(show, table.concat(lines, "   "), 20, nil, 4)
-	info(show, `Bonus: {bonus}`, 19, Theme.Colors.Good, 5)
+	local chipRow = Chips.row(show.info, { Align = "Center", LayoutOrder = 4, ZIndex = 4 })
+	for i, stat in ipairs(species.Stats) do
+		Chips.chip(chipRow, STAT_ICONS[stat] or "Star", string.match(lines[i] or "", "^(%S+)") or "", { Height = 40, LayoutOrder = i, ZIndex = 4 })
+	end
+	Chips.chip(chipRow, "Star", string.match(bonus, "^(%S+)") or "", { Height = 40, LayoutOrder = 10, ZIndex = 4, TextColor = Theme.Colors.Good })
 	if result.lucky then
-		info(show, "Lucky! Egg Luck made it one rarity higher", 17, Theme.Colors.Gold, 6, "Button")
+		info(show, "Lucky!", 22, Theme.Colors.Gold, 6, "Button") -- Egg Luck made it one rarity higher
 	end
 	local equip = show.buttons.Equip
 	equip.Instance.Visible = true
 	if equippedCount() >= Hatching.slots() then
-		equip:SetText("Slots full")
-		equip:SetStyle("disabled")
+		equip:SetStyle("disabled") -- every slot is full
 	end
 end
 
@@ -198,10 +202,10 @@ local function revealMany(show: Show)
 	if infoList then
 		infoList.VerticalAlignment = Enum.VerticalAlignment.Top
 	end
-	local banner = info(show, `{#show.results} pets hatched!`, if compact then 26 else 34, Theme.Colors.Gold, 1, "Title")
+	local banner = info(show, `x{#show.results}`, if compact then 26 else 34, Theme.Colors.Gold, 1, "Title")
 	banner.LayoutOrder = 1
 	local best = Rarities.get(show.best.rarity)
-	local bestLine = info(show, `Best: {best.Name} {Pets.displayName(asPet(show.best))}`, 20, nil, 2, "Button")
+	local bestLine = info(show, `{best.Name} {Pets.displayName(asPet(show.best))}`, 20, nil, 2, "Button")
 	Theme.paintRarity(bestLine, show.best.rarity)
 	local grid = Instance.new("ScrollingFrame")
 	grid.Name = "Summary"
@@ -251,8 +255,7 @@ local function revealMany(show: Show)
 		cell.Parent = grid
 	end
 	local equip = show.buttons.Equip
-	equip:SetText("Equip Best")
-	equip.Instance.Visible = true
+	equip.Instance.Visible = true -- the check equips the best pets
 end
 
 local function reveal(show: Show)
@@ -417,14 +420,14 @@ function Hatching.play(results: { any }, options: Options?)
 	local buttonW = if compact then 170 else 200
 	local show: Show
 	local buttons = {}
+	-- kid-friendly UI: pictures (check = equip, egg = again, X = close)
 	buttons.Skip = Button.new({ Name = "Skip", Text = "Skip", Style = "secondary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 1, ZIndex = 4, Parent = row, OnClick = function()
 		reveal(show)
 	end })
-	buttons.Equip = Button.new({ Name = "Equip", Text = "Equip", Style = "go", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 2, ZIndex = 4, Parent = row, OnClick = function()
+	buttons.Equip = Button.new({ Name = "Equip", Icon = "Check", Style = "go", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 2, ZIndex = 4, Parent = row, OnClick = function()
 		if #show.results > 1 then
 			local ok, message = Net.request("EquipBestPets")
 			if ok then
-				buttons.Equip:SetText("Equipped")
 				buttons.Equip:SetEnabled(false)
 				Notifier.push({ Kind = "info", Text = "Best pets equipped", Icon = "Pets" })
 			else
@@ -435,7 +438,6 @@ function Hatching.play(results: { any }, options: Options?)
 		local result = show.results[1]
 		local ok, message = Net.request("EquipPet", result.uid)
 		if ok then
-			buttons.Equip:SetText("Equipped")
 			buttons.Equip:SetEnabled(false)
 			Notifier.push({ Kind = "info", Text = `Equipped {Pets.ById[result.petId].Name}`, Icon = "Pets" })
 		else
@@ -443,13 +445,13 @@ function Hatching.play(results: { any }, options: Options?)
 			Notifier.push({ Kind = "error", Text = tostring(message or "Could not equip") })
 		end
 	end })
-	buttons.Next = Button.new({ Name = "Next", Text = opts.NextText or "Hatch next", Style = "primary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 3, ZIndex = 4, Parent = row, OnClick = function()
+	buttons.Next = Button.new({ Name = "Next", Text = opts.NextText, Icon = "Egg", Style = "primary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 3, ZIndex = 4, Parent = row, OnClick = function()
 		close()
 		if opts.OnNext then
 			opts.OnNext()
 		end
 	end })
-	buttons.Close = Button.new({ Name = "Close", Text = "Close", Style = "secondary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 4, ZIndex = 4, Parent = row, OnClick = close })
+	buttons.Close = Button.new({ Name = "Close", Icon = "Close", Style = "secondary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 4, ZIndex = 4, Parent = row, OnClick = close })
 	for _, name in ipairs({ "Equip", "Next", "Close" }) do
 		buttons[name].Instance.Visible = false
 	end

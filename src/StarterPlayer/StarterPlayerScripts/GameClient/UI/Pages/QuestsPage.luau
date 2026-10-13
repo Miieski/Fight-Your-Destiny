@@ -5,6 +5,9 @@
 --   Daily Reward: the 7-day streak, today's reward to claim (missing a day restarts at day 1).
 --   Playtime Gifts: 6 gifts by minutes played today.
 --   Codes: a text box and Redeem.
+-- Kid-friendly UI (owner 2026-10-13: "avoid text, more visual"): rewards are icon + number chips, timers are a clock
+-- + time, claim buttons show a picture (gift = claim now, grey gift = not yet, check = claimed, clock = wait); a
+-- quest's sentence shows when its picture is tapped; the rules are behind an (i).
 -- Days and timers use the server clock (workspace:GetServerTimeNow()).
 --   QuestsPage.build(ctx)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -18,13 +21,16 @@ local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
+local Chips = require(Kit.Chips)
 local Icons = require(Kit.Icons)
+local Info = require(Kit.Info)
 local Theme = require(Kit.Theme)
 
 local QuestsPage = {}
 
 local busy = false
 local playtimeSeen = os.clock() -- when the replicated play time last changed (the display adds the time since)
+local windowFrame: GuiObject? = nil
 
 local function now(): number
 	return workspace:GetServerTimeNow()
@@ -55,23 +61,6 @@ local function request(action: string, ...: any): (boolean, any)
 	return false, nil
 end
 
-local function rewardText(reward: { [string]: any }): string
-	local parts = {}
-	if reward.Gold then
-		table.insert(parts, `{Format.number(reward.Gold * g())} Gold`)
-	end
-	if reward.Diamonds then
-		table.insert(parts, `{reward.Diamonds} Diamonds`)
-	end
-	if reward.PremiumEgg then
-		table.insert(parts, "Premium egg")
-	end
-	if reward.Boost then
-		table.insert(parts, `Gold x2 {reward.BoostMinutes or reward.Minutes} min`)
-	end
-	return table.concat(parts, " + ")
-end
-
 local function rewardIcon(reward: { [string]: any }): string
 	if reward.PremiumEgg then
 		return "Egg"
@@ -81,6 +70,65 @@ local function rewardIcon(reward: { [string]: any }): string
 		return "Diamond"
 	end
 	return "Gold"
+end
+
+-- The reward as icon + number chips. goldMult: Daily / Gifts store Gold as a multiple of the zone's G.
+local function rewardChips(parent: Instance, reward: { [string]: any }, height: number, goldMult: number, props: { [string]: any }?): Frame
+	local p = props or {}
+	local row = Chips.row(parent, { Name = "Reward", Align = p.Align or "Center", ZIndex = 3, LayoutOrder = p.LayoutOrder })
+	row.Size = p.Size or UDim2.new(1, -8, 0, 0)
+	if p.Position then
+		row.Position = p.Position
+		row.AnchorPoint = p.AnchorPoint or Vector2.zero
+	end
+	local list = row:FindFirstChildOfClass("UIListLayout") :: UIListLayout
+	list.Padding = UDim.new(0, 4)
+	local order = 0
+	local function chip(icon: string, text: string)
+		order += 1
+		Chips.chip(row, icon, text, { Height = height, LayoutOrder = order, ZIndex = 3 })
+	end
+	if reward.Gold then
+		chip("Gold", Format.number(reward.Gold * goldMult))
+	end
+	if reward.Diamonds then
+		chip("Diamond", tostring(reward.Diamonds))
+	end
+	if reward.PremiumEgg then
+		chip("Egg", "1")
+	end
+	if reward.Boost then
+		chip("Boost", `{reward.BoostMinutes or reward.Minutes}m`)
+	end
+	return row
+end
+
+-- A claim button that shows a picture: "claim" = gift (green), "locked" = grey gift (not yet), "done" = check,
+-- "wait" = clock + time left.
+type ClaimButton = { button: any, set: (state: string, text: string?) -> () }
+local function claimButton(props: { [string]: any }): ClaimButton
+	props.Text = ""
+	props.Style = "disabled"
+	props.TextSize = props.TextSize or 26
+	local button = Button.new(props)
+	local z = button.Instance.ZIndex
+	local pics = {
+		Gift = Icons.create("Gift", button.Face, { Size = UDim2.new(0, 0, 0.72, 0), ZIndex = z }),
+		Check = Icons.create("Check", button.Face, { Size = UDim2.new(0, 0, 0.72, 0), ZIndex = z }),
+		Clock = Icons.create("Clock", button.Face, { Size = UDim2.new(0, 0, 0.66, 0), Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = z }),
+	}
+	button.Label.Size = UDim2.new(1, -52, 0.78, 0)
+	button.Label.Position = UDim2.new(0, 44, 0.5, 0)
+	button.Label.AnchorPoint = Vector2.new(0, 0.5)
+	local function set(state: string, text: string?)
+		pics.Gift.Visible = state == "claim" or state == "locked"
+		pics.Check.Visible = state == "done"
+		pics.Clock.Visible = state == "wait"
+		button:SetText(if state == "wait" then text or "" else "")
+		button:SetStyle(if state == "claim" then "go" else "disabled")
+	end
+	set("locked")
+	return { button = button, set = set }
 end
 
 local function card(parent: Instance, size: UDim2, order: number, highlight: boolean?): Frame
@@ -119,12 +167,27 @@ local function gridOf(page: Instance, order: number, cell: Vector2): Frame
 	return grid
 end
 
+-- The top line of a tab: chips on the left, an (i) with the rules on the right.
+local function topRow(page: Instance, title: string, lines: { string }?): Frame
+	local row = Instance.new("Frame")
+	row.Name = "Top"
+	row.BackgroundTransparency = 1
+	row.Size = UDim2.new(1, -8, 0, 44)
+	row.LayoutOrder = 0
+	row.Parent = page
+	if lines and windowFrame then
+		Info.button({ Parent = row, Frame = windowFrame, Title = title, Lines = lines, Size = 40, Position = UDim2.new(1, -4, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, PopupSize = Vector2.new(560, 260) })
+	end
+	return row
+end
+
 ----------------------------------------------------------------------------------------------------
 -- tabs
 ----------------------------------------------------------------------------------------------------
 local function buildQuests(page: ScrollingFrame): () -> ()
 	local small = Theme.isCompact()
-	local header = Theme.text({ Font = "Number", Text = "", TextSize = 19, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -8, 0, 28), LayoutOrder = 0, Parent = page })
+	local top = topRow(page, "Quests", { "3 new quests every day at 00:00 UTC.", `Finish and claim all 3 quests: +{Quests.AllDoneDiamonds} Diamonds.`, "Tap a quest's picture to see what to do." })
+	local timer = Chips.chip(top, "Clock", "", { Height = 40, Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	local list = Instance.new("Frame")
 	list.BackgroundTransparency = 1
 	list.Size = UDim2.new(1, -8, 0, 0)
@@ -135,50 +198,69 @@ local function buildQuests(page: ScrollingFrame): () -> ()
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = list
 	list.Parent = page
-	local bonus = Theme.text({ Font = "Button", Text = "", TextSize = 20, Size = UDim2.new(1, -8, 0, 30), LayoutOrder = 2, Parent = page })
+	-- the all-done bonus: 3 checks -> Diamonds
+	local bonus = Chips.row(page, { Name = "Bonus", Align = "Center", LayoutOrder = 2 })
+	local bonusDone = Chips.chip(bonus, "Check", "0/3", { Height = 40, LayoutOrder = 1 })
+	Icons.create("Arrow", bonus, { Size = UDim2.fromOffset(30, 30), ZIndex = 3 }).LayoutOrder = 2
+	local bonusReward = Chips.chip(bonus, "Diamond", `+{Quests.AllDoneDiamonds}`, { Height = 40, LayoutOrder = 3 })
 	local function refresh()
 		clear(list)
 		local quests = State.get("Quests") or {}
 		local today = Quests.day(now())
 		local current = quests.Day == today and typeof(quests.List) == "table"
 		if not current then
-			Theme.text({ Text = "Getting today's quests...", TextSize = 20, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 40), Parent = list })
-			bonus.Text = ""
+			Icons.create("Clock", list, { Size = UDim2.fromOffset(56, 56), ZIndex = 3 }) -- getting today's quests
+			bonus.Visible = false
 			return
 		end
+		bonus.Visible = true
 		local zone = Stats.highestZone({ Zones = State.get("Zones") or {} })
-		local rowH = if small then 84 else 100
+		local rowH = if small then 76 else 92
+		local claimedCount = 0
 		for i, quest in ipairs(quests.List) do
 			local kind = Quests.ById[quest.Id]
 			if kind then
 				local done = quest.Progress >= quest.Target
+				if quest.Claimed then
+					claimedCount += 1
+				end
 				local row = card(list, UDim2.new(1, 0, 0, rowH), i, done and not quest.Claimed)
-				Icons.create(kind.Icon, row, { Size = UDim2.fromOffset(rowH - 20, rowH - 20), Position = UDim2.fromOffset(10, 10), AnchorPoint = Vector2.zero, ZIndex = 3 })
+				-- the quest's picture: tap = what to do
+				local pic = Instance.new("TextButton")
+				pic.Name = "Picture"
+				pic.Text = ""
+				pic.AutoButtonColor = false
+				pic.BackgroundTransparency = 1
+				pic.Size = UDim2.fromOffset(rowH - 16, rowH - 16)
+				pic.Position = UDim2.fromOffset(8, 8)
+				pic.ZIndex = 3
+				pic.Parent = row
+				Icons.create(kind.Icon, pic, { ZIndex = 3 })
+				local sentence = Quests.describe(quest.Id, quest.Target, Format.number)
+				pic.Activated:Connect(function()
+					Sfx.play("UIClick")
+					Notifier.push({ Kind = "info", Text = sentence, Icon = kind.Icon })
+				end)
 				local x = rowH
-				Theme.text({ Font = "Button", Text = Quests.describe(quest.Id, quest.Target, Format.number), TextSize = if small then 19 else 22, Align = "Left", Size = UDim2.new(0.62, -x, 0, 28), Position = UDim2.fromOffset(x, 8), ZIndex = 3, Parent = row })
+				-- progress bar with the numbers inside
 				local bar = Instance.new("Frame")
 				bar.BackgroundColor3 = Theme.Colors.WoodLine
-				bar.Size = UDim2.new(0.62, -x - 70, 0, 16)
-				bar.Position = UDim2.fromOffset(x, 42)
+				bar.Size = UDim2.new(0.6, -x, 0, 30)
+				bar.Position = UDim2.fromOffset(x, 10)
 				bar.ZIndex = 3
-				Theme.corner(bar, 8)
+				Theme.corner(bar, 10)
+				Theme.stroke(bar, Theme.Colors.GoldDark, 1.5)
 				bar.Parent = row
 				local fill = Instance.new("Frame")
 				fill.BackgroundColor3 = if done then Theme.Colors.Good else Theme.Colors.Gold
 				fill.Size = UDim2.fromScale(math.clamp(quest.Progress / math.max(quest.Target, 1), 0, 1), 1)
 				fill.ZIndex = 4
-				Theme.corner(fill, 8)
+				Theme.corner(fill, 10)
 				fill.Parent = bar
-				Theme.text({ Font = "Number", Text = `{Format.number(math.floor(quest.Progress))} / {Format.number(quest.Target)}`, TextSize = 16, Align = "Left", Size = UDim2.new(0, 130, 0, 18), Position = UDim2.new(0.62, -64, 0, 41), ZIndex = 3, Parent = row })
+				Theme.text({ Font = "Number", Text = `{Format.number(math.floor(quest.Progress))}/{Format.number(quest.Target)}`, TextSize = 18, Size = UDim2.new(1, -8, 1, -4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5, Parent = bar })
 				local reward = Quests.questReward(quest.Id, zone)
-				Theme.text({ Text = `Reward: {rewardText(if reward.Gold then { Gold = reward.Gold / g() } else reward)}`, TextSize = 16, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(0.62, -x, 0, 20), Position = UDim2.fromOffset(x, 64), ZIndex = 3, Parent = row })
-				local text, style = "In progress", "disabled"
-				if quest.Claimed then
-					text, style = "Claimed", "disabled"
-				elseif done then
-					text, style = "Claim", "go"
-				end
-				local button = Button.new({ Text = text, Style = style, TextSize = 22, Size = UDim2.new(0.3, -16, 0, Theme.TOUCH), Position = UDim2.new(1, -12, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = row, OnClick = function()
+				rewardChips(row, reward, if small then 28 else 32, 1, { Align = "Left", Size = UDim2.new(0.6, -x, 0, 0), Position = UDim2.fromOffset(x, 46) })
+				local claim = claimButton({ Name = "Claim" .. i, Size = UDim2.new(0.3, -16, 0, Theme.TOUCH), Position = UDim2.new(1, -12, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 3, Parent = row, OnClick = function()
 					if quest.Claimed or not done then
 						return
 					end
@@ -188,18 +270,18 @@ local function buildQuests(page: ScrollingFrame): () -> ()
 						Notifier.push({ Kind = "reward", Text = `Quest reward: {result.text}`, Icon = "Quests" })
 					end
 				end })
-				button.Instance.Name = "Claim" .. i
+				claim.set(if quest.Claimed then "done" elseif done then "claim" else "locked")
 			end
 		end
 		local claimedAll = quests.Bonus == true
-		bonus.Text = if claimedAll then `All 3 quests done: +{Quests.AllDoneDiamonds} Diamonds received` else `Finish and claim all 3 quests: +{Quests.AllDoneDiamonds} Diamonds`
-		bonus.TextColor3 = if claimedAll then Theme.Colors.Good else Theme.Colors.Gold
+		bonusDone:Set(`{claimedCount}/3`, if claimedAll then Theme.Colors.Good else nil)
+		bonusReward:Set(`+{Quests.AllDoneDiamonds}`, if claimedAll then Theme.Colors.Good else Theme.Colors.Gold)
 	end
 	refresh()
 	State.changed("Quests", refresh)
 	State.changed("Zones", refresh)
 	return function()
-		header.Text = `New quests in {clock(Quests.secondsToReset(now()))} (00:00 UTC)`
+		timer:Set(clock(Quests.secondsToReset(now())))
 		local quests = State.get("Quests") or {}
 		if quests.Day ~= Quests.day(now()) then
 			refresh()
@@ -209,7 +291,8 @@ end
 
 local function buildDaily(page: ScrollingFrame): () -> ()
 	local small = Theme.isCompact()
-	Theme.text({ Text = "Claim a reward every day. Missing a day restarts the streak at Day 1.", TextSize = 18, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -8, 0, 28), LayoutOrder = 0, Parent = page })
+	local top = topRow(page, "Daily Reward", { "Claim a reward every day.", "Missing a day restarts the streak at Day 1." })
+	Icons.create("Calendar", top, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	-- the 7 days on one row
 	local grid = gridOf(page, 1, if small then Vector2.new(88, 138) else Vector2.new(108, 172))
 	local footer = Instance.new("Frame")
@@ -217,7 +300,7 @@ local function buildDaily(page: ScrollingFrame): () -> ()
 	footer.Size = UDim2.new(1, -8, 0, Theme.TOUCH)
 	footer.LayoutOrder = 2
 	footer.Parent = page
-	local claimButton = Button.new({ Name = "ClaimDaily", Text = "Claim", Style = "go", TextSize = 22, Size = UDim2.fromOffset(320, Theme.TOUCH), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0), Parent = footer, OnClick = function()
+	local claim = claimButton({ Name = "ClaimDaily", TextSize = 22, Size = UDim2.fromOffset(240, Theme.TOUCH), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0), Parent = footer, OnClick = function()
 		local ok, result = request("ClaimDaily")
 		if ok then
 			Sfx.play("Purchase")
@@ -234,9 +317,14 @@ local function buildDaily(page: ScrollingFrame): () -> ()
 			local isNext = nextIndex == i
 			local claimed = i <= streak
 			local c = card(grid, UDim2.new(), i, isNext)
-			Theme.text({ Font = "Title", Text = `Day {i}`, TextSize = 22, Color = Theme.Colors.Gold, Size = UDim2.new(1, -8, 0, 28), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = c })
-			Icons.create(rewardIcon(reward), c, { Size = UDim2.fromOffset(if small then 44 else 58, if small then 44 else 58), Position = UDim2.new(0.5, 0, 0, if small then 32 else 36), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
-			Theme.text({ Text = rewardText(reward), TextSize = 15, Wrapped = true, Size = UDim2.new(1, -8, 0, 40), Position = UDim2.new(0.5, 0, 1, -30), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 3, Parent = c })
+			Theme.text({ Font = "Title", Text = tostring(i), TextSize = 26, Color = Theme.Colors.Gold, Size = UDim2.new(1, -8, 0, 30), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = c })
+			if reward.Gold and reward.Diamonds then
+				-- two rewards: their chips one above the other, no big picture
+				rewardChips(c, reward, if small then 26 else 30, g(), { Position = UDim2.new(0.5, 0, 0, if small then 40 else 50), AnchorPoint = Vector2.new(0.5, 0) })
+			else
+				Icons.create(rewardIcon(reward), c, { Size = UDim2.fromOffset(if small then 44 else 58, if small then 44 else 58), Position = UDim2.new(0.5, 0, 0, if small then 34 else 38), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
+				rewardChips(c, reward, if small then 26 else 30, g(), { Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1) })
+			end
 			if claimed then
 				local dot = Instance.new("Frame")
 				dot.Size = UDim2.fromOffset(30, 30)
@@ -248,7 +336,6 @@ local function buildDaily(page: ScrollingFrame): () -> ()
 				Icons.create("Check", dot, { Size = UDim2.fromScale(0.8, 0.8), ZIndex = 5 })
 				dot.Parent = c
 			end
-			Theme.text({ Font = "Button", Text = if claimed then "Claimed" elseif isNext then "Today" else "", TextSize = 15, Color = if isNext then Theme.Colors.Good else Theme.Colors.TextDim, Size = UDim2.new(1, -8, 0, 20), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 3, Parent = c })
 		end
 	end
 	refresh()
@@ -261,13 +348,10 @@ local function buildDaily(page: ScrollingFrame): () -> ()
 			lastDay = today
 			refresh()
 		end
-		local nextIndex = Quests.nextDaily(State.get("Daily"), today)
-		if nextIndex then
-			claimButton:SetText(`Claim Day {nextIndex}`)
-			claimButton:SetStyle("go")
+		if Quests.nextDaily(State.get("Daily"), today) then
+			claim.set("claim")
 		else
-			claimButton:SetText(`Next reward in {clock(Quests.secondsToReset(now()))}`)
-			claimButton:SetStyle("disabled")
+			claim.set("wait", clock(Quests.secondsToReset(now())))
 		end
 	end
 end
@@ -282,48 +366,51 @@ end
 
 local function buildGifts(page: ScrollingFrame): () -> ()
 	local small = Theme.isCompact()
-	local header = Theme.text({ Font = "Number", Text = "", TextSize = 20, Color = Theme.Colors.Gold, Size = UDim2.new(1, -8, 0, 28), LayoutOrder = 0, Parent = page })
+	local top = topRow(page, "Playtime Gifts", { "Play to open the gifts: each one has a time.", "The timer starts again every day." })
+	local played = Chips.chip(top, "Clock", "0:00", { Height = 40, Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	-- the 6 gifts on one row
 	local grid = gridOf(page, 1, if small then Vector2.new(104, 160) else Vector2.new(128, 196))
-	local timers: { [number]: { label: TextLabel, button: any } } = {}
+	local buttons: { [number]: ClaimButton } = {}
 	local function refresh()
 		clear(grid)
-		table.clear(timers)
+		table.clear(buttons)
 		for i, gift in ipairs(Quests.Gifts) do
 			local c = card(grid, UDim2.new(), i)
-			Theme.text({ Font = "Title", Text = `{gift.Minutes} min`, TextSize = 22, Color = Theme.Colors.Gold, Size = UDim2.new(1, -8, 0, 28), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = c })
-			Icons.create(if gift.Boost then "Boost" elseif gift.Diamonds and not gift.Gold then "Diamond" else "Rewards", c, { Size = UDim2.fromOffset(50, 50), Position = UDim2.new(0.5, 0, 0, 34), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
-			local label = Theme.text({ Text = rewardText(gift), TextSize = 15, Wrapped = true, Size = UDim2.new(1, -8, 0, 36), Position = UDim2.new(0.5, 0, 0, 88), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = c })
-			local button = Button.new({ Text = "", Style = "disabled", TextSize = 18, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 3, Parent = c, OnClick = function()
+			Chips.chip(c, "Clock", `{gift.Minutes}m`, { Height = 30, Position = UDim2.new(0.5, 0, 0, 6), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
+			local iconSize = if small then 40 else 50
+			local parts = (if gift.Gold then 1 else 0) + (if gift.Diamonds then 1 else 0) + (if gift.PremiumEgg then 1 else 0) + (if gift.Boost then 1 else 0)
+			if parts > 1 then
+				-- two rewards: their chips one above the other, no big picture
+				rewardChips(c, gift, if small then 26 else 30, g(), { Position = UDim2.fromOffset(4, 42) })
+			else
+				Icons.create(if gift.Boost then "Boost" elseif gift.Diamonds and not gift.Gold then "Diamond" else "Rewards", c, { Size = UDim2.fromOffset(iconSize, iconSize), Position = UDim2.new(0.5, 0, 0, 40), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
+				rewardChips(c, gift, if small then 26 else 30, g(), { Position = UDim2.fromOffset(4, 44 + iconSize) })
+			end
+			buttons[i] = claimButton({ Name = "Gift" .. i, TextSize = 24, Size = UDim2.new(1, -12, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -6), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 3, Parent = c, OnClick = function()
 				local ok, result = request("ClaimGift", i)
 				if ok then
 					Sfx.play("Purchase")
 					Notifier.push({ Kind = "reward", Text = `Gift: {result.text}`, Icon = "Rewards" })
 				end
 			end })
-			button.Instance.Name = "Gift" .. i
-			timers[i] = { label = label, button = button }
 		end
 	end
 	refresh()
 	State.changed("Zones", refresh)
 	return function()
-		local played = playedSeconds()
-		header.Text = `Played today: {clock(played)}`
+		local seconds = playedSeconds()
+		played:Set(clock(seconds))
 		local playtime = State.get("Playtime") or {}
 		local claimed = if playtime.Day == Quests.day(now()) then playtime.Claimed or {} else {}
 		for i, gift in ipairs(Quests.Gifts) do
-			local entry = timers[i]
+			local entry = buttons[i]
 			if entry then
 				if table.find(claimed, i) then
-					entry.button:SetText("Claimed")
-					entry.button:SetStyle("disabled")
-				elseif played >= gift.Minutes * 60 then
-					entry.button:SetText("Claim")
-					entry.button:SetStyle("go")
+					entry.set("done")
+				elseif seconds >= gift.Minutes * 60 then
+					entry.set("claim")
 				else
-					entry.button:SetText(clock(gift.Minutes * 60 - played))
-					entry.button:SetStyle("disabled")
+					entry.set("wait", clock(gift.Minutes * 60 - seconds))
 				end
 			end
 		end
@@ -331,7 +418,8 @@ local function buildGifts(page: ScrollingFrame): () -> ()
 end
 
 local function buildCodes(page: ScrollingFrame)
-	Theme.text({ Text = "Enter a code to get a reward. Each code works once per player.", TextSize = 20, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -8, 0, 40), LayoutOrder = 0, Parent = page })
+	local top = topRow(page, "Codes", { "Enter a code to get a reward.", "Each code works once per player." })
+	Icons.create("Ticket", top, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	local row = Instance.new("Frame")
 	row.BackgroundTransparency = 1
 	row.Size = UDim2.new(1, -8, 0, Theme.TOUCH)
@@ -369,7 +457,7 @@ local function buildCodes(page: ScrollingFrame)
 			Sfx.play("Denied")
 		end
 	end
-	Button.new({ Name = "Redeem", Text = "Redeem", Style = "go", TextSize = 22, Size = UDim2.new(0.4, 0, 1, 0), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), Parent = row, OnClick = redeem })
+	Button.new({ Name = "Redeem", Icon = "Check", Style = "go", Size = UDim2.new(0.4, 0, 1, 0), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), Parent = row, OnClick = redeem })
 	box.FocusLost:Connect(function(enter)
 		if enter then
 			redeem()
@@ -378,6 +466,7 @@ local function buildCodes(page: ScrollingFrame)
 end
 
 function QuestsPage.build(ctx: any)
+	windowFrame = ctx.Frame
 	local tickers = {
 		buildQuests(ctx.Pages.Quests),
 		buildDaily(ctx.Pages["Daily Reward"]),

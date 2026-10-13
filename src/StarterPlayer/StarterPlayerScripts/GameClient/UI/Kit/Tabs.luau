@@ -1,6 +1,8 @@
 --!strict
--- Row of tab buttons; the selected one is gold, the others steel.
---   local tabs = Tabs.new({ Tabs = { "A", "B" }, Parent, Size, Position, OnSelect = function(name) end })
+-- Row of tab buttons; the selected one is gold, the others steel. Kid-friendly (owner 2026-10-13): each tab can
+-- show a big icon and a short label instead of its name.
+--   local tabs = Tabs.new({ Tabs = { "A", "B" }, Icons = { A = "Sword" }?, Labels = { A = "Short" }?, Parent, Size,
+--                           Position, OnSelect = function(name) end })
 --   tabs:Select(name, silent?)
 local Button = require(script.Parent.Button)
 local Theme = require(script.Parent.Theme)
@@ -25,9 +27,12 @@ function Tabs.new(props: { [string]: any }): Tabs
 	local self = setmetatable({ Instance = row, Selected = nil, _buttons = {}, _onSelect = props.OnSelect }, Tabs)
 	local count = #props.Tabs
 	for i, name in ipairs(props.Tabs) do
+		local icons = props.Icons or {}
+		local labels = props.Labels or {}
 		self._buttons[name] = Button.new({
 			Name = name,
-			Text = name,
+			Text = labels[name] or name,
+			Icon = icons[name],
 			Style = "secondary",
 			TextSize = 22,
 			LayoutOrder = i,
