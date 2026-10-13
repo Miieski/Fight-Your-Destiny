@@ -3,7 +3,7 @@
 -- Each bar: a big round icon over the left end of a dark wooden pill, the amount in white with a
 -- dark stroke (it shrinks to fit), and a "+" end cap; tapping the bar opens the Shop on its tab
 -- (Diamonds tab for Diamonds). Every change counts up with a pop and a floating "+N" (green) /
--- "-N" (red) left of the bar, so the death penalty shows its Gold loss in red.
+-- "-N" (red) left of the bar, so every purchase shows what it cost in red.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 

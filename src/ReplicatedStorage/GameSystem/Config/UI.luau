@@ -163,7 +163,6 @@ UI.Text = {
 	ZoneLocked = "Zone locked",
 	Back = "Back",
 	HubDescription = "The safe hub: shops, the Rebirth Altar and the portals to every zone.",
-	DeathGold = "You lost %d%% of your Gold: -%s",
 }
 
 return UI

@@ -330,10 +330,11 @@ local function holdRepeat(button: any, fn: () -> boolean)
 end
 
 local function doRespec()
-	local cost = Attributes.respecCost(Stats.highestZone(snapshot()))
+	local data = snapshot()
+	local cost = Attributes.respecCost(Stats.highestZone(data))
 	Window.confirm({
 		Title = "Start over?",
-		Text = `All points back to 0 for {cost} Diamonds. The Gold you spent is NOT given back.`,
+		Text = `All points back to 0 for {cost} Diamonds. You get back the {Format.number(Attributes.refundOf(data.Attributes))} Gold you spent.`,
 		ConfirmText = "Yes",
 		CancelText = "No",
 		OnConfirm = function()
@@ -346,7 +347,7 @@ local function doRespec()
 			if called and ok then
 				queued = Attributes.empty()
 				target = {}
-				Notifier.push({ Kind = "info", Text = `Points reset for {result.Cost} Diamonds`, Icon = "Reset" })
+				Notifier.push({ Kind = "reward", Text = `Points reset: +{Format.number(result.Refund or 0)} Gold`, Icon = "Gold" })
 			else
 				Notifier.push({ Kind = "error", Text = if called and typeof(result) == "string" then result else "Respec failed" })
 			end

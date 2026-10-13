@@ -628,7 +628,7 @@ local function worldPage(page: Instance)
 	button(health, "Damage 40", "secondary", function() send("damageSelf", 40) end)
 	button(health, "Enemy hit 50", "secondary", function() send("enemyHit", 50) end)
 	button(health, "Enemy hit 500", "secondary", function() send("enemyHit", 500) end)
-	button(health, "Die (penalty)", "danger", function() send("damageSelf", 1e9) end)
+	button(health, "Die", "danger", function() send("damageSelf", 1e9) end)
 end
 
 ----------------------------------------------------------------------------------------------------

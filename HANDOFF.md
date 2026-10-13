@@ -149,6 +149,10 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-13: RESPEC REFUND, NO DEATH PENALTY.** The Diamond respec of the Stats window gives back the Gold the points
+cost (`Attributes.refundOf`, `StatsService` respec answers `{ Cost, Refund }`). Dying no longer costs Gold (the
+ZoneService Died handler, `Economy.DeathGoldLoss` and `UI.Text.DeathGold` are gone). Details in NIGHT_LOG.
+
 **2026-10-13: ADMIN PANEL V2 (owner: "I want to test every possibility in game").** `UI/AdminPanel` rewritten: 8 tabs
 (Money, Swords, Armor, Pets, Stats, World, Gifts, Tests) with pickers (rows of buttons, the chosen one gold) and live
 value lines; a button for every `AdminService` command. New commands: giveWeapons, clearArmor, givePets, rerollItems,

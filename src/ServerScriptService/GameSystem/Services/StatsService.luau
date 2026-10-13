@@ -2,7 +2,8 @@
 -- Attributes (docs/menu_systems_brief.txt Part A) and the derived stats on the character.
 --   Net.request("TrainAttributes", { Vigor = 2, ... }) buys points: keys, integers, caps, total cost point by
 --   point, Gold; charged and applied together, saved, answered true, { Attributes, Cost }.
---   Net.request("RespecAttributes") -> every point back to 0 for Diamonds (Gold not refunded).
+--   Net.request("RespecAttributes") -> every point back to 0 for Diamonds, the Gold they cost given back;
+--   answered true, { Cost, Refund }.
 -- The Humanoid gets Max HP and walk speed from Util/Stats.compute (no combat logic here).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -102,11 +103,14 @@ local function respec(player: Player): (boolean, any)
 	if typeof(profile.Diamonds) ~= "number" or profile.Diamonds < cost then
 		return false, "Not enough Diamonds"
 	end
+	-- the Gold the points cost comes back (the price only depends on the level, so this is exactly what was paid)
+	local refund = Attributes.refundOf(profile.Attributes)
 	DataService:Set(player, "Diamonds", profile.Diamonds - cost)
 	DataService:Set(player, "Attributes", Attributes.empty())
+	DataService:AddGold(player, refund)
 	StatsService:Apply(player)
 	DataService:Save(player)
-	return true, { Cost = cost }
+	return true, { Cost = cost, Refund = refund }
 end
 
 function StatsService:Init()

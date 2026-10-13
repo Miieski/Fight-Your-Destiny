@@ -20,7 +20,8 @@ Attributes.RebirthPowerPerRebirth = 0.25 -- RebirthPower = 1 + 0.25 x Rebirths
 -- Cost of the next point: round(CostBase x CostGrowth ^ L), L = total points already bought (x10 every ~24 levels).
 Attributes.CostBase = 400
 Attributes.CostGrowth = 1.1
--- Respec: every point back to 0 (no Gold refund) for RespecBase + RespecPerZone x Z Diamonds.
+-- Respec: every point back to 0 for RespecBase + RespecPerZone x Z Diamonds; the Gold the points cost is given back
+-- (owner 2026-10-13: "When you reset stat with diamond you have to get back your money spend").
 Attributes.RespecBase = 5
 Attributes.RespecPerZone = 2
 
@@ -230,6 +231,11 @@ end
 
 function Attributes.respecCost(zone: number): number
 	return Attributes.RespecBase + Attributes.RespecPerZone * zone
+end
+
+-- The Gold a respec gives back: what every point bought cost (points 1..L; the price only depends on the level).
+function Attributes.refundOf(values: { [string]: number }?): number
+	return Attributes.costOf(0, Attributes.level(values))
 end
 
 function Attributes.empty(): { [string]: number }

@@ -155,7 +155,8 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 * Enemies telegraph strong attacks (>= 0.4 s for normal enemies, >= 1 s for bosses).
 
 ### Death
-* On death the player **loses 35% of their Gold**, no delay, no other penalty.
+* **No death penalty** (owner 2026-10-13: "Remove the coin loss when you died"): no Gold or anything else is
+  lost; the player just respawns.
 * Respawn: at the start of the current sub-zone (the sub-zone's `Entrance`).
 * Boss arenas: see section 7 (defaults).
 
@@ -186,7 +187,9 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
   Dexterity +0.5% attack speed; Intelligence +0.8 pt element proc, +1% magic radius; Faith +3% pet power and healing;
   Arcane +0.5 pt crit, +3% crit damage, +1% loot. Hard caps unchanged (block 85%, move +40%, attack speed +15%, proc
   +16 pts, radius +25%, crit 60%, roll 0.6 s).
-* All attribute points reset to 0 on Rebirth (Respec: 5 + 2 x zone Diamonds, Gold not refunded).
+* All attribute points reset to 0 on Rebirth. Respec (any time): 5 + 2 x zone Diamonds, and the Gold the points cost
+  is given back (owner 2026-10-13; `Attributes.refundOf`: the price only depends on the level, so the refund is
+  exactly what was paid).
 
 ### Armor (3 slots)
 * Slots: `Helmet`, `Chest` (plastron), `Legs` (jambieres).
@@ -204,8 +207,8 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 ## 4. Economy & progression
 
 ### Currencies
-* **Gold:** from killing enemies, selling trophies, quests and rewards. Lost partially on death
-  (35%) and entirely on Rebirth. Values scale x10 per zone.
+* **Gold:** from killing enemies, selling trophies, quests and rewards. Never lost on death (since 2026-10-13);
+  lost entirely on Rebirth. Values scale x10 per zone.
 * **Diamonds:** premium currency. Dropped ONLY by mini-bosses and bosses, and sold for Robux.
   **Kept on Rebirth.** Uses: premium eggs, Gold boosts, skins (the weapon rarity reroll was removed on
   2026-10-13).
@@ -377,7 +380,7 @@ Changes for this design:
 * **Rewards:** every player who dealt **at least 5% of the boss's total HP** receives their own
   Gold, loot rolls and diamond chance (rolled **separately per player**). The first time a
   player beats a boss, they also receive its **key** (guaranteed).
-* **Death in a boss arena (default):** the player loses 35% Gold as usual and is removed from
+* **Death in a boss arena (default):** the player loses nothing (no death penalty) and is removed from
   the fight (spectates until it ends), then returns to the hub. If everyone dies, the arena is
   destroyed and players go back to the hub.
 * Arena is destroyed 15 seconds after the boss dies (players see the reward screen first).

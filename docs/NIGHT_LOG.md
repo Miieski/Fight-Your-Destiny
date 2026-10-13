@@ -1401,3 +1401,26 @@ Not asked: an owner-only tool, so plain text labels (the kid-friendly UI rules d
 - The tab names Resources / Weapons / Rewards show as Money / Swords / Gifts (the long words shrank to tiny text).
 - "Save now" says "(Studio: memory only unless API access is on)" in Studio: DataService keeps profiles in memory
   when the DataStore is not reachable, so a save there writes nothing.
+
+# Respec refund, no death penalty - 2026-10-13 (owner: "When you reset stat with diamond you have to get back your money spend. Remove the coin loss when you died")
+
+Backups `..._before_respec_refund_*` / `..._after_respec_refund_*` (6 files each).
+
+## Status (newest first)
+
+- 21:08 DONE. Studio = disk (pull: 162 scripts, 0 written). Screenshots `docs/screenshots/respec_refund/`.
+  * Respec (Stats window, reset button, Diamonds): the Gold spent on the points comes back. New
+    `Attributes.refundOf(values)` = `costOf(0, level)`: the point price only depends on the level (not the zone), so
+    it is exactly what the player paid. `StatsService` respec adds it (answer `{ Cost, Refund }`); the confirm says
+    "You get back the N Gold you spent", the toast "Points reset: +N Gold".
+  * Death penalty removed: `ZoneService` no longer takes 35% of the Gold on Humanoid.Died (no toast either);
+    `Economy.DeathGoldLoss` and `UI.Text.DeathGold` deleted; admin button "Die (penalty)" -> "Die".
+  * Tests (Play): 12 points bought (8,552 Gold) -> respec 7 Diamonds, refund 8,552, Gold back to 1,000,000; 4
+    purchases at growing levels (88,899 Gold) -> refund 88,899; a server-side death (admin damageSelf) keeps
+    1,000,000 Gold; the confirm shows 14.38K for 14,378 spent, the toast +14.38K. Output: no errors.
+
+## Decisions taken without the owner
+
+- Points given by the admin panel (setPoints / setAllPoints) are free but a respec refunds them like bought points
+  (admin only; real players can only buy points).
+- Boss arenas: dying there costs nothing either (the player still spectates until the fight ends).

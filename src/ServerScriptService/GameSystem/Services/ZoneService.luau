@@ -11,8 +11,6 @@ local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
-local Economy = require(ReplicatedStorage.GameSystem.Config.Economy)
-local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local DataService = require(script.Parent.DataService)
 local RewardService = require(script.Parent.RewardService)
 local EnemyService = require(script.Parent.EnemyService)
@@ -381,20 +379,9 @@ function ZoneService:Init()
 					end
 					health = value
 				end)
-				humanoid.Died:Connect(function()
-					-- (in a boss room BossService turns the player into a spectator)
-					-- Death penalty (DESIGN.md section 2): lose a share of the Gold.
-					local profile = DataService:Get(player)
-					local loss = if profile then math.floor(profile.Gold * Economy.DeathGoldLoss) else 0
-					if loss > 0 then
-						DataService:AddGold(player, -loss)
-						Net.fire(player, "Notify", {
-							Kind = "death",
-							Text = string.format(UIConfig.Text.DeathGold, math.floor(Economy.DeathGoldLoss * 100 + 0.5), Format.number(loss)),
-						})
-					end
-				end)
 			end
+			-- No death penalty (owner 2026-10-13: "Remove the coin loss when you died"); in a boss room BossService
+			-- turns the player into a spectator.
 			-- Respawn at the start of the current sub-zone (DESIGN.md section 2, Death).
 			local subZone = byId[player:GetAttribute("RespawnSubZone") or ""]
 			if player:GetAttribute("ArenaKey") then
