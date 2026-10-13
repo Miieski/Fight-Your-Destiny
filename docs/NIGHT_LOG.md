@@ -1355,3 +1355,49 @@ hatching "big and flashy". Backups `..._before_pet_traits_*` / `..._after_pet_tr
   The stat is random. Item rarity does not depend on the pet's rarity or Egg Luck.
 - Item values are not multiplied by the mutation / size (those boost the species stats), but Faith boosts them.
 - Premium (Robux) pets roll items too (they never mutate).
+
+# Admin panel V2 - 2026-10-13 (owner: "Now upgrade the Admin Panel. I want to test every possibility in game. So, this is an improved menu for weapons, Pets, armor, stats, resources, etc.")
+
+Not asked: an owner-only tool, so plain text labels (the kid-friendly UI rules do not apply). Backups
+`..._before_admin_v2_*` / `..._after_admin_v2_*` (6 files each).
+
+## Status (newest first)
+
+- 20:46 DONE. Studio = disk (pull: 162 scripts, 0 written). Screenshots `docs/screenshots/admin_v2/`.
+  * `UI/AdminPanel` rewritten: 8 tabs with pictures (Config/UI Admin: Money, Swords, Armor, Pets, Stats, World,
+    Gifts, Tests; 1000 x 640). Pickers = rows of buttons, the chosen one is gold; live lines show the current
+    values (Gold, Diamonds, credits, keys, weapons, pity, armor, pets, eggs, slots, quests, streak, play time).
+    Every command of AdminService has a button; risky ones (reset weapons, clear armor / pets, wipe, reset
+    profile) ask first.
+    - Money: Gold / Diamonds presets + typed Add / Set, Rebirth Credits +3 / +10 / +100 / 0, boss keys (one,
+      all 12, clear), Gold Boost x2 +15 min / +1 h / +24 h / clear, game passes on / off (green = owned).
+    - Swords: zone x category x rarity -> Give 1 / Give 5 / every rarity; the zone's 7 weapons; all 84; reset;
+      shop next-purchase rarity and pity counters.
+    - Armor: zone x piece (or full set) x rarity x count; sets of all 12 zones; every rarity; clear.
+    - Pets: zone (or Premium) -> its pets, rarity, mutation, size, Bonus Stats item rarity (or random) -> Give 1 /
+      Give 5 / the zone's pets / every rarity / every mutation / items 1..8; new items for every owned pet; eggs of
+      the zone x rarity x 1 / 5 / 30; Equip best; 100K egg simulation; clear pets + eggs.
+    - Stats: every attribute 0 / 10 / 20 / 30 / 40 (row label = current value), all at once; Rebirths 0..12;
+      Rebirth ready / wipe; each Rebirth Shop upgrade 0 / half / max, all max / all 0; stats tests.
+    - World: teleport (sub-zone 1-4 / boss) to any zone or the Hub; zone locks; enemies of a zone (sub-zones 1-4,
+      the 2 minis, the boss) -> spawn / spawn 5 / drop loot / trophy x1 / x10 (rarity picker) / 10K kill simulation
+      / kill all / enemy data check; god mode, heal, damage, enemy hits, die.
+    - Gifts: complete any quest kind (today's 3 are green, done ones gold), reset / simulate quests, play time
+      +5..+60 min, daily (day 1 / 3 / 7 ready, claimed today, streak lost), Index (all, per tab, Plains, clear).
+    - Tests: notifications, fake equipment, menu badges, checks, save now, reset to a new player.
+  * `AdminService` new commands: giveWeapons(zone | "All", rarity), clearArmor, givePets(zone | "Premium",
+    rarity, itemTier?), rerollItems(itemTier?), setAllPoints(n), giveAllKeys, clearBoosts, setUpgrades(max),
+    save, resetProfile (every Profile.new key but Settings / Version / Purchases, then a respawn).
+  * Tests (Play, client Net.request + clicks): weapons 1 -> 8 -> 92, armor set 3 -> clear 0, zone pets 6 + premium
+    4, items rerolled to Secret, all points 40, 12 keys, boost on / cleared, upgrades max / 0, spawn Boar + Golem,
+    kill all (2), drop loot, trophies, kill simulation (+0.6 sd), credits, key, quest done (button turns gold,
+    "Quests done 1/3"), play time, daily, Index, god mode (enemy hit dealt 0), pass, upgrade; Pets tab Premium ->
+    the 4 premium pets -> Give pet (toast "Golden Dragonling added"); reset to new player (confirm -> Hub, 1
+    starter weapon, nothing else). Phone (iPhone landscape): tabs move to the title row, pickers wrap. Output: no
+    errors (only the Studio DataStore notice).
+
+## Decisions taken without the owner
+
+- The tab names Resources / Weapons / Rewards show as Money / Swords / Gifts (the long words shrank to tiny text).
+- "Save now" says "(Studio: memory only unless API access is on)" in Studio: DataService keeps profiles in memory
+  when the DataStore is not reachable, so a save there writes nothing.

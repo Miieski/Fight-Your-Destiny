@@ -149,6 +149,13 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-13: ADMIN PANEL V2 (owner: "I want to test every possibility in game").** `UI/AdminPanel` rewritten: 8 tabs
+(Money, Swords, Armor, Pets, Stats, World, Gifts, Tests) with pickers (rows of buttons, the chosen one gold) and live
+value lines; a button for every `AdminService` command. New commands: giveWeapons, clearArmor, givePets, rerollItems,
+setAllPoints, giveAllKeys, clearBoosts, setUpgrades, save, resetProfile. When adding a feature: add its test command
+to AdminService AND a button in the matching tab. Details in NIGHT_LOG and DESIGN.md section 13; screenshots
+`docs/screenshots/admin_v2/`.
+
 **2026-10-13: PET BONUS STATS, WEAPON SELLING, NEW HATCHING.** Every pet has 3 rolled items (Crown, Accessory,
 Aura; own rarity + random stat; `Config/PetTraits`) that it wears (`Util/PetGear`, meshes in
 `ReplicatedStorage.Assets.PetGear` - **in the place only: save it**); pet card shows Power / Worth / item cards

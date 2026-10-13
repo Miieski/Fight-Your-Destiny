@@ -57,7 +57,10 @@ UI.Windows = {
 		TabIcons = { Audio = "Speaker", Display = "Eye", Controls = "Gamepad", Keys = "Keyboard", Other = "Settings" },
 		TabLabels = { Audio = "Sound", Display = "Screen" } },
 	Zones = { Title = "Zones", Icon = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
-	Admin = { Title = "Admin", Tabs = { "Money", "Teleport", "UI Test", "Weapons" }, Size = Vector2.new(760, 520) },
+	-- owner tools V2 (UI/AdminPanel): every test command, 8 tabs
+	Admin = { Title = "Admin", Icon = "Admin", Tabs = { "Resources", "Weapons", "Armor", "Pets", "Stats", "World", "Rewards", "Tests" },
+		TabIcons = { Resources = "Gold", Weapons = "Sword", Armor = "Chest", Pets = "Pets", Stats = "Stats", World = "Zones", Rewards = "Gift", Tests = "Settings" },
+		TabLabels = { Resources = "Money", Weapons = "Swords", Rewards = "Gifts" }, Size = Vector2.new(1000, 640) },
 }
 UI.WINDOW_SIZE = Vector2.new(700, 500)
 UI.MaxScreenFraction = 0.9

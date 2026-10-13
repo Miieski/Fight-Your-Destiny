@@ -558,6 +558,17 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
   teleport to any zone or boss room, give any weapon/armor/pet at a chosen rarity, kill the
   current boss, heal / invincibility, spawn an enemy, force a boss pattern, toggle boosts,
   reset my data.
+* **V2 (owner 2026-10-13: "I want to test every possibility in game").** `UI/AdminPanel`, 8 tabs (owner-only, so
+  plain text labels): **Money** (Gold, Diamonds, Rebirth Credits, boss keys, Gold Boost, game passes on / off),
+  **Swords** (any weapon by zone x category x rarity, a zone's 7, all 84, shop rarity / pity, reset), **Armor**
+  (piece or set x rarity x count, every zone's set, clear), **Pets** (zone or Premium -> pet, rarity, mutation, size,
+  Bonus Stats item rarity; zone's pets; new items for every pet; eggs; Equip best; egg simulation; clear),
+  **Stats** (each attribute 0..40, all at once, Rebirths, Rebirth ready / wipe, Rebirth Shop levels), **World**
+  (teleports, zone locks, any enemy of a zone: spawn / loot / trophies / kill simulation / kill all, god mode,
+  heal, hits), **Gifts** (complete any quest - today's are green -, play time, daily streak states, Index),
+  **Tests** (notifications, fake equipment, badges, checks, save now, reset to a new player). Pickers are rows of
+  buttons (the chosen one is gold), live lines show the current values, risky commands ask first. Every command
+  is still checked on the server (`AdminService`, `Net.request("Admin", cmd, ...)`).
 * Owner UserId: `<ADMIN_USER_ID>` (to be provided).
 
 ## 14. Tooling & rules

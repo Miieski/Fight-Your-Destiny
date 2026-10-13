@@ -40,6 +40,8 @@ local EnemyService = require(script.Parent.EnemyService)
 local LootService = require(script.Parent.LootService)
 local Enemies = require(ReplicatedStorage.GameSystem.Config.Enemies)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
+local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
+local Profile = require(ReplicatedStorage.GameSystem.Config.Profile)
 
 local AdminService = { Priority = 6 }
 
@@ -644,6 +646,126 @@ local COMMANDS: { [string]: Command } = {
 		badges[id] = if n > 0 then n else nil
 		DataService:SetTransient(player, "DebugBadges", badges)
 		return true, nil
+	end,
+
+	-- Admin panel V2 (owner 2026-10-13: "test every possibility") ------------------------------------------
+	-- giveWeapons(zone | "All", rarity): every weapon of a zone (7) or of the game (84), for free
+	giveWeapons = function(player, zoneValue, rarity)
+		local profile = DataService:Get(player)
+		if not profile then return false, "Profile not loaded" end
+		local list = {}
+		if zoneValue == "All" then
+			list = Weapons.List
+		else
+			local zone = if typeof(zoneValue) == "number" then Zones.List[zoneValue] else zoneOf(zoneValue)
+			if not zone then return false, "giveWeapons(zone | \"All\", rarity)" end
+			for _, weapon in ipairs(Weapons.List) do
+				if weapon.ZoneId == zone.Id then
+					table.insert(list, weapon)
+				end
+			end
+		end
+		local owned = table.clone(profile.Weapons)
+		for _, weapon in ipairs(list) do
+			owned[HttpService:GenerateGUID(false)] = { id = weapon.Id, rarity = tier(rarity) }
+		end
+		DataService:Set(player, "Weapons", owned)
+		return true, `{#list} {Rarities.get(tier(rarity)).Name} weapons given`
+	end,
+	clearArmor = function(player)
+		DataService:Set(player, "EquippedArmor", {})
+		DataService:Set(player, "Armor", {})
+		return true, "Armor cleared"
+	end,
+	-- givePets(zone | "Premium", rarity, itemTier?): the 6 pets of a zone (or the 4 premium pets)
+	givePets = function(player, zoneValue, rarity, itemTier)
+		local ids = {}
+		for _, species in ipairs(Pets.List) do
+			if (zoneValue == "Premium" and species.Premium) or (not species.Premium and (species.Zone == tonumber(zoneValue) or species.ZoneId == zoneValue)) then
+				table.insert(ids, species.Id)
+			end
+		end
+		if #ids == 0 then return false, "givePets(zone | \"Premium\", rarity, itemTier?)" end
+		for _, id in ipairs(ids) do
+			PetService:GivePet(player, id, tier(rarity), nil, nil, if itemTier ~= nil then tier(itemTier) else nil)
+		end
+		return true, `{#ids} pets given`
+	end,
+	-- rerollItems(itemTier?): new Bonus Stats items for every owned pet (all of that rarity, or rolled)
+	rerollItems = function(player, itemTier)
+		local profile = DataService:Get(player)
+		if not profile then return false, "Profile not loaded" end
+		local rng = Random.new()
+		local owned = table.clone(profile.Pets)
+		local n = 0
+		for uid, pet in pairs(owned) do
+			local copy = table.clone(pet)
+			copy.traits = PetTraits.roll(rng, if itemTier ~= nil then tier(itemTier) else nil)
+			owned[uid] = copy
+			n += 1
+		end
+		DataService:Set(player, "Pets", owned)
+		PetService:UpdateFollowers(player)
+		return true, `{n} pets got new items`
+	end,
+	-- setAllPoints(n): every attribute = n points (0..40), free
+	setAllPoints = function(player, value)
+		local n = math.floor(tonumber(value) or -1)
+		if n < 0 or n > Attributes.MaxPoints then return false, "setAllPoints(0-40)" end
+		local values = Attributes.empty()
+		for id in pairs(values) do
+			values[id] = n
+		end
+		DataService:Set(player, "Attributes", values)
+		return true, `Every attribute = {n}`
+	end,
+	-- giveAllKeys(): the 12 boss keys
+	giveAllKeys = function(player)
+		local keys = {}
+		for _, zone in ipairs(Zones.List) do
+			keys[zone.Id] = true
+		end
+		DataService:Set(player, "Keys", keys)
+		return true, "All 12 boss keys given"
+	end,
+	-- clearBoosts(): no boost running
+	clearBoosts = function(player)
+		DataService:Set(player, "Boosts", {})
+		return true, "Boosts cleared"
+	end,
+	-- setUpgrades(max | 0): every Rebirth Shop upgrade at its max level (true) or 0 (false)
+	setUpgrades = function(player, max)
+		local levels = {}
+		if max == true then
+			for _, upgrade in ipairs(RebirthShop.List) do
+				levels[upgrade.Id] = upgrade.Max
+			end
+		end
+		DataService:Set(player, "RebirthUpgrades", levels)
+		return true, if max == true then "Every Rebirth upgrade maxed" else "Rebirth upgrades reset"
+	end,
+	-- save(): saves the profile now (in Studio without API access the profile lives in memory only: nothing to save)
+	save = function(player)
+		local ok = DataService:Save(player)
+		local where = if RunService:IsStudio() then " (Studio: memory only unless API access is on)" else ""
+		return ok, (if ok then "Profile saved" else "Save failed") .. where
+	end,
+	-- resetProfile(): back to a brand new player (settings kept), then a respawn
+	resetProfile = function(player)
+		local fresh = Profile.new()
+		for key, value in pairs(fresh) do
+			if key ~= "Settings" and key ~= "Version" and key ~= "Purchases" then
+				DataService:Set(player, key, value)
+			end
+		end
+		DataService:Set(player, "EquippedWeapon", nil)
+		PetService:UpdateFollowers(player)
+		task.defer(function()
+			if player.Parent then
+				player:LoadCharacter()
+			end
+		end)
+		return true, "Profile reset to a new player"
 	end,
 }
 
