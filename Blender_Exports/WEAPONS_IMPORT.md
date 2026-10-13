@@ -1,28 +1,36 @@
 # Weapon FBX files to import (Weapons V2, 7 categories x 12 zones = 84)
 
 Made by tools/blender/fyd_weapons2.py (convention in Blender/Weapons/README.txt), rebuilt from each icon on
-2026-10-12 (side-by-side sheets: `Previews/Weapons/<Category>/<NN>_<id>_compare.png`). Until they are imported the
+2026-10-12, all 84 re-checked against their icons on 2026-10-13 (side-by-side sheets: `Previews/Weapons/<Category>/<NN>_<id>_compare.png`). Until they are imported the
 game uses the PLACEHOLDER Tools of `ReplicatedStorage.Assets.Weapons` (attribute Placeholder = true), so nothing
 is blocked. The old V1 files are in `BackUP_Files/old_weapon_models_2026-10-12/`.
 
+**STATUS 2026-10-13: IMPORTED AND APPLIED** (84/84 Tools on their real mesh, 68 with their glow mask). What the import
+really gave, for the next time: one MeshPart + SurfaceAppearance per file (the `<id>_Glow` faces are merged into it:
+`DevTools.WeaponGlow` gives them back as an emissive mask, called by ApplyWeaponMeshes), and the Studio Default
+preset reads the files as centimeters (28x too big: ApplyWeaponMeshes scales them back). After a re-export of some
+.blend files, re-run `tools/blender/weapon_emissive_masks.py` for them and upload the new masks.
+
 ## How to import (owner)
 
-1. Studio > Asset Manager > **Bulk Import** (or File > Import 3D) and pick the 84 `.fbx` files of
-   `Blender_Exports/Weapons/<Category>/`. **File dimensions = Meters** (the Iron Shortsword must come in about
-   4.5 studs long). Keep the object names, do not rotate the imports, textures on (each file embeds its 1024 px
-   color / metalness / roughness maps).
-2. Leave the imported models anywhere in the place (for example `workspace.ImportedWeapons`). Their names are the
-   file names (`01_plains_sword`) or the weapon ids (`plains_sword`): both are recognised.
-3. Command bar: `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()` (or pass the folder:
-   `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)(workspace.ImportedWeapons)`).
-   For each weapon it swaps the mesh into `ReplicatedStorage.Assets.Weapons.<WeaponId>.Handle` (biggest part =
+1. Studio > **File > Import 3D**. In the file browser open `Blender_Exports/Weapons_ALL_import/` (a flat copy of the
+   84 files, not in git), press **Ctrl+A** and **Open**: the 84 files go into the importer's **import queue**.
+2. In the queue, set **Scale Unit = Meters** (preset or per file; the Iron Shortsword must come in about 4.5 studs
+   long). Keep the defaults otherwise: Import Only As Model ON, Merge Meshes OFF, Insert In Workspace ON, textures on.
+   Do not rotate the imports. Click **Import** (all 84 boxes ticked) and wait until the 84 models are in the Workspace.
+   If the Scale Unit was forgotten, nothing is lost: the next step scales each weapon back to its length.
+3. Tell Claude, or run in the command bar: `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()` (or pass the
+   folder: `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)(workspace.ImportedWeapons)`).
+   For each weapon it swaps the mesh into `ReplicatedStorage.Assets.Weapons.<WeaponId>.Handle` (biggest textured part =
    Handle, the others welded, `_Glow` parts Neon), keeps the Tool's attributes and grip rotation, moves the grip to
    the model's true origin, rebuilds `TipAttachment`, `BaseAttachment`, `MuzzleAttachment` (Ranged, Magic) and
    `ImpactAttachment` (Heavy) at the points measured in Blender (`DevTools.WeaponPoints`), sets Placeholder = false
-   and prints a report: applied / not found / wrong size (a wrong size means the import was not in Meters: that
-   weapon is left untouched).
-4. Check a few weapons in Play (grip, trail from Base to Tip), delete `workspace.ImportedWeapons`, save the place.
-   `require(game.ServerStorage.DevTools.WeaponTools).missing()` lists the weapons still on placeholders.
+   and prints a report: applied / not found / rescaled / wrong shape (a wrong shape is left untouched).
+4. Check a few weapons in Play (grip, trail from Base to Tip), delete the imported models from the Workspace, save the
+   place. `require(game.ServerStorage.DevTools.WeaponTools).missing()` lists the weapons still on placeholders.
+
+(Use the 3D Importer rather than the Asset Manager's Bulk Import: its import queue takes the 84 files at once and
+shows the embedded textures in its preview before importing.)
 
 | File | Name | Category | Zone | Length (studs) | Triangles | Glow | Goes to |
 |---|---|---|---|---|---|---|---|

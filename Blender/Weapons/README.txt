@@ -21,7 +21,10 @@ WEAPONS V2 (2026-10-12, docs/weapons_combat_brief.txt Phase 3) - THE CURRENT MOD
 - Run headless: blender -b Blender/Icons/_IconTemplate.blend --python tools/blender/run_weapons2.py --
   <Category> <zone indexes...>   (or -- --lineup <Category>).
 - The V1 .blend / .fbx files are kept in BackUP_Files/old_weapon_models_2026-10-12/.
-- IMPORT: Blender_Exports/WEAPONS_IMPORT.md (Bulk Import in Meters, then DevTools.ApplyWeaponMeshes).
+- IMPORT: Blender_Exports/WEAPONS_IMPORT.md (File > Import 3D of the 84 files, then DevTools.ApplyWeaponMeshes).
+  Done on 2026-10-13: the importer merges the Glow faces into the one textured MeshPart, so their glow comes back as a
+  SurfaceAppearance emissive mask (tools/blender/weapon_emissive_masks.py -> weapons_emissive_ids.json ->
+  tools/WeaponGlow.luau). The axis convention below was checked on the imported meshes.
 
 AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05; all weapons follow it; not yet
 imported in Studio by the owner)

@@ -1,7 +1,7 @@
 --!strict
 -- Weapon models V2 -> the game's weapon Tools (docs/weapons_combat_brief.txt Phase 3).
--- After the owner's Bulk Import of Blender_Exports/Weapons/<Category>/*.fbx (Asset Manager -> Bulk Import, File
--- Dimensions = Meters), with the imported models / MeshParts anywhere in the place (not rotated):
+-- After the owner's import of the 84 FBX (File > Import 3D, all of Blender_Exports/Weapons_ALL_import/*.fbx in one
+-- queue, Scale Unit = Meters), with the imported models / MeshParts anywhere in the place (not rotated):
 --   require(game.ServerStorage.DevTools.ApplyWeaponMeshes)(searchRoot?)   -- default: the whole place
 -- For every weapon it finds the import named like its file ("01_plains_sword") or like its id ("plains_sword"),
 -- then in ReplicatedStorage.Assets.Weapons.<WeaponId>:
@@ -10,9 +10,11 @@
 --   - the placeholder parts are removed; the Tool's attributes and its Grip rotation are kept, the Grip position moves
 --     to the model's true origin (Studio recenters imported meshes on their box: DevTools.WeaponPoints gives the box);
 --   - TipAttachment, BaseAttachment, MuzzleAttachment (Ranged / Magic) and ImpactAttachment (Heavy) are rebuilt at the
---     points measured in Blender; Placeholder = false, MeshVersion = 2.
--- It prints a report (applied / missing / wrong size) and returns { applied, missing, wrongSize }. A weapon whose
--- import has the wrong size (not imported in Meters) is reported and left untouched. The imports are not deleted.
+--     points measured in Blender; Placeholder = false, MeshVersion = 2;
+--   - then DevTools.WeaponGlow puts the emissive mask on the weapons with glow parts.
+-- It prints a report (applied / missing / rescaled / wrong size) and returns { applied, missing, wrongSize, rescaled }.
+-- An import in another Scale Unit is scaled to the weapon's length when its proportions match; one whose shape does
+-- not match is reported and left untouched. The imports are not deleted.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -92,6 +94,14 @@ local function worldBox(parts: { BasePart }): (Vector3, Vector3)
 	return low, high
 end
 
+-- Uniform scale of the imported parts around the box center (an import in the wrong Scale Unit keeps its shape).
+local function rescale(parts: { BasePart }, center: Vector3, factor: number)
+	for _, part in ipairs(parts) do
+		part.Size *= factor
+		part.Position = center + (part.Position - center) * factor
+	end
+end
+
 local function volume(part: BasePart): number
 	return part.Size.X * part.Size.Y * part.Size.Z
 end
@@ -124,7 +134,7 @@ return function(searchRoot: Instance?): { [string]: { string } }
 		end
 	end
 
-	local applied, missing, wrongSize = {}, {}, {}
+	local applied, missing, wrongSize, rescaled = {}, {}, {}, {}
 	for _, weapon in ipairs(Weapons.List) do
 		local item = imports[weapon.Id]
 		local data = Points[weapon.Id]
@@ -139,8 +149,19 @@ return function(searchRoot: Instance?): { [string]: { string } }
 		local longest = math.max(expected.X, expected.Y, expected.Z)
 		local measured = math.max(size.X, size.Y, size.Z)
 		if math.abs(measured - longest) > SIZE_TOLERANCE * longest then
-			table.insert(wrongSize, `{weapon.Id} ({math.round(measured * 100) / 100} studs, expected {math.round(longest * 100) / 100})`)
-			continue
+			-- not imported in Meters: scale it to the measured length when the proportions are the weapon's own
+			local factor = longest / measured
+			local sorted, wanted = { size.X, size.Y, size.Z }, { expected.X, expected.Y, expected.Z }
+			table.sort(sorted)
+			table.sort(wanted)
+			local sameShape = math.abs(sorted[2] * factor - wanted[2]) <= SIZE_TOLERANCE * longest
+			if measured <= 0 or not sameShape then
+				table.insert(wrongSize, `{weapon.Id} ({math.round(measured * 100) / 100} studs, expected {math.round(longest * 100) / 100})`)
+				continue
+			end
+			rescale(parts, (low + high) / 2, factor)
+			table.insert(rescaled, `{weapon.Id} x{math.round(factor * 1000) / 1000}`)
+			low, high = worldBox(parts)
 		end
 		-- the Handle = the biggest textured part (the biggest part at all if none is textured)
 		local main = parts[1]
@@ -214,12 +235,21 @@ return function(searchRoot: Instance?): { [string]: { string } }
 		table.insert(applied, weapon.Id)
 	end
 
+	-- the importer merges the glow faces into the textured part: DevTools.WeaponGlow gives them their emissive mask
+	local glowModule = DEVTOOLS:FindFirstChild("WeaponGlow")
+	if glowModule and #applied > 0 then
+		fresh(glowModule :: ModuleScript)(weaponsFolder)
+	end
+
 	print(`ApplyWeaponMeshes: {#applied} weapon(s) now use their V2 mesh, {#missing} not found, {#wrongSize} with a wrong size`)
 	if #missing > 0 then
 		print("  not found (still placeholders): " .. table.concat(missing, ", "))
 	end
-	if #wrongSize > 0 then
-		warn("  wrong size, import again with File Dimensions = Meters: " .. table.concat(wrongSize, ", "))
+	if #rescaled > 0 then
+		print("  rescaled (not imported in Meters): " .. table.concat(rescaled, ", "))
 	end
-	return { applied = applied, missing = missing, wrongSize = wrongSize }
+	if #wrongSize > 0 then
+		warn("  wrong size or shape, import again with Scale Unit = Meters: " .. table.concat(wrongSize, ", "))
+	end
+	return { applied = applied, missing = missing, wrongSize = wrongSize, rescaled = rescaled }
 end

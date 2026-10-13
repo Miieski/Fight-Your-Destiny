@@ -149,6 +149,21 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-13: THE 84 REAL WEAPON MODELS ARE IN THE GAME (owner: "make these weapons in 3D, almost identical to the
+icons").** The V2 Blender models (already built from the icons on 2026-10-12) were re-checked one by one against their
+icon (`Previews/Weapons/<Cat>/<NN>_<id>_compare.png`), then imported by the owner (File > Import 3D, the 84 files of
+`Blender_Exports/Weapons_ALL_import/` in one queue, preset Studio Default) and applied by
+`DevTools.ApplyWeaponMeshes`: every Tool of `ReplicatedStorage.Assets.Weapons` now holds its real MeshPart
+(Placeholder = false, MeshVersion = 2, grip and Tip / Base / Muzzle / Impact points from `DevTools.WeaponPoints`).
+Import facts: the importer gives ONE MeshPart + SurfaceAppearance per file (the glow faces are merged into it) and
+Studio Default reads the FBX as centimeters (28x too big): ApplyWeaponMeshes now rescales an import whose proportions
+match, and `DevTools.WeaponGlow` (68 emissive masks, `tools/blender/weapon_emissive_masks.py`, ids in
+`Blender/Weapons/weapons_emissive_ids.json`) gives the glow back (SurfaceAppearance EmissiveMaskContent, strength
+1.5). Axis convention checked on the imported meshes (Roblox X = -Blender X, Y = Blender Z, Z = Blender Y). Tested in
+Play: every category equips in the hand, no console error. The 84 imported models are kept in
+`ServerStorage.ImportedWeapons` (can be deleted, the Tools hold their own copies). Backups
+`BackUP_Files/*before_weapon_meshes_import*` / `*after_weapon_meshes_v2*`. **Save the place** (File > Save to File As).
+
 **2026-10-13: RESPEC REFUND, NO DEATH PENALTY.** The Diamond respec of the Stats window gives back the Gold the points
 cost (`Attributes.refundOf`, `StatsService` respec answers `{ Cost, Refund }`). Dying no longer costs Gold (the
 ZoneService Died handler, `Economy.DeathGoldLoss` and `UI.Text.DeathGold` are gone). Details in NIGHT_LOG.
@@ -219,7 +234,7 @@ Rebirth N opens zone N + 1), UI `UI/Pages/RebirthPage`, badge = unspent credits 
 * Phase 2: the HUD's 3 pet slots are 3 empty SKILL slots (`Config/Skills`, `SkillService`, `SkillController`,
   `Kit/SkillSlot` with the cooldown sweep; keys Z / X / C, touch buttons around Attack). Skills come later.
 * Phase 3: the 84 weapon models rebuilt from their icons (see the Part C notes below and
-  `Blender_Exports/WEAPONS_IMPORT.md`); not imported yet (owner: Bulk Import + `DevTools.ApplyWeaponMeshes`).
+  `Blender_Exports/WEAPONS_IMPORT.md`); imported and applied on 2026-10-13 (entry above).
 * Phase 4: combat framework by the main agent (`Config/Combat` Combos / Feel, `CombatService`, `CombatController`:
   combos, hit-stop, aim assist 15 studs, lunge, cancels, combo counter, Net "Swing" / "Impact" / "Motion"), then
   three sub-agents, each the only Studio user during its run, contract `docs/COMBAT_CONTRACTS.md`:
@@ -232,8 +247,7 @@ Rebirth N opens zone N + 1), UI `UI/Pages/RebirthPage`, badge = unspent credits 
   (Net "Combo" resync, rate booked at the due time, real knockback, point-blank shots, damage numbers after respawn).
   Screenshots `docs/screenshots/weapons_v2/combat_<category>_<step>.jpg`. Open: other players' view not testable
   through the MCP (no second client), crossbow / gun looks need the real meshes, nothing auditioned by ear.
-* OWNER TO DO: Bulk Import of the 84 weapon FBX + `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()`
-  (`Blender_Exports/WEAPONS_IMPORT.md`), listen to the combat sounds once (`docs/SOUND_KIT.md` Combat section), File >
+* OWNER TO DO: (weapon FBX import done 2026-10-13) listen to the combat sounds once (`docs/SOUND_KIT.md` Combat section), File >
   Save to File As for the .rbxl. No animation to publish (procedural pipeline, option 2).
 
 **2026-10-05 (evening): ENEMIES / NPCs / PETS (`docs/enemies_npcs_pets_brief.txt`, zones 1-4) are DONE - rule
@@ -350,7 +364,7 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
   `Previews/Weapons/<Cat>/<NN>_<id>_compare.png`; V1 files in `BackUP_Files/old_weapon_models_2026-10-12/`). The .blend
   and .fbx files were replaced in place; measured points in `Blender/Weapons/weapons_v2_points.json` ->
   `tools/WeaponPoints.luau` + `tools/WeaponBounds.luau` (DevTools).
-* The FBX files are NOT imported in Studio yet. Owner: `Blender_Exports/WEAPONS_IMPORT.md` (Bulk Import in Meters, then
+* The FBX files were imported on 2026-10-13 (`Blender_Exports/WEAPONS_IMPORT.md`: File > Import 3D, then
   `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()`, which swaps each mesh into the existing Tool
   `ReplicatedStorage.Assets.Weapons.<WeaponId>`, keeps attributes + grip rotation and rebuilds Tip / Base / Muzzle /
   Impact attachments).

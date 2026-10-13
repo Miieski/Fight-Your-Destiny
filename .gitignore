@@ -32,3 +32,6 @@ tools/blender/_last_run.json
 # Old model copies kept before an overwrite (large binaries)
 BackUP_Files/old_*/
 _to_delete/
+
+# Flat copy of the 84 weapon FBX for one 3D Importer selection (sources stay in Blender_Exports/Weapons/<Category>/)
+Blender_Exports/Weapons_ALL_import/
