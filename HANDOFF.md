@@ -153,7 +153,8 @@ Work boss by boss and system by system with sub-agents:
 landing shockwave; Ranged volley, Magic blast), dash strikes (DashAttacks: attack during / right after a roll), longer
 Spear / Heavy / Ranged / Magic combos; 35 new clips, VFX (VFX.land, dives, dashes), SFX ("Land", Air / Dash). Dodge bug
 fixed (the roll afterimages lay inside the ground: lifted, no Neon). Then the owner's zone styles: `Config/CombatStyles`
-(12 styles, one per zone; animations / VFX / SFX read the held weapon's zone, ctx.Zone). Contracts:
+(12 styles, one per zone; animations (ZoneStyles + Style_<Zone>_* overlays, ground guard), VFX (Zone_<Zone> accents)
+and SFX (Combat_Style_<Zone>_*) read the held weapon's zone, ctx.Zone). Owner: listen to the new combat sounds once. Contracts:
 `docs/COMBAT_CONTRACTS.md` sections 8-9. Log: NIGHT_LOG "Combat V3". Test tricks in the contracts (attack key ButtonR2).
 
 **2026-10-13: THE 84 REAL WEAPON MODELS ARE IN THE GAME (owner: "make these weapons in 3D, almost identical to the

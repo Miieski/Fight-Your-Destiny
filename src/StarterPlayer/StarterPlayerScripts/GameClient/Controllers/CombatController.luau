@@ -54,6 +54,8 @@ local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "Equ
 local HIT_STOP_GAP = 0.05 -- several enemies hit by one swing give one hit-stop
 local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
 local AIR_AIM_AHEAD = 14 -- Ranged / Magic jump attacks without an enemy in front aim at the ground this far ahead
+local MAX_RISE = 24 -- studs / s: the upward speed a roll or a lunge may reach (bumping into an enemy at full dash speed
+-- could throw the body ~25 studs up, seen 2026-10-14; slopes stay fine)
 local COMBO_COUNTER = { Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromOffset(220, 46), PopScale = 1.25, PopSeconds = 0.12, FadeSeconds = 0.3 }
 
 local holding = false
@@ -233,6 +235,22 @@ local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vect
 	return flat(root.CFrame.LookVector), point, false
 end
 
+-- While a roll / lunge pushes the body, a collision must not throw it up into the air: the upward speed is capped.
+local function capRise(root: BasePart, seconds: number)
+	local untilT = os.clock() + seconds
+	local conn: RBXScriptConnection
+	conn = RunService.Heartbeat:Connect(function()
+		if os.clock() > untilT or not root.Parent then
+			conn:Disconnect()
+			return
+		end
+		local v = root.AssemblyLinearVelocity
+		if v.Y > MAX_RISE then
+			root.AssemblyLinearVelocity = Vector3.new(v.X, MAX_RISE, v.Z)
+		end
+	end)
+end
+
 -- A short step forward with the swing (LinearVelocity impulse); it stops short of the aimed enemy.
 local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector3?, seconds: number?)
 	if studs <= 0 then
@@ -261,6 +279,7 @@ local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector
 	velocity.PlaneVelocity = Vector2.new(dir.X * speed, dir.Z * speed)
 	velocity.MaxForce = 1e6
 	velocity.Parent = root
+	capRise(root, duration + 0.15)
 	task.delay(duration, function()
 		velocity:Destroy()
 		if root.Parent then
@@ -402,12 +421,13 @@ local function attackOnce(forced: Vector3?): boolean
 	if now - lastSent < gap * Combat.RateTolerance + RATE_MARGIN then
 		return false
 	end
-	-- jump attack / dash strike / the same combo step the server will pick (CombatService nextStep)
+	-- dash strike / jump attack / the same combo step the server will pick (CombatService nextStep). The dash strike
+	-- wins: a roll can lift the body a moment (bumping into an enemy) and the press right after a roll means a dash.
 	local variant: string? = nil
-	if Combat.AirAttacks[categoryId] and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then
-		variant = "Air"
-	elseif Combat.DashAttacks[categoryId] and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
+	if Combat.DashAttacks[categoryId] and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
 		variant = "Dash"
+	elseif Combat.AirAttacks[categoryId] and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then
+		variant = "Air"
 	end
 	local step: { [string]: any }, index: number
 	if variant then
@@ -729,6 +749,7 @@ local function dash(root: BasePart, dir: Vector3)
 	velocity.PlaneVelocity = Vector2.new(dir.X * speed, dir.Z * speed)
 	velocity.MaxForce = 1e6
 	velocity.Parent = root
+	capRise(root, Combat.Roll.Duration + 0.15)
 	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
 	task.delay(Combat.Roll.Duration, function()
 		velocity:Destroy()

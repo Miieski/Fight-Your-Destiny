@@ -152,6 +152,12 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
   blast (x1.5). One jump attack per jump; the combo restarts after it. The server checks the player is airborne.
 * **Dash strike** (Iron Soul style): an attack pressed during a roll or within 0.35 s after it is a long lunge out of
   the roll (6-8 studs; x1.2 to x1.4 damage), then the combo restarts.
+* **Zone fighting styles** (owner 2026-10-14: "plains weapon will have a different animation than the void one"):
+  every weapon moves in its zone's style, whatever its category (`Config/CombatStyles`): Plains Squire (the base),
+  Desert Dune Dancer, Jungle Feral, Tundra Glacier, Swamp Hexblade, Volcano Berserker, Hell Demon, Heaven Seraph, Dead
+  Revenant, Abyss Tidecaller, Mechanical Automaton, Void Voidwalker: own stance and idle, rhythm, swing size, a
+  signature move on finishers and jump attacks, plus its own effect and sound accents. Styles never change the hit
+  timing or the damage.
 
 ### Defense
 * **Roll:** 0.35 s of invulnerability, 12 studs, cooldown 1.5 s. Cannot roll while blocking.

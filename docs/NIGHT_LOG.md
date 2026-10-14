@@ -1465,3 +1465,44 @@ anim_v3_before / _after, vfx_v3_before / _after (use the 130638 set), sfx_v3_bef
   damage of a combo about x1.
 - Jump attacks: one per jump, Ranged / Magic hover instead of diving, every jump attack is a finisher (bigger feel).
 - Dash strike instead of Iron Soul's hold-for-heavy (holding attack already chains the combo in this game).
+
+# Zone fighting styles - 2026-10-14 (owner: "Create different animations animation according to the zone weapon. So plains weapon will have a different animation than the void one.")
+
+Owner's answers (asked): "12 fighting styles (Recommended)" and "Yes, effects and sounds (Recommended)". Backups
+styles_anim_before / _after, styles_anim_fix_before / _after, styles_vfx_before / _after, styles_sfx_before / _after,
+after_combat_v3 (6 files each).
+
+## Status (newest first)
+
+- 17:45 DONE (commits 9eff00b groundwork, dddd160 animations, 2f02711 VFX, 67d708e weapon-in-ground fix, c687e31
+  SFX, then the dash priority / rise cap fix). Studio = disk (pull: 166 scripts, 0 written).
+  * Main agent: `Config/CombatStyles` (one style per zone with Moves / Finisher / Jump / Look / Sound briefs:
+    Squire, Dune Dancer, Feral, Glacier, Hexblade, Berserker, Demon, Seraph, Revenant, Tidecaller, Automaton,
+    Voidwalker), ctx.Zone in every VFX / SFX ctx, contract section 9.
+  * Animation sub-agent: no 84 clip sets - a style system: per-zone posture, idle guard, swing size / follow-through,
+    wind-up and recovery time-warps that keep the Hit exact (Sword measured within one frame in all 12 zones),
+    stepped / linear motion for Mechanical, idle waves (Heaven / Void hover...), and 22 overlays Style_<Zone>_Finisher
+    / _Jump (Desert dervish spin, Jungle pounce, Tundra frozen pause, Swamp wrist twirl, Volcano stomping charge, Hell
+    savage spin, Heaven wings, Dead stutter lunge, Abyss ripple, Mechanical ratchet + piston, Void slow spin snap).
+    Follow-up after the VFX agent saw the Swamp blade 1.7 studs underground: all 84 combos measured (worst before:
+    Dead spear -4.06 in idle; bow / gun runs below the ground in every zone, Plains -0.40): an engine ground guard
+    keeps the held weapon 0.06 stud above the ground in idle / run, styled attacks bury it at most 0.45 x its reach.
+  * VFX sub-agent: per-zone accent on swings (shed emitter on the blade tip, arc shapes: spiral, wave, saw, stutter,
+    jag, hard), impacts (max 3 per 0.1 s), jump landings and the signature beats (timed like the animation overlays);
+    24 assets Zone_<Zone> / _Shed (builders in tools/vfx/).
+  * SFX sub-agent: per-zone accent layers (light on every 2nd ordinary step, full on finishers / dashes / jump
+    attacks, impacts, landings, signature beats within ~25 ms of the animation), quieter, in the cap and dropped
+    first; 56 new free catalog sounds; nothing auditioned by ear (swap first: Dead moan, Swamp bubbles, Heaven choir,
+    Jungle growl, Tundra crack).
+  * Main agent, from the SFX agent's report: an attack right after a roll sometimes became a jump attack: the dash
+    strike now wins over the jump attack within the dash window. A roll / lunge into a dying enemy once threw the body
+    to y 27: the upward speed is capped at 24 studs/s during rolls and lunges (test: 4 dash strikes through 8 boars,
+    max height 4.8, all accepted as dash strikes, no errors).
+
+## Decisions taken without the owner
+
+- Styles are a system (parameters + overlays) on the category clips, not 84 hand-made clip sets; Plains = the base.
+- Weapons never go below the ground at rest, even where a style droops them (Hell / Swamp rest the tip on the
+  surface); the authored Plains spear dive landing (point 3.6 studs in the ground) is kept.
+- Zone accents only on swings / impacts / landings / signature beats; projectiles in flight, Magic area bursts and
+  the Equip sound have no zone accent yet.
