@@ -43,6 +43,9 @@
 -- attacks, and a signature overlay (Style_<Zone>_Finisher on combo finishers, Style_<Zone>_Jump on jump attacks) timed on
 -- the attack clip's own Dive / Hit markers: its joint rotations and Lift (whole body) are multiplied on at write time,
 -- its hand / blade / grip / feet / RootP offsets go into the IK targets. Plains (and no zone) = the clips as authored.
+-- Ground guard (2026-10-14): the held Tool's lowest corner (from last frame's pose) is kept above the ground in the idle /
+-- run stances (any zone) and at most ACTION_DEPTH x its reach under it in styled attacks, by lifting the blade elevation
+-- (or the hand when the pommel side is lowest); the lifts relax once the weapon is clear. No allocation per frame.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -75,6 +78,19 @@ local AIR_FADE = 0.15 -- airborne stance blend
 -- may reach (deeper only if the clip itself goes deeper: landings)
 local LATE_WINDUP, LATE_SPLIT, CROUCH_FLOOR = 0.15, 0.55, -1.2
 local ROLE_ACTION, ROLE_IDLE, ROLE_STANCE = 0, 1, 2
+-- ground guard: in the idle / run stances (no action clip) the held weapon's lowest corner is kept at least GROUND_MARGIN
+-- studs above the ground under the character (a "dragging" blade may touch it): when it is lower, the stance's blade
+-- elevation is lifted (tip side lowest) or the hand raised (pommel / butt side lowest); the lift relaxes slowly once
+-- the weapon is GROUND_SLACK above the margin. Maximum lift, per-frame step limits, relax rates (per second).
+local GROUND_MARGIN, GROUND_SLACK = 0.06, 0.2
+local CLEAR_HOLD = 1.5 -- seconds the stance weapon must stay clear before its lift relaxes (longer than a run / idle cycle)
+local BLEND_RELAX = 3 -- rad (studs) per second: the transient lift of an idle <-> run blend fades fast once it is over (while clear)
+local BLEND_LEAD, RUN_LEAD = 0.2, 0.1 -- studs of extra clearance aimed at during an idle <-> run blend / while running
+local LIFT_EL_MAX, LIFT_H_MAX, LIFT_EL_STEP, LIFT_H_STEP, LIFT_EL_RELAX, LIFT_H_RELAX = math.rad(80), 1.2, 0.35, 0.3, 0.5, 0.3
+-- styled attacks (zone styles): the weapon may go at most ACTION_DEPTH x its reach under the ground (about the authored
+-- depth of the jump attack landings' ground stabs); deeper, the attack's own lift raises it (relaxes at ACTION_RELAX)
+local ACTION_DEPTH, ACTION_RELAX = 0.45, 1.5
+local BLADE_MIN = 1.2 -- studs past the hand: shorter weapons are lifted by the hand only
 local VARIANTS: { [string]: { suffix: string, steps: { [string]: { [string]: any } } } } = {
 	Air = { suffix = "_JumpAttack", steps = Combat.AirAttacks or {} },
 	Dash = { suffix = "_DashAttack", steps = Combat.DashAttacks or {} },
@@ -137,6 +153,9 @@ type Slot = {
 	-- zone styles: phase 0 = unstyled, 1 = combo step / dash strike (time warp), 2 = jump attack (no wind-up warp: the
 	-- dive sync); fin = combo finisher; sig = signature overlay (gain sigW, late = played in the recovery)
 	phase: number, fin: boolean, sig: Clip?, sigW: number, late: boolean, started: number,
+	-- ground guard of a styled attack: blade elevation / hand height lift keeping the weapon at most ACTION_DEPTH x its
+	-- reach under the ground (the authored ground stabs of the landings stay, the style may not bury the weapon deeper)
+	lift: number, liftH: number,
 }
 type Term = { c: number, axis: number, amp: number, freq: number, phase: number, bias: number, kind: number, steps: { number }? }
 type ZStyle = {
@@ -157,6 +176,13 @@ type State = {
 	dirty: boolean, retryAt: number, ready: boolean, toolDirty: boolean, diedConn: RBXScriptConnection?, watched: Humanoid?,
 	category: string?, style: string?, idle: Clip?, run: Clip?, air: Clip?, stanceOn: boolean, aimPitch: number,
 	zstyle: ZStyle?, styleT: number,
+	-- ground guard (stances): the held Tool's bounding-box corners in its Handle's frame (tipSide = on the blade's side
+	-- of the hand), and the lift applied to the stance's blade elevation (radians) / hand height (studs)
+	handle: BasePart?, corners: { Vector3 }, tipSide: { boolean }, toolReach: number, liftEl: number, liftH: number,
+	runEl: number, runH: number, -- the same lifts for the run / air stances (kept apart: the run holds weapons lower)
+	blendEl: number, blendH: number, -- transient lift while the idle and run stances blend (their targets cross over)
+	upper: BasePart?, upT: Vector3, -- UpperTorso, and the world's up in its frame (last frame): the lifts go straight up
+	clearT: number, -- seconds the stance weapon has been clear of the ground (see CLEAR_HOLD)
 	stanceW: number, standF: number, runF: number, airF: number, idleT: number, runT: number, airT: number,
 	act: Slot, prev: Slot, add: Slot,
 	hitStopUntil: number, blocking: boolean, dead: boolean, spawnUntil: number,
@@ -519,6 +545,32 @@ local function wristTarget(arm: Arm, hp: Vector3): Vector3
 	return Vector3.new(-hp.Z * k * sin(hp.X), arm.shoulder.Y + hp.Y * k, -hp.Z * k * cos(hp.X))
 end
 
+-- Ground guard lifts toward the world's up (S.upT, in the UpperTorso frame: right even when the torso bends far): the
+-- right hand target rises `height` studs, the blade direction turns `angle` radians up (never past straight up).
+local function liftTargets(S: State, out: { Vector3 }, angle: number, height: number)
+	local upT = S.upT
+	if height > 0 then
+		local arm = S.rArm
+		local hp = out[C_RHAND]
+		local w = wristTarget(arm, hp) + upT * height
+		local k = arm.scale
+		-- azimuths stay continuous with the clip's (the idle / run targets are blended after this)
+		out[C_RHAND] = Vector3.new(hp.X + wrap(atan2(-w.X, -w.Z) - hp.X), (w.Y - arm.shoulder.Y) / k, sqrt(w.X * w.X + w.Z * w.Z) / k)
+	end
+	if angle > 0 then
+		local b = out[C_RBLADE]
+		local d = direction(b)
+		local cosUp = d:Dot(upT)
+		local perp = upT - d * cosUp
+		local m = perp.Magnitude
+		if m > 1e-3 then
+			local a = math.min(angle, acos(clamp(cosUp, -1, 1)))
+			d = d * cos(a) + perp * (sin(a) / m)
+			out[C_RBLADE] = Vector3.new(b.X + wrap(atan2(-d.X, -d.Z) - b.X), asin(clamp(d.Y, -1, 1)), 0)
+		end
+	end
+end
+
 -- One arm, UpperTorso frame: wrist target w, elbow pole, optional aim (direction of the held weapon's axis arm.blade)
 -- and face (direction of its face axis arm.face, i.e. the roll around aim). The forearm takes the twist (up to
 -- TWIST_MAX), the wrist the rest. Writes the three joint rotations from firstJ; returns the hand rotation and the
@@ -589,7 +641,7 @@ local sigJ: { Vector3 } = table.create(NJ, ZERO) -- signature joint offsets of t
 local function newSlot(): Slot
 	return {
 		clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false, sync = false, held = 0,
-		phase = 0, fin = false, sig = nil, sigW = 1, late = false, started = 0,
+		phase = 0, fin = false, sig = nil, sigW = 1, late = false, started = 0, lift = 0, liftH = 0,
 	}
 end
 
@@ -653,6 +705,8 @@ local function rebuild(S: State)
 	end
 	local j = S.joints
 	S.scale = math.max(0.3, humanoid.HipHeight / REF_HIP)
+	local upper = character:FindFirstChild("UpperTorso")
+	S.upper = if upper and upper:IsA("BasePart") then upper else nil
 	S.pivot = c0(j[1])
 	local a1r = c1(j[1])
 	for side = 1, 2 do
@@ -703,6 +757,9 @@ end
 -- crossbow top, gun side, gauntlet back of the hand) and the Handle's origin from the wrist.
 local function measureTool(S: State)
 	S.toolDirty = false
+	S.handle = nil
+	S.liftEl, S.liftH, S.runEl, S.runH, S.clearT = 0, 0, 0, 0, 0 -- a new weapon starts from its style's own pose
+	S.blendEl, S.blendH = 0, 0
 	local arm = S.rArm
 	arm.blade = HAND_BLADE
 	arm.face = ZERO
@@ -724,10 +781,35 @@ local function measureTool(S: State)
 	arm.grip = true
 	-- the clips drive weapons into the ground (jump attack landings): a colliding weapon would bounce its owner up
 	-- (seen 2026-10-14: the spawn-time starter sword's Handle read CanCollide = true on the client)
+	-- ground guard: the bounding box of the Tool's visible parts in the Handle's frame (welded: fixed)
+	local lo, hi = Vector3.one * math.huge, -Vector3.one * math.huge
+	local handleCF = (handle :: BasePart).CFrame
 	for _, part in ipairs((tool :: Tool):GetDescendants()) do
-		if part:IsA("BasePart") and part.CanCollide then
-			part.CanCollide = false
+		if part:IsA("BasePart") then
+			if part.CanCollide then
+				part.CanCollide = false
+			end
+			if part.Transparency < 1 then
+				local rel = handleCF:ToObjectSpace(part.CFrame)
+				local s = part.Size * 0.5
+				for i = 0, 7 do
+					local corner = rel:PointToWorldSpace(Vector3.new(if i % 2 == 0 then -s.X else s.X, if i % 4 < 2 then -s.Y else s.Y, if i < 4 then -s.Z else s.Z))
+					lo, hi = lo:Min(corner), hi:Max(corner)
+				end
+			end
 		end
+	end
+	if lo.X <= hi.X then
+		local reach = 0
+		local handOrigin = inHand:PointToObjectSpace(ZERO)
+		for i = 0, 7 do
+			local corner = Vector3.new(if i % 2 == 0 then lo.X else hi.X, if i % 4 < 2 then lo.Y else hi.Y, if i < 4 then lo.Z else hi.Z)
+			S.corners[i + 1] = corner
+			S.tipSide[i + 1] = true
+			reach = math.max(reach, (corner - handOrigin).Magnitude)
+		end
+		S.toolReach = math.max(0.5, reach)
+		S.handle = handle :: BasePart
 	end
 	local tip = handle:FindFirstChild("TipAttachment")
 	local base = handle:FindFirstChild("BaseAttachment")
@@ -739,6 +821,16 @@ local function measureTool(S: State)
 		return
 	end
 	axis = axis.Unit
+	-- corners beyond the hand along the weapon's axis are on the blade's side (lifting the blade raises them); a short
+	-- weapon (gauntlet: under BLADE_MIN studs past the hand) is only lifted by the hand
+	local handAlong = (inHand:PointToObjectSpace(ZERO) - base.Position):Dot(axis)
+	local bladeLen = 0
+	for i = 1, 8 do
+		bladeLen = math.max(bladeLen, (S.corners[i] - base.Position):Dot(axis) - handAlong)
+	end
+	for i = 1, 8 do
+		S.tipSide[i] = bladeLen >= BLADE_MIN and (S.corners[i] - base.Position):Dot(axis) > handAlong
+	end
 	local front = Vector3.new(0, 0, -1)
 	for _, name in ipairs(FACE_POINTS) do
 		local point = handle:FindFirstChild(name)
@@ -784,6 +876,8 @@ local function play(S: State, clip: Clip, rate1: number, rate2: number, kind: st
 	act.sigW = 1
 	act.late = false
 	act.started = os.clock()
+	act.lift = 0
+	act.liftH = 0
 	if kind == "attack" or kind == "roll" then
 		S.moveLockUntil = os.clock() + MOVE_LOCK
 	end
@@ -931,6 +1025,19 @@ local function add(character: Model, spawned: boolean)
 		style = nil,
 		zstyle = nil,
 		styleT = math.random() * 10, -- style waves: characters of one style do not bob in sync
+		handle = nil,
+		corners = table.create(8, ZERO),
+		tipSide = table.create(8, true),
+		toolReach = 1,
+		liftEl = 0,
+		liftH = 0,
+		runEl = 0,
+		runH = 0,
+		blendEl = 0,
+		blendH = 0,
+		upper = nil,
+		upT = Vector3.yAxis,
+		clearT = 0,
 		aimPitch = 0,
 		idle = nil,
 		run = nil,
@@ -1164,6 +1271,9 @@ local function shape(S: State, Z: ZStyle, clip: Clip, t: number, out: { Vector3 
 			g = 1 - smooth((v - 0.5) / 0.5)
 		end
 		amplify(clip, out, lower, 1 + (Z.kt * m - 1) * g, 1 + (Z.ka * m - 1) * g, 1 + (Z.kl - 1) * g)
+		if slot.lift > 0 or slot.liftH > 0 then
+			liftTargets(S, out, slot.lift, slot.liftH) -- ground guard of the styled attack (see ACTION_DEPTH)
+		end
 		if #Z.attack > 0 then
 			applyTerms(Z.attack, out, S.styleT, 1, lower)
 		end
@@ -1241,6 +1351,14 @@ local function sampleInto(S: State, clip: Clip, t: number, out: { Vector3 }, low
 	if Z then
 		shape(S, Z, clip, t, out, lower, slot, role)
 	end
+	if role ~= ROLE_ACTION then
+		-- ground guard: lift the stance's weapon out of the ground
+		local el = (if role == ROLE_IDLE then S.liftEl else S.runEl) + S.blendEl
+		local height = (if role == ROLE_IDLE then S.liftH else S.runH) + S.blendH
+		if el > 0 or height > 0 then
+			liftTargets(S, out, el, height)
+		end
+	end
 	if arms then
 		solveArms(S, clip, out)
 	end
@@ -1301,6 +1419,27 @@ local function actionLayer(S: State, slot: Slot)
 		scratchA[3] += Vector3.new(pitch * 0.25, 0, 0)
 	end
 	layer(scratchA, w, wL)
+end
+
+-- One ground guard update from the gaps of the weapon's blade side (tip) and pommel side (butt) to the allowed level
+-- (negative = too low): the blade elevation lifts a low tip, the hand rises for a low butt, when both ends are low or
+-- when the elevation is spent; both relax once clear. Returns elevation, height.
+local function guardStep(gapT: number, gapB: number, el: number, height: number, reach: number, relaxEl: number, relaxH: number, dt: number): (number, number)
+	if gapT < 0 and gapB < 0 then
+		height = math.min(LIFT_H_MAX, height + math.min(LIFT_H_STEP, -math.min(gapT, gapB)))
+	elseif gapT < 0 then
+		if el < LIFT_EL_MAX then
+			el = math.min(LIFT_EL_MAX, el + math.min(LIFT_EL_STEP, -gapT / reach))
+		else
+			height = math.min(LIFT_H_MAX, height + math.min(LIFT_H_STEP, -gapT))
+		end
+	elseif gapB < 0 then
+		height = math.min(LIFT_H_MAX, height + math.min(LIFT_H_STEP, -gapB))
+	elseif math.min(gapT, gapB) > GROUND_SLACK then
+		el = math.max(0, el - dt * relaxEl)
+		height = math.max(0, height - dt * relaxH)
+	end
+	return el, height
 end
 
 local function step(S: State, dt: number, now: number, camPos: Vector3)
@@ -1385,6 +1524,53 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 	end
 	if (root.Position - camPos).Magnitude > RANGE then
 		return
+	end
+	local upper = S.upper
+	if upper then
+		S.upT = upper.CFrame:VectorToObjectSpace(Vector3.yAxis)
+	end
+	-- ground guard (from last frame's pose, ground = under the standing character): the stance alone (no action clip)
+	-- keeps the weapon above the ground; a styled attack keeps it at most ACTION_DEPTH x its reach under it
+	local handle = S.handle
+	local stanceOnly = S.stanceW > 0.5 and not (act.clip and act.w > 0.01) and not (S.prev.clip and S.prev.w > 0.01)
+	local styledAct = act.clip ~= nil and act.phase > 0 and act.w > 0.5
+	if handle and not floorAir and (stanceOnly or styledAct) then
+		local groundY = root.Position.Y - root.Size.Y * 0.5 - humanoid.HipHeight
+		local cf = handle.CFrame
+		local corners, tipSide = S.corners, S.tipSide
+		local tipLow, buttLow = math.huge, math.huge
+		for i = 1, 8 do
+			local y = cf:PointToWorldSpace(corners[i]).Y
+			if tipSide[i] then
+				tipLow = math.min(tipLow, y)
+			else
+				buttLow = math.min(buttLow, y)
+			end
+		end
+		if stanceOnly then
+			local level = groundY + GROUND_MARGIN
+			-- relax only after CLEAR_HOLD clear seconds: the run cycle and the idle waves dip the weapon periodically
+			S.clearT = if math.min(tipLow, buttLow) - level > GROUND_SLACK then S.clearT + dt else 0
+			local relax = S.clearT > CLEAR_HOLD
+			local relaxEl, relaxH = if relax then LIFT_EL_RELAX else 0, if relax then LIFT_H_RELAX else 0
+			if S.runF > 0.05 and S.runF < 0.95 then
+				-- the blend moves the weapon fast: aim BLEND_LEAD higher (this lift fades once the blend is over)
+				S.blendEl, S.blendH = guardStep(tipLow - level - BLEND_LEAD, buttLow - level - BLEND_LEAD, S.blendEl, S.blendH, S.toolReach, BLEND_RELAX, BLEND_RELAX, dt)
+			elseif S.runF > 0.5 or S.airF > 0.5 then
+				-- the run cycle swings the weapon fast: keep RUN_LEAD more clearance
+				S.runEl, S.runH = guardStep(tipLow - level - RUN_LEAD, buttLow - level - RUN_LEAD, S.runEl, S.runH, S.toolReach, relaxEl, relaxH, dt)
+			else
+				S.liftEl, S.liftH = guardStep(tipLow - level, buttLow - level, S.liftEl, S.liftH, S.toolReach, relaxEl, relaxH, dt)
+			end
+			if (S.runF <= 0.05 or S.runF >= 0.95) and (S.blendEl > 0 or S.blendH > 0) and math.min(tipLow, buttLow) - level > GROUND_SLACK then
+				-- after the blend its lift fades, but only while the weapon is clear (it never drops the weapon in)
+				S.blendEl = math.max(0, S.blendEl - dt * BLEND_RELAX)
+				S.blendH = math.max(0, S.blendH - dt * BLEND_RELAX)
+			end
+		else
+			local level = groundY - ACTION_DEPTH * S.toolReach
+			act.lift, act.liftH = guardStep(tipLow - level, buttLow - level, act.lift, act.liftH, S.toolReach, ACTION_RELAX, ACTION_RELAX, dt)
+		end
 	end
 	-- layers
 	covU, covL = 0, 0
