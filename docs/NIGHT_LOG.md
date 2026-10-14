@@ -1571,3 +1571,24 @@ tools/MapAudit.luau, Windmill + AncientTree shells), then the 11 other zones in 
   * Left: 6 small exposed edges under 12 studs (Desert 5, Tundra 1), audit false positives (Tundra_4 crystal reliefs,
     Swamp cabin gables). MapAudit: `insideSolid` filter (543 false positives gone), `footprintBox` fins, `keepClear`
     covers every path folder.
+- 20:45 run 3 DONE (Volcano, Hell, Heaven, Dead; backups mapfix_run3_before / _after; the owner played in Studio for a
+  while during the run: the agent only ran read-only checks meanwhile, nothing lost).
+  * Volcano: the whole Volcano_1 rim hung 30-52 studs above the floor with its dark underside visible from outside
+    (623 closures, corners rebuilt to end at the slab), Volcano_4 crater wall bottom (168), a 102-part cap closing the
+    hollow volcano landmark seen from below, 4 black mine-gallery boxes that stuck out of the cave dome trimmed, 28 ash
+    mounds collide, 109 exact duplicates deleted, 93 parts nudged.
+  * Hell: outer cliff bands of Hell_1 / Hell_3 open over the void (1,443 closures) + 44 slabs under them (sky showed
+    through a slit at the east cliff foot), void beside the Hell_1 -> Hell_2 gate passage filled (2 floor strips), lava
+    moat extended to close a void strip in front of the HornedCastle wall, 210 parts nudged.
+  * Heaven: the island rims are audit false positives (grass plates over closed rock cones, checked on screenshots);
+    gaps between islands are sky by design (glass light-bridges). 184 parts nudged, shadows off on 39 see-through
+    parts (ponds, waterfall, glass bridges / barriers, crystal floor tiles; nothing made opaque).
+  * Dead: hollow outer hill rings closed (Dead_1 628, Dead_3 240), 29 duplicates deleted, 2,534 parts nudged (coffin
+    niches, skull panels flush on the walls), shadows off on 115 (112 broken gothic window panes stay glass).
+  * Heaven_1 TreeOfLight no-climb shell: 23 parts (16-sided prism r 11 to y 125, roof, 6 root fins), Play-tested:
+    runs from 12 directions stop outside, jumps end outside, drops land on the invisible roof.
+  * Checked, no shell needed: SkullRock, BurningTower, HornedCastle, GoldenArch, GoldenCastle, GreatCrypt, Hell_4 /
+    Heaven_4 halls, MineElevator (car floor only), LavaFall, Ossuary and Cathedral (walk-through interiors by design).
+  * Left: the Dead_3 rock arch over the gate (closing it would block the gate), a few small crypt-roof edges, Volcano_2
+    cave mouths (open by design), the hollow under the Volcano_4 crater wall (visible only from below the island).
+  * MapAudit: facetNames, underFill, capFan, holeScan, minY.

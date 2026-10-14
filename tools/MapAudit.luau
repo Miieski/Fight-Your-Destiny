@@ -47,6 +47,11 @@
 		A.footprintBox(part, pad, bottom, top)   vertical box around a part's footprint, e.g. shell "fins"
 		                         over sloped roots: A.shell(m, { radius = r, boxes = { A.footprintBox(root, 1, -3, 27) } })
 		A.undo(sub, tag?)        deletes MapFix parts (all, or one Tag)
+		A.underFill(sub, o)      flat slabs closing the hollow under cliff bands / overhangs over the void
+		                         (cells of A.underCells merged by A.rects): no sky through the foot slit
+		A.capFan(model, sub, y)  triangle-fan bottom cap for a hollow cone over the void (Volcano_1 volcano)
+		A.holeScan(sub, step)    top-down void holes in the playable box (gaps in the floor)
+		A.minY(part)             lowest point of a part (a wedge's missing corner excluded)
 ]]
 
 local MapAudit = {}
@@ -160,8 +165,13 @@ local function faceOf(p: BasePart, sx: number)
 	}
 end
 
+-- WedgePart names that count as facet surfaces. Heaven's sky islands are grass-topped triangles named
+-- "Ground" over rock undersides named "Facet": set MapAudit.facetNames.Ground = true while auditing them
+-- (and back to nil after), or every island rim reads as an open edge.
+MapAudit.facetNames = { Facet = true }
+
 function MapAudit.isFacet(p: Instance): boolean
-	return p:IsA("WedgePart") and (p.Name == "Facet" or p:GetAttribute("MapFixFacet") == true)
+	return p:IsA("WedgePart") and (MapAudit.facetNames[p.Name] == true or p:GetAttribute("MapFixFacet") == true)
 end
 
 -- Facet records under roots. filter(part) -> boolean (optional).
@@ -169,7 +179,7 @@ function MapAudit.facets(roots: { Instance }, filter: ((BasePart) -> boolean)?)
 	local recs = {}
 	for _, root in ipairs(roots) do
 		for _, p in ipairs(root:GetDescendants()) do
-			if p:IsA("WedgePart") and p.Name == "Facet" and (not filter or filter(p)) then
+			if p:IsA("WedgePart") and MapAudit.facetNames[p.Name] == true and (not filter or filter(p)) then
 				local ry = p.CFrame.RightVector.Y
 				local rec = { part = p }
 				if math.abs(ry) < 1e-3 then
@@ -1561,6 +1571,228 @@ function MapAudit.undo(sub: Instance, tag: string?): number
 		end
 	end
 	return n
+end
+
+---------------------------------------------------------------------
+-- Hollow undersides, void holes, cone caps (run 3)
+---------------------------------------------------------------------
+-- Lowest world Y of a part (the missing corner of a WedgePart is not counted).
+function MapAudit.minY(p: BasePart): number
+	local cf, s = p.CFrame, p.Size / 2
+	local my = math.huge
+	for _, x in ipairs({ -1, 1 }) do
+		for _, y in ipairs({ -1, 1 }) do
+			for _, z in ipairs({ -1, 1 }) do
+				if not (p:IsA("WedgePart") and y == 1 and z == -1) then
+					my = math.min(my, cf:PointToWorldSpace(Vector3.new(x * s.X, y * s.Y, z * s.Z)).Y)
+				end
+			end
+		end
+	end
+	return my
+end
+
+--[[
+	Void holes in a sub-zone's playable box: grid points (step studs, Area grown by margin) where a ray
+	from above finds nothing or lands below minY (default -6). Returns a list of Vector3 (Y = -999 over
+	the void).
+]]
+function MapAudit.holeScan(sub: Instance, step: number?, margin: number?, minY: number?): { Vector3 }
+	local area = sub:FindFirstChild("Area") :: BasePart?
+	local holes = {}
+	if not area then
+		return holes
+	end
+	local params = groundParams(seeThroughList({ sub }))
+	local c, s = area.Position, area.Size
+	local hx, hz = s.X / 2 + (margin or 0), s.Z / 2 + (margin or 0)
+	local counter = { n = 0 }
+	for x = c.X - hx, c.X + hx, step or 3 do
+		for z = c.Z - hz, c.Z + hz, step or 3 do
+			local hit = workspace:Raycast(Vector3.new(x, 300, z), Vector3.new(0, -600, 0), params)
+			if not hit or hit.Position.Y < (minY or -6) then
+				table.insert(holes, Vector3.new(x, if hit then hit.Position.Y else -999, z))
+			end
+			chunkWait(counter, 2000)
+		end
+	end
+	return holes
+end
+
+--[[
+	Cells (cell x cell studs) under the facet surfaces of sub with nothing below them: the hollow under a
+	cliff band or an overhang that hangs over the void (seen through the slit at its foot or from below).
+	A cell counts when the first thing a ray from above hits is a facet of sub higher than minTop
+	(default 1) that is not a MapFix closure (the outer closure walls stay the boundary), and nothing but
+	facets is under that point. Returns { { x, z, top } } (x, z = the cell's low corner).
+]]
+function MapAudit.underCells(sub: Instance, cell: number?, minTop: number?)
+	local size = cell or 4
+	local zones = workspace:FindFirstChild("Zones") or workspace
+	local see, facets = {}, {}
+	for _, d in ipairs(zones:GetDescendants()) do
+		if d:IsA("BasePart") then
+			if d.Transparency >= 0.3 then
+				table.insert(see, d)
+			elseif MapAudit.isFacet(d) then
+				table.insert(facets, d)
+			end
+		end
+	end
+	local pTop = groundParams(see)
+	local below = table.clone(see)
+	for _, f in ipairs(facets) do
+		table.insert(below, f)
+	end
+	local pBelow = groundParams(below)
+	local mn, mx = Vector3.one * 1e9, -Vector3.one * 1e9
+	for _, d in ipairs((sub:FindFirstChild("Decor") or sub):GetDescendants()) do
+		if d:IsA("BasePart") and MapAudit.isFacet(d) then
+			mn, mx = mn:Min(d.Position), mx:Max(d.Position)
+		end
+	end
+	local cells = {}
+	local counter = { n = 0 }
+	for x = math.floor(mn.X / size) * size, mx.X, size do
+		for z = math.floor(mn.Z / size) * size, mx.Z, size do
+			local cx, cz = x + size / 2, z + size / 2
+			local h = workspace:Raycast(Vector3.new(cx, 300, cz), Vector3.new(0, -600, 0), pTop)
+			if h and MapAudit.isFacet(h.Instance) and h.Position.Y > (minTop or 1)
+				and MapAudit.subZoneOf(h.Instance) == sub and not h.Instance:FindFirstAncestor("MapFix") then
+				if not workspace:Raycast(Vector3.new(cx, h.Position.Y - 0.1, cz), Vector3.new(0, -400, 0), pBelow) then
+					table.insert(cells, { x = x, z = z, top = h.Position.Y })
+				end
+			end
+			chunkWait(counter, 1500)
+		end
+	end
+	return cells
+end
+
+-- Merges grid cells ({ x, z } low corners, cell studs apart) into rectangles { x0, x1, z0, z1 }: runs
+-- along X per row, equal runs of consecutive rows joined.
+function MapAudit.rects(cells, cell: number)
+	local rows = {}
+	for _, c in ipairs(cells) do
+		rows[c.z] = rows[c.z] or {}
+		rows[c.z][c.x] = true
+	end
+	local zs = {}
+	for z in pairs(rows) do
+		table.insert(zs, z)
+	end
+	table.sort(zs)
+	local open, done, prevZ = {}, {}, nil
+	for _, z in ipairs(zs) do
+		local xs = {}
+		for x in pairs(rows[z]) do
+			table.insert(xs, x)
+		end
+		table.sort(xs)
+		local newOpen = {}
+		local i = 1
+		while i <= #xs do
+			local j = i
+			while j < #xs and math.abs(xs[j + 1] - xs[j] - cell) < 1e-3 do
+				j += 1
+			end
+			local k = `{xs[i]}|{xs[j]}`
+			local rect = open[k]
+			if rect and prevZ and math.abs(z - prevZ - cell) < 1e-3 then
+				rect.z1 = z + cell
+				open[k] = nil
+			else
+				rect = { x0 = xs[i], x1 = xs[j] + cell, z0 = z, z1 = z + cell }
+			end
+			newOpen[k] = rect
+			i = j + 1
+		end
+		for _, rect in pairs(open) do
+			table.insert(done, rect)
+		end
+		open, prevZ = newOpen, z
+	end
+	for _, rect in pairs(open) do
+		table.insert(done, rect)
+	end
+	return done
+end
+
+--[[
+	Closes the hollow under cliff bands / overhangs over the void (MapAudit.underCells) with flat slabs,
+	one Part per merged rectangle, from opts.top (-0.5: under the ground surface, hidden by the facets
+	above) down to opts.bottom (-8), in <sub>.Decor.MapFix.UnderFill.
+	opts: cell (4), minTop (1), top, bottom, color, material (SmoothPlastic), tag. Returns the parts made.
+]]
+function MapAudit.underFill(sub: Instance, opts: { [string]: any }?): { BasePart }
+	opts = opts or {}
+	local cell = opts.cell or 4
+	local top, bottom = opts.top or -0.5, opts.bottom or -8
+	local fix = MapAudit.fixFolder(sub)
+	local folder = fix:FindFirstChild("UnderFill")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "UnderFill"
+		folder.Parent = fix
+	end
+	local made = {}
+	for _, r in ipairs(MapAudit.rects(MapAudit.underCells(sub, cell, opts.minTop), cell)) do
+		local p = newPart("Part", {
+			Name = "UnderFill", Size = Vector3.new(r.x1 - r.x0, top - bottom, r.z1 - r.z0),
+			CFrame = CFrame.new((r.x0 + r.x1) / 2, (top + bottom) / 2, (r.z0 + r.z1) / 2),
+			Color = opts.color or Color3.fromRGB(60, 40, 40), Material = opts.material or Enum.Material.SmoothPlastic,
+			CanTouch = false, Parent = folder,
+		})
+		if opts.tag then
+			p:SetAttribute("Tag", opts.tag)
+		end
+		table.insert(made, p)
+	end
+	return made
+end
+
+--[[
+	Bottom cap for a hollow cone / dome over the void (run 3: the Volcano_1 volcano landmark, whose base
+	hangs past the island): a triangle fan from every open facet edge of model lying at baseY (+- 1) to
+	their centroid, opts.drop (0.25) studs lower, in <sub>.Decor.MapFix.<opts.folder or "BaseCap">.
+	Returns the number of parts made.
+]]
+function MapAudit.capFan(model: Instance, sub: Instance, baseY: number, opts: { [string]: any }?): number
+	opts = opts or {}
+	local Kit = require(game:GetService("ServerStorage").DevTools.BuildKit)
+	local edges = MapAudit.openEdges({ model }, { filter = function(p) return p:IsDescendantOf(model) end })
+	local base, sum = {}, Vector3.zero
+	for _, e in ipairs(edges) do
+		if math.abs(e.a.Y - baseY) < 1 and math.abs(e.b.Y - baseY) < 1 then
+			table.insert(base, e)
+			sum += e.a + e.b
+		end
+	end
+	if #base == 0 then
+		return 0
+	end
+	local drop = opts.drop or 0.25
+	local c = sum / (2 * #base)
+	c = Vector3.new(c.X, baseY - drop, c.Z)
+	local folder = Instance.new("Folder")
+	folder.Name = opts.folder or "BaseCap"
+	local made = 0
+	for _, e in ipairs(base) do
+		local a = Vector3.new(e.a.X, baseY - drop, e.a.Z)
+		local b = Vector3.new(e.b.X, baseY - drop, e.b.Z)
+		local w1, w2 = Kit.tri(a, b, c, folder, e.part.Color, 1, e.part.Material)
+		for _, w in ipairs({ w1, w2 }) do
+			if w then
+				w.CastShadow = false
+				if opts.tag then
+					w:SetAttribute("Tag", opts.tag)
+				end
+				made += 1
+			end
+		end
+	end
+	folder.Parent = MapAudit.fixFolder(sub)
+	return made
 end
 
 return MapAudit
