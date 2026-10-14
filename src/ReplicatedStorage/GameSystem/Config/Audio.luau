@@ -66,5 +66,18 @@ return {
 		Combat_Magic_BurstFrost2 = "PlayerFX", Combat_Magic_BurstShock1 = "PlayerFX",
 		Combat_Magic_BurstShock2 = "PlayerFX", Combat_Magic_BurstWater1 = "PlayerFX",
 		Combat_Magic_BurstWater2 = "PlayerFX", Combat_Magic_HolyChime = "PlayerFX",
+		-- combat V3: landings, jump attacks, dash strikes, new combo steps
+		Combat_Heavy_LandBoom1 = "PlayerFX", Combat_Heavy_LandBoom2 = "PlayerFX", Combat_Heavy_LandCrunch1 = "PlayerFX",
+		Combat_Heavy_LandCrunch2 = "PlayerFX", Combat_Gauntlet_LandThud1 = "PlayerFX", Combat_Gauntlet_LandThud2 = "PlayerFX",
+		Combat_Shared_LandCrack1 = "PlayerFX", Combat_Shared_LandCrack2 = "PlayerFX", Combat_Shared_LandStab1 = "PlayerFX",
+		Combat_Shared_LandStab2 = "PlayerFX", Combat_Shared_LandDirt1 = "PlayerFX", Combat_Shared_LandDirt2 = "PlayerFX",
+		Combat_Shared_AirRise1 = "PlayerFX", Combat_Shared_AirRise2 = "PlayerFX", Combat_Shared_AirDive1 = "PlayerFX",
+		Combat_Shared_AirDive2 = "PlayerFX", Combat_Shared_DashWhoosh1 = "PlayerFX", Combat_Shared_DashWhoosh2 = "PlayerFX",
+		Combat_Spear_Sweep1 = "PlayerFX", Combat_Spear_Sweep2 = "PlayerFX", Combat_Spear_Shaft = "PlayerFX",
+		Combat_Heavy_Breaker1 = "PlayerFX", Combat_Heavy_Breaker2 = "PlayerFX", Combat_Dagger_Shadow1 = "PlayerFX",
+		Combat_Dagger_Shadow2 = "PlayerFX", Combat_Gauntlet_Rocket1 = "PlayerFX", Combat_Gauntlet_Rocket2 = "PlayerFX",
+		Combat_Ranged_Slide1 = "PlayerFX", Combat_Ranged_Slide2 = "PlayerFX", Combat_Ranged_PowerRelease1 = "PlayerFX",
+		Combat_Ranged_PowerRelease2 = "PlayerFX", Combat_Ranged_PowerWhoosh = "PlayerFX", Combat_Magic_GrandCast1 = "PlayerFX",
+		Combat_Magic_GrandCast2 = "PlayerFX", Combat_Magic_Blink1 = "PlayerFX", Combat_Magic_Blink2 = "PlayerFX",
 	},
 }

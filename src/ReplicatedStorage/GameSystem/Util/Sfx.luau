@@ -86,14 +86,19 @@ end
 -- ------------------------------------------------------------------------------------------------
 -- Combat sounds (docs/weapons_combat_brief.txt 4D, contract in docs/COMBAT_CONTRACTS.md). OWNER: the SFX sub-agent
 -- (this section, Config/CombatSfx, the sounds in ReplicatedStorage.Assets.Sounds.Combat). CombatController calls only:
---   Sfx.combat(event, ctx?)   event = "Swing" | "Impact" | "Shot" | "Cast" | "Burst" | "Roll" | "Block" | "BlockHit"
---                             | "BlockBreak" | "Hurt" | "Death" | "Equip"
---                             ctx = { Category?, Step?, Finisher?, Crit?, Material? ("flesh" | "metal" | "stone"),
---                                     Speed?, Tool? (Swing: the WeaponId picks bow / crossbow / gun / blowgun),
---                                     Style? (Burst), Enemy? / Own? (Shot), Rarity? (Equip), IsLocal?,
+--   Sfx.combat(event, ctx?)   event = "Swing" | "Land" | "Impact" | "Shot" | "Cast" | "Burst" | "Roll" | "Block"
+--                             | "BlockHit" | "BlockBreak" | "Hurt" | "Death" | "Equip"
+--                             ctx = { Category?, Step?, Variant? (Swing: nil | "Air" jump attack | "Dash" dash strike),
+--                                     Finisher?, Crit?, Material? ("flesh" | "metal" | "stone"), Speed?,
+--                                     Tool? (Swing: the WeaponId picks bow / crossbow / gun / blowgun),
+--                                     Character? (Swing: its Magic cast / Ranged release times the Burst / Shot),
+--                                     Element? (Swing: Magic BlinkBlast's burst), Style? (Burst), Enemy? / Own? /
+--                                     Shooter? (Shot), Rarity? (Equip), Radius? (Land), IsLocal?,
 --                                     Position? (3D sound there; nil = heard at full volume) }
--- Config/CombatSfx maps event / category / step / weapon style / burst style to sets of variants (no variant twice
--- in a row, pitch +-5 %), times the Swing sounds to the step's hit (and the Magic burst to the release), layers crit /
+--                             "Land" (combat V3) = a melee jump attack hits the ground (ctx as VFX.land)
+-- Config/CombatSfx maps event / category / step / variant / weapon style / burst style to sets of variants (no variant
+-- twice in a row, pitch +-5 %), times the Swing sounds to the step's hit, the Magic area burst to the cast's release +
+-- the bolt's flight and another player's arrow whiz to its release (as Controllers/VFX draws them), layers crit /
 -- finisher / rarity sounds. The Sound copies are pooled (no Clone once warm), at most CombatSfx.Cap play at once (a
 -- new one stops the oldest), each one leaves SoundService / the workspace when it has faded. Every sound goes through
 -- its Config/Audio group (PlayerFX; enemy launches EnemyFX, the rarity chime UI). Unknown events and missing sounds
@@ -104,6 +109,7 @@ end
 -- ------------------------------------------------------------------------------------------------
 type Variant = { Name: string, Peak: number, Length: number, Start: number? }
 type Voice = { sound: Sound?, name: string, anchor: Attachment?, serial: number }
+type Release = { time: number, release: number, grand: boolean }
 
 local IS_CLIENT = RunService:IsClient()
 local SETS = CombatSfx.Sets
@@ -118,6 +124,9 @@ local lastVariant: { [string]: number } = {}
 local stackAt: { [string]: number } = {}
 local stackCount: { [string]: number } = {}
 local created = 0 -- copies cloned since start (Sfx.combatStats)
+-- the last Magic cast / Ranged shot of each character (from its Swing): when its release comes
+local casts: { [Instance]: Release } = setmetatable({}, { __mode = "k" }) :: any
+local shots: { [Instance]: Release } = setmetatable({}, { __mode = "k" }) :: any
 
 local function debugLog(text: string)
 	local log = SoundService:GetAttribute("CombatSfxLog")
@@ -321,6 +330,49 @@ local function nearLocal(position: Vector3): boolean
 	return root ~= nil and root:IsA("BasePart") and (root.Position - position).Magnitude <= CombatSfx.NearLocal
 end
 
+-- Remembers when this character's cast / shot is released (seconds from now).
+local function remember(list: { [Instance]: Release }, character: Instance, release: number, grand: boolean)
+	local now = os.clock()
+	local entry = list[character]
+	if entry then
+		entry.time, entry.release, entry.grand = now, now + release, grand
+	else
+		list[character] = { time = now, release = now + release, grand = grand }
+	end
+end
+
+-- The latest Magic cast of the last CastLink.Window s whose caster stands within CastLink.Range (flat) of a Burst
+-- (one Burst per cast), and the caster's root.
+local function linkCast(at: Vector3): (Release?, BasePart?)
+	local link = CombatSfx.CastLink
+	local now = os.clock()
+	local best: Release?, bestRoot: BasePart? = nil, nil
+	for character, cast in pairs(casts) do
+		if now - cast.time < link.Window and (not best or cast.time > best.time) then
+			local root = character:FindFirstChild("HumanoidRootPart")
+			if root and root:IsA("BasePart") then
+				local d = root.Position - at
+				if Vector3.new(d.X, 0, d.Z).Magnitude <= link.Range then
+					best, bestRoot = cast, root
+				end
+			end
+		end
+	end
+	if best then
+		best.time = -math.huge
+	end
+	return best, bestRoot
+end
+
+-- The Burst spec of a style (an element, "Arcane", "Slam", "Enemy").
+local function burstStyle(entry: { [string]: any }, style: string): { [string]: any }?
+	local styles = entry.Styles
+	if typeof(styles) ~= "table" then
+		return nil
+	end
+	return styles[style] or styles[CombatSfx.StyleGroups[style] or ""] or styles[entry.Default or ""]
+end
+
 local EMPTY = table.freeze({})
 local CHIME = table.freeze({ Set = "RarityChime", Volume = CombatSfx.EquipChime.Volume })
 local CHIME_LEGENDARY = table.freeze({ Set = "RarityChimeLegendary", Volume = CombatSfx.EquipChime.Volume })
@@ -359,18 +411,50 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 				swing = styles[style]
 			end
 		end
-		local spec = swing.Finisher
-		if info.Finisher ~= true or not spec then
-			local steps = swing.Steps
-			local step = if typeof(info.Step) == "number" then math.max(1, math.floor(info.Step)) else 1
-			spec = steps and steps[(step - 1) % #steps + 1]
+		local variant = if info.Variant == "Air" or info.Variant == "Dash" then info.Variant else nil
+		local step = if typeof(info.Step) == "number" then math.max(1, math.floor(info.Step)) else 1
+		local spec: { [string]: any }? = nil
+		local def: { [string]: any }? = nil
+		if variant then
+			-- jump attack / dash strike (combat V3): its own spec (the weapon style's, else the category's), timed on
+			-- Config/Combat AirAttacks / DashAttacks
+			spec = swing[variant] or entry[variant]
+			local moves = if variant == "Air" then Combat.AirAttacks else Combat.DashAttacks
+			def = moves[requested] or moves[CombatSfx.DefaultCategory]
+		end
+		if not spec then
+			spec = swing.Finisher
+			if info.Finisher ~= true or not spec then
+				local steps = swing.Steps
+				spec = steps and steps[(step - 1) % #steps + 1]
+			end
 		end
 		if spec then
-			local combo = Combat.Combos[requested] or Combat.Combos[CombatSfx.DefaultCategory]
-			local def = combo and (combo[if typeof(info.Step) == "number" then info.Step else 1] or combo[1])
+			if not def then
+				local combo = Combat.Combos[requested] or Combat.Combos[CombatSfx.DefaultCategory]
+				def = combo and (combo[step] or combo[1])
+			end
 			local speed = if typeof(info.Speed) == "number" and info.Speed > 0 then info.Speed else 1
-			local impact = if def and typeof(def.Impact) == "number" then def.Impact else 0.15
-			playSpec(spec, volume, 1, position, impact / speed, lead, speed, event)
+			local impact = (if def and typeof(def.Impact) == "number" then def.Impact else 0.15) / speed
+			playSpec(spec, volume, 1, position, impact, lead, speed, event)
+			local burst = spec.Burst
+			if typeof(burst) == "table" then
+				-- a blast drawn at the hit with no Burst from the server (Magic BlinkBlast): the element's burst sound
+				local shared = CombatSfx.Shared.Burst
+				local layer = if shared then burstStyle(shared, if typeof(info.Element) == "string" then info.Element else "") else nil
+				if layer then
+					playSpec(layer, volume * (burst.Volume or 1), burst.Pitch or 1, position, impact, 0, speed, event)
+				end
+			end
+			-- the server sends the cast's Burst / the arrows at the request: they are timed on this release
+			local character = info.Character
+			if typeof(character) == "Instance" then
+				if requested == "Magic" and variant ~= "Dash" then
+					remember(casts, character, impact, variant == "Air" or info.Finisher == true)
+				elseif requested == "Ranged" then
+					remember(shots, character, impact, false)
+				end
+			end
 		end
 	elseif event == "Impact" then
 		local materials = entry.Materials or EMPTY
@@ -401,14 +485,42 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 		-- the player's own shot is heard through its Swing (release / fire)
 		local spec = if info.Own == true then nil elseif info.Enemy == true then entry.Enemy else entry.Player
 		if spec then
-			playSpec(spec, volume, 1, position, nil, lead, 1, event)
+			-- another player's arrow leaves at the release of its swing (the drawn arrow waits for it too)
+			local hitIn: number? = nil
+			local shooter = info.Shooter
+			local character = if typeof(shooter) == "Instance" and shooter:IsA("Player") then shooter.Character else nil
+			local shot = if character then shots[character] else nil
+			if shot then
+				local wait = shot.release - os.clock()
+				if wait > 0 and wait <= CombatSfx.CastLink.ShotHold then
+					hitIn = wait
+				end
+			end
+			playSpec(spec, volume, 1, position, hitIn, lead, 1, event)
 		end
 	elseif event == "Burst" then
-		local styles = entry.Styles or EMPTY
 		local style = if typeof(info.Style) == "string" then info.Style else ""
-		local spec = styles[style] or styles[CombatSfx.StyleGroups[style] or ""] or styles[entry.Default or ""]
+		local spec = burstStyle(entry, style)
 		if spec then
-			playSpec(spec, volume, 1, position, nil, lead, 1, event)
+			local hitIn: number? = nil
+			local grand = false
+			if style ~= "Slam" and style ~= "Enemy" and typeof(info.Position) == "Vector3" then
+				-- a Magic area (sent at the cast start): it explodes where the cast's bolt lands = the release + the
+				-- bolt's flight from the caster (Controllers/VFX Casts), else BurstHit s from now
+				local cast, root = linkCast(info.Position)
+				if cast and root then
+					local link = CombatSfx.CastLink
+					local flight = ((info.Position + Vector3.new(0, 0.8, 0)) - (root.Position + Vector3.new(0, 2, 0))).Magnitude / link.BoltSpeed
+					hitIn = math.max(0, cast.release - os.clock()) + math.clamp(flight, link.MinTravel, link.MaxTravel)
+					grand = cast.grand
+				else
+					hitIn = CombatSfx.BurstHit
+				end
+			end
+			playSpec(spec, volume, 1, position, hitIn, lead, 1, event)
+			if grand and typeof(entry.Grand) == "table" then
+				playSpec(entry.Grand, volume, 1, position, hitIn, lead, 1, event)
+			end
 		end
 	else
 		playSpec(entry, volume, 1, position, nil, lead, 1, event)

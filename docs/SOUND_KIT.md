@@ -241,6 +241,71 @@ asset): Spear crit / finisher / equip, Heavy metal / stone / crit, Dagger metal,
 | Combat_Magic_BurstWater2 | 9120504377 | Burst Tidal, Poison layer | 1.76 |
 | Combat_Magic_HolyChime | 9116394876 | Holy burst layer, Magic crit sting | 2.5 |
 
+### Round 3 (2026-10-14, Combat V3): 36 more sounds, 151 in total
+
+Jump attacks (`Swing` ctx.Variant "Air"), the new event `Land` (a melee jump attack hits the ground: the local landing
+or Net "AirSlam"), dash strikes (Variant "Dash") and the new combo steps (Spear 3 Sweep, Heavy 3 GroundBreaker, Ranged
+2-3 QuickShot / PowerShot, Magic 2-3 Cast2 / GrandCast), mapped in `Config/CombatSfx` (`Swing.Air`, `Swing.Dash`,
+`Land`, more `Steps`, new `Finisher`s; crossbow / gun / blowgun have their own). Same source and settings as before
+(licensed ProSoundEffects catalog, free; inserted with the Studio MCP `insert_asset`, a plain Sound each, no children,
+attributes SourceAssetId / SourceName / SourceCreator, RollOff InverseTapered 10-150, group PlayerFX). Volumes
+loudness-matched by measurement (AudioAnalyzer RMS peak against the existing kit: whooshes about -15 dB, impacts and
+booms about -11 dB); Peak / Start / Length measured the same way. **Nothing was auditioned by ear.** Swap candidates
+first: the dive wind (a reversed wind build-up), the RocketPunch thruster, the GrandCast energy blast.
+
+Timing: the melee jump attack's dive wind (AirDive, a reversed build-up) ends at the landing (AirAttacks Impact), the
+hang whoosh (AirRise) plays from the call; `Land` layers play at the real landing. The Magic area burst now peaks where
+the drawn bolt lands (the cast's release + the bolt's flight, as Controllers/VFX), grand casts add a deep boom;
+another player's arrow whiz waits for the release of its swing (at most 0.3 s).
+
+| Name | Asset id | Event | Volume |
+|---|---|---|---|
+| Combat_Heavy_LandBoom1 | 9125401226 | Land Heavy (MeteorSmash) deep boom; small layer of the other landings; grand magic burst | 1.27 |
+| Combat_Heavy_LandBoom2 | 9125401225 | same set | 1.13 |
+| Combat_Heavy_LandCrunch1 | 9118617342 | Land Heavy rock crunch | 0.34 |
+| Combat_Heavy_LandCrunch2 | 9114036371 | Land Heavy rock crunch | 0.49 |
+| Combat_Gauntlet_LandThud1 | 9113535176 | Land Gauntlet (GroundPound) thud | 1.05 |
+| Combat_Gauntlet_LandThud2 | 9113524237 | Land Gauntlet thud | 0.72 |
+| Combat_Shared_LandCrack1 | 9119041016 | Land Gauntlet / Heavy ground crack | 0.46 |
+| Combat_Shared_LandCrack2 | 9125869504 | Land Gauntlet / Heavy ground crack | 2.46 |
+| Combat_Shared_LandStab1 | 9117738766 | Land Sword / Spear point into the ground | 0.99 |
+| Combat_Shared_LandStab2 | 9117736085 | Land Sword / Spear point into the ground | 1.72 |
+| Combat_Shared_LandDirt1 | 9118596772 | Land Dagger (ShadowDrop) thump, feet layer of Sword / Spear, Shared.Land | 1.08 |
+| Combat_Shared_LandDirt2 | 9118683165 | same set | 1.26 |
+| Combat_Shared_AirRise1 | 9114374862 | Swing Air: hang whoosh (Dagger flip, Magic hover) | 0.97 |
+| Combat_Shared_AirRise2 | 9120716440 | Swing Air: hang whoosh | 0.46 |
+| Combat_Shared_AirDive1 | 9120767439 | Swing Air melee: dive wind into the landing | 1.08 |
+| Combat_Shared_AirDive2 | 9120768247 | Swing Air melee: dive wind | 2.0 |
+| Combat_Shared_DashWhoosh1 | 9120716042 | Swing Dash: lunge whoosh (Sword, Spear, Heavy, Dagger) | 0.67 |
+| Combat_Shared_DashWhoosh2 | 9120713678 | Swing Dash: lunge whoosh | 0.52 |
+| Combat_Spear_Sweep1 | 9120297827 | Spear step 3 Sweep | 1.64 |
+| Combat_Spear_Sweep2 | 9117034144 | Spear step 3 Sweep | 0.74 |
+| Combat_Spear_Shaft | 9126283595 | Sweep layer (wooden swish) | 1.33 |
+| Combat_Heavy_Breaker1 | 9120720141 | Heavy step 3 GroundBreaker swing | 0.94 |
+| Combat_Heavy_Breaker2 | 9117034419 | Heavy step 3 GroundBreaker swing | 1.0 |
+| Combat_Dagger_Shadow1 | 9116405867 | Dagger ShadowStep vanish puff, ShadowDrop landing layer | 0.89 |
+| Combat_Dagger_Shadow2 | 9125646252 | same set | 1.86 |
+| Combat_Gauntlet_Rocket1 | 9120007469 | Gauntlet RocketPunch thrust | 0.75 |
+| Combat_Gauntlet_Rocket2 | 9120009733 | Gauntlet RocketPunch thrust | 0.78 |
+| Combat_Ranged_Slide1 | 9114658416 | Ranged SlideShot knee slide (all weapon styles) | 0.51 |
+| Combat_Ranged_Slide2 | 9114658160 | Ranged SlideShot knee slide | 0.56 |
+| Combat_Ranged_PowerRelease1 | 9114001801 | Ranged step 3 PowerShot report (bow, crossbow) | 1.7 |
+| Combat_Ranged_PowerRelease2 | 9114002002 | Ranged PowerShot report | 2.09 |
+| Combat_Ranged_PowerWhoosh | 9113166206 | PowerShot arrow leaving (bow, crossbow, gun, blowgun) | 1.9 |
+| Combat_Magic_GrandCast1 | 9114314786 | Magic step 3 GrandCast / MeteorDrop deep cast | 0.43 |
+| Combat_Magic_GrandCast2 | 9114314602 | Magic GrandCast / MeteorDrop deep cast | 0.46 |
+| Combat_Magic_Blink1 | 9116422213 | Magic BlinkBlast blink | 1.0 |
+| Combat_Magic_Blink2 | 9116422021 | Magic BlinkBlast blink | 1.57 |
+
+Reused (no new asset): the AirVolley triple release = BowRelease / CrossbowRelease / GunShot / Blowgun three times
+0.015 s apart + BowWhoosh + Roll (backflip); jump attack weapon whooshes = SwordSwing / SpearThrust / HeavySwing /
+DaggerSlash / GauntletUpper (lower pitch); Land metal ring = SwordHitMetal, debris = HeavySlamDebris, GroundPound punch
+= GauntletHitHeavy; dash strikes = SwordSpin + SwordSwing, SpearPierce + SpearThrust, HeavySmash + HeavySwing,
+DaggerSlash x2, GauntletUpper; QuickShot = BowRelease / BowWhoosh / BowDraw (higher), crossbow / gun / blowgun steps 2-3
+from their own sets (+ HeavySlamBoom under the gun PowerShot); Cast2 = MagicCharge + MagicCast (higher); GrandCast /
+MeteorDrop = MagicCharge + MagicCast (lower) + GrandCast; BlinkBlast burst = the element's Burst style at its hit;
+GroundBreaker jump = Roll (lower), its slam = the existing Burst "Slam".
+
 ## How to swap a sound
 
 Change `SoundId` to `rbxassetid://<new id>` on the Sound instance, keep its `Name`, and update the three
