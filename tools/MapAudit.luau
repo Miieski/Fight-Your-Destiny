@@ -25,10 +25,13 @@
 		openEdges     boundary edges of "Facet" surfaces (WedgeParts made by BuildKit.tri) used by one triangle
 		              only. classify() marks e.exposure = "player" (the hollow under it is seen from a walkable
 		              spot / camera height in the zone), "outside" (only from the ring of outside viewpoints) or
-		              nil (on / in the floor, filled by a solid part, or hidden behind
-		              other geometry)
+		              nil (on / in the floor, filled by a solid part, a slab rim sitting on the cone rim
+		              under it (pairRims, e.sealed), or hidden behind other geometry). Floating islands
+		              (Void, Heaven) still give many "player" hits where a top plate overhangs its rock
+		              cone by a few studs: the plate is a solid 2-stud slab, check those on screenshots.
 		floating      decor items with nothing under, above (hanging) or beside (wall-mounted) them
-		zfight        coplanar overlapping faces facing the same way with different colours (+ exact duplicates)
+		zfight        coplanar overlapping faces facing the same way with different colours (+ exact duplicates,
+		              same geometry checked by sameGeometry, so two spokes of a wheel are not duplicates)
 		transparency  semi-transparent / invisible shadow casters, Glass / ForceField parts, selection adornments
 		unanchored    unanchored parts
 		singleSided   big single-sided MeshParts a player can walk into (CanCollide off, reachable)
@@ -563,8 +566,59 @@ function MapAudit.floorBelow(p: Vector3, params: RaycastParams?): number?
 end
 
 --[[
+	Plate-over-cone rims (run 4: Void islands, also Heaven's): a flat facet slab (2 studs thick, top
+	normal up) whose open rim lies right on the open rim of the rock cone under it (same XZ within 1 stud,
+	~2 studs lower). The slab's own side face closes that seam, so both edges get e.sealed = true and are
+	not holes. Returns the number of sealed edges.
+]]
+function MapAudit.pairRims(edges): number
+	local grid = {}
+	local function cellOf(e)
+		local m = (e.a + e.b) / 2
+		return math.floor(m.X / 4), math.floor(m.Z / 4)
+	end
+	for _, e in ipairs(edges) do
+		local cx, cz = cellOf(e)
+		local k = cx .. "|" .. cz
+		grid[k] = grid[k] or {}
+		table.insert(grid[k], e)
+	end
+	local function flatDist(p: Vector3, q: Vector3): number
+		return Vector2.new(p.X - q.X, p.Z - q.Z).Magnitude
+	end
+	local n = 0
+	for _, e in ipairs(edges) do
+		if not e.sealed then
+			local cx, cz = cellOf(e)
+			local found
+			for dx = -1, 1 do
+				for dz = -1, 1 do
+					for _, f in ipairs(grid[(cx + dx) .. "|" .. (cz + dz)] or {}) do
+						if not found and f ~= e and not f.sealed then
+							local ye, yf = (e.a.Y + e.b.Y) / 2, (f.a.Y + f.b.Y) / 2
+							local upper = if ye > yf then e else f
+							local dy = math.abs(ye - yf)
+							if dy > 1.4 and dy < 2.6 and upper.n.Y > 0.8
+								and ((flatDist(e.a, f.a) < 1 and flatDist(e.b, f.b) < 1) or (flatDist(e.a, f.b) < 1 and flatDist(e.b, f.a) < 1)) then
+								found = f
+							end
+						end
+					end
+				end
+			end
+			if found then
+				e.sealed, found.sealed = true, true
+				n += 2
+			end
+		end
+	end
+	return n
+end
+
+--[[
 	Marks each edge with e.exposure = "player" | "outside" | nil and e.floor (floor height under the
-	edge, nil over the void). Edges at or under the floor are skipped (buried).
+	edge, nil over the void). Edges at or under the floor are skipped (buried), and so are the sealed
+	plate-over-cone rims of MapAudit.pairRims.
 ]]
 function MapAudit.classify(edges, subs: { Instance }, opts: { [string]: any }?)
 	opts = opts or {}
@@ -573,12 +627,15 @@ function MapAudit.classify(edges, subs: { Instance }, opts: { [string]: any }?)
 	local params = groundParams(see)
 	local vps = opts.viewpoints or MapAudit.viewpoints(subs, see)
 	local counter = { n = 0 }
+	MapAudit.pairRims(edges)
 	for _, e in ipairs(edges) do
 		local mid = (e.a + e.b) / 2
 		local fl = MapAudit.floorBelow(mid - e.n * 2.2 - e.o * 0.4, params)
 		e.floor = fl
 		local low = math.min(e.a.Y, e.b.Y)
-		if fl and low <= fl + 0.4 and math.max(e.a.Y, e.b.Y) <= fl + 1.2 then
+		if e.sealed then
+			e.exposure = nil -- slab rim sitting on the cone rim under it
+		elseif fl and low <= fl + 0.4 and math.max(e.a.Y, e.b.Y) <= fl + 1.2 then
 			e.exposure = nil -- resting on / buried in the floor
 		elseif not fl and math.max(e.a.Y, e.b.Y) <= (opts.voidFloor or -9) + 0.5 then
 			e.exposure = nil -- bottom of a closure over the void (the map's underside)
@@ -735,6 +792,34 @@ local function rectOverlap(f1, f2): boolean
 	return true
 end
 
+-- Same geometry: same class, position, size and orientation. A Block / Cylinder turned 180 degrees about
+-- one of its axes is the same box (axes compared up to sign); a wedge, a mesh or a ball is not. Run 4: the
+-- old key (position, size, LookVector X/Y, UpVector X) also matched two different spokes of a wheel at
+-- angles t and 180 - t (Mechanical Giant_Gear / Valve_Wheel), so every candidate is checked here.
+function MapAudit.sameGeometry(a: BasePart, b: BasePart): boolean
+	if a.ClassName ~= b.ClassName or (a.Position - b.Position).Magnitude > 0.01 or (a.Size - b.Size).Magnitude > 0.01 then
+		return false
+	end
+	if a:IsA("Part") and (a :: Part).Shape ~= (b :: Part).Shape then
+		return false
+	end
+	if a:IsA("MeshPart") and ((a :: any).MeshId ~= (b :: any).MeshId or (a :: any).TextureID ~= (b :: any).TextureID) then
+		return false
+	end
+	if a:IsA("Part") and (a :: Part).Shape == Enum.PartType.Ball then
+		return true
+	end
+	local box = a:IsA("Part") and ((a :: Part).Shape == Enum.PartType.Block or (a :: Part).Shape == Enum.PartType.Cylinder)
+	local ca, cb = a.CFrame, b.CFrame
+	for _, pair in ipairs({ { ca.RightVector, cb.RightVector }, { ca.UpVector, cb.UpVector }, { ca.LookVector, cb.LookVector } }) do
+		local d = pair[1]:Dot(pair[2])
+		if (box and math.abs(d) < 0.9995) or (not box and d < 0.9995) then
+			return false
+		end
+	end
+	return true
+end
+
 -- Coplanar overlapping faces facing the same way with a different colour / material (Block / Cylinder
 -- parts; z-fighting flicker) and exact duplicate parts.
 function MapAudit.zfight(sub: Instance)
@@ -744,12 +829,20 @@ function MapAudit.zfight(sub: Instance)
 	local counter = { n = 0 }
 	for _, p in ipairs(sub:GetDescendants()) do
 		if p:IsA("BasePart") and p.Transparency < 0.95 then
-			local key = string.format("%s|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.3f|%.3f|%.3f", p.ClassName, p.Position.X, p.Position.Y, p.Position.Z,
-				p.Size.X, p.Size.Y, p.Size.Z, p.CFrame.LookVector.X, p.CFrame.LookVector.Y, p.CFrame.UpVector.X)
-			if dup[key] and not (p:IsA("MeshPart") and (dup[key] :: any).MeshId ~= (p :: any).MeshId) then
-				table.insert(out, { inst = p, other = dup[key], kind = "duplicate", pos = p.Position, text = `duplicate of {dup[key]:GetFullName()}: {p:GetFullName()}` })
+			local key = string.format("%s|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f", p.ClassName, p.Position.X, p.Position.Y, p.Position.Z,
+				p.Size.X, p.Size.Y, p.Size.Z)
+			local same
+			for _, q in ipairs(dup[key] or {}) do
+				if MapAudit.sameGeometry(p, q) then
+					same = q
+					break
+				end
+			end
+			if same then
+				table.insert(out, { inst = p, other = same, kind = "duplicate", pos = p.Position, text = `duplicate of {same:GetFullName()}: {p:GetFullName()}` })
 			else
-				dup[key] = p
+				dup[key] = dup[key] or {}
+				table.insert(dup[key], p)
 			end
 			if p:IsA("Part") and (p.Shape == Enum.PartType.Block or p.Shape == Enum.PartType.Cylinder) then
 				for _, f in ipairs(boxFaces(p)) do

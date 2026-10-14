@@ -1592,3 +1592,33 @@ tools/MapAudit.luau, Windmill + AncientTree shells), then the 11 other zones in 
   * Left: the Dead_3 rock arch over the gate (closing it would block the gate), a few small crypt-roof edges, Volcano_2
     cave mouths (open by design), the hollow under the Volcano_4 crater wall (visible only from below the island).
   * MapAudit: facetNames, underFill, capFan, holeScan, minY.
+- 21:25 run 4 DONE, MAP FIX FINISHED (Abyss, Mechanical, Void; backups mapfix_run4_before / _after, then the final
+  `after_map_fix` set after the main agent's last fix).
+  * Abyss: the Abyss_3 trench walls were open cross-sections seen from the gate corridors and their outer flanks hung
+    over the sea bed (the owner's screenshot 2-4 kind): 1,048 closure facets down to the sea bed + 36 skirt parts for
+    hollow sand shelves / rock beside the gates (nothing blocks a path); 257 z-fighting parts nudged; 3 gate barriers
+    without shadows; the 5 brain-coral balls of the Abyss_4 hall collide; no floor hole.
+  * Mechanical (no facets): 618 coplanar parts nudged + 4 ceiling slabs trimmed 0.1 stud, 1 shadow off; the skyline
+    towers behind the 40-stud walls and a hanging broken truss are by design; a roofless sealed box in Mechanical_2 is
+    unreachable and invisible from inside.
+  * Void (floats on purpose, nothing closed over empty space): undersides checked on ~12 screenshots (solid rock),
+    0 floor holes, 322 parts nudged, 1 glass barrier without shadow.
+  * Void_2 CrystalTree no-climb shell (23 parts: 16-sided wall r 13.2 to y 118, roof, 6 fins around the crystal root
+    spikes that players walked into): runs from 12 directions, jumps from 8 and drops all end outside.
+  * The audit's old duplicate check matched two different parts (wheel spokes at angles t and 180 - t): run 3 had
+    deleted one tripod Base block on two Volcano_3 Chain_Post models; the main agent restored them (yaw 120 at x 11988,
+    yaw 60 at x 12012, attribute MapFixRestored). Same-name models compared across every zone: nothing else missing.
+    MapAudit: sameGeometry (full geometry compare), pairRims.
+  * Checked, no shell: CoralArch (a climb stalls at y ~20), SunkenGalleon (solid, deck not reached), SunkenPalaceDome
+    (unreachable lattice), AssemblyMachine, PipeJunction, HologramMap, CrystalPillar, FloatingTower. To look at by hand:
+    the Abyss_3 SeaMonsterSkeleton ribs might be walked up to y ~60 (solid, nothing broken inside).
+  * Whole map, read-only audit at the end (open edges seen by players / only from outside; z-fight; see-through shadow
+    casters): Plains 27/2, 0, 0; Hub 4/4, 0, 0; Desert 1/4, 1, 0; Jungle 0/0, 1, 0; Tundra 27/0, 1, 208 (near-opaque ice
+    0.05-0.2 kept); Swamp 24/0 (cabin gables, false positives), 3, 0; Volcano 8/60 (own closure bottoms over the void),
+    13, 0; Hell 2/1, 31, 0; Heaven 188/16 (plate-over-cone rims, false positives), 25, 0; Dead 27/45, 27, 0 (glass panes
+    without shadows); Abyss 8/1, 0, 13 (near-opaque sails kept); Mechanical 0/0, 0, 0; Void 265/127 (island plates over
+    rock cones, checked), 0, 1. Leftover z-fight pairs are mostly barriers / transparent parts the fixer skips.
+  * Totals of the 4 runs: ~13,400 closure / skirt / fill parts in `<Sub>.Decor.MapFix` (tagged, `MapAudit.undo`),
+    7 no-climb shells (Windmill, AncientTree, GiantTree, FrozenTree, SwingTree, TreeOfLight, CrystalTree), ~470 walk-in
+    meshes given collision (MapFixCollide), ~6,500 z-fighting parts nudged, ~240 duplicates deleted, ~350 shadows off.
+    No Terrain anywhere in the map; no game script changed.
