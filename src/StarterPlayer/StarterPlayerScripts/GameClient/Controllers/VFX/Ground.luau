@@ -5,7 +5,8 @@
 -- crack), Chunk1..M, and an attachment Center with emitters (Dust, Pebbles).
 -- Spec: Asset, the anchor (Anchors.frame: Anchor, Height, Offset), Cracks, CrackLength { min, max }, CrackWidth, Grow,
 -- Hold, Fade, CrackColor, Chunks (halved with Low FX), ChunkSize { min, max }, ChunkUp { min, max },
--- ChunkOut { min, max }, Gravity, ChunkLife.
+-- ChunkOut { min, max }, Gravity, ChunkLife, CrackMaterial? (Enum.Material: Neon = glowing lava cracks; else the
+-- asset's own).
 --   Ground.play(spec, character, direction, delay, tool?)
 --   Ground.playAt(spec, position, direction, delay)    at a fixed point (the ground under it): jump attack landings
 local Anchors = require(script.Parent.Anchors)
@@ -34,6 +35,8 @@ local function setup(fx: Fx): boolean
 		return false
 	end
 	fx.cracks, fx.chunks = cracks, chunks
+	fx.baseMaterial = cracks[1].Material
+	fx.mat = fx.baseMaterial
 	local nc, nk = #cracks, #chunks
 	-- per crack segment: start point, direction, length; per chunk: velocity, spin, size
 	fx.cs = table.create(nc, Vector3.zero)
@@ -111,6 +114,14 @@ local function begin(fx: Fx): boolean
 	local cracks = fx.cracks
 	local used = math.min(spec.Cracks, math.floor(#cracks / 2))
 	fx.used = used
+	local material = spec.CrackMaterial or fx.baseMaterial
+	if fx.mat ~= material then
+		-- glowing lava / hellfire cracks (zone styles), else the asset's own material
+		fx.mat = material
+		for i = 1, #cracks do
+			cracks[i].Material = material
+		end
+	end
 	local base = math.atan2(-fx.dir.X, -fx.dir.Z)
 	for c = 1, used do
 		local a = base + TAU * (c - 1) / used + rng:NextNumber(-0.35, 0.35)

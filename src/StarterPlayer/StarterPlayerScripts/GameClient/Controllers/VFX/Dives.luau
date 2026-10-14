@@ -11,7 +11,8 @@
 -- start where a streak begins), Bottom { min, max } (studs above the root where it ends), Width, Fade, MinFall,
 -- LandGap, Timeout (s after the call), Color? (else the weapon palette), Solid = true (the color itself, else its
 -- whitened core), Ring? (an Arcs spec laid flat at the dive start, RingHeight studs above the root), TrailOff.
---   Dives.play(spec, character, tool, palette, wait)   wait = s before the dive may start (the hang)
+--   Dives.play(spec, character, tool, palette, wait, color?)   wait = s before the dive may start (the hang); color =
+--                                                       the zone style's dive color (solid streaks and ring)
 --   Dives.land(character)                               the landing (VFX.land)
 local Arcs = require(script.Parent.Arcs)
 local Colors = require(script.Parent.Colors)
@@ -104,7 +105,7 @@ local function startDive(fx: Fx, at: Vector3)
 		fx.bottom[i] = rng:NextNumber(spec.Bottom[1], spec.Bottom[2])
 		fx.wk[i] = rng:NextNumber(0.6, 1)
 	end
-	local color = if spec.Solid then fx.pal.arc else fx.pal.core
+	local color = if fx.solid then fx.pal.arc else fx.pal.core
 	if fx.palette ~= color then
 		fx.palette = color
 		for i = 1, fx.n do
@@ -189,7 +190,7 @@ local function done(fx: Fx)
 	fx.tool = false
 end
 
-function Dives.play(spec: any, character: Model, tool: Instance?, palette: Colors.Palette, wait: number)
+function Dives.play(spec: any, character: Model, tool: Instance?, palette: Colors.Palette, wait: number, color: Color3?)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not (root and root:IsA("BasePart")) then
 		return
@@ -211,7 +212,10 @@ function Dives.play(spec: any, character: Model, tool: Instance?, palette: Color
 	fx.root, fx.character, fx.spec = root, character, spec
 	fx.tool = if tool and tool.Parent == character then tool else false
 	fx.weapon = palette
-	fx.pal = if spec.Color then Colors.flat(spec.Color) else palette
+	-- the zone's dive color (zone styles) wins over the category's own
+	local tone: Color3? = color or spec.Color
+	fx.pal = if tone then Colors.flat(tone) else palette
+	fx.solid = color ~= nil or spec.Solid == true
 	fx.done = done
 	fx.phase = 0
 	fx.landed = false

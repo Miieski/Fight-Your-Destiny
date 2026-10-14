@@ -6,11 +6,12 @@
 --                                           Emit once. options: Color (Color3: recolors the Config.Tint emitters),
 --                                           Emit (count multiplier), Delay (s), Life (s the clone stays; default: its
 --                                           longest particle)
---   VFX.swing(ctx)        ctx = { Character, Tool?, Category, Step, Variant?, Finisher, Direction, Rarity?, Element?, Speed, IsLocal, Position? }
+--   VFX.swing(ctx)        ctx = { Character, Tool?, Category, Step, Variant?, Finisher, Direction, Rarity?, Element?, Zone?, Speed, IsLocal, Position? }
 --                         Variant = nil (combo step) | "Air" (jump attack) | "Dash" (dash strike)
---   VFX.land(ctx)         ctx = { Character?, Tool?, Category, Position, Radius, Rarity?, Element?, IsLocal }
+--   VFX.land(ctx)         ctx = { Character?, Tool?, Category, Position, Radius, Rarity?, Element?, Zone?, IsLocal }
 --                         (a melee jump attack hits the ground: local landing, or Net "AirSlam")
---   VFX.impact(ctx)       ctx = { Position, Category?, Crit, Finisher, Element?, IsLocal }
+--   VFX.impact(ctx)       ctx = { Position, Category?, Crit, Finisher, Element?, Zone?, IsLocal }
+--                         Zone = the weapon's zone 1..12 (zone fighting styles: the zone's accent, Styles)
 --   VFX.shot(ctx)         ctx = { Origin, Direction, Speed, Distance, Style }      (Net "Projectile": Ranged, enemies)
 --   VFX.burst(ctx)        ctx = { Position, Radius, Style }                         (Net "Burst": Magic area, Heavy slam)
 --   VFX.roll(ctx)         ctx = { Character, Direction, IsLocal }
@@ -32,6 +33,11 @@
 -- shooter's weapon). Burst: "Slam" = Heavy shockwave ring + dust ring, "Enemy" = disc, an element / "Arcane" = Magic
 -- area (Casts). Block: a shield bubble following the character. Roll: a dust puff tinted by the ground + afterimages
 -- (Ghosts: kept above the ground, no Neon; none with Low FX).
+-- Zone styles (zone fighting styles, Styles + Config Zones; ctx.Zone = the weapon's zone 1..12): on top of the element
+-- tint, each zone sheds its particles from the blade during melee swings (sand, leaves, embers, feathers...), draws its
+-- arcs its way (Arcs modifiers: spiral, claws, serrated, rippling, stuttering, hard-edged, bolts, dark core), bursts its
+-- particles at the Ranged / Magic release and on impacts (+ rings / bolts), colors the jump attack's dive, adds its own
+-- landing, and plays signature beats timed on the animation's Style_<Zone>_Finisher / _Jump overlays.
 -- Enemy death: a dissolve (workspace.Enemies "Dead"). Everything is pooled (Runner) under workspace.VFX; Low FX halves
 -- the Emit counts, speed lines and chunks.
 -- Dev hook (Play, Client command bar), plays an effect on the local character:
@@ -39,6 +45,7 @@
 --     | "land[:<category>[:<radius>]]" (at the feet; default: the equipped Tool's category and its jump attack radius)
 --     | "impact:normal|crit|finisher[:<element>[:<category>]]" | "shot[:<style>]" | "burst:<style>" | "roll"
 --     | "block:on|off" | "blockhit" | "number:<kind>")   (append "#n" to send the same command again)
+--   (swing / land / impact use the equipped Tool's zone; workspace.VFX "Zone" = a zone id forces one, Styles)
 -- Runner has the Freeze, Profile and LowFx hooks.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -58,6 +65,7 @@ local Casts = require(script.Parent.Casts)
 local Numbers = require(script.Parent.Numbers)
 local Ghosts = require(script.Parent.Ghosts)
 local Dives = require(script.Parent.Dives)
+local Styles = require(script.Parent.Styles)
 
 local VFX = {}
 
@@ -65,6 +73,7 @@ type Fx = Runner.Fx
 
 local player = Players.LocalPlayer
 local UP = Vector3.yAxis
+local NONE = table.freeze({})
 
 local function rootOf(character: any): BasePart?
 	local root = if typeof(character) == "Instance" then character:FindFirstChild("HumanoidRootPart") else nil
@@ -101,11 +110,12 @@ local function playBegin(fx: Fx): boolean
 	elseif fx.inst:IsA("Model") then
 		(fx.inst :: Model):PivotTo(fx.cf)
 	end
-	Runner.emit(fx, fx.emitK)
+	Runner.emit(fx, fx.emitK, fx.emitCounts or nil)
 	return true
 end
 
-local function playEffect(name: string, cframe: CFrame, color: Color3?, emit: number?, delay: number?, life: number?)
+-- counts = { emitter name = Emit count } (only those emitters; the zone styles' bursts), else the asset's own counts
+local function playEffect(name: string, cframe: CFrame, color: Color3?, emit: number?, delay: number?, life: number?, counts: { [string]: number }?)
 	if not Runner.near(cframe.Position) then
 		return
 	end
@@ -116,6 +126,7 @@ local function playEffect(name: string, cframe: CFrame, color: Color3?, emit: nu
 	Runner.tint(fx, color)
 	fx.cf = cframe
 	fx.emitK = emit or 1
+	fx.emitCounts = counts or false
 	Runner.run(fx, delay or 0, life or fx.particleLife + 0.05, playBegin, nil)
 end
 
@@ -147,6 +158,32 @@ local function paletteOf(effect: any, weapon: Colors.Palette, element: string?):
 	return weapon
 end
 
+-- One effect of a swing (or a zone signature beat) starting delay s from now; impact = s from now to the hit; mod = the
+-- zone's Arc modifiers (Arcs; Claws add thinner copies of the Crescent slashes).
+local function swingEffect(effect: any, delay: number, impact: number, speed: number, character: Model, dir: Vector3, palette: Colors.Palette, element: string?, tool: Instance?, mod: any?)
+	local kind = effect.Kind or "Arc"
+	if kind == "Arc" then
+		local extra = if effect.HoldToHit then math.max(0, impact - delay) else 0
+		local tint = if effect.Palette == "Element" then Colors.style(element or "Arcane") else nil
+		local look = paletteOf(effect, palette, element)
+		Arcs.play(effect, character, dir, look, delay, tool, extra, tint, mod)
+		local claws = mod and mod.Claws
+		if claws and effect.Shape ~= "Line" and (effect.Profile or "Crescent") == "Crescent" then
+			for _, claw in ipairs(claws) do
+				Arcs.play(effect, character, dir, look, delay + (claw.Delay or 0) / speed, tool, extra, tint, claw)
+			end
+		end
+	elseif kind == "Lines" then
+		Streaks.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool)
+	elseif kind == "Ground" then
+		Ground.play(effect, character, dir, delay, tool)
+	elseif kind == "Flash" then
+		Shots.flash(effect, character, dir, delay, tool)
+	elseif kind == "Charge" then
+		Casts.charge(effect, character, tool, Colors.style(element or "Arcane"), math.max(0, impact - delay))
+	end
+end
+
 function VFX.swing(ctx: { [string]: any })
 	local started = os.clock()
 	local character = ctx.Character
@@ -168,17 +205,25 @@ function VFX.swing(ctx: { [string]: any })
 		spec = spec or (if steps then steps[stepIndex] or steps[1] elseif info and info.Melee then Config.Swing.Default else nil)
 		if spec then
 			local speed = if typeof(ctx.Speed) == "number" and ctx.Speed > 0 then ctx.Speed else 1
-			local impact = (if def and typeof(def.Impact) == "number" then def.Impact else 0.15) / speed
+			local impact1 = if def and typeof(def.Impact) == "number" then def.Impact else 0.15
+			local impact = impact1 / speed
 			local palette = Colors.weapon(ctx.Rarity, ctx.Element)
 			local tool = ctx.Tool or character:FindFirstChildOfClass("Tool")
 			local dir = flat(ctx.Direction) or flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
 			local element = if typeof(ctx.Element) == "string" then ctx.Element else nil
+			local look = Styles.look(ctx.Zone)
+			local mod = look and look.Arc
 			if spec.TrailOn then
 				Trails.swing(tool, palette, impact * spec.TrailOn, impact + spec.TrailOff / speed)
+				if look then
+					Styles.shed(tool, look, impact * spec.TrailOn, impact + spec.TrailOff / speed)
+				end
+			elseif look and look.Release and (category == "Ranged" or category == "Magic") then
+				Shots.flash(Styles.release(look), character, dir, impact, tool)
 			end
 			local dive = spec.Dive
 			if dive and variant == "Air" then
-				Dives.play(dive, character, tool, palette, (if def and typeof(def.Hang) == "number" then def.Hang else 0) / speed)
+				Dives.play(dive, character, tool, palette, (if def and typeof(def.Hang) == "number" then def.Hang else 0) / speed, look and look.DiveColor)
 			end
 			local effects = spec.Effects
 			if effects then
@@ -191,20 +236,27 @@ function VFX.swing(ctx: { [string]: any })
 					elseif hit >= 2 and hits and hits[hit - 1] then
 						at = hits[hit - 1] / speed
 					end
-					local delay = math.max(0, at + (effect.Delay or 0) / speed)
-					local kind = effect.Kind or "Arc"
-					if kind == "Arc" then
-						local extra = if effect.HoldToHit then math.max(0, impact - delay) else 0
-						local tint = if effect.Palette == "Element" then Colors.style(element or "Arcane") else nil
-						Arcs.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool, extra, tint)
-					elseif kind == "Lines" then
-						Streaks.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool)
-					elseif kind == "Ground" then
-						Ground.play(effect, character, dir, delay, tool)
-					elseif kind == "Flash" then
-						Shots.flash(effect, character, dir, delay, tool)
-					elseif kind == "Charge" then
-						Casts.charge(effect, character, tool, Colors.style(element or "Arcane"), math.max(0, impact - delay))
+					swingEffect(effect, math.max(0, at + (effect.Delay or 0) / speed), impact, speed, character, dir, palette, element, tool, mod)
+				end
+			end
+			-- the zone's signature beats (finishers: Style_<Zone>_Finisher, jump attacks: the hang of Style_<Zone>_Jump)
+			if look then
+				local beats = nil
+				local late = false
+				if variant == "Air" then
+					if not (look.JumpSkip and look.JumpSkip[category]) then
+						beats = look.Jump
+					end
+				elseif variant == nil and ctx.Finisher then
+					beats = look.Finisher
+					late = look.LateOk == true and impact < Config.ZoneTiming.LateWindup
+				end
+				if beats then
+					for _, beat in ipairs(beats) do
+						local at = Styles.beatTime(category, beat.At or 0, impact1, variant == "Air", late)
+						if at then
+							swingEffect(beat, at / speed, impact, speed, character, dir, palette, element, tool, mod)
+						end
 					end
 				end
 			end
@@ -258,6 +310,43 @@ local function impactPoint(position: Vector3): Vector3
 end
 
 local ringWindow, ringCount = -math.huge, 0
+local zoneWindow, zoneCount = -math.huge, 0
+local rng = Random.new()
+local TAU = math.pi * 2
+local PITCH90 = CFrame.Angles(math.rad(90), 0, 0)
+local YAW90 = CFrame.Angles(0, math.rad(90), 0)
+
+-- The zone's accent on a hit (zone styles): its particles (Impact counts) and its ImpactArcs, at most ZoneMax per
+-- ZoneWindow s (a spin through a crowd).
+local function zoneImpact(look: any, at: Vector3, cf: CFrame, category: string?, crit: boolean, started: number)
+	local cfg = Config.Impact
+	if started - zoneWindow > cfg.ZoneWindow then
+		zoneWindow, zoneCount = started, 0
+	end
+	zoneCount += 1
+	if zoneCount > cfg.ZoneMax then
+		return
+	end
+	if look.Impact then
+		playEffect(look.Asset, cf, nil, (cfg.CategoryEmit[category] or 1) * (if crit then cfg.ZoneCritK else 1), 0, nil, look.Impact)
+	end
+	local arcs = look.ImpactArcs
+	local camera = workspace.CurrentCamera
+	if arcs and camera then
+		local face = CFrame.lookAt(at, camera.CFrame.Position)
+		for _, arc in ipairs(arcs) do
+			local palette = Colors.flat(arc.Color)
+			if arc.Face == "Radial" then
+				-- lines from the hit across the view, in random directions
+				for _ = 1, arc.Count or 1 do
+					Arcs.playAt(arc, face * CFrame.Angles(0, 0, rng:NextNumber(0, TAU)) * YAW90, palette, 0, nil, nil, look.Arc)
+				end
+			else
+				Arcs.playAt(arc, face * PITCH90, palette, 0, nil, nil, look.Arc)
+			end
+		end
+	end
+end
 
 function VFX.impact(ctx: { [string]: any })
 	local started = os.clock()
@@ -268,6 +357,10 @@ function VFX.impact(ctx: { [string]: any })
 		local cf = CFrame.new(at)
 		local tint = Colors.weapon(1, ctx.Element).spark
 		local category = ctx.Category
+		local look = Styles.look(ctx.Zone)
+		if look then
+			zoneImpact(look, at, cf, category, ctx.Crit == true, started)
+		end
 		if ctx.Finisher then
 			if started - ringWindow > cfg.FinisherWindow then
 				ringWindow, ringCount = started, 0
@@ -341,29 +434,35 @@ function VFX.land(ctx: { [string]: any })
 		local dust = dustColor(groundColor, cfg.DustColor, cfg.GroundTint)
 		local earth: Colors.Palette? = nil -- the dust rings' palette (darker: beams are brightened)
 		local scale = math.clamp(radius / cfg.RadiusRef, cfg.EmitScale[1], cfg.EmitScale[2])
-		for _, effect in ipairs(spec.Effects) do
-			local kind = effect.Kind or "Ring"
-			local delay = effect.Delay or 0
-			local frame = landFrame(effect, ground, dir)
-			if kind == "Ring" or kind == "Line" then
-				local look
-				if effect.Palette == "Ground" then
-					earth = earth or Colors.flat(dustColor(groundColor, cfg.RingColor, cfg.GroundTint))
-					look = earth
-				else
-					look = paletteOf(effect, palette, element)
+		local look = Styles.look(ctx.Zone)
+		local mod = look and look.Arc
+		-- the category's landing, then the zone's (zone styles: its rings drawn its way, its particles)
+		for pass = 1, 2 do
+			local effects = if pass == 1 then spec.Effects elseif look then look.Land else nil
+			for _, effect in ipairs(effects or NONE) do
+				local kind = effect.Kind or "Ring"
+				local delay = effect.Delay or 0
+				local frame = landFrame(effect, ground, dir)
+				if kind == "Ring" or kind == "Line" then
+					local tone
+					if effect.Palette == "Ground" then
+						earth = earth or Colors.flat(dustColor(groundColor, cfg.RingColor, cfg.GroundTint))
+						tone = earth
+					else
+						tone = paletteOf(effect, palette, element)
+					end
+					Arcs.playAt(effect, frame, tone, delay, if effect.Scale then radius else 1, nil, mod)
+				elseif kind == "Burst" then
+					local tint: Color3? = nil
+					if effect.Tint == "Ground" then
+						tint = dust
+					elseif effect.Tint == "Weapon" then
+						tint = palette.glow
+					end
+					playEffect(effect.Asset, frame, tint, (effect.Emit or 1) * (if effect.Fixed then 1 else scale), delay, nil, effect.Emitters)
+				elseif kind == "Ground" then
+					Ground.playAt(effect, frame.Position, dir, delay)
 				end
-				Arcs.playAt(effect, frame, look, delay, if effect.Scale then radius else 1)
-			elseif kind == "Burst" then
-				local tint: Color3? = nil
-				if effect.Tint == "Ground" then
-					tint = dust
-				elseif effect.Tint == "Weapon" then
-					tint = palette.glow
-				end
-				playEffect(effect.Asset, frame, tint, (effect.Emit or 1) * (if effect.Fixed then 1 else scale), delay)
-			elseif kind == "Ground" then
-				Ground.playAt(effect, frame.Position, dir, delay)
 			end
 		end
 	end
@@ -618,6 +717,7 @@ local function dissolve(model: Model)
 	Runner.tint(fx, nil)
 	fx.cf = cf
 	fx.emitK = 1
+	fx.emitCounts = false
 	Runner.run(fx, cfg.Delay, fx.particleLife + 0.1, playBegin, nil)
 end
 
@@ -646,6 +746,7 @@ local function test(command: string)
 	local look = flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
 	local front = root.Position + look * 5
 	local tool = character:FindFirstChildOfClass("Tool")
+	local zone = tool and tool:GetAttribute("Zone") -- (workspace.VFX "Zone" forces another one)
 	if what == "swing" then
 		local category = tool and tool:GetAttribute("Category") or "Sword"
 		local stepIndex = tonumber(args[2]) or 1
@@ -655,7 +756,7 @@ local function test(command: string)
 			Character = character, Tool = tool, Category = category, Step = if variant then 1 else stepIndex, Variant = variant,
 			Finisher = variant == "Air" or (variant == nil and combo ~= nil and combo[stepIndex] ~= nil and combo[stepIndex].Finisher == true),
 			Direction = look, Rarity = tonumber(args[3]) or (tool and tool:GetAttribute("Rarity")) or 1,
-			Element = if args[4] and args[4] ~= "" then args[4] else nil, Speed = 1, IsLocal = true,
+			Element = if args[4] and args[4] ~= "" then args[4] else nil, Zone = zone, Speed = 1, IsLocal = true,
 		})
 	elseif what == "land" then
 		local category = if args[2] and args[2] ~= "" then args[2] else (tool and tool:GetAttribute("Category") or "Sword")
@@ -664,10 +765,10 @@ local function test(command: string)
 		VFX.land({
 			Character = character, Tool = tool, Category = category, Position = feet,
 			Radius = tonumber(args[3]) or (air and air.Shape and air.Shape.Radius) or 6,
-			Rarity = tool and tool:GetAttribute("Rarity") or 1, Element = nil, IsLocal = true,
+			Rarity = tool and tool:GetAttribute("Rarity") or 1, Element = nil, Zone = zone, IsLocal = true,
 		})
 	elseif what == "impact" then
-		VFX.impact({ Position = front + Vector3.new(0, 3, 0), Crit = args[2] == "crit", Finisher = args[2] == "finisher", Element = args[3], Category = args[4], IsLocal = false })
+		VFX.impact({ Position = front + Vector3.new(0, 3, 0), Crit = args[2] == "crit", Finisher = args[2] == "finisher", Element = args[3], Category = args[4], Zone = zone, IsLocal = false })
 	elseif what == "shot" then
 		VFX.shot({ Origin = root.Position + Vector3.new(0, 1.2, 0) + look * 1.5, Direction = look, Speed = 120, Distance = 30, Style = args[2] or "Nature" })
 	elseif what == "burst" then

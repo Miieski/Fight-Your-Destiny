@@ -12,7 +12,8 @@
 --   Shots.kind(tool) -> "Bow" | "Crossbow" | "Gun" | "Orb"
 --   Shots.flash(spec, character, direction, delay, tool?)   the muzzle flash (spec Kind = "Flash": Asset, Anchor,
 --                      Counts[kind] = emit counts per weapon type, Emit = count multiplier); any particle asset
---                      works (e.g. a dust kick at the feet), played with its own colors
+--                      works (e.g. a dust kick at the feet), played with its own colors; Emitters = { name = count }
+--                      emits only those emitters (the zone styles' bursts)
 --   Shots.fire(look, from, finish, travel, color, delay, character?, tool?, arrive?, origin?)   a cosmetic projectile
 --                      (Magic release): from = a point, or the Tool's MuzzleAttachment at launch when character +
 --                      tool are given, or origin (an Attachment, e.g. the left hand's) at launch; arrive(finish) is
@@ -227,7 +228,7 @@ function Shots.flash(spec: any, character: Model, direction: Vector3, delay: num
 	local flat = Vector3.new(direction.X, 0, direction.Z)
 	fx.dir = if flat.Magnitude > 1e-3 then flat.Unit else root.CFrame.LookVector
 	fx.root, fx.character, fx.tool, fx.spec = root, character, tool, spec
-	fx.flashCounts = if spec.Counts then spec.Counts[Shots.kind(tool)] or false else false
+	fx.flashCounts = if spec.Emitters then spec.Emitters elseif spec.Counts then spec.Counts[Shots.kind(tool)] or false else false
 	Runner.tint(fx, nil)
 	Runner.run(fx, delay, fx.particleLife + 0.05, flashBegin, nil)
 end
