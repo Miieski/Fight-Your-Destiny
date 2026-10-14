@@ -8,11 +8,15 @@
 --   nearest enemy in reach. Each attack lunges forward (step Lunge).
 --   Feel on a confirmed hit (Net "Hit"): hit-stop, camera shake, FOV pulse on finishers, combo counter.
 --   Roll: 12-stud dash (i-frames on the server); cancels the attack recovery; no attack during the roll.
+--   Jump attack (combat V3, Config/Combat AirAttacks): attacking in the air hangs a moment, then dives so the body
+--   lands exactly at the hit (melee: shockwave around the landing point; Ranged: a volley; Magic: a big blast).
+--   Dash strike (Config/Combat DashAttacks): an attack pressed during a roll or within DashAttack.Window after it.
 --   Block: shield bubble, half speed, no attacks; cancels the attack recovery except after a finisher.
 -- Hooks: Combat/Animations (animation sub-agent), VFX/VFX (VFX sub-agent), Sfx.combat (SFX sub-agent); contract in
 -- docs/COMBAT_CONTRACTS.md. Other players' swings and hits come as Net "Swing" / "Impact".
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -39,9 +43,11 @@ local CombatController = {}
 
 local player = Players.LocalPlayer
 local FEEL = Combat.Feel
+local AIR = Combat.AirAttack
 local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts" }
 local HIT_STOP_GAP = 0.05 -- several enemies hit by one swing give one hit-stop
 local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
+local AIR_AIM_AHEAD = 14 -- Ranged / Magic jump attacks without an enemy in front aim at the ground this far ahead
 local COMBO_COUNTER = { Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromOffset(220, 46), PopScale = 1.25, PopSeconds = 0.12, FadeSeconds = 0.3 }
 
 local holding = false
@@ -50,6 +56,10 @@ local blockHeld = false
 local nextAttack = 0
 local nextRoll = 0
 local rollingUntil = 0
+local rollStartedAt = -math.huge -- dash strikes: an attack within DashAttack.Window after the roll
+local plungeUntil = 0 -- a jump attack is under way (no roll, no other attack)
+local airUsed = false -- one jump attack per jump (reset on landing)
+local lastAir = -math.huge
 local finisherUntil = 0
 local comboStep = 0
 local comboAt = -math.huge
@@ -218,7 +228,7 @@ local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vect
 end
 
 -- A short step forward with the swing (LinearVelocity impulse); it stops short of the aimed enemy.
-local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector3?)
+local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector3?, seconds: number?)
 	if studs <= 0 then
 		return
 	end
@@ -240,15 +250,108 @@ local function lunge(root: BasePart, dir: Vector3, studs: number, target: Vector
 	velocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Plane
 	velocity.PrimaryTangentAxis = Vector3.xAxis
 	velocity.SecondaryTangentAxis = Vector3.zAxis
-	local speed = studs / FEEL.LungeSeconds
+	local duration = seconds or FEEL.LungeSeconds
+	local speed = studs / duration
 	velocity.PlaneVelocity = Vector2.new(dir.X * speed, dir.Z * speed)
 	velocity.MaxForce = 1e6
 	velocity.Parent = root
-	task.delay(FEEL.LungeSeconds, function()
+	task.delay(duration, function()
 		velocity:Destroy()
 		if root.Parent then
 			local v = root.AssemblyLinearVelocity
 			root.AssemblyLinearVelocity = Vector3.new(0, v.Y, 0)
+		end
+	end)
+end
+
+-- Jump attacks: in the air (falling or rising) with at least AIR.MinHeight studs between the feet and the ground.
+local airParams = RaycastParams.new()
+airParams.FilterType = Enum.RaycastFilterType.Exclude
+local function groundBelow(root: BasePart, depth: number): RaycastResult?
+	-- enemies under the player do not count as ground (the dive goes for the real ground)
+	airParams.FilterDescendantsInstances = { root.Parent :: Instance, workspace:FindFirstChild("Enemies") :: Instance }
+	return workspace:Raycast(root.Position, Vector3.new(0, -depth, 0), airParams)
+end
+
+local function inAir(root: BasePart, humanoid: Humanoid): boolean
+	if humanoid.FloorMaterial ~= Enum.Material.Air then
+		return false
+	end
+	return groundBelow(root, humanoid.HipHeight + root.Size.Y / 2 + AIR.MinHeight) == nil
+end
+
+-- Holds the body still in the air for `seconds` (Ranged / Magic jump attacks shoot from the top of the jump).
+local function hover(root: BasePart, seconds: number)
+	local attachment = root:FindFirstChild("RootAttachment") :: Attachment?
+	if not attachment then
+		return
+	end
+	local velocity = Instance.new("LinearVelocity")
+	velocity.Name = "AirHover"
+	velocity.Attachment0 = attachment
+	velocity.RelativeTo = Enum.ActuatorRelativeTo.World
+	velocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
+	velocity.VectorVelocity = Vector3.zero
+	velocity.MaxForce = 1e6
+	velocity.Parent = root
+	task.delay(seconds, function()
+		velocity:Destroy()
+	end)
+end
+
+-- The melee jump attack's body motion: hang at least Hang s (a small drift toward the aim), then dive so the feet touch
+-- the ground at Impact: the body keeps hanging until a dive at AIR.DiveSpeed would land on time (low jumps hang longer),
+-- faster up to AIR.DiveMaxSpeed from high up. onLand(groundPoint) once on landing.
+local function plunge(root: BasePart, humanoid: Humanoid, dir: Vector3, step: { [string]: any }, speed: number, target: Vector3?, onLand: (Vector3) -> ())
+	local attachment = root:FindFirstChild("RootAttachment") :: Attachment?
+	if not attachment then
+		return
+	end
+	local hang = (step.Hang or 0) / speed
+	local impact = math.max(hang + 0.05, step.Impact / speed)
+	local drift = step.Lunge or 0
+	if target then
+		local distance = Vector3.new(target.X - root.Position.X, 0, target.Z - root.Position.Z).Magnitude
+		drift = math.min(drift, math.max(0, distance - LUNGE_KEEP_DISTANCE))
+	end
+	local driftSpeed = drift / impact
+	local velocity = Instance.new("LinearVelocity")
+	velocity.Name = "AirDive"
+	velocity.Attachment0 = attachment
+	velocity.RelativeTo = Enum.ActuatorRelativeTo.World
+	velocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
+	velocity.VectorVelocity = Vector3.new(dir.X * driftSpeed, 0, dir.Z * driftSpeed)
+	velocity.MaxForce = 1e6
+	velocity.Parent = root
+	local started = os.clock()
+	local conn: RBXScriptConnection
+	conn = RunService.Heartbeat:Connect(function()
+		local t = os.clock() - started
+		local landedAt: Vector3? = nil
+		local stop = not root.Parent or humanoid.Health <= 0 or t > impact + AIR.LandTimeout
+		if not stop and t >= hang then
+			local reach = humanoid.HipHeight + root.Size.Y / 2
+			local hit = groundBelow(root, reach + 200)
+			local height = if hit then root.Position.Y - hit.Position.Y - reach else math.huge
+			if height <= 0.25 or (t > hang + 0.05 and humanoid.FloorMaterial ~= Enum.Material.Air) then
+				landedAt = if hit then hit.Position else root.Position - Vector3.new(0, reach, 0)
+			else
+				local left = impact - t
+				local need = if left > 0.02 then height / left else math.huge
+				local fall = if need >= AIR.DiveSpeed then math.min(need, AIR.DiveMaxSpeed) else 0
+				velocity.VectorVelocity = Vector3.new(dir.X * driftSpeed, -fall, dir.Z * driftSpeed)
+			end
+		end
+		if stop or landedAt then
+			conn:Disconnect()
+			velocity:Destroy()
+			if root.Parent then
+				root.AssemblyLinearVelocity = Vector3.new(0, math.min(0, root.AssemblyLinearVelocity.Y), 0)
+			end
+			plungeUntil = 0
+			if landedAt then
+				onLand(landedAt)
+			end
 		end
 	end)
 end
@@ -263,14 +366,26 @@ local function toolInfo(character: Model): (Tool?, number?, string?)
 	return tool, if typeof(rarity) == "number" then rarity else nil, if def then def.Element else nil
 end
 
+-- The landing of my jump attack: shockwave, sound, shake (the damage comes from the server's "Hit").
+local function landed(character: Model, categoryId: string, groundPoint: Vector3, radius: number)
+	local tool, rarity, element = toolInfo(character)
+	local ctx = { Character = character, Tool = tool, Category = categoryId, Position = groundPoint, Radius = radius, Rarity = rarity, Element = element, IsLocal = true }
+	if VFX.land then
+		VFX.land(ctx)
+	end
+	Sfx.combat("Land", ctx)
+	Fx.shake(if categoryId == "Heavy" then FEEL.Shake.Heavy else FEEL.Shake.Finisher)
+	Fx.fovPulse(FEEL.FovPulse.Degrees, FEEL.FovPulse.Seconds)
+end
+
 -- One attack now if the weapon is ready. Returns true when it was sent.
 local function attackOnce(forced: Vector3?): boolean
-	local root = rootPart()
-	if not root or blocking or player:GetAttribute("Spectating") then
+	local root, humanoid = rootPart()
+	if not (root and humanoid) or blocking or player:GetAttribute("Spectating") then
 		return false
 	end
 	local now = os.clock()
-	if now < nextAttack or now < rollingUntil then
+	if now < nextAttack or now < rollingUntil or now < plungeUntil then
 		return false
 	end
 	local categoryId, shape = weapon()
@@ -279,29 +394,72 @@ local function attackOnce(forced: Vector3?): boolean
 	if now - lastSent < gap * Combat.RateTolerance + RATE_MARGIN then
 		return false
 	end
-	-- the same step the server will pick (CombatService nextStep)
-	if comboCategory ~= categoryId or now - comboAt > gap + Combat.ComboReset then
-		comboStep = 0
+	-- jump attack / dash strike / the same combo step the server will pick (CombatService nextStep)
+	local variant: string? = nil
+	if Combat.AirAttacks[categoryId] and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then
+		variant = "Air"
+	elseif Combat.DashAttacks[categoryId] and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
+		variant = "Dash"
 	end
-	comboStep = comboStep % #steps + 1
+	local step: { [string]: any }, index: number
+	if variant then
+		step = if variant == "Air" then Combat.AirAttacks[categoryId] else Combat.DashAttacks[categoryId]
+		index = 1
+		comboStep = 0 -- the combo restarts after it
+		rollStartedAt = -math.huge
+	else
+		if comboCategory ~= categoryId or now - comboAt > gap + Combat.ComboReset then
+			comboStep = 0
+		end
+		comboStep = comboStep % #steps + 1
+		step = steps[comboStep]
+		index = comboStep
+	end
 	comboAt = now
 	comboCategory = categoryId
-	local step = steps[comboStep]
 	local dir, point, assisted = aim(root, shape, forced)
+	if variant == "Air" and not isMelee(shape) and not forced then
+		-- shooting / casting down from the air: the nearest enemy in front, else the ground a little ahead
+		local _, position = nearestEnemy(root.Position, reach(shape), dir, math.cos(math.rad(FEEL.AimAssistAngle)))
+		if position then
+			point = position
+			dir = flat(position - root.Position)
+		else
+			local ahead = root.Position + dir * AIR_AIM_AHEAD
+			local ground = workspace:Raycast(ahead, Vector3.new(0, -60, 0), airParams)
+			point = if ground then ground.Position else ahead - Vector3.new(0, humanoid.HipHeight + root.Size.Y, 0)
+		end
+	end
 	nextAttack = now + gap
 	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
-	lunge(root, dir, step.Lunge or 0, if assisted then point else nil)
 	local character = root.Parent :: Model
 	local speed = 1 + (stats().AttackSpeed or 0)
-	local length = Animations.attack(character, categoryId, comboStep, speed, if point then point - (root.Position + Vector3.new(0, 1.5, 0)) else nil)
-	finisherUntil = if step.Finisher then now + math.max(length, step.Impact / speed) else 0
+	local finisher = step.Finisher == true or variant == "Air"
+	if variant == "Air" then
+		airUsed = true
+		lastAir = now
+		if isMelee(shape) then
+			plungeUntil = now + step.Impact / speed + AIR.LandTimeout
+			local radius = (step.Shape and step.Shape.Radius) or shape.Radius or 6
+			plunge(root, humanoid, dir, step, speed, if assisted then point else nil, function(groundPoint: Vector3)
+				landed(character, categoryId, groundPoint, radius)
+			end)
+		else
+			hover(root, math.max(step.Hang or 0, step.Impact) / speed + 0.05)
+		end
+	else
+		lunge(root, dir, step.Lunge or 0, if assisted then point else nil, step.LungeSeconds)
+	end
+	local length = Animations.attack(character, categoryId, index, speed, if point then point - (root.Position + Vector3.new(0, 1.5, 0)) else nil, variant)
+	finisherUntil = if finisher then now + math.max(length, step.Impact / speed) else 0
 	local tool, rarity, element = toolInfo(character)
 	local ctx = {
 		Character = character,
 		Tool = tool,
 		Category = categoryId,
-		Step = comboStep,
-		Finisher = step.Finisher == true,
+		Step = index,
+		Variant = variant,
+		Finisher = finisher,
 		Direction = dir,
 		Rarity = rarity,
 		Element = element,
@@ -316,7 +474,7 @@ local function attackOnce(forced: Vector3?): boolean
 	pendingAttacks += 1
 	sentAt = now
 	lastSent = math.max(now, lastSent + gap)
-	Net.send("Attack", dir, point)
+	Net.send("Attack", dir, point, variant)
 	return true
 end
 
@@ -404,13 +562,14 @@ local function onHit(position: Vector3, amount: number, crit: boolean, finisher:
 end
 
 -- Another player's swing (Net "Swing"): animation, trail and whoosh only.
-local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number, aim: Vector3?)
+local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number, aim: Vector3?, variant: string?)
 	local character = attacker.Character
 	if attacker == player or not character or typeof(category) ~= "string" or typeof(step) ~= "number" then
 		return
 	end
+	local kind = if variant == "Air" or variant == "Dash" then variant else nil
 	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1, if typeof(aim) == "Vector3" then aim else nil)
+	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1, if typeof(aim) == "Vector3" then aim else nil, kind)
 	local steps = Combat.Combos[category]
 	local tool, rarity, element = toolInfo(character)
 	local ctx = {
@@ -418,7 +577,8 @@ local function onSwing(attacker: Player, category: string, step: number, dir: Ve
 		Tool = tool,
 		Category = category,
 		Step = step,
-		Finisher = steps and steps[step] and steps[step].Finisher == true or false,
+		Variant = kind,
+		Finisher = kind == "Air" or (steps and steps[step] and steps[step].Finisher == true and kind == nil) or false,
 		Direction = if typeof(dir) == "Vector3" then dir else Vector3.new(0, 0, -1),
 		Rarity = rarity,
 		Element = element,
@@ -444,6 +604,32 @@ local function onImpact(position: Vector3, category: string?, crit: boolean, fin
 	}
 	VFX.impact(ctx)
 	Sfx.combat("Impact", ctx)
+end
+
+-- Another player's jump attack hit the ground (Net "AirSlam"): shockwave and sound.
+local function onAirSlam(attacker: Player, category: string, position: Vector3, radius: number, element: string?)
+	if attacker == player or typeof(position) ~= "Vector3" then
+		return
+	end
+	local character = attacker.Character
+	local tool: Tool?, rarity: number? = nil, nil
+	if character then
+		tool, rarity = toolInfo(character)
+	end
+	local ctx = {
+		Character = character,
+		Tool = tool,
+		Category = if typeof(category) == "string" then category else nil,
+		Position = position,
+		Radius = if typeof(radius) == "number" then radius else 6,
+		Rarity = rarity,
+		Element = if typeof(element) == "string" then element else nil,
+		IsLocal = false,
+	}
+	if VFX.land then
+		VFX.land(ctx)
+	end
+	Sfx.combat("Land", ctx)
 end
 
 -- Another player's roll or hit reaction (Net "Motion"): animation, effects and sound only.
@@ -565,11 +751,12 @@ local function roll()
 		return
 	end
 	local now = os.clock()
-	if now < nextRoll then
+	if now < nextRoll or now < plungeUntil then
 		return
 	end
 	nextRoll = now + (stats().RollCooldown or 1.5)
 	rollingUntil = now + Combat.Roll.Duration
+	rollStartedAt = now
 	finisherUntil = 0
 	local move = humanoid.MoveDirection
 	local dir = if move.Magnitude > 0.1 then flat(move) else flat(root.CFrame.LookVector)
@@ -663,6 +850,7 @@ function CombatController:Start()
 	Net.on("Combo", onCombo)
 	Net.on("Swing", onSwing)
 	Net.on("Impact", onImpact)
+	Net.on("AirSlam", onAirSlam)
 	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string, shooter: Player?)
 		local from = if typeof(shooter) == "Instance" and shooter:IsA("Player") then shooter else nil
 		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style, Shooter = from })
@@ -693,6 +881,15 @@ function CombatController:Start()
 	Controls.Attack:Connect(function(down: boolean)
 		if down and not holding then
 			holding = true
+			local untilRollEnd = rollingUntil - os.clock()
+			if untilRollEnd > 0 then
+				-- pressed during the roll: the dash strike comes out at the end of it, even after a quick tap
+				task.delay(untilRollEnd + 0.01, function()
+					if not holding then
+						attackOnce()
+					end
+				end)
+			end
 			local _, shape = weapon()
 			if not isMelee(shape) and not autoOn() then
 				-- one press = one shot, kept for a moment if the weapon is not ready yet
@@ -795,14 +992,31 @@ function CombatController:Start()
 		watchCharacters(other)
 	end
 	Players.PlayerAdded:Connect(watchCharacters)
-	player.CharacterAdded:Connect(function()
+	local function watchLanding(character: Model)
+		local humanoid = character:WaitForChild("Humanoid", 10)
+		if humanoid and humanoid:IsA("Humanoid") then
+			humanoid.StateChanged:Connect(function(_, new)
+				if new == Enum.HumanoidStateType.Landed or new == Enum.HumanoidStateType.Running or new == Enum.HumanoidStateType.RunningNoPhysics then
+					airUsed = false
+				end
+			end)
+		end
+	end
+	if player.Character then
+		task.spawn(watchLanding, player.Character)
+	end
+	player.CharacterAdded:Connect(function(character)
 		holding = false
 		blocking = false
 		blockHeld = false
 		comboStep = 0
 		finisherUntil = 0
 		rollingUntil = 0
+		rollStartedAt = -math.huge
+		plungeUntil = 0
+		airUsed = false
 		pendingAttacks = 0
+		task.spawn(watchLanding, character)
 	end)
 
 	makeComboCounter()

@@ -81,13 +81,19 @@ Combat.Combos = {
 	Spear = {
 		{ Name = "Thrust", Impact = 0.18, Damage = 0.9, Lunge = 4 },
 		{ Name = "Thrust2", Impact = 0.18, Damage = 0.9, Lunge = 4 },
-		{ Name = "PiercingLunge", Impact = 0.24, Damage = 1.2, Lunge = 6, Finisher = true, Knockback = 8,
+		-- combat V3 (2026-10-14): a wide sweep with the shaft before the lunge
+		{ Name = "Sweep", Impact = 0.22, Damage = 0.95, Lunge = 2, Knockback = 6,
+			Shape = { Kind = "Arc", Angle = 180, Radius = 8.5, MaxTargets = 6 } },
+		{ Name = "PiercingLunge", Impact = 0.24, Damage = 1.25, Lunge = 6, Finisher = true, Knockback = 8,
 			Shape = { Length = 14, MaxTargets = 6 } },
 	},
 	Heavy = {
-		{ Name = "OverheadSlam", Impact = 0.45, Damage = 0.9, Lunge = 3 },
-		{ Name = "WideSmash", Impact = 0.4, Damage = 1.1, Lunge = 3, Finisher = true, Knockback = 10,
+		{ Name = "OverheadSlam", Impact = 0.45, Damage = 0.85, Lunge = 3 },
+		{ Name = "WideSmash", Impact = 0.4, Damage = 0.95, Lunge = 3, Knockback = 6,
 			Shape = { Angle = 200, Radius = 7.5, MaxTargets = 8, SlamRadius = false } },
+		-- combat V3: a jumping two-handed slam that cracks the ground all around
+		{ Name = "GroundBreaker", Impact = 0.55, Damage = 1.2, Lunge = 3, Finisher = true, Knockback = 12,
+			Shape = { Kind = "Circle", Radius = 8, MaxTargets = 10, SlamRadius = 9, Stagger = 0.6 } },
 	},
 	Dagger = {
 		{ Name = "SlashR", Impact = 0.08, Damage = 0.9, Lunge = 1.5 },
@@ -101,13 +107,68 @@ Combat.Combos = {
 		{ Name = "Cross", Impact = 0.1, Damage = 1.0, Lunge = 2 },
 		{ Name = "Uppercut", Impact = 0.16, Damage = 2.0, Lunge = 2, Finisher = true, Knockback = 8 },
 	},
+	-- combat V3: three shots / casts, the third one stronger
 	Ranged = {
-		{ Name = "Shot", Impact = 0.05, Damage = 1.0, Lunge = 0 },
+		{ Name = "Shot", Impact = 0.05, Damage = 0.9, Lunge = 0 },
+		{ Name = "QuickShot", Impact = 0.05, Damage = 0.9, Lunge = 0 },
+		{ Name = "PowerShot", Impact = 0.12, Damage = 1.2, Lunge = 0, Finisher = true, Knockback = 6, Shape = { Speed = 170 } },
 	},
 	Magic = {
-		{ Name = "Cast", Impact = 0.3, Damage = 1.0, Lunge = 0 },
+		{ Name = "Cast", Impact = 0.3, Damage = 0.9, Lunge = 0 },
+		{ Name = "Cast2", Impact = 0.28, Damage = 0.9, Lunge = 0 },
+		{ Name = "GrandCast", Impact = 0.4, Damage = 1.2, Lunge = 0, Finisher = true, Shape = { Radius = 8.5 } },
 	},
 } :: { [string]: { { [string]: any } } }
+
+-- JUMP ATTACKS (owner 2026-10-14: "a special animation when the character jump+attack"). An attack while airborne:
+-- melee weapons hang a moment at the top, dive and slam the ground (a circle around the landing point); Ranged fires a
+-- volley at the aim point; Magic drops a big blast at the aim point. Same fields as a combo step, plus:
+--   Impact  seconds after the request when the hit lands (melee: the landing; the client times its dive on it)
+--   Hang    seconds the attacker stays still in the air before the dive / the shot
+--   Stagger seconds every enemy hit is staggered
+--   Shots, Spread (Ranged: projectiles and the angle between two of them, degrees)
+-- Every jump attack counts as a finisher (bigger feedback). The combo restarts after it.
+Combat.AirAttacks = {
+	Sword = { Name = "PlungeStrike", Impact = 0.32, Hang = 0.1, Damage = 1.3, Lunge = 2, Knockback = 8,
+		Shape = { Kind = "Circle", Radius = 7, MaxTargets = 6 } },
+	Spear = { Name = "DragoonDive", Impact = 0.34, Hang = 0.12, Damage = 1.3, Lunge = 3, Knockback = 8,
+		Shape = { Kind = "Circle", Radius = 6.5, MaxTargets = 6 } },
+	Heavy = { Name = "MeteorSmash", Impact = 0.45, Hang = 0.16, Damage = 1.5, Lunge = 2, Knockback = 12, Stagger = 0.6,
+		Shape = { Kind = "Circle", Radius = 9, MaxTargets = 10, SlamRadius = false } },
+	Dagger = { Name = "ShadowDrop", Impact = 0.26, Hang = 0.06, Damage = 1.5, Lunge = 2, Knockback = 4,
+		Shape = { Kind = "Circle", Radius = 5, MaxTargets = 3 } },
+	Gauntlet = { Name = "GroundPound", Impact = 0.32, Hang = 0.1, Damage = 1.6, Lunge = 1.5, Knockback = 10, Stagger = 0.3,
+		Shape = { Kind = "Circle", Radius = 7.5, MaxTargets = 6 } },
+	Ranged = { Name = "AirVolley", Impact = 0.12, Hang = 0.25, Damage = 0.6, Lunge = 0, Shots = 3, Spread = 14 },
+	Magic = { Name = "MeteorDrop", Impact = 0.4, Hang = 0.3, Damage = 1.5, Lunge = 0, Shape = { Radius = 9 } },
+} :: { [string]: { [string]: any } }
+Combat.AirAttack = {
+	MinHeight = 1.2, -- studs between the feet and the ground for an attack to count as a jump attack
+	MinGap = 0.6, -- seconds between two jump attacks (at least)
+	DiveSpeed = 50, -- studs / s: the body hangs until a dive at this speed lands right at Impact (higher = faster)
+	DiveMaxSpeed = 140,
+	LandTimeout = 1.2, -- seconds after Impact: the dive gives up (stuck on something)
+}
+
+-- DASH ATTACKS (combat V3, Iron Soul style dash strike): an attack within Window seconds after a roll ends (or pressed
+-- during the roll) is the category's dash strike: a long lunge out of the roll. Same fields as a combo step;
+-- LungeSeconds = the lunge's duration (default Feel.LungeSeconds). The combo restarts after it.
+Combat.DashAttack = { Window = 0.35, Tolerance = 0.15 }
+Combat.DashAttacks = {
+	Sword = { Name = "DashSlash", Impact = 0.14, Damage = 1.25, Lunge = 6, LungeSeconds = 0.16, Knockback = 7,
+		Shape = { Kind = "Line", Length = 9, Width = 4, MaxTargets = 4 } },
+	Spear = { Name = "ChargeThrust", Impact = 0.16, Damage = 1.3, Lunge = 8, LungeSeconds = 0.18, Knockback = 9,
+		Shape = { Length = 13, MaxTargets = 6 } },
+	Heavy = { Name = "RushingSmash", Impact = 0.3, Damage = 1.3, Lunge = 5, LungeSeconds = 0.2, Knockback = 11, Stagger = 0.4,
+		Shape = { Angle = 150, Radius = 7, SlamRadius = false } },
+	Dagger = { Name = "ShadowStep", Impact = 0.1, Hits = { 0.18 }, Damage = 0.9, Lunge = 6, LungeSeconds = 0.14, Knockback = 3,
+		Shape = { Kind = "Line", Length = 7, Width = 3, MaxTargets = 2 } },
+	Gauntlet = { Name = "RocketPunch", Impact = 0.12, Damage = 1.4, Lunge = 6, LungeSeconds = 0.16, Knockback = 10,
+		Shape = { Kind = "Line", Length = 8, Width = 3.5, MaxTargets = 3 } },
+	Ranged = { Name = "SlideShot", Impact = 0.08, Damage = 1.2, Lunge = 0 },
+	Magic = { Name = "BlinkBlast", Impact = 0.2, Damage = 1.2, Lunge = 0, Knockback = 8,
+		Shape = { Kind = "Circle", Radius = 6, MaxTargets = 10 } },
+} :: { [string]: { [string]: any } }
 
 -- Client feel (never decides damage). Low FX turns off the shakes and the afterimages (Controllers/VFX halves the
 -- particles).

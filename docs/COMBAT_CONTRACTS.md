@@ -144,3 +144,49 @@ to its SoundGroup (`Config/Audio` `GroupOfSound`; combat sounds -> PlayerFX, ene
 
 Files created / changed, the exact API and clip / effect / sound names, what was tested in Play (with timings),
 decisions, problems, REQUESTS for other owners, and what is left.
+
+## 8. Combat V3 additions (2026-10-14: jump attacks, dash strikes, longer combos)
+
+Owner: "Make more combat animation. Make a special animation when the character jump+attack ... take inspiration from
+Iron Soul: Dungeon ... create as much animation as possible ... You MUST use Subagent for VFX and SFX. Fix a lag of ground
+texture lagging when you dodge" (the ground turns blue and flickers: the cyan Neon roll afterimages of the curled roll
+pose lie on / inside the ground). Gameplay by the main agent (done, tested in Play): `Config/Combat`, `CombatService`,
+`CombatController`, `Net` ("Swing" gets a variant, new "AirSlam").
+
+### 8.1 New moves (Config/Combat)
+* **Combos** - Spear 4 steps (Thrust, Thrust2, **Sweep** 0.22 (new: wide 180 deg arc), PiercingLunge 0.24 finisher =
+  was step 3, now 4), Heavy 3 (OverheadSlam 0.45, WideSmash 0.40 (no longer the finisher), **GroundBreaker** 0.55 (new
+  finisher: jumping two-handed slam, circle radius 8 + ground slam radius 9)), Ranged 3 (Shot 0.05, **QuickShot** 0.05,
+  **PowerShot** 0.12 finisher, faster arrow), Magic 3 (Cast 0.30, **Cast2** 0.28, **GrandCast** 0.40 finisher, radius
+  8.5). Sword (4), Dagger (5), Gauntlet (3) unchanged.
+* **Jump attack** `Combat.AirAttacks[category]` (variant "Air"): attack while airborne (>= 1.2 studs under the feet).
+  Melee: the body hangs `Hang` s, then dives (CombatController) so the feet touch the ground exactly at `Impact`; the
+  hit is a circle around the landing point (counts as a finisher). Sword PlungeStrike (Impact 0.32, Hang 0.10, r 7),
+  Spear DragoonDive (0.34, 0.12, r 6.5), Heavy MeteorSmash (0.45, 0.16, r 9, stagger), Dagger ShadowDrop (0.26, 0.06,
+  r 5), Gauntlet GroundPound (0.32, 0.10, r 7.5, stagger). Ranged AirVolley (Impact 0.12, Hang 0.25: the body hovers,
+  3 arrows fanned 14 deg toward the nearest enemy below / the ground ahead). Magic MeteorDrop (Impact 0.40, Hang 0.30:
+  hovers, a radius 9 blast at the aim point). The combo restarts after it.
+* **Dash strike** `Combat.DashAttacks[category]` (variant "Dash"): attack pressed during a roll or within 0.35 s after
+  it -> a long lunge out of the roll. Sword DashSlash (Impact 0.14, lunge 6 studs over 0.16 s, line 9), Spear
+  ChargeThrust (0.16, 8 over 0.18, line 13), Heavy RushingSmash (0.30, 5 over 0.20, arc 150), Dagger ShadowStep (0.10 +
+  second hit 0.18, 6 over 0.14), Gauntlet RocketPunch (0.12, 6 over 0.16, line 8), Ranged SlideShot (0.08, no lunge),
+  Magic BlinkBlast (0.20, a radius 6 blast around the caster). The combo restarts after it.
+
+### 8.2 API changes (keep the old calls working)
+```
+Animations.attack(character, category, step, speed, aim?, variant?) -> length
+    -- variant nil = the combo step's clip <Category>_Attack<step>; "Air" = <Category>_JumpAttack (step = 1; its Hit
+    -- marker = Combat.AirAttacks[category].Impact, the landing for melee: the clip must look airborne until Hit -
+    -- hang + dive - then land / recover, Legs "Own"); "Dash" = <Category>_DashAttack (Hit = Combat.DashAttacks Impact).
+    -- Styles (RangedCrossbow_, RangedGun_) fall back to the category's clip as before.
+VFX.swing(ctx)      -- ctx.Variant = nil | "Air" | "Dash" (ctx.Step = 1 for both; ctx.Finisher = true for "Air")
+VFX.land(ctx)       -- NEW: a melee jump attack hits the ground. ctx = { Character?, Tool?, Category, Position (ground
+                    -- point), Radius (the hit radius), Rarity?, Element?, IsLocal }. Local: called by the client at its
+                    -- own landing; others: Net "AirSlam" at the server's hit. CombatController calls it only if it exists.
+Sfx.combat("Land", ctx)   -- NEW event, same ctx as VFX.land (Position = a 3D sound there, IsLocal = own sound)
+Sfx.combat("Swing", ctx)  -- ctx.Variant as in VFX.swing
+```
+New clip names: `<Category>_JumpAttack`, `<Category>_DashAttack` (7 categories each), `Spear_Attack3` (Sweep, the old
+PiercingLunge clip becomes `Spear_Attack4`), `Heavy_Attack3`, `Ranged_Attack2..3` (+ RangedCrossbow_ / RangedGun_
+versions where the style differs), `Magic_Attack2..3`. Optional (if time allows): `<Category>_Air` (upper-body stance
+while jumping / falling, Legs "Upper"), a second hurt clip, a landing recovery.

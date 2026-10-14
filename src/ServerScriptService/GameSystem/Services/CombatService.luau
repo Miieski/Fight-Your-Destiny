@@ -1,15 +1,19 @@
 --!strict
 -- Player combat (docs/enemies_npcs_pets_brief.txt Part A, DESIGN.md section 2). Server authoritative; the client
 -- only sends its inputs and shows the results.
---   Net.send("Attack", aimDir: Vector3, aimPoint: Vector3?)   rate = weapon HitsPerSecond x (1 + attack speed); each
---                                         attack is the next step of the category's combo (Config/Combat Combos)
---                                         chosen here; no attack while a roll is under way
+--   Net.send("Attack", aimDir: Vector3, aimPoint: Vector3?, variant: string?)   rate = weapon HitsPerSecond x
+--                                         (1 + attack speed); each attack is the next step of the category's combo
+--                                         (Config/Combat Combos) chosen here; no attack while a roll is under way.
+--                                         variant "Air" (jump attack, Combat.AirAttacks: checked airborne here) or
+--                                         "Dash" (dash strike right after a roll, Combat.DashAttacks); refused variants
+--                                         fall back to the combo
 --   Net.send("Roll", dir: Vector3?)       cooldown = Stats RollCooldown, i-frames Config/Combat Roll.IFrames
 --   Net.send("Block", holding: boolean)   damage x (1 - Stats Block), speed x Combat.Block.SpeedFactor, no attacks
 --   CombatService:DamagePlayer(player, raw, source?) -> dealt   (enemies and bosses call this)
--- Events: "Swing" (attacker, category, step, dir, speed) to the other players nearby so they see the swing,
--- "Hit" (position, damage, crit, finisher, category) to the attacker, "Impact" (position, category, crit, finisher)
--- to the others. Animations / VFX / SFX never decide damage.
+-- Events: "Swing" (attacker, category, step, dir, speed, aim, variant?) to the other players nearby so they see the
+-- swing, "Hit" (position, damage, crit, finisher, category) to the attacker, "Impact" (position, category, crit,
+-- finisher) to the others, "AirSlam" (attacker, category, position, radius, element) to the others when a jump attack
+-- lands. Animations / VFX / SFX never decide damage.
 -- Hits use the shapes of Config/Combat (with the combo step's overrides) at the step's impact moment.
 -- Damage per hit = Stats.compute WeaponDamage (the weapon's OWN zone base x category x rarity x attributes x pets x
 -- Rebirth Shop; NEVER the player's zone, rule 1B) x the step's Damage x crit (Stats CritChance, +20% with daggers;
@@ -38,8 +42,10 @@ type PlayerState = {
 	comboAt: number,
 	comboCategory: string?,
 	lastRoll: number,
+	rollAt: number, -- when the last accepted roll started (dash attacks)
 	rollUntil: number,
 	rollEnd: number,
+	lastAir: number, -- the last jump attack
 	blocking: boolean,
 	stats: { [string]: any }?,
 }
@@ -49,23 +55,34 @@ local rng = Random.new()
 
 -- SHAPES[category][step] = the category shape with the step's overrides (a `false` field removes a feature,
 -- for example the Heavy slam on the finisher).
+-- AIR_SHAPES / DASH_SHAPES[category] = the same for the jump attack and the dash strike.
+local function merged(categoryId: string, step: { [string]: any }): { [string]: any }
+	local shape = table.clone(Combat.Shapes[categoryId] or Combat.Shapes.Sword)
+	for key, value in pairs(step.Shape or {}) do
+		shape[key] = value
+	end
+	return shape
+end
 local SHAPES: { [string]: { { [string]: any } } } = {}
 for categoryId, steps in pairs(Combat.Combos) do
-	local base = Combat.Shapes[categoryId] or Combat.Shapes.Sword
 	SHAPES[categoryId] = {}
 	for index, step in ipairs(steps) do
-		local shape = table.clone(base)
-		for key, value in pairs(step.Shape or {}) do
-			shape[key] = value
-		end
-		SHAPES[categoryId][index] = shape
+		SHAPES[categoryId][index] = merged(categoryId, step)
 	end
+end
+local AIR_SHAPES: { [string]: { [string]: any } } = {}
+for categoryId, step in pairs(Combat.AirAttacks) do
+	AIR_SHAPES[categoryId] = merged(categoryId, step)
+end
+local DASH_SHAPES: { [string]: { [string]: any } } = {}
+for categoryId, step in pairs(Combat.DashAttacks) do
+	DASH_SHAPES[categoryId] = merged(categoryId, step)
 end
 
 local function stateOf(player: Player): PlayerState
 	local state = states[player]
 	if not state then
-		state = { lastAttack = -math.huge, combo = 0, comboAt = 0, comboCategory = nil, lastRoll = -math.huge, rollUntil = 0, rollEnd = 0, blocking = false, stats = nil }
+		state = { lastAttack = -math.huge, combo = 0, comboAt = 0, comboCategory = nil, lastRoll = -math.huge, rollAt = -math.huge, rollUntil = 0, rollEnd = 0, lastAir = -math.huge, blocking = false, stats = nil }
 		states[player] = state
 	end
 	return state
@@ -143,7 +160,7 @@ local function visualTo(origin: Vector3): { Player }
 	return list
 end
 
-type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, knockback: any, category: string, element: string? }
+type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, knockback: any, stagger: number?, category: string, element: string? }
 
 -- One hit on one enemy: crit roll, Boss Slayer, knockback, the "Hit" number for the attacker and the "Impact" for
 -- the players around.
@@ -164,6 +181,9 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 	damage = math.max(1, math.floor(damage + 0.5))
 	local at = centerOf(enemy) + Vector3.new(0, (enemy.halfHeight or 2) + 1, 0)
 	EnemyService:Damage(player, enemy, damage, strike.knockback)
+	if strike.stagger and enemy.alive and EnemyService.Stagger then
+		EnemyService:Stagger(enemy, strike.stagger)
+	end
 	Net.fire(player, "Hit", at, damage, crit, strike.finisher, strike.category)
 	for _, viewer in ipairs(visualTo(at)) do
 		if viewer ~= player then
@@ -252,7 +272,22 @@ local function nextStep(state: PlayerState, categoryId: string, now: number, int
 	return state.combo
 end
 
-local function attack(player: Player, aimDir: any, aimPoint: any)
+-- The server's view of "in the air": rising / falling, or nothing under the feet within Combat.AirAttack.MinHeight
+-- (the client sends its jump attacks from the air, a little before the server sees it: generous on purpose).
+local airParams = RaycastParams.new()
+airParams.FilterType = Enum.RaycastFilterType.Exclude
+local function airborne(root: BasePart, humanoid: Humanoid): boolean
+	if math.abs(root.AssemblyLinearVelocity.Y) > 4 then
+		return true
+	end
+	local character = root.Parent
+	-- enemies under the player do not count as ground
+	airParams.FilterDescendantsInstances = if character then { character, workspace:FindFirstChild("Enemies") :: Instance } else {}
+	local reach = humanoid.HipHeight + root.Size.Y / 2 + Combat.AirAttack.MinHeight * 0.5
+	return workspace:Raycast(root.Position, Vector3.new(0, -reach, 0), airParams) == nil
+end
+
+local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	local root, humanoid = rootOf(player)
 	if not (root and humanoid) or player:GetAttribute("Spectating") then
 		return
@@ -283,16 +318,39 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 	-- an early request (network jitter tolerance) is booked at its due time, so the long-run rate stays the weapon's
 	state.lastAttack = math.max(now, state.lastAttack + 1 / hitsPerSecond)
 	local dir = if finite(aimDir) and aimDir.Magnitude > 0.01 then flat(aimDir) else flat(root.CFrame.LookVector)
-	local index = nextStep(state, id, now, 1 / hitsPerSecond)
-	Net.fire(player, "Combo", id, index, true)
-	local step = Combat.Combos[id][index]
-	local shape = SHAPES[id][index]
+	-- jump attack / dash strike, else the next combo step
+	local kind: string? = nil
+	if variant == "Air" and Combat.AirAttacks[id] and now - state.lastAir >= Combat.AirAttack.MinGap and airborne(root, humanoid) then
+		kind = "Air"
+	elseif variant == "Dash" and Combat.DashAttacks[id] and now - state.rollAt <= Combat.Roll.Duration + Combat.DashAttack.Window + Combat.DashAttack.Tolerance then
+		kind = "Dash"
+	end
+	local index: number, step: { [string]: any }, shape: { [string]: any }
+	if kind then
+		-- the combo restarts after it
+		state.combo = 0
+		state.comboAt = now
+		state.comboCategory = id
+		index = 1
+		step = if kind == "Air" then Combat.AirAttacks[id] else Combat.DashAttacks[id]
+		shape = if kind == "Air" then AIR_SHAPES[id] else DASH_SHAPES[id]
+		if kind == "Air" then
+			state.lastAir = now
+		end
+		Net.fire(player, "Combo", id, 0, true)
+	else
+		index = nextStep(state, id, now, 1 / hitsPerSecond)
+		step = Combat.Combos[id][index]
+		shape = SHAPES[id][index]
+		Net.fire(player, "Combo", id, index, true)
+	end
 	local impact = (step.Impact or shape.Impact) / speed
 	local strike: Strike = {
 		multiplier = step.Damage or 1,
 		bonusCrit = shape.BonusCrit or 0,
-		finisher = step.Finisher == true,
+		finisher = step.Finisher == true or kind == "Air",
 		knockback = step.Knockback,
+		stagger = step.Stagger,
 		category = id,
 		element = if weapon then weapon.Element else nil,
 	}
@@ -307,16 +365,49 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 	end
 	for _, viewer in ipairs(visualTo(origin)) do
 		if viewer ~= player then
-			Net.fire(viewer, "Swing", player, id, index, dir, speed, aim)
+			Net.fire(viewer, "Swing", player, id, index, dir, speed, aim, kind)
 		end
 	end
 
 	if shape.Kind == "Projectile" then
 		local muzzle = origin + Vector3.new(0, 1.2, 0) + dir * 1.5
+		local style = if weapon then weapon.Element else "Physical"
+		if kind == "Air" then
+			-- the volley from the air: toward the aimed point (else down and forward), fanned out around the vertical
+			local toward = if finite(aimPoint) then aimPoint - muzzle else nil
+			local base = if toward and toward.Magnitude > 1 then toward.Unit else (dir - Vector3.new(0, 0.45, 0)).Unit
+			-- always down at least 10 degrees (never up into the sky)
+			local pitch = math.clamp(math.asin(math.clamp(base.Y, -1, 1)), math.rad(-85), math.rad(-10))
+			base = flat(base) * math.cos(pitch) + Vector3.new(0, math.sin(pitch), 0)
+			local shots = step.Shots or 1
+			for i = 1, shots do
+				local yaw = math.rad(((i - 1) - (shots - 1) / 2) * (step.Spread or 0))
+				local d = CFrame.fromAxisAngle(Vector3.yAxis, yaw):VectorToWorldSpace(base)
+				local target, along = firstOnRay(muzzle, d, shape.Range)
+				-- the arrow stops in the ground when it hits no enemy before
+				airParams.FilterDescendantsInstances = { root.Parent :: Instance, workspace:FindFirstChild("Enemies") :: Instance }
+				local wall = workspace:Raycast(muzzle, d * along, airParams)
+				if wall then
+					target, along = nil, wall.Distance
+				end
+				local distance = math.max(0.5, along)
+				for _, viewer in ipairs(visualTo(origin)) do
+					Net.fire(viewer, "Projectile", muzzle, d, shape.Speed, distance, style, player)
+				end
+				if target then
+					task.delay(impact + distance / shape.Speed, function()
+						if rootOf(player) then
+							hit(player, target, stats, strike)
+						end
+					end)
+				end
+			end
+			return
+		end
 		local target, along = firstOnRay(origin + Vector3.new(0, 1.2, 0), dir, shape.Range + 1.5)
 		local distance = math.max(0.5, along - 1.5)
 		for _, viewer in ipairs(visualTo(origin)) do
-			Net.fire(viewer, "Projectile", muzzle, dir, shape.Speed, distance, if weapon then weapon.Element else "Physical", player)
+			Net.fire(viewer, "Projectile", muzzle, dir, shape.Speed, distance, style, player)
 		end
 		if target then
 			task.delay(impact + distance / shape.Speed, function()
@@ -374,6 +465,15 @@ local function attack(player: Player, aimDir: any, aimPoint: any)
 			hitSet[enemy] = true
 			hit(player, enemy, stats, strike)
 		end
+		if kind == "Air" then
+			-- the landing shockwave of a jump attack, for the players around (the attacker draws its own at landing)
+			local ground = from - Vector3.new(0, body.HipHeight + current.Size.Y / 2, 0)
+			for _, viewer in ipairs(visualTo(from)) do
+				if viewer ~= player then
+					Net.fire(viewer, "AirSlam", player, id, ground, shape.Radius or 6, if weapon then weapon.Element else nil)
+				end
+			end
+		end
 		if shape.SlamRadius then
 			-- Heavy: a small ground slam in front, with a short stagger
 			local center = from + dir * 3
@@ -411,6 +511,7 @@ local function roll(player: Player, dir: any)
 		return
 	end
 	state.lastRoll = math.max(now, state.lastRoll + cooldown)
+	state.rollAt = now
 	state.rollUntil = now + Combat.Roll.IFrames
 	state.rollEnd = now + Combat.Roll.Duration * Combat.RateTolerance
 	local d = if finite(dir) then flat(dir) else flat(root.CFrame.LookVector)
