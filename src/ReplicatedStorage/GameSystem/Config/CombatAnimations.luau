@@ -5,6 +5,10 @@
 --
 -- Clip names: <Category>_Idle, <Category>_Run, <Category>_Equip, <Category>_Attack1..N, <Category>_Block,
 -- <Category>_BlockHit, Shared_Roll, Shared_Hit, Shared_Death, Shared_Spawn.
+-- Combat V3 (docs/COMBAT_CONTRACTS.md section 8): <Category>_JumpAttack (Hit = Config/Combat AirAttacks Impact, the
+-- landing for melee; Markers.Dive = where the clip waits while the client still holds the body in the air),
+-- <Category>_DashAttack (Hit = DashAttacks Impact), <Category>_Air (upper-body stance while jumping / falling),
+-- Shared_Hit2 (a second flinch, picked at random).
 -- clip = {
 --   Length    seconds at speed x1
 --   Loop      true for Idle / Run
@@ -297,6 +301,74 @@ Clips.Sword_BlockHit = {
 	},
 }
 
+-- Jump attack, PlungeStrike (combat V3; Impact 0.32 = the landing, Hang 0.10): in the air the legs tuck and the sword
+-- goes up over the head in both hands (point up-back, it stands out above the head from the camera behind); the body
+-- waits there (Dive) while the client holds it, pitches forward and chops down as it dives, then lands on one knee
+-- with the point driven into the ground in front (Hit), and rises back to the guard.
+local SWORD_AIR_UP: Pose = {
+	Root = { 14, 5, 0 }, RootP = { 0, 0.15, 0 }, Waist = { 10, -5, 0 }, Neck = { -8, -5, 0 },
+	RHand = { -12, 0.95, 0.35 }, RBlade = { -5, 140 }, LHand = { 10, 0.85, 0.35 }, LGrip = { -0.35, 1 },
+	RFoot = { 0.15, 0.95, -0.35, -10 }, LFoot = { -0.15, 0.75, 0.5, 15 },
+}
+local SWORD_LAND: Pose = {
+	Root = { -15, 10, 0 }, RootP = { 0, -1.15, -0.05 }, Waist = { -20, -10, 0 }, Neck = { 22, 0, 0 },
+	RHand = { -35, -0.55, 1.3 }, RBlade = { -25, -32 }, LHand = { 130, -0.35, 0.95 }, LGrip = { -0.35, 0 },
+	RFoot = { 0.25, 0, -0.6, -10 }, LFoot = { -0.22, 0.05, 0.9, 20 },
+}
+Clips.Sword_JumpAttack = {
+	Length = 0.85, Legs = "Own", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.32, Dive = 0.2 },
+	Poses = {
+		P(0, nil, SWORD_GUARD, { LGrip = { -0.35, 0 }, RFoot = { 0.12, 0.4, -0.3, -12 }, LFoot = { -0.12, 0.3, 0.4, 25 } }),
+		P(0.11, "o", SWORD_AIR_UP),
+		P(0.2, "s", SWORD_AIR_UP, { Root = { 18, 5, 0 }, Waist = { 13, -5, 0 }, RBlade = { -5, 150 }, RHand = { -12, 1.0, 0.3 } }),
+		P(0.26, "i", SWORD_AIR_UP, { Root = { -28, 5, 0 }, RootP = { 0, 0.1, 0 }, Waist = { -12, -5, 0 }, Neck = { 14, -5, 0 },
+			RHand = { -8, 0.45, 1.0 }, RBlade = { -5, 35 }, LHand = { 8, 0.4, 0.95 },
+			RFoot = { 0.18, 0.45, -0.3, -10 }, LFoot = { -0.18, 0.55, 0.6, 15 } }),
+		P(0.295, "l", SWORD_LAND, { Root = { -32, 8, 0 }, RootP = { 0, -0.2, 0 }, Waist = { -16, -8, 0 }, Neck = { 20, 0, 0 },
+			RHand = { -28, -0.15, 1.3 }, RBlade = { -22, -8 }, LHand = { 60, -0.2, 0.9 }, LGrip = { -0.35, 0.3 },
+			RFoot = { 0.2, 0.15, -0.4, -10 }, LFoot = { -0.2, 0.3, 0.7, 20 } }),
+		P(0.32, "O", SWORD_LAND),
+		P(0.52, "s", SWORD_LAND, { RootP = { 0, -1.2, -0.05 }, Waist = { -22, -10, 0 }, RHand = { -35, -0.6, 1.28 }, RBlade = { -25, -34 } }),
+		P(0.85, "s", SWORD_GUARD, { LGrip = { -0.35, 0 } }),
+	},
+}
+
+-- Dash strike, DashSlash (Impact 0.14, the lunge carries the body 6 studs in 0.16 s): out of the roll, low and coiled
+-- with the sword trailing behind on the right, a long lunge with a flat slash through the front to the left.
+Clips.Sword_DashAttack = {
+	Length = 0.8, Legs = "Own", FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.14 },
+	Poses = {
+		P(0, nil, SWORD_GUARD, { Root = { -8, -35, 0 }, RootP = { 0, -0.7, 0 }, Waist = { -14, -20, 0 }, Neck = { 10, 45, 0 },
+			RHand = { -125, -0.55, 0.9 }, RBlade = { -165, -5 }, LHand = { 40, -0.3, 0.85 },
+			RFoot = { 0.25, 0, -0.6, -15 }, LFoot = { -0.25, 0, 0.6, 25 } }),
+		P(0.07, "o", SWORD_GUARD, { Root = { -14, -40, 0 }, RootP = { 0, -0.8, -0.15 }, Waist = { -16, -22, 0 }, Neck = { 12, 50, 0 },
+			RHand = { -135, -0.5, 0.95 }, RBlade = { -170, 0 }, LHand = { 35, -0.25, 0.95 },
+			RFoot = { 0.28, 0, -0.95, -12 }, LFoot = { -0.28, 0.1, 0.9, 25 } }),
+		P(0.14, "i", SWORD_GUARD, { Root = { -14, 12, 0 }, RootP = { 0, -0.9, -0.3 }, Waist = { -14, 18, 0 }, Neck = { 12, -25, 0 },
+			RHand = { 5, -0.25, 1.55 }, RBlade = { 35, -5 }, LHand = { 125, -0.3, 0.6 },
+			RFoot = { 0.3, 0, -1.25, -10 }, LFoot = { -0.3, 0.15, 1.1, 25 } }),
+		P(0.25, "O", SWORD_GUARD, { Root = { -10, 38, 0 }, RootP = { 0, -0.88, -0.3 }, Waist = { -12, 32, 0 }, Neck = { 10, -50, 0 },
+			RHand = { 80, -0.3, 1.35 }, RBlade = { 125, -10 }, LHand = { 150, -0.3, 0.6 },
+			RFoot = { 0.3, 0, -1.25, -10 }, LFoot = { -0.3, 0.1, 1.1, 25 } }),
+		P(0.45, "s", SWORD_GUARD, { Root = { -8, 36, 0 }, RootP = { 0, -0.75, -0.25 }, Waist = { -10, 30, 0 }, Neck = { 8, -46, 0 },
+			RHand = { 76, -0.35, 1.3 }, RBlade = { 120, -8 }, LHand = { 145, -0.3, 0.6 },
+			RFoot = { 0.3, 0, -1.1, -10 }, LFoot = { -0.3, 0, 1.0, 25 } }),
+		P(0.8, "s", SWORD_GUARD),
+	},
+}
+
+-- Airborne stance (jumping / falling, upper body over the default jump legs): arms out for balance, the sword held
+-- out to the right.
+local SWORD_AIR: Pose = {
+	Waist = { 4, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -80, -0.15, 0.9 }, RBlade = { -110, 35 },
+	LHand = { 75, -0.1, 0.85 },
+}
+Clips.Sword_Air = {
+	Length = 0.8, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
+	Poses = { P(0, nil, SWORD_AIR), P(0.4, nil, SWORD_AIR, { RHand = { -80, -0.05, 0.9 }, LHand = { 75, 0.0, 0.85 } }), P(0.8, nil, SWORD_AIR) },
+}
+
 -- A hit taken on the guard (every category): pushed back, arms jolt, added on top of the guard.
 local function blockHitClip(): { [string]: any }
 	return {
@@ -319,7 +391,7 @@ local function stance(length: number, guard: Pose, breath: Pose): { [string]: an
 end
 
 -- ------------------------------------------------------------------------------------------------
--- SPEAR: two hands on the shaft, long reach, forward lunges (3 steps, 1.11 s interval at speed x1)
+-- SPEAR: two hands on the shaft, long reach, forward lunges (4 steps, 1.11 s interval at speed x1)
 -- ------------------------------------------------------------------------------------------------
 -- Guard: left side forward, rear (right) hand out at the hip, the point raised toward the target (the shaft passes
 -- right of the body so it reads from the camera behind), left hand forward on the shaft.
@@ -382,8 +454,31 @@ Clips.Spear_Attack2 = {
 	},
 }
 
--- Attack 3, PiercingLunge (finisher): deep coil, a long one-handed lunge, the left arm thrown back for balance.
+-- Attack 3, Sweep (combat V3; Impact 0.22, a 180 deg arc): coiled far to the right with both hands, the shaft swept
+-- flat and low through the front one-handed (the full 8-stud reach), the left arm out for balance, then regrip.
 Clips.Spear_Attack3 = {
+	Length = 0.95, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.22 },
+	Poses = {
+		P(0, nil, SPEAR_GUARD),
+		P(0.11, "o", SPEAR_GUARD, { Root = { 0, -70, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -6, -25, 0 }, Neck = { 6, 70, 0 },
+			RHand = { -105, -0.35, 0.75 }, RBlade = { -160, -4 }, LGrip = { 1.2, 1 },
+			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.4, 10 } }),
+		P(0.22, "i", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.6, -0.05 }, Waist = { -10, 10, 0 }, Neck = { 8, -5, 0 },
+			RHand = { -25, -0.4, 1.3 }, RBlade = { 15, -6 }, LGrip = { 1.2, 0 }, LHand = { 150, -0.3, 0.8 },
+			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.45, 10 } }),
+		P(0.34, "O", SPEAR_GUARD, { Root = { 0, 35, 0 }, RootP = { 0, -0.6, -0.05 }, Waist = { -10, 35, 0 }, Neck = { 8, -45, 0 },
+			RHand = { 65, -0.4, 1.25 }, RBlade = { 115, -4 }, LGrip = { 1.2, 0 }, LHand = { 170, -0.3, 0.8 },
+			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.45, 10 } }),
+		P(0.55, "s", SPEAR_GUARD, { Root = { 0, 32, 0 }, RootP = { 0, -0.55, -0.05 }, Waist = { -9, 32, 0 }, Neck = { 8, -40, 0 },
+			RHand = { 60, -0.42, 1.2 }, RBlade = { 110, -2 }, LGrip = { 1.2, 0.2 }, LHand = { 165, -0.3, 0.8 },
+			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.45, 10 } }),
+		P(0.95, "s", SPEAR_GUARD),
+	},
+}
+
+-- Attack 4, PiercingLunge (finisher; was Attack 3 before combat V3): deep coil, a long one-handed lunge, the left arm
+-- thrown back for balance.
+Clips.Spear_Attack4 = {
 	Length = 0.95, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.24 },
 	Poses = {
 		P(0, nil, SPEAR_GUARD),
@@ -411,8 +506,72 @@ Clips.Spear_Block = {
 }
 Clips.Spear_BlockHit = blockHitClip()
 
+-- Jump attack, DragoonDive (Impact 0.34 = the landing, Hang 0.12): high over the head in both hands, the point aimed
+-- down ahead (a diagonal line above the head from behind), legs tucked; it dives point first and lands crouched with
+-- the point driven into the ground at the front right, both hands still on the shaft.
+local SPEAR_AIR_UP: Pose = {
+	Root = { 10, -10, 0 }, RootP = { 0, 0.2, 0 }, Waist = { 8, 0, 0 }, Neck = { -6, 10, 0 },
+	RHand = { -20, 1.0, 0.45 }, RBlade = { -5, -50 }, LGrip = { 1.3, 1 },
+	RFoot = { 0.15, 1.0, -0.3, -10 }, LFoot = { -0.15, 0.8, 0.45, 15 },
+}
+local SPEAR_LAND: Pose = {
+	Root = { -10, -20, 0 }, RootP = { 0, -1.1, 0 }, Waist = { -15, 0, 0 }, Neck = { 15, 20, 0 },
+	RHand = { -30, 0.3, 0.85 }, RBlade = { -22, -76 }, LGrip = { 1.0, 1 },
+	RFoot = { 0.25, 0.05, 0.85, -25 }, LFoot = { -0.25, 0, -0.55, 10 },
+}
+Clips.Spear_JumpAttack = {
+	Length = 0.95, Legs = "Own", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.34, Dive = 0.22 },
+	Poses = {
+		P(0, nil, SPEAR_GUARD, { RFoot = { 0.15, 0.4, 0.3, -30 }, LFoot = { -0.1, 0.3, -0.3, 10 } }),
+		P(0.12, "o", SPEAR_AIR_UP),
+		P(0.22, "s", SPEAR_AIR_UP, { Root = { 14, -10, 0 }, Waist = { 10, 0, 0 }, RHand = { -20, 1.1, 0.4 }, RBlade = { -5, -45 } }),
+		P(0.29, "i", SPEAR_AIR_UP, { Root = { -22, -15, 0 }, RootP = { 0, 0.1, 0 }, Waist = { -10, 0, 0 }, Neck = { 12, 15, 0 },
+			RHand = { -25, 0.55, 0.7 }, RBlade = { -15, -78 }, LGrip = { 1.1, 1 },
+			RFoot = { 0.15, 0.35, 0.3, -20 }, LFoot = { -0.15, 0.5, 0.1, 10 } }),
+		P(0.315, "l", SPEAR_LAND, { Root = { -25, -18, 0 }, RootP = { 0, -0.2, 0 }, Waist = { -12, 0, 0 },
+			RHand = { -28, 0.4, 0.8 }, RBlade = { -20, -80 }, RFoot = { 0.2, 0.2, 0.6, -25 }, LFoot = { -0.2, 0.15, -0.4, 10 } }),
+		P(0.34, "O", SPEAR_LAND),
+		P(0.56, "s", SPEAR_LAND, { RootP = { 0, -1.15, 0 }, Waist = { -17, 0, 0 }, RHand = { -30, 0.28, 0.85 } }),
+		P(0.95, "s", SPEAR_GUARD),
+	},
+}
+
+-- Dash strike, ChargeThrust (Impact 0.16, the lunge carries the body 8 studs in 0.18 s): couched low under the arm out
+-- of the roll, then a full one-handed extension in a very long lunge, the left arm thrown back.
+Clips.Spear_DashAttack = {
+	Length = 0.9, Legs = "Own", FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.16 },
+	Poses = {
+		P(0, nil, SPEAR_GUARD, { Root = { -10, -35, 0 }, RootP = { 0, -0.65, 0.1 }, Waist = { -10, 0, 0 }, Neck = { 8, 30, 0 },
+			RHand = { -85, -0.5, 0.45 }, RBlade = { -3, 5 }, LGrip = { 1.1, 1 },
+			RFoot = { 0.2, 0, 0.6, -30 }, LFoot = { -0.15, 0, -0.5, 10 } }),
+		P(0.08, "o", SPEAR_GUARD, { Root = { -12, -38, 0 }, RootP = { 0, -0.72, 0.15 }, Waist = { -12, 0, 0 }, Neck = { 10, 32, 0 },
+			RHand = { -92, -0.45, 0.35 }, RBlade = { -3, 4 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.2, 0, 0.7, -30 }, LFoot = { -0.15, 0, -0.7, 10 } }),
+		P(0.16, "i", SPEAR_GUARD, { Root = { -15, -5, 0 }, RootP = { 0, -0.85, -0.45 }, Waist = { -20, 15, 0 }, Neck = { 16, -5, 0 },
+			RHand = { -40, -0.1, 1.45 }, RBlade = { 3, 0 }, LGrip = { 1.6, 0 }, LHand = { 155, -0.2, 0.8 },
+			RFoot = { 0.2, 0.1, 1.1, -30 }, LFoot = { -0.1, 0, -1.2, 10 } }),
+		P(0.32, "O", SPEAR_GUARD, { Root = { -15, -5, 0 }, RootP = { 0, -0.87, -0.45 }, Waist = { -21, 15, 0 }, Neck = { 16, -5, 0 },
+			RHand = { -39, -0.08, 1.47 }, RBlade = { 3, 1 }, LGrip = { 1.6, 0 }, LHand = { 158, -0.2, 0.8 },
+			RFoot = { 0.2, 0.1, 1.1, -30 }, LFoot = { -0.1, 0, -1.2, 10 } }),
+		P(0.5, "s", SPEAR_GUARD, { Root = { -10, -10, 0 }, RootP = { 0, -0.7, -0.35 }, Waist = { -16, 12, 0 }, Neck = { 12, 0, 0 },
+			RHand = { -45, -0.2, 1.3 }, RBlade = { 2, 4 }, LGrip = { 1.5, 0.3 }, LHand = { 140, -0.25, 0.8 },
+			RFoot = { 0.2, 0.05, 0.95, -30 }, LFoot = { -0.1, 0, -1.0, 10 } }),
+		P(0.9, "s", SPEAR_GUARD),
+	},
+}
+
+-- Airborne stance: the spear held level in both hands, point forward, upper body upright.
+local SPEAR_AIR: Pose = {
+	Waist = { 4, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -60, -0.2, 0.7 }, RBlade = { -5, 28 }, LHand = { 30, -0.1, 0.8 }, LGrip = { 1.1, 1 },
+}
+Clips.Spear_Air = {
+	Length = 0.8, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
+	Poses = { P(0, nil, SPEAR_AIR), P(0.4, nil, SPEAR_AIR, { RHand = { -60, -0.12, 0.7 }, RBlade = { -5, 32 } }), P(0.8, nil, SPEAR_AIR) },
+}
+
 -- ------------------------------------------------------------------------------------------------
--- HEAVY: two hands, slow and heavy, big anticipation (2 steps, 2.5 s interval)
+-- HEAVY: two hands, slow and heavy, big anticipation (3 steps, 2.5 s interval)
 -- RFace = the striking face of the head (ImpactAttachment side), turned toward the swing.
 -- ------------------------------------------------------------------------------------------------
 local HEAVY_GUARD: Pose = {
@@ -498,6 +657,100 @@ Clips.Heavy_Block = {
 	},
 }
 Clips.Heavy_BlockHit = blockHitClip()
+
+-- Attack 3, GroundBreaker (combat V3 finisher; Impact 0.55, Legs Own): squat with the weapon dragged low behind, a
+-- jump with the weapon swung up over the head (arched back at the top), a two-handed slam that drops into a deep
+-- squat, then the long heave back to the guard. The jump is the clip's own (RootP), the client only lunges forward.
+Clips.Heavy_Attack3 = {
+	Length = 1.9, Legs = "Own", FadeIn = 0.08, FadeOut = 0.2, Markers = { Hit = 0.55 },
+	Poses = {
+		P(0, nil, HEAVY_GUARD),
+		P(0.2, "o", HEAVY_GUARD, { Root = { 0, -10, 0 }, RootP = { 0, -0.85, 0.1 }, Waist = { -24, -10, 0 }, Neck = { 18, 10, 0 },
+			RHand = { -60, -0.6, 0.6 }, RBlade = { -170, -15 }, RFace = { -170, -105 },
+			RFoot = { 0.38, 0, -0.1, -15 }, LFoot = { -0.38, 0, 0.2, 20 } }),
+		P(0.38, "o", HEAVY_GUARD, { Root = { 12, 0, 0 }, RootP = { 0, 1.3, 0.1 }, Waist = { 14, 0, 0 }, Neck = { -10, 0, 0 },
+			RHand = { -8, 0.95, 0.35 }, RBlade = { 0, 155 }, RFace = { 0, 65 },
+			RFoot = { 0.25, 1.55, -0.2, -15 }, LFoot = { -0.25, 1.45, 0.3, 20 } }),
+		P(0.47, "s", HEAVY_GUARD, { Root = { 15, 0, 0 }, RootP = { 0, 1.4, 0.05 }, Waist = { 16, 0, 0 }, Neck = { -11, 0, 0 },
+			RHand = { -8, 1.0, 0.3 }, RBlade = { 0, 162 }, RFace = { 0, 72 },
+			RFoot = { 0.3, 1.45, -0.25, -15 }, LFoot = { -0.3, 1.35, 0.3, 20 } }),
+		P(0.55, "i", HEAVY_GUARD, { Root = { -10, 12, 0 }, RootP = { 0, -0.9, -0.15 }, Waist = { -28, -5, 0 }, Neck = { 22, -8, 0 },
+			RHand = { -38, 0.05, 1.35 }, RBlade = { -33, -28 }, RFace = { -33, -118 },
+			RFoot = { 0.4, 0, -0.3, -15 }, LFoot = { -0.4, 0, 0.3, 20 } }),
+		P(0.8, "O", HEAVY_GUARD, { Root = { -10, 12, 0 }, RootP = { 0, -0.95, -0.15 }, Waist = { -30, -5, 0 }, Neck = { 23, -8, 0 },
+			RHand = { -38, 0.03, 1.35 }, RBlade = { -33, -30 }, RFace = { -33, -120 },
+			RFoot = { 0.4, 0, -0.3, -15 }, LFoot = { -0.4, 0, 0.3, 20 } }),
+		P(1.2, "s", HEAVY_GUARD, { Root = { 4, 4, 0 }, RootP = { 0, -0.55, -0.05 }, Waist = { -20, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -15, -0.55, 0.95 }, RBlade = { -10, -10 }, RFace = { -10, -100 } }),
+		P(1.9, "s", HEAVY_GUARD),
+	},
+}
+
+-- Jump attack, MeteorSmash (Impact 0.45 = the landing, Hang 0.16): arched far back with the weapon over the head in
+-- both hands, legs tucked; the whole body whips forward as it dives and the head crashes into the ground ahead on the
+-- landing, deep on one knee.
+local HEAVY_AIR_UP: Pose = {
+	Root = { 16, 0, 0 }, RootP = { 0, 0.2, 0 }, Waist = { 14, 0, 0 }, Neck = { -10, 0, 0 },
+	RHand = { -8, 1.0, 0.3 }, RBlade = { 0, 160 }, RFace = { 0, 70 }, LGrip = { -0.8, 1 },
+	RFoot = { 0.25, 0.9, -0.2, -15 }, LFoot = { -0.25, 0.8, 0.35, 20 },
+}
+local HEAVY_LAND: Pose = {
+	Root = { -12, 15, 0 }, RootP = { 0, -1.15, -0.1 }, Waist = { -30, -5, 0 }, Neck = { 25, -10, 0 },
+	RHand = { -40, 0.05, 1.35 }, RBlade = { -35, -28 }, RFace = { -35, -118 }, LGrip = { -0.8, 1 },
+	RFoot = { 0.35, 0, -0.45, -15 }, LFoot = { -0.3, 0.05, 0.75, 20 },
+}
+Clips.Heavy_JumpAttack = {
+	Length = 1.3, Legs = "Own", FadeIn = 0.06, FadeOut = 0.2, Markers = { Hit = 0.45, Dive = 0.3 },
+	Poses = {
+		P(0, nil, HEAVY_GUARD, { RFoot = { 0.28, 0.4, -0.2, -15 }, LFoot = { -0.28, 0.3, 0.3, 20 } }),
+		P(0.16, "o", HEAVY_AIR_UP),
+		P(0.3, "s", HEAVY_AIR_UP, { Root = { 22, 0, 0 }, Waist = { 16, 0, 0 }, RBlade = { 0, 168 }, RFace = { 0, 78 } }),
+		P(0.38, "i", HEAVY_AIR_UP, { Root = { -25, 0, 0 }, RootP = { 0, 0.1, 0 }, Waist = { -15, 0, 0 }, Neck = { 12, 0, 0 },
+			RHand = { -5, 0.5, 0.9 }, RBlade = { 0, 60 }, RFace = { 0, -30 },
+			RFoot = { 0.28, 0.45, -0.3, -15 }, LFoot = { -0.28, 0.55, 0.5, 20 } }),
+		P(0.425, "l", HEAVY_LAND, { Root = { -35, 0, 0 }, RootP = { 0, -0.2, 0 }, Waist = { -20, 0, 0 }, Neck = { 18, 0, 0 },
+			RHand = { -30, -0.05, 1.2 }, RBlade = { -25, -5 }, RFace = { -25, -95 },
+			RFoot = { 0.3, 0.15, -0.4, -15 }, LFoot = { -0.3, 0.3, 0.6, 20 } }),
+		P(0.45, "O", HEAVY_LAND),
+		P(0.75, "s", HEAVY_LAND, { RootP = { 0, -1.2, -0.1 }, Waist = { -32, -5, 0 }, RHand = { -40, 0.03, 1.35 } }),
+		P(1.3, "s", HEAVY_GUARD),
+	},
+}
+
+-- Dash strike, RushingSmash (Impact 0.30, the lunge carries the body 5 studs in 0.20 s): out of the roll the weapon
+-- drags low behind on the right, then a rising diagonal smash through the front up to the left (150 deg arc).
+Clips.Heavy_DashAttack = {
+	Length = 1.5, Legs = "Own", FadeIn = 0.05, FadeOut = 0.2, Markers = { Hit = 0.3 },
+	Poses = {
+		P(0, nil, HEAVY_GUARD, { Root = { -12, -30, 0 }, RootP = { 0, -0.6, 0 }, Waist = { -15, -20, 0 }, Neck = { 10, 40, 0 },
+			RHand = { -120, -0.5, 0.75 }, RBlade = { -165, -25 }, RFace = { -165, -110 },
+			RFoot = { 0.3, 0, -0.5, -15 }, LFoot = { -0.3, 0.1, 0.6, 20 } }),
+		P(0.18, "o", HEAVY_GUARD, { Root = { -12, -45, 0 }, RootP = { 0, -0.65, -0.1 }, Waist = { -15, -30, 0 }, Neck = { 10, 55, 0 },
+			RHand = { -135, -0.55, 0.8 }, RBlade = { -175, -30 }, RFace = { -175, -115 },
+			RFoot = { 0.3, 0, -0.8, -15 }, LFoot = { -0.3, 0.1, 0.8, 20 } }),
+		P(0.3, "i", HEAVY_GUARD, { Root = { -5, 15, 0 }, RootP = { 0, -0.55, -0.25 }, Waist = { -6, 20, 0 }, Neck = { 6, -20, 0 },
+			RHand = { -10, 0.0, 1.25 }, RBlade = { 15, 15 }, RFace = { 105, 15 },
+			RFoot = { 0.3, 0, -1.0, -15 }, LFoot = { -0.3, 0.1, 0.9, 20 } }),
+		P(0.45, "O", HEAVY_GUARD, { Root = { 0, 40, 0 }, RootP = { 0, -0.45, -0.25 }, Waist = { 6, 35, 0 }, Neck = { -4, -45, 0 },
+			RHand = { 75, 0.6, 0.85 }, RBlade = { 120, 55 }, RFace = { 200, 30 },
+			RFoot = { 0.3, 0, -1.0, -15 }, LFoot = { -0.3, 0.05, 0.9, 20 } }),
+		P(0.8, "s", HEAVY_GUARD, { Root = { 0, 36, 0 }, RootP = { 0, -0.4, -0.2 }, Waist = { 4, 32, 0 }, Neck = { -2, -40, 0 },
+			RHand = { 70, 0.5, 0.85 }, RBlade = { 115, 48 }, RFace = { 195, 25 },
+			RFoot = { 0.3, 0, -0.8, -15 }, LFoot = { -0.3, 0, 0.7, 20 } }),
+		P(1.5, "s", HEAVY_GUARD, { RFace = { 330, -35 } }),
+	},
+}
+
+-- Airborne stance: the weapon on the right shoulder, upper body upright.
+local HEAVY_AIR: Pose = {
+	Waist = { 4, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -45, 0.15, 0.4 }, RBlade = { -165, 50 }, RFace = { -165, -40 },
+	LHand = { 45, -0.3, 0.8 }, LGrip = { -0.8, 0 },
+}
+Clips.Heavy_Air = {
+	Length = 0.8, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
+	Poses = { P(0, nil, HEAVY_AIR), P(0.4, nil, HEAVY_AIR, { RHand = { -45, 0.2, 0.4 }, LHand = { 45, -0.22, 0.8 } }), P(0.8, nil, HEAVY_AIR) },
+}
 
 -- ------------------------------------------------------------------------------------------------
 -- DAGGER: very fast, low stance, tiny lunges (5 steps, 0.4 s interval). The one dagger is in the right hand: the
@@ -619,6 +872,76 @@ Clips.Dagger_Block = {
 }
 Clips.Dagger_BlockHit = blockHitClip()
 
+-- Jump attack, ShadowDrop (Impact 0.26 = the landing, Hang 0.06): a tucked front flip (the arms turn with the body),
+-- out of it the dagger high over the right shoulder in a reverse grip (blade down), then the drop into a three-point
+-- "hero" landing: very low, the blade stabbed down at the front right, the left hand down by the ground. Root keys
+-- stay one turn ahead (-360) after the flip so nothing unwinds (the engine wraps the root).
+local DAGGER_AIR_UP: Pose = {
+	Root = { -350, 5, 0 }, RootP = { 0, 0.25, 0 }, Waist = { 6, 0, 0 }, Neck = { -4, 0, 0 },
+	RHand = { -40, 0.75, 0.45 }, RBlade = { -10, -75 }, LHand = { 40, 0.05, 0.8 },
+	RFoot = { 0.15, 1.05, -0.2, -12 }, LFoot = { -0.15, 0.95, 0.25, 25 },
+}
+local DAGGER_LAND: Pose = {
+	Root = { -375, 10, 0 }, RootP = { 0, -1.35, -0.1 }, Waist = { -25, -5, 0 }, Neck = { 25, 0, 0 },
+	RHand = { -75, -0.55, 1.05 }, RBlade = { -65, -80 }, LHand = { 70, -0.9, 0.95 },
+	RFoot = { 0.3, 0, -0.5, -15 }, LFoot = { -0.3, 0.05, 0.6, 25 },
+}
+local DAGGER_TUCK: Pose = {
+	RootP = { 0, 0.35, 0 }, Waist = { -30, 0, 0 }, Neck = { -20, 0, 0 },
+	RHand = { -30, -0.35, 0.55 }, RBlade = { -20, -60 }, LHand = { 30, -0.35, 0.55 },
+	RFoot = { 0.15, 1.2, -0.45, -12 }, LFoot = { -0.15, 1.2, -0.35, 25 },
+}
+Clips.Dagger_JumpAttack = {
+	Length = 0.62, Legs = "Own", FadeIn = 0.03, FadeOut = 0.12, Markers = { Hit = 0.26, Dive = 0.17 },
+	Poses = {
+		P(0, nil, DAGGER_GUARD, { RFoot = { 0.15, 0.5, -0.3, -12 }, LFoot = { -0.15, 0.4, 0.3, 25 } }),
+		P(0.04, "l", DAGGER_TUCK, { Torso = true, Root = { -90, 0, 0 } }),
+		P(0.09, "l", DAGGER_TUCK, { Torso = true, Root = { -210, 0, 0 } }),
+		P(0.13, "o", DAGGER_TUCK, { Torso = true, Root = { -320, 0, 0 } }),
+		P(0.17, "s", DAGGER_AIR_UP),
+		P(0.235, "l", DAGGER_LAND, { Root = { -385, 5, 0 }, RootP = { 0, -0.1, 0 }, Waist = { -10, 0, 0 }, Neck = { 12, 0, 0 },
+			RHand = { -30, 0.3, 0.7 }, RBlade = { -10, -82 }, LHand = { 40, -0.4, 0.8 },
+			RFoot = { 0.2, 0.25, -0.3, -12 }, LFoot = { -0.2, 0.35, 0.4, 25 } }),
+		P(0.26, "O", DAGGER_LAND),
+		P(0.42, "s", DAGGER_LAND, { RootP = { 0, -1.3, -0.1 }, Waist = { -24, -5, 0 }, LHand = { 70, -0.85, 0.95 } }),
+		P(0.62, "s", DAGGER_GUARD, { Root = { -360, 15, 0 } }),
+	},
+}
+
+-- Dash strike, ShadowStep (Hit 0.10 and Hit2 0.18 = Config/Combat DashAttacks Hits, the lunge carries the body 6 studs
+-- in 0.14 s): very low out of the roll, a forehand slash through to the left, then the backhand back to the right.
+Clips.Dagger_DashAttack = {
+	Length = 0.55, Legs = "Own", FadeIn = 0.03, FadeOut = 0.1, Markers = { Hit = 0.1, Hit2 = 0.18 },
+	Poses = {
+		P(0, nil, DAGGER_GUARD, { Root = { -15, -20, 0 }, RootP = { 0, -0.8, 0 }, Waist = { -20, -15, 0 }, Neck = { 15, 20, 0 },
+			RHand = { -95, -0.4, 0.9 }, RBlade = { -135, 0 }, LHand = { 80, -0.5, 0.6 },
+			RFoot = { 0.25, 0, -0.7, -12 }, LFoot = { -0.25, 0.1, 0.8, 25 } }),
+		P(0.1, "i", DAGGER_GUARD, { Root = { -15, 25, 0 }, RootP = { 0, -0.85, -0.2 }, Waist = { -18, 20, 0 }, Neck = { 14, -25, 0 },
+			RHand = { 40, -0.3, 1.35 }, RBlade = { 95, -5 }, LHand = { 140, -0.4, 0.6 },
+			RFoot = { 0.25, 0, -1.0, -12 }, LFoot = { -0.25, 0.15, 0.95, 25 } }),
+		P(0.14, "o", DAGGER_GUARD, { Root = { -15, 30, 0 }, RootP = { 0, -0.85, -0.2 }, Waist = { -16, 24, 0 }, Neck = { 14, -30, 0 },
+			RHand = { 60, 0.05, 1.0 }, RBlade = { 115, 20 }, LHand = { 140, -0.4, 0.6 },
+			RFoot = { 0.25, 0, -1.0, -12 }, LFoot = { -0.25, 0.15, 0.95, 25 } }),
+		P(0.18, "i", DAGGER_GUARD, { Root = { -15, -15, 0 }, RootP = { 0, -0.88, -0.2 }, Waist = { -18, -20, 0 }, Neck = { 14, 20, 0 },
+			RHand = { -70, -0.3, 1.35 }, RBlade = { -105, -10 }, LHand = { 60, -0.4, 0.7 },
+			RFoot = { 0.25, 0, -1.0, -12 }, LFoot = { -0.25, 0.1, 0.95, 25 } }),
+		P(0.27, "O", DAGGER_GUARD, { Root = { -15, -22, 0 }, RootP = { 0, -0.85, -0.2 }, Waist = { -18, -25, 0 }, Neck = { 14, 25, 0 },
+			RHand = { -95, -0.35, 1.2 }, RBlade = { -130, -12 }, LHand = { 55, -0.4, 0.7 },
+			RFoot = { 0.25, 0, -1.0, -12 }, LFoot = { -0.25, 0.05, 0.95, 25 } }),
+		P(0.55, "s", DAGGER_GUARD),
+	},
+}
+
+-- Airborne stance: arms out low and wide, the dagger trailing behind.
+local DAGGER_AIR: Pose = {
+	Waist = { 2, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -75, -0.2, 0.8 }, RBlade = { -125, -25 }, LHand = { 75, -0.05, 0.8 },
+}
+Clips.Dagger_Air = {
+	Length = 0.6, Loop = true, Legs = "Upper", FadeIn = 0.1, FadeOut = 0.1,
+	Poses = { P(0, nil, DAGGER_AIR), P(0.3, nil, DAGGER_AIR, { RHand = { -75, -0.1, 0.8 }, LHand = { 75, 0.05, 0.8 } }), P(0.6, nil, DAGGER_AIR) },
+}
+
 -- ------------------------------------------------------------------------------------------------
 -- GAUNTLET: punchy, rhythmic (3 steps, 0.556 s interval). One right-hand gauntlet: RBlade = where the knuckles
 -- point, RFace = the back of the hand. Southpaw stance (right side forward), the left fist guards the chin.
@@ -709,8 +1032,73 @@ Clips.Gauntlet_Block = {
 }
 Clips.Gauntlet_BlockHit = blockHitClip()
 
+-- Jump attack, GroundPound (Impact 0.32 = the landing, Hang 0.10): both fists together high over the head (arched
+-- back, legs tucked), the body whips forward in the dive and both fists smash the ground in front as the body drops
+-- into a wide squat.
+local GAUNT_AIR_UP: Pose = {
+	Root = { 14, 0, 0 }, RootP = { 0, 0.2, 0 }, Waist = { 12, 0, 0 }, Neck = { -8, 0, 0 },
+	RHand = { -14, 1.05, 0.32 }, RBlade = { -5, 100 }, RFace = { -90, 0 },
+	LHand = { 14, 1.05, 0.32 }, LBlade = { 5, 100 },
+	RFoot = { 0.18, 0.95, -0.3, -15 }, LFoot = { -0.18, 0.85, 0.35, 25 },
+}
+local GAUNT_LAND: Pose = {
+	Root = { -20, 0, 0 }, RootP = { 0, -1.25, -0.1 }, Waist = { -30, 0, 0 }, Neck = { 28, 0, 0 },
+	RHand = { -48, -0.85, 1.1 }, RBlade = { -40, -80 }, RFace = { -130, 0 },
+	LHand = { 48, -0.85, 1.1 }, LBlade = { 40, -80 },
+	RFoot = { 0.45, 0, -0.2, -20 }, LFoot = { -0.45, 0, 0.2, 25 },
+}
+Clips.Gauntlet_JumpAttack = {
+	Length = 0.75, Legs = "Own", FadeIn = 0.04, FadeOut = 0.12, Markers = { Hit = 0.32, Dive = 0.2 },
+	Poses = {
+		P(0, nil, GAUNT_GUARD, { RFoot = { 0.15, 0.4, -0.3, -15 }, LFoot = { -0.15, 0.3, 0.3, 25 } }),
+		P(0.1, "o", GAUNT_AIR_UP),
+		P(0.2, "s", GAUNT_AIR_UP, { Root = { 18, 0, 0 }, Waist = { 14, 0, 0 }, RHand = { -14, 1.1, 0.28 }, LHand = { 14, 1.1, 0.28 } }),
+		P(0.26, "i", GAUNT_AIR_UP, { Root = { -28, 0, 0 }, RootP = { 0, 0.1, 0 }, Waist = { -12, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -10, 0.4, 0.95 }, RBlade = { -5, 30 }, LHand = { 10, 0.4, 0.95 }, LBlade = { 5, 30 },
+			RFoot = { 0.2, 0.45, -0.3, -15 }, LFoot = { -0.2, 0.55, 0.4, 25 } }),
+		P(0.295, "l", GAUNT_LAND, { Root = { -35, 0, 0 }, RootP = { 0, -0.2, 0 }, Waist = { -18, 0, 0 }, Neck = { 20, 0, 0 },
+			RHand = { -30, -0.3, 1.05 }, RBlade = { -25, -40 }, LHand = { 30, -0.3, 1.05 }, LBlade = { 25, -40 },
+			RFoot = { 0.3, 0.15, -0.25, -20 }, LFoot = { -0.3, 0.3, 0.25, 25 } }),
+		P(0.32, "O", GAUNT_LAND),
+		P(0.5, "s", GAUNT_LAND, { RootP = { 0, -1.3, -0.1 }, Waist = { -32, 0, 0 } }),
+		P(0.75, "s", GAUNT_GUARD),
+	},
+}
+
+-- Dash strike, RocketPunch (Impact 0.12, the lunge carries the body 6 studs in 0.16 s): the fist cocked at the hip,
+-- then a flying straight: the body leans far forward behind the fully extended right fist, the left arm thrown back
+-- and the back leg kicked up.
+Clips.Gauntlet_DashAttack = {
+	Length = 0.55, Legs = "Own", FadeIn = 0.03, FadeOut = 0.1, Markers = { Hit = 0.12 },
+	Poses = {
+		P(0, nil, GAUNT_GUARD, { Root = { -10, 30, 0 }, RootP = { 0, -0.55, 0.1 }, Waist = { -10, 20, 0 }, Neck = { 8, -25, 0 },
+			RHand = { -45, -0.25, 0.45 }, RBlade = { -10, 0 }, RFace = { -10, 90 }, LHand = { 30, 0.0, 0.7 }, LBlade = { 10, 30 },
+			RFoot = { 0.2, 0, -0.5, -15 }, LFoot = { -0.2, 0, 0.5, 25 } }),
+		P(0.06, "o", GAUNT_GUARD, { Root = { -12, 38, 0 }, RootP = { 0, -0.6, 0.12 }, Waist = { -12, 25, 0 }, Neck = { 10, -30, 0 },
+			RHand = { -75, -0.45, 0.4 }, RBlade = { -30, -10 }, RFace = { -30, 80 }, LHand = { 25, 0.05, 0.75 }, LBlade = { 10, 30 },
+			RFoot = { 0.2, 0, -0.6, -15 }, LFoot = { -0.2, 0, 0.6, 25 } }),
+		P(0.12, "i", GAUNT_GUARD, { Root = { -35, 5, 0 }, RootP = { 0, -0.3, -0.35 }, Waist = { -15, -10, 0 }, Neck = { 25, 10, 0 },
+			RHand = { -5, 0.3, 1.5 }, RBlade = { 0, -5 }, RFace = { 0, 85 }, LHand = { 170, -0.2, 0.8 }, LBlade = { 170, -20 },
+			RFoot = { 0.2, 0, -0.9, -15 }, LFoot = { -0.2, 0.9, 1.0, 25 } }),
+		P(0.24, "O", GAUNT_GUARD, { Root = { -33, 5, 0 }, RootP = { 0, -0.32, -0.35 }, Waist = { -15, -10, 0 }, Neck = { 24, 10, 0 },
+			RHand = { -5, 0.28, 1.48 }, RBlade = { 0, -4 }, RFace = { 0, 86 }, LHand = { 168, -0.2, 0.8 }, LBlade = { 168, -20 },
+			RFoot = { 0.2, 0, -0.9, -15 }, LFoot = { -0.2, 0.75, 0.95, 25 } }),
+		P(0.55, "s", GAUNT_GUARD),
+	},
+}
+
+-- Airborne stance: both fists up in front of the chest.
+local GAUNT_AIR: Pose = {
+	Waist = { 2, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -28, -0.1, 0.65 }, RBlade = { 0, 45 }, RFace = { 0, 135 }, LHand = { 28, -0.1, 0.65 }, LBlade = { 0, 45 },
+}
+Clips.Gauntlet_Air = {
+	Length = 0.6, Loop = true, Legs = "Upper", FadeIn = 0.1, FadeOut = 0.1,
+	Poses = { P(0, nil, GAUNT_AIR), P(0.3, nil, GAUNT_AIR, { RHand = { -28, -0.03, 0.65 }, LHand = { 28, -0.17, 0.65 } }), P(0.6, nil, GAUNT_AIR) },
+}
+
 -- ------------------------------------------------------------------------------------------------
--- RANGED (1 step, 0.833 s interval; AimPitch: the torso follows the aim up / down)
+-- RANGED (3 steps, 0.833 s interval; AimPitch: the torso follows the aim up / down)
 -- Bows (style Ranged, the default): the bow in the right hand, side-on archer, the left hand draws to the face.
 -- RBlade = the upper limb, RFace = the arrow side (Muzzle) toward the target.
 -- ------------------------------------------------------------------------------------------------
@@ -767,6 +1155,92 @@ Clips.Ranged_Block = {
 }
 Clips.Ranged_BlockHit = blockHitClip()
 
+-- Attack 2, QuickShot (combat V3; Hit 0.05): a snap shot with the bow canted flat (it reads as a different shot), the
+-- drawing hand flicks back, then the bow comes upright again for the next nock.
+Clips.Ranged_Attack2 = {
+	Length = 0.62, Legs = "Stand", AimPitch = true, FadeIn = 0.03, FadeOut = 0.15, Markers = { Hit = 0.05 },
+	Poses = {
+		P(0, nil, BOW_AIM),
+		P(0.05, "O", BOW_AIM, { Waist = { -5, 12, -6 }, RHand = { -22, -0.08, 1.2 }, RBlade = { -88, 12 }, LHand = { 95, 0.15, 0.5 } }),
+		P(0.16, "O", BOW_AIM, { Waist = { -5, 12, -7 }, RHand = { -22, -0.1, 1.18 }, RBlade = { -90, 14 }, LHand = { 108, 0.1, 0.5 } }),
+		P(0.36, "s", BOW_AIM, { LHand = { -15, 0.0, 1.0 } }),
+		P(0.62, "s", BOW_AIM),
+	},
+}
+
+-- Attack 3, PowerShot (finisher; Hit 0.12): braced wide and leaning back, the string pulled far past the ear, then a
+-- release that kicks the bow up and rocks the body back a step.
+Clips.Ranged_Attack3 = {
+	Length = 0.78, Legs = "Stand", AimPitch = true, FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.12 },
+	Poses = {
+		P(0, nil, BOW_AIM),
+		P(0.1, "o", BOW_AIM, { Root = { 0, 52, 0 }, RootP = { 0, -0.38, 0.05 }, Waist = { 4, 14, 0 }, Neck = { 2, -58, 0 },
+			RHand = { -22, 0.0, 1.25 }, RBlade = { -60, 48 }, LHand = { 55, 0.35, 0.45 },
+			RFoot = { 0, 0, -0.5, -10 }, LFoot = { 0, 0, 0.5, 10 } }),
+		P(0.12, "i", BOW_AIM, { Root = { 6, 50, 0 }, RootP = { 0, -0.36, 0.15 }, Waist = { 6, 14, 0 }, Neck = { 0, -56, 0 },
+			RHand = { -22, 0.1, 1.2 }, RBlade = { -62, 56 }, LHand = { 120, 0.3, 0.55 },
+			RFoot = { 0, 0, -0.5, -10 }, LFoot = { 0, 0, 0.5, 10 } }),
+		P(0.26, "O", BOW_AIM, { Root = { 8, 47, 0 }, RootP = { 0, -0.3, 0.25 }, Waist = { 8, 12, 0 }, Neck = { -2, -52, 0 },
+			RHand = { -22, 0.15, 1.15 }, RBlade = { -62, 62 }, LHand = { 132, 0.25, 0.55 },
+			RFoot = { 0, 0, -0.45, -10 }, LFoot = { 0, 0, 0.55, 10 } }),
+		P(0.48, "s", BOW_AIM, { LHand = { -15, 0.0, 1.0 } }),
+		P(0.78, "s", BOW_AIM),
+	},
+}
+
+-- Jump attack, AirVolley (Hit 0.12, Hang 0.25: the client holds the body still in the air): legs tucked, a draw aimed
+-- down (AimPitch leans the torso toward the ground ahead), the release, then a backflip out of it (the arms turn with
+-- the body) and the legs reach down for the landing.
+local BOW_AIR_DRAW: Pose = with(BOW_AIM, {
+	Root = { 12, 45, 0 }, RootP = { 0, 0.2, 0 }, Waist = { 4, 10, 0 },
+	RFoot = { 0, 0.95, -0.35, -10 }, LFoot = { 0, 0.85, 0.3, 10 },
+})
+local BOW_FLIP: Pose = {
+	RootP = { 0, 0.35, 0 }, Waist = { -25, 0, 0 }, Neck = { -15, 0, 0 },
+	RHand = { -45, -0.2, 0.6 }, RBlade = { -30, 60 }, RFace = { 0, -20 }, LHand = { 40, -0.3, 0.55 },
+	RFoot = { 0.12, 1.2, -0.45, -10 }, LFoot = { -0.12, 1.2, -0.35, 10 },
+}
+Clips.Ranged_JumpAttack = {
+	Length = 0.8, Legs = "Own", AimPitch = true, FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.12 },
+	Poses = {
+		P(0, nil, BOW_AIM, { RFoot = { 0, 0.5, -0.38, -10 }, LFoot = { 0, 0.4, 0.38, 10 } }),
+		P(0.1, "o", BOW_AIR_DRAW, { LHand = { 20, 0.35, 0.35 } }),
+		P(0.12, "O", BOW_AIR_DRAW, { LHand = { 110, 0.3, 0.5 }, RBlade = { -62, 50 } }),
+		P(0.18, "o", BOW_AIR_DRAW, { LHand = { 120, 0.25, 0.5 }, RBlade = { -62, 52 } }),
+		P(0.26, "l", BOW_FLIP, { Torso = true, Root = { 110, 0, 0 } }),
+		P(0.34, "l", BOW_FLIP, { Torso = true, Root = { 230, 0, 0 } }),
+		P(0.42, "o", BOW_FLIP, { Torso = true, Root = { 340, 0, 0 } }),
+		P(0.52, "s", BOW_AIM, { Root = { 365, 45, 0 }, RootP = { 0, -0.05, 0 }, RFoot = { 0, 0.3, -0.4, -10 }, LFoot = { 0, 0.25, 0.4, 10 } }),
+		P(0.8, "s", BOW_AIM, { Root = { 360, 45, 0 } }),
+	},
+}
+
+-- Dash strike, SlideShot (Hit 0.08, no lunge): out of the roll straight into a one-knee shot, then up into the stance.
+local BOW_KNEEL: Pose = with(BOW_AIM, {
+	RootP = { 0, -1.0, 0 }, Waist = { -4, 10, 0 },
+	RFoot = { 0.1, 0, -0.6, -10 }, LFoot = { -0.1, 0.05, 0.85, 10 },
+})
+Clips.Ranged_DashAttack = {
+	Length = 0.7, Legs = "Own", AimPitch = true, FadeIn = 0.03, FadeOut = 0.15, Markers = { Hit = 0.08 },
+	Poses = {
+		P(0, nil, BOW_KNEEL, { RootP = { 0, -0.9, 0 } }),
+		P(0.08, "O", BOW_KNEEL, { RootP = { 0, -1.0, 0.1 }, RHand = { -22, 0.0, 1.15 }, RBlade = { -62, 50 }, LHand = { 110, 0.3, 0.5 } }),
+		P(0.2, "O", BOW_KNEEL, { RootP = { 0, -1.0, 0.12 }, LHand = { 120, 0.25, 0.5 } }),
+		P(0.42, "s", BOW_KNEEL, { RootP = { 0, -0.6, 0.05 }, LHand = { -15, 0.0, 1.0 } }),
+		P(0.7, "s", BOW_AIM),
+	},
+}
+
+-- Airborne stance: the bow held up and out, the free hand open.
+local BOW_AIR: Pose = {
+	Waist = { 2, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -50, -0.35, 0.75 }, RBlade = { -20, 70 }, RFace = { 0, -20 }, LHand = { 55, -0.2, 0.8 },
+}
+Clips.Ranged_Air = {
+	Length = 0.8, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
+	Poses = { P(0, nil, BOW_AIR), P(0.4, nil, BOW_AIR, { RHand = { -50, -0.28, 0.75 }, LHand = { 55, -0.12, 0.8 } }), P(0.8, nil, BOW_AIR) },
+}
+
 -- Crossbows (style RangedCrossbow: RFace = the top, up) and guns / blowgun (style RangedGun: RFace = the side, so the
 -- pistol grip hangs down): shouldered, the left hand forward on the weapon, recoil on the shot.
 local function rifleClips(prefix: string, face: { number }, blockFace: { number })
@@ -812,12 +1286,86 @@ local function rifleClips(prefix: string, face: { number }, blockFace: { number 
 				RHand = { -30, 0.15, 0.75 }, RBlade = { 95, 5 }, RFace = blockFace, LGrip = { 1.6, 1 } }),
 		},
 	}
+	-- combat V3. Attack 2, QuickShot (Hit 0.05): a hip-level snap shot, small kick.
+	Clips[prefix .. "_Attack2"] = {
+		Length = 0.55, Legs = "Stand", AimPitch = true, FadeIn = 0.03, FadeOut = 0.15, Markers = { Hit = 0.05 },
+		Poses = {
+			P(0, nil, aim),
+			P(0.05, "O", aim, { Root = { 0, 30, 0 }, RootP = { 0, -0.25, 0.05 }, Waist = { -2, 8, 0 }, Neck = { 2, -32, 0 },
+				RHand = { -28, -0.2, 0.6 }, RBlade = { 0, 9 }, LGrip = { 1.4, 1 } }),
+			P(0.18, "s", aim, { Root = { 0, 30, 0 }, RootP = { 0, -0.24, 0.02 }, Waist = { -4, 8, 0 },
+				RHand = { -28, -0.18, 0.6 }, RBlade = { 0, 2 } }),
+			P(0.55, "s", aim),
+		},
+	}
+	-- Attack 3, PowerShot (finisher, Hit 0.12): braced low, a heavy recoil that throws the muzzle up and the body back.
+	Clips[prefix .. "_Attack3"] = {
+		Length = 0.75, Legs = "Stand", AimPitch = true, FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.12 },
+		Poses = {
+			P(0, nil, aim),
+			P(0.1, "o", aim, { RootP = { 0, -0.4, -0.05 }, Waist = { -10, 5, 0 }, Neck = { 6, -35, 0 },
+				RFoot = { 0.15, 0, -0.5, -15 }, LFoot = { -0.15, 0, 0.5, 20 } }),
+			P(0.12, "i", aim, { Root = { 6, 35, 0 }, RootP = { 0, -0.35, 0.2 }, Waist = { 6, 5, 0 }, Neck = { -2, -35, 0 },
+				RHand = { -25, 0.12, 0.42 }, RBlade = { 0, 28 }, LGrip = { 1.4, 1 },
+				RFoot = { 0.15, 0, -0.5, -15 }, LFoot = { -0.15, 0, 0.5, 20 } }),
+			P(0.26, "O", aim, { Root = { 8, 35, 0 }, RootP = { 0, -0.32, 0.3 }, Waist = { 8, 5, 0 }, Neck = { -4, -35, 0 },
+				RHand = { -25, 0.15, 0.4 }, RBlade = { 0, 34 }, LGrip = { 1.4, 1 },
+				RFoot = { 0.15, 0, -0.45, -15 }, LFoot = { -0.15, 0, 0.55, 20 } }),
+			P(0.5, "s", aim, { RootP = { 0, -0.25, 0.1 }, RBlade = { 0, 6 } }),
+			P(0.75, "s", aim),
+		},
+	}
+	-- Jump attack, AirVolley (Hit 0.12, hovering): legs tucked, the weapon shouldered and aimed down (AimPitch), a
+	-- burst recoil, then a backflip with the weapon held tight and the legs reaching down.
+	local airAim: Pose = with(aim, { Root = { 12, 35, 0 }, RootP = { 0, 0.2, 0 }, Waist = { 0, 5, 0 },
+		RFoot = { 0.1, 0.95, -0.35, -15 }, LFoot = { -0.1, 0.85, 0.3, 20 } })
+	local flip: Pose = {
+		RootP = { 0, 0.35, 0 }, Waist = { -25, 0, 0 }, Neck = { -15, 0, 0 },
+		RHand = { -25, -0.3, 0.5 }, RBlade = { 0, 40 }, RFace = face, LHand = { 20, -0.3, 0.6 }, LGrip = { 1.3, 1 },
+		RFoot = { 0.12, 1.2, -0.45, -15 }, LFoot = { -0.12, 1.2, -0.35, 20 },
+	}
+	Clips[prefix .. "_JumpAttack"] = {
+		Length = 0.8, Legs = "Own", AimPitch = true, FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.12 },
+		Poses = {
+			P(0, nil, aim, { RFoot = { 0.1, 0.5, -0.4, -15 }, LFoot = { -0.1, 0.4, 0.4, 20 } }),
+			P(0.1, "o", airAim),
+			P(0.12, "O", airAim, { Root = { 16, 35, 0 }, RHand = { -25, 0.1, 0.45 }, RBlade = { 0, 16 } }),
+			P(0.2, "o", airAim, { Root = { 18, 35, 0 }, RHand = { -25, 0.12, 0.42 }, RBlade = { 0, 20 } }),
+			P(0.28, "l", flip, { Torso = true, Root = { 120, 0, 0 } }),
+			P(0.36, "l", flip, { Torso = true, Root = { 240, 0, 0 } }),
+			P(0.44, "o", flip, { Torso = true, Root = { 345, 0, 0 } }),
+			P(0.54, "s", aim, { Root = { 365, 35, 0 }, RootP = { 0, -0.05, 0 }, RFoot = { 0.1, 0.3, -0.4, -15 }, LFoot = { -0.1, 0.25, 0.4, 20 } }),
+			P(0.8, "s", aim, { Root = { 360, 35, 0 } }),
+		},
+	}
+	-- Dash strike, SlideShot (Hit 0.08): a one-knee shot out of the roll.
+	local kneel: Pose = with(aim, { RootP = { 0, -1.0, 0 }, Waist = { -6, 5, 0 },
+		RFoot = { 0.1, 0, -0.6, -15 }, LFoot = { -0.1, 0.05, 0.85, 20 } })
+	Clips[prefix .. "_DashAttack"] = {
+		Length = 0.7, Legs = "Own", AimPitch = true, FadeIn = 0.03, FadeOut = 0.15, Markers = { Hit = 0.08 },
+		Poses = {
+			P(0, nil, kneel, { RootP = { 0, -0.9, 0 } }),
+			P(0.08, "O", kneel, { RootP = { 0, -1.0, 0.12 }, RHand = { -25, 0.05, 0.45 }, RBlade = { 0, 14 } }),
+			P(0.2, "s", kneel, { RootP = { 0, -1.0, 0.08 }, RBlade = { 0, 4 } }),
+			P(0.42, "s", kneel, { RootP = { 0, -0.6, 0.03 } }),
+			P(0.7, "s", aim),
+		},
+	}
+	-- Airborne stance: the weapon held across the chest.
+	local air: Pose = {
+		Waist = { 2, 0, 0 }, Neck = { -2, 0, 0 },
+		RHand = { -30, -0.3, 0.55 }, RBlade = { -20, -10 }, RFace = face, LHand = { 20, -0.3, 0.8 }, LGrip = { 1.3, 1 },
+	}
+	Clips[prefix .. "_Air"] = {
+		Length = 0.8, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
+		Poses = { P(0, nil, air), P(0.4, nil, air, { RHand = { -30, -0.24, 0.55 } }), P(0.8, nil, air) },
+	}
 end
 rifleClips("RangedCrossbow", { 0, 90 }, { 0, 90 })
 rifleClips("RangedGun", { 90, 0 }, { 0, 0 })
 
 -- ------------------------------------------------------------------------------------------------
--- MAGIC: a staff in the right hand, readable casting pose (1 step, 1.0 s interval; AimPitch)
+-- MAGIC: a staff in the right hand, readable casting pose (3 steps, 1.0 s interval; AimPitch)
 -- ------------------------------------------------------------------------------------------------
 local STAFF_GUARD: Pose = {
 	Root = { 0, 15, 0 }, RootP = { 0, -0.2, 0 },
@@ -875,6 +1423,98 @@ Clips.Magic_Block = {
 }
 Clips.Magic_BlockHit = blockHitClip()
 
+-- Attack 2, Cast2 (combat V3; Hit 0.28): the other hand: the staff swings up and back on the right while the left
+-- hand gathers at the chest, then the left palm is thrust at the target with a step.
+Clips.Magic_Attack2 = {
+	Length = 0.9, Legs = "Stand", AimPitch = true, FadeIn = 0.06, FadeOut = 0.15, Markers = { Hit = 0.28 },
+	Poses = {
+		P(0, nil, STAFF_GUARD),
+		P(0.14, "o", STAFF_GUARD, { Root = { 0, -15, 0 }, RootP = { 0, -0.16, 0.03 }, Waist = { 4, -15, 0 }, Neck = { -2, 15, 0 },
+			RHand = { -70, 0.35, 0.7 }, RBlade = { -40, 100 }, LHand = { 30, 0.0, 0.35 } }),
+		P(0.21, "s", STAFF_GUARD, { Root = { 0, -18, 0 }, RootP = { 0, -0.15, 0.04 }, Waist = { 5, -16, 0 }, Neck = { -3, 17, 0 },
+			RHand = { -72, 0.4, 0.7 }, RBlade = { -45, 105 }, LHand = { 32, 0.02, 0.3 } }),
+		P(0.28, "i", STAFF_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.32, -0.1 }, Waist = { -10, 20, 0 }, Neck = { 8, -25, 0 },
+			RHand = { -100, 0.15, 0.8 }, RBlade = { -120, 60 }, LHand = { 0, 0.12, 1.3 },
+			RFoot = { 0.12, 0, -0.35, -12 }, LFoot = { -0.12, 0, 0.45, 20 } }),
+		P(0.42, "O", STAFF_GUARD, { Root = { 0, 26, 0 }, RootP = { 0, -0.33, -0.1 }, Waist = { -11, 21, 0 }, Neck = { 8, -26, 0 },
+			RHand = { -102, 0.13, 0.8 }, RBlade = { -122, 58 }, LHand = { 0, 0.1, 1.32 },
+			RFoot = { 0.12, 0, -0.35, -12 }, LFoot = { -0.12, 0, 0.45, 20 } }),
+		P(0.9, "s", STAFF_GUARD),
+	},
+}
+
+-- Attack 3, GrandCast (finisher; Hit 0.40): both hands lift the staff high over the head (arched back, a beat at the
+-- top), then drive it forward and down at the target in a wide stance.
+Clips.Magic_Attack3 = {
+	Length = 0.98, Legs = "Stand", AimPitch = true, FadeIn = 0.06, FadeOut = 0.15, Markers = { Hit = 0.4 },
+	Poses = {
+		P(0, nil, STAFF_GUARD, { LGrip = { 1.0, 0 } }),
+		P(0.22, "o", STAFF_GUARD, { Root = { 10, 0, 0 }, RootP = { 0, -0.1, 0.05 }, Waist = { 14, 0, 0 }, Neck = { -10, 0, 0 },
+			RHand = { -20, 1.0, 0.4 }, RBlade = { 0, 120 }, LGrip = { 1.0, 1 } }),
+		P(0.32, "s", STAFF_GUARD, { Root = { 12, 0, 0 }, RootP = { 0, -0.08, 0.06 }, Waist = { 16, 0, 0 }, Neck = { -11, 0, 0 },
+			RHand = { -20, 1.05, 0.35 }, RBlade = { 0, 130 }, LGrip = { 1.0, 1 } }),
+		P(0.4, "i", STAFF_GUARD, { Root = { -8, 0, 0 }, RootP = { 0, -0.5, -0.15 }, Waist = { -20, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -12, 0.0, 1.2 }, RBlade = { 0, 10 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.25, 0, -0.55, -12 }, LFoot = { -0.25, 0, 0.45, 20 } }),
+		P(0.6, "O", STAFF_GUARD, { Root = { -8, 0, 0 }, RootP = { 0, -0.52, -0.15 }, Waist = { -21, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -12, -0.02, 1.2 }, RBlade = { 0, 8 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.25, 0, -0.55, -12 }, LFoot = { -0.25, 0, 0.45, 20 } }),
+		P(0.98, "s", STAFF_GUARD, { LGrip = { 1.0, 0 } }),
+	},
+}
+
+-- Jump attack, MeteorDrop (Hit 0.40, Hang 0.30: the client holds the body in the air): levitating with the knees drawn
+-- up and the staff raised high (orb up, the left arm open), then both hands drive the staff down at the aim point
+-- (AimPitch), and the legs reach down for the fall.
+Clips.Magic_JumpAttack = {
+	Length = 1.0, Legs = "Own", AimPitch = true, FadeIn = 0.06, FadeOut = 0.15, Markers = { Hit = 0.4 },
+	Poses = {
+		P(0, nil, STAFF_GUARD, { LGrip = { 1.0, 0 }, RFoot = { 0.12, 0.4, -0.3, -12 }, LFoot = { -0.12, 0.3, 0.35, 20 } }),
+		P(0.2, "o", STAFF_GUARD, { Root = { 8, 0, 0 }, RootP = { 0, 0.25, 0 }, Waist = { 10, 0, 0 }, Neck = { -12, 0, 0 },
+			RHand = { -15, 1.1, 0.35 }, RBlade = { 0, 95 }, LHand = { 85, 0.3, 0.9 }, LGrip = { 1.0, 0 },
+			RFoot = { 0.1, 0.85, 0.45, 0 }, LFoot = { -0.1, 0.75, 0.55, 0 } }),
+		P(0.32, "s", STAFF_GUARD, { Root = { 10, 0, 0 }, RootP = { 0, 0.3, 0 }, Waist = { 12, 0, 0 }, Neck = { -14, 0, 0 },
+			RHand = { -15, 1.15, 0.3 }, RBlade = { 0, 100 }, LHand = { 88, 0.35, 0.9 }, LGrip = { 1.0, 0 },
+			RFoot = { 0.1, 0.9, 0.45, 0 }, LFoot = { -0.1, 0.8, 0.55, 0 } }),
+		P(0.4, "i", STAFF_GUARD, { Root = { -10, 10, 0 }, RootP = { 0, 0.15, 0 }, Waist = { -15, -5, 0 }, Neck = { 12, -5, 0 },
+			RHand = { -35, -0.05, 1.3 }, RBlade = { -25, -35 }, LHand = { 10, -0.1, 1.0 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.1, 0.4, 0.1, 0 }, LFoot = { -0.1, 0.5, 0.3, 0 } }),
+		P(0.55, "O", STAFF_GUARD, { Root = { -10, 10, 0 }, RootP = { 0, 0.15, 0 }, Waist = { -16, -5, 0 }, Neck = { 12, -5, 0 },
+			RHand = { -35, -0.07, 1.3 }, RBlade = { -25, -37 }, LHand = { 10, -0.1, 1.0 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.1, 0.35, 0.1, 0 }, LFoot = { -0.1, 0.45, 0.3, 0 } }),
+		P(0.75, "s", STAFF_GUARD, { LGrip = { 1.0, 0.3 }, RFoot = { 0.12, 0.15, -0.3, -12 }, LFoot = { -0.12, 0.1, 0.35, 20 } }),
+		P(1.0, "s", STAFF_GUARD, { LGrip = { 1.0, 0 } }),
+	},
+}
+
+-- Dash strike, BlinkBlast (Hit 0.20, a blast around the caster): out of the roll the staff goes up in both hands, then
+-- it is stamped down upright into the ground in a deep wide crouch.
+Clips.Magic_DashAttack = {
+	Length = 0.85, Legs = "Own", FadeIn = 0.04, FadeOut = 0.15, Markers = { Hit = 0.2 },
+	Poses = {
+		P(0, nil, STAFF_GUARD, { RootP = { 0, -0.6, 0 }, RHand = { -40, 0.6, 0.7 }, RBlade = { -10, 95 }, LHand = { 40, 0.3, 0.8 }, LGrip = { 1.0, 0 } }),
+		P(0.12, "o", STAFF_GUARD, { Root = { 6, 0, 0 }, RootP = { 0, -0.2, 0 }, Waist = { 8, 0, 0 }, Neck = { -6, 0, 0 },
+			RHand = { -15, 1.0, 0.5 }, RBlade = { 0, 90 }, LGrip = { 1.0, 1 } }),
+		P(0.2, "i", STAFF_GUARD, { Root = { -5, 0, 0 }, RootP = { 0, -1.0, 0 }, Waist = { -18, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -20, -0.2, 0.9 }, RBlade = { -5, 88 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.4, 0, -0.1, -25 }, LFoot = { -0.4, 0, 0.1, 25 } }),
+		P(0.4, "O", STAFF_GUARD, { Root = { -5, 0, 0 }, RootP = { 0, -1.02, 0 }, Waist = { -19, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -20, -0.22, 0.9 }, RBlade = { -5, 88 }, LGrip = { 1.0, 1 },
+			RFoot = { 0.4, 0, -0.1, -25 }, LFoot = { -0.4, 0, 0.1, 25 } }),
+		P(0.85, "s", STAFF_GUARD, { LGrip = { 1.0, 0 } }),
+	},
+}
+
+-- Airborne stance: the staff held out to the right, the left arm open.
+local STAFF_AIR: Pose = {
+	Waist = { 4, 0, 0 }, Neck = { -2, 0, 0 },
+	RHand = { -60, -0.15, 0.8 }, RBlade = { -25, 70 }, LHand = { 65, 0.0, 0.8 },
+}
+Clips.Magic_Air = {
+	Length = 0.8, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
+	Poses = { P(0, nil, STAFF_AIR), P(0.4, nil, STAFF_AIR, { RHand = { -60, -0.08, 0.8 }, LHand = { 65, 0.08, 0.8 } }), P(0.8, nil, STAFF_AIR) },
+}
+
 -- ------------------------------------------------------------------------------------------------
 -- SHARED (every category)
 -- ------------------------------------------------------------------------------------------------
@@ -914,6 +1554,18 @@ Clips.Shared_Hit = {
 		P(0.06, "O", REST, { Root = { 5, 0, 0 }, Waist = { 10, 0, 5 }, Neck = { 12, 0, -6 },
 			RShoulder = { -8, 0, 6 }, LShoulder = { -8, 0, -6 } }),
 		P(0.3, "s", REST),
+	},
+}
+
+-- Second hit taken (picked at random with Shared_Hit): the shoulders twist away to the side, the head snaps the other
+-- way.
+Clips.Shared_Hit2 = {
+	Length = 0.32, Additive = true, Legs = "Upper", FadeIn = 0.01, FadeOut = 0.01,
+	Poses = {
+		P(0, nil, REST),
+		P(0.06, "O", REST, { Root = { 3, 0, -4 }, Waist = { 6, -14, -8 }, Neck = { 8, 12, 6 },
+			RShoulder = { -12, 0, 10 }, LShoulder = { 10, 0, -6 } }),
+		P(0.32, "s", REST),
 	},
 }
 

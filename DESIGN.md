@@ -141,6 +141,17 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 * **Auto-Attack (paid game pass):** when enabled, the player automatically attacks the nearest
   enemy in range (melee) or fires at the nearest enemy (ranged/magic). Toggle button on the HUD.
 * Weapon stats (damage, hits per second, range, shape) come from `docs/weapon_system_document.txt`.
+* **Combos** (`Config/Combat` Combos): each attack is the next step of the category's combo (Sword 4, Spear 4, Heavy 3,
+  Dagger 5, Gauntlet 3, Ranged 3, Magic 3 steps; the last one is a finisher). The average damage over a combo stays
+  about x1 (the Gauntlet keeps its x2 third hit). The combo restarts after 0.8 s without attacking.
+* **Jump attack** (combat V3, owner 2026-10-14: "a special animation when the character jump+attack"): attacking in the
+  air (feet at least 1.2 studs above the ground) is the category's jump attack. Melee weapons hang a moment at the top,
+  then dive so the body lands exactly at the hit: a shockwave circle around the landing point (Sword r 7, Spear 6.5,
+  Heavy 9, Dagger 5, Gauntlet 7.5; x1.3 to x1.6 damage, knockback, stagger for Heavy / Gauntlet), counted as a finisher.
+  Ranged: the body hovers and fires 3 arrows down at the nearest enemy (x0.6 each). Magic: hovers and drops a radius 9
+  blast (x1.5). One jump attack per jump; the combo restarts after it. The server checks the player is airborne.
+* **Dash strike** (Iron Soul style): an attack pressed during a roll or within 0.35 s after it is a long lunge out of
+  the roll (6-8 studs; x1.2 to x1.4 damage), then the combo restarts.
 
 ### Defense
 * **Roll:** 0.35 s of invulnerability, 12 studs, cooldown 1.5 s. Cannot roll while blocking.

@@ -1,9 +1,13 @@
 --!strict
 -- Player combat animations (docs/weapons_combat_brief.txt 4B, contract in docs/COMBAT_CONTRACTS.md).
 -- OWNER: the Animation sub-agent. CombatController calls only the functions below; keep their names and arguments.
---   Animations.attack(character, category, step, speed) -> length   one combo step (Config/Combat Combos); the clip's
---                                                                   "Hit" marker lands at the step's Impact / speed;
---                                                                   returns the clip length in seconds at that speed
+--   Animations.attack(character, category, step, speed, aim?, variant?) -> length
+--                                                one combo step (Config/Combat Combos); the clip's "Hit" marker lands
+--                                                at the step's Impact / speed; returns the clip length in seconds at
+--                                                that speed. variant "Air" = the jump attack <Category>_JumpAttack
+--                                                (Hit at Combat.AirAttacks Impact), "Dash" = the dash strike
+--                                                <Category>_DashAttack (Combat.DashAttacks Impact); a missing clip
+--                                                falls back to the step's clip (stretched to the variant's Impact)
 --   Animations.cancel(character)                 stops the attack clip quickly (Roll / Block cancels)
 --   Animations.hitStop(character, seconds)       plays the character's clips at Combat.Feel.HitStopSpeed
 --   Animations.block(character, on)              guard pose while Block is held
@@ -26,6 +30,10 @@
 -- Clip sets per weapon style (Config/CombatAnimations Styles[WeaponId]: RangedCrossbow, RangedGun) fall back to the
 -- category; placeholder Tools (attribute Placeholder) always use the category's clips.
 -- attack's optional 5th argument aim (Vector3, the 3D aim direction) pitches the torso of AimPitch clips (Ranged, Magic).
+-- Jump attacks (combat V3): the client hangs the body, then dives it to land at Impact (CombatController plunge). For
+-- the local player the clip follows the body: it waits at Markers.Dive while the body still hangs, waits just before
+-- Hit while it is still in the air (high falls), and catches up once it has landed. Other players: by time only.
+-- Airborne stance: <Category>_Air (upper body) replaces Idle / Run while the Humanoid jumps or falls.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -48,6 +56,13 @@ local MOVE_LOCK = 0.35 -- seconds after an attack / roll start during which the 
 local SPAWN_WINDOW = 3 -- a new character plays Shared_Spawn if its joints are ready within this many seconds
 local TWIST_MAX = math.rad(110) -- forearm twist toward the blade
 local AIM_PITCH_MAX = math.rad(40) -- torso pitch toward the attack's aim (AimPitch clips)
+-- jump attack sync (local player): falling faster than this = diving; total wait; lead before Hit; catch-up rate
+local DIVE_VY, SYNC_HOLD_MAX, LAND_LEAD, CATCH_UP = 8, 1.3, 0.025, 3
+local AIR_FADE = 0.15 -- airborne stance blend
+local VARIANTS: { [string]: { suffix: string, steps: { [string]: { [string]: any } } } } = {
+	Air = { suffix = "_JumpAttack", steps = Combat.AirAttacks or {} },
+	Dash = { suffix = "_DashAttack", steps = Combat.DashAttacks or {} },
+}
 
 local PI, TAU = math.pi, math.pi * 2
 local ZERO = Vector3.zero
@@ -86,10 +101,13 @@ local EASE = { s = 0, l = 1, i = 2, o = 3, O = 4 }
 type Track = { times: { number }, values: { Vector3 }, eases: { number }, n: number }
 type Clip = {
 	name: string, length: number, loop: boolean, legs: number, additive: boolean, hold: boolean,
-	fadeIn: number, fadeOut: number, hit: number?, legIK: boolean, rArm: boolean, lArm: boolean, aimPitch: boolean,
+	fadeIn: number, fadeOut: number, hit: number?, dive: number?, legIK: boolean, rArm: boolean, lArm: boolean, aimPitch: boolean,
 	tracks: { Track | false },
 }
-type Slot = { clip: Clip?, t: number, w: number, fade: number, stopping: boolean, rate1: number, rate2: number, kind: string, dir: Vector3?, frozen: boolean }
+type Slot = {
+	clip: Clip?, t: number, w: number, fade: number, stopping: boolean, rate1: number, rate2: number, kind: string, dir: Vector3?,
+	frozen: boolean, sync: boolean, held: number,
+}
 type Leg = { hipLocal: Vector3, rest: Vector3, l1: number, l2: number, goal: number, yaw: number, hip: number, knee: number, ankle: number }
 type Arm = {
 	shoulder: Vector3, l1: number, l2: number, invF1: CFrame, invF2: CFrame, scale: number, axis2: Vector3, palm: number,
@@ -99,8 +117,8 @@ type State = {
 	character: Model, isLocal: boolean, humanoid: Humanoid?, root: BasePart?,
 	joints: { any }, legs: { Leg }, rArm: Arm, lArm: Arm, pivot: CFrame, scale: number,
 	dirty: boolean, retryAt: number, ready: boolean, toolDirty: boolean, diedConn: RBXScriptConnection?, watched: Humanoid?,
-	category: string?, style: string?, idle: Clip?, run: Clip?, stanceOn: boolean, aimPitch: number,
-	stanceW: number, standF: number, runF: number, idleT: number, runT: number,
+	category: string?, style: string?, idle: Clip?, run: Clip?, air: Clip?, stanceOn: boolean, aimPitch: number,
+	stanceW: number, standF: number, runF: number, airF: number, idleT: number, runT: number, airT: number,
 	act: Slot, prev: Slot, add: Slot,
 	hitStopUntil: number, blocking: boolean, dead: boolean, spawnUntil: number,
 	moving: boolean, moveLockUntil: number,
@@ -160,6 +178,7 @@ local function compile(name: string, def: { [string]: any }): Clip
 		fadeIn = math.max(0.01, def.FadeIn or 0.1),
 		fadeOut = math.max(0.01, def.FadeOut or 0.15),
 		hit = def.Markers and def.Markers.Hit or nil,
+		dive = def.Markers and def.Markers.Dive or nil,
 		legIK = not rawLegs,
 		rArm = tracks[C_RHAND] ~= false,
 		lArm = tracks[C_LHAND] ~= false or tracks[C_LGRIP] ~= false,
@@ -168,9 +187,14 @@ local function compile(name: string, def: { [string]: any }): Clip
 	}
 end
 
-for name, def in pairs(Data.Clips) do
-	clips[name] = compile(name, def)
+local function compileAll(data: { [string]: any })
+	table.clear(clips)
+	for name, def in pairs(data.Clips) do
+		clips[name] = compile(name, def)
+	end
+	STYLES = data.Styles or {}
 end
+compileAll(Data)
 
 local function ease(k: number, kind: number): number
 	if kind == 0 then
@@ -338,7 +362,7 @@ local scratchB: { Vector3 } = table.create(NCH, ZERO)
 local acc: { Vector3 } = table.create(NCH, ZERO)
 
 local function newSlot(): Slot
-	return { clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false }
+	return { clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false, sync = false, held = 0 }
 end
 
 local function newLeg(goal: number, yaw: number, hip: number): Leg
@@ -363,6 +387,7 @@ end
 local onDied: (S: State) -> ()
 local debugAttribute: (S: State) -> ()
 local profileAttribute: (character: Model) -> ()
+local reloadAttribute: () -> ()
 
 local function rebuild(S: State)
 	S.dirty = false
@@ -469,6 +494,13 @@ local function measureTool(S: State)
 	local inHand = grip.C0 * grip.C1:Inverse()
 	arm.gripOffset = inHand.Position - arm.wristInHand
 	arm.grip = true
+	-- the clips drive weapons into the ground (jump attack landings): a colliding weapon would bounce its owner up
+	-- (seen 2026-10-14: the spawn-time starter sword's Handle read CanCollide = true on the client)
+	for _, part in ipairs((tool :: Tool):GetDescendants()) do
+		if part:IsA("BasePart") and part.CanCollide then
+			part.CanCollide = false
+		end
+	end
 	local tip = handle:FindFirstChild("TipAttachment")
 	local base = handle:FindFirstChild("BaseAttachment")
 	if not (tip and base and tip:IsA("Attachment") and base:IsA("Attachment")) then
@@ -516,6 +548,8 @@ local function play(S: State, clip: Clip, rate1: number, rate2: number, kind: st
 	act.kind = kind
 	act.dir = dir
 	act.frozen = false
+	act.sync = false
+	act.held = 0
 	if kind == "attack" or kind == "roll" then
 		S.moveLockUntil = os.clock() + MOVE_LOCK
 	end
@@ -575,6 +609,7 @@ local function refreshTool(S: State, added: boolean)
 		end
 		S.idle = idle
 		S.run = styled(S, "_Run")
+		S.air = styled(S, "_Air")
 	end
 	S.toolDirty = true
 	if added and id and S.ready and not S.dead then
@@ -632,12 +667,15 @@ local function add(character: Model, spawned: boolean)
 		aimPitch = 0,
 		idle = nil,
 		run = nil,
+		air = nil,
 		stanceOn = false,
 		stanceW = 0,
 		standF = 1,
 		runF = 0,
+		airF = 0,
 		idleT = 0,
 		runT = 0,
+		airT = 0,
 		act = newSlot(),
 		prev = newSlot(),
 		add = newSlot(),
@@ -683,6 +721,9 @@ local function add(character: Model, spawned: boolean)
 	table.insert(S.conns, character:GetAttributeChangedSignal("AnimProfile"):Connect(function()
 		profileAttribute(character)
 	end))
+	table.insert(S.conns, character:GetAttributeChangedSignal("AnimReload"):Connect(function()
+		reloadAttribute()
+	end))
 	refreshTool(S, false)
 end
 
@@ -717,7 +758,8 @@ local GROUNDED: { [Enum.HumanoidStateType]: boolean } = {
 	[Enum.HumanoidStateType.None] = true,
 }
 
-local function advance(slot: Slot, dt: number, sdt: number)
+-- air: 0 on the ground, 1 in the air and not diving, 2 diving (only computed for a synced jump attack)
+local function advance(slot: Slot, dt: number, sdt: number, air: number)
 	local clip = slot.clip
 	if not clip then
 		return
@@ -739,9 +781,28 @@ local function advance(slot: Slot, dt: number, sdt: number)
 	local t = slot.t
 	local hit = clip.hit
 	if hit and t < hit then
-		t += sdt * slot.rate1
+		local rate = slot.rate1
+		local dive = clip.dive
+		if slot.sync and dive and slot.held < SYNC_HOLD_MAX then
+			-- local jump attack: the dive follows the body (wait while it hangs / is still in the air, catch up on landing)
+			if air == 0 then
+				if t >= 0.06 then
+					rate *= CATCH_UP -- landed (the first frames may still read the floor under the jump)
+				end
+				t += sdt * rate
+			else
+				local stop = if air == 1 then dive else hit - LAND_LEAD
+				t += sdt * rate
+				if slot.t <= stop and t > stop then
+					t = stop
+					slot.held += dt
+				end
+			end
+		else
+			t += sdt * rate
+		end
 		if t > hit then
-			t = hit + (t - hit) / slot.rate1 * slot.rate2
+			t = hit + (t - hit) / rate * slot.rate2
 		end
 	else
 		t += sdt * slot.rate2
@@ -902,24 +963,34 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 		moving = true
 	end
 	S.moving = moving
-	local standing = GROUNDED[state] == true and humanoid.FloorMaterial ~= Enum.Material.Air and not moving
+	local floorAir = humanoid.FloorMaterial == Enum.Material.Air
+	local standing = GROUNDED[state] == true and not floorAir and not moving
+	local airborne = floorAir and (state == Enum.HumanoidStateType.Freefall or state == Enum.HumanoidStateType.Jumping)
 	S.standF = approach(S.standF, if standing then 1 else 0, dt / STAND_FADE)
 	S.runF = approach(S.runF, if moving then 1 else 0, dt / RUN_FADE)
+	S.airF = approach(S.airF, if airborne then 1 else 0, dt / AIR_FADE)
 	S.stanceW = approach(S.stanceW, if S.stanceOn and allowed and not S.dead then 1 else 0, dt / STANCE_FADE)
 	-- clocks (hit-stop slows every clip of this character)
 	local sdt = if now < S.hitStopUntil then dt * HIT_STOP_SPEED else dt
-	advance(S.act, dt, sdt)
-	advance(S.prev, dt, sdt)
-	advance(S.add, dt, sdt)
+	local air = 0
+	if S.act.sync and floorAir then
+		air = if root.AssemblyLinearVelocity.Y < -DIVE_VY then 2 else 1
+	end
+	advance(S.act, dt, sdt, air)
+	advance(S.prev, dt, sdt, air)
+	advance(S.add, dt, sdt, 0)
 	if S.act.clip and S.act.w >= 1 then
 		S.prev.clip = nil
 	end
-	local idle, run = S.idle, S.run
+	local idle, run, airClip = S.idle, S.run, S.air
 	if idle then
 		S.idleT = (S.idleT + sdt) % idle.length
 	end
 	if run then
 		S.runT = (S.runT + sdt) % run.length
+	end
+	if airClip then
+		S.airT = (S.airT + sdt) % airClip.length
 	end
 	if (root.Position - camPos).Magnitude > RANGE then
 		return
@@ -929,19 +1000,31 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 	local stanceW = S.stanceW
 	if stanceW > 0 and idle then
 		local wL = stanceW * S.standF
-		local runF = S.runF
-		if runF > 0 and run then
-			-- idle -> run: blend the IK targets (hands, blade) when both clips use them, then solve once
-			local targets = idle.rArm == run.rArm and idle.lArm == run.lArm
+		local runF, airF = S.runF, S.airF
+		local useRun = runF > 0 and run ~= nil
+		local useAir = airF > 0 and airClip ~= nil
+		if useRun or useAir then
+			-- idle -> run -> air (upper body): blend the IK targets (hands, blade) when the clips all use them, then
+			-- solve once; else blend the solved joints
+			local targets = (not run or not useRun or (idle.rArm == run.rArm and idle.lArm == run.lArm))
+				and (not airClip or not useAir or (idle.rArm == airClip.rArm and idle.lArm == airClip.lArm))
 			sampleInto(S, idle, S.idleT, scratchA, wL > 0, false, 0, not targets)
-			sampleInto(S, run, S.runT, scratchB, false, false, 0, not targets)
-			for c = 2, 9 do
-				scratchA[c] = scratchA[c]:Lerp(scratchB[c], runF)
+			for pass = 1, 2 do
+				local clip = if pass == 1 then (if useRun then run else nil) else (if useAir then airClip else nil)
+				if clip then
+					local f = if pass == 1 then runF else airF
+					sampleInto(S, clip, if pass == 1 then S.runT else S.airT, scratchB, false, false, 0, not targets)
+					for c = 2, 9 do
+						scratchA[c] = scratchA[c]:Lerp(scratchB[c], f)
+					end
+					if targets then
+						for c = C_RHAND, C_LGRIP do
+							scratchA[c] = scratchA[c]:Lerp(scratchB[c], f)
+						end
+					end
+				end
 			end
 			if targets then
-				for c = C_RHAND, C_LGRIP do
-					scratchA[c] = scratchA[c]:Lerp(scratchB[c], runF)
-				end
 				solveArms(S, idle, scratchA)
 			end
 		else
@@ -1038,17 +1121,28 @@ local function fallback(character: Model, category: string)
 	end
 end
 
-function Animations.attack(character: Model, category: string, step: number, speed: number, aim: Vector3?): number
+function Animations.attack(character: Model, category: string, step: number, speed: number, aim: Vector3?, variant: string?): number
 	local S = states[character]
 	local style = if S and S.category == category then S.style else nil
-	local clip = (if style then clips[`{style}_Attack{step}`] else nil) or clips[`{category}_Attack{step}`]
+	-- jump attack / dash strike: its own clip and Impact; a category without that clip plays the step's clip
+	local kind = if typeof(variant) == "string" then VARIANTS[variant] else nil
+	local def = if kind then kind.steps[category] else nil
+	local clip = if kind and def
+		then (if style then clips[style .. kind.suffix] else nil) or clips[category .. kind.suffix]
+		else nil
+	local own = clip ~= nil
+	if not clip then
+		clip = (if style then clips[`{style}_Attack{step}`] else nil) or clips[`{category}_Attack{step}`]
+	end
 	if not clip then
 		fallback(character, category)
 		return 0
 	end
 	local sp = if typeof(speed) == "number" and speed > 0 then speed else 1
-	local combo = Combat.Combos[category]
-	local def = combo and combo[step]
+	if not def then
+		local combo = Combat.Combos[category]
+		def = combo and combo[step]
+	end
 	local hit = clip.hit
 	local impact = (if def and typeof(def.Impact) == "number" then def.Impact else hit or 0) / sp
 	local rate1 = if hit and hit > 0 and impact > 0 then hit / impact else sp
@@ -1057,6 +1151,7 @@ function Animations.attack(character: Model, category: string, step: number, spe
 		local unit = if typeof(aim) == "Vector3" and aim.Magnitude > 1e-3 then aim.Unit else nil
 		S.aimPitch = if unit then clamp(asin(clamp(unit.Y, -1, 1)), -AIM_PITCH_MAX, AIM_PITCH_MAX) else 0
 		play(S, clip, rate1, sp, "attack")
+		S.act.sync = own and S.isLocal and variant == "Air" and clip.dive ~= nil
 	end
 	return length
 end
@@ -1112,7 +1207,8 @@ end
 
 function Animations.hurt(character: Model)
 	local S = states[character]
-	local clip = clips.Shared_Hit
+	-- two flinches picked at random (Shared_Hit2 optional)
+	local clip = if clips.Shared_Hit2 and math.random() < 0.5 then clips.Shared_Hit2 else clips.Shared_Hit
 	if S and clip and S.ready and not S.dead then
 		playAdditive(S, clip)
 	end
@@ -1123,6 +1219,9 @@ end
 --                                                   "Ranged_Attack1@0.3@20" also pitches AimPitch clips by 20 deg
 --   character:SetAttribute("AnimProfile", os.clock())  -> attributes AnimCostMs (average update of ALL characters,
 --                                                        ms per frame since the previous request) and AnimChars
+--   character:SetAttribute("AnimReload", os.clock())   recompiles every clip from a fresh copy of
+--                                                        Config/CombatAnimations (tuning in Play after its Source
+--                                                        was replaced from the command line); AnimReloaded = clip count
 debugAttribute = function(S: State)
 	local value = S.character:GetAttribute("AnimDebug")
 	local name, at, pitch = string.match(if typeof(value) == "string" then value else "", "^([%w_]+)@?([%d%.]*)@?(%-?[%d%.]*)$")
@@ -1145,6 +1244,33 @@ profileAttribute = function(character: Model)
 	character:SetAttribute("AnimCostMs", if frames > 0 then cost / frames * 1000 else 0)
 	character:SetAttribute("AnimChars", #list)
 	cost, frames = 0, 0
+end
+
+reloadAttribute = function()
+	local source = ReplicatedStorage.GameSystem.Config:FindFirstChild("CombatAnimations")
+	if not (source and source:IsA("ModuleScript")) then
+		return
+	end
+	local copy = source:Clone()
+	copy.Name = "CombatAnimationsReload"
+	copy.Parent = source.Parent
+	local ok, data = pcall(require, copy)
+	copy:Destroy()
+	if not ok or typeof(data) ~= "table" or typeof(data.Clips) ~= "table" then
+		warn("Animations: reload failed", data)
+		return
+	end
+	compileAll(data)
+	local count = 0
+	for _ in pairs(clips) do
+		count += 1
+	end
+	for _, S in ipairs(list) do
+		S.act.clip, S.prev.clip, S.add.clip = nil, nil, nil
+		S.idle, S.run, S.air = nil, nil, nil
+		refreshTool(S, false)
+		S.character:SetAttribute("AnimReloaded", count)
+	end
 end
 
 return Animations
