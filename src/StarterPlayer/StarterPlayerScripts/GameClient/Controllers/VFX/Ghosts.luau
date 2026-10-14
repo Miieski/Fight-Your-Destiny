@@ -2,7 +2,12 @@
 -- Roll afterimages (OWNER: the VFX sub-agent; Config/CombatVFX Roll): Config.Roll.Ghosts snapshots of the
 -- character's pose, one every Interval s from the start of the roll, each fading out over Fade s. A ghost = clones of
 -- the character's body parts (the BaseParts directly in the character model), in the Material of
--- ReplicatedStorage.Assets.VFX.Shared_Afterimage and Config Roll GhostColor / GhostFrom. None with Low FX.
+-- ReplicatedStorage.Assets.VFX.Shared_Afterimage (SmoothPlastic: no Neon bloom on the ground) and Config Roll
+-- GhostColor / GhostFrom. None with Low FX.
+-- Ground rule (combat V3 dodge fix): the roll clip curls the body down into the ground, so at each snapshot the ghost
+-- is lifted until its lowest part sits GroundMargin studs above the ground plane under the body (at most MaxLift), and
+-- any part still lower than HideBelow is hidden: no ghost part ever lies on or cuts through the ground (that tinted
+-- the ground blue and made its texture flicker).
 -- The ghosts of every player's character (local and others) are prepared ahead by a watcher: every PrepareEvery s, at
 -- most one character within Config.CullDistance of the camera that is PrepareAfter s old (appearance loaded) and has
 -- no ghosts yet (or its body parts changed) gets them, one ghost per frame. A roll of a character still without ghosts
@@ -23,19 +28,56 @@ local sets: { [Instance]: Set } = {}
 local building: { [Instance]: boolean } = {}
 local firstSeen: { [Instance]: number } = setmetatable({}, { __mode = "k" }) :: any
 
+local abs = math.abs
+
 local function park(rec: Rec)
 	rec.model.Parent = nil
 end
 
+-- World Y of the lowest corner of a part's box.
+local function bottomOf(part: BasePart): number
+	local cf, s = part.CFrame, part.Size
+	return cf.Y - (abs(cf.XVector.Y) * s.X + abs(cf.YVector.Y) * s.Y + abs(cf.ZVector.Y) * s.Z) * 0.5
+end
+
 local function begin(rec: Rec): boolean
-	local parts, sources, live = rec.parts, rec.sources, rec.live
+	local cfg = Config.Roll
+	local parts, sources, live, rel = rec.parts, rec.sources, rec.live, rec.rel
 	local from = rec.from
+	-- the ground plane under the body at this snapshot (point + normal)
+	local root = rec.root
+	local floor: Vector3?, normal: Vector3? = nil, nil
+	if root and root.Parent then
+		local hit, _, n = Runner.ground(root.Position, 0.5, cfg.GroundProbe)
+		floor, normal = hit, n
+	end
+	-- each part's bottom height above that plane, and the lowest one
+	local lowest = math.huge
+	for i = 1, #parts do
+		local source = sources[i]
+		if parts[i] and source.Parent then
+			local h = bottomOf(source)
+			if floor and normal then
+				local p = source.Position
+				h -= floor.Y - (normal.X * (p.X - floor.X) + normal.Z * (p.Z - floor.Z)) / math.max(normal.Y, 0.3)
+			end
+			rel[i] = h
+			if h < lowest then
+				lowest = h
+			end
+		end
+	end
+	local lift = 0
+	if floor and lowest < cfg.GroundMargin then
+		lift = math.min(cfg.GroundMargin - lowest, cfg.MaxLift)
+	end
+	local up = Vector3.new(0, lift, 0)
 	for i = 1, #parts do
 		local part = parts[i]
 		local source = sources[i]
 		if part then
-			if source.Parent then
-				part.CFrame = source.CFrame
+			if source.Parent and (not floor or rel[i] + lift >= cfg.HideBelow) then
+				part.CFrame = source.CFrame + up
 				part.Transparency = from
 				live[i] = true
 			else
@@ -78,7 +120,7 @@ local function clear(character: Instance)
 	end
 end
 
-local function ghostOf(sources: { BasePart }, look: BasePart): Rec
+local function ghostOf(sources: { BasePart }, look: BasePart, root: BasePart?): Rec
 	local model = Instance.new("Model")
 	model.Name = "Afterimage"
 	local parts: { any } = table.create(#sources, false)
@@ -111,7 +153,7 @@ local function ghostOf(sources: { BasePart }, look: BasePart): Rec
 	end
 	return Runner.track({
 		capped = true, model = model, parts = parts, sources = sources, live = table.create(#sources, false),
-		from = Config.Roll.GhostFrom, done = park,
+		rel = table.create(#sources, 0), root = root or false, from = Config.Roll.GhostFrom, done = park,
 	})
 end
 
@@ -147,11 +189,13 @@ local function build(character: Model, spread: boolean?): Set?
 			clear(character)
 		end
 	end))
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	local root: BasePart? = if hrp and hrp:IsA("BasePart") then hrp else nil
 	for g = 1, Config.Roll.Ghosts do
 		if spread and g > 1 then
 			task.wait()
 		end
-		set.ghosts[g] = ghostOf(sources, look)
+		set.ghosts[g] = ghostOf(sources, look, root)
 	end
 	building[character] = nil
 	if not character:IsDescendantOf(game) then

@@ -8,8 +8,9 @@
 -- Profile ("Crescent" | "Ring" | "Full" | "Spike" | "Spindle" | "Scallop"), Reveal (s, tail -> head), Hold, Fade, Grow
 -- (circle: fraction of the radius; line: fraction of the length it moves forward; eased out), Core, Spin (degrees / s around the frame's
 -- up), Ground = true; the frame: Anchors.frame (Anchor, Height, Offset, Yaw, Pitch, Roll).
---   Arcs.play(spec, character, direction, palette, delay, tool?, holdExtra?)   on the attacker, delay s from now (at
---                                         its begin the anchor is read: the pose of that moment); holdExtra adds hold
+--   Arcs.play(spec, character, direction, palette, delay, tool?, holdExtra?, tint?)   on the attacker, delay s from
+--                                         now (at its begin the anchor is read: the pose of that moment); holdExtra
+--                                         adds hold; tint recolors the asset's Config.Tint emitters
 --   Arcs.playAt(spec, cframe, palette, delay, size?, tint?)   at a fixed frame; size scales Radius / Length (area
 --                                         rings); tint recolors the asset's Config.Tint emitters
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -68,14 +69,16 @@ local function setup(fx: Fx): boolean
 	fx.prof = table.create(n + 1, 0)
 	fx.wid = table.create(n + 1, 0)
 	fx.palette = false
+	local over = Config.ArcLook[fx.name]
 	for layer = 1, 2 do
-		local look = if layer == 1 then ARC.OuterLook else ARC.CoreLook
+		local look = if layer == 1 then (over and over.Outer or ARC.OuterLook) else (over and over.Core or ARC.CoreLook)
 		local list = if layer == 1 then outer else core
 		local tail, head = look.Transparency[1], look.Transparency[2]
 		for i = 1, n do
 			local b = list[i]
 			b.LightEmission = look.LightEmission
 			b.Brightness = look.Brightness
+			b.LightInfluence = look.LightInfluence or 0
 			b.Transparency = NumberSequence.new(tail + (head - tail) * (i - 1) / n, tail + (head - tail) * i / n)
 		end
 	end
@@ -201,7 +204,7 @@ local function acquire(spec: any): Fx?
 	return fx
 end
 
-function Arcs.play(spec: any, character: Model, direction: Vector3, palette: Colors.Palette, delay: number, tool: Instance?, holdExtra: number?)
+function Arcs.play(spec: any, character: Model, direction: Vector3, palette: Colors.Palette, delay: number, tool: Instance?, holdExtra: number?, tint: Color3?)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not (root and root:IsA("BasePart")) then
 		return
@@ -210,6 +213,7 @@ function Arcs.play(spec: any, character: Model, direction: Vector3, palette: Col
 	if not fx then
 		return
 	end
+	Runner.tint(fx, tint)
 	local flat = Vector3.new(direction.X, 0, direction.Z)
 	fx.dir = if flat.Magnitude > 1e-3 then flat.Unit else root.CFrame.LookVector
 	fx.root = root

@@ -6,12 +6,17 @@
 --                      its Tool gives the look (Config.Ranged.Kinds by WeaponId: Bow -> arrow,
 --                      Crossbow -> bolt, Gun -> bullet; a Magic Tool -> orb) and the flight starts at the Tool's
 --                      MuzzleAttachment; enemy shots ("Enemy") and unknown shooters fly the orb. Spark on arrival.
+--                      A player's shot waits for the release of its swing (Shots.record, at most Config Shot.MaxHold s):
+--                      the server sends it at the request, its hit lands at the release + the flight.
+--   Shots.record(character, release)   VFX.swing (Ranged): the release is release s from now
 --   Shots.kind(tool) -> "Bow" | "Crossbow" | "Gun" | "Orb"
 --   Shots.flash(spec, character, direction, delay, tool?)   the muzzle flash (spec Kind = "Flash": Asset, Anchor,
---                      Counts[kind] = emit counts per weapon type)
---   Shots.fire(look, from, finish, travel, color, delay, character?, tool?, arrive?)   a cosmetic projectile (Magic
---                      release): from = a point, or the Tool's MuzzleAttachment at launch when character + tool are
---                      given; arrive(finish) is called on arrival
+--                      Counts[kind] = emit counts per weapon type, Emit = count multiplier); any particle asset
+--                      works (e.g. a dust kick at the feet), played with its own colors
+--   Shots.fire(look, from, finish, travel, color, delay, character?, tool?, arrive?, origin?)   a cosmetic projectile
+--                      (Magic release): from = a point, or the Tool's MuzzleAttachment at launch when character +
+--                      tool are given, or origin (an Attachment, e.g. the left hand's) at launch; arrive(finish) is
+--                      called on arrival
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -25,6 +30,12 @@ local Shots = {}
 type Fx = Runner.Fx
 
 local SHOOTER_LIFT = Vector3.new(0, 1.2, 0)
+
+local releases: { [Instance]: number } = setmetatable({}, { __mode = "k" }) :: any
+
+function Shots.record(character: Instance, release: number)
+	releases[character] = os.clock() + release
+end
 
 function Shots.kind(tool: Instance?): string
 	if not tool then
@@ -164,6 +175,7 @@ function Shots.shot(ctx: { [string]: any })
 	local style = ctx.Style
 	local looks = Config.Ranged.Looks
 	local look, muzzle = looks.Enemy, nil
+	local delay = 0
 	if style ~= "Enemy" then
 		local character: Model?, tool: Instance? = nil, nil
 		local from = ctx.Shooter
@@ -177,12 +189,19 @@ function Shots.shot(ctx: { [string]: any })
 		if character and tool then
 			muzzle = Anchors.attachment(tool, "MuzzleAttachment")
 		end
+		local releaseAt = if character then releases[character] else nil
+		if releaseAt then
+			local wait = releaseAt - os.clock()
+			if wait > 0 and wait <= Config.Shot.MaxHold then
+				delay = wait
+			end
+		end
 	end
-	launch(look, origin, muzzle, finish, distance / speed, Colors.style(style), 0, nil)
+	launch(look, origin, muzzle, finish, distance / speed, Colors.style(style), delay, nil)
 end
 
-function Shots.fire(look: any, from: Vector3, finish: Vector3, travel: number, color: Color3, delay: number, character: Model?, tool: Instance?, arrive: any?)
-	local muzzle = if character and tool and tool.Parent == character then Anchors.attachment(tool, "MuzzleAttachment") else nil
+function Shots.fire(look: any, from: Vector3, finish: Vector3, travel: number, color: Color3, delay: number, character: Model?, tool: Instance?, arrive: any?, origin: Attachment?)
+	local muzzle = if origin then origin elseif character and tool and tool.Parent == character then Anchors.attachment(tool, "MuzzleAttachment") else nil
 	launch(look, from, muzzle, finish, travel, color, delay, arrive)
 end
 
@@ -192,7 +211,7 @@ local function flashBegin(fx: Fx): boolean
 		return false
 	end
 	fx.part.CFrame = Anchors.frame(fx.spec, fx.character, root, fx.tool, fx.dir)
-	Runner.emit(fx, 1, fx.flashCounts or nil)
+	Runner.emit(fx, fx.spec.Emit or 1, fx.flashCounts or nil)
 	return true
 end
 
@@ -209,6 +228,7 @@ function Shots.flash(spec: any, character: Model, direction: Vector3, delay: num
 	fx.dir = if flat.Magnitude > 1e-3 then flat.Unit else root.CFrame.LookVector
 	fx.root, fx.character, fx.tool, fx.spec = root, character, tool, spec
 	fx.flashCounts = if spec.Counts then spec.Counts[Shots.kind(tool)] or false else false
+	Runner.tint(fx, nil)
 	Runner.run(fx, delay, fx.particleLife + 0.05, flashBegin, nil)
 end
 

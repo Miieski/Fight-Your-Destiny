@@ -7,6 +7,7 @@
 --     .arc       ColorSequence of the arc's outer beams      .core   of its white core
 --     .gradient  the rarity's ColorSequence (Divine / Secret) or nil; Colors.segment(palette, n, i) slices it per beam
 --     .spark     Color3 tint of the impact shards (nil = white)
+--     .glow      Color3: the weapon color lightened toward white (landing flash sparks)
 --   Colors.flat(color) -> Palette   one color (rings, special arcs), cached
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -23,6 +24,7 @@ export type Palette = {
 	core: ColorSequence,
 	gradient: ColorSequence?,
 	spark: Color3?,
+	glow: Color3,
 	segments: { [number]: { ColorSequence } },
 }
 
@@ -67,6 +69,7 @@ local function build(tier: number, element: string): Palette
 		core = ColorSequence.new(base:Lerp(WHITE, weapon.CoreWhite)),
 		gradient = if hasTrail then rarity.Gradient else nil,
 		spark = if elementColor then WHITE:Lerp(elementColor, weapon.SparkTint) else nil,
+		glow = base:Lerp(WHITE, weapon.GlowWhite),
 		segments = {},
 	}
 end
@@ -117,6 +120,7 @@ function Colors.flat(color: Color3): Palette
 			core = ColorSequence.new(color:Lerp(WHITE, Config.Weapon.CoreWhite)),
 			gradient = nil,
 			spark = nil,
+			glow = color:Lerp(WHITE, Config.Weapon.GlowWhite),
 			segments = {},
 		}
 		flatCache[key] = palette

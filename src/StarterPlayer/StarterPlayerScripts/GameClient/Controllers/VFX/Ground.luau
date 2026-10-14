@@ -7,6 +7,7 @@
 -- Hold, Fade, CrackColor, Chunks (halved with Low FX), ChunkSize { min, max }, ChunkUp { min, max },
 -- ChunkOut { min, max }, Gravity, ChunkLife.
 --   Ground.play(spec, character, direction, delay, tool?)
+--   Ground.playAt(spec, position, direction, delay)    at a fixed point (the ground under it): jump attack landings
 local Anchors = require(script.Parent.Anchors)
 local Runner = require(script.Parent.Runner)
 
@@ -91,14 +92,19 @@ local function step(fx: Fx, t: number): boolean
 end
 
 local function begin(fx: Fx): boolean
-	local root = fx.root
-	if not root.Parent then
-		return false
-	end
 	local spec = fx.spec
-	local frame = Anchors.frame(spec, fx.character, root, fx.tool, fx.dir)
-	local hit, color = Runner.ground(frame.Position, 2, 10)
-	local center = (hit or (frame.Position - Vector3.new(0, 2.5, 0))) + Vector3.new(0, 0.04, 0)
+	local probe: Vector3
+	local root = fx.root
+	if root then
+		if not root.Parent then
+			return false
+		end
+		probe = Anchors.frame(spec, fx.character, root, fx.tool, fx.dir).Position
+	else
+		probe = fx.at
+	end
+	local hit, color = Runner.ground(probe, 2, 10)
+	local center = (hit or (probe - Vector3.new(0, 2.5, 0))) + Vector3.new(0, 0.05, 0)
 	fx.center = center
 	fx.part.CFrame = CFrame.new(center)
 	-- cracks around the striking point, the first one toward the attack direction
@@ -163,6 +169,21 @@ function Ground.play(spec: any, character: Model, direction: Vector3, delay: num
 	local flat = Vector3.new(direction.X, 0, direction.Z)
 	fx.dir = if flat.Magnitude > 1e-3 then flat.Unit else root.CFrame.LookVector
 	fx.root, fx.character, fx.tool, fx.spec = root, character, tool, spec
+	Runner.run(fx, delay, math.max(spec.Grow + spec.Hold + spec.Fade, spec.ChunkLife, fx.particleLife), begin, step)
+end
+
+function Ground.playAt(spec: any, position: Vector3, direction: Vector3, delay: number)
+	local fx = Runner.acquire(spec.Asset)
+	if not fx then
+		return
+	end
+	if not fx.cracks and not setup(fx) then
+		Runner.release(fx)
+		return
+	end
+	local flat = Vector3.new(direction.X, 0, direction.Z)
+	fx.dir = if flat.Magnitude > 1e-3 then flat.Unit else Vector3.new(0, 0, -1)
+	fx.root, fx.character, fx.tool, fx.spec, fx.at = nil, nil, nil, spec, position
 	Runner.run(fx, delay, math.max(spec.Grow + spec.Hold + spec.Fade, spec.ChunkLife, fx.particleLife), begin, step)
 end
 

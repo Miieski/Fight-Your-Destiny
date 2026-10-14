@@ -4,7 +4,8 @@
 -- attachments A1..An / B1..Bn and beams Line1..n (A_i -> B_i).
 -- Spec: Asset, the frame (Anchors.frame: Anchor, Height, Offset, Yaw, Pitch, Roll), Count (halved with Low FX),
 -- Spread { x, y } (random offsets around the frame's axis), Start, Length (studs forward; each line 70-100 % of it),
--- Width, Extend (s: the head shoots out), Hold, Fade (the tail catches up), Jitter (random start delay per line).
+-- Width, Extend (s: the head shoots out), Hold, Fade (the tail catches up), Jitter (random start delay per line),
+-- Solid = true (the palette's color itself instead of its whitened core: dark shadow lines).
 --   Streaks.play(spec, character, direction, palette, delay, tool?)
 local Anchors = require(script.Parent.Anchors)
 local Colors = require(script.Parent.Colors)
@@ -88,10 +89,11 @@ local function begin(fx: Fx): boolean
 		fx.wait[i] = rng:NextNumber(0, spec.Jitter or 0)
 	end
 	local palette = fx.pal
-	if fx.palette ~= palette then
-		fx.palette = palette
+	local color = if spec.Solid then palette.arc else palette.core
+	if fx.palette ~= color then
+		fx.palette = color
 		for i = 1, fx.n do
-			fx.beams[i].Color = palette.core
+			fx.beams[i].Color = color
 		end
 	end
 	step(fx, 0)

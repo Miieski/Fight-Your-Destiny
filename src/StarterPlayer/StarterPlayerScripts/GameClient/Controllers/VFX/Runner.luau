@@ -16,7 +16,7 @@
 --   Runner.tint(fx, color?)          recolor the Config.Tint emitters (nil = their own color)
 --   Runner.sequence(color)           cached ColorSequence of one color
 --   Runner.template(name)            the asset under ReplicatedStorage.Assets.VFX (or nil)
---   Runner.near(position)  Runner.ground(position, up?, depth?) -> (point?, color?)  Runner.folder()  Runner.lowFx()
+--   Runner.near(position)  Runner.ground(position, up?, depth?) -> (point?, color?, normal?)  Runner.folder()  Runner.lowFx()
 --   Runner.measure(t0)  Runner.full() (at the global cap)
 -- Dev hooks (Play, Client command bar), attributes set locally on workspace.VFX:
 --   Freeze = true          pauses every effect (particles too) for a screenshot; false resumes
@@ -315,8 +315,8 @@ function Runner.full(): boolean
 	return capped >= Config.MaxActive
 end
 
--- Ground point below position (characters, enemies and effects ignored) and the ground's color, or nil.
-function Runner.ground(position: Vector3, up: number?, depth: number?): (Vector3?, Color3?)
+-- Ground point below position (characters, enemies and effects ignored), the ground's color and its normal, or nil.
+function Runner.ground(position: Vector3, up: number?, depth: number?): (Vector3?, Color3?, Vector3?)
 	local now = os.clock()
 	if now - filterAt > 2 then
 		filterAt = now
@@ -335,7 +335,7 @@ function Runner.ground(position: Vector3, up: number?, depth: number?): (Vector3
 	local top = up or 1
 	local result = workspace:Raycast(position + Vector3.new(0, top, 0), Vector3.new(0, -(top + (depth or 10)), 0), params)
 	if not result then
-		return nil, nil
+		return nil, nil, nil
 	end
 	local hit = result.Instance
 	local color: Color3? = nil
@@ -345,7 +345,7 @@ function Runner.ground(position: Vector3, up: number?, depth: number?): (Vector3
 	elseif hit:IsA("BasePart") then
 		color = hit.Color
 	end
-	return result.Position, color
+	return result.Position, color, result.Normal
 end
 
 local function update(dt: number)

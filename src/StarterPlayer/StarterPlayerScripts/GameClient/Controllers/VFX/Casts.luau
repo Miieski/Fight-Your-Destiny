@@ -2,14 +2,17 @@
 -- Magic casts (OWNER: the VFX sub-agent; Config/CombatVFX Magic, Swing.Magic). The cast circle under the caster is an
 -- Arcs spec in Swing.Magic; this module draws the rest:
 --   Casts.charge(spec, character, tool, color, release)   the charge orb at the staff's MuzzleAttachment (else the
---                        right hand) from now to the release (s): it grows and pulses, motes are drawn in
---   Casts.record(character, tool, release, color)          remembers the cast (VFX.swing, Magic)
+--                        right hand; spec.Hand = "LeftHand": that hand) from now to the release (s): it grows and
+--                        pulses, motes are drawn in
+--   Casts.record(character, tool, release, color, grand?, hand?)   remembers the cast (VFX.swing, Magic); grand =
+--                        the bigger area burst (Config Magic.Grand: GrandCast, MeteorDrop); hand = the bolt leaves
+--                        that hand's grip attachment instead of the staff (Cast2: the left palm)
 --   Casts.burst(position, radius, style) -> boolean        VFX.burst with an element / "Arcane" style (the server sends
 --                        it at the cast start, the damage lands at the release): when a cast of the last LinkWindow s
 --                        matches (caster within LinkRange), the bolt leaves the staff at the release and the area
 --                        burst plays where it lands (true); false = no cast found
---   Casts.area(ground, radius, color, delay)               the area burst: a ring sized to the radius + flash, light
---                        column and motes (Magic_AreaBurst)
+--   Casts.area(ground, radius, color, delay, grand?)       the area burst: a ring sized to the radius + flash, light
+--                        column and motes (Magic_AreaBurst); grand adds Config Magic.Grand.Extra (more rings)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.GameSystem.Config.CombatVFX)
@@ -22,7 +25,7 @@ local Shots = require(script.Parent.Shots)
 local Casts = {}
 
 type Fx = Runner.Fx
-type Cast = { time: number, releaseAt: number, tool: Instance?, color: Color3 }
+type Cast = { time: number, releaseAt: number, tool: Instance?, color: Color3, grand: boolean, hand: string? }
 
 local casts: { [Instance]: Cast } = setmetatable({}, { __mode = "k" }) :: any
 local UP = Vector3.yAxis
@@ -40,6 +43,10 @@ local function setContinuous(fx: Fx, on: boolean)
 end
 
 local function chargePosition(fx: Fx): Vector3
+	local hand = fx.hand
+	if hand and hand.Parent then
+		return hand.Position
+	end
 	local muzzle = fx.muzzle
 	if muzzle and muzzle.Parent then
 		return muzzle.WorldPosition
@@ -99,15 +106,17 @@ function Casts.charge(spec: any, character: Model, tool: Instance?, color: Color
 	end
 	fx.spec, fx.root, fx.character, fx.color, fx.release = spec, root, character, color, release
 	fx.muzzle = if tool and tool.Parent == character then Anchors.attachment(tool, "MuzzleAttachment") or false else false
+	local hand = if spec.Hand then character:FindFirstChild(spec.Hand) else nil
+	fx.hand = if hand and hand:IsA("BasePart") then hand else false
 	fx.done = chargeDone
 	Runner.tint(fx, color)
 	Runner.run(fx, 0, release + spec.Linger, chargeBegin, chargeStep)
 end
 
-function Casts.record(character: Model, tool: Instance?, release: number, color: Color3)
+function Casts.record(character: Model, tool: Instance?, release: number, color: Color3, grand: boolean?, hand: string?)
 	local cast = casts[character]
 	if not cast then
-		cast = { time = 0, releaseAt = 0, tool = nil, color = color }
+		cast = { time = 0, releaseAt = 0, tool = nil, color = color, grand = false, hand = nil }
 		casts[character] = cast
 	end
 	local now = os.clock()
@@ -115,11 +124,19 @@ function Casts.record(character: Model, tool: Instance?, release: number, color:
 	cast.releaseAt = now + release
 	cast.tool = tool
 	cast.color = color
+	cast.grand = grand == true
+	cast.hand = hand
 end
 
-function Casts.area(ground: Vector3, radius: number, color: Color3, delay: number)
+function Casts.area(ground: Vector3, radius: number, color: Color3, delay: number, grand: boolean?)
 	local spec = Config.Magic.Area
-	Arcs.playAt(spec, CFrame.new(ground + Vector3.new(0, spec.Lift, 0)), Colors.flat(color), delay, radius, color)
+	local palette = Colors.flat(color)
+	Arcs.playAt(spec, CFrame.new(ground + Vector3.new(0, spec.Lift, 0)), palette, delay, radius, color)
+	if grand then
+		for _, extra in ipairs(Config.Magic.Grand.Extra) do
+			Arcs.playAt(extra, CFrame.new(ground + Vector3.new(0, extra.Lift or spec.Lift, 0)), palette, delay + (extra.Delay or 0), radius, color)
+		end
+	end
 end
 
 function Casts.burst(position: Vector3, radius: number, style: any): boolean
@@ -149,9 +166,16 @@ function Casts.burst(position: Vector3, radius: number, style: any): boolean
 	local from = root.Position + UP * 2
 	local target = ground + UP * cfg.Bolt.Height
 	local travel = math.clamp((target - from).Magnitude / cfg.Bolt.Speed, cfg.Bolt.MinTravel, cfg.Bolt.MaxTravel)
+	local origin: Attachment? = nil
+	if best.hand then
+		local hand = caster:FindFirstChild(best.hand)
+		local grip = hand and hand:FindFirstChild(best.hand == "LeftHand" and "LeftGripAttachment" or "RightGripAttachment")
+		origin = if grip and grip:IsA("Attachment") then grip else nil
+	end
+	local grand = best.grand
 	Shots.fire(cfg.Bolt, from, target, travel, color, release, caster :: Model, best.tool, function()
-		Casts.area(ground, radius, color, 0)
-	end)
+		Casts.area(ground, radius, color, 0, grand)
+	end, origin)
 	return true
 end
 

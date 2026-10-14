@@ -6,7 +6,10 @@
 --                                           Emit once. options: Color (Color3: recolors the Config.Tint emitters),
 --                                           Emit (count multiplier), Delay (s), Life (s the clone stays; default: its
 --                                           longest particle)
---   VFX.swing(ctx)        ctx = { Character, Tool?, Category, Step, Finisher, Direction, Rarity?, Element?, Speed, IsLocal, Position? }
+--   VFX.swing(ctx)        ctx = { Character, Tool?, Category, Step, Variant?, Finisher, Direction, Rarity?, Element?, Speed, IsLocal, Position? }
+--                         Variant = nil (combo step) | "Air" (jump attack) | "Dash" (dash strike)
+--   VFX.land(ctx)         ctx = { Character?, Tool?, Category, Position, Radius, Rarity?, Element?, IsLocal }
+--                         (a melee jump attack hits the ground: local landing, or Net "AirSlam")
 --   VFX.impact(ctx)       ctx = { Position, Category?, Crit, Finisher, Element?, IsLocal }
 --   VFX.shot(ctx)         ctx = { Origin, Direction, Speed, Distance, Style }      (Net "Projectile": Ranged, enemies)
 --   VFX.burst(ctx)        ctx = { Position, Radius, Style }                         (Net "Burst": Magic area, Heavy slam)
@@ -14,21 +17,26 @@
 --   VFX.block(ctx)        ctx = { Character, On }
 --   VFX.blockHit(ctx)     ctx = { Character, Position? }
 --   VFX.damageNumber(position, text, kind)   kind = "normal" | "crit" | "hurt" | "block" | "dodge"
--- Swing (Config/CombatVFX Swing[category][step]): the weapon Trail (Trails: rarity color + element tint) from TrailOn x
--- the time to the hit to TrailOff s after it, and the step's Effects, each timed on a hit of the step (Hit 0 = the
--- call, 1 = Combos Impact, 2 = the first of Combos Hits) + Delay, all divided by the speed:
+-- Swing (Config/CombatVFX Swing[category][step]; jump attacks AirSwing[category] timed on Combat.AirAttacks, dash
+-- strikes DashSwing[category] timed on Combat.DashAttacks): the weapon Trail (Trails: rarity color + element tint) from
+-- TrailOn x the time to the hit to TrailOff s after it, and the step's Effects, each timed on a hit of the step (Hit 0
+-- = the call, 1 = Impact, 2 = the first of Hits) + Delay, all divided by the speed (a jump attack's Dive: Dives):
 --   Kind "Arc" (Arcs: arcs, rings, straight streaks), "Lines" (Streaks: speed lines), "Ground" (Ground: cracks +
 --   chunks), "Flash" (Shots.flash: muzzle flash by weapon type), "Charge" (Casts.charge: the Magic orb). Effects sit on
 --   anchors (Anchors: root, feet, hand, Tool Tip / Muzzle / Impact attachments) read at their start, so they follow
 --   the animation's pose at the hit. Magic casts are remembered (Casts) so the area burst follows the release.
+-- Land (Config Land[category]): the landing shockwave of a melee jump attack at the ground point, sized by the hit
+-- radius: flat rings, flash, dust (ground colored), debris, cracks (Heavy, Gauntlet), Spear spike, Dagger shadow.
 -- Impact: sparks on the enemy's body toward the camera (crit burst, finisher beam ring, Dagger crit cross); a
 -- confirmed local hit keeps the trail on through the hit-stop. Shot: Shots (arrow / bolt / bullet / orb by the
--- shooter's weapon). Burst: "Slam" = Heavy shockwave ring, "Enemy" = disc, an element / "Arcane" = Magic area
--- (Casts). Block: a shield bubble following the character. Roll: dust puff + afterimages (Ghosts; none with Low FX).
+-- shooter's weapon). Burst: "Slam" = Heavy shockwave ring + dust ring, "Enemy" = disc, an element / "Arcane" = Magic
+-- area (Casts). Block: a shield bubble following the character. Roll: a dust puff tinted by the ground + afterimages
+-- (Ghosts: kept above the ground, no Neon; none with Low FX).
 -- Enemy death: a dissolve (workspace.Enemies "Dead"). Everything is pooled (Runner) under workspace.VFX; Low FX halves
 -- the Emit counts, speed lines and chunks.
 -- Dev hook (Play, Client command bar), plays an effect on the local character:
---   workspace.VFX:SetAttribute("Test", "swing:<step>:<rarity>[:<element>]" (the equipped Tool's category)
+--   workspace.VFX:SetAttribute("Test", "swing:<step>:<rarity>[:<element>[:Air|Dash]]" (the equipped Tool's category)
+--     | "land[:<category>[:<radius>]]" (at the feet; default: the equipped Tool's category and its jump attack radius)
 --     | "impact:normal|crit|finisher[:<element>[:<category>]]" | "shot[:<style>]" | "burst:<style>" | "roll"
 --     | "block:on|off" | "blockhit" | "number:<kind>")   (append "#n" to send the same command again)
 -- Runner has the Freeze, Profile and LowFx hooks.
@@ -49,6 +57,7 @@ local Shots = require(script.Parent.Shots)
 local Casts = require(script.Parent.Casts)
 local Numbers = require(script.Parent.Numbers)
 local Ghosts = require(script.Parent.Ghosts)
+local Dives = require(script.Parent.Dives)
 
 local VFX = {}
 
@@ -68,6 +77,18 @@ local function flat(v: any): Vector3?
 	end
 	local f = Vector3.new(v.X, 0, v.Z)
 	return if f.Magnitude > 1e-3 then f.Unit else nil
+end
+
+-- Dust color: a base dust color mixed with the ground's color (Runner.ground), quantized so the tint cache stays small.
+local function dustColor(groundColor: Color3?, base: Color3?, k: number?): Color3
+	local c = base or Config.Roll.DustColor
+	if groundColor then
+		c = c:Lerp(groundColor, k or Config.Roll.DustGroundTint)
+	end
+	local function q(x: number): number
+		return math.min(255, math.floor(x * 255 / 8 + 0.5) * 8)
+	end
+	return Color3.fromRGB(q(c.R), q(c.G), q(c.B))
 end
 
 -- ------------------------------------------------------------------------------------------------
@@ -134,12 +155,19 @@ function VFX.swing(ctx: { [string]: any })
 	local combo = Combat.Combos[category]
 	if root and combo and Runner.near(root.Position) then
 		local stepIndex = if typeof(ctx.Step) == "number" then ctx.Step else 1
+		local variant = if ctx.Variant == "Air" or ctx.Variant == "Dash" then ctx.Variant else nil
 		local steps = Config.Swing[category]
 		local info = WeaponCategories.ById[category]
-		local spec = if steps then steps[stepIndex] or steps[1] elseif info and info.Melee then Config.Swing.Default else nil
+		local def: { [string]: any }? = nil
+		local spec: { [string]: any }? = nil
+		if variant then
+			def = (if variant == "Air" then Combat.AirAttacks else Combat.DashAttacks)[category]
+			spec = (if variant == "Air" then Config.AirSwing else Config.DashSwing)[category]
+		end
+		def = def or combo[stepIndex] or combo[1]
+		spec = spec or (if steps then steps[stepIndex] or steps[1] elseif info and info.Melee then Config.Swing.Default else nil)
 		if spec then
 			local speed = if typeof(ctx.Speed) == "number" and ctx.Speed > 0 then ctx.Speed else 1
-			local def = combo[stepIndex] or combo[1]
 			local impact = (if def and typeof(def.Impact) == "number" then def.Impact else 0.15) / speed
 			local palette = Colors.weapon(ctx.Rarity, ctx.Element)
 			local tool = ctx.Tool or character:FindFirstChildOfClass("Tool")
@@ -147,6 +175,10 @@ function VFX.swing(ctx: { [string]: any })
 			local element = if typeof(ctx.Element) == "string" then ctx.Element else nil
 			if spec.TrailOn then
 				Trails.swing(tool, palette, impact * spec.TrailOn, impact + spec.TrailOff / speed)
+			end
+			local dive = spec.Dive
+			if dive and variant == "Air" then
+				Dives.play(dive, character, tool, palette, (if def and typeof(def.Hang) == "number" then def.Hang else 0) / speed)
 			end
 			local effects = spec.Effects
 			if effects then
@@ -163,7 +195,8 @@ function VFX.swing(ctx: { [string]: any })
 					local kind = effect.Kind or "Arc"
 					if kind == "Arc" then
 						local extra = if effect.HoldToHit then math.max(0, impact - delay) else 0
-						Arcs.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool, extra)
+						local tint = if effect.Palette == "Element" then Colors.style(element or "Arcane") else nil
+						Arcs.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool, extra, tint)
 					elseif kind == "Lines" then
 						Streaks.play(effect, character, dir, paletteOf(effect, palette, element), delay, tool)
 					elseif kind == "Ground" then
@@ -175,8 +208,13 @@ function VFX.swing(ctx: { [string]: any })
 					end
 				end
 			end
-			if category == "Magic" then
-				Casts.record(character, tool, impact, Colors.style(element or "Arcane"))
+			if category == "Ranged" then
+				-- the arrows of this shot (Net "Projectile", sent at the request) leave at the release
+				Shots.record(character, impact)
+			end
+			if category == "Magic" and variant ~= "Dash" then
+				-- the server's Burst of this cast is drawn from the release (BlinkBlast sends none: its blast is an effect)
+				Casts.record(character, tool, impact, Colors.style(element or "Arcane"), spec.Grand == true, spec.Hand)
 			end
 		end
 	end
@@ -264,6 +302,75 @@ function VFX.impact(ctx: { [string]: any })
 end
 
 -- ------------------------------------------------------------------------------------------------
+-- Land: a melee jump attack hits the ground (combat V3)
+-- ------------------------------------------------------------------------------------------------
+-- The frame of a landing effect: the ground point looking along the attacker's facing, + Offset { right, up, back }
+-- and Lift (world up), turned by Yaw / Pitch / Roll (degrees, as Anchors.frame).
+local function landFrame(effect: any, ground: Vector3, dir: Vector3): CFrame
+	local frame = CFrame.lookAt(ground, ground + dir)
+	local o = effect.Offset
+	if o then
+		frame += frame:VectorToWorldSpace(Vector3.new(o[1], o[2], o[3]))
+	end
+	if effect.Lift then
+		frame += Vector3.new(0, effect.Lift, 0)
+	end
+	if effect.Yaw or effect.Pitch or effect.Roll then
+		frame *= CFrame.fromEulerAnglesYXZ(math.rad(effect.Pitch or 0), math.rad(effect.Yaw or 0), math.rad(effect.Roll or 0))
+	end
+	return frame
+end
+
+function VFX.land(ctx: { [string]: any })
+	local started = os.clock()
+	local character = ctx.Character
+	if typeof(character) == "Instance" then
+		Dives.land(character)
+	end
+	local position = ctx.Position
+	if typeof(position) == "Vector3" and Runner.near(position) then
+		local cfg = Config.Land
+		local spec = cfg[ctx.Category] or cfg.Default
+		local radius = if typeof(ctx.Radius) == "number" and ctx.Radius > 0 then ctx.Radius else cfg.DefaultRadius
+		local hit, groundColor = Runner.ground(position, cfg.Probe, cfg.Probe)
+		local ground = hit or position
+		local root = rootOf(character)
+		local dir = (if root then flat(root.CFrame.LookVector) else nil) or Vector3.new(0, 0, -1)
+		local element = if typeof(ctx.Element) == "string" then ctx.Element else nil
+		local palette = Colors.weapon(ctx.Rarity, element)
+		local dust = dustColor(groundColor, cfg.DustColor, cfg.GroundTint)
+		local earth: Colors.Palette? = nil -- the dust rings' palette (darker: beams are brightened)
+		local scale = math.clamp(radius / cfg.RadiusRef, cfg.EmitScale[1], cfg.EmitScale[2])
+		for _, effect in ipairs(spec.Effects) do
+			local kind = effect.Kind or "Ring"
+			local delay = effect.Delay or 0
+			local frame = landFrame(effect, ground, dir)
+			if kind == "Ring" or kind == "Line" then
+				local look
+				if effect.Palette == "Ground" then
+					earth = earth or Colors.flat(dustColor(groundColor, cfg.RingColor, cfg.GroundTint))
+					look = earth
+				else
+					look = paletteOf(effect, palette, element)
+				end
+				Arcs.playAt(effect, frame, look, delay, if effect.Scale then radius else 1)
+			elseif kind == "Burst" then
+				local tint: Color3? = nil
+				if effect.Tint == "Ground" then
+					tint = dust
+				elseif effect.Tint == "Weapon" then
+					tint = palette.glow
+				end
+				playEffect(effect.Asset, frame, tint, (effect.Emit or 1) * (if effect.Fixed then 1 else scale), delay)
+			elseif kind == "Ground" then
+				Ground.playAt(effect, frame.Position, dir, delay)
+			end
+		end
+	end
+	Runner.measure(started)
+end
+
+-- ------------------------------------------------------------------------------------------------
 -- Shots and bursts
 -- ------------------------------------------------------------------------------------------------
 function VFX.shot(ctx: { [string]: any })
@@ -299,11 +406,17 @@ function VFX.burst(ctx: { [string]: any })
 	local started = os.clock()
 	local position, radius, style = ctx.Position, ctx.Radius, ctx.Style
 	if typeof(position) == "Vector3" and typeof(radius) == "number" and Runner.near(position) then
-		local ground = Runner.ground(position, 4, 20) or position
+		local hit, groundColor = Runner.ground(position, 4, 20)
+		local ground = hit or position
 		if style == "Slam" then
-			-- Heavy slam: the shockwave ring over the slam area (cracks and chunks come with the swing)
+			-- Heavy slam: the shockwave ring over the slam area + a dust ring sized to it (cracks and chunks come with the
+			-- swing)
 			local slam = Config.Slam
 			Arcs.playAt(slam.Ring, CFrame.new(ground + Vector3.new(0, slam.Lift, 0)), Colors.flat(slam.Color), 0, radius)
+			if slam.Dust then
+				local land = Config.Land
+				playEffect(slam.Dust, CFrame.new(ground + Vector3.new(0, slam.Lift, 0)), dustColor(groundColor, land.DustColor, land.GroundTint), math.clamp(radius / slam.DustRadius, 0.5, 1.5))
+			end
 		elseif style == "Enemy" then
 			local cfg = Config.Burst
 			local fx = Runner.acquire(cfg.Asset)
@@ -466,10 +579,11 @@ function VFX.roll(ctx: { [string]: any })
 	local character = ctx.Character
 	local root = rootOf(character)
 	if root and Runner.near(root.Position) then
+		local cfg = Config.Roll
 		local dir = flat(ctx.Direction) or flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
-		local feet = Runner.ground(root.Position, 0.5, 8) or (root.Position - Vector3.new(0, Config.Roll.FeetDrop, 0))
-		feet += Vector3.new(0, 0.2, 0)
-		playEffect(Config.Roll.Dust, CFrame.lookAt(feet, feet - dir))
+		local hit, groundColor = Runner.ground(root.Position, 0.5, 8)
+		local feet = (hit or (root.Position - Vector3.new(0, cfg.FeetDrop, 0))) + Vector3.new(0, cfg.DustLift, 0)
+		playEffect(cfg.Dust, CFrame.lookAt(feet, feet - dir), dustColor(groundColor))
 		Ghosts.play(character :: Model)
 	end
 	Runner.measure(started)
@@ -536,11 +650,21 @@ local function test(command: string)
 		local category = tool and tool:GetAttribute("Category") or "Sword"
 		local stepIndex = tonumber(args[2]) or 1
 		local combo = Combat.Combos[category]
+		local variant = if args[5] == "Air" or args[5] == "Dash" then args[5] else nil
 		VFX.swing({
-			Character = character, Tool = tool, Category = category, Step = stepIndex,
-			Finisher = combo ~= nil and combo[stepIndex] ~= nil and combo[stepIndex].Finisher == true,
+			Character = character, Tool = tool, Category = category, Step = if variant then 1 else stepIndex, Variant = variant,
+			Finisher = variant == "Air" or (variant == nil and combo ~= nil and combo[stepIndex] ~= nil and combo[stepIndex].Finisher == true),
 			Direction = look, Rarity = tonumber(args[3]) or (tool and tool:GetAttribute("Rarity")) or 1,
 			Element = if args[4] and args[4] ~= "" then args[4] else nil, Speed = 1, IsLocal = true,
+		})
+	elseif what == "land" then
+		local category = if args[2] and args[2] ~= "" then args[2] else (tool and tool:GetAttribute("Category") or "Sword")
+		local air = Combat.AirAttacks[category]
+		local feet = Runner.ground(root.Position, 0.5, 8) or (root.Position - Vector3.new(0, 3, 0))
+		VFX.land({
+			Character = character, Tool = tool, Category = category, Position = feet,
+			Radius = tonumber(args[3]) or (air and air.Shape and air.Shape.Radius) or 6,
+			Rarity = tool and tool:GetAttribute("Rarity") or 1, Element = nil, IsLocal = true,
 		})
 	elseif what == "impact" then
 		VFX.impact({ Position = front + Vector3.new(0, 3, 0), Crit = args[2] == "crit", Finisher = args[2] == "finisher", Element = args[3], Category = args[4], IsLocal = false })
