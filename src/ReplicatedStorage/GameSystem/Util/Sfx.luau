@@ -12,6 +12,8 @@ local SoundService = game:GetService("SoundService")
 local Audio = require(ReplicatedStorage.GameSystem.Config.Audio)
 local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
 local CombatSfx = require(ReplicatedStorage.GameSystem.Config.CombatSfx)
+local CombatStyles = require(ReplicatedStorage.GameSystem.Config.CombatStyles)
+local CombatVFX = require(ReplicatedStorage.GameSystem.Config.CombatVFX) -- read only: the zone styles' beat timing
 
 local Sfx = {}
 
@@ -93,7 +95,7 @@ end
 --                                     Tool? (Swing: the WeaponId picks bow / crossbow / gun / blowgun),
 --                                     Character? (Swing: its Magic cast / Ranged release times the Burst / Shot),
 --                                     Element? (Swing: Magic BlinkBlast's burst), Style? (Burst), Enemy? / Own? /
---                                     Shooter? (Shot), Rarity? (Equip), Radius? (Land), IsLocal?,
+--                                     Shooter? (Shot), Rarity? (Equip), Radius? (Land), Zone? (1..12), IsLocal?,
 --                                     Position? (3D sound there; nil = heard at full volume) }
 --                             "Land" (combat V3) = a melee jump attack hits the ground (ctx as VFX.land)
 -- Config/CombatSfx maps event / category / step / variant / weapon style / burst style to sets of variants (no variant
@@ -106,9 +108,14 @@ end
 -- Dev hook (Play, Client command bar): SoundService:SetAttribute("CombatSfxDebug", true) -> every combat sound
 -- appends "time event name pitch volume delay skip 2D|3D" to the SoundService attribute "CombatSfxLog" (last 40) and
 -- writes the count playing to "CombatSfxActive".
+-- Zone fighting styles (2026-10-14): ctx.Zone (the weapon's zone, 1..12) on Swing / Impact / Land adds the zone's
+-- accent layer (Config/CombatSfx Zones: a light layer on ordinary steps, finishers / dash strikes / jump attacks, the
+-- signature beats timed as the animation's Style_<Zone> overlays, impacts, landings). Accents count in the cap and are
+-- stopped first ("CombatSfxAccents" = accents playing, log lines "<event>+<Zone>"). Dev hook:
+-- SoundService:SetAttribute("CombatSfxZone", "<ZoneId>") forces that zone's accent for every combat sound.
 -- ------------------------------------------------------------------------------------------------
 type Variant = { Name: string, Peak: number, Length: number, Start: number? }
-type Voice = { sound: Sound?, name: string, anchor: Attachment?, serial: number }
+type Voice = { sound: Sound?, name: string, anchor: Attachment?, serial: number, accent: boolean }
 type Release = { time: number, release: number, grand: boolean }
 
 local IS_CLIENT = RunService:IsClient()
@@ -124,6 +131,9 @@ local lastVariant: { [string]: number } = {}
 local stackAt: { [string]: number } = {}
 local stackCount: { [string]: number } = {}
 local created = 0 -- copies cloned since start (Sfx.combatStats)
+local ACCENT = CombatSfx.ZoneAccent
+local accentCount = 0 -- zone accent voices in active
+local impactAt, impactCount = -math.huge, 0 -- impact accents of the current ZoneAccent.ImpactWindow
 -- the last Magic cast / Ranged shot of each character (from its Swing): when its release comes
 local casts: { [Instance]: Release } = setmetatable({}, { __mode = "k" }) :: any
 local shots: { [Instance]: Release } = setmetatable({}, { __mode = "k" }) :: any
@@ -169,7 +179,11 @@ local function release(voice: Voice)
 	local index = table.find(active, voice)
 	if index then
 		table.remove(active, index)
+		if voice.accent then
+			accentCount -= 1
+		end
 	end
+	voice.accent = false
 	voice.serial += 1
 	local sound = voice.sound
 	voice.sound = nil
@@ -196,6 +210,7 @@ local function release(voice: Voice)
 	table.insert(spareVoices, voice)
 	if SoundService:GetAttribute("CombatSfxDebug") == true then
 		SoundService:SetAttribute("CombatSfxActive", #active)
+		SoundService:SetAttribute("CombatSfxAccents", accentCount)
 	end
 end
 
@@ -205,12 +220,28 @@ local function expire(voice: Voice, serial: number)
 	end
 end
 
+-- The oldest zone accent playing (the first one stopped when the cap is full).
+local function oldestAccent(): Voice?
+	if accentCount > 0 then
+		for _, voice in ipairs(active) do
+			if voice.accent then
+				return voice
+			end
+		end
+	end
+	return nil
+end
+
 -- One variant, now. volume / pitch already include the spec's multipliers and the random pitch; extra = seconds of
 -- the file skipped on top of the variant's Start (a whoosh that would peak too late for a fast hit).
-local function start(variant: Variant, setName: string, volume: number, pitch: number, position: Vector3?, event: string, delay: number, extra: number)
+-- accent = the zone of a zone style accent layer (nil: a category sound).
+local function start(variant: Variant, setName: string, volume: number, pitch: number, position: Vector3?, event: string, delay: number, extra: number, accent: string?)
 	local now = os.clock()
 	local at = stackAt[setName]
-	if at and now - at < CombatSfx.StackWindow then
+	if accent then
+		-- zone accents have their own limits (ZoneAccent: Cap, ImpactMax): the signature beats of one move may start
+		-- several variants of a set in the same frame
+	elseif at and now - at < CombatSfx.StackWindow then
 		local n = (stackCount[setName] or 0) + 1
 		if n > (CombatSfx.StackMaxOf[setName] or CombatSfx.StackMax) then
 			return
@@ -221,16 +252,27 @@ local function start(variant: Variant, setName: string, volume: number, pitch: n
 		stackCount[setName] = 1
 	end
 	local name = variant.Name
+	if accent then
+		-- zone accents count in the cap: at most ZoneAccent.Cap of them, and one never stops a category sound
+		local oldest = if accentCount >= ACCENT.Cap then oldestAccent() else nil
+		if oldest then
+			release(oldest)
+		end
+		if #active >= CombatSfx.Cap and accentCount == 0 then
+			return
+		end
+	end
 	local sound = acquire(name)
 	if not sound then
 		return
 	end
 	while #active >= CombatSfx.Cap do
-		release(active[1])
+		release(oldestAccent() or active[1])
 	end
-	local voice = table.remove(spareVoices) or { sound = nil, name = name, anchor = nil, serial = 0 }
+	local voice = table.remove(spareVoices) or { sound = nil, name = name, anchor = nil, serial = 0, accent = false }
 	voice.sound = sound
 	voice.name = name
+	voice.accent = accent ~= nil
 	sound.Volume = (baseVolume[name] or sound.Volume) * volume
 	sound.PlaybackSpeed = pitch
 	local skip = (variant.Start or 0) + extra
@@ -250,11 +292,15 @@ local function start(variant: Variant, setName: string, volume: number, pitch: n
 	end
 	sound:Play()
 	table.insert(active, voice)
+	if accent then
+		accentCount += 1
+	end
 	local length = if variant.Length and variant.Length > 0 then variant.Length else math.max(sound.TimeLength, 1)
 	task.delay(math.max(0.05, (length - skip) / pitch), expire, voice, voice.serial)
 	if SoundService:GetAttribute("CombatSfxDebug") == true then
 		SoundService:SetAttribute("CombatSfxActive", #active)
-		debugLog(string.format("%.3f %s %s p=%.3f v=%.2f d=%.3f s=%.3f %s", now, event, name, pitch, sound.Volume, delay, skip, if position then "3D" else "2D"))
+		SoundService:SetAttribute("CombatSfxAccents", accentCount)
+		debugLog(string.format("%.3f %s %s p=%.3f v=%.2f d=%.3f s=%.3f %s", now, if accent then event .. "+" .. accent else event, name, pitch, sound.Volume, delay, skip, if position then "3D" else "2D"))
 	end
 end
 
@@ -281,8 +327,8 @@ end
 -- Plays a spec and its layers. hitIn = seconds from now until the hit the spec is timed to (nil: at once), lead = how
 -- long before that hit the variant's Peak lands (delayed, or with the start of the file skipped when the hit comes
 -- sooner than the peak; 0.05 s stay before it), speed divides the spec's own Hit / At times. Layers inherit hitIn and
--- lead unless they set their own Hit / Lead / At.
-local function playSpec(spec: { [string]: any }, volume: number, pitch: number, position: Vector3?, hitIn: number?, lead: number, speed: number, event: string)
+-- lead unless they set their own Hit / Lead / At. accent = the zone of a zone style accent layer (nil: a category sound).
+local function playSpec(spec: { [string]: any }, volume: number, pitch: number, position: Vector3?, hitIn: number?, lead: number, speed: number, event: string, accent: string?)
 	local setName = spec.Set
 	local myLead = if typeof(spec.Lead) == "number" then spec.Lead else lead
 	local myHit = if typeof(spec.Hit) == "number" then spec.Hit / speed else hitIn
@@ -305,15 +351,15 @@ local function playSpec(spec: { [string]: any }, volume: number, pitch: number, 
 			end
 		end
 		if delay > 0.01 then
-			task.delay(delay, start, variant, setName, v, p, position, event, delay, extra)
+			task.delay(delay, start, variant, setName, v, p, position, event, delay, extra, accent)
 		else
-			start(variant, setName, v, p, position, event, 0, extra)
+			start(variant, setName, v, p, position, event, 0, extra, accent)
 		end
 	end
 	local also = spec.Also
 	if typeof(also) == "table" then
 		for _, layer in ipairs(also) do
-			playSpec(layer, volume, pitch, position, myHit, myLead, speed, event)
+			playSpec(layer, volume, pitch, position, myHit, myLead, speed, event, accent)
 		end
 	end
 end
@@ -371,6 +417,128 @@ local function burstStyle(entry: { [string]: any }, style: string): { [string]: 
 		return nil
 	end
 	return styles[style] or styles[CombatSfx.StyleGroups[style] or ""] or styles[entry.Default or ""]
+end
+
+-- ------------------------------------------------------------------------------------------------
+-- Zone fighting styles: the accent layer of the weapon's zone (Config/CombatSfx Zones / ZoneAccent)
+-- ------------------------------------------------------------------------------------------------
+local ZONE_TIMING = CombatVFX.ZoneTiming
+local FIN_HIT = 0.5 -- the overlays' markers (Config/CombatAnimations; Controllers/VFX/Styles)
+local JUMP_DIVE, JUMP_HIT = 0.35, 0.6
+
+-- The zone id and accent entry of a ctx (the CombatSfxZone dev hook forces one); nil for Plains / no zone.
+local function zoneOf(info: { [string]: any }): (string?, { [string]: any }?)
+	local zone = SoundService:GetAttribute("CombatSfxZone")
+	if zone == nil or zone == "" then
+		zone = info.Zone
+	end
+	local style = CombatStyles.get(zone)
+	if not style then
+		return nil, nil
+	end
+	return style.Id, CombatSfx.Zones[style.Id]
+end
+
+-- Seconds (at x1) from the attack call to a signature beat at overlay time `at`, as the animation times its
+-- Style_<Zone>_Finisher / _Jump overlay on the clip (mirrors Controllers/VFX/Styles.beatTime); nil = a melee jump beat
+-- after the dive starts (the landing is the Land event).
+local function beatTime(category: string, at: number, impact: number, air: boolean, late: boolean): number?
+	if air then
+		local dive = ZONE_TIMING.JumpDive[category]
+		if dive then
+			return if at <= JUMP_DIVE then at / JUMP_DIVE * dive else nil
+		end
+		-- Ranged / Magic hover: [0, Hit] then the recovery
+		local length = ZONE_TIMING.JumpLength[category] or impact * 2
+		if at <= JUMP_HIT then
+			return at / JUMP_HIT * impact
+		end
+		return impact + (at - JUMP_HIT) / (1 - JUMP_HIT) * math.max(0, length - impact)
+	end
+	local span = math.max(0, (ZONE_TIMING.FinisherLength[category] or impact * 2) - impact)
+	if late then
+		-- the whole signature in the recovery: its wind-up part over the first LateSplit of it
+		local split = ZONE_TIMING.LateSplit
+		if at <= FIN_HIT then
+			return impact + at / FIN_HIT * split * span
+		end
+		return impact + (split + (at - FIN_HIT) / (1 - FIN_HIT) * (1 - split)) * span
+	end
+	if at <= FIN_HIT then
+		return at / FIN_HIT * impact
+	end
+	return impact + (at - FIN_HIT) / (1 - FIN_HIT) * span
+end
+
+-- The signature beats of a move: each beat's variant Peak lands Lead (default 0) before its overlay time.
+local function playBeats(beats: { any }, category: string, impact1: number, speed: number, air: boolean, late: boolean, volume: number, position: Vector3?, zoneId: string): boolean
+	local played = false
+	for _, beat in ipairs(beats) do
+		local at = if typeof(beat.Beat) == "number" then beatTime(category, beat.Beat, impact1, air, late) else nil
+		if at then
+			playSpec(beat, volume, 1, position, at / speed, if typeof(beat.Lead) == "number" then beat.Lead else 0, speed, "Swing", zoneId)
+			played = true
+		end
+	end
+	return played
+end
+
+-- The zone's accent on a swing (after the category's own sounds): impact1 = the move's hit at x1.
+local function swingAccent(info: { [string]: any }, category: string, variant: string?, step: number, impact1: number, speed: number, volume: number, position: Vector3?)
+	local zoneId, accent = zoneOf(info)
+	if not (zoneId and accent) then
+		return
+	end
+	local look = CombatVFX.Zones[zoneId] -- LateOk / JumpSkip, as the animation and the VFX
+	local beats = accent.Beats
+	local impact = impact1 / speed
+	local v = volume * ACCENT.Volume
+	local spec: { [string]: any }? = nil
+	if variant == "Air" then
+		local played = false
+		if beats and beats.Jump and not (look and look.JumpSkip and look.JumpSkip[category]) then
+			played = playBeats(beats.Jump, category, impact1, speed, true, false, v, position, zoneId)
+		end
+		spec = accent.Air or (if played then nil else accent.Swing)
+	elseif variant == "Dash" then
+		spec = accent.Dash or accent.Swing
+	elseif info.Finisher == true then
+		spec = accent.Finisher or accent.Swing
+		if beats and beats.Finisher then
+			local late = look ~= nil and look.LateOk == true and impact < ZONE_TIMING.LateWindup
+			playBeats(beats.Finisher, category, impact1, speed, false, late, v, position, zoneId)
+		end
+	elseif (step - 1) % (ACCENT.LightEvery[category] or 2) == 0 then
+		spec = accent.Light
+	end
+	if spec then
+		playSpec(spec, v, 1, position, impact, CombatSfx.HitLead, speed, "Swing", zoneId)
+	end
+end
+
+-- The zone's accent on a confirmed hit (at most ImpactMax per ImpactWindow) or a landing: it peaks at once (the
+-- start of the file is skipped up to 0.05 s before its peak).
+local function hitAccent(event: string, info: { [string]: any }, volume: number, position: Vector3?)
+	local zoneId, accent = zoneOf(info)
+	local spec = if accent then accent[event] else nil
+	if not (zoneId and spec) then
+		return
+	end
+	local v = volume * ACCENT.Volume
+	if event == "Impact" then
+		local now = os.clock()
+		if now - impactAt > ACCENT.ImpactWindow then
+			impactAt, impactCount = now, 0
+		end
+		if impactCount >= ACCENT.ImpactMax then
+			return
+		end
+		impactCount += 1
+		if info.Finisher == true then
+			v *= ACCENT.FinisherImpact
+		end
+	end
+	playSpec(spec, v, 1, position, 0, 0, 1, event, zoneId)
 end
 
 local EMPTY = table.freeze({})
@@ -435,7 +603,8 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 				def = combo and (combo[step] or combo[1])
 			end
 			local speed = if typeof(info.Speed) == "number" and info.Speed > 0 then info.Speed else 1
-			local impact = (if def and typeof(def.Impact) == "number" then def.Impact else 0.15) / speed
+			local impact1 = if def and typeof(def.Impact) == "number" then def.Impact else 0.15
+			local impact = impact1 / speed
 			playSpec(spec, volume, 1, position, impact, lead, speed, event)
 			local burst = spec.Burst
 			if typeof(burst) == "table" then
@@ -455,6 +624,8 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 					remember(shots, character, impact, false)
 				end
 			end
+			-- zone fighting styles: the accent of the weapon's zone
+			swingAccent(info, requested, variant, step, impact1, speed, volume, position)
 		end
 	elseif event == "Impact" then
 		local materials = entry.Materials or EMPTY
@@ -481,6 +652,7 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 		if info.Crit == true and entry.Crit then
 			playSpec(entry.Crit, base, 1, position, nil, lead, 1, event)
 		end
+		hitAccent(event, info, base, position)
 	elseif event == "Shot" then
 		-- the player's own shot is heard through its Swing (release / fire)
 		local spec = if info.Own == true then nil elseif info.Enemy == true then entry.Enemy else entry.Player
@@ -524,6 +696,9 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 		end
 	else
 		playSpec(entry, volume, 1, position, nil, lead, 1, event)
+		if event == "Land" then
+			hitAccent(event, info, volume, position)
+		end
 		local rarity = info.Rarity
 		local chime = CombatSfx.EquipChime
 		if event == "Equip" and typeof(rarity) == "number" and rarity >= chime.From then
@@ -538,7 +713,7 @@ function Sfx.combatStats(): { [string]: number }
 	for _, list in pairs(idle) do
 		pooled += #list
 	end
-	return { Active = #active, Pooled = pooled, Created = created, Anchors = #anchors }
+	return { Active = #active, Accents = accentCount, Pooled = pooled, Created = created, Anchors = #anchors }
 end
 
 -- Client start: load every combat sound, then warm the pool (the first swing must not wait for a download).

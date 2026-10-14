@@ -306,6 +306,87 @@ from their own sets (+ HeavySlamBoom under the gun PowerShot); Cast2 = MagicChar
 MeteorDrop = MagicCharge + MagicCast (lower) + GrandCast; BlinkBlast burst = the element's Burst style at its hit;
 GroundBreaker jump = Roll (lower), its slam = the existing Burst "Slam".
 
+### Round 4 (2026-10-14, zone fighting styles): 56 more sounds, 207 in total
+
+Every weapon now adds its zone's accent layer (ctx.Zone = the weapon's zone, the brief = the Sound line of
+`Config/CombatStyles`) on top of the category sounds, mapped in `Config/CombatSfx` `Zones` / `ZoneAccent`: a light
+layer on ordinary combo steps (every 2nd step; every step for Heavy / Magic, every 3rd for Dagger), a fuller one on
+finishers, dash strikes and jump attacks, the zone's signature beats timed exactly like the animation's
+`Style_<Zone>_Finisher` / `_Jump` overlays (read from `Config/CombatVFX` `ZoneTiming`, late mode and JumpSkip included),
+impacts (at most 3 accents per 0.1 s) and landings. Plains (the base style) has no accent. Accents are quieter than the
+category sounds, count in the cap of 12, at most 4 play at once, they are the first ones stopped when the cap is full
+and never stop a category sound. Same source and settings as before (licensed ProSoundEffects catalog, free; inserted
+with the Studio MCP `insert_asset`, a plain Sound each, no children, attributes SourceAssetId / SourceName /
+SourceCreator, RollOff InverseTapered 10-150, group PlayerFX). Base volumes loudness-matched by measurement
+(AudioAnalyzer RMS peak: whoosh-type layers -15 dB, impact-type -11 dB, voices and clicks -13 dB); the accent level is
+the spec Volume in `Zones` (0.2-0.85). Peak / Start / Length measured the same way. All 56 verified loaded in Play
+(IsLoaded, TimeLength > 0). **Nothing was auditioned by ear.** Swap candidates first: the Dead moans (no real moan in
+the catalog: an eerie choral exhale and a very quiet ghostly exhale at Volume 8.5), the Swamp bubbles (wet "mouth pops"),
+the Heaven choir (a short real chorus swell), the Jungle growls (lion roar / snarl).
+
+| Name | Asset id | Zone: event | Volume |
+|---|---|---|---|
+| Combat_Style_Desert_Hiss1 | 9118771837 | Desert: sandy hiss on swings, corkscrew jump, landing | 1.32 |
+| Combat_Style_Desert_Hiss2 | 9118772208 | Desert: same set | 0.68 |
+| Combat_Style_Desert_Burst1 | 9118768545 | Desert: sand burst on impacts, landings, the finisher's sand kick | 1.07 |
+| Combat_Style_Desert_Burst2 | 9118768199 | Desert: same set | 0.79 |
+| Combat_Style_Jungle_Growl1 | 9116302323 | Jungle: growl-breath at the top of the finisher pounce, pounce jump, dash strike | 1.20 |
+| Combat_Style_Jungle_Growl2 | 9116311713 | Jungle: same set | 1.02 |
+| Combat_Style_Jungle_Rustle1 | 9114518070 | Jungle: leaf rustle on swings, impacts, landing crouch, landings | 0.77 |
+| Combat_Style_Jungle_Rustle2 | 9114515384 | Jungle: same set | 0.54 |
+| Combat_Style_Jungle_Rustle3 | 9114515381 | Jungle: same set (short crunchy rustle) | 0.88 |
+| Combat_Style_Tundra_Crack1 | 9114857058 | Tundra: icy crack at the release, the finisher's crush (~0.19 s), the frozen jump lock | 0.72 |
+| Combat_Style_Tundra_Crack2 | 9114856932 | Tundra: same set | 2.16 |
+| Combat_Style_Tundra_Crunch1 | 9114857626 | Tundra: crunching ice impacts, landings | 1.06 |
+| Combat_Style_Tundra_Crunch2 | 9114857819 | Tundra: same set | 1.15 |
+| Combat_Style_Swamp_Whisper1 | 9126213992 | Swamp: whispery curse on swings, the finisher twirl, jump twist, landings | 1.51 |
+| Combat_Style_Swamp_Whisper2 | 9126214931 | Swamp: same set | 4.07 |
+| Combat_Style_Swamp_Bubble1 | 9113607142 | Swamp: bubbling pop on impacts, landings, the late body turn | 1.12 |
+| Combat_Style_Swamp_Bubble2 | 9113607667 | Swamp: same set | 2.00 |
+| Combat_Style_Swamp_Bubble3 | 9113606976 | Swamp: same set | 2.34 |
+| Combat_Style_Volcano_Roar1 | 9114442751 | Volcano: fiery roar on swings, the finisher's knee-up and smash, the explosive leap | 0.43 |
+| Combat_Style_Volcano_Roar2 | 9114445306 | Volcano: same set | 0.88 |
+| Combat_Style_Volcano_Roar3 | 9114443884 | Volcano: same set | 1.07 |
+| Combat_Style_Volcano_Hiss1 | 9119165650 | Volcano: lava hiss on impacts, landings, the finisher overshoot | 1.27 |
+| Combat_Style_Volcano_Hiss2 | 9119166217 | Volcano: same set | 1.23 |
+| Combat_Style_Hell_Rumble1 | 9125990895 | Hell: deep demonic rumble on swings, the savage spin, crater landings | 0.90 |
+| Combat_Style_Hell_Rumble2 | 9125989410 | Hell: same set | 1.22 |
+| Combat_Style_Hell_Growl1 | 9114628620 | Hell: demonic growl at the finisher's counter-coil, the dive with arms wide | 0.94 |
+| Combat_Style_Hell_Growl2 | 9114628598 | Hell: same set | 0.95 |
+| Combat_Style_Hell_Fire1 | 9117984279 | Hell: fire burst on impacts, landings, the deepest rip | 1.33 |
+| Combat_Style_Hell_Fire2 | 9117988143 | Hell: same set | 1.48 |
+| Combat_Style_Heaven_Chime1 | 9126073318 | Heaven: bright chime on swings, the strike, impacts, landings | 2.04 |
+| Combat_Style_Heaven_Chime2 | 9126073001 | Heaven: same set | 2.51 |
+| Combat_Style_Heaven_Chime3 | 9126071458 | Heaven: same set | 1.04 |
+| Combat_Style_Heaven_Shimmer1 | 9120296422 | Heaven: shimmer on the open wings, the halo pause, landings | 1.88 |
+| Combat_Style_Heaven_Choir1 | 9113043149 | Heaven: choir-like swell on the finisher's open wings, the halo pause | 3.35 |
+| Combat_Style_Dead_Moan1 | 9113802218 | Dead: ghostly moan on the finisher's glide back, the jump drift | 2.04 |
+| Combat_Style_Dead_Moan2 | 9114572768 | Dead: same set | 8.51 |
+| Combat_Style_Dead_Spirit1 | 9119468359 | Dead: ghostly whoosh on swings, landings | 1.29 |
+| Combat_Style_Dead_Spirit2 | 9119467121 | Dead: same set | 1.82 |
+| Combat_Style_Dead_Bone1 | 9113510003 | Dead: hollow bone impacts, landings | 1.23 |
+| Combat_Style_Dead_Bone2 | 9113509723 | Dead: same set | 1.80 |
+| Combat_Style_Dead_Knock1 | 9119975167 | Dead: hollow knock under the bone impacts, the finisher's two snaps | 1.76 |
+| Combat_Style_Abyss_Swoosh1 | 9118859153 | Abyss: watery swoosh on swings, the whip, the breaching dive | 0.39 |
+| Combat_Style_Abyss_Swoosh2 | 9118859436 | Abyss: same set | 0.51 |
+| Combat_Style_Abyss_Splash1 | 9117947034 | Abyss: splash on impacts, landings, the finisher's second ripples | 3.35 |
+| Combat_Style_Abyss_Splash2 | 9125701286 | Abyss: same set | 2.63 |
+| Combat_Style_Mechanical_Servo1 | 9118943996 | Mechanical: servo whir on swings, the piston release, the jump lock | 1.02 |
+| Combat_Style_Mechanical_Servo2 | 9118991185 | Mechanical: same set | 1.58 |
+| Combat_Style_Mechanical_Servo3 | 9118421080 | Mechanical: same set | 1.48 |
+| Combat_Style_Mechanical_Click1 | 9125822328 | Mechanical: ratchet clicks of the finisher wind-up / retract, the jump lock, after landings | 1.93 |
+| Combat_Style_Mechanical_Click2 | 9117612325 | Mechanical: same set | 1.11 |
+| Combat_Style_Mechanical_Zap1 | 9114277402 | Mechanical: electric zap on impacts, landings | 1.72 |
+| Combat_Style_Mechanical_Zap2 | 9114277403 | Mechanical: same set | 2.75 |
+| Combat_Style_Void_Warp1 | 9118158113 | Void: reversed whoosh sucked into the hit (swings, the snap), the flip, implode on impacts | 0.97 |
+| Combat_Style_Void_Warp2 | 9118158252 | Void: same set | 1.24 |
+| Combat_Style_Void_Thump1 | 9119873301 | Void: deep gravity thump on landings, the slam-down, impacts | 2.95 |
+| Combat_Style_Void_Thump2 | 9119872771 | Void: same set | 3.31 |
+
+Reused (no new asset): the Volcano finisher's two stomps = LandDirt (lower), the Abyss splash landing = MagicBurstWater
+under the splash. Dev hook: `SoundService:SetAttribute("CombatSfxZone", "<ZoneId>")` forces one zone's accent for
+every combat sound; with `CombatSfxDebug` the log marks accents "<event>+<Zone>" and `CombatSfxAccents` counts them.
+
 ## How to swap a sound
 
 Change `SoundId` to `rbxassetid://<new id>` on the Sound instance, keep its `Name`, and update the three

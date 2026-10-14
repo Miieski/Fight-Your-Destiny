@@ -26,6 +26,7 @@
 --   3. a spec = { Set, Volume?, Pitch?, Lead?, Hit?, At?, Also? }: one variant of the Set (never the same twice in a
 --      row), random pitch +-PitchRange, Volume / Pitch multiply the Sound's own; Also = more specs played together
 --      (layers, they inherit the timing of their parent).
+--   4. zone fighting styles: the accent layer of the weapon's zone (ctx.Zone) on top, see Zones at the end
 -- Timing (seconds at attack speed x1, divided by ctx.Speed): a Swing spec's variant Peak lands Lead (default HitLead)
 -- before the step's hit (Config/Combat Combos[category][step].Impact, or the AirAttacks / DashAttacks Impact) -
 -- delayed, or skipping the start of the file when the hit comes sooner; Hit = sync to that time instead (Dagger's
@@ -364,6 +365,117 @@ CombatSfx.Sets = {
 	MagicBlink = { -- BlinkBlast: the caster blinks
 		{ Name = "Combat_Magic_Blink1", Peak = 0.06, Length = 0.58 },
 		{ Name = "Combat_Magic_Blink2", Peak = 0.06, Length = 0.47 },
+	},
+	-- Zone fighting styles (2026-10-14): each zone's accent layer (Zones below; Plains has none)
+	StyleDesertHiss = { -- sandy hiss under the whoosh (Desert)
+		{ Name = "Combat_Style_Desert_Hiss1", Peak = 0.7, Length = 1.43, Start = 0.5 },
+		{ Name = "Combat_Style_Desert_Hiss2", Peak = 0.55, Length = 1.7, Start = 0.3 },
+	},
+	StyleDesertBurst = { -- soft sand burst (Desert impacts, landings)
+		{ Name = "Combat_Style_Desert_Burst1", Peak = 0.17, Length = 0.94, Start = 0.1 },
+		{ Name = "Combat_Style_Desert_Burst2", Peak = 0.34, Length = 0.58, Start = 0.06 },
+	},
+	StyleJungleGrowl = { -- short growl-breath (Jungle finishers, pounces)
+		{ Name = "Combat_Style_Jungle_Growl1", Peak = 0.21, Length = 1.0 },
+		{ Name = "Combat_Style_Jungle_Growl2", Peak = 0.21, Length = 1.5, Start = 0.08 },
+	},
+	StyleJungleRustle = { -- leaf rustle in the whoosh, leaf bursts
+		{ Name = "Combat_Style_Jungle_Rustle1", Peak = 0.51, Length = 1.6, Start = 0.25 },
+		{ Name = "Combat_Style_Jungle_Rustle2", Peak = 0.4, Length = 1.4, Start = 0.34 },
+		{ Name = "Combat_Style_Jungle_Rustle3", Peak = 0.11, Length = 0.6, Start = 0.02 },
+	},
+	StyleTundraCrack = { -- icy crack at the release
+		{ Name = "Combat_Style_Tundra_Crack1", Peak = 0.41, Length = 0.85, Start = 0.38 },
+		{ Name = "Combat_Style_Tundra_Crack2", Peak = 0.45, Length = 0.55, Start = 0.42 },
+	},
+	StyleTundraCrunch = { -- crunching ice (impacts, landings)
+		{ Name = "Combat_Style_Tundra_Crunch1", Peak = 0.6, Length = 0.92, Start = 0.55 },
+		{ Name = "Combat_Style_Tundra_Crunch2", Peak = 0.49, Length = 0.9, Start = 0.44 },
+	},
+	StyleSwampWhisper = { -- whispery curse layer
+		{ Name = "Combat_Style_Swamp_Whisper1", Peak = 0.79, Length = 1.8, Start = 0.38 },
+		{ Name = "Combat_Style_Swamp_Whisper2", Peak = 0.85, Length = 1.54, Start = 0.55 },
+	},
+	StyleSwampBubble = { -- bubbling pop (impacts, landings)
+		{ Name = "Combat_Style_Swamp_Bubble1", Peak = 0.19, Length = 0.3, Start = 0.17 },
+		{ Name = "Combat_Style_Swamp_Bubble2", Peak = 0.24, Length = 0.43, Start = 0.21 },
+		{ Name = "Combat_Style_Swamp_Bubble3", Peak = 0.13, Length = 0.64, Start = 0.09 },
+	},
+	StyleVolcanoRoar = { -- fiery roar layer
+		{ Name = "Combat_Style_Volcano_Roar1", Peak = 0.34, Length = 0.56, Start = 0.2 },
+		{ Name = "Combat_Style_Volcano_Roar2", Peak = 0.41, Length = 0.68, Start = 0.29 },
+		{ Name = "Combat_Style_Volcano_Roar3", Peak = 0.3, Length = 0.43, Start = 0.12 },
+	},
+	StyleVolcanoHiss = { -- lava hiss (impacts, landings)
+		{ Name = "Combat_Style_Volcano_Hiss1", Peak = 0.24, Length = 0.75, Start = 0.19 },
+		{ Name = "Combat_Style_Volcano_Hiss2", Peak = 0.17, Length = 0.75, Start = 0.13 },
+	},
+	StyleHellRumble = { -- deep demonic rumble (low growling whoosh)
+		{ Name = "Combat_Style_Hell_Rumble1", Peak = 0.68, Length = 1.8, Start = 0.4 },
+		{ Name = "Combat_Style_Hell_Rumble2", Peak = 1.32, Length = 2.2, Start = 0.8 },
+	},
+	StyleHellGrowl = { -- deep demonic growl (finisher spin, demonic dive)
+		{ Name = "Combat_Style_Hell_Growl1", Peak = 0.28, Length = 2.1, Start = 0.04 },
+		{ Name = "Combat_Style_Hell_Growl2", Peak = 0.26, Length = 1.75, Start = 0.04 },
+	},
+	StyleHellFire = { -- fire burst (impacts, crater landings)
+		{ Name = "Combat_Style_Hell_Fire1", Peak = 0.21, Length = 0.68, Start = 0.04 },
+		{ Name = "Combat_Style_Hell_Fire2", Peak = 0.34, Length = 0.6, Start = 0.17 },
+	},
+	StyleHeavenChime = { -- bright chime layer
+		{ Name = "Combat_Style_Heaven_Chime1", Peak = 0.21, Length = 1.04, Start = 0.11 },
+		{ Name = "Combat_Style_Heaven_Chime2", Peak = 0.15, Length = 0.75, Start = 0.11 },
+		{ Name = "Combat_Style_Heaven_Chime3", Peak = 0.32, Length = 0.66, Start = 0.3 },
+	},
+	StyleHeavenShimmer = { -- light shimmer (halo pause, landings)
+		{ Name = "Combat_Style_Heaven_Shimmer1", Peak = 0.15, Length = 1.9, Start = 0.09 },
+	},
+	StyleHeavenChoir = { -- choir-like swell (the finisher's open wings)
+		{ Name = "Combat_Style_Heaven_Choir1", Peak = 0.38, Length = 2.1, Start = 0.12 },
+	},
+	StyleDeadMoan = { -- ghostly moan
+		{ Name = "Combat_Style_Dead_Moan1", Peak = 2.24, Length = 3.0, Start = 1.6 },
+		{ Name = "Combat_Style_Dead_Moan2", Peak = 0.43, Length = 1.7, Start = 0.15 },
+	},
+	StyleDeadSpirit = { -- ghostly whoosh
+		{ Name = "Combat_Style_Dead_Spirit1", Peak = 0.41, Length = 1.07, Start = 0.1 },
+		{ Name = "Combat_Style_Dead_Spirit2", Peak = 0.51, Length = 1.09, Start = 0.25 },
+	},
+	StyleDeadBone = { -- hollow bone impact
+		{ Name = "Combat_Style_Dead_Bone1", Peak = 0.02, Length = 0.62 },
+		{ Name = "Combat_Style_Dead_Bone2", Peak = 0.04, Length = 0.49 },
+	},
+	StyleDeadKnock = { -- hollow wooden knock (the bone's hollow layer, the finisher's sudden snaps)
+		{ Name = "Combat_Style_Dead_Knock1", Peak = 0.02, Length = 0.25 },
+	},
+	StyleAbyssSwoosh = { -- watery swoosh
+		{ Name = "Combat_Style_Abyss_Swoosh1", Peak = 0.32, Length = 0.85, Start = 0.1 },
+		{ Name = "Combat_Style_Abyss_Swoosh2", Peak = 0.32, Length = 0.81, Start = 0.09 },
+	},
+	StyleAbyssSplash = { -- small splash (impacts, ripples, landings)
+		{ Name = "Combat_Style_Abyss_Splash1", Peak = 0.15, Length = 1.0, Start = 0.13 },
+		{ Name = "Combat_Style_Abyss_Splash2", Peak = 0.3, Length = 0.68 },
+	},
+	StyleMechServo = { -- servo whir
+		{ Name = "Combat_Style_Mechanical_Servo1", Peak = 0.34, Length = 0.64, Start = 0.09 },
+		{ Name = "Combat_Style_Mechanical_Servo2", Peak = 0.79, Length = 0.85, Start = 0.2 },
+		{ Name = "Combat_Style_Mechanical_Servo3", Peak = 0.21, Length = 0.83, Start = 0.03 },
+	},
+	StyleMechClick = { -- ratchet clicks (the finisher's wind-up steps and retract, the locked jump)
+		{ Name = "Combat_Style_Mechanical_Click1", Peak = 0.06, Length = 0.34 },
+		{ Name = "Combat_Style_Mechanical_Click2", Peak = 0.36, Length = 0.72, Start = 0.17 },
+	},
+	StyleMechZap = { -- electric zap (impacts, landings)
+		{ Name = "Combat_Style_Mechanical_Zap1", Peak = 0.36, Length = 0.6, Start = 0.13 },
+		{ Name = "Combat_Style_Mechanical_Zap2", Peak = 0.34, Length = 0.58, Start = 0.13 },
+	},
+	StyleVoidWarp = { -- reversed whoosh (it builds up and cuts at its peak: the snap)
+		{ Name = "Combat_Style_Void_Warp1", Peak = 0.38, Length = 0.66, Start = 0.1 },
+		{ Name = "Combat_Style_Void_Warp2", Peak = 0.45, Length = 0.75, Start = 0.07 },
+	},
+	StyleVoidThump = { -- deep gravity thump (landings, the finisher's slam-down)
+		{ Name = "Combat_Style_Void_Thump1", Peak = 0.11, Length = 0.56 },
+		{ Name = "Combat_Style_Void_Thump2", Peak = 0.09, Length = 0.56, Start = 0.03 },
 	},
 	-- Shared
 	Roll = {
@@ -778,6 +890,221 @@ CombatSfx.Shared = {
 		Default = "Arcane",
 		-- layered under the area of a grand cast (GrandCast, MeteorDrop: the bigger area burst)
 		Grand = { Set = "HeavyLandBoom", Pitch = 0.9, Volume = 0.6, Lead = 0 },
+	},
+} :: { [string]: { [string]: any } }
+
+-- ------------------------------------------------------------------------------------------------
+-- Zone fighting styles (2026-10-14, docs/COMBAT_CONTRACTS.md section 9; the brief = the Sound line of
+-- Config/CombatStyles). Every weapon adds its zone's accent layer (ctx.Zone = the weapon's zone, 1..12) on top of the
+-- category sounds above: quieter, same position / IsLocal rules, same registry (variants, pitch +-5 %, pooled copies).
+-- Accent sounds count in Cap and are the first ones stopped when it is full; at most ZoneAccent.Cap of them play at
+-- once, and an accent never stops a category sound (it is dropped instead); StackWindow / StackMax apply to category
+-- sounds only (the beats of one move may start several variants of a set at once). Plains (the base style) has no accent.
+-- Per zone (every field optional):
+--   Light     ordinary combo steps: on every LightEvery[category]-th step (1, 1 + N, ...) so it does not get tiring
+--   Swing     finishers, dash strikes and jump attacks with no jump beat (the default of Finisher / Dash / Air)
+--   Finisher, Dash, Air   their own spec instead of Swing ({} = no layer, only the beats)
+--             (timed on the move's hit like the category's whoosh: the variant's Peak lands Lead before it)
+--   Beats     signature moments, { Finisher = { beat }, Jump = { beat } }: a beat = a spec + Beat = the time in the
+--             animation's Style_<Zone>_Finisher / _Jump overlay (finisher 0..1 with the hit at 0.5; jump: the dive starts
+--             at 0.35, the landing at 0.6), converted with the clips of Config/CombatVFX ZoneTiming exactly as the
+--             animation and the VFX beats (Config/CombatVFX Zones LateOk: Dagger / Ranged finishers play the whole
+--             signature in the recovery; JumpSkip: no jump beats; melee jump beats after 0.35 are skipped, the landing is
+--             the Land event); the variant's Peak lands Lead (default 0) before that time
+--   Impact    every confirmed hit (x FinisherImpact on finishers), at most ImpactMax per ImpactWindow s; peaks at once
+--   Land      the jump attack's landing (Land event), peaks at once; its layers with At play that long after it
+-- Dev hook (Play, Client command bar): SoundService:SetAttribute("CombatSfxZone", "Void") (a zone id or index) forces
+-- that zone's accent for every combat sound; the CombatSfxDebug log marks accent sounds "<event>+<Zone>" and the
+-- attribute CombatSfxAccents counts the accents playing.
+CombatSfx.ZoneAccent = {
+	Volume = 1, -- master level of every accent layer
+	Cap = 4, -- accent sounds playing at once
+	ImpactMax = 3, -- impact accents per ImpactWindow s (a spin through a crowd), like the VFX zone impacts
+	ImpactWindow = 0.1,
+	FinisherImpact = 1.25, -- impact accent level on a finisher hit
+	-- the Light layer on every Nth ordinary combo step (fast weapons less often)
+	LightEvery = { Sword = 2, Spear = 2, Heavy = 1, Dagger = 3, Gauntlet = 2, Ranged = 2, Magic = 1 } :: { [string]: number },
+}
+
+-- Plains (Squire): the base style, no accent ("plain steel whooshes, no extra layer").
+CombatSfx.Zones = {
+	-- Dune Dancer: a sandy hiss under the whoosh, a soft sand burst on impacts; the finisher whirl hisses into the hit
+	-- and kicks a little sand as it completes, the corkscrew jump hisses in the air
+	Desert = {
+		Light = { Set = "StyleDesertHiss", Volume = 0.3 },
+		Swing = { Set = "StyleDesertHiss", Volume = 0.55 },
+		Finisher = { Set = "StyleDesertHiss", Volume = 0.6, Lead = 0.05 },
+		Beats = {
+			Finisher = { { Beat = 0.44, Set = "StyleDesertBurst", Volume = 0.3, Pitch = 1.1 } },
+			Jump = { { Beat = 0.2, Set = "StyleDesertHiss", Volume = 0.5, Pitch = 1.1 } },
+		},
+		Impact = { Set = "StyleDesertBurst", Volume = 0.45 },
+		Land = { Set = "StyleDesertBurst", Volume = 0.8, Also = { { Set = "StyleDesertHiss", Volume = 0.35, Pitch = 0.9 } } },
+	},
+	-- Feral: leaf rustle in the whoosh, a short growl-breath on finishers (peaking at the top of the pounce) and dash
+	-- strikes, leaves at the landing crouch, leaf bursts on impacts; the pounce jump growls as the claws spread
+	Jungle = {
+		Light = { Set = "StyleJungleRustle", Volume = 0.35 },
+		Swing = { Set = "StyleJungleRustle", Volume = 0.5 },
+		Dash = { Set = "StyleJungleRustle", Volume = 0.45, Also = { { Set = "StyleJungleGrowl", Volume = 0.3, Pitch = 1.1 } } },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.4, Set = "StyleJungleGrowl", Volume = 0.55 },
+				{ Beat = 0.6, Set = "StyleJungleRustle", Volume = 0.3, Pitch = 1.1 },
+			},
+			Jump = { { Beat = 0.12, Set = "StyleJungleGrowl", Volume = 0.5 } },
+		},
+		Impact = { Set = "StyleJungleRustle", Volume = 0.35, Pitch = 1.1 },
+		Land = { Set = "StyleJungleRustle", Volume = 0.65 },
+	},
+	-- Glacier: an icy crack at the hard release, crunching ice impacts; the finisher cracks at the crushing release after
+	-- its frozen pause (the crack is its only layer), the frozen hang of the jump locks with a small crack
+	Tundra = {
+		Light = { Set = "StyleTundraCrack", Volume = 0.25, Pitch = 1.15 },
+		Swing = { Set = "StyleTundraCrack", Volume = 0.45 },
+		Finisher = {},
+		Beats = {
+			Finisher = { { Beat = 0.43, Set = "StyleTundraCrack", Volume = 0.65 } },
+			Jump = { { Beat = 0.08, Set = "StyleTundraCrack", Volume = 0.35, Pitch = 1.2 } },
+		},
+		Impact = { Set = "StyleTundraCrunch", Volume = 0.5 },
+		Land = { Set = "StyleTundraCrunch", Volume = 0.8, Also = { { Set = "StyleTundraCrack", Volume = 0.5, Pitch = 0.9 } } },
+	},
+	-- Hexblade: a whispery curse layer, a bubbling pop on impacts; the finisher's twirl whispers into the hit, a curse
+	-- bubbles on the late body turn; the crooked twist of the jump whispers
+	Swamp = {
+		Light = { Set = "StyleSwampWhisper", Volume = 0.3 },
+		Swing = { Set = "StyleSwampWhisper", Volume = 0.55 },
+		Finisher = { Set = "StyleSwampWhisper", Volume = 0.6, Lead = 0.06 },
+		Beats = {
+			Finisher = { { Beat = 0.72, Set = "StyleSwampBubble", Volume = 0.3, Pitch = 0.9 } },
+			Jump = { { Beat = 0.15, Set = "StyleSwampWhisper", Volume = 0.45 } },
+		},
+		Impact = { Set = "StyleSwampBubble", Volume = 0.5 },
+		Land = { Set = "StyleSwampBubble", Volume = 0.7, Also = { { Set = "StyleSwampWhisper", Volume = 0.35, Pitch = 0.9 } } },
+	},
+	-- Berserker: a fiery roar layer, lava hiss on impacts; the finisher roars at the knee-up, stomps twice, smashes with a
+	-- lower roar and hisses lava on the overshoot; the explosive leap of the jump roars, the crash hisses
+	Volcano = {
+		Light = { Set = "StyleVolcanoRoar", Volume = 0.3 },
+		Swing = { Set = "StyleVolcanoRoar", Volume = 0.55 },
+		Finisher = { Set = "StyleVolcanoRoar", Volume = 0.6, Pitch = 0.88 },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.12, Set = "StyleVolcanoRoar", Volume = 0.45, Pitch = 0.78 },
+				{ Beat = 0.24, Set = "LandDirt", Volume = 0.45, Pitch = 0.8 },
+				{ Beat = 0.45, Set = "LandDirt", Volume = 0.5, Pitch = 0.72 },
+				{ Beat = 0.6, Set = "StyleVolcanoHiss", Volume = 0.35 },
+			},
+			Jump = { { Beat = 0.1, Set = "StyleVolcanoRoar", Volume = 0.5, Pitch = 0.85 } },
+		},
+		Impact = { Set = "StyleVolcanoHiss", Volume = 0.45 },
+		Land = { Set = "StyleVolcanoHiss", Volume = 0.75, Also = { { Set = "StyleVolcanoRoar", Volume = 0.5, Pitch = 0.75 } } },
+	},
+	-- Demon: a deep demonic rumble, fire bursts on impacts; the finisher's savage spin growls from the counter-coil and
+	-- rumbles into the rip-down, fire on the deepest rip; the dive growls with the arms flung wide, the crater burns
+	Hell = {
+		Light = { Set = "StyleHellRumble", Volume = 0.3 },
+		Swing = { Set = "StyleHellRumble", Volume = 0.55 },
+		Finisher = { Set = "StyleHellRumble", Volume = 0.6, Pitch = 0.9 },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.06, Set = "StyleHellGrowl", Volume = 0.45 },
+				{ Beat = 0.62, Set = "StyleHellFire", Volume = 0.35, Pitch = 0.85 },
+			},
+			Jump = { { Beat = 0.12, Set = "StyleHellGrowl", Volume = 0.45 } },
+		},
+		Impact = { Set = "StyleHellFire", Volume = 0.45 },
+		Land = { Set = "StyleHellFire", Volume = 0.75, Pitch = 0.85, Also = { { Set = "StyleHellRumble", Volume = 0.45, Pitch = 0.8 } } },
+	},
+	-- Seraph: a bright chime layer, a choir-like shimmer on finishers (the wings open, the held beat), chimes on impacts;
+	-- the halo pause of the jump shimmers, the beam strike landing chimes
+	Heaven = {
+		Light = { Set = "StyleHeavenChime", Volume = 0.25 },
+		Swing = { Set = "StyleHeavenChime", Volume = 0.45 },
+		Finisher = { Set = "StyleHeavenChime", Volume = 0.5, Lead = 0 },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.3, Set = "StyleHeavenChoir", Volume = 0.5 },
+				{ Beat = 0.3, Set = "StyleHeavenShimmer", Volume = 0.35 },
+			},
+			Jump = {
+				{ Beat = 0.12, Set = "StyleHeavenShimmer", Volume = 0.45 },
+				{ Beat = 0.2, Set = "StyleHeavenChoir", Volume = 0.3, Pitch = 1.1 },
+			},
+		},
+		Impact = { Set = "StyleHeavenChime", Volume = 0.35, Pitch = 1.1 },
+		Land = { Set = "StyleHeavenChime", Volume = 0.6, Also = { { Set = "StyleHeavenShimmer", Volume = 0.4 } } },
+	},
+	-- Revenant: a ghostly whoosh, hollow bone impacts; the finisher's two sudden snaps knock, a ghostly moan on its glide
+	-- back; the slow drift of the jump moans, a soul whoosh on the landing
+	Dead = {
+		Light = { Set = "StyleDeadSpirit", Volume = 0.3 },
+		Swing = { Set = "StyleDeadSpirit", Volume = 0.5 },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.31, Set = "StyleDeadKnock", Volume = 0.35 },
+				{ Beat = 0.41, Set = "StyleDeadKnock", Volume = 0.4, Pitch = 0.88 },
+				{ Beat = 0.75, Set = "StyleDeadMoan", Volume = 0.45 },
+			},
+			Jump = { { Beat = 0.15, Set = "StyleDeadMoan", Volume = 0.4, Lead = -0.1 } },
+		},
+		Impact = { Set = "StyleDeadBone", Volume = 0.45, Also = { { Set = "StyleDeadKnock", Volume = 0.3 } } },
+		Land = { Set = "StyleDeadBone", Volume = 0.6, Pitch = 0.85, Also = { { Set = "StyleDeadSpirit", Volume = 0.4, Pitch = 0.85 } } },
+	},
+	-- Tidecaller: a watery swoosh, splashes on impacts; the finisher's whip swooshes lower, its second ripples splash at
+	-- the feet; the breaching dive swooshes, the splash landing (with the water burst of the magic areas)
+	Abyss = {
+		Light = { Set = "StyleAbyssSwoosh", Volume = 0.3 },
+		Swing = { Set = "StyleAbyssSwoosh", Volume = 0.5 },
+		Finisher = { Set = "StyleAbyssSwoosh", Volume = 0.55, Pitch = 0.9 },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.65, Set = "StyleAbyssSplash", Volume = 0.25 },
+				{ Beat = 0.8, Set = "StyleAbyssSplash", Volume = 0.2, Pitch = 1.12 },
+			},
+			Jump = { { Beat = 0.15, Set = "StyleAbyssSwoosh", Volume = 0.45, Pitch = 0.85 } },
+		},
+		Impact = { Set = "StyleAbyssSplash", Volume = 0.45 },
+		Land = { Set = "StyleAbyssSplash", Volume = 0.7, Also = { { Set = "MagicBurstWater", Volume = 0.35, Pitch = 1.1 } } },
+	},
+	-- Automaton: servo whirs and clicks, an electric zap on impacts; the finisher's ratchet wind-up clicks three times,
+	-- the piston release whirs, two retract clicks; the locked jump clicks, the landing zaps then retracts
+	Mechanical = {
+		Light = { Set = "StyleMechServo", Volume = 0.3 },
+		Swing = { Set = "StyleMechServo", Volume = 0.5 },
+		Finisher = { Set = "StyleMechServo", Volume = 0.5, Pitch = 1.1 },
+		Beats = {
+			Finisher = {
+				{ Beat = 0.12, Set = "StyleMechClick", Volume = 0.35 },
+				{ Beat = 0.24, Set = "StyleMechClick", Volume = 0.35, Pitch = 1.05 },
+				{ Beat = 0.36, Set = "StyleMechClick", Volume = 0.4, Pitch = 1.1 },
+				{ Beat = 0.62, Set = "StyleMechClick", Volume = 0.3, Pitch = 0.95 },
+				{ Beat = 0.8, Set = "StyleMechClick", Volume = 0.3, Pitch = 0.9 },
+			},
+			Jump = {
+				{ Beat = 0.06, Set = "StyleMechClick", Volume = 0.4 },
+				{ Beat = 0.06, Set = "StyleMechServo", Volume = 0.3, Pitch = 0.9, Lead = -0.08 },
+			},
+		},
+		Impact = { Set = "StyleMechZap", Volume = 0.45 },
+		Land = { Set = "StyleMechZap", Volume = 0.7, Also = {
+			{ Set = "StyleMechClick", At = 0.22, Volume = 0.35 },
+			{ Set = "StyleMechClick", At = 0.4, Volume = 0.3, Pitch = 0.92 },
+		} },
+	},
+	-- Voidwalker: a warped (reversed) whoosh sucked into the hit, a deep gravity thump on landings; the finisher's slow
+	-- spin is sucked into the snap, a thump on the slam-down; the weightless flip warps; impacts implode
+	Void = {
+		Light = { Set = "StyleVoidWarp", Volume = 0.3 },
+		Swing = { Set = "StyleVoidWarp", Volume = 0.5, Lead = 0 },
+		Finisher = { Set = "StyleVoidWarp", Volume = 0.6, Pitch = 0.85, Lead = 0 },
+		Beats = {
+			Finisher = { { Beat = 0.6, Set = "StyleVoidThump", Volume = 0.4, Pitch = 0.8 } },
+			Jump = { { Beat = 0.15, Set = "StyleVoidWarp", Volume = 0.4, Pitch = 0.8 } },
+		},
+		Impact = { Set = "StyleVoidThump", Volume = 0.35, Pitch = 1.2, Also = { { Set = "StyleVoidWarp", Volume = 0.25, Pitch = 1.3 } } },
+		Land = { Set = "StyleVoidThump", Volume = 0.85, Pitch = 0.7, Also = { { Set = "StyleVoidWarp", Volume = 0.35, Pitch = 0.75 } } },
 	},
 } :: { [string]: { [string]: any } }
 
