@@ -149,6 +149,14 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-14 (evening): MAP FIX (owner: hollow shells, gaps, z-fighting, no entering / climbing giant trees and the
+windmill).** 4 map sub-agent runs over all 12 zones + Hub with `tools/MapAudit.luau` (ServerStorage.DevTools.MapAudit:
+audit, autoClose, skirt, underFill, capFan, holeScan, fixZFight, fixShadows, fill, shell, undo). Fix parts live in
+`<Sub>.Decor.MapFix` (tagged, undoable), invisible no-climb shells in `<Landmark>.NoClimb` (Windmill, AncientTree,
+GiantTree, FrozenTree, SwingTree, TreeOfLight, CrystalTree), walk-in meshes with collision carry `MapFixCollide`.
+Facet surfaces (WedgePart "Facet") have nothing underneath: close any new one's open edges with MapAudit. Log: NIGHT_LOG
+"Map fix"; screenshots docs/screenshots/map_fix/. The map lives in the place file: the owner saves the .rbxl.
+
 **2026-10-14: COMBAT V3 + ZONE FIGHTING STYLES.** Jump attacks (`Config/Combat` AirAttacks: hang, dive timed on the hit,
 landing shockwave; Ranged volley, Magic blast), dash strikes (DashAttacks: attack during / right after a roll), longer
 Spear / Heavy / Ranged / Magic combos; 35 new clips, VFX (VFX.land, dives, dashes), SFX ("Land", Air / Dash). Dodge bug
