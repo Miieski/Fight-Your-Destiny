@@ -1506,3 +1506,46 @@ after_combat_v3 (6 files each).
   surface); the authored Plains spear dive landing (point 3.6 studs in the ground) is kept.
 - Zone accents only on swings / impacts / landings / signature beats; projectiles in flight, Magic area bursts and
   the Equip sound have no zone accent yet.
+
+# Map fix - 2026-10-14 (owner: "MAP FIX TASK (small) ... 6 screenshots of bugs in the map ... Do NOT change the style or layout of the map, only fix defects." + no entering / no climbing the giant trees and the windmill)
+
+Backup `before_map_fix` (6 files). Main agent findings: all 12 zones are built (~110k parts + Hub ~4k); hills,
+mountains, ridges, cliffs, shores are triangle surfaces of 2-stud WedgeParts "Facet" with nothing underneath (open
+edges / overhangs show their underside = screenshots 2-4); the giant trees / windmill are the landmarks Plains_1
+Windmill, Plains_3 AncientTree (already has an invisible TrunkCollision part), Jungle_1 GiantTree, Tundra_1 FrozenTree,
+Swamp_2 SwingTree, Heaven_1 TreeOfLight, Void_2 CrystalTree. No semi-transparent shadow caster in Plains / Hub at first
+scan. Map sub-agent runs (one Studio user at a time): run 1 = Plains + Hub (the owner's 6 screenshots, the reusable
+tools/MapAudit.luau, Windmill + AncientTree shells), then the 11 other zones in 2 runs.
+
+## Status (newest first)
+
+- 18:05 run 1 (Plains + Hub) started.
+- 19:15 run 1 DONE (Plains + Hub; backups mapfix_plains_before / _after). Map instances live in the place file; the repo
+  gets the new tool `tools/MapAudit.luau` (= ServerStorage.DevTools.MapAudit: audit / autoClose / skirt / fixZFight /
+  fixShadows / fill / shell / undo) and 22 before / after screenshots `docs/screenshots/map_fix/`. No terrain exists.
+  * Owner screenshot 1 (leaning peak + dark rectangle on the water): the Plains_1 mountain ring was cut open at the
+    Plains_2 border and hung over an empty strip with no sea / sea bed; the "rectangle" was the mountain's real shadow
+    cut off where the sea bed ended. Fixed: sea + sea-bed fill strips, closure facets (snow on top, rock below).
+  * 2-3 (green hollow hill): the two ends of the Plains_3 CorridorRidge, closed down to the sea bed (the hanging rock is
+    now inside the closure). 4 (brown slab over "water" = sky): NW end of the Plains_1 ring, closed.
+  * 5 (inside the AncientTree): Trunk / RootFlare meshes are CanCollide false and the old TrunkCollision box was only
+    22 studs wide for a ~19-stud flare radius: players walked 8 studs into the flare. Fixed with a no-climb shell.
+  * 6 (frame next to the windmill): no such part exists in Edit or Play (nothing semi-transparent, no Highlight /
+    SelectionBox, nothing created at runtime): Studio's own selection box (same cyan as the outline in #5) around the
+    PineTree_C next to the windmill. Climbing the windmill is fixed by its shell.
+  * Open facet edges: 750 found in Plains, 256 exposed ones closed by 1436 closure facets in `<Sub>.Decor.MapFix`
+    (78-degree cliffs, color of the nearest facet); 6 sea / sea-bed fill parts for 3 empty strips next to the map.
+    Z-fighting: 17 exact duplicates deleted, ~123 coplanar pairs in Plains and 245 in the Hub nudged 0.05-0.15 stud.
+    Hub: 16 semi-transparent / invisible parts no longer cast shadows (portals, fountain water, crystal ball, a glow).
+    Left as is (a wall there looked worse): small seams where the Plains_1 mountain foot meets the hills, ridge ends
+    by the gate passages, cave-mouth edges behind the Plains_4 tunnel walls.
+  * No-climb shells (`<Landmark>.NoClimb`, Transparency 1, CanCollide on, CanQuery / CanTouch / CastShadow off, so the
+    camera passes): Windmill 17 parts (16 walls r 15.5 + an invisible roof at y 78; the 30 blade parts no longer
+    collide, they are 15 studs up), AncientTree 17 parts (r 19.5, roof y 58, path kept clear). Play: runs from 8
+    directions stop at r 18.3 / 21.8, jumps from every side end outside, the windmill door cannot be reached (stops
+    8 studs before it), drops from above land on the invisible roofs or slide off the branches / blades.
+  * Checked, nothing to do: FarmHouse and Hub cottages (solid walls, roofs out of jump reach), PirateShip (solid hull,
+    deck by its ramp on purpose), CrystalGate, arches, gates, Hub tower. The only windmill is the Plains_1 one.
+  * Read-only audit of the 11 other zones (open edges / exposed to players): Desert 475/15, Jungle 244/8, Tundra
+    743/71 (+238 semi-transparent shadow casters), Swamp 32/24, Volcano 326/27, Hell 317/54, Heaven 274/188 (floats on
+    purpose), Dead 284/31, Abyss 455/89, Mechanical 0 facets, Void 1029/576 (floats on purpose).
