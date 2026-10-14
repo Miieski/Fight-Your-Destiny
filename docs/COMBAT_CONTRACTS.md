@@ -190,3 +190,29 @@ New clip names: `<Category>_JumpAttack`, `<Category>_DashAttack` (7 categories e
 PiercingLunge clip becomes `Spear_Attack4`), `Heavy_Attack3`, `Ranged_Attack2..3` (+ RangedCrossbow_ / RangedGun_
 versions where the style differs), `Magic_Attack2..3`. Optional (if time allows): `<Category>_Air` (upper-body stance
 while jumping / falling, Legs "Upper"), a second hurt clip, a landing recovery.
+
+### 8.3 What V3 added in each owner's files (for the next rounds)
+* Animations: `<Category>_JumpAttack` (new `Markers.Dive` = dive start; the local clip waits at Dive while the body hangs
+  and just before Hit until the body has landed), `<Category>_DashAttack`, `<Category>_Air` (upper-body stance while
+  jumping / falling), `Shared_Hit2` (random second hurt clip), new combo clips; dev hook `AnimReload` (recompiles the
+  clips in Play). The held Tool's parts are forced CanCollide = false on the client.
+* VFX: `Config/CombatVFX` `Land[category]` (VFX.land effects: Ring / Line / Burst / Ground), `AirSwing`, `DashSwing`;
+  module `Controllers/VFX/Dives.luau` (dive streaks from the body's real fall); dev hook command `land:<category>` on
+  workspace.VFX `Test`. Roll afterimages are lifted above the ground under the body (SmoothPlastic, no bloom).
+* Testing spots in Plains_1: path (2000, 3.2, -70), grass (2066, 3.2, -22).
+
+## 9. Zone fighting styles (2026-10-14)
+
+Owner: "Create different animations according to the zone weapon. So plains weapon will have a different animation than
+the void one." Answers: **12 fighting styles** (each zone its own stance and idle, rhythm, swing size and a signature
+move on finishers and jump attacks, for all 7 categories) and **effects and sounds too**.
+* `Config/CombatStyles.luau` (main agent, read it): one style per zone - Plains Squire (the base, unchanged), Desert
+  Dune Dancer, Jungle Feral, Tundra Glacier, Swamp Hexblade, Volcano Berserker, Hell Demon, Heaven Seraph, Dead
+  Revenant, Abyss Tidecaller, Mechanical Automaton, Void Voidwalker. Each entry describes Moves, Finisher, Jump, Look and
+  Sound: that is the brief; the numbers live in each owner's config. `CombatStyles.get(zoneIndexOrId)`,
+  `CombatStyles.ofTool(tool)` (the Tool's "Zone" attribute 1..12).
+* The style is the held weapon's zone, for every player's character (the Tool and its attributes replicate).
+* ctx.Zone (1..12, the weapon's zone) is now in every combat ctx CombatController builds: `VFX.swing`, `VFX.impact`,
+  `VFX.land`, `Sfx.combat("Swing" | "Impact" | "Land")` (other players' impacts: derived from their element).
+* Timing rules stay: a style may reshape a clip and its rhythm, but the Hit marker stays exactly at the step's Impact /
+  speed (the server hits then), and combo clips still fit the weapon interval at speed x1.

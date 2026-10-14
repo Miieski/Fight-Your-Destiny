@@ -27,6 +27,7 @@ local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 local WeaponCategories = require(ReplicatedStorage.GameSystem.Config.WeaponCategories)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
+local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
 local State = require(script.Parent.Parent.State)
 local Controls = require(script.Parent.ControlsController)
@@ -44,6 +45,11 @@ local CombatController = {}
 local player = Players.LocalPlayer
 local FEEL = Combat.Feel
 local AIR = Combat.AirAttack
+-- zone (fighting style) of a weapon element: other players' impacts only carry the element
+local ZONE_OF_ELEMENT: { [string]: number } = {}
+for _, zone in ipairs(Zones.List) do
+	ZONE_OF_ELEMENT[zone.Element] = zone.Index
+end
 local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts" }
 local HIT_STOP_GAP = 0.05 -- several enemies hit by one swing give one hit-stop
 local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
@@ -356,20 +362,22 @@ local function plunge(root: BasePart, humanoid: Humanoid, dir: Vector3, step: { 
 	end)
 end
 
-local function toolInfo(character: Model): (Tool?, number?, string?)
+-- The held weapon: Tool, rarity, element and zone (1..12: the zone fighting style, Config/CombatStyles).
+local function toolInfo(character: Model): (Tool?, number?, string?, number?)
 	local tool = character:FindFirstChildOfClass("Tool")
 	if not tool then
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	end
 	local def = Weapons.ById[tool:GetAttribute("WeaponId") or ""]
 	local rarity = tool:GetAttribute("Rarity")
-	return tool, if typeof(rarity) == "number" then rarity else nil, if def then def.Element else nil
+	local zone = tool:GetAttribute("Zone")
+	return tool, if typeof(rarity) == "number" then rarity else nil, if def then def.Element else nil, if typeof(zone) == "number" then zone elseif def then def.Zone else nil
 end
 
 -- The landing of my jump attack: shockwave, sound, shake (the damage comes from the server's "Hit").
 local function landed(character: Model, categoryId: string, groundPoint: Vector3, radius: number)
-	local tool, rarity, element = toolInfo(character)
-	local ctx = { Character = character, Tool = tool, Category = categoryId, Position = groundPoint, Radius = radius, Rarity = rarity, Element = element, IsLocal = true }
+	local tool, rarity, element, zone = toolInfo(character)
+	local ctx = { Character = character, Tool = tool, Category = categoryId, Position = groundPoint, Radius = radius, Rarity = rarity, Element = element, Zone = zone, IsLocal = true }
 	if VFX.land then
 		VFX.land(ctx)
 	end
@@ -452,7 +460,7 @@ local function attackOnce(forced: Vector3?): boolean
 	end
 	local length = Animations.attack(character, categoryId, index, speed, if point then point - (root.Position + Vector3.new(0, 1.5, 0)) else nil, variant)
 	finisherUntil = if finisher then now + math.max(length, step.Impact / speed) else 0
-	local tool, rarity, element = toolInfo(character)
+	local tool, rarity, element, zone = toolInfo(character)
 	local ctx = {
 		Character = character,
 		Tool = tool,
@@ -463,6 +471,7 @@ local function attackOnce(forced: Vector3?): boolean
 		Direction = dir,
 		Rarity = rarity,
 		Element = element,
+		Zone = zone,
 		Speed = speed,
 		IsLocal = true,
 	}
@@ -540,8 +549,11 @@ local function onHit(position: Vector3, amount: number, crit: boolean, finisher:
 		VFX.damageNumber(position, Format.number(amount) .. (if crit then "!" else ""), if crit then "crit" else "normal")
 	end
 	local mine = player.Character
-	local element = if mine then select(3, toolInfo(mine)) else nil
-	local ctx = { Position = position, Category = category, Crit = crit, Finisher = finisher == true, Element = element, IsLocal = true }
+	local element, zone = nil, nil
+	if mine then
+		element, zone = select(3, toolInfo(mine))
+	end
+	local ctx = { Position = position, Category = category, Crit = crit, Finisher = finisher == true, Element = element, Zone = zone, IsLocal = true }
 	VFX.impact(ctx)
 	Sfx.combat("Impact", ctx)
 	countHit()
@@ -571,13 +583,14 @@ local function onSwing(attacker: Player, category: string, step: number, dir: Ve
 	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
 	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1, if typeof(aim) == "Vector3" then aim else nil, kind)
 	local steps = Combat.Combos[category]
-	local tool, rarity, element = toolInfo(character)
+	local tool, rarity, element, zone = toolInfo(character)
 	local ctx = {
 		Character = character,
 		Tool = tool,
 		Category = category,
 		Step = step,
 		Variant = kind,
+		Zone = zone,
 		Finisher = kind == "Air" or (steps and steps[step] and steps[step].Finisher == true and kind == nil) or false,
 		Direction = if typeof(dir) == "Vector3" then dir else Vector3.new(0, 0, -1),
 		Rarity = rarity,
@@ -600,6 +613,7 @@ local function onImpact(position: Vector3, category: string?, crit: boolean, fin
 		Crit = crit == true,
 		Finisher = finisher == true,
 		Element = if typeof(element) == "string" then element else nil,
+		Zone = if typeof(element) == "string" then ZONE_OF_ELEMENT[element] else nil,
 		IsLocal = false,
 	}
 	VFX.impact(ctx)
@@ -612,9 +626,10 @@ local function onAirSlam(attacker: Player, category: string, position: Vector3, 
 		return
 	end
 	local character = attacker.Character
-	local tool: Tool?, rarity: number? = nil, nil
+	local tool: Tool?, rarity: number?, zone: number? = nil, nil, nil
 	if character then
-		tool, rarity = toolInfo(character)
+		local _
+		tool, rarity, _, zone = toolInfo(character)
 	end
 	local ctx = {
 		Character = character,
@@ -624,6 +639,7 @@ local function onAirSlam(attacker: Player, category: string, position: Vector3, 
 		Radius = if typeof(radius) == "number" then radius else 6,
 		Rarity = rarity,
 		Element = if typeof(element) == "string" then element else nil,
+		Zone = zone,
 		IsLocal = false,
 	}
 	if VFX.land then
