@@ -1549,3 +1549,25 @@ tools/MapAudit.luau, Windmill + AncientTree shells), then the 11 other zones in 
   * Read-only audit of the 11 other zones (open edges / exposed to players): Desert 475/15, Jungle 244/8, Tundra
     743/71 (+238 semi-transparent shadow casters), Swamp 32/24, Volcano 326/27, Hell 317/54, Heaven 274/188 (floats on
     purpose), Dead 284/31, Abyss 455/89, Mechanical 0 facets, Void 1029/576 (floats on purpose).
+- 20:00 run 2 DONE (Desert, Jungle, Tundra, Swamp; backups mapfix_run2_before / _after).
+  * Open shells: 4,655 closure facets (Desert 1,100, Jungle 1,416, Tundra 2,135; Swamp uses almost no facets): Tundra
+    mountain rings cut open over the void (T1 south, T4 north) - the owner's screenshot 2-4 kind -, mountain ends at the
+    T2 / T3 border, Jungle hill-ring corners, Desert dune-ring ends; Desert_3 talus edges closed under the surface
+    (no new wall where players walk). Gaps: Tundra 20-stud trenches along the mountain feet (snow floors) and Jungle
+    slits beside the corridors (ground strips); a top-down ray scan finds no hole in the 16 sub-zones.
+  * Z-fighting: 880 coplanar parts nudged 0.05 stud, 87 duplicates deleted. Shadows off on 34 parts (3 invisible gate
+    barriers, a fountain water, 30 see-through Tundra ice parts; nothing made opaque). 3 floating Swamp_3 lanterns put
+    on the ground. No textures / decals in these zones (nothing dark or stretched).
+  * Walk-in meshes now collide (attribute MapFixCollide): 386 Jungle EdgeWall hedges (a run stops at the surface
+    instead of 20 studs inside; 18 near gates / the entrance left passable), 12 HillCanopy + 6 moss caps, 4 Swamp_2
+    TwistedTree_B (95 studs tall), Tundra IceBulges and TreeMound.
+  * No-climb shells (Play-tested from every side, jumps and drops): Jungle_1 GiantTree (24 parts: 16-sided prism r 19.5
+    to y 124 + roof + 7 root fins so nobody walks up a root), Tundra_1 FrozenTree (17 parts, r 16.5), Swamp_2 SwingTree
+    (22 parts; flat wall along the path that passes 14 studs from the trunk, path not blocked). High limbs out of reach
+    no longer collide. No windmill in these zones.
+  * Big structures checked, no shell needed (solid, tops out of reach or reachable on purpose): RockArch, OasisWell,
+    StoneBridge, clay houses, tents, WaterfallCliff, StepPyramid, TribalHut, FrozenShip, IceCavePeak, cabins, Scaffold,
+    SunkenTrunk (tunnel by design), WitchTower.
+  * Left: 6 small exposed edges under 12 studs (Desert 5, Tundra 1), audit false positives (Tundra_4 crystal reliefs,
+    Swamp cabin gables). MapAudit: `insideSolid` filter (543 false positives gone), `footprintBox` fins, `keepClear`
+    covers every path folder.

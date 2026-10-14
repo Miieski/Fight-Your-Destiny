@@ -16,14 +16,17 @@
 			A.fixZFight(A.zfight(sub), { skip = function(p) return p.Transparency > 0.3 end })
 			A.fixShadows(A.transparency(sub))
 		end
-		-- 4) no-climb shell around a landmark (16-sided prism + disc roof in <model>.NoClimb)
+		-- 4) no-climb shell around a landmark (16-sided prism + disc roof in <model>.NoClimb); roots that
+		--    reach past the prism get "fins" so nobody walks up a root (run 2: Jungle_1 GiantTree)
 		A.shell(model, { center = Vector3.new(x, 0, z), radius = 15, sides = 16, thickness = 2, bottom = 10, top = 78 })
+		A.shell(model, { center = c, radius = 19.5, top = 124, boxes = { A.footprintBox(root, 1, -3, 27) } })
 
 	Checks (report fields, each a list of records { inst, pos, text, kind? }):
 		openEdges     boundary edges of "Facet" surfaces (WedgeParts made by BuildKit.tri) used by one triangle
 		              only. classify() marks e.exposure = "player" (the hollow under it is seen from a walkable
 		              spot / camera height in the zone), "outside" (only from the ring of outside viewpoints) or
-		              nil (on / in the floor, or hidden behind other geometry)
+		              nil (on / in the floor, filled by a solid part, or hidden behind
+		              other geometry)
 		floating      decor items with nothing under, above (hanging) or beside (wall-mounted) them
 		zfight        coplanar overlapping faces facing the same way with different colours (+ exact duplicates)
 		transparency  semi-transparent / invisible shadow casters, Glass / ForceField parts, selection adornments
@@ -41,6 +44,8 @@
 		A.fixShadows(list, o)    CastShadow off on semi-transparent / invisible parts
 		A.fill(sub, cf, size, props, name, tag)   one support / gap-filler part
 		A.shell(model, opts)     invisible collision shell (Transparency 1, CanCollide, no query / touch / shadow)
+		A.footprintBox(part, pad, bottom, top)   vertical box around a part's footprint, e.g. shell "fins"
+		                         over sloped roots: A.shell(m, { radius = r, boxes = { A.footprintBox(root, 1, -3, 27) } })
 		A.undo(sub, tag?)        deletes MapFix parts (all, or one Tag)
 ]]
 
@@ -521,6 +526,26 @@ local function visibleFrom(points: { Vector3 }, vps: { Vector3 }, params: Raycas
 	return false
 end
 
+-- p is inside a solid opaque block / wedge that is not a facet (a terrace body, a cabin wall, a
+-- ramp): the space under the edge is filled, there is no hollow to see.
+local function insideSolid(p: Vector3): boolean
+	local op = OverlapParams.new()
+	op.RespectCanCollide = false
+	for _, part in ipairs(workspace:GetPartBoundsInBox(CFrame.new(p), Vector3.one * 0.2, op)) do
+		local block = part:IsA("Part") and part.Shape == Enum.PartType.Block
+		if part.Transparency < 0.3 and not MapAudit.isFacet(part) and (block or part:IsA("WedgePart")) then
+			local l = part.CFrame:PointToObjectSpace(p)
+			local h = part.Size / 2
+			if math.abs(l.X) <= h.X and math.abs(l.Y) <= h.Y and math.abs(l.Z) <= h.Z
+				and (block or (l.Y + h.Y) / (2 * h.Y) <= (l.Z + h.Z) / (2 * h.Z)) then
+				return true
+			end
+		end
+	end
+	return false
+end
+MapAudit.insideSolid = insideSolid
+
 -- Height of the floor (ground, sea bed, facets) under p, nil over the void.
 function MapAudit.floorBelow(p: Vector3, params: RaycastParams?): number?
 	local hit = workspace:Raycast(p, Vector3.new(0, -500, 0), params or groundParams({}))
@@ -549,7 +574,17 @@ function MapAudit.classify(edges, subs: { Instance }, opts: { [string]: any }?)
 			e.exposure = nil -- bottom of a closure over the void (the map's underside)
 		else
 			local pts = probePoints(e)
-			if visibleFrom(pts, vps.player, params, opts.maxPlayerDist or 260, e) then
+			local filled = true
+			for _, q in ipairs(pts) do
+				if not insideSolid(q) then
+					filled = false
+					break
+				end
+			end
+			if filled then
+				e.exposure = nil -- the hollow is filled by a solid part (terrace body, wall)
+				e.filled = true
+			elseif visibleFrom(pts, vps.player, params, opts.maxPlayerDist or 260, e) then
 				e.exposure = "player"
 			elseif visibleFrom(pts, vps.outside, params, opts.maxOutsideDist or 700, e) then
 				e.exposure = "outside"
@@ -1155,6 +1190,43 @@ function MapAudit.shell(model: Instance, opts: { [string]: any }): { BasePart }
 	return made
 end
 
+--[=[
+	Vertical box around a part's horizontal footprint (a root, a rock, a buttress), aligned with the
+	part's longest horizontal axis, from Y = bottom to Y = top, padded by pad studs on each side. Used
+	as a shell "fin": A.shell(model, { radius = ..., boxes = { A.footprintBox(root, 1, -3, 26) } })
+	follows sloped roots closely, so nobody walks up a root onto the trunk.
+	Returns { CFrame, Size }.
+]=]
+function MapAudit.footprintBox(part: BasePart, pad: number, bottom: number, top: number): { any }
+	local cf, s = part.CFrame, part.Size / 2
+	local corners = {}
+	for _, x in ipairs({ -1, 1 }) do
+		for _, y in ipairs({ -1, 1 }) do
+			for _, z in ipairs({ -1, 1 }) do
+				table.insert(corners, cf:PointToWorldSpace(Vector3.new(x * s.X, y * s.Y, z * s.Z)))
+			end
+		end
+	end
+	-- Longest horizontal axis of the part.
+	local axes = { cf.RightVector * part.Size.X, cf.UpVector * part.Size.Y, cf.LookVector * part.Size.Z }
+	local best = flat(axes[1])
+	for _, a in ipairs(axes) do
+		if flat(a).Magnitude > best.Magnitude then
+			best = flat(a)
+		end
+	end
+	local u = if best.Magnitude > 1e-3 then best.Unit else Vector3.xAxis
+	local v = Vector3.new(-u.Z, 0, u.X)
+	local u0, u1, v0, v1 = math.huge, -math.huge, math.huge, -math.huge
+	for _, q in ipairs(corners) do
+		local du, dv = q:Dot(u), q:Dot(v)
+		u0, u1 = math.min(u0, du), math.max(u1, du)
+		v0, v1 = math.min(v0, dv), math.max(v1, dv)
+	end
+	local center = u * (u0 + u1) / 2 + v * (v0 + v1) / 2 + Vector3.new(0, (bottom + top) / 2, 0)
+	return { CFrame.fromMatrix(center, u, Vector3.yAxis), Vector3.new(u1 - u0 + 2 * pad, top - bottom, v1 - v0 + 2 * pad) }
+end
+
 -- Boxes (CFrame, Size) a fix must not cover: paths, spawns, entrance, hub return, gates, arches.
 function MapAudit.keepClear(sub: Instance): { { any } }
 	local boxes = {}
@@ -1162,13 +1234,22 @@ function MapAudit.keepClear(sub: Instance): { { any } }
 		table.insert(boxes, { p.CFrame, p.Size + Vector3.one * pad * 2 })
 	end
 	local decor = sub:FindFirstChild("Decor")
-	for _, folderName in ipairs({ "Path", "Tunnel", "Plaza" }) do
+	for _, folderName in ipairs({ "Path", "Paths", "Tunnel", "Plaza", "Walkways" }) do
 		local folder = decor and decor:FindFirstChild(folderName)
 		if folder then
 			for _, p in ipairs(folder:GetDescendants()) do
 				if p:IsA("BasePart") then
 					addPart(p, 3)
 				end
+			end
+		end
+	end
+	-- Path strips that live in other folders (Swamp: Ground.Path, Jungle: Corridor.Path).
+	for _, p in ipairs(if decor then decor:GetDescendants() else {}) do
+		if p:IsA("BasePart") and (p.Name == "Path" or p.Name == "PathShore") and p.Size.Y < 3 then
+			local f = p.Parent
+			if not (f and (f.Name == "Path" or f.Name == "Paths")) then
+				addPart(p, 3)
 			end
 		end
 	end
