@@ -34,13 +34,24 @@
 -- the local player the clip follows the body: it waits at Markers.Dive while the body still hangs, waits just before
 -- Hit while it is still in the air (high falls), and catches up once it has landed. Other players: by time only.
 -- Airborne stance: <Category>_Air (upper body) replaces Idle / Run while the Humanoid jumps or falls.
+-- Zone fighting styles (docs/COMBAT_CONTRACTS.md section 9): the held Tool's "Zone" (1..12, Config/CombatStyles) picks
+-- Config/CombatAnimations ZoneStyles[zoneId], applied to every clip of the category (Shared_ clips excepted) of any
+-- player's character: Posture offsets (lean, crouch, hunch, stance width, free hand), the attack's swing size around its
+-- first pose (Amp torso / arms / legs, Follow = overshoot after the hit), a time warp of the wind-up [0, Hit] and of the
+-- recovery [Hit, end] (the Hit pose stays exactly at the Hit time: warp(Hit) = Hit; the clip length is unchanged), Linear
+-- easing / a stepped idle (Mechanical), waves added to the idle (hover, rocking, breathing, servo ticks, twitches) and to
+-- attacks, and a signature overlay (Style_<Zone>_Finisher on combo finishers, Style_<Zone>_Jump on jump attacks) timed on
+-- the attack clip's own Dive / Hit markers: its joint rotations and Lift (whole body) are multiplied on at write time,
+-- its hand / blade / grip / feet / RootP offsets go into the IK targets. Plains (and no zone) = the clips as authored.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
+local CombatStyles = require(ReplicatedStorage.GameSystem.Config.CombatStyles)
 local Data = require(ReplicatedStorage.GameSystem.Config.CombatAnimations)
+local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 
 local Animations = {}
 local STYLES: { [string]: string } = Data.Styles or {}
@@ -59,6 +70,11 @@ local AIM_PITCH_MAX = math.rad(40) -- torso pitch toward the attack's aim (AimPi
 -- jump attack sync (local player): falling faster than this = diving; total wait; lead before Hit; catch-up rate
 local DIVE_VY, SYNC_HOLD_MAX, LAND_LEAD, CATCH_UP = 8, 1.3, 0.025, 3
 local AIR_FADE = 0.15 -- airborne stance blend
+-- zone styles: a finisher whose wind-up is shorter than this (seconds) plays a LateOk signature (spins, twirls) in its
+-- recovery instead (LATE_SPLIT of the recovery = the signature's wind-up part); lowest RootP.Y the posture / swing size
+-- may reach (deeper only if the clip itself goes deeper: landings)
+local LATE_WINDUP, LATE_SPLIT, CROUCH_FLOOR = 0.15, 0.55, -1.2
+local ROLE_ACTION, ROLE_IDLE, ROLE_STANCE = 0, 1, 2
 local VARIANTS: { [string]: { suffix: string, steps: { [string]: { [string]: any } } } } = {
 	Air = { suffix = "_JumpAttack", steps = Combat.AirAttacks or {} },
 	Dash = { suffix = "_DashAttack", steps = Combat.DashAttacks or {} },
@@ -85,7 +101,7 @@ local NAMES = {
 	"Root", "Waist", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow", "LWrist",
 	"RHip", "RKnee", "RAnkle", "LHip", "LKnee", "LAnkle",
 	"RootP", "RFoot", "LFoot", "RFootYaw", "LFootYaw", "RHand", "RBlade", "RPole", "LHand", "LBlade", "LPole",
-	"RFace", "LGrip",
+	"RFace", "LGrip", "Lift",
 }
 local PARTS = {
 	"LowerTorso", "UpperTorso", "Head", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperArm", "LeftLowerArm",
@@ -95,18 +111,40 @@ local NJ, NCH = 15, #NAMES
 local C_ROOTP, C_RFOOT, C_LFOOT, C_RYAW, C_LYAW = 16, 17, 18, 19, 20
 local C_RHAND, C_RBLADE, C_RPOLE, C_LHAND, C_LBLADE, C_LPOLE = 21, 22, 23, 24, 25, 26
 local C_RFACE, C_LGRIP = 27, 28 -- C_LGRIP is the last arm channel
+local C_LIFT = 29 -- style overlays only: whole-body offset (studs) added at write time
 local LEGS = { Upper = 0, Stand = 1, Own = 2 }
 local EASE = { s = 0, l = 1, i = 2, o = 3, O = 4 }
+local CHANNEL: { [string]: number } = {}
+for c, name in ipairs(NAMES) do
+	CHANNEL[name] = c
+end
+-- signature overlay channels that go into the IK targets (the joint channels 1..15 and Lift are applied at write time)
+local SIG_PRE = { C_ROOTP, C_RFOOT, C_LFOOT, C_RHAND, C_RBLADE, C_LHAND, C_LBLADE, C_LGRIP }
+local LOWER_CH: { [number]: boolean } = { [1] = true, [C_ROOTP] = true, [C_RFOOT] = true, [C_LFOOT] = true, [C_RYAW] = true, [C_LYAW] = true }
 
 type Track = { times: { number }, values: { Vector3 }, eases: { number }, n: number }
 type Clip = {
 	name: string, length: number, loop: boolean, legs: number, additive: boolean, hold: boolean,
 	fadeIn: number, fadeOut: number, hit: number?, dive: number?, legIK: boolean, rArm: boolean, lArm: boolean, aimPitch: boolean,
 	tracks: { Track | false },
+	-- zone styles: values at t = 0 (the swing size is scaled around them), the root turns a full spin / flip (no
+	-- root swing size), styled (not Shared_ / Style_), signature gain per category and LateOk (see LATE_WINDUP)
+	base: { Vector3 }, spinX: boolean, spinY: boolean, styled: boolean, gain: { [string]: number }?, lateOk: boolean,
 }
 type Slot = {
 	clip: Clip?, t: number, w: number, fade: number, stopping: boolean, rate1: number, rate2: number, kind: string, dir: Vector3?,
 	frozen: boolean, sync: boolean, held: number,
+	-- zone styles: phase 0 = unstyled, 1 = combo step / dash strike (time warp), 2 = jump attack (no wind-up warp: the
+	-- dive sync); fin = combo finisher; sig = signature overlay (gain sigW, late = played in the recovery)
+	phase: number, fin: boolean, sig: Clip?, sigW: number, late: boolean, started: number,
+}
+type Term = { c: number, axis: number, amp: number, freq: number, phase: number, bias: number, kind: number, steps: { number }? }
+type ZStyle = {
+	id: string, rootRot: Vector3, rootP: Vector3, waist: Vector3, neck: Vector3, rHand: Vector3, lHand: Vector3,
+	rFoot: Vector3, lFoot: Vector3, kt: number, ka: number, kl: number, follow: number,
+	windup: { number }?, recovery: { number }?, finWindup: { number }?, linear: boolean, idleRate: number, idleStep: number,
+	idle: { Term }, attack: { Term }, finisher: string?, jump: string?,
+	guardRHand: Vector3, guardRBlade: Vector3, guardLHand: Vector3, guardGain: { [string]: number },
 }
 type Leg = { hipLocal: Vector3, rest: Vector3, l1: number, l2: number, goal: number, yaw: number, hip: number, knee: number, ankle: number }
 type Arm = {
@@ -118,6 +156,7 @@ type State = {
 	joints: { any }, legs: { Leg }, rArm: Arm, lArm: Arm, pivot: CFrame, scale: number,
 	dirty: boolean, retryAt: number, ready: boolean, toolDirty: boolean, diedConn: RBXScriptConnection?, watched: Humanoid?,
 	category: string?, style: string?, idle: Clip?, run: Clip?, air: Clip?, stanceOn: boolean, aimPitch: number,
+	zstyle: ZStyle?, styleT: number,
 	stanceW: number, standF: number, runF: number, airF: number, idleT: number, runT: number, airT: number,
 	act: Slot, prev: Slot, add: Slot,
 	hitStopUntil: number, blocking: boolean, dead: boolean, spawnUntil: number,
@@ -168,6 +207,22 @@ local function compile(name: string, def: { [string]: any }): Clip
 			rawLegs = true
 		end
 	end
+	local base: { Vector3 } = table.create(NCH, ZERO)
+	for c = 1, NCH do
+		local tr = tracks[c]
+		if tr then
+			base[c] = tr.values[1]
+		end
+	end
+	local spinX, spinY = false, false
+	local rootTrack = tracks[1]
+	if rootTrack then
+		local loX, hiX, loY, hiY = math.huge, -math.huge, math.huge, -math.huge
+		for _, v in ipairs(rootTrack.values) do
+			loX, hiX, loY, hiY = math.min(loX, v.X), math.max(hiX, v.X), math.min(loY, v.Y), math.max(hiY, v.Y)
+		end
+		spinX, spinY = hiX - loX > math.rad(200), hiY - loY > math.rad(200)
+	end
 	return {
 		name = name,
 		length = def.Length,
@@ -184,7 +239,80 @@ local function compile(name: string, def: { [string]: any }): Clip
 		lArm = tracks[C_LHAND] ~= false or tracks[C_LGRIP] ~= false,
 		aimPitch = def.AimPitch == true,
 		tracks = tracks,
+		base = base,
+		spinX = spinX,
+		spinY = spinY,
+		styled = string.sub(name, 1, 7) ~= "Shared_" and string.sub(name, 1, 6) ~= "Style_",
+		gain = if typeof(def.Gain) == "table" then def.Gain else nil,
+		lateOk = def.LateOk == true,
 	}
+end
+
+-- Zone styles: Config/CombatAnimations ZoneStyles[zoneId] -> runtime numbers (radians, studs, channel indices).
+local zstyles: { [string]: ZStyle } = {}
+
+local function offset(c: number, v: any): Vector3
+	if typeof(v) ~= "table" then
+		return ZERO
+	end
+	local x, y, z = v[1] or 0, v[2] or 0, v[3] or 0
+	if c <= NJ then
+		return Vector3.new(math.rad(x), math.rad(y), math.rad(z))
+	elseif c == C_RHAND or c == C_LHAND then
+		return Vector3.new(math.rad(x), y, z)
+	elseif c == C_RBLADE or c == C_LBLADE or c == C_RFACE then
+		return Vector3.new(math.rad(x), math.rad(y), 0)
+	end
+	return Vector3.new(x, y, z)
+end
+
+local function terms(list: any): { Term }
+	local out: { Term } = {}
+	if typeof(list) ~= "table" then
+		return out
+	end
+	for _, def in ipairs(list) do
+		local c = CHANNEL[def[1]]
+		local axis = def[2] or 1
+		if c and axis >= 1 and axis <= 3 then
+			-- degrees for joints, hand azimuths and blades; studs for the rest
+			local angle = c <= NJ or ((c == C_RHAND or c == C_LHAND) and axis == 1) or c == C_RBLADE or c == C_LBLADE
+			local k = if angle then math.rad(1) else 1
+			local wave = def[7]
+			table.insert(out, {
+				c = c, axis = axis, amp = (def[3] or 0) * k, freq = def[4] or 1, phase = def[5] or 0, bias = (def[6] or 0) * k,
+				kind = if typeof(wave) == "table" then 1 elseif wave == "pulse" then 2 else 0,
+				steps = if typeof(wave) == "table" then wave else nil,
+			})
+		end
+	end
+	return out
+end
+
+local function knots(v: any): { number }?
+	return if typeof(v) == "table" and #v >= 2 then v else nil
+end
+
+local function compileStyles(data: { [string]: any })
+	table.clear(zstyles)
+	for id, def in pairs(data.ZoneStyles or {}) do
+		local post = def.Posture or {}
+		local guard = def.Guard or {}
+		local amp = def.Amp or {}
+		zstyles[id] = {
+			guardRHand = offset(C_RHAND, guard.RHand), guardRBlade = offset(C_RBLADE, guard.RBlade), guardLHand = offset(C_LHAND, guard.LHand),
+			guardGain = if typeof(def.GuardGain) == "table" then def.GuardGain else {},
+			id = id,
+			rootRot = offset(1, post.Root), rootP = offset(C_ROOTP, post.RootP), waist = offset(2, post.Waist), neck = offset(3, post.Neck),
+			rHand = offset(C_RHAND, post.RHand), lHand = offset(C_LHAND, post.LHand),
+			rFoot = offset(C_RFOOT, post.RFoot), lFoot = offset(C_LFOOT, post.LFoot),
+			kt = amp[1] or 1, ka = amp[2] or 1, kl = amp[3] or 1, follow = def.Follow or 1,
+			windup = knots(def.Windup), recovery = knots(def.Recovery), finWindup = knots(def.FinisherWindup),
+			linear = def.Linear == true, idleRate = def.IdleRate or 1, idleStep = def.IdleStep or 0,
+			idle = terms(def.Idle), attack = terms(def.Attack),
+			finisher = def.Finisher, jump = def.Jump,
+		}
+	end
 end
 
 local function compileAll(data: { [string]: any })
@@ -193,6 +321,7 @@ local function compileAll(data: { [string]: any })
 		clips[name] = compile(name, def)
 	end
 	STYLES = data.Styles or {}
+	compileStyles(data)
 end
 compileAll(Data)
 
@@ -211,6 +340,8 @@ local function ease(k: number, kind: number): number
 	return 1 - u * u * u
 end
 
+local linearEase = false -- zone style Linear (Mechanical): every key eased linearly while sampling a styled clip
+
 local function sample(track: Track, t: number): Vector3
 	local times, values = track.times, track.values
 	local n = track.n
@@ -223,7 +354,7 @@ local function sample(track: Track, t: number): Vector3
 		local b = times[i]
 		if t < b then
 			local a = times[i - 1]
-			return values[i - 1]:Lerp(values[i], ease((t - a) / (b - a), track.eases[i]))
+			return values[i - 1]:Lerp(values[i], ease((t - a) / (b - a), if linearEase then 1 else track.eases[i]))
 		end
 	end
 	return values[n]
@@ -231,6 +362,99 @@ end
 
 local function wrap(a: number): number
 	return (a + PI) % TAU - PI
+end
+
+local function smooth(k: number): number
+	k = clamp(k, 0, 1)
+	return k * k * (3 - 2 * k)
+end
+
+-- Time warp knots { u1, v1, u2, v2, ... } (0 < u < 1, increasing), implicit (0, 0) and (1, 1): piecewise linear.
+local function warpKnots(k: { number }, u: number): number
+	local pu, pv = 0, 0
+	for i = 1, #k - 1, 2 do
+		local ku, kv = k[i], k[i + 1]
+		if u < ku then
+			return pv + (kv - pv) * (u - pu) / (ku - pu)
+		end
+		pu, pv = ku, kv
+	end
+	return if pu < 1 then pv + (1 - pv) * (u - pu) / (1 - pu) else 1
+end
+
+-- The clip time a styled attack slot samples at clip time t: the wind-up and the recovery are warped separately so
+-- the Hit pose stays at the Hit time and the clip ends on time.
+local function warpTime(Z: ZStyle, clip: Clip, t: number, slot: Slot): number
+	local hit = clip.hit
+	if not hit or hit <= 0 then
+		return t
+	end
+	if t < hit then
+		local k = if slot.phase == 2 then nil elseif slot.fin and Z.finWindup then Z.finWindup else Z.windup
+		return if k then warpKnots(k, t / hit) * hit else t
+	end
+	local k = Z.recovery
+	local span = clip.length - hit
+	if not k or span <= 1e-3 then
+		return t
+	end
+	return hit + warpKnots(k, math.min(1, (t - hit) / span)) * span
+end
+
+-- The signature overlay's time for the attack clip at time t: its Dive / Hit markers line up with the clip's (the
+-- local jump attack holds at Dive while the body hangs: the overlay holds too); late = all of it in the recovery.
+local function sigTime(slot: Slot, clip: Clip, sig: Clip, t: number): number
+	local hit = clip.hit or clip.length
+	local ohit = sig.hit or sig.length * 0.5
+	local span = math.max(1e-3, clip.length - hit)
+	if slot.late then
+		if t <= hit then
+			return 0
+		end
+		local v = (t - hit) / span
+		if v < LATE_SPLIT then
+			return v / LATE_SPLIT * ohit
+		end
+		return ohit + math.min(1, (v - LATE_SPLIT) / (1 - LATE_SPLIT)) * (sig.length - ohit)
+	end
+	if t <= hit then
+		if hit <= 0 then
+			return ohit
+		end
+		local dive, odive = clip.dive, sig.dive
+		if dive and odive and dive > 0 and dive < hit then
+			if t <= dive then
+				return t / dive * odive
+			end
+			return odive + (t - dive) / (hit - dive) * (ohit - odive)
+		end
+		return t / hit * ohit
+	end
+	return ohit + math.min(1, (t - hit) / span) * (sig.length - ohit)
+end
+
+-- Style waves (idle / attack) added into out at style clock T, weight W; lower = root and legs are sampled.
+local function applyTerms(list: { Term }, out: { Vector3 }, T: number, W: number, lower: boolean)
+	for _, term in ipairs(list) do
+		local c = term.c
+		if lower or not LOWER_CH[c] then
+			local x = T * term.freq + term.phase
+			local v
+			if term.kind == 0 then
+				v = term.amp * sin(TAU * x)
+			elseif term.kind == 1 then
+				local steps = term.steps :: { number }
+				v = term.amp * steps[math.floor(x) % #steps + 1]
+			else
+				local f = x % 1 -- a twitch: up fast, down a little slower, then still for the rest of the period
+				v = term.amp * (if f < 0.04 then f / 0.04 elseif f < 0.14 then 1 - (f - 0.04) / 0.1 else 0)
+			end
+			v = (v + term.bias) * W
+			local o = out[c]
+			local axis = term.axis
+			out[c] = if axis == 1 then Vector3.new(o.X + v, o.Y, o.Z) elseif axis == 2 then Vector3.new(o.X, o.Y + v, o.Z) else Vector3.new(o.X, o.Y, o.Z + v)
+		end
+	end
 end
 
 local function approach(value: number, target: number, step: number): number
@@ -360,9 +584,13 @@ local list: { State } = {}
 local scratchA: { Vector3 } = table.create(NCH, ZERO)
 local scratchB: { Vector3 } = table.create(NCH, ZERO)
 local acc: { Vector3 } = table.create(NCH, ZERO)
+local sigJ: { Vector3 } = table.create(NJ, ZERO) -- signature joint offsets of the character being written
 
 local function newSlot(): Slot
-	return { clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false, sync = false, held = 0 }
+	return {
+		clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false, sync = false, held = 0,
+		phase = 0, fin = false, sig = nil, sigW = 1, late = false, started = 0,
+	}
 end
 
 local function newLeg(goal: number, yaw: number, hip: number): Leg
@@ -550,6 +778,12 @@ local function play(S: State, clip: Clip, rate1: number, rate2: number, kind: st
 	act.frozen = false
 	act.sync = false
 	act.held = 0
+	act.phase = 0
+	act.fin = false
+	act.sig = nil
+	act.sigW = 1
+	act.late = false
+	act.started = os.clock()
 	if kind == "attack" or kind == "roll" then
 		S.moveLockUntil = os.clock() + MOVE_LOCK
 	end
@@ -601,6 +835,17 @@ local function refreshTool(S: State, added: boolean)
 	S.category = id
 	local placeholder = tool and tool:GetAttribute("Placeholder") == true
 	S.style = if id and not placeholder and typeof(weaponId) == "string" then STYLES[weaponId] else nil
+	-- zone fighting style: the Tool's "Zone" (else its weapon's zone); dev override: local character attribute AnimZone
+	local zone = S.character:GetAttribute("AnimZone")
+	if typeof(zone) ~= "number" and typeof(zone) ~= "string" then
+		zone = tool and tool:GetAttribute("Zone")
+		if typeof(zone) ~= "number" and typeof(weaponId) == "string" then
+			local def = Weapons.ById[weaponId]
+			zone = def and def.Zone
+		end
+	end
+	local zoneStyle = if id then CombatStyles.get(zone) else nil
+	S.zstyle = if zoneStyle then zstyles[zoneStyle.Id] else nil
 	local idle = if id then styled(S, "_Idle") else nil
 	S.stanceOn = idle ~= nil
 	if idle then
@@ -618,6 +863,26 @@ local function refreshTool(S: State, added: boolean)
 		if equip and kind ~= "spawn" and kind ~= "death" and kind ~= "attack" and kind ~= "roll" then
 			play(S, equip, 1, 1, "equip")
 		end
+	end
+end
+
+-- Zone style of an attack slot (after play): phase, finisher, signature overlay (Style_<Zone>_Finisher / _Jump).
+local function styleSlot(S: State, slot: Slot, category: string, finisher: boolean, air: boolean)
+	local Z = S.zstyle
+	local clip = slot.clip
+	if not Z or not clip or not clip.styled or not clip.hit then
+		return
+	end
+	slot.phase = if air then 2 else 1
+	slot.fin = finisher
+	local name = if air then Z.jump elseif finisher then Z.finisher else nil
+	local sig = if name then clips[name] else nil
+	local gain = if sig and sig.gain then (sig.gain[category] or 1) else 1
+	if sig and gain > 0 then
+		slot.sig = sig
+		slot.sigW = gain
+		-- too short a wind-up for a spin before the strike: LateOk signatures play in the recovery
+		slot.late = sig.lateOk and not air and (clip.hit :: number) / math.max(1e-3, slot.rate1) < LATE_WINDUP
 	end
 end
 
@@ -664,6 +929,8 @@ local function add(character: Model, spawned: boolean)
 		watched = nil,
 		category = nil,
 		style = nil,
+		zstyle = nil,
+		styleT = math.random() * 10, -- style waves: characters of one style do not bob in sync
 		aimPitch = 0,
 		idle = nil,
 		run = nil,
@@ -723,6 +990,9 @@ local function add(character: Model, spawned: boolean)
 	end))
 	table.insert(S.conns, character:GetAttributeChangedSignal("AnimReload"):Connect(function()
 		reloadAttribute()
+	end))
+	table.insert(S.conns, character:GetAttributeChangedSignal("AnimZone"):Connect(function()
+		refreshTool(S, false)
 	end))
 	refreshTool(S, false)
 end
@@ -846,16 +1116,130 @@ local function solveArms(S: State, clip: Clip, out: { Vector3 })
 	end
 end
 
--- Samples a clip into out (upper body + arm IK unless arms = false; root, legs and leg IK when lower).
-local function sampleInto(S: State, clip: Clip, t: number, out: { Vector3 }, lower: boolean, wrapRoot: boolean, yawAdd: number, arms: boolean)
+-- Swing size of a styled attack around the clip's first pose: kt torso (root twist / lean unless the clip spins or
+-- flips, waist, neck), ka arms (hand azimuth / height, blade directions), kl legs (steps, body shift; crouch at half
+-- strength and never below CROUCH_FLOOR unless the clip goes there).
+local function amplify(clip: Clip, out: { Vector3 }, lower: boolean, kt: number, ka: number, kl: number)
+	local base = clip.base
+	if kt ~= 1 then
+		for c = 2, 3 do
+			local b = base[c]
+			out[c] = b + (out[c] - b) * kt
+		end
+		if lower then
+			local r, b = out[1], base[1]
+			out[1] = Vector3.new(if clip.spinX then r.X else b.X + (r.X - b.X) * kt, if clip.spinY then r.Y else b.Y + (r.Y - b.Y) * kt, r.Z)
+		end
+	end
+	if ka ~= 1 then
+		for pass = 1, 2 do
+			local c = if pass == 1 then C_RHAND else C_LHAND
+			local v, b = out[c], base[c]
+			out[c] = Vector3.new(b.X + (v.X - b.X) * ka, b.Y + (v.Y - b.Y) * ka, v.Z)
+			c = if pass == 1 then C_RBLADE else C_LBLADE
+			v, b = out[c], base[c]
+			out[c] = Vector3.new(b.X + (v.X - b.X) * ka, clamp(b.Y + (v.Y - b.Y) * ka, -1.9, 3.3), 0)
+		end
+	end
+	if lower and kl ~= 1 then
+		local v, b = out[C_ROOTP], base[C_ROOTP]
+		local y = b.Y + (v.Y - b.Y) * (1 + (kl - 1) * 0.5)
+		out[C_ROOTP] = Vector3.new(b.X + (v.X - b.X) * kl, math.max(y, math.min(v.Y, CROUCH_FLOOR)), b.Z + (v.Z - b.Z) * kl)
+		for c = C_RFOOT, C_LFOOT do
+			v, b = out[c], base[c]
+			out[c] = Vector3.new(b.X + (v.X - b.X) * kl, math.max(b.Y + (v.Y - b.Y) * kl, math.min(v.Y, 0)), b.Z + (v.Z - b.Z) * kl)
+		end
+	end
+end
+
+-- Zone style on a freshly sampled styled clip (before the IK): swing size, attack waves and the signature's target
+-- offsets (attack slots), posture (every clip), idle waves (the idle).
+local function shape(S: State, Z: ZStyle, clip: Clip, t: number, out: { Vector3 }, lower: boolean, slot: Slot?, role: number)
+	if slot and slot.phase > 0 then
+		local hit = clip.hit :: number
+		local m, g = 1, 1 -- follow-through multiplier, fade back to the clip's own size at the end
+		if t > hit then
+			local v = (t - hit) / math.max(1e-3, clip.length - hit)
+			m = 1 + (Z.follow - 1) * smooth(v / 0.25)
+			g = 1 - smooth((v - 0.5) / 0.5)
+		end
+		amplify(clip, out, lower, 1 + (Z.kt * m - 1) * g, 1 + (Z.ka * m - 1) * g, 1 + (Z.kl - 1) * g)
+		if #Z.attack > 0 then
+			applyTerms(Z.attack, out, S.styleT, 1, lower)
+		end
+		local sig = slot.sig
+		if sig then
+			local st = sigTime(slot, clip, sig, t)
+			local w = slot.sigW
+			local tracks = sig.tracks
+			for _, c in ipairs(SIG_PRE) do
+				local tr = tracks[c]
+				if tr and (lower or not LOWER_CH[c]) then
+					out[c] += sample(tr, st) * w
+				end
+			end
+		end
+	end
+	-- posture
+	out[2] += Z.waist
+	out[3] += Z.neck
+	out[C_RHAND] += Z.rHand
+	out[C_LHAND] += Z.lHand
+	if lower then
+		out[1] += Z.rootRot
+		local p, d = out[C_ROOTP], Z.rootP
+		out[C_ROOTP] = Vector3.new(p.X + d.X, math.max(p.Y + d.Y, math.min(p.Y, CROUCH_FLOOR)), p.Z + d.Z)
+		out[C_RFOOT] += Z.rFoot
+		out[C_LFOOT] += Z.lFoot
+	end
+	if role == ROLE_IDLE then
+		-- the style's own guard (how the weapon is held at rest; the attacks start from the clip's guard)
+		local k = if S.category then Z.guardGain[S.category] or 1 else 1
+		out[C_RHAND] += Z.guardRHand * k
+		out[C_RBLADE] += Z.guardRBlade * k
+		out[C_LHAND] += Z.guardLHand * k
+		if #Z.idle > 0 then
+			applyTerms(Z.idle, out, S.styleT, 1, lower)
+		end
+	end
+end
+
+-- Samples a clip into out (upper body + arm IK unless arms = false; root, legs and leg IK when lower). slot = the
+-- action slot playing it (nil for the stance), role = ROLE_ACTION / ROLE_IDLE / ROLE_STANCE (run, air): the zone style.
+local function sampleInto(S: State, clip: Clip, t: number, out: { Vector3 }, lower: boolean, wrapRoot: boolean, yawAdd: number, arms: boolean, slot: Slot?, role: number)
 	local tracks = clip.tracks
+	local Z = if clip.styled then S.zstyle else nil
+	local ts = t
+	if Z then
+		if slot and slot.phase > 0 then
+			ts = warpTime(Z, clip, t, slot)
+			linearEase = Z.linear
+		elseif role == ROLE_IDLE then
+			if Z.idleStep > 0 then
+				ts = t - t % Z.idleStep
+			end
+			linearEase = Z.linear
+		end
+	end
 	for c = 2, 9 do
 		local tr = tracks[c]
-		out[c] = if tr then sample(tr, t) else ZERO
+		out[c] = if tr then sample(tr, ts) else ZERO
 	end
 	for c = C_RHAND, C_LGRIP do
 		local tr = tracks[c]
-		out[c] = if tr then sample(tr, t) else ZERO
+		out[c] = if tr then sample(tr, ts) else ZERO
+	end
+	if lower then
+		local tr = tracks[1]
+		out[1] = if tr then sample(tr, ts) else ZERO
+		for c = 10, C_LYAW do
+			local track = tracks[c]
+			out[c] = if track then sample(track, ts) else ZERO
+		end
+	end
+	linearEase = false
+	if Z then
+		shape(S, Z, clip, t, out, lower, slot, role)
 	end
 	if arms then
 		solveArms(S, clip, out)
@@ -863,15 +1247,9 @@ local function sampleInto(S: State, clip: Clip, t: number, out: { Vector3 }, low
 	if not lower then
 		return
 	end
-	local tr = tracks[1]
-	local r = if tr then sample(tr, t) else ZERO
 	if wrapRoot then
-		r = Vector3.new(wrap(r.X), wrap(r.Y + yawAdd), wrap(r.Z))
-	end
-	out[1] = r
-	for c = 10, C_LYAW do
-		local track = tracks[c]
-		out[c] = if track then sample(track, t) else ZERO
+		local r = out[1]
+		out[1] = Vector3.new(wrap(r.X), wrap(r.Y + yawAdd), wrap(r.Z))
 	end
 	if clip.legIK then
 		solveLegs(S, out)
@@ -915,7 +1293,7 @@ local function actionLayer(S: State, slot: Slot)
 		local lv = root.CFrame:VectorToObjectSpace(dir)
 		yawAdd = atan2(-lv.X, -lv.Z)
 	end
-	sampleInto(S, clip, slot.t, scratchA, wL > 0, true, yawAdd, true)
+	sampleInto(S, clip, slot.t, scratchA, wL > 0, true, yawAdd, true, slot, ROLE_ACTION)
 	local pitch = S.aimPitch
 	if clip.aimPitch and pitch ~= 0 then
 		-- aim up / down: the torso leans (the arms follow, their targets are torso-relative)
@@ -976,15 +1354,28 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 	if S.act.sync and floorAir then
 		air = if root.AssemblyLinearVelocity.Y < -DIVE_VY then 2 else 1
 	end
-	advance(S.act, dt, sdt, air)
+	local act = S.act
+	local before, hitClip = act.t, act.clip
+	advance(act, dt, sdt, air)
 	advance(S.prev, dt, sdt, air)
 	advance(S.add, dt, sdt, 0)
-	if S.act.clip and S.act.w >= 1 then
+	if hitClip and hitClip.hit and act.kind == "attack" and act.clip == hitClip and before < hitClip.hit and act.t >= hitClip.hit
+		and S.character:GetAttribute("AnimHitDebug") == true then
+		-- dev check (attribute AnimHitDebug = true): real seconds from the attack call to the frame the clip reached Hit,
+		-- and the clip time the styled pose shows there (= Hit: the style keeps the Hit pose on the Hit time)
+		local Z = if hitClip.styled then S.zstyle else nil
+		S.character:SetAttribute("AnimHitAt", now - act.started)
+		S.character:SetAttribute("AnimHitPose", if Z and act.phase > 0 then warpTime(Z, hitClip, hitClip.hit, act) else hitClip.hit)
+		S.character:SetAttribute("AnimHitClip", `{hitClip.name} {if Z then Z.id else "-"}{if act.sig then " " .. act.sig.name else ""}{if act.late then " late" else ""}`)
+	end
+	if act.clip and act.w >= 1 then
 		S.prev.clip = nil
 	end
+	local Z = S.zstyle
+	S.styleT = (S.styleT + sdt) % 3600
 	local idle, run, airClip = S.idle, S.run, S.air
 	if idle then
-		S.idleT = (S.idleT + sdt) % idle.length
+		S.idleT = (S.idleT + sdt * (if Z and idle.styled then Z.idleRate else 1)) % idle.length
 	end
 	if run then
 		S.runT = (S.runT + sdt) % run.length
@@ -1008,12 +1399,12 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 			-- solve once; else blend the solved joints
 			local targets = (not run or not useRun or (idle.rArm == run.rArm and idle.lArm == run.lArm))
 				and (not airClip or not useAir or (idle.rArm == airClip.rArm and idle.lArm == airClip.lArm))
-			sampleInto(S, idle, S.idleT, scratchA, wL > 0, false, 0, not targets)
+			sampleInto(S, idle, S.idleT, scratchA, wL > 0, false, 0, not targets, nil, ROLE_IDLE)
 			for pass = 1, 2 do
 				local clip = if pass == 1 then (if useRun then run else nil) else (if useAir then airClip else nil)
 				if clip then
 					local f = if pass == 1 then runF else airF
-					sampleInto(S, clip, if pass == 1 then S.runT else S.airT, scratchB, false, false, 0, not targets)
+					sampleInto(S, clip, if pass == 1 then S.runT else S.airT, scratchB, false, false, 0, not targets, nil, ROLE_STANCE)
 					for c = 2, 9 do
 						scratchA[c] = scratchA[c]:Lerp(scratchB[c], f)
 					end
@@ -1028,12 +1419,41 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 				solveArms(S, idle, scratchA)
 			end
 		else
-			sampleInto(S, idle, S.idleT, scratchA, wL > 0, false, 0, true)
+			sampleInto(S, idle, S.idleT, scratchA, wL > 0, false, 0, true, nil, ROLE_IDLE)
 		end
 		layer(scratchA, stanceW, wL)
 	end
 	actionLayer(S, S.prev)
 	actionLayer(S, S.act)
+	-- zone style signature: joint rotations and the whole-body Lift of the attack slots' overlays (weighted by the slot)
+	local sigOn = false
+	local sigP = ZERO
+	for pass = 1, 2 do
+		local slot = if pass == 1 then S.act else S.prev
+		local sig, clip = slot.sig, slot.clip
+		if sig and clip and slot.w > 0 then
+			local st = sigTime(slot, clip, sig, slot.t)
+			local w = slot.w * slot.sigW
+			local tracks = sig.tracks
+			if not sigOn then
+				sigOn = true
+				for c = 1, NJ do
+					sigJ[c] = ZERO
+				end
+			end
+			for c = 1, NJ do
+				local tr = tracks[c]
+				if tr then
+					local v = sample(tr, st)
+					sigJ[c] += Vector3.new(wrap(v.X), wrap(v.Y), wrap(v.Z)) * w
+				end
+			end
+			local lt = tracks[C_LIFT]
+			if lt then
+				sigP += sample(lt, st) * w
+			end
+		end
+	end
 	-- write (blend with the Animator's pose of this frame), additive on top
 	local addClip = S.add.clip
 	local addT, addW = S.add.t, S.add.w
@@ -1042,7 +1462,9 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 	for c = 1, NJ do
 		local cov = if c >= 2 and c <= 9 then covU else covL
 		local addTrack = addClip and (addClip.tracks[c] or (c == 1 and addClip.tracks[C_ROOTP]))
-		if cov > 0.001 or addTrack then
+		local sj = if sigOn then sigJ[c] else ZERO
+		local lift = if c == 1 then sigP else ZERO
+		if cov > 0.001 or addTrack or sj ~= ZERO or lift ~= ZERO then
 			local joint = joints[c]
 			local cf
 			if cov > 0.001 then
@@ -1068,6 +1490,12 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 					end
 				end
 				cf *= offset
+			end
+			if sj ~= ZERO then
+				cf *= CFrame.fromEulerAnglesYXZ(sj.X, sj.Y, sj.Z)
+			end
+			if lift ~= ZERO then
+				cf += lift * scale -- in the root's parent frame: straight up / ahead whatever the lean
 			end
 			-- never write a NaN: it would make the body vanish (the Animator's pose stays for this frame)
 			local p, l, r = cf.Position, cf.LookVector, cf.RightVector
@@ -1152,6 +1580,8 @@ function Animations.attack(character: Model, category: string, step: number, spe
 		S.aimPitch = if unit then clamp(asin(clamp(unit.Y, -1, 1)), -AIM_PITCH_MAX, AIM_PITCH_MAX) else 0
 		play(S, clip, rate1, sp, "attack")
 		S.act.sync = own and S.isLocal and variant == "Air" and clip.dive ~= nil
+		local air = kind ~= nil and variant == "Air"
+		styleSlot(S, S.act, category, air or (kind == nil and def ~= nil and def.Finisher == true), air)
 	end
 	return length
 end
@@ -1222,6 +1652,11 @@ end
 --   character:SetAttribute("AnimReload", os.clock())   recompiles every clip from a fresh copy of
 --                                                        Config/CombatAnimations (tuning in Play after its Source
 --                                                        was replaced from the command line); AnimReloaded = clip count
+--   character:SetAttribute("AnimZone", "Void")          plays the held weapon in that zone's style (index or id; nil =
+--                                                        the Tool's zone): AnimDebug poses then show that style
+--   character:SetAttribute("AnimHitDebug", true)        each attack sets AnimHitAt (seconds from the call to the frame
+--                                                        the clip reached Hit), AnimHitPose (clip time the styled pose
+--                                                        shows then: = Hit) and AnimHitClip (clip, style, signature)
 debugAttribute = function(S: State)
 	local value = S.character:GetAttribute("AnimDebug")
 	local name, at, pitch = string.match(if typeof(value) == "string" then value else "", "^([%w_]+)@?([%d%.]*)@?(%-?[%d%.]*)$")
@@ -1234,6 +1669,15 @@ debugAttribute = function(S: State)
 		S.act.t = tonumber(at) or 0
 		S.act.frozen = true
 		S.prev.clip = nil
+		-- the zone style of the held weapon as in a real attack (<Category>_AttackN / _JumpAttack / _DashAttack)
+		local rest = string.match(name, "^%a+_(%a+%d*)$") or ""
+		local stepIndex = tonumber(string.match(rest, "^Attack(%d+)$"))
+		local category = S.category
+		local combo = category and Combat.Combos[category]
+		local finisher = stepIndex ~= nil and combo ~= nil and combo[stepIndex] ~= nil and combo[stepIndex].Finisher == true
+		if category and (stepIndex or rest == "JumpAttack" or rest == "DashAttack") then
+			styleSlot(S, S.act, category, finisher or rest == "JumpAttack", rest == "JumpAttack")
+		end
 	elseif S.act.kind == "debug" then
 		S.act.clip = nil
 		S.prev.clip = nil

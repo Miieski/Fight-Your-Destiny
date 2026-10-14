@@ -1424,3 +1424,44 @@ Backups `..._before_respec_refund_*` / `..._after_respec_refund_*` (6 files each
 - Points given by the admin panel (setPoints / setAllPoints) are free but a respec refunds them like bought points
   (admin only; real players can only buy points).
 - Boss arenas: dying there costs nothing either (the player still spectates until the fight ends).
+
+# Combat V3 - 2026-10-14 (owner: "LONG TASK: Make more combat animation. Make a special animation when the caracter jump+attack. You can take inspiration from the game Iron Soul: Donjon from Roblox. create as much animation as possible. You can use Blender but its not mandatory. You MUST use Subagent for VFX and SFX. Fix a lag of ground texture laggin when you dodge.")
+
+Iron Soul: Dungeon (web: Shift dash, hold-click heavy attack, weapon abilities) used as feel reference only. Dodge bug
+asked: "The ground become a bit blue, and sometime its making ground texture lagging". Backups before_combat_v3,
+anim_v3_before / _after, vfx_v3_before / _after (use the 130638 set), sfx_v3_before / _after.
+
+## Status (newest first)
+
+- 13:45 Combat V3 DONE (commits d28ca7a gameplay, 06968d1 animations, 63af514 VFX, 98dd97d SFX). Then the owner asked
+  for zone fighting styles (entry below).
+  * Dodge bug: measured first (no frame drop: 7 ms frames, camera smooth). Cause: the 3 roll afterimages (cyan Neon,
+    0.4) are snapshots of the curled roll pose; the 2nd / 3rd lay ON and INSIDE the ground (14 of 15 parts below the
+    ground, up to 0.93 stud deep): the bloom tinted the ground blue and the parts cutting through it made its texture
+    flicker. VFX sub-agent: ghosts lifted 0.12 stud above the ground under the body (slopes too), parts still below
+    hidden, SmoothPlastic instead of Neon, roll dust tinted by the ground; checked 4 dodges in a row on path and grass
+    (0 parts below). Main agent: the roll clip's tuck stays higher (RootP x0.6). With the owner's big-headed cat avatar
+    the head still dips into the ground for ~0.05 s at the upside-down frame (a different roll would be needed).
+  * Gameplay (main agent): jump attacks (Config/Combat AirAttacks: hang, then a dive timed so the feet touch the
+    ground at Impact; melee circle around the landing, a finisher; Ranged 3-arrow volley down at the nearest enemy,
+    stopping at the ground; Magic radius 9 blast), dash strikes (DashAttacks: an attack during a roll or within 0.35 s
+    after it), longer combos (Spear Sweep, Heavy GroundBreaker, Ranged QuickShot / PowerShot, Magic Cast2 / GrandCast),
+    Net "Swing" variant + "AirSlam". Server: airborne check (vertical speed or nothing under the feet; enemies under
+    the player are not ground). Tested: Sword jump attack landed at 0.311 s (Impact 0.32), 4 boars hit 72 (x1.3);
+    dash strike 3 boars 69 (x1.25); Ranged volley; Magic 5 boars 66 (x1.5); combos 1..3 for Ranged / Magic.
+  * Animation sub-agent: 35 clips (<Category>_JumpAttack with a Dive marker synced to the real landing, _DashAttack,
+    new combo steps, _Air stances, Shared_Hit2); measured landings on the Hit frame (Sword 0.30, Spear 0.33, Heavy
+    0.44, Dagger 0.25, Gauntlet 0.31). It found the spawn-time starter sword's Handle reading CanCollide = true on the
+    client (bounced the player on landings): held weapon parts are now forced non-colliding on the client (root cause
+    not found: the asset and the server say false).
+  * VFX sub-agent: VFX.land per category, Dives module, Air / Dash swing specs, new combo step effects, arrows launched
+    on the release frame; 11 new assets (place file only).
+  * SFX sub-agent: "Land" per category, Air / Dash swing sounds, new combo step sounds, 36 new free catalog sounds
+    (place file only); nothing auditioned by ear.
+
+## Decisions taken without the owner
+
+- Gauntlet keeps its 3-hit combo (the weapon rules say its 3rd hit does x2); the other new steps keep the average
+  damage of a combo about x1.
+- Jump attacks: one per jump, Ranged / Magic hover instead of diving, every jump attack is a finisher (bigger feel).
+- Dash strike instead of Iron Soul's hold-for-heavy (holding attack already chains the combo in this game).

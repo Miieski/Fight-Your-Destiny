@@ -149,6 +149,13 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-14: COMBAT V3 + ZONE FIGHTING STYLES.** Jump attacks (`Config/Combat` AirAttacks: hang, dive timed on the hit,
+landing shockwave; Ranged volley, Magic blast), dash strikes (DashAttacks: attack during / right after a roll), longer
+Spear / Heavy / Ranged / Magic combos; 35 new clips, VFX (VFX.land, dives, dashes), SFX ("Land", Air / Dash). Dodge bug
+fixed (the roll afterimages lay inside the ground: lifted, no Neon). Then the owner's zone styles: `Config/CombatStyles`
+(12 styles, one per zone; animations / VFX / SFX read the held weapon's zone, ctx.Zone). Contracts:
+`docs/COMBAT_CONTRACTS.md` sections 8-9. Log: NIGHT_LOG "Combat V3". Test tricks in the contracts (attack key ButtonR2).
+
 **2026-10-13: THE 84 REAL WEAPON MODELS ARE IN THE GAME (owner: "make these weapons in 3D, almost identical to the
 icons").** The V2 Blender models (already built from the icons on 2026-10-12) were re-checked one by one against their
 icon (`Previews/Weapons/<Cat>/<NN>_<id>_compare.png`), then imported by the owner (File > Import 3D, the 84 files of

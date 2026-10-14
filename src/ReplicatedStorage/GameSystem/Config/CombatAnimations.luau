@@ -1602,6 +1602,496 @@ Clips.Shared_Spawn = {
 
 CombatAnimations.Clips = Clips
 
+-- ------------------------------------------------------------------------------------------------
+-- ZONE FIGHTING STYLES (docs/COMBAT_CONTRACTS.md section 9; the brief of each style: Config/CombatStyles). Every weapon
+-- of a zone moves in its zone's style, whatever its category: the engine reshapes the category's clips (no clip per
+-- zone). Plains (Squire) has no entry: the clips as authored.
+-- ZoneStyles[zoneId] = {
+--   Posture   offsets added to every clip of the held category (Shared_ clips excepted): Root / Waist / Neck = { x, y, z }
+--             degrees (x < 0 leans forward; the Neck's x > 0 lifts the chin), RootP = { x, y, z } studs (y < 0 crouches),
+--             RFoot / LFoot = { x, y, z } studs (stance width / lift), RHand / LHand = { azimuth, height, radius }
+--   Guard     offsets of RHand / RBlade / LHand in the idle only: how the style holds the weapon at rest (the attacks
+--             start from the clip's own guard); GuardGain = { [category] = factor } (bows and staffs: less)
+--   Amp       { torso, arms, legs }: swing size of the attacks around their first pose (the guard): root twist / lean,
+--             waist and neck; hand azimuth / height and blade directions; steps and body shift (crouch at half)
+--   Follow    multiplier of the torso / arms size just after the Hit (> 1 = overshoot), back to the clip's own size
+--             at the end of the clip
+--   Windup / Recovery / FinisherWindup   time warp knots { u1, v1, u2, v2, ... }: at the fraction u of the wind-up
+--             [0, Hit] (of the recovery [Hit, end]) the clip shows its pose of fraction v (implicit 0 -> 0 and 1 -> 1, so
+--             the Hit pose stays exactly at the Hit time); equal v = a held pose, a short u step = a snap, v going back
+--             = a hitch. FinisherWindup replaces Windup on combo finishers. Jump attacks keep their wind-up (dive sync).
+--   Linear    true: no easing between keys (attacks and idle); IdleStep = seconds: the idle pose jumps in steps
+--   IdleRate  speed of the idle loop (breathing)
+--   Idle / Attack   waves added to the idle / to every attack: { channel, axis 1..3, amplitude, frequency Hz, phase
+--             (turns), bias?, wave? } (degrees for rotations, hand azimuths and blades, studs otherwise); wave nil =
+--             sine, "pulse" = a short twitch once per period, a table = steps (amplitude x step value: servo ticks)
+--   Finisher / Jump   signature overlay clips layered on combo finishers / jump attacks
+-- }
+-- Signature overlays (Style_<Zone>_Finisher / Style_<Zone>_Jump): offsets, not poses, timed on the attack clip's own
+-- markers: their Hit lines up with the clip's Hit (and their Dive with a jump attack's Dive), the parts before / after
+-- are stretched over the clip's wind-up / recovery. Joint channels (Root, Waist, Neck, hips, knees, RWrist ...: degrees)
+-- are multiplied on at write time (a Root yaw of 360 = a full spin of the whole body, arms and legs included); Lift =
+-- { x, y, z } studs moves the whole body (feet too: leaps) in the root's parent frame; RootP / RFoot / LFoot / RHand /
+-- LHand / RBlade / LBlade / LGrip are added to the clip's IK targets (LGrip { 0, -1 } lets go of a two-handed grip).
+-- Gain = { [category] = factor } (0 = not on that category); LateOk = true: on a finisher whose wind-up is shorter than
+-- 0.15 s (Dagger, Ranged) the whole signature plays in the recovery instead (spins after the strike).
+-- ------------------------------------------------------------------------------------------------
+-- An overlay: every channel used starts and ends at zero unless the first / last key sets it.
+local function overlay(length: number, markers: { [string]: number }, keys: { Pose }, extra: { [string]: any }?): { [string]: any }
+	local poses: { Pose } = {}
+	if keys[1][1] > 0 then
+		table.insert(poses, { 0 })
+	end
+	for _, key in ipairs(keys) do
+		table.insert(poses, key)
+	end
+	if keys[#keys][1] < length then
+		table.insert(poses, { length })
+	end
+	local first, last = poses[1], poses[#poses]
+	for _, key in ipairs(keys) do
+		for name in pairs(key) do
+			if typeof(name) == "string" then
+				if first[name] == nil then
+					first[name] = { 0, 0, 0, 0 }
+				end
+				if last[name] == nil then
+					last[name] = { 0, 0, 0, 0 }
+				end
+			end
+		end
+	end
+	local clip: { [string]: any } = { Length = length, Overlay = true, Legs = "Upper", Markers = markers, Poses = poses }
+	for k, v in pairs(extra or {}) do
+		clip[k] = v
+	end
+	return clip
+end
+-- A key: time, ease, channels (a held pose = the same channels again later).
+local function K(t: number, ease: string?, channels: Pose): Pose
+	local out = table.clone(channels)
+	out[1] = t
+	out[2] = ease
+	return out
+end
+local FIN = { Hit = 0.5 } -- finisher overlays: wind-up 0 -> 0.5, recovery 0.5 -> 1
+local JUMP = { Dive = 0.35, Hit = 0.6 } -- jump overlays: hang 0 -> 0.35, dive 0.35 -> 0.6 (landing), recovery -> 1
+
+local ZoneStyles: { [string]: { [string]: any } } = {}
+
+-- DESERT, Dune Dancer: flowing and wide, big torso twist, low sweeping steps; the follow-through lingers (the body keeps
+-- turning); idle sways like heat haze. Finisher: a whirling full-body spin into the strike. Jump: a corkscrew.
+ZoneStyles.Desert = {
+	Posture = { RootP = { 0, -0.12, 0 }, Waist = { -2, 0, 0 }, RFoot = { 0.08, 0, 0 }, LFoot = { -0.08, 0, 0.06 }, LHand = { 12, 0.12, 0.15 } },
+	Guard = { RHand = { 55, -0.05, 0.05 }, RBlade = { 160, -45 }, LHand = { 50, 0.6, 0.2 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.5, 1.15, 1.3 }, Follow = 1.2,
+	Windup = { 0.5, 0.42 }, Recovery = { 0.6, 0.42 },
+	IdleRate = 0.8,
+	Idle = {
+		{ "Waist", 3, 5, 0.3, 0 }, { "Root", 3, -3, 0.3, 0 }, { "Root", 2, 8, 0.15, 0.25 }, { "Neck", 3, -4, 0.3, 0.1 },
+		{ "RHand", 1, 6, 0.3, 0 }, { "LHand", 2, 0.1, 0.3, 0.5 }, { "LHand", 1, 10, 0.15, 0 },
+	},
+	Finisher = "Style_Desert_Finisher", Jump = "Style_Desert_Jump",
+}
+Clips.Style_Desert_Finisher = overlay(1, FIN, {
+	K(0.08, "o", { Root = { 0, -25, 0 }, RootP = { 0, -0.12, 0 }, LHand = { 15, 0.1, 0.1 } }),
+	K(0.2, "i", { Root = { 0, 50, 0 }, Waist = { 0, 0, -6 }, LHand = { 35, 0.35, 0.25 } }),
+	K(0.42, "l", { Root = { 0, 300, 0 }, Waist = { 0, 0, -8 }, RootP = { 0, -0.18, 0 }, LHand = { 35, 0.35, 0.25 } }),
+	K(0.5, "o", { Root = { 0, 360, 0 }, Waist = { 0, 0, 0 }, RootP = { 0, -0.15, 0 }, LHand = { 20, 0.15, 0.15 } }),
+	K(0.7, "s", { Root = { 0, 360, 0 }, RootP = { 0, -0.05, 0 }, LHand = { 10, 0.05, 0.05 } }),
+	K(1, "s", { Root = { 0, 360, 0 } }),
+}, { LateOk = true })
+Clips.Style_Desert_Jump = overlay(1, JUMP, {
+	K(0.05, "o", { Root = { 0, 20, 8 } }),
+	K(0.18, "l", { Root = { 0, 180, 18 }, LHand = { 40, 0.3, 0.2 }, LGrip = { 0, -1 }, RFoot = { 0, -0.4, 0, 0 }, LFoot = { 0, -0.4, 0, 0 } }),
+	K(0.33, "l", { Root = { 0, 340, 6 }, LHand = { 40, 0.3, 0.2 }, LGrip = { 0, -1 } }),
+	K(0.42, "o", { Root = { 0, 360, 0 }, LHand = { 0, 0, 0 }, LGrip = { 0, 0 }, RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 } }),
+	K(1, "s", { Root = { 0, 360, 0 } }),
+}, { Gain = { Ranged = 0 } })
+
+-- JUNGLE, Feral: a low crouched hunter, leaning in, head forward; fast snappy wind-ups (a quick coil, a tense beat, the
+-- snap), quick recoveries back into the crouch; idle prowls. Finisher: a pouncing leap into the strike. Jump: a pounce
+-- with the arms spread like claws, landing on all fours.
+ZoneStyles.Jungle = {
+	Posture = { Root = { -14, 0, 0 }, RootP = { 0, -0.42, 0.05 }, Waist = { -14, 0, 0 }, Neck = { 22, 0, 0 },
+		RFoot = { 0.1, 0, -0.05 }, LFoot = { -0.1, 0, 0.15 }, LHand = { 5, -0.12, 0.2 } },
+	Guard = { RHand = { 15, -0.15, 0.1 }, RBlade = { 20, -35 }, LHand = { -10, -0.15, 0.25 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.15, 0.95, 1.35 }, Follow = 0.95,
+	Windup = { 0.25, 0.5, 0.6, 0.56 }, Recovery = { 0.3, 0.72 },
+	Idle = {
+		{ "Waist", 3, 4, 0.4, 0 }, { "Root", 2, 6, 0.2, 0 }, { "RootP", 2, 0.05, 0.8, 0 }, { "Neck", 2, 12, 0.25, 0.3 },
+		{ "Waist", 1, 2.5, 0.8, 0.1 }, { "RHand", 2, 0.05, 0.4, 0 }, { "LHand", 2, 0.06, 0.4, 0.5 },
+	},
+	Finisher = "Style_Jungle_Finisher", Jump = "Style_Jungle_Jump",
+}
+Clips.Style_Jungle_Finisher = overlay(1, FIN, {
+	K(0.2, "o", { RootP = { 0, -0.3, 0 }, Lift = { 0, 0, 0.35 }, Waist = { -14, 0, 0 }, Neck = { 12, 0, 0 }, LHand = { 10, -0.2, 0.2 } }),
+	K(0.4, "o", { RootP = { 0, 0.05, 0 }, Lift = { 0, 0.85, 0.15 }, Root = { -18, 0, 0 }, Waist = { -6, 0, 0 }, Neck = { 6, 0, 0 },
+		RHip = { 40, 0, 0 }, RKnee = { -55, 0, 0 }, LHip = { 55, 0, 0 }, LKnee = { -65, 0, 0 }, LHand = { 30, 0.4, 0.25 } }),
+	K(0.5, "i", { RootP = { 0, -0.1, 0 }, Lift = { 0, 0.15, 0 }, Root = { -24, 0, 0 }, Waist = { -10, 0, 0 }, Neck = { 10, 0, 0 },
+		RHip = { 15, 0, 0 }, RKnee = { -20, 0, 0 }, LHip = { 20, 0, 0 }, LKnee = { -25, 0, 0 }, LHand = { 20, -0.15, 0.3 } }),
+	K(0.6, "O", { RootP = { 0, -0.35, 0 }, Lift = { 0, 0, 0 }, Root = { -8, 0, 0 }, Waist = { -12, 0, 0 }, Neck = { 10, 0, 0 },
+		RHip = { 0, 0, 0 }, RKnee = { 0, 0, 0 }, LHip = { 0, 0, 0 }, LKnee = { 0, 0, 0 }, LHand = { 15, -0.3, 0.3 } }),
+	K(0.85, "s", { RootP = { 0, -0.15, 0 }, Root = { -2, 0, 0 }, Waist = { -5, 0, 0 }, Neck = { 4, 0, 0 }, LHand = { 5, -0.1, 0.1 } }),
+})
+Clips.Style_Jungle_Jump = overlay(1, JUMP, {
+	K(0.12, "o", { Root = { -10, 0, 0 }, RHip = { -25, 0, 0 }, LHip = { -15, 0, 0 },
+		LHand = { 60, 0.35, 0.3 }, RHand = { -30, 0.2, 0.1 }, LGrip = { 0, -1 } }),
+	K(0.35, "s", { Root = { -12, 0, 0 }, RHip = { -30, 0, 0 }, LHip = { -20, 0, 0 },
+		LHand = { 65, 0.4, 0.3 }, RHand = { -35, 0.25, 0.1 }, LGrip = { 0, -1 } }),
+	K(0.5, "i", { Root = { -20, 0, 0 }, Waist = { -10, 0, 0 }, RHip = { -10, 0, 0 }, LHip = { -5, 0, 0 },
+		LHand = { 30, -0.1, 0.4 }, RHand = { -15, 0, 0.1 }, LGrip = { 0, -1 } }),
+	K(0.6, "O", { Root = { -6, 0, 0 }, Waist = { -26, 0, 0 }, Neck = { 22, 0, 0 }, RootP = { 0, -0.1, 0 },
+		RHip = { 0, 0, 0 }, LHip = { 0, 0, 0 }, LHand = { 10, -0.75, 0.45 }, RHand = { 0, -0.1, 0 }, LGrip = { 0, -1 } }),
+	K(0.8, "s", { Root = { -4, 0, 0 }, Waist = { -22, 0, 0 }, Neck = { 18, 0, 0 }, RootP = { 0, -0.1, 0 },
+		LHand = { 10, -0.7, 0.4 }, LGrip = { 0, -1 } }),
+	K(1, "s", { LGrip = { 0, 0 } }),
+})
+
+-- TUNDRA, Glacier: heavy and deliberate, a wide low stance, a stiff upper body (small twist); the wind-up snaps to the
+-- coil, freezes there, then a hard release; the follow-through stops dead, then a deliberate return; a slow frosty
+-- breath. Finisher: a frozen pause at the top, then a crushing release. Jump: a long frozen hang, then a straight drop
+-- like an icicle.
+ZoneStyles.Tundra = {
+	Posture = { RootP = { 0, -0.3, 0 }, Waist = { 3, 0, 0 }, Neck = { -2, 0, 0 }, RFoot = { 0.22, 0, 0 }, LFoot = { -0.22, 0, 0 } },
+	Guard = { RHand = { 45, 0.1, 0.1 }, RBlade = { 35, 15 }, LHand = { -20, 0, 0.1 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 0.75, 1.05, 1.15 }, Follow = 0.9,
+	Windup = { 0.22, 0.52, 0.72, 0.56 }, FinisherWindup = { 0.18, 0.55, 0.85, 0.6 }, Recovery = { 0.15, 0.25, 0.5, 0.3 },
+	IdleRate = 0.6,
+	Idle = { { "RootP", 2, 0.03, 0.22, 0 }, { "Waist", 1, 1.5, 0.22, 0.25 }, { "Neck", 2, 6, 0.08, 0 } },
+	Finisher = "Style_Tundra_Finisher", Jump = "Style_Tundra_Jump",
+}
+Clips.Style_Tundra_Finisher = overlay(1, FIN, {
+	K(0.12, "o", { RootP = { 0, 0.08, 0 }, Root = { 6, 0, 0 }, Waist = { 6, 0, 0 }, RHand = { 0, 0.25, 0 }, RBlade = { 0, 15 } }),
+	K(0.42, "s", { RootP = { 0, 0.1, 0 }, Root = { 7, 0, 0 }, Waist = { 7, 0, 0 }, RHand = { 0, 0.28, 0 }, RBlade = { 0, 17 } }),
+	K(0.5, "i", { RootP = { 0, -0.3, -0.05 }, Root = { -6, 0, 0 }, Waist = { -14, 0, 0 }, RHand = { 0, -0.15, 0.05 }, RBlade = { 0, -15 } }),
+	K(0.62, "O", { RootP = { 0, -0.35, -0.05 }, Root = { -7, 0, 0 }, Waist = { -16, 0, 0 }, RHand = { 0, -0.18, 0.05 }, RBlade = { 0, -18 } }),
+	K(0.8, "s", { RootP = { 0, -0.3, 0 }, Root = { -6, 0, 0 }, Waist = { -14, 0, 0 } }),
+})
+Clips.Style_Tundra_Jump = overlay(1, JUMP, {
+	K(0.08, "o", { Root = { -14, 0, 0 }, Waist = { -6, 0, 0 }, RFoot = { 0, -0.6, 0.15, 0 }, LFoot = { 0, -0.55, -0.15, 0 } }),
+	K(0.35, "s", { Root = { -15, 0, 0 }, Waist = { -6, 0, 0 }, RFoot = { 0, -0.6, 0.15, 0 }, LFoot = { 0, -0.55, -0.15, 0 } }),
+	K(0.47, "i", { Root = { 20, 0, 0 }, Waist = { 8, 0, 0 }, RFoot = { 0, -0.5, 0, 0 }, LFoot = { 0, -0.5, 0, 0 } }),
+	K(0.6, "O", { Root = { 5, 0, 0 }, Waist = { 0, 0, 0 }, RootP = { 0, -0.1, 0 }, RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 } }),
+	K(0.8, "s", { Root = { 2, 0, 0 }, RootP = { 0, -0.1, 0 } }),
+}, { Gain = { Ranged = 0.6, Magic = 0.6 } })
+
+-- SWAMP, Hexblade: loose and unsettling, hunched and tilted off-balance; off-beat wind-ups (a hitch back before the
+-- swing), late lingering follow-throughs; idle rocks like a witch with wrist flicks. Finisher: the weapon twirls in the
+-- hand before the hit. Jump: a crooked, off-balance drop with a twist.
+ZoneStyles.Swamp = {
+	Posture = { Root = { 0, 0, 6 }, RootP = { 0, -0.15, 0 }, Waist = { -16, 0, -6 }, Neck = { 14, 0, 10 },
+		RFoot = { 0.05, 0, 0 }, LFoot = { -0.05, 0, 0 }, LHand = { 15, 0.05, 0.15 } },
+	Guard = { RHand = { 0, -0.1, -0.1 }, RBlade = { 10, -70 }, LHand = { 10, 0.45, 0.1 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 0.95, 1.1, 1.0 }, Follow = 1.2,
+	Windup = { 0.2, 0.32, 0.38, 0.22 }, Recovery = { 0.4, 0.14 },
+	IdleRate = 1.1,
+	Idle = {
+		{ "Root", 3, 6, 0.45, 0 }, { "Waist", 3, -5, 0.45, 0.15 }, { "Root", 1, 3, 0.225, 0 }, { "Neck", 3, 6, 0.45, 0.3 },
+		{ "RBlade", 1, 14, 0.9, 0 }, { "LHand", 1, 10, 0.6, 0 }, { "LHand", 2, 0.06, 0.6, 0.25 },
+	},
+	Finisher = "Style_Swamp_Finisher", Jump = "Style_Swamp_Jump",
+}
+Clips.Style_Swamp_Finisher = overlay(1, FIN, {
+	K(0.08, "o", { RWrist = { 0, 0, 0 }, Root = { 0, 0, -5 }, Waist = { 0, 0, 8 } }),
+	K(0.38, "l", { RWrist = { -360, 0, 0 }, Root = { 0, 0, 4 }, Waist = { 0, 0, -6 }, LHand = { 20, 0.2, 0.25 } }),
+	K(0.5, "s", { RWrist = { -360, 0, 0 }, Root = { 0, 0, 0 }, Waist = { 0, 0, 0 }, LHand = { 10, 0.1, 0.1 } }),
+	K(0.72, "s", { RWrist = { -360, 0, 0 }, Waist = { 0, 14, 0 }, Neck = { 0, 0, 10 }, LHand = { 25, 0.15, 0.2 } }),
+	K(1, "s", { RWrist = { -360, 0, 0 } }),
+}, { LateOk = true })
+Clips.Style_Swamp_Jump = overlay(1, JUMP, {
+	K(0.15, "o", { Root = { 0, -35, 22 }, Waist = { 0, 15, -10 }, LHand = { 50, 0.1, 0.2 }, LGrip = { 0, -1 } }),
+	K(0.35, "s", { Root = { 0, -40, 26 }, Waist = { 0, 18, -12 }, LHand = { 55, 0.15, 0.2 }, LGrip = { 0, -1 } }),
+	K(0.5, "i", { Root = { 0, 15, -14 }, Waist = { 0, -5, 6 }, LHand = { 30, 0, 0.1 }, LGrip = { 0, -0.5 } }),
+	K(0.6, "O", { Root = { 0, 0, 8 }, Waist = { 0, 0, 10 }, RootP = { 0, -0.05, 0 }, LHand = { 0, 0, 0 }, LGrip = { 0, 0 } }),
+	K(0.8, "s", { Root = { 0, 0, 4 }, Waist = { 0, 0, 5 } }),
+})
+
+-- VOLCANO, Berserker: aggressive, leaning in, big swings with an overshoot after the hit, stomping steps, a heavier lift
+-- then a fast smash; idle heaves (heavy breathing, faster loop). Finisher: a roaring two-step charge into an overshooting
+-- smash. Jump: a high explosive leap and a meteor-like crash.
+ZoneStyles.Volcano = {
+	Posture = { Root = { -8, 0, 0 }, RootP = { 0, -0.18, 0 }, Waist = { -6, 0, 0 }, Neck = { 6, 0, 0 },
+		RFoot = { 0.12, 0, 0 }, LFoot = { -0.12, 0, 0 }, RHand = { 0, 0.08, 0 }, LHand = { 0, 0.1, 0.05 } },
+	Guard = { RHand = { 20, 0.6, -0.35 }, RBlade = { -140, 15 }, LHand = { 0, 0.1, 0.1 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.35, 1.25, 1.3 }, Follow = 1.4,
+	Windup = { 0.55, 0.45 },
+	IdleRate = 1.5,
+	Idle = {
+		{ "RootP", 2, 0.07, 0.7, 0 }, { "Waist", 1, 4, 0.7, 0.1 }, { "Neck", 1, -3, 0.7, 0.1 },
+		{ "RHand", 2, 0.06, 0.7, 0.1 }, { "LHand", 2, 0.06, 0.7, 0.1 }, { "Root", 2, 4, 0.25, 0 },
+	},
+	Finisher = "Style_Volcano_Finisher", Jump = "Style_Volcano_Jump",
+}
+Clips.Style_Volcano_Finisher = overlay(1, FIN, {
+	K(0.12, "o", { Root = { 10, 0, 0 }, Neck = { 16, 0, 0 }, Waist = { 8, 0, 0 }, RHand = { 0, 0.35, -0.1 }, RBlade = { 0, 25 },
+		LHand = { 30, 0.3, 0.1 }, RHip = { 30, 0, 0 }, RKnee = { -40, 0, 0 }, Lift = { 0, 0.12, 0 } }),
+	K(0.24, "i", { Root = { 8, 0, 0 }, Neck = { 14, 0, 0 }, Waist = { 8, 0, 0 }, RHand = { 0, 0.38, -0.1 }, RBlade = { 0, 28 },
+		LHand = { 30, 0.3, 0.1 }, RHip = { 0, 0, 0 }, RKnee = { 0, 0, 0 }, Lift = { 0, -0.05, 0 }, RootP = { 0, -0.12, 0 } }),
+	K(0.34, "o", { Root = { 6, 0, 0 }, Neck = { 12, 0, 0 }, Waist = { 8, 0, 0 }, RHand = { 0, 0.42, -0.12 }, RBlade = { 0, 30 },
+		LHand = { 30, 0.3, 0.1 }, LHip = { 30, 0, 0 }, LKnee = { -40, 0, 0 }, Lift = { 0, 0.12, 0 }, RootP = { 0, 0, 0 } }),
+	K(0.45, "i", { Root = { 6, 0, 0 }, Neck = { 10, 0, 0 }, Waist = { 8, 0, 0 }, RHand = { 0, 0.45, -0.15 }, RBlade = { 0, 32 },
+		LHand = { 30, 0.3, 0.1 }, LHip = { 0, 0, 0 }, LKnee = { 0, 0, 0 }, Lift = { 0, 0, 0 } }),
+	K(0.5, "i", { Root = { -14, 0, 0 }, Neck = { -6, 0, 0 }, Waist = { -12, 0, 0 }, RHand = { 0, -0.2, 0.1 }, RBlade = { 0, -25 },
+		LHand = { 10, 0, 0.1 }, RootP = { 0, -0.3, 0 } }),
+	K(0.6, "O", { Root = { -22, 0, 0 }, Neck = { -4, 0, 0 }, Waist = { -18, 0, 0 }, RHand = { 0, -0.3, 0.1 }, RBlade = { 0, -35 },
+		LHand = { 0, -0.1, 0.1 }, RootP = { 0, -0.4, 0 } }),
+	K(0.8, "s", { Root = { -8, 0, 0 }, Waist = { -6, 0, 0 }, RootP = { 0, -0.15, 0 }, RHand = { 0, -0.1, 0 }, RBlade = { 0, -10 } }),
+})
+Clips.Style_Volcano_Jump = overlay(1, JUMP, {
+	K(0.1, "o", { Lift = { 0, 0.6, 0 }, Root = { 16, 0, 0 }, Waist = { 10, 0, 0 }, LHand = { 60, 0.4, 0.2 }, LGrip = { 0, -1 },
+		RFoot = { 0.25, -0.3, 0, 0 }, LFoot = { -0.25, -0.3, 0, 0 } }),
+	K(0.35, "s", { Lift = { 0, 0.65, 0 }, Root = { 18, 0, 0 }, Waist = { 12, 0, 0 }, LHand = { 65, 0.45, 0.2 }, LGrip = { 0, -1 },
+		RFoot = { 0.28, -0.3, 0, 0 }, LFoot = { -0.28, -0.3, 0, 0 } }),
+	K(0.48, "i", { Lift = { 0, 0.2, 0 }, Root = { -25, 0, 0 }, Waist = { -12, 0, 0 }, LHand = { 20, 0.2, 0.3 }, LGrip = { 0, -0.5 },
+		RFoot = { 0, 0.2, 0, 0 }, LFoot = { 0, 0.2, 0, 0 } }),
+	K(0.6, "O", { Lift = { 0, 0, 0 }, Root = { -6, 0, 0 }, Waist = { -16, 0, 0 }, RootP = { 0, -0.2, 0 }, LHand = { 0, -0.3, 0.1 },
+		LGrip = { 0, 0 }, RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 } }),
+	K(0.75, "s", { Root = { -8, 0, 0 }, Waist = { -20, 0, 0 }, RootP = { 0, -0.25, 0 } }),
+}, { Gain = { Ranged = 0.5, Magic = 0.7 } })
+
+-- HELL, Demon: brutal and menacing, hunched shoulders, head tilted; a fast brutal wind-up, a heavy savage follow-through
+-- (big overshoot) and a slow menacing return; idle looms and twitches. Finisher: a savage spin with a downward rip.
+-- Jump: a demonic dive with the arms flung wide, a crater landing.
+ZoneStyles.Hell = {
+	Posture = { Root = { -6, 0, 0 }, RootP = { 0, -0.22, 0 }, Waist = { -18, 0, 0 }, Neck = { 12, 0, 12 },
+		RFoot = { 0.1, 0, 0 }, LFoot = { -0.1, 0, 0 }, RHand = { 0, 0.05, 0 }, LHand = { 5, 0.15, 0.2 } },
+	Guard = { RHand = { -40, -0.35, -0.05 }, RBlade = { -110, -70 }, LHand = { -5, 0.3, 0.3 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.25, 1.2, 1.15 }, Follow = 1.5,
+	Windup = { 0.45, 0.6 }, Recovery = { 0.25, 0.45, 0.5, 0.55 },
+	IdleRate = 0.8,
+	Idle = {
+		{ "Root", 2, 5, 0.12, 0 }, { "Waist", 3, 3, 0.18, 0 }, { "RootP", 2, 0.04, 0.35, 0 },
+		{ "Neck", 2, 18, 0.52, 0, 0, "pulse" }, { "Waist", 3, 6, 0.37, 0.4, 0, "pulse" }, { "LHand", 1, 12, 0.61, 0.2, 0, "pulse" },
+	},
+	Finisher = "Style_Hell_Finisher", Jump = "Style_Hell_Jump",
+}
+Clips.Style_Hell_Finisher = overlay(1, FIN, {
+	K(0.06, "o", { Root = { 0, 20, 0 }, Waist = { -6, 0, 0 } }),
+	K(0.42, "l", { Root = { 0, -330, 0 }, Waist = { -10, 0, 0 }, RHand = { 0, 0.35, 0 }, RBlade = { 0, 30 }, LHand = { -20, 0.3, 0.2 },
+		RootP = { 0, -0.1, 0 } }),
+	K(0.5, "O", { Root = { -12, -360, 0 }, Waist = { -18, 0, 0 }, Neck = { 10, 0, 12 }, RHand = { 0, -0.25, 0.05 }, RBlade = { 0, -30 },
+		LHand = { 0, 0, 0 }, RootP = { 0, -0.3, 0 } }),
+	K(0.62, "s", { Root = { -16, -360, 0 }, Waist = { -22, 0, 0 }, Neck = { 10, 0, 12 }, RHand = { 0, -0.3, 0.05 }, RBlade = { 0, -40 },
+		RootP = { 0, -0.4, 0 } }),
+	K(1, "s", { Root = { 0, -360, 0 } }),
+}, { LateOk = true })
+Clips.Style_Hell_Jump = overlay(1, JUMP, {
+	K(0.12, "o", { LHand = { 95, 0.3, 0.4 }, RHand = { -60, 0.3, 0.2 }, RBlade = { -40, -50 }, LGrip = { 0, -1 }, Root = { -4, 0, 0 },
+		Waist = { 2, 0, 0 }, Neck = { 4, 0, 0 } }),
+	K(0.35, "s", { LHand = { 100, 0.35, 0.4 }, RHand = { -65, 0.35, 0.2 }, RBlade = { -45, -55 }, LGrip = { 0, -1 }, Root = { -4, 0, 0 },
+		Waist = { 3, 0, 0 }, Neck = { 5, 0, 0 } }),
+	K(0.5, "i", { LHand = { 95, 0.1, 0.35 }, RHand = { -50, 0.1, 0.15 }, RBlade = { -20, -20 }, LGrip = { 0, -1 }, Root = { -20, 0, 0 },
+		Waist = { 0, 0, 0 }, Neck = { 0, 0, 0 } }),
+	K(0.6, "O", { LHand = { 30, -0.6, 0.3 }, RHand = { 0, 0, 0 }, LGrip = { 0, -1 }, Root = { -4, 0, 0 }, Waist = { -20, 0, 0 },
+		Neck = { 14, 0, 10 }, RootP = { 0, -0.2, 0 } }),
+	K(0.85, "s", { LHand = { 20, -0.4, 0.2 }, LGrip = { 0, -0.6 }, Waist = { -14, 0, 0 }, Neck = { 10, 0, 6 }, RootP = { 0, -0.12, 0 } }),
+})
+
+-- HEAVEN, Seraph: graceful and upright, chin up, light on the feet; slow-in / fast-out wind-ups and a long graceful
+-- settle; idle floats (a soft hover bob, feet off the ground). Finisher: a radiant overhead flourish, the arms opening
+-- like wings, before the strike. Jump: a gentle hover with a halo-like pause, then a beam-like vertical strike.
+ZoneStyles.Heaven = {
+	Posture = { Root = { 3, 0, 0 }, RootP = { 0, 0.08, 0 }, Waist = { 6, 0, 0 }, Neck = { 4, 0, 0 },
+		RFoot = { 0, 0.08, 0 }, LFoot = { 0, 0.08, 0 }, LHand = { 15, 0.15, 0.1 } },
+	Guard = { RHand = { 45, 0.35, -0.15 }, RBlade = { 35, 50 }, LHand = { 70, 0.35, 0.3 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.0, 1.2, 0.8 }, Follow = 1.1,
+	Windup = { 0.5, 0.28, 0.8, 0.62 }, Recovery = { 0.25, 0.4, 0.6, 0.8 },
+	IdleRate = 0.8,
+	Idle = {
+		{ "RootP", 2, 0.07, 0.4, 0, 0.22 }, { "RFoot", 2, 0.07, 0.4, 0, 0.22 }, { "LFoot", 2, 0.07, 0.4, 0.03, 0.24 },
+		{ "LHand", 2, 0.06, 0.4, 0.15 }, { "RHand", 2, 0.04, 0.4, 0.15 }, { "Waist", 1, 2, 0.4, 0.2 },
+	},
+	Finisher = "Style_Heaven_Finisher", Jump = "Style_Heaven_Jump",
+}
+Clips.Style_Heaven_Finisher = overlay(1, FIN, {
+	K(0.08, "o", { Lift = { 0, 0.05, 0 } }),
+	K(0.3, "o", { RHand = { -25, 0.6, -0.1 }, RBlade = { 0, 45 }, LHand = { 60, 0.7, 0.25 }, LGrip = { 0, -1 }, Root = { 6, 0, 0 },
+		Waist = { 8, 0, 0 }, Neck = { 12, 0, 0 }, Lift = { 0, 0.25, 0 } }),
+	K(0.42, "s", { RHand = { -28, 0.65, -0.1 }, RBlade = { 0, 48 }, LHand = { 65, 0.75, 0.25 }, LGrip = { 0, -1 }, Root = { 7, 0, 0 },
+		Waist = { 9, 0, 0 }, Neck = { 13, 0, 0 }, Lift = { 0, 0.28, 0 } }),
+	K(0.5, "i", { RHand = { 0, 0, 0 }, RBlade = { 0, 0 }, LHand = { 20, 0.2, 0.15 }, LGrip = { 0, -0.6 }, Root = { 0, 0, 0 },
+		Waist = { 0, 0, 0 }, Neck = { 0, 0, 0 }, Lift = { 0, 0.05, 0 } }),
+	K(0.65, "O", { LHand = { 35, 0.25, 0.2 }, LGrip = { 0, -0.5 }, Lift = { 0, 0, 0 } }),
+	K(1, "s", { LGrip = { 0, 0 } }),
+})
+Clips.Style_Heaven_Jump = overlay(1, JUMP, {
+	K(0.12, "o", { Root = { -12, 0, 0 }, RFoot = { 0, -0.55, 0, 0 }, LFoot = { 0, -0.6, 0, 0 }, LHand = { 75, 0.35, 0.3 },
+		RHand = { -35, 0.2, 0.1 }, LGrip = { 0, -1 }, Neck = { 12, 0, 0 }, Lift = { 0, 0.3, 0 } }),
+	K(0.35, "s", { Root = { -13, 0, 0 }, RFoot = { 0, -0.55, 0, 0 }, LFoot = { 0, -0.6, 0, 0 }, LHand = { 80, 0.4, 0.3 },
+		RHand = { -38, 0.22, 0.1 }, LGrip = { 0, -1 }, Neck = { 13, 0, 0 }, Lift = { 0, 0.32, 0 } }),
+	K(0.5, "i", { Root = { 15, 0, 0 }, RFoot = { 0, -0.4, 0, 0 }, LFoot = { 0, -0.4, 0, 0 }, LHand = { 0, 0.1, 0 },
+		RHand = { 0, 0, 0 }, LGrip = { 0, 0 }, Neck = { 0, 0, 0 }, Lift = { 0, 0.1, 0 } }),
+	K(0.6, "O", { Root = { 0, 0, 0 }, RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 }, Lift = { 0, 0, 0 }, RootP = { 0, 0.3, 0 },
+		Waist = { 6, 0, 0 } }),
+}, { Gain = { Ranged = 0.6 } })
+
+-- DEAD, Revenant: ghostly, hunched with the head lolling, arms hanging; stuttering strikes (held frames, sudden snaps)
+-- in the wind-up and the recovery; a slow drifting idle with a twitch. Finisher: a stutter-step teleport-like lunge.
+-- Jump: a slow ghostly drift, then a sudden fall.
+ZoneStyles.Dead = {
+	Posture = { Root = { -4, 0, 0 }, RootP = { 0, -0.1, 0 }, Waist = { -12, 0, 0 }, Neck = { -4, 0, 16 },
+		RHand = { 0, -0.12, -0.05 }, LHand = { -10, -0.2, -0.1 } },
+	Guard = { RHand = { 0, -0.35, -0.2 }, RBlade = { 0, -75 }, LHand = { -5, -0.25, -0.15 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 0.9, 1.05, 0.9 }, Follow = 1.0,
+	Windup = { 0.26, 0.04, 0.3, 0.42, 0.56, 0.46, 0.6, 0.82, 0.88, 0.85 },
+	Recovery = { 0.06, 0.3, 0.3, 0.33, 0.35, 0.66, 0.62, 0.7, 0.68, 1 },
+	IdleRate = 0.5,
+	Idle = {
+		{ "Root", 2, 9, 0.1, 0 }, { "RootP", 1, 0.12, 0.1, 0.25 }, { "Neck", 3, 12, 0.17, 0 }, { "Root", 3, 3, 0.14, 0.3 },
+		{ "RootP", 2, 0.04, 0.2, 0, 0.06 }, { "RFoot", 2, 0.04, 0.2, 0, 0.06 }, { "LFoot", 2, 0.04, 0.2, 0, 0.06 },
+		{ "LHand", 2, 0.05, 0.2, 0.4 }, { "Neck", 1, 10, 0.43, 0, 0, "pulse" },
+	},
+	Finisher = "Style_Dead_Finisher", Jump = "Style_Dead_Jump",
+}
+Clips.Style_Dead_Finisher = overlay(1, FIN, {
+	K(0.25, "o", { Lift = { 0, 0.05, 0.5 }, Neck = { 0, 0, 20 }, Waist = { -8, 0, 0 }, LHand = { 0, -0.2, -0.1 } }),
+	K(0.3, "l", { Lift = { 0, 0.05, 0.5 }, Neck = { 0, 0, 20 }, Waist = { -8, 0, 0 }, LHand = { 0, -0.2, -0.1 } }),
+	K(0.32, "l", { Lift = { 0, 0, 0.1 }, Neck = { 0, 0, -10 }, Waist = { -10, 0, 0 }, LHand = { 20, 0, 0 } }),
+	K(0.4, "l", { Lift = { 0, 0, 0.1 }, Neck = { 0, 0, -10 }, Waist = { -10, 0, 0 }, LHand = { 20, 0, 0 } }),
+	K(0.42, "l", { Lift = { 0, 0, -0.35 }, Neck = { 6, 0, 8 }, Root = { -10, 0, 0 }, Waist = { -10, 0, 0 }, LHand = { 40, 0.2, 0.3 } }),
+	K(0.5, "l", { Lift = { 0, 0, -0.4 }, Neck = { 6, 0, 8 }, Root = { -12, 0, 0 }, Waist = { -10, 0, 0 }, LHand = { 40, 0.2, 0.3 } }),
+	K(0.7, "s", { Lift = { 0, 0, -0.4 }, Neck = { 0, 0, 14 }, Root = { -6, 0, 0 }, Waist = { -6, 0, 0 }, LHand = { 10, -0.1, 0 } }),
+})
+Clips.Style_Dead_Jump = overlay(1, JUMP, {
+	K(0.15, "o", { Root = { 0, 15, 12 }, Neck = { 10, 0, 25 }, LHand = { 20, -0.3, -0.1 }, LGrip = { 0, -1 },
+		RFoot = { 0, -0.4, 0, 0 }, LFoot = { 0, -0.45, 0, 0 } }),
+	K(0.35, "s", { Root = { 0, -10, -8 }, Neck = { 10, 0, -15 }, LHand = { 25, -0.35, -0.1 }, LGrip = { 0, -1 },
+		RFoot = { 0, -0.45, 0, 0 }, LFoot = { 0, -0.4, 0, 0 } }),
+	K(0.4, "l", { Root = { -15, 0, 0 }, Neck = { -15, 0, 0 }, LHand = { 40, 0.4, 0.2 }, LGrip = { 0, -1 },
+		RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 } }),
+	K(0.6, "O", { Root = { 0, 0, 0 }, Waist = { -18, 0, 0 }, Neck = { 15, 0, -20 }, RootP = { 0, -0.1, 0 }, LHand = { 20, -0.4, 0 }, LGrip = { 0, -1 } }),
+	K(0.8, "l", { Waist = { -18, 0, 0 }, Neck = { 15, 0, -20 }, RootP = { 0, -0.1, 0 }, LHand = { 20, -0.4, 0 }, LGrip = { 0, -1 } }),
+	K(0.84, "l", { Waist = { -8, 0, 0 }, Neck = { 0, 0, 10 }, RootP = { 0, -0.05, 0 }, LHand = { 0, -0.1, 0 }, LGrip = { 0, -0.3 } }),
+}, { Gain = { Ranged = 0.6 } })
+
+-- ABYSS, Tidecaller: fluid like water, smooth even wind-ups, follow-throughs that carry on, a rolling wave through the
+-- torso during every attack; idle drifts like seaweed. Finisher: a rolling wave from the feet up to the blade. Jump: a
+-- dive like a breaching whale (arched, then head first), a splash landing with the arms flung out.
+ZoneStyles.Abyss = {
+	Posture = { RootP = { 0, -0.12, 0 }, Waist = { -4, 0, 0 }, LHand = { 20, 0, 0.1 } },
+	Guard = { RHand = { -15, 0.1, 0.1 }, RBlade = { -55, -25 }, LHand = { 40, 0.15, 0.2 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.2, 1.15, 1.1 }, Follow = 1.25,
+	Windup = { 0.5, 0.44 }, Recovery = { 0.5, 0.36 },
+	Attack = { { "Root", 3, 4, 1.4, 0 }, { "Waist", 3, -5, 1.4, 0.15 }, { "Neck", 3, 4, 1.4, 0.3 }, { "Waist", 1, 3, 1.4, 0.1 } },
+	IdleRate = 0.7,
+	Idle = {
+		{ "Waist", 3, 5, 0.28, 0 }, { "Neck", 3, 4, 0.28, 0.12 }, { "Root", 3, -2.5, 0.28, -0.12 }, { "RHand", 1, 7, 0.28, 0.2 },
+		{ "LHand", 1, 9, 0.28, 0.3 }, { "LHand", 2, 0.06, 0.28, 0.4 }, { "Waist", 1, 2, 0.14, 0 },
+	},
+	Finisher = "Style_Abyss_Finisher", Jump = "Style_Abyss_Jump",
+}
+Clips.Style_Abyss_Finisher = overlay(1, FIN, {
+	K(0.1, "s", { RootP = { 0, -0.25, 0 }, Root = { -6, 0, 4 } }),
+	K(0.2, "s", { RootP = { 0, 0.08, 0 }, Root = { 8, 0, -4 }, Waist = { -12, 0, 6 } }),
+	K(0.3, "s", { RootP = { 0, -0.05, 0 }, Root = { -4, 0, 2 }, Waist = { 10, 0, -6 }, Neck = { -10, 0, 4 }, RHand = { 0, -0.15, 0 } }),
+	K(0.4, "s", { RootP = { 0, 0, 0 }, Root = { 0, 0, 0 }, Waist = { -6, 0, 0 }, Neck = { 10, 0, -4 }, RHand = { 0, 0.35, 0 }, RBlade = { 0, 25 },
+		LHand = { 40, 0.2, 0.2 } }),
+	K(0.5, "i", { RootP = { 0, -0.1, 0 }, Waist = { 0, 0, 0 }, Neck = { 0, 0, 0 }, RHand = { 0, -0.1, 0.1 }, RBlade = { 0, -15 },
+		LHand = { 60, 0.1, 0.25 } }),
+	K(0.65, "s", { RootP = { 0, -0.15, 0 }, Waist = { -8, 0, 4 }, Root = { 4, 0, -4 }, RHand = { 0, 0, 0 }, RBlade = { 0, 0 }, LHand = { 50, 0, 0.2 } }),
+	K(0.8, "s", { RootP = { 0, -0.05, 0 }, Waist = { 6, 0, -4 }, Neck = { -6, 0, 4 }, Root = { -2, 0, 3 }, LHand = { 30, 0, 0.1 } }),
+})
+Clips.Style_Abyss_Jump = overlay(1, JUMP, {
+	K(0.15, "o", { Root = { 22, 0, 0 }, Waist = { 14, 0, 0 }, Neck = { 14, 0, 0 }, LHand = { 150, 0.2, 0.3 }, LGrip = { 0, -1 },
+		RFoot = { 0, -0.3, 0.3, 0 }, LFoot = { 0, -0.3, 0.3, 0 } }),
+	K(0.35, "s", { Root = { 26, 0, 0 }, Waist = { 16, 0, 0 }, Neck = { 15, 0, 0 }, LHand = { 155, 0.2, 0.3 }, LGrip = { 0, -1 },
+		RFoot = { 0, -0.3, 0.35, 0 }, LFoot = { 0, -0.3, 0.35, 0 } }),
+	K(0.5, "i", { Root = { -30, 0, 0 }, Waist = { -10, 0, 0 }, Neck = { 0, 0, 0 }, LHand = { 20, 0.3, 0.4 }, LGrip = { 0, -0.5 },
+		RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 } }),
+	K(0.6, "O", { Root = { 0, 0, 0 }, Waist = { -12, 0, 0 }, RootP = { 0, -0.1, 0 }, LHand = { 90, -0.1, 0.4 }, LGrip = { 0, -1 } }),
+	K(0.8, "s", { Waist = { -6, 0, 0 }, LHand = { 60, -0.2, 0.3 }, LGrip = { 0, -0.6 } }),
+	K(1, "s", { LGrip = { 0, 0 } }),
+}, { Gain = { Ranged = 0.6 } })
+
+-- MECHANICAL, Automaton: robotic and precise, upright and stiff; linear moves between held poses (a ratchet wind-up in
+-- three clicks, a snap strike, a stepped return); idle ticks like servos. Finisher: a ratchet wind-up in clicks and a
+-- piston release. Jump: a rigid locked pose in the air, a piston-straight drop.
+ZoneStyles.Mechanical = {
+	Posture = { Root = { 2, 0, 0 }, RootP = { 0, -0.04, 0 }, Waist = { 4, 0, 0 }, Neck = { -2, 0, 0 } },
+	Guard = { RHand = { 50, 0.15, 0.2 }, RBlade = { 35, -30 }, LHand = { -20, -0.1, -0.2 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.0, 1.0, 0.9 }, Follow = 1.0,
+	Linear = true, IdleStep = 0.3,
+	Windup = { 0.18, 0, 0.22, 0.3, 0.42, 0.3, 0.46, 0.6, 0.8, 0.62 },
+	Recovery = { 0.1, 0.33, 0.32, 0.35, 0.37, 0.68, 0.6, 0.7, 0.65, 1 },
+	Idle = {
+		{ "Neck", 2, 1, 0.8, 0, 0, { 0, 12, 12, 0, -10, -10 } }, { "Waist", 2, 1, 0.55, 0.3, 0, { 0, -5, 0, 6 } },
+		{ "RootP", 2, 1, 0.9, 0, 0, { 0, -0.02, -0.04, -0.02 } }, { "LHand", 2, 1, 0.45, 0.5, 0, { 0, 0.05, 0, -0.05 } },
+	},
+	Finisher = "Style_Mechanical_Finisher", Jump = "Style_Mechanical_Jump",
+}
+Clips.Style_Mechanical_Finisher = overlay(1, FIN, {
+	K(0.1, "l", { Root = { 0, 0, 0 }, Waist = { 0, 0, 0 }, RHand = { 0, 0, 0 } }),
+	K(0.12, "l", { Root = { 0, -10, 0 }, Waist = { 0, -3, 0 }, RHand = { 0, 0, -0.08 } }),
+	K(0.22, "l", { Root = { 0, -10, 0 }, Waist = { 0, -3, 0 }, RHand = { 0, 0, -0.08 } }),
+	K(0.24, "l", { Root = { 0, -20, 0 }, Waist = { 0, -6, 0 }, RHand = { 0, 0, -0.16 } }),
+	K(0.34, "l", { Root = { 0, -20, 0 }, Waist = { 0, -6, 0 }, RHand = { 0, 0, -0.16 } }),
+	K(0.36, "l", { Root = { 0, -30, 0 }, Waist = { 0, -8, 0 }, RHand = { 0, 0, -0.24 } }),
+	K(0.46, "l", { Root = { 0, -30, 0 }, Waist = { 0, -8, 0 }, RHand = { 0, 0, -0.24 }, RootP = { 0, 0, 0 } }),
+	K(0.5, "l", { Root = { 0, 5, 0 }, Waist = { 0, 4, 0 }, RHand = { 0, 0, 0.3 }, RootP = { 0, -0.05, -0.3 } }),
+	K(0.6, "l", { Root = { 0, 5, 0 }, Waist = { 0, 4, 0 }, RHand = { 0, 0, 0.3 }, RootP = { 0, -0.05, -0.3 } }),
+	K(0.62, "l", { Root = { 0, 2, 0 }, Waist = { 0, 2, 0 }, RHand = { 0, 0, 0.15 }, RootP = { 0, -0.03, -0.15 } }),
+	K(0.78, "l", { Root = { 0, 2, 0 }, Waist = { 0, 2, 0 }, RHand = { 0, 0, 0.15 }, RootP = { 0, -0.03, -0.15 } }),
+	K(0.8, "l", { Root = { 0, 0, 0 }, Waist = { 0, 0, 0 }, RHand = { 0, 0, 0 }, RootP = { 0, 0, 0 } }),
+})
+Clips.Style_Mechanical_Jump = overlay(1, JUMP, {
+	K(0.04, "l", { Root = { 0, 0, 0 }, LHand = { 0, 0, 0 }, LGrip = { 0, 0 }, RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 } }),
+	K(0.08, "l", { Root = { -14, 0, 0 }, LHand = { 90, 0, 0.35 }, LGrip = { 0, -1 }, RFoot = { 0, -0.6, 0, 0 }, LFoot = { 0, -0.6, 0, 0 },
+		Neck = { 0, 0, 0 } }),
+	K(0.35, "l", { Root = { -14, 0, 0 }, LHand = { 90, 0, 0.35 }, LGrip = { 0, -1 }, RFoot = { 0, -0.6, 0, 0 }, LFoot = { 0, -0.6, 0, 0 } }),
+	K(0.4, "l", { Root = { 20, 0, 0 }, LHand = { 0, -0.2, 0.2 }, LGrip = { 0, -1 }, RFoot = { 0, -0.5, 0, 0 }, LFoot = { 0, -0.5, 0, 0 } }),
+	K(0.6, "l", { Root = { 0, 0, 0 }, LHand = { 20, -0.3, 0 }, LGrip = { 0, -1 }, RFoot = { 0, 0, 0, 0 }, LFoot = { 0, 0, 0, 0 }, RootP = { 0, -0.15, 0 } }),
+	K(0.75, "l", { LHand = { 20, -0.3, 0 }, LGrip = { 0, -1 }, RootP = { 0, -0.15, 0 } }),
+	K(0.78, "l", { LHand = { 10, -0.15, 0 }, LGrip = { 0, -0.5 }, RootP = { 0, -0.08, 0 } }),
+	K(0.9, "l", { LHand = { 10, -0.15, 0 }, LGrip = { 0, -0.5 }, RootP = { 0, -0.08, 0 } }),
+	K(0.92, "l", { LHand = { 0, 0, 0 }, LGrip = { 0, 0 }, RootP = { 0, 0, 0 } }),
+})
+
+-- VOID, Voidwalker: warped and floating; elastic timing (slow-motion wind-ups, then a snap; a fast follow-through that
+-- then floats back); the idle hovers above the ground with dangling feet. Finisher: a slow-motion spin that snaps into the
+-- strike. Jump: a weightless float with a full flip, then a gravity-crushing slam.
+ZoneStyles.Void = {
+	Posture = { RootP = { 0, 0.04, 0 }, Waist = { -3, 0, 0 }, RFoot = { 0, 0.04, 0 }, LFoot = { 0, 0.04, 0 }, LHand = { 35, 0.1, 0.2 } },
+	Guard = { RHand = { -35, 0.15, 0.1 }, RBlade = { -65, -80 }, LHand = { 60, 0.15, 0.3 } },
+	GuardGain = { Ranged = 0.35, Magic = 0.7 },
+	Amp = { 1.15, 1.15, 1.0 }, Follow = 1.2,
+	Windup = { 0.55, 0.12, 0.82, 0.42 }, Recovery = { 0.12, 0.5, 0.35, 0.56 },
+	IdleRate = 0.6,
+	Idle = {
+		{ "RootP", 2, 0.08, 0.3, 0, 0.35 }, { "RFoot", 2, 0.08, 0.3, 0, 0.35 }, { "LFoot", 2, 0.08, 0.3, 0.05, 0.37 },
+		{ "RFoot", 3, 0.1, 0.3, 0 }, { "LFoot", 3, -0.1, 0.3, 0 }, { "Root", 1, 2.5, 0.15, 0 }, { "Waist", 2, 8, 0.12, 0 },
+		{ "LHand", 2, 0.08, 0.3, 0.2 },
+	},
+	Finisher = "Style_Void_Finisher", Jump = "Style_Void_Jump",
+}
+Clips.Style_Void_Finisher = overlay(1, FIN, {
+	K(0.05, "o", { Lift = { 0, 0.15, 0 } }),
+	K(0.38, "i", { Root = { 0, 190, 0 }, Lift = { 0, 0.3, 0 }, LHand = { 50, 0.25, 0.2 }, Waist = { 0, 0, -8 } }),
+	K(0.5, "l", { Root = { 0, 360, 0 }, Lift = { 0, 0, 0 }, LHand = { 0, 0, 0 }, Waist = { 0, 0, 0 } }),
+	K(0.6, "O", { Root = { -8, 360, 0 }, RootP = { 0, -0.2, 0 } }),
+	K(1, "s", { Root = { 0, 360, 0 }, RootP = { 0, 0, 0 } }),
+}, { LateOk = true })
+Clips.Style_Void_Jump = overlay(1, JUMP, {
+	K(0.3, "s", { Root = { -360, 0, 0 }, Lift = { 0, 0.35, 0 }, LHand = { 40, 0.2, 0.2 }, LGrip = { 0, -1 } }),
+	K(0.35, "s", { Root = { -360, 0, 0 }, Lift = { 0, 0.35, 0 }, LHand = { 40, 0.2, 0.2 }, LGrip = { 0, -1 } }),
+	K(0.5, "i", { Root = { -372, 0, 0 }, Lift = { 0, 0.1, 0 }, LHand = { 0, 0, 0 }, LGrip = { 0, 0 } }),
+	K(0.6, "O", { Root = { -366, 0, 0 }, Lift = { 0, 0, 0 }, RootP = { 0, -0.25, 0 }, Waist = { -16, 0, 0 } }),
+	K(0.8, "s", { Root = { -362, 0, 0 }, RootP = { 0, -0.15, 0 }, Waist = { -10, 0, 0 } }),
+	K(1, "s", { Root = { -360, 0, 0 } }),
+}, { Gain = { Ranged = 0 } })
+
+CombatAnimations.ZoneStyles = ZoneStyles
+
 -- Weapon styles: a clip prefix tried before the category's (Ranged crossbows and guns; tools/WeaponTools WEAPON_GRIPS).
 -- Not used while the Tool is a placeholder (Placeholder attribute: every placeholder Ranged is a bow on the bow grip).
 CombatAnimations.Styles = {

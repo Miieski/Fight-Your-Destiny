@@ -216,3 +216,9 @@ move on finishers and jump attacks, for all 7 categories) and **effects and soun
   `VFX.land`, `Sfx.combat("Swing" | "Impact" | "Land")` (other players' impacts: derived from their element).
 * Timing rules stay: a style may reshape a clip and its rhythm, but the Hit marker stays exactly at the step's Impact /
   speed (the server hits then), and combo clips still fit the weapon interval at speed x1.
+* Animations (zone styles round): `CombatAnimations.ZoneStyles[zoneId]` (posture, idle guard, swing amplitude /
+  follow-through, wind-up / recovery time-warps keeping Hit exact, Linear / IdleStep, idle and attack waves) and 22
+  overlay clips `Style_<Zone>_Finisher` / `Style_<Zone>_Jump` (offsets layered on the finisher steps and the jump
+  attacks, timed on their Dive / Hit markers, "late" mode on very short wind-ups). Plains runs the old path. Dev hooks
+  `AnimZone` (character attribute: show the held weapon in any zone's style) and `AnimHitDebug` (writes `AnimHitAt` /
+  `AnimHitPose` / `AnimHitClip`).
