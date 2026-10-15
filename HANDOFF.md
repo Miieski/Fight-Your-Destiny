@@ -149,6 +149,20 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-15: ARMOR SHOP + INVENTORY FILTERS AND MULTI-SELL (owner: "Create a shop for Armors too, same as the weapon
+shop. And in the inventory for weapon, create a filter and an select option to sell many items at the same time for
+each category").** Shop window tabs Weapons / Armor / Diamonds. `UI/Pages/WeaponShopPage` is now one page factory
+`create(kind)` with two kinds (weapons: categories; armor: Helmet / Chest / Legs, `ModelIcon.armor` cards, turntable
+preview, Max HP / Defense odds): `WeaponShopPage.build` and `.buildArmor`. Server: `ShopService` handles "BuyWeapon"
+and "BuyArmor" with one `buy(player, kind, id)` (armor: storage check, own pity keys `Armor.PITY_KEYS`, price
+`Armor.price` = half the zone's weapon price, auto-equip into an empty slot when the opening ends). `UI/CaseOpening`
+plays weapons and armor (`itemOf(result)`: weaponId or armorId). Inventory: the shared `Kit/SellBar` (select mode,
+"All", sell the ticked ones with a confirm) on Weapons (`InventoryPage`, now header + grid), Armor and Trophies;
+`Kit/Filter` gained `rarityOptions()` / `zoneOptions(options, present)`. Server batch sells "SellWeapons",
+"SellArmors", "SellTrophies" (skip equipped / worn / locked, max 300). Admin: setPity sets both shops, clearArmor
+resets the armor pity, the Armor admin page shows it. Not tested: the phone layout of the new inventory headers (no
+device emulation through the MCP). Log: NIGHT_LOG "Armor shop".
+
 **2026-10-14 (evening): MAP FIX (owner: hollow shells, gaps, z-fighting, no entering / climbing giant trees and the
 windmill).** 4 map sub-agent runs over all 12 zones + Hub with `tools/MapAudit.luau` (ServerStorage.DevTools.MapAudit:
 audit, autoClose, skirt, underFill, capFan, holeScan, fixZFight, fixShadows, fill, shell, undo). Fix parts live in

@@ -58,6 +58,8 @@ function Profile.new(): { [string]: any }
 		Stats_Lifetime = { TotalGold = 0, TotalDamage = 0, BossKills = 0, EnemyKills = 0, PlaySeconds = 0 },
 		PityCounter = 0, -- weapon shop: purchases in a row without Epic or better (Config/WeaponRarities Pity)
 		PityLegendary = 0, -- weapon shop: purchases in a row without Legendary or better
+		ArmorPityCounter = 0, -- armor shop: the same two counters (Config/Armor PITY_KEYS)
+		ArmorPityLegendary = 0,
 		LastOnline = 0,
 		Tutorial = 0,
 		-- EquippedWeapon (uid) and EquippedSkin are absent until set.

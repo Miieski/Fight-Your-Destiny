@@ -1,5 +1,5 @@
 --!strict
--- Window shells for every menu button (Config/UI Windows). Built so far: Shop (weapon shop), Inventory
+-- Window shells for every menu button (Config/UI Windows). Built so far: Shop (weapon and armor shops), Inventory
 -- (weapons), Stats (Attributes), Pets (pets, eggs, premium eggs), Settings and Zones; the others are empty shells: title, frame, X button, tabs, "Coming soon". The Shop's Diamonds tab
 -- explains where diamond packs are sold and offers a trip to the hub.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -39,6 +39,7 @@ end
 
 local function shop(ctx: any)
 	WeaponShopPage.build(ctx.Pages.Weapons, ctx)
+	WeaponShopPage.buildArmor(ctx.Pages.Armor, ctx)
 	DiamondShopPage.build(ctx.Pages.Diamonds, ctx)
 end
 
@@ -58,11 +59,11 @@ end
 
 local function inventory(ctx: any)
 	EquipmentPage.build(ctx.Pages.Equipment, ctx)
-	InventoryPage.buildWeapons(ctx.Pages.Weapons)
+	InventoryPage.buildWeapons(ctx.Pages.Weapons, ctx)
 	ArmorPage.build(ctx.Pages.Armor, ctx)
 	shortcut(ctx.Pages.Pets, "Your pets live in the Pets window.", "Pets", "Pets")
 	shortcut(ctx.Pages.Eggs, "Your eggs are hatched in the Pets window.", "Eggs", "Egg")
-	TrophiesPage.build(ctx.Pages.Trophies)
+	TrophiesPage.build(ctx.Pages.Trophies, ctx)
 end
 
 local BUILDERS = {

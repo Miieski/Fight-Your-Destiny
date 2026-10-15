@@ -1622,3 +1622,46 @@ tools/MapAudit.luau, Windmill + AncientTree shells), then the 11 other zones in 
     7 no-climb shells (Windmill, AncientTree, GiantTree, FrozenTree, SwingTree, TreeOfLight, CrystalTree), ~470 walk-in
     meshes given collision (MapFixCollide), ~6,500 z-fighting parts nudged, ~240 duplicates deleted, ~350 shadows off.
     No Terrain anywhere in the map; no game script changed.
+
+# Armor shop + inventory filters / multi-sell - 2026-10-15 (owner: "Create a shop for Armors too, same as the weapon shop. And in the inventory for weapon, create a filter and an select option to sell many items at the same time for each category")
+
+Owner's answers (asked): "Like weapons (Recommended)" (tabs per slot, a card per zone, random rarity with the
+weapon odds / pity, same case opening, locked zones as silhouettes), "Half a weapon (Recommended)" (price),
+"Weapons, Armor, Trophies (Recommended)" (filter + select-and-sell on the three tabs that sell for Gold).
+Backups before_armor_shop / after_armor_shop (6 files each).
+
+## Status (newest first)
+
+- 23:16 DONE. Studio = disk (pull: 168 scripts, 0 written).
+  * Config/Armor: `SHOP_PRICE_SHARE` 0.5, `price(zone)`, `BUY_INTERVAL`, `PITY_KEYS`; Profile `ArmorPityCounter`,
+    `ArmorPityLegendary`. ShopService: one `buy(player, kind, id)` for "BuyWeapon" / "BuyArmor" (lookup, price,
+    storage full refused for armor, pity keys per kind, Index, rollback incl. the pity keys, BuyWeapon quest only for
+    weapons), announcements name the item kind ("mystery armor piece").
+  * Shop > Armor (WeaponShopPage factory): Helmet / Chest / Legs tabs, 3D piece cards (black silhouette + "?" when
+    the zone is locked), turntable preview with Max HP / Defense / slot chips, Odds (Max HP x, Defense +3 per tier,
+    the armor pity). CaseOpening: slot icon on the reel, "+X Max HP | +D Defense | Slot", better-than-equipped hint,
+    Equip uses "EquipArmor".
+  * Inventory: Kit/SellBar on Weapons (InventoryPage rebuilt as header + grid: funnel category / rarity / zone / sort,
+    count chip), Armor (funnel + rarity + zone; "Best" hides in select mode; empty tab has a Shop button) and Trophies
+    (funnel rarity / zone; "Sell All" hides in select mode). Server batch sells with the same skips as single sells.
+  * Play tests (memory profile): Armor tab, 500 Gold Ranger Helm (Plains weapon 1,000), Rare reveal "+55 Max HP |
+    +9 Defense | Helmet", "Equipped automatically - your first helmet!", Open again (Common, Equip offered), odds
+    table, armor pity 2/30 vs weapon pity 0/30, weapon purchase unchanged; setPity 30 -> BuyArmor gave Mythic with
+    reason "Epic or better" and reset the armor counters; full storage -> "Armor storage full: sell some pieces
+    first". Filters (Rare only), select All 7 -> "Sold 7 weapons: +3.08K Gold"; equipped weapon dimmed and skipped
+    (15 / 16); Armor: worn + locked skipped, confirm "Sell 9 armor pieces for 3.4K Gold? 2 of them are Epic or
+    better.", sold; Trophies: 2 tapped and sold. Server guards: worn / locked uids -> "Nothing to sell", a string or
+    an empty / 301-uid list -> "Bad request".
+  * Fixed during the tests: the armor auto-equip changed the look and Max HP during the spin (the rarity showed
+    before the reveal) -> the piece goes into its empty slot when the opening ends (Max HP 100 during the spin, 145
+    after); select mode hides each item's own trash / sell button and puts the tick ring there; blocked items are
+    dimmed more.
+
+## Decisions taken without the owner
+
+- Armor shop pity uses the weapon rules (30 / 100) with separate counters; the admin setPity sets both shops.
+- A piece bought for an empty slot is equipped at the end of the opening (not at purchase): leaving mid-opening
+  keeps the piece but not equipped. A full armor storage refuses the purchase instead of auto-selling.
+- Every multi-sell asks once (even Common); hidden (filtered-out) items are never sold; the funnel's zone row only
+  shows zones the player owns items from (no spoiler).
+- Not tested: the phone layout of the new inventory headers (select mode adds 3 controls to the header row).

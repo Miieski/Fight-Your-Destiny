@@ -266,7 +266,9 @@ local COMMANDS: { [string]: Command } = {
 		end
 		DataService:Set(player, "PityCounter", n)
 		DataService:Set(player, "PityLegendary", n)
-		return true, `Pity counters = {n}`
+		DataService:Set(player, Armor.PITY_KEYS.PityCounter, n)
+		DataService:Set(player, Armor.PITY_KEYS.PityLegendary, n)
+		return true, `Pity counters (weapons and armor) = {n}`
 	end,
 	-- resetWeapons(): no weapons, nothing equipped, pity counters 0
 	resetWeapons = function(player)
@@ -675,6 +677,8 @@ local COMMANDS: { [string]: Command } = {
 	clearArmor = function(player)
 		DataService:Set(player, "EquippedArmor", {})
 		DataService:Set(player, "Armor", {})
+		DataService:Set(player, Armor.PITY_KEYS.PityCounter, 0)
+		DataService:Set(player, Armor.PITY_KEYS.PityLegendary, 0)
 		return true, "Armor cleared"
 	end,
 	-- givePets(zone | "Premium", rarity, itemTier?): the 6 pets of a zone (or the 4 premium pets)

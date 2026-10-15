@@ -4,6 +4,8 @@
 --   Net.request("UnequipArmor", slot)     "Helmet" | "Chest" | "Legs" | "All"
 --   Net.request("EquipBestArmor")         best score per slot = pieceHP x (1 + Defense / 100) in the CURRENT zone
 --   Net.request("LockArmor", uid, bool), Net.request("SellArmor", uid)   (a locked or equipped piece is not sold)
+--   Net.request("SellArmors", { uid, ... }) -> true, { gold, count }   several at once (Inventory select mode); locked
+--                                         and equipped pieces are skipped
 -- ArmorService:GiveArmor (loot, admin): storage 100; a piece that drops while full is sold at once (toast).
 -- The worn pieces are listed in the player attribute "ArmorLook" ("Helmet=id:tier;Chest=id:tier;Legs=id:tier")
 -- for the client-side visuals (GameClient/Controllers/ArmorVisualsController, Util/ArmorLook).
@@ -165,6 +167,38 @@ local function sell(player: Player, uid: any): (boolean, any)
 	return true, { gold = gold }
 end
 
+local MAX_BATCH = 300
+local function sellMany(player: Player, uids: any): (boolean, any)
+	if typeof(uids) ~= "table" or #uids == 0 or #uids > MAX_BATCH then
+		return false, "Bad request"
+	end
+	local profile = DataService:Get(player)
+	if not profile then
+		return false, "Profile not loaded"
+	end
+	local worn = {}
+	for _, equippedUid in pairs(profile.EquippedArmor or {}) do
+		worn[equippedUid] = true
+	end
+	local owned = table.clone(profile.Armor)
+	local gold, n = 0, 0
+	for _, uid in ipairs(uids) do
+		local item = if typeof(uid) == "string" then owned[uid] else nil
+		if item and Armor.ById[item.id] and not item.locked and not worn[uid] then
+			gold += Armor.sellValue(item.id, item.rarity)
+			owned[uid] = nil
+			n += 1
+		end
+	end
+	if n == 0 then
+		return false, "Nothing to sell"
+	end
+	DataService:Set(player, "Armor", owned)
+	DataService:AddGold(player, gold)
+	DataService:Save(player)
+	return true, { gold = gold, count = n }
+end
+
 -- Loot / admin: a new piece. Full storage -> sold at once for Gold (with a toast). Returns the uid or nil.
 function ArmorService:GiveArmor(player: Player, id: string, tier: number, quiet: boolean?): string?
 	local profile = DataService:Get(player)
@@ -197,6 +231,7 @@ function ArmorService:Init()
 	Net.handle("EquipBestArmor", equipBest, 0.5)
 	Net.handle("LockArmor", lock, 0.1)
 	Net.handle("SellArmor", sell, 0.1)
+	Net.handle("SellArmors", sellMany, 0.5)
 	DataService.Loaded:Connect(function(player: Player)
 		ArmorService:UpdateLook(player)
 	end)

@@ -3,7 +3,8 @@
 -- (ShopService); this only shows it. A strip of TileCount rarity tiles slides under a fixed center marker and
 -- stops on the server's tier (tile WinIndex, at a random spot inside it) after SpinSeconds (FastSpinSeconds
 -- with the Fast Open setting). Skip (button or a tap on the reel) jumps to the reveal; the reveal always plays.
---   CaseOpening.play(result, onAgain)  result = the BuyWeapon reply; onAgain(weaponId) buys the same again
+--   CaseOpening.play(result, onAgain)  result = the BuyWeapon / BuyArmor reply (weaponId or armorId); onAgain(itemId)
+--                                      buys the same again
 --   CaseOpening.isActive(), CaseOpening.Changed (fires with the new active flag)
 --   CaseOpening.burst(fx, modal, tier): the rarity reveal effects (shared with the hatch screen)
 -- One tween moves the strip. The per-frame check (tick sound, tile under the marker) recomputes the strip
@@ -13,6 +14,7 @@ local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
+local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local Net = require(ReplicatedStorage.GameSystem.Net)
@@ -45,10 +47,25 @@ local root: Frame? = nil
 local ticks: { Sound } = {}
 local nextTick = 1
 
+-- What is opened: a weapon (BuyWeapon reply: weaponId) or an armor piece (BuyArmor reply: armorId).
+type Item = { kind: string, id: string, name: string, zoneId: string, zone: number, icon: string, price: number, slot: string?, def: any }
+
+local function itemOf(result: { [string]: any }): Item?
+	local piece = if typeof(result.armorId) == "string" then Armor.ById[result.armorId] else nil
+	if piece then
+		return { kind = "Armor", id = piece.Id, name = piece.Name, zoneId = piece.ZoneId, zone = piece.Zone, icon = Armor.SLOT_ICONS[piece.Slot], price = Armor.price(piece.Zone), slot = piece.Slot, def = piece }
+	end
+	local weapon = if typeof(result.weaponId) == "string" then Weapons.ById[result.weaponId] else nil
+	if weapon then
+		return { kind = "Weapon", id = weapon.Id, name = weapon.Name, zoneId = weapon.ZoneId, zone = weapon.Zone, icon = weapon.Icon or weapon.Category, price = Weapons.price(weapon.Zone), slot = nil, def = weapon }
+	end
+	return nil
+end
+
 -- Everything of the current opening (destroyed on close).
 type Opening = {
 	result: { [string]: any },
-	weapon: any,
+	item: Item,
 	modal: Frame,
 	tiles: { Frame },
 	scales: { UIScale },
@@ -137,7 +154,7 @@ local function darker(color: Color3, amount: number): Color3
 	return color:Lerp(Color3.new(0, 0, 0), amount)
 end
 
-local function makeTile(parent: Instance, weapon: any, tier: number, width: number, height: number, x: number): (Frame, UIScale)
+local function makeTile(parent: Instance, item: Item, tier: number, width: number, height: number, x: number): (Frame, UIScale)
 	local rarity = WeaponRarities.get(tier)
 	local tile = Instance.new("Frame")
 	tile.Name = "Tile"
@@ -159,14 +176,14 @@ local function makeTile(parent: Instance, weapon: any, tier: number, width: numb
 	stroke.Transparency = 0.1
 	local scale = Instance.new("UIScale")
 	scale.Parent = tile
-	Icons.create(weapon.Icon or weapon.Category, tile, { Size = UDim2.fromOffset(width * 0.7, width * 0.7), Position = UDim2.new(0.5, 0, 0, width * 0.06), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 2 })
+	Icons.create(item.icon, tile, { Size = UDim2.fromOffset(width * 0.7, width * 0.7), Position = UDim2.new(0.5, 0, 0, width * 0.06), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 2 })
 	Theme.text({ Font = "Button", Text = rarity.Name, TextSize = 20, Size = UDim2.new(1, -8, 0, height * 0.2), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 2, Parent = tile })
 	tile.Parent = parent
 	return tile, scale
 end
 
-local function zoneName(weapon: any): string
-	return ZoneVisibility.displayName(weapon.ZoneId)
+local function zoneName(item: Item): string
+	return ZoneVisibility.displayName(item.zoneId)
 end
 
 local function close()
@@ -311,7 +328,7 @@ local function reveal(opening: Opening)
 
 	local tier = opening.result.rarity
 	local rarity = WeaponRarities.get(tier)
-	local weapon = opening.weapon
+	local item = opening.item
 	local winScale = opening.scales[win]
 	TweenService:Create(winScale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = CONFIG.RevealScale }):Play()
 	Sfx.play(if tier >= Rarities.LEGENDARY_SOUND_FROM then "RarityLegendary" else "RarityReveal")
@@ -328,20 +345,33 @@ local function reveal(opening: Opening)
 	local banner = panel:FindFirstChild("Banner") :: TextLabel
 	banner.Text = rarity.Name
 	Theme.paintRarity(banner, tier)
-	local damage = Stats.weaponDamage(weapon.Id, tier)
 	local details = panel:FindFirstChild("Details") :: TextLabel
-	details.Text = if Balance.ZoneBoostEnabled
-		then string.format("%s damage per hit   |   Zone Boost +%d%% in %s   |   %s %d%% proc",
-			Format.number(damage), math.round(rarity.ZoneBoost * 100), zoneName(weapon), weapon.Element, math.round(rarity.ElementProc * 100))
-		else string.format("%s damage per hit   |   %s %d%% proc", Format.number(damage), weapon.Element, math.round(rarity.ElementProc * 100))
 	local hint = panel:FindFirstChild("Hint") :: TextLabel
-	local weapons = State.get("Weapons") or {}
-	local equipped = opening.equippedBefore and weapons[opening.equippedBefore]
 	local parts = {}
-	if not equipped then
-		table.insert(parts, "Equipped automatically - your first weapon!")
-	elseif Stats.weaponDps(weapon.Id, tier) > Stats.weaponDps(equipped.id, equipped.rarity) then
-		table.insert(parts, "Better than equipped!")
+	local equipped
+	if item.kind == "Armor" then
+		local hp, defense = Armor.baseHP(item.id, tier), Armor.baseDefense(tier)
+		details.Text = string.format("+%s Max HP   |   +%d Defense   |   %s", Format.number(math.floor(hp + 0.5)), defense, item.slot or "")
+		equipped = opening.equippedBefore and (State.get("Armor") or {})[opening.equippedBefore]
+		if not equipped then
+			table.insert(parts, `Equipped automatically - your first {string.lower(item.slot or "piece")}!`)
+		elseif Armor.score(item.id, tier, nil) > Armor.score(equipped.id, equipped.rarity, nil) then
+			table.insert(parts, "Better than equipped!")
+		end
+	else
+		local weapon = item.def
+		local damage = Stats.weaponDamage(weapon.Id, tier)
+		details.Text = if Balance.ZoneBoostEnabled
+			then string.format("%s damage per hit   |   Zone Boost +%d%% in %s   |   %s %d%% proc",
+				Format.number(damage), math.round(rarity.ZoneBoost * 100), zoneName(item), weapon.Element, math.round(rarity.ElementProc * 100))
+			else string.format("%s damage per hit   |   %s %d%% proc", Format.number(damage), weapon.Element, math.round(rarity.ElementProc * 100))
+		local weapons = State.get("Weapons") or {}
+		equipped = opening.equippedBefore and weapons[opening.equippedBefore]
+		if not equipped then
+			table.insert(parts, "Equipped automatically - your first weapon!")
+		elseif Stats.weaponDps(weapon.Id, tier) > Stats.weaponDps(equipped.id, equipped.rarity) then
+			table.insert(parts, "Better than equipped!")
+		end
 	end
 	local pity = opening.result.pityReason
 	if pity and pity ~= "forced" then
@@ -360,8 +390,7 @@ local function reveal(opening: Opening)
 		buttons.Equip:SetText("Equipped")
 		buttons.Equip:SetEnabled(false)
 	end
-	local price = Weapons.price(weapon.Zone)
-	buttons.Again:SetStyle(if (State.get("Gold") or 0) >= price then "primary" else "disabled")
+	buttons.Again:SetStyle(if (State.get("Gold") or 0) >= item.price then "primary" else "disabled")
 end
 
 -- Shows the opening of `result` (the server's BuyWeapon reply). onAgain(weaponId) is called by "Open again".
@@ -369,8 +398,8 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 	if current then
 		close()
 	end
-	local weapon = Weapons.ById[result.weaponId]
-	if not weapon then
+	local item = itemOf(result)
+	if not item then
 		return
 	end
 	setActive(true)
@@ -410,10 +439,10 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 
 	-- title, zone, Gold
 	if compact then
-		Theme.text({ Name = "Title", Font = "Title", Text = `Opening: {weapon.Name}  -  {zoneName(weapon)}`, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -200, 0, 34), Position = UDim2.fromOffset(16, 10), ZIndex = 3, Parent = panel })
+		Theme.text({ Name = "Title", Font = "Title", Text = `Opening: {item.name}  -  {zoneName(item)}`, TextSize = 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -200, 0, 34), Position = UDim2.fromOffset(16, 10), ZIndex = 3, Parent = panel })
 	else
-		Theme.text({ Name = "Title", Font = "Title", Text = `Opening: {weapon.Name}`, TextSize = 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -260, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
-		Theme.text({ Name = "Zone", Text = zoneName(weapon), TextSize = 20, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -260, 0, 24), Position = UDim2.new(0.5, 0, 0, 50), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
+		Theme.text({ Name = "Title", Font = "Title", Text = `Opening: {item.name}`, TextSize = 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -260, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
+		Theme.text({ Name = "Zone", Text = zoneName(item), TextSize = 20, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -260, 0, 24), Position = UDim2.new(0.5, 0, 0, 50), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
 	end
 	local goldBox = Instance.new("Frame")
 	goldBox.Name = "Gold"
@@ -457,7 +486,7 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 	local tiles, scales = {}, {}
 	for index = 1, CONFIG.TileCount do
 		local tier = if index == CONFIG.WinIndex then result.rarity else visualTier(rng)
-		local tile, scale = makeTile(strip, weapon, tier, tileW, tileH, (index - 1) * (tileW + gap))
+		local tile, scale = makeTile(strip, item, tier, tileW, tileH, (index - 1) * (tileW + gap))
 		tile.ZIndex = 4
 		tiles[index] = tile
 		scales[index] = scale
@@ -542,24 +571,24 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 		reveal(opening)
 	end })
 	buttons.Equip = Button.new({ Name = "Equip", Text = "Equip", Style = "go", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 2, ZIndex = 4, Parent = row, OnClick = function()
-		local ok, message = Net.request("EquipWeapon", result.uid)
+		local ok, message = Net.request(if item.kind == "Armor" then "EquipArmor" else "EquipWeapon", result.uid)
 		if ok then
 			buttons.Equip:SetText("Equipped")
 			buttons.Equip:SetEnabled(false)
-			Notifier.push({ Kind = "info", Text = `Equipped {WeaponRarities.get(result.rarity).Name} {weapon.Name}`, Icon = weapon.Icon or weapon.Category })
+			Notifier.push({ Kind = "info", Text = `Equipped {WeaponRarities.get(result.rarity).Name} {item.name}`, Icon = item.icon })
 		else
 			Notifier.push({ Kind = "error", Text = tostring(message or "Could not equip") })
 		end
 	end })
 	buttons.Again = Button.new({ Name = "Again", Text = "Open again", Style = "primary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 3, ZIndex = 4, Parent = row, OnClick = function()
-		if (State.get("Gold") or 0) < Weapons.price(weapon.Zone) then
+		if (State.get("Gold") or 0) < item.price then
 			Sfx.play("Denied")
 			Notifier.push({ Kind = "error", Text = "Not enough Gold" })
 			return
 		end
 		close()
 		if onAgain then
-			onAgain(weapon.Id)
+			onAgain(item.id)
 		end
 	end })
 	buttons.Close = Button.new({ Name = "Close", Text = "Close", Style = "secondary", Size = UDim2.fromOffset(buttonW, Theme.TOUCH), LayoutOrder = 4, ZIndex = 4, Parent = row, OnClick = close })
@@ -576,7 +605,7 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 	local tween = TweenService:Create(strip, TweenInfo.new(duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Position = UDim2.fromOffset(endX, 0) })
 	opening = {
 		result = result,
-		weapon = weapon,
+		item = item,
 		modal = modal,
 		tiles = tiles,
 		scales = scales,
@@ -586,7 +615,7 @@ function CaseOpening.play(result: { [string]: any }, onAgain: ((string) -> ())?)
 		goldConn = goldConn,
 		revealed = false,
 		endX = endX,
-		equippedBefore = State.get("EquippedWeapon"),
+		equippedBefore = if item.kind == "Armor" then (State.get("EquippedArmor") or {})[item.slot or ""] else State.get("EquippedWeapon"),
 		onAgain = onAgain,
 		buttons = buttons,
 		fx = fx,

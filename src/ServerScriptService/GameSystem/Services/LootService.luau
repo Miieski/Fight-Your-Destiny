@@ -6,6 +6,7 @@
 --                                                        zone (random slot) | Corpse / Material / Trophy -> a head trophy
 --   LootService:GiveTrophy(player, enemyId, tier, quiet?) full storage (Enemies.TROPHY_STORAGE) -> sold at once (toast)
 --   Net.request("SellTrophy", uid) / Net.request("SellAllTrophies") -> true, { gold, count }
+--   Net.request("SellTrophies", { uid, ... }) -> true, { gold, count }   the selected ones (Inventory select mode)
 -- Trophy value = 25 x enemy Gold x rarityMult x (1 + Trophy Value bonus of the pets).
 -- profile.Trophies = { [uid] = { id = enemyId, rarity = tier } } (reset on Rebirth).
 local HttpService = game:GetService("HttpService")
@@ -123,6 +124,35 @@ local function sell(player: Player, uid: any): (boolean, any)
 	return true, { gold = gold, count = 1 }
 end
 
+local MAX_BATCH = 300
+local function sellMany(player: Player, uids: any): (boolean, any)
+	if typeof(uids) ~= "table" or #uids == 0 or #uids > MAX_BATCH then
+		return false, "Bad request"
+	end
+	local profile = DataService:Get(player)
+	if not profile then
+		return false, "Profile not loaded"
+	end
+	local bonus = trophyBonus(profile)
+	local trophies = table.clone(profile.Trophies or {})
+	local gold, n = 0, 0
+	for _, uid in ipairs(uids) do
+		local trophy = if typeof(uid) == "string" then trophies[uid] else nil
+		if trophy then
+			gold += LootService.trophyValue(trophy.id, trophy.rarity, bonus)
+			trophies[uid] = nil
+			n += 1
+		end
+	end
+	if n == 0 then
+		return false, "Nothing to sell"
+	end
+	DataService:Set(player, "Trophies", trophies)
+	DataService:AddGold(player, gold) -- (not counted for the "Gold from enemies" quest)
+	DataService:Save(player)
+	return true, { gold = gold, count = n }
+end
+
 local function sellAll(player: Player): (boolean, any)
 	local profile = DataService:Get(player)
 	if not profile then
@@ -146,6 +176,7 @@ end
 function LootService:Init()
 	Net.handle("SellTrophy", sell, 0.15)
 	Net.handle("SellAllTrophies", sellAll, 1)
+	Net.handle("SellTrophies", sellMany, 0.5)
 end
 
 return LootService

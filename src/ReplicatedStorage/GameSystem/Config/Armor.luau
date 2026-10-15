@@ -6,8 +6,11 @@
 -- Ids "<zone lower>_helmet|_chest|_legs". Items in profile.Armor = { [uid] = { id, rarity, locked? } },
 -- equipped in profile.EquippedArmor = { Helmet = uid, Chest = uid, Legs = uid }.
 -- Palette = the in-world look (GameSystem/Util/ArmorLook): Main, Second, Accent, Glow (accent is neon).
+-- Shop (owner 2026-10-15: "a shop for Armors too, same as the weapon shop"): Shop > Armor sells every piece like the
+-- weapon shop (same rarity odds and pity rules, its own pity counters), for half the weapon price of its zone.
 local Balance = require(script.Parent.Balance)
 local Rarities = require(script.Parent.Rarities)
+local Weapons = require(script.Parent.Weapons)
 local Zones = require(script.Parent.Zones)
 
 export type Piece = { Id: string, Name: string, ZoneId: string, Zone: number, Slot: string, Palette: { [string]: any } }
@@ -25,6 +28,10 @@ Armor.SetHPBonus = 0.10 -- read by Util/Stats (Max HP)
 Armor.SetBoostBonus = 0.10 -- Zone Boost x 1.10 with a full set
 Armor.ShimmerFrom = 4 -- Epic and rarer pieces shimmer in the world
 Armor.SLOT_ICONS = { Helmet = "Helmet", Chest = "Chest", Legs = "Legs" }
+Armor.SHOP_PRICE_SHARE = 0.5 -- a piece costs half the weapon price of its zone (a full set = 1.5 weapons)
+Armor.BUY_INTERVAL = Weapons.BUY_INTERVAL -- seconds between two BuyArmor requests of a player
+-- the armor shop's own pity counters (profile fields), counted like the weapon shop's (Config/WeaponRarities Pity)
+Armor.PITY_KEYS = { PityCounter = "ArmorPityCounter", PityLegendary = "ArmorPityLegendary" }
 
 local NAMES = {
 	Plains = { "Ranger Helm", "Ranger Chestplate", "Ranger Greaves" },
@@ -111,6 +118,11 @@ end
 function Armor.score(id: string, tier: number, zoneId: string?): number
 	local hp, defense = Armor.pieceStats(id, tier, zoneId, false)
 	return hp * (1 + defense / 100)
+end
+
+-- Shop price of a piece of this zone (1..12).
+function Armor.price(zone: number): number
+	return Weapons.price(zone) * Armor.SHOP_PRICE_SHARE
 end
 
 function Armor.sellValue(id: string, tier: number): number

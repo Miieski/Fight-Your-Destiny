@@ -4,6 +4,8 @@
 -- preview, HP / Defense with and without the Zone Boost, sell value, Equip / Unequip, Lock, Sell with a confirm).
 -- ArmorPage.picker(slot) is the Equipment screen's slot list: the compatible pieces with a comparison against the
 -- worn one (green up / red down arrows for HP and Defense in the current zone) and Equip / Unequip.
+-- Owner 2026-10-15: the funnel also filters by rarity and zone, and select mode (Kit/SellBar, Net "SellArmors")
+-- sells many pieces at once; worn and locked pieces are never sold.
 --   ArmorPage.build(page, ctx), ArmorPage.picker(slot), ArmorPage.detail(uid)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -26,6 +28,7 @@ local Icons = require(Kit.Icons)
 local Info = require(Kit.Info)
 local ModelIcon = require(Kit.ModelIcon)
 local Overlay = require(Kit.Overlay)
+local SellBar = require(Kit.SellBar)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 
@@ -33,7 +36,9 @@ local ArmorPage = {}
 
 local SORTS = { "Rarity", "Zone", "Score" }
 local UP, DOWN = "▲", "▼"
-local filter = { slot = 0, sort = 1 } -- slot 0 = all, else index in Armor.SLOTS
+-- slot 0 = all, else index in Armor.SLOTS; rarity 0 / zone 0 = all
+local filter = { slot = 0, sort = 1, rarity = 0, zone = 0 :: any }
+local zoneOptions: { { [string]: any } } = {}
 local overlayParent: GuiObject? = nil
 local busy = false
 
@@ -335,7 +340,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Armor tab
 ----------------------------------------------------------------------------------------------------
--- the funnel's choices (Kit/Filter): slot pictures and sort pictures
+-- the funnel's choices (Kit/Filter): slot pictures, rarity colors, zone pictures and sort pictures
 local function filterGroups(): { any }
 	local slots = { { Value = 0, Text = "All" } }
 	for i, slot in ipairs(Armor.SLOTS) do
@@ -343,6 +348,8 @@ local function filterGroups(): { any }
 	end
 	return {
 		{ Icon = "Chest", Options = slots, Get = function() return filter.slot end, Set = function(v) filter.slot = v end },
+		{ Icon = "Star", Options = Filter.rarityOptions(), Get = function() return filter.rarity end, Set = function(v) filter.rarity = v end },
+		{ Icon = "Zones", Options = zoneOptions, Get = function() return filter.zone end, Set = function(v) filter.zone = v end },
 		{ Icon = "Sort", Options = { { Value = 1, Icon = "Star" }, { Value = 2, Icon = "Zones" }, { Value = 3, Icon = "Attack" } }, Get = function() return filter.sort end, Set = function(v) filter.sort = v end },
 	}
 end
@@ -369,11 +376,15 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 		refresh()
 	end, Size = Theme.TOUCH, LayoutOrder = 1, ZIndex = 3 })
 	local storage = Chips.chip(header, "Chest", "0", { Height = if small then 36 else 42, LayoutOrder = 3, ZIndex = 3 })
-	Button.new({ Name = "EquipBest", Text = "Best", Icon = "Star", Style = "go", Size = UDim2.fromOffset(if small then 120 else 150, Theme.TOUCH), LayoutOrder = 4, ZIndex = 3, Parent = header, OnClick = function()
+	local best = Button.new({ Name = "EquipBest", Text = "Best", Icon = "Star", Style = "go", Size = UDim2.fromOffset(if small then 120 else 150, Theme.TOUCH), LayoutOrder = 4, ZIndex = 3, Parent = header, OnClick = function()
 		if request("EquipBestArmor") then
 			Sfx.play("UIClick")
 			Notifier.push({ Kind = "info", Text = "Best armor equipped for this zone", Icon = "Chest" })
 		end
+	end })
+	-- select mode: the Best button makes room for the sell buttons
+	local bar = SellBar.new({ Parent = header, LayoutOrder = 10, ZIndex = 3, Page = page, Request = "SellArmors", Noun = { "armor piece", "armor pieces" }, OnMode = function(on)
+		best.Instance.Visible = not on
 	end })
 
 	local cell = if small then Vector2.new(100, 124) else Vector2.new(118, 146)
@@ -401,7 +412,6 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 	grid.Parent = page
 
 	refresh = function()
-		funnel.Refresh()
 		local owned = State.get("Armor") or {}
 		storage:Set(`{count(owned)}/{Armor.Storage}`)
 		local scroll = grid.CanvasPosition
@@ -412,10 +422,25 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 		end
 		layout.CellSize = UDim2.fromOffset(cell.X, cell.Y)
 		local zone = currentZone()
+		local present = {}
+		for _, item in pairs(owned) do
+			local piece = Armor.ById[item.id]
+			if piece then
+				present[piece.ZoneId] = true
+			end
+		end
+		if filter.zone ~= 0 and not present[filter.zone] then
+			filter.zone = 0 -- the last piece of that zone is gone
+		end
+		Filter.zoneOptions(zoneOptions, present)
+		funnel.Refresh()
 		local entries = {}
 		for uid, item in pairs(owned) do
 			local piece = Armor.ById[item.id]
-			if piece and (filter.slot == 0 or piece.Slot == Armor.SLOTS[filter.slot]) then
+			if piece and (filter.slot == 0 or piece.Slot == Armor.SLOTS[filter.slot])
+				and (filter.rarity == 0 or item.rarity == filter.rarity)
+				and (filter.zone == 0 or piece.ZoneId == filter.zone)
+			then
 				table.insert(entries, { uid = uid, item = item, piece = piece, score = Armor.score(item.id, item.rarity, zone), worn = ArmorPage.equippedSlot(uid) ~= nil })
 			end
 		end
@@ -440,13 +465,21 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 			end
 			return a.uid < b.uid
 		end)
+		bar:Begin()
 		if #entries == 0 then
-			layout.CellSize = UDim2.fromOffset(440, 140)
+			layout.CellSize = UDim2.fromOffset(440, 200)
 			local empty = Instance.new("Frame")
 			empty.BackgroundTransparency = 1
 			Icons.create("Chest", empty, { Size = UDim2.fromOffset(64, 64), Position = UDim2.new(0.5, 0, 0, 4), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3 })
-			Theme.text({ Text = if count(owned) > 0 then "No armor matches this filter." else "No armor yet. Enemies drop armor pieces.", TextSize = 20, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -20, 0, 52), Position = UDim2.new(0.5, 0, 0, 74), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = empty })
+			local none = count(owned) == 0
+			Theme.text({ Text = if none then "No armor yet. Enemies drop armor pieces, and the Shop sells them." else "No armor matches this filter.", TextSize = 20, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, -20, 0, 52), Position = UDim2.new(0.5, 0, 0, 74), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = empty })
+			if none then
+				Button.new({ Name = "OpenShop", Icon = "Shop", Style = "primary", Size = UDim2.fromOffset(150, Theme.TOUCH + 8), Position = UDim2.new(0.5, 0, 1, -4), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 3, Parent = empty, OnClick = function()
+					Window.open("Shop", "Armor")
+				end })
+			end
 			empty.Parent = grid
+			bar:Finish()
 			return
 		end
 		for index, entry in ipairs(entries) do
@@ -472,8 +505,11 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 				Sfx.play("UIClick")
 				ArmorPage.detail(entry.uid)
 			end)
+			local blocked = if entry.worn then "Worn pieces cannot be sold" elseif entry.item.locked then "Locked pieces cannot be sold" else nil
+			bar:Attach(button, { uid = entry.uid, value = Armor.sellValue(entry.item.id, entry.item.rarity), rarity = entry.item.rarity, blocked = blocked })
 			button.Parent = grid
 		end
+		bar:Finish()
 		grid.CanvasPosition = scroll
 	end
 	refresh()

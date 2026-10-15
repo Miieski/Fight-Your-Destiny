@@ -217,8 +217,12 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
   * Piece Defense points = `3 x rarityTier` (Common 3 ... Secret 24), not zone-scaled.
 * **Zone Boost:** like weapons, armor from a zone gets the rarity's Zone Boost (+5% ... +120%)
   on its HP and Defense while the player is in that zone.
-* Armor is obtained as **loot** (enemies, mini-bosses, bosses). It is **not** sold in the shop.
-  Armor is lost on Rebirth.
+* Armor is obtained as **loot** (enemies, mini-bosses, bosses) and, since 2026-10-15, in the **Shop > Armor**
+  tab (owner: "a shop for Armors too, same as the weapon shop"): tabs Helmet / Chest / Legs, one card per zone,
+  random rarity with the weapon shop's odds and pity rules but **its own pity counters** (`ArmorPityCounter`,
+  `ArmorPityLegendary`), the same case opening. Price = **half the weapon price of the zone** (`Armor.price`,
+  a full set = 1.5 weapons). A full armor storage (100) refuses the purchase. A piece bought for an empty slot
+  is equipped when the opening ends. Armor is lost on Rebirth.
 * Equipping a piece in a slot replaces the previous one (the old one goes to the inventory).
 
 ## 4. Economy & progression
@@ -370,6 +374,12 @@ Changes for this design:
 * **No rarity reroll** (removed 2026-10-13). Instead a weapon can be **sold for Gold** (Inventory > Weapons, red
   trash button): 20% of its shop price x the rarity's damage multiplier (Common Plains 200, Rare 440). The
   equipped weapon cannot be sold; Epic and better ask first.
+* **Inventory filters and multi-sell** (owner 2026-10-15): the Weapons, Armor and Trophies tabs have one funnel
+  (Weapons: category, rarity, zone, sort; Armor: slot, rarity, zone, sort; Trophies: rarity, zone; the zone row
+  only lists zones the player has items from) and a **select mode** (check button): taps tick items, "All" ticks
+  every shown item, the trash button sells the ticked ones in one request after a confirm (it says how many are
+  Epic or better). Equipped weapons, worn and locked armor are dimmed and never sold (also refused by the server:
+  Net "SellWeapons" / "SellArmors" / "SellTrophies", max 300 uids). Ticked items hidden by a filter are unticked.
 * **Weapons are lost on Rebirth.**
 * No weapon level / no weapon upgrades.
 * Weapons never drop from enemies.
@@ -412,7 +422,8 @@ Changes for this design:
 ## 8. Hub
 
 The hub is the central safe area (no combat). Players spawn here on join.
-* **Weapon Shop:** buy a weapon of a chosen zone; rarity is random (weapon doc).
+* **Weapon Shop:** buy a weapon of a chosen zone; rarity is random (weapon doc). The Shop window also has an
+  **Armor** tab (same rules, half price, own pity counters).
 * **Trainer:** stat upgrade menu.
 * **Egg Station:** hatch eggs, open premium eggs (diamonds). **Pet Manager** (equip/delete).
 * **Trophy Merchant:** sells head trophies.
@@ -480,7 +491,7 @@ src/StarterPlayer/StarterPlayerScripts/GameClient/
 `DataService` (profile, DataStore, session lock, autosave 90 s) - `StatsService` (derived stats) -
 `CombatService` (player attacks, roll, block, validation) - `EnemyService` (spawn, AI, damage
 tracking, drops) - `BossService` (arenas, groups, patterns, rewards) - `ZoneService` (unlocks,
-gates, teleports, death respawn) - `ShopService` (weapons, training, premium eggs) -
+gates, teleports, death respawn) - `ShopService` (weapons, armor, training, premium eggs) -
 `LootService` (drops, trophies) - `PetService` - `ArmorService` - `RebirthService` -
 `RewardService` (daily, playtime, quests, codes, boosts, AFK/offline) - `LeaderboardService` -
 `TeamService` - `MarketService` (Robux products) - `TutorialService` - `AdminService`.
@@ -526,6 +537,7 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Settings = { Music = true, Sfx = true, LowFx = false, ButtonLayout = {} },
   Stats_Lifetime = { TotalGold = 0, TotalDamage = 0, BossKills = 0, EnemyKills = 0, PlaySeconds = 0 },
   PityCounter = 0,                     -- weapon shop pity
+  ArmorPityCounter = 0, ArmorPityLegendary = 0,   -- armor shop pity (same rules, own counters)
   LastOnline = 0,
   Tutorial = 0,                        -- 99 = done
 }

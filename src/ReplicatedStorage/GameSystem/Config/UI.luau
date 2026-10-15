@@ -40,8 +40,8 @@ UI.Windows = {
 		TabLabels = { Equipment = "Me" } },
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
 	Stats = { Title = "Stats", Icon = "Stats", Size = Vector2.new(1080, 620) }, -- attributes (UI/Pages/AttributesPage)
-	Shop = { Title = "Shop", Icon = "Shop", Tabs = { "Weapons", "Diamonds" }, Size = Vector2.new(1040, 600),
-		TabIcons = { Weapons = "Sword", Diamonds = "Diamond" } },
+	Shop = { Title = "Shop", Icon = "Shop", Tabs = { "Weapons", "Armor", "Diamonds" }, Size = Vector2.new(1040, 600),
+		TabIcons = { Weapons = "Sword", Armor = "Chest", Diamonds = "Diamond" } },
 	Rebirth = { Title = "Rebirth", Icon = "RebirthShop", Tabs = { "Rebirth", "Rebirth Shop" }, Size = Vector2.new(940, 620), -- UI/Pages/RebirthPage + RebirthShopPage
 		TabIcons = { Rebirth = "RebirthShop", ["Rebirth Shop"] = "RebirthCredit" }, TabLabels = { ["Rebirth Shop"] = "Shop" } },
 	Pets = { Title = "Pets", Icon = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620),

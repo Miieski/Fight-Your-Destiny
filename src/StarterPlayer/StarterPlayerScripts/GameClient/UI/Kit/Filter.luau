@@ -5,6 +5,13 @@
 --   Filter.button({ Parent, Frame (window frame), Groups = { Group }, OnChange = fn, Size?, Position?,
 --                   AnchorPoint?, ZIndex?, LayoutOrder? }) -> { Instance, Refresh = fn }
 --   Group = { Icon (row picture), Options = { { Value, Icon?, Color?, Text? } }, Get = () -> any, Set = (v) -> () }
+--   Filter.rarityOptions() -> Options: "All" (0) + one color swatch per rarity tier
+--   Filter.zoneOptions(options, present) refills options with "All" (0) + the zones in `present` ({ [zoneId] = true }),
+--       in zone order (the zone pictures): only zones the player has items from, so nothing is spoiled
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local Button = require(script.Parent.Button)
 local Icons = require(script.Parent.Icons)
 local Overlay = require(script.Parent.Overlay)
@@ -13,6 +20,24 @@ local Theme = require(script.Parent.Theme)
 local Filter = {}
 
 local TILE = 66
+
+function Filter.rarityOptions(): { { [string]: any } }
+	local options: { { [string]: any } } = { { Value = 0, Text = "All" } }
+	for _, rarity in ipairs(Rarities.List) do
+		table.insert(options, { Value = rarity.Tier, Color = rarity.Color })
+	end
+	return options
+end
+
+function Filter.zoneOptions(options: { { [string]: any } }, present: { [string]: boolean })
+	table.clear(options)
+	table.insert(options, { Value = 0, Text = "All" })
+	for _, zone in ipairs(Zones.List) do
+		if present[zone.Id] then
+			table.insert(options, { Value = zone.Id, Icon = zone.Id })
+		end
+	end
+end
 
 local function tile(parent: Instance, option: { [string]: any }, selected: boolean, order: number, onClick: () -> ())
 	local cell = Instance.new("TextButton")

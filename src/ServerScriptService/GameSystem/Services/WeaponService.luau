@@ -135,8 +135,39 @@ local function sell(player: Player, uid: any): (boolean, any)
 	return true, { gold = gold }
 end
 
+-- Several copies at once (Inventory select mode, owner 2026-10-15): Net.request("SellWeapons", { uid, ... }) ->
+-- true, { gold, count }. The equipped copy and unknown uids are skipped.
+local MAX_BATCH = 300
+local function sellMany(player: Player, uids: any): (boolean, any)
+	if typeof(uids) ~= "table" or #uids == 0 or #uids > MAX_BATCH then
+		return false, "Bad request"
+	end
+	local profile = DataService:Get(player)
+	if not profile then
+		return false, "Profile not loaded"
+	end
+	local owned = table.clone(profile.Weapons)
+	local gold, count = 0, 0
+	for _, uid in ipairs(uids) do
+		local item = if typeof(uid) == "string" then owned[uid] else nil
+		if item and Weapons.ById[item.id] and uid ~= profile.EquippedWeapon then
+			gold += Weapons.sellValue(item.id, item.rarity)
+			owned[uid] = nil
+			count += 1
+		end
+	end
+	if count == 0 then
+		return false, "Nothing to sell"
+	end
+	DataService:Set(player, "Weapons", owned)
+	DataService:AddGold(player, gold)
+	DataService:Save(player)
+	return true, { gold = gold, count = count }
+end
+
 function WeaponService:Init()
 	Net.handle("SellWeapon", sell, 0.1)
+	Net.handle("SellWeapons", sellMany, 0.5)
 	Net.handle("EquipWeapon", function(player: Player, uid: any)
 		if uid ~= nil and typeof(uid) ~= "string" then
 			return false, "Bad request"

@@ -350,8 +350,8 @@ end
 -- Armor
 ----------------------------------------------------------------------------------------------------
 local function armorPage(page: Instance)
-	liveLine(page, { "Armor", "EquippedArmor" }, function()
-		return `Armor pieces {count(State.get("Armor"))}/{Armor.Storage}    Worn {count(State.get("EquippedArmor"))}/3`
+	liveLine(page, { "Armor", "EquippedArmor", Armor.PITY_KEYS.PityCounter, Armor.PITY_KEYS.PityLegendary }, function()
+		return `Armor pieces {count(State.get("Armor"))}/{Armor.Storage}    Worn {count(State.get("EquippedArmor"))}/3    Shop pity Epic {State.get(Armor.PITY_KEYS.PityCounter) or 0}/30    Legendary {State.get(Armor.PITY_KEYS.PityLegendary) or 0}/100`
 	end)
 	heading(page, "Give armor")
 	local zone = picker(page, "Zone", zoneOptions(), CELL)
