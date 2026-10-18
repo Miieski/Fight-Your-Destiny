@@ -9,8 +9,14 @@
 -- turning light rays build up (in the pet's rarity colour near the end), shell chips fly at every crack, then a
 -- white flash, the rarity burst, confetti (more for rarer pets) and a screen shake from Legendary; the pet pops
 -- in and its 3 Bonus Stats items (Config/PetTraits) pop in one by one. Low FX: no rays, chips, confetti or shake.
+-- Real cracking (owner 2026-10-18: "the egg skin should crack bit by bit and then break, just like a real egg"):
+-- UI/EggCrack draws the cracks on the egg's own mesh in bursts (a starburst at the hit, then around the middle, up
+-- and around the cap), light in the pet's rarity colour shines through them at the end, then the shell breaks into
+-- skinned pieces (cap pops off, shards fall, the cup fades) and the pet appears. Without the mesh APIs (the place
+-- setting "Allow Mesh & Image APIs" off) the flat 2D cracks below are used instead.
 --   Hatching.play(results, { NextText?, OnNext? })   results = the "results" list of HatchEgg / HatchAll / BuyPremiumEgg
 --   Hatching.isActive()
+local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -27,6 +33,7 @@ local PetTraits = require(ReplicatedStorage.GameSystem.Config.PetTraits)
 local State = require(script.Parent.Parent.State)
 local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local CaseOpening = require(script.Parent.CaseOpening)
+local EggCrack = require(script.Parent.EggCrack)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
@@ -54,6 +61,9 @@ type Show = {
 	conn: RBXScriptConnection?,
 	spinConn: RBXScriptConnection?,
 	stopSpin: (() -> ())?,
+	shell: EggCrack.Shell?, -- the real cracks (nil: flat 2D cracks)
+	eggView: ViewportFrame?,
+	breaking: boolean,
 	panel: GuiObject,
 	halo: Frame,
 	rays: Frame?,
@@ -66,6 +76,12 @@ type Show = {
 
 local root: Frame? = nil
 local DROP_SECONDS = 0.45 -- the egg's fall at the start
+-- real cracks: how far they have spread (0..1) along the wobble (0..1); bursts with short pauses = "bit by bit"
+local CRACK_KEYS = { { 0, 0 }, { 0.2, 0 }, { 0.28, 0.12 }, { 0.4, 0.14 }, { 0.5, 0.42 }, { 0.58, 0.45 }, { 0.7, 0.75 }, { 0.76, 0.78 }, { 0.88, 1 } }
+local CRACK_BURSTS = { 0.2, 0.4, 0.58, 0.76 } -- a crack sound and a few chips at the start of each burst
+local OPEN_FROM = 0.9 -- the cracks widen and glow from here to the break
+local BREAK_REVEAL = 0.15 -- seconds between the shell breaking and the pet's reveal
+local BREAK_ROOM = 1.9 -- the egg's viewport grows by this at the break (camera widened) so the pieces can fly out
 -- effects (defined below reveal's helpers)
 local makeRays: (GuiObject) -> Frame
 local setRays: (Frame, Color3, number) -> ()
@@ -74,6 +90,7 @@ local confetti: (any, number) -> ()
 local shake: (GuiObject, number, number) -> ()
 local itemCards: (any, { [string]: any }, number) -> ()
 local itemDots: (GuiObject, { [string]: any }) -> ()
+local breakEgg: (any) -> ()
 local current: Show? = nil
 
 function Hatching.isActive(): boolean
@@ -118,14 +135,17 @@ local function close()
 	if show.stopSpin then
 		show.stopSpin()
 	end
+	if show.shell then
+		show.shell:destroy()
+	end
 	show.modal:Destroy()
 	Sfx.play("UIClose")
 end
 
-local function crackLines(show: Show, step: number)
-	-- 2D cracks drawn over the egg, a few more at every step
+local function crackLines(show: Show, step: number, flat: boolean)
+	-- 2D cracks drawn over the egg, a few more at every step (only without the real cracks)
 	local rng = Random.new(step * 17 + 3)
-	for _ = 1, 3 do
+	for _ = 1, if flat then 3 else 0 do
 		local line = Instance.new("Frame")
 		line.AnchorPoint = Vector2.new(0.5, 0.5)
 		line.Position = UDim2.fromScale(0.5 + rng:NextNumber(-0.12, 0.12), 0.45 + rng:NextNumber(-0.18, 0.14))
@@ -136,7 +156,9 @@ local function crackLines(show: Show, step: number)
 		line.ZIndex = 6
 		line.Parent = show.cracks
 	end
-	Sfx.play("EggCrack")
+	-- the real cracks tick with short crack sounds (3 variants), the flat ones keep the long crunch
+	local small = `EggCrackSmall{(step - 1) % 3 + 1}`
+	Sfx.play(if not flat and Sfx.find(small) then small else "EggCrack")
 	-- shell chips fly off
 	if Settings.get("LowFx") ~= true then
 		for _ = 1, 3 + step do
@@ -508,6 +530,11 @@ local function reveal(show: Show)
 		show.conn:Disconnect()
 		show.conn = nil
 	end
+	if show.shell and not show.breaking then
+		-- skipped before the break: no pieces
+		show.shell:destroy()
+		show.shell = nil
+	end
 	show.stage:ClearAllChildren()
 	show.cracks:ClearAllChildren()
 	show.stageHolder.Position = show.stageBase
@@ -550,6 +577,40 @@ local function reveal(show: Show)
 	if show.options.OnNext then
 		show.buttons.Next.Instance.Visible = true
 	end
+end
+
+-- The shell breaks along its cracks; the pet is revealed a moment later while the pieces still fly.
+breakEgg = function(show: Show)
+	local shell, view = show.shell, show.eggView
+	if show.revealed or show.breaking or not shell or not view then
+		reveal(show)
+		return
+	end
+	show.breaking = true
+	if show.conn then
+		show.conn:Disconnect()
+		show.conn = nil
+	end
+	-- room for the pieces: a bigger viewport with a wider camera, so the egg keeps its size on screen; it moves out
+	-- of the stage (cleared by the reveal) and stays above the pet until the pieces are gone
+	local camera = view.CurrentCamera
+	if camera then
+		camera.FieldOfView = math.deg(2 * math.atan(math.tan(math.rad(camera.FieldOfView / 2)) * BREAK_ROOM))
+		view.Size = UDim2.fromScale(view.Size.X.Scale * BREAK_ROOM, view.Size.Y.Scale * BREAK_ROOM)
+	end
+	view.ZIndex = 5
+	view.Parent = show.stageHolder
+	show.stageHolder.Position = show.stageBase
+	Sfx.play("EggShellBreak")
+	shell:shatter(view)
+	task.delay(BREAK_REVEAL, function()
+		if current == show then
+			reveal(show)
+		end
+	end)
+	task.delay(1.4, function()
+		view:Destroy()
+	end)
 end
 
 -- results: { { uid, petId, rarity, eggRarity, lucky, zone } }
@@ -726,7 +787,7 @@ function Hatching.play(results: { any }, options: Options?)
 		buttons[name].Instance.Visible = false
 	end
 
-	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, spinConn = nil, stopSpin = nil, panel = panel, halo = halo, rays = rays, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
+	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, spinConn = nil, stopSpin = nil, shell = nil, eggView = nil, breaking = false, panel = panel, halo = halo, rays = rays, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
 	current = show
 	stageHolder.Activated:Connect(function()
 		reveal(show)
@@ -734,8 +795,25 @@ function Hatching.play(results: { any }, options: Options?)
 
 	-- the egg drops in and bounces, then rocks around its base, faster and wider, cracks at 35 / 60 / 82 %
 	local eggView = ModelIcon.egg(best.zone, if best.premiumEgg then nil else best.eggRarity, { Size = UDim2.fromScale(0.86, 0.86), ZIndex = 4, Parent = stage })
+	show.eggView = eggView
 	local fast = Settings.get("FastOpen") == true
 	local low = Settings.get("LowFx") == true
+	-- the real cracks are prepared while the egg drops in (the mesh loads once per zone)
+	local eggModel = eggView:FindFirstChildOfClass("Model")
+	local eggPart = eggModel and eggModel:FindFirstChild("Egg", true)
+	if eggPart and eggPart:IsA("MeshPart") then
+		task.spawn(function()
+			local shell = EggCrack.new(eggPart, { Camera = eggView.CurrentCamera, Low = low })
+			if not shell then
+				return
+			end
+			if current ~= show or show.revealed then
+				shell:destroy()
+				return
+			end
+			show.shell = shell
+		end)
+	end
 	local drop = if fast then 0 else DROP_SECONDS
 	if drop > 0 then
 		eggView.Position = UDim2.fromScale(0.5, -0.6)
@@ -750,6 +828,7 @@ function Hatching.play(results: { any }, options: Options?)
 	local phase = 0
 	local crackSteps = { 0.35, 0.6, 0.82 }
 	local nextCrack = 1
+	local nextBurst = 1
 	local tease = Rarities.get(best.rarity).Color -- the glow turns to the pet's colour near the end
 	local shakeRng = Random.new()
 	show.conn = RunService.RenderStepped:Connect(function(dt)
@@ -773,15 +852,50 @@ function Hatching.play(results: { any }, options: Options?)
 			local power = (u - 0.2) * (u - 0.2) * 10
 			stageHolder.Position = show.stageBase + UDim2.fromOffset(shakeRng:NextNumber(-power, power), shakeRng:NextNumber(-power, power))
 		end
-		if nextCrack <= #crackSteps and u >= crackSteps[nextCrack] then
-			crackLines(show, nextCrack)
+		local shell = show.shell
+		if shell then
+			-- the real cracks spread in bursts, then widen with the pet's light shining through
+			local spread = 1
+			for i = 2, #CRACK_KEYS do
+				local a, b = CRACK_KEYS[i - 1], CRACK_KEYS[i]
+				if u <= b[1] then
+					spread = a[2] + (b[2] - a[2]) * (u - a[1]) / (b[1] - a[1])
+					break
+				end
+			end
+			shell:setCracks(spread)
+			if u > OPEN_FROM then
+				shell:open((u - OPEN_FROM) / (1 - OPEN_FROM), tease)
+			end
+			if nextBurst <= #CRACK_BURSTS and u >= CRACK_BURSTS[nextBurst] then
+				crackLines(show, nextBurst, false)
+				nextBurst += 1
+			end
+		elseif nextCrack <= #crackSteps and u >= crackSteps[nextCrack] then
+			crackLines(show, nextCrack, true)
 			nextCrack += 1
 		end
 		if u >= 1 then
-			reveal(show)
+			if shell then
+				breakEgg(show)
+			else
+				reveal(show)
+			end
 		end
 	end)
 	Sfx.play("UIOpen")
 end
+
+-- the crack and break sounds are loaded ahead, so the first crack of the first hatch is not late
+task.spawn(function()
+	local sounds = {}
+	for _, name in ipairs({ "EggCrackSmall1", "EggCrackSmall2", "EggCrackSmall3", "EggShellBreak" }) do
+		local sound = Sfx.find(name)
+		if sound then
+			table.insert(sounds, sound)
+		end
+	end
+	pcall(ContentProvider.PreloadAsync, ContentProvider, sounds)
+end)
 
 return Hatching

@@ -364,6 +364,13 @@ redone after a Rebirth has its sub-zone prices reset.
     glow and turning light rays build up (in the pet's rarity colour near the end), shell chips fly at each
     crack; then a white flash, the rarity burst, confetti (more for rarer pets), a screen shake from Legendary;
     the pet pops in with a hop and its items pop in. Tap to skip; Fast Open shortens it; Low FX drops the extras.
+  * **Real cracking (owner 2026-10-18: "crack bit by bit and then break, just like a real egg", keep the egg skins):**
+    `UI/EggCrack` reads the zone egg's own mesh (EditableMesh): thin dark cracks spread over the skin in 4 bursts
+    (a starburst at the hit, a zigzag around the middle, up between the pieces, around the cap), widen and glow
+    in the pet's rarity colour, then the shell breaks along exactly those cracks into skinned pieces (white inside):
+    the cap pops off, 5 shards fall (3 with Low FX), the cup fades; a new pattern every hatch. Normal hatch 3.4 s
+    (was 2.6). **Needs the place setting "Allow Mesh & Image APIs" (Game Settings > Security)**; without it the
+    flat 2D cracks and flash are used.
 * A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)

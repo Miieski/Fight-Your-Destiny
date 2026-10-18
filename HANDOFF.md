@@ -149,6 +149,21 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-18 (evening): REAL EGG CRACKING (owner: "The egg skin should crack bit by bit and then break, just like a
+real egg. However, keep the egg skins").** New `UI/EggCrack` (client): reads the zone egg mesh with EditableMesh
+(cached per mesh), an untextured overlay MeshPart gets crack strips (3 jagged segments per mesh edge) in the order
+of a starburst + Dijkstra along the piece borders; `open(f, glow)` widens them and turns them Neon in the rarity
+colour; `shatter(view)` shows prebuilt pieces (cup / 5 shards / cap: the egg's own faces + UVs + texture outside, a
+cream inner shell + rims) flying in the hatch ViewportFrame. `UI/Hatching` drives it (CRACK_KEYS bursts, OPEN_FROM
+0.9, breakEgg: viewport x1.9 with a widened camera, reveal 0.15 s after the break) and falls back to the old flat
+cracks when `EggCrack.new` returns nil. `Config/PetRarities.HatchSeconds` 2.6 -> 3.4. Sounds (SFX sub-agent):
+EggCrackSmall1-3 per burst (trimmed ProSoundEffects "Crack Egg Crunchy 5", vol 0.6), EggShellBreak at the break
+(Crunchy 13, vol 0.7), preloaded by Hatching. **The place setting "Allow Mesh & Image APIs" (Game Settings >
+Security) must be ON** - without it Roblox blocks EditableMesh even in Studio Play ("EditableMesh is not
+accessible"). The owner switched it on 2026-10-18 but Studio still blocked it in that session: the real hatch has
+only been checked in an Edit-mode bench (same viewport / camera / timeline), NOT yet in Play - test it after the
+place is reopened. Log: NIGHT_LOG "Real egg cracking"; screenshots docs/screenshots/egg_crack/.
+
 **2026-10-18: HUB / MAP POLISH (owner screenshots: misaligned tree base + mushroom, flickering Rebirth Altar stairs
 and house windows, "gross" Egg Station eggs, a smoother bench you can sit on).** Plains_3 `AncientTree`
 (Decor.Landmark): RootFlare + the 8 Root wedges moved under the trunk (+3.5, 0, +5.5; old position in attribute

@@ -19,6 +19,7 @@ return {
 		UIClick = "UI", UIOpen = "UI", UIClose = "UI", Purchase = "UI", Denied = "UI",
 		RarityReveal = "UI", RarityLegendary = "UI", GoldPickup = "UI", Unlock = "UI",
 		LevelUp = "UI", EggCrack = "UI", PetHatch = "UI", PortalEnter = "UI",
+		EggCrackSmall1 = "UI", EggCrackSmall2 = "UI", EggCrackSmall3 = "UI", EggShellBreak = "UI", -- hatch: crack bursts, shell break
 		EnemyDeath = "EnemyFX", BossRoar = "EnemyFX", TelegraphWarn = "EnemyFX",
 		-- combat (Config/CombatSfx, Assets.Sounds.Combat): the player's own and other players' fight sounds
 		Combat_Sword_Swing1 = "PlayerFX", Combat_Sword_Swing2 = "PlayerFX", Combat_Sword_Swing3 = "PlayerFX",

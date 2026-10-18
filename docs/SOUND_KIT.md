@@ -1,7 +1,7 @@
 # SOUND KIT - Fight Your Destiny
 
 Built 2026-10-04 by the SFX agent. Location: `ReplicatedStorage.Assets.Sounds` with three folders
-`SFX` (25), `Music` (15), `Ambience` (18). 58 Sound instances, no scripts.
+`SFX` (29), `Music` (15), `Ambience` (18). 62 Sound instances, no scripts.
 
 * Every Sound has the attributes `SourceAssetId` (number), `SourceCreator` (string), `SourceName` (string).
 * Volumes: SFX 0.5-0.8, UI sounds 0.4, music 0.35, ambience 0.3. Music and ambience have `Looped = true`.
@@ -44,6 +44,10 @@ licensed catalogs are published by the official partner accounts above.
 | Denied | 17208353912 | Roblox GUI - Negative | Roblox | 0.38 | yes | alt 17208214688 (Call Decline) |
 | Unlock | 9116324156 | Lock Unlock Door 10 (SFX) | ProSoundEffects | 1.91 | yes | alt 9116324157, 9117185722 (padlock) |
 | EggCrack | 9113959071 | Crack Egg Crunchy 6 (SFX) | ProSoundEffects | 1.29 | yes | alt 9113959343, 9113959559 |
+| EggCrackSmall1 | 9113958805 | Crack Egg Crunchy 5 (SFX) | ProSoundEffects | 0.23 (trim) | yes | hatch crack burst; PlaybackRegion 1.755-1.980 of the 3.37 s file: one dry crack (~50 ms) + faint tail, volume 0.6; alt same file 0.990-1.240, 9113958660 (Crunchy 1) 0.060-0.360 |
+| EggCrackSmall2 | 9113958805 | Crack Egg Crunchy 5 (SFX) | ProSoundEffects | 0.25 (trim) | yes | hatch crack burst; PlaybackRegion 2.355-2.600: one crack, slightly different attack, volume 0.6; alt 9113959071 (Crunchy 6 = EggCrack) 0.150-0.420 |
+| EggCrackSmall3 | 9113958805 | Crack Egg Crunchy 5 (SFX) | ProSoundEffects | 0.25 (trim) | yes | hatch crack burst; PlaybackRegion 2.055-2.300: double crack (~70 ms), the fullest of the three, volume 0.6; alt 9113958660 (Crunchy 1) 0.060-0.360 |
+| EggShellBreak | 9113959542 | Crack Egg Crunchy 13 (SFX) | ProSoundEffects | 1.15 (trim) | yes | shell breaks open; PlaybackRegion 0.155-1.300 of the 1.71 s file: dense crunch ~0.25 s, small bits at +0.35 s, one piece at +1.0 s, volume 0.7; alt 9113959343 (Crunchy 11, crunch + bits) 0.150-1.000, 9113958649 (Crunchy 2) 0.180-0.700 |
 | PetHatch | 15675055424 | Roblox_UI_Cute_Pop | Roblox | 2.70 | yes | closest match; alt 9116422765 (Magic Transformation 23), 9120222027 (Toy Squeak 1) |
 | RarityReveal | 9116395089 | Magic Glows Soft Clusters Of Chiming Hits 4 (SFX) | ProSoundEffects | 2.46 | yes | alt 9116394876, 9126073318 (synth sparkle bell) |
 | RarityLegendary | 9116426026 | Magic Transformation 7 (SFX) | ProSoundEffects | 5.11 | yes | longest/biggest magic cue; alt 9114631461 (Gong Whoosh 3), 9116395085 |
@@ -54,6 +58,13 @@ licensed catalogs are published by the official partner accounts above.
 | UIClose | 17208186900 | Roblox GUI - Back | Roblox | 0.53 | yes | alt 10066914500 (RBLX UI Back), 15675012262 (Whoosh_04) |
 | PortalEnter | 9116411685 | Magic Swoosh Fast Zooming Pass Bys 18 (SFX) | ProSoundEffects | 2.40 | yes | alt 9125648149 (Magic Zoom Up), 9116422213 |
 | GateOpen | 9125880713 | Rock Scrape Deep Clunky Slides Rumbling Thun (SFX) | ProSoundEffects | 2.06 | yes | stone door slide; alt 9113807062, 9120878291 (wood gate hinge) |
+
+Hatch sounds (2026-10-18): the egg-crack files start with ~0.15-0.2 s of silence and some hold several cracks,
+so the four hatch sounds play only a slice of their file (`PlaybackRegionsEnabled = true`, `PlaybackRegion` above;
+a clone keeps it). Each slice starts ~25 ms before the crack so the sound lands on the visual burst. The slices were
+picked from a measured envelope, not by ear: an `AudioPlayer` wired to an `AudioAnalyzer` (no output, silent) in Edit
+gives `PeakLevel` per ~11 ms block at half speed and the spectrum centroid (all four ~8-10 kHz, i.e. bright, not muddy).
+Alternate slices in the notes are suggestions from the same envelopes (not set up).
 
 ## Music
 

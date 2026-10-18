@@ -31,7 +31,7 @@ PetRarities.PowerWeights = { Gold = 1.0, HP = 1.0, Attack = 1.2, Speed = 0.5, De
 PetRarities.BonusWeight = 0.5
 
 -- Hatch screen timing (seconds); the Fast Open setting uses the short one.
-PetRarities.HatchSeconds = 2.6
+PetRarities.HatchSeconds = 3.4 -- 2.6 until 2026-10-18; longer so the real cracks spread bit by bit (UI/EggCrack)
 PetRarities.FastHatchSeconds = 0.9
 
 -- Followers (client side, GameClient/Controllers/PetFollowController).

@@ -1702,3 +1702,42 @@ Owner's answers (asked): eggs = "Game's zone eggs (Recommended)", sitting = "\"S
 - Tree: the base was re-centered (not removed); the trunk mesh itself was not moved or scaled.
 - Window panes moved behind the timber cross (the owner's screenshot shows a window cross) instead of in front of it.
 - One Sit prompt per bench (2 seats) instead of one per seat, so two prompts never overlap.
+
+# Real egg cracking - 2026-10-18 (owner: "Create a clean animation of haching egg. The egg skin should crack bit by bit and then break, just like a real egg. However, keep the egg skins you've already created.")
+
+Owner's answer (asked): "Turn on the setting (Recommended)" = the live EditableMesh approach (not pre-made FBX
+pieces). Backups before_egg_hatch / after_egg_hatch (6 files each).
+
+## Status (newest first)
+
+- 18:15 DONE except the real Play test. Studio = disk (pull: 170 scripts, 0 written).
+  * The 12 zone eggs are AI-generated textured meshes (generate_mesh), ~2,000 triangles, 1024 px textures, owned by
+    the owner: EditableMesh / EditableImage load them in Studio. New `UI/EggCrack`: welds the mesh, outward normals,
+    edge adjacency; per hatch a random pattern of cells (bottom cup under a zigzag line around the middle, 5 side
+    shards with wavy borders, a top cap); the cracks = the cell borders, ordered by Dijkstra from the point facing the
+    camera, plus a 4-branch starburst at that point; each crack edge = 3 jagged thin strips on an untextured overlay
+    MeshPart (fixed bounds, so it never rescales); open() widens them and makes them Neon in the rarity colour;
+    the pieces (egg faces + UVs + texture outside, cream inner shell + rims, built during the wobble) fly at the
+    break (cap up and spinning, shards outward, the cup and the rarity ring fade), then everything is destroyed.
+    Build ~0.4 s the first time per zone (during the drop / first wobble).
+  * `UI/Hatching`: cracks in 4 bursts (CRACK_KEYS, pauses between = "bit by bit"), widen + glow from 90 %, breakEgg
+    (viewport x1.9 + wider camera so the pieces have room, reveal 0.15 s after the break, egg view kept above the
+    pet until the pieces are gone); skip before the break = no pieces; fallback = the old flat cracks.
+    HatchSeconds 2.6 -> 3.4 (Fast Open unchanged 0.9).
+  * SFX sub-agent: EggCrackSmall1-3 (3 trimmed cracks of "Crack Egg Crunchy 5", 0.23-0.25 s) and EggShellBreak
+    ("Crack Egg Crunchy 13", 1.15 s), measured with an AudioAnalyzer (not by ear); main agent raised them to 0.6 / 0.7
+    (the reveal sounds are at 0.7) and preloads them. Config/Audio routes them to "UI"; SOUND_KIT updated.
+  * Checked: world tests (Plains, Void, Volcano: crack growth, full network, glow, pieces) and an Edit-mode bench with
+    the real ModelIcon.egg viewport, camera and timeline (cracks at 45 %, glow at 97 %, break at 0.18 s and 0.35 s).
+    Play: the fallback hatch reaches the reveal with no script error.
+  * NOT checked: the real cracks in Play. Roblox: "EditableMesh is not accessible. Go to the Security Tab in
+    Experience Settings to enable this API." The owner switched the setting on (away from the PC after that); Studio
+    likely needs the place reopened. I may not change security settings myself.
+
+## Decisions taken without the owner
+
+- Cracks are dark strips on an overlay mesh (not drawn into the texture): the AI meshes' UVs are fragmented, an
+  overlay is clean on every egg; the skin itself is untouched and every piece keeps it.
+- Light in the pet's rarity colour shines through the cracks just before the break (a hint of the rarity, like the
+  existing glow).
+- Hatching lasts 3.4 s instead of 2.6 s so the cracks can spread in visible steps.
