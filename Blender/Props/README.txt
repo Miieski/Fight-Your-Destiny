@@ -90,8 +90,9 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
   Bone          #F0E8D0   240,232,208    Bone  (bone_ivory)    252,244,219      bones, skulls (Desert Bone)
   BoneAged*     #D9CDA8   217,205,168    Bone                  228,215,176      yellowed ends, cracks
   BoneSocket    #3E3C4E    62, 60, 78    Bone                   65, 63, 82      eye sockets (CaveRockDark)
-  ClamPink      #FF5C78   255, 92,120    Bone                  255, 92,120      clam shell (Plains Flower1)
-  ClamCream*    #F7B8B8   247,184,184    Bone                  255,190,190      clam insides (pink-cream)
+  ClamPink      #FF5C78   255, 92,120    Plain (no texture)    255, 92,120      clam shells, outside (Plains Flower1)
+  ClamInner*    #FF8AA3   255,138,163    Plain (no texture)    255,138,163      clam insides (warm light pink; ClamCream
+                                                                                 #F7B8B8 was too pale, 2026-10-19)
   -- untextured (no ColorMap: tint = hex) --------------------------------------------------------------------
   Water         #34D6EC    52,214,236    Water (Glass, T 0.35)                  fountain / well water (Hub Water)
   Lantern       #FFD678   255,214,120    Glow (Neon)                            lantern glass, flames
@@ -306,11 +307,11 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
     propId          asset id(s)                         size        meshes / vertices / triangles
     well            rbxassetid://80102529524931         1024 x 163  10 / 7,108 / 3,106
     chest           rbxassetid://91198421411858         1024 x 45   5 / 2,116 / 1,170
-    rowboat         rbxassetid://76907442521443         1024 x 91   7 / 3,999 / 1,644
+    rowboat         rbxassetid://105090937255120        1024 x 94   7 / 4,080 / 1,676
     minecart        rbxassetid://87079386271654         1024 x 78   6 / 3,496 / 1,736
     skull_bones     rbxassetid://86179103526619         1024 x 80   3 / 3,476 / 1,254
-    clam_pearl      rbxassetid://89935697598144         1024 x 36   5 / 1,580 / 572
-    egg_nest        rbxassetid://105270124758004        1024 x 66   9 / 2,861 / 1,091
+    clam_pearl      rbxassetid://122490022754803        1024 x 36   5 / 1,580 / 572
+    egg_nest        rbxassetid://85105593530507         1024 x 73   9 / 3,167 / 1,245
     scarecrow       rbxassetid://119496532966562        1024 x 101  13 / 4,442 / 1,848
     fountain        rbxassetid://115702162046935        1024 x 253  12 / 11,016 / 5,018
     anvil_forge     rbxassetid://79286061632425         1024 x 98   12 / 4,434 / 1,950
@@ -372,6 +373,18 @@ BATCH 2 (2026-10-19; lineup Previews/Props/Batch2_lineup.png; sizes x y z vs tod
   X-stitched smile, wavy-brimmed straw hat with a band tilted 6 deg like today, straw cores at the wrists, a ruff
   at the collar, a straw band + long straws at the hem. Colliders Post, Arms, Shirt (Blocks) + Head (Ball) as
   today. Sway: Hat + HatBand around HatPivot (0, 8, 0), each Straw mesh around its own pivot.
+FIXES AFTER AGENT B'S STUDIO PREVIEW (2026-10-19):
+- rowboat (1,676 tris, 14.09 x 4.95 x 10.41): hull 13.7 long and 0.3 taller, its bbox placed like today's (x -5.61 ..
+  8.47, centre z -0.64, top 4.89; today -5.62 .. 8.48 / -0.64 / 4.98); clinker laps 0.1 per strake + alternating strake
+  tones (read from +Z too); the OAR now LEANS against the hull: grip end on the low (-Z) gunwale (y about 3.2), blade
+  tip on the ground at (5.1, 0.08, -4.55), so only the tip comes near sloped ground; oar x -3.59 .. 5.11 inside today's
+  -4.03 .. 5.26. Oar collider = a Cylinder along the shaft (Rotation is a Roblox Orientation: 70.97, -80.49, -90).
+- clam_pearl (572 tris): shells now Plain (SmoothPlastic like today) ClamPink #FF5C78 outside, ClamInner #FF8AA3
+  (warm light pink) inside, vertex-colour gradient darker at the hinge; rest pose 34 deg (today 42).
+- egg_nest (1,245 tris + 100-tri collider): rock centre raised to y 4.91 with a flat ledge stone (r 2.95, top 9.05) set
+  into its top; ring, lining, eggs and twigs sunk 0.12 (ring bottom 8.95, 0.1 into the ledge all round) + a skirt of
+  10 twigs; egg_nest_Collider_Rock = the true convex hull of the rock + both boulders (52 vertices, every rock vertex
+  inside, top 9.05, x -5.65 .. 6.37, z -4.77 .. 5.14), CollisionFidelity Hull; nest collider centre y 9.48.
 BATCH 3 (2026-10-19; lineup Previews/Props/Batch3_lineup.png):
 - fountain: 5,018 tris / 12 meshes (DarkStone StoneDark: step slabs, coping, carved bands, upper bowl, spout lips;
   Wall StoneBlocks/Stone; Pedestal Stone; Column StonePale; Wet StoneMortar: wet bands + basin floor; Moss; Gold collar;

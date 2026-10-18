@@ -85,7 +85,7 @@ PALETTE = {
     "Bone": "#F0E8D0", "BoneAged": "#D9CDA8", "BoneSocket": "#3E3C4E",
     "RoofRed": "#C4403A", "RoofRedDark": "#9C302C", "ClamPink": "#FF5C78", "Pearl": "#F5F6FA",
     "Water": "#34D6EC", "Lantern": "#FFD678", "Fire": "#FF8C28", "Diamond": "#5FD4FF", "OreGold": "#FFC43C",
-    "Flame": "#FFB648", "ClamCream": "#F7B8B8", "Thread": "#3A2A20", "ButtonDark": "#2E2B33", "Speckle": "#9C8A70",
+    "Flame": "#FFB648", "ClamCream": "#F7B8B8", "ClamInner": "#FF8AA3", "Thread": "#3A2A20", "ButtonDark": "#2E2B33", "Speckle": "#9C8A70",
 }
 
 # material family -> shared texture set (Blender/Props/textures/<set>_*.png), Studio fallbacks
@@ -647,6 +647,28 @@ class Mesh:
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:]) if cap else None
         return self._commit(bm, m, grain=2, tone=tone)
 
+    def hull(self, points, max_verts=200):
+        """Convex hull of prop-space points (collision meshes: Roblox CollisionFidelity Hull takes one convex shape).
+        Returns the number of hull vertices (asserted <= max_verts)."""
+        bm = bmesh.new()
+        vs = [bm.verts.new(Vector(p)) for p in points]
+        res = bmesh.ops.convex_hull(bm, input=vs)
+        bmesh.ops.delete(bm, geom=list(set(res.get("geom_interior", []) + res.get("geom_unused", []))), context="VERTS")
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+        n = len(bm.verts)
+        assert n <= max_verts, f"hull has {n} vertices"
+        self._commit(bm, Matrix.Identity(4), tone=1.0)
+        return n
+
+    def shade(self, fn, start_face=0):
+        """Per-corner vertex-colour shade of the faces added since face index start_face: shade = fn(Vector pos, old)
+        (gradients such as a shell lighter toward its rim)."""
+        k = sum(len(f) for f in self.faces[:start_face])
+        for f in self.faces[start_face:]:
+            for i in f:
+                self.loop_shade[k] = fn(Vector(self.verts[i]), self.loop_shade[k])
+                k += 1
+
     def deform(self, fn, start=0):
         """Applies fn(Vector prop-space) -> Vector to the vertices added since index `start` (e.g. a wavy brim)."""
         self.verts[start:] = [tuple(fn(Vector(v))) for v in self.verts[start:]]
@@ -734,7 +756,8 @@ class Prop:
         """Simple collider for ApplyPropMeshes (an invisible Part, not a mesh): shape Block | Cylinder | Wedge,
         Roblox Part conventions (a Cylinder's axis is its X: rotation (0, 0, 90) stands it up)."""
         self.colliders.append({"Name": name or f"{self.id}_Collider_{len(self.colliders) + 1}", "Shape": shape,
-                               "Center": list(center), "Size": list(size), "Rotation": list(rotation)})
+                               "Center": [round(float(v), 3) for v in center], "Size": [round(float(v), 3) for v in size],
+                               "Rotation": [round(float(v), 2) for v in rotation]})
 
     def attach(self, name, pos):
         """Named point (studs, prop space) for PropFX: emitters, lights, sounds."""
@@ -916,6 +939,7 @@ def preview_material(mesh):
             bsdf.inputs["Roughness"].default_value = 0.06
             _try(lambda: setattr(m, "surface_render_method", "BLENDED"))
         else:
+            bsdf.inputs["Roughness"].default_value = 0.7   # matte like SmoothPlastic (preview only)
             mul = nt.nodes.new("ShaderNodeVectorMath")
             mul.operation = "MULTIPLY"
             mul.inputs[0].default_value = tint

@@ -248,16 +248,19 @@ def chest():
 # and photo 05 (bow on the left = camera on -Z, the front: the oar lies on the -Z side, the boat leans toward it and
 # its broken side is the near, low one).
 # ------------------------------------------------------------------------------------------------
+HULL_L = 13.7   # 2026-10-19: as long as today's hull (x -5.62 .. 8.48 with the stem and transom)
+
+
 def _hull(s):
     """Hull lines at station s (0 stern .. 1 bow tip): x, half-breadth at the sheer B, at the bottom b, keel y, sheer H."""
-    x = -6.15 + 12.3 * s
+    x = -HULL_L / 2 + HULL_L * s
     if s <= 0.4:
         B = 2.1 + 0.42 * math.sin(math.pi / 2 * s / 0.4)
     else:
         B = 2.52 * (1 - ((s - 0.4) / 0.6) ** 2)
     b = 0.6 * B
     yk = 0.25 + (1.4 * ((s - 0.75) / 0.25) ** 2 if s > 0.75 else 0.0)
-    H = 3.0 + (0.3 * (0.2 - s) / 0.2 if s < 0.2 else 0.0) + 1.0 * max(0.0, (s - 0.6) / 0.4) ** 2
+    H = 3.3 + (0.3 * (0.2 - s) / 0.2 if s < 0.2 else 0.0) + 1.1 * max(0.0, (s - 0.6) / 0.4) ** 2
     return x, B, b, yk, H
 
 
@@ -284,7 +287,7 @@ def rowboat():
         for k in range(4):
             t0 = k / 4 - (0.05 if k else 0.0)
             t1 = (k + 1) / 4
-            out = 0.035 * k
+            out = 0.1 * k    # clinker lap step (reads from both sides)
             pieces = [stations]
             if side == -1 and k >= 2:  # the wreck: a broken gap in the two top strakes of the near (-Z) side
                 pieces = [[0.0, 0.12, 0.25, ("break", 0.36, 0.31)], [("break", 0.6, 0.66), 0.74, 0.84, 0.92, 1.0]]
@@ -297,8 +300,8 @@ def rowboat():
                         rows.append([_hull_point(st, t0, side, out), _hull_point(st, t1, side, out)])
                 if side == -1:
                     rows = rows[::-1]  # keep (du x dv) pointing outward on both sides
-                hull.grid(rows, thickness=0.08, sides=("top", "bottom", "u0", "u1", "v0", "v1"), smooth=False,
-                          tone=rng.uniform(0.82, 1.0))
+                hull.grid(rows, thickness=0.12, sides=("top", "bottom", "u0", "u1", "v0", "v1"), smooth=False,
+                          tone=(1.0 if k % 2 == 0 else 0.83) - rng.uniform(0.0, 0.04))
     # flat bottom boards, transom, keel and stem
     bottom = [[(_hull(s)[0], _hull(s)[3], z * _hull(s)[2]) for z in (1.0, 0.0, -1.0)] for s in stations[:8]]
     timber.grid(bottom, thickness=0.1, sides=("top", "bottom", "u0", "u1", "v0", "v1"), smooth=False)
@@ -335,29 +338,46 @@ def rowboat():
     rope.torus((xr - 0.03, ykr + 0.24, 0.08), 0.32, 0.065, segs=8, rsegs=3)
     rope.tube([(xr - 0.3, ykr + 0.28, 0.25), (xr - 0.9, ykr + 0.35, 0.5), (_hull(0.68)[0] + 0.3, _hull(0.68)[4] - 0.3, 0.6)],
               0.06, segs=4)
-    # lay the boat down: roll 22 deg about its long axis (top toward -Z, the front), resting on its bilge
+    # lay the boat down: roll 22 deg about its long axis (top toward -Z, the front), resting on its bilge, then put the
+    # hull's bbox centre where today's is (x 1.43, z -0.64; Agent B's measures of the old model)
     R = Matrix_rot_x(-22)
-    lowest = min((R @ Vector(v)).y for m in (hull, timber, light, iron, rope) for v in m.verts)
-    M = P.Matrix.Translation(Vector((1.25, -lowest, 1.2))) @ R
-    for m in (hull, timber, light, iron, rope):
+    boat = (hull, timber, light, iron, rope)
+    pts = [R @ Vector(v) for m in boat for v in m.verts]
+    lowest = min(q.y for q in pts)
+    cx = (min(q.x for q in pts) + max(q.x for q in pts)) / 2
+    cz = (min(q.z for q in pts) + max(q.z for q in pts)) / 2
+    M = P.Matrix.Translation(Vector((1.43 - cx, -lowest, -0.64 - cz))) @ R
+    for m in boat:
         m.transform(M)
     # loose plank on the ground behind the boat (+Z side)
-    light.box((-2.6, 0.1, 5.35), (3.6, 0.2, 0.9), rot=(0, -14, 2), grain="x", bevel="long", tone=0.9)
-    # the oar: a second object, lying on the ground on the -Z (front) side, blade toward the bow (as in photo 05)
+    light.box((-2.6, 0.1, 4.6), (3.6, 0.2, 0.9), rot=(0, -14, 2), grain="x", bevel="long", tone=0.9)
+    # the oar (a second object): LEANS on the low (-Z) gunwale, blade tip just above the ground, inside today's oar
+    # extent (x -4.03 .. 5.26): only the tip comes near sloped ground, nothing lies flat to sink
     oar = p.mesh("Oar", "Wood", "WoodDark", shadow=False)
     blade = p.mesh("OarBlade", "Wood", "WoodLight", shadow=False)
-    a, b2 = Vector((-1.0, 0.17, -3.75)), Vector((6.4, 0.13, -3.25))
-    oar.cyl(tuple(a + (b2 - a).normalized() * 0.75), tuple(b2), 0.17, segs=6)
-    oar.cyl(tuple(a), tuple(a + (b2 - a).normalized() * 0.78), 0.12, segs=6)   # grip
-    d = (b2 - a).normalized()
-    phi = math.degrees(math.atan2(d.z, d.x))
+    rest = M @ Vector(_hull_point(0.2, 1.0, -1, 0.12, 0.04))          # top of the near gunwale, by the stern
+    a = rest + Vector((0.0, 0.25, -0.12))                             # the shaft lies on it (gunwale + radii)
+    tip = Vector((5.1, 0.08, -4.55))
+    d = (tip - a).normalized()
+    a = a - d * 0.85                                                  # the grip end sticks out past the gunwale
+    length = (tip - a).length
+    b2 = a + d * (length - 2.05)                                      # blade root
+    oar.cyl(tuple(a + d * 0.75), tuple(b2), 0.17, segs=6)
+    oar.cyl(tuple(a), tuple(a + d * 0.78), 0.12, segs=6)                # grip
+    w = d.cross(Vector((0, 1, 0))).normalized()                       # blade width: horizontal, across the oar
+    n = d.cross(w)
+    e = P.Matrix((d, w, n)).transposed().to_euler("ZYX")
     outline = [(0, -0.13), (0.45, -0.36), (1.6, -0.46), (1.95, -0.34), (2.05, 0), (1.95, 0.34), (1.6, 0.46),
                (0.45, 0.36), (0, 0.13)]
-    blade.prism([(x - 1.0, y) for x, y in outline], 0.1, c=tuple(b2 + d * 0.95 + Vector((0, -0.06, 0))), rot=(90, 0, phi),
-                bevel=0.02, grain="x")
-    p.collider("Block", (1.25, 1.7, 1.3), (12.3, 3.3, 5.0), (-22, 0, 0), name="rowboat_Collider_Hull")
-    p.collider("Cylinder", (3.7, 0.17, -3.43), (9.5, 0.34, 0.34), (0, -3.9, 0), name="rowboat_Collider_Oar")
-    p.attach("Bow", (7.4, 3.2, 0.6))
+    blade.prism([(x - 1.0, y) for x, y in outline], 0.1, c=tuple(b2 + d * 1.0),
+                rot=(math.degrees(e.x), math.degrees(e.y), math.degrees(e.z)), bevel=0.02, grain="x")
+    hc = M @ Vector((0.0, 1.65, 0.0))
+    p.collider("Block", tuple(hc), (HULL_L + 0.4, 3.4, 5.2), (-22, 0, 0), name="rowboat_Collider_Hull")
+    o = P.Matrix((d, w, n)).transposed().to_euler("ZXY")              # Roblox Orientation (applied Z, X, then Y)
+    p.collider("Cylinder", tuple((a + tip) / 2), (length, 0.34, 0.34),
+               (round(math.degrees(o.x), 2), round(math.degrees(o.y), 2), round(math.degrees(o.z), 2)),
+               name="rowboat_Collider_Oar")
+    p.attach("Bow", tuple(M @ Vector((HULL_L / 2, 3.6, 0.0))))
     return p
 
 
@@ -547,19 +567,32 @@ def clam_pearl():
                                       "decor only (no collision, no shadow)")
     H = (0.0, 0.38, 1.25)                     # hinge (X axis)
     T = 0.06                                   # shell thickness
-    low_out = p.mesh("ShellBottom", "Bone", "ClamPink", shadow=False)
-    low_in = p.mesh("ShellBottomInner", "Bone", "ClamCream", shadow=False)
-    top_out = p.mesh("ShellTop", "Bone", "ClamPink", pivot=H, shadow=False)
-    top_in = p.mesh("ShellTopInner", "Bone", "ClamCream", pivot=H, shadow=False)
+    # 2026-10-19 (Agent B's preview: too pale): saturated pink outside, warm light pink inside, SmoothPlastic like
+    # today's parts (Plain family), a vertex-colour gradient darker at the hinge, lighter toward the rim
+    low_out = p.mesh("ShellBottom", "Plain", "ClamPink", shadow=False)
+    low_in = p.mesh("ShellBottomInner", "Plain", "ClamInner", shadow=False)
+    top_out = p.mesh("ShellTop", "Plain", "ClamPink", pivot=H, shadow=False)
+    top_in = p.mesh("ShellTopInner", "Plain", "ClamInner", pivot=H, shadow=False)
     pearl = p.mesh("Pearl", "Plain", "Pearl", shadow=False)
+    hv = Vector(H)
+
+    def gradient(lo, hi):
+        return lambda v, s: lo + (hi - lo) * min(1.0, (v - hv).length / 2.5)
+
     lower = _scallop(H, 0.42, 0.36)
     low_in.grid(lower, thickness=T, sides=("top",), smooth=True, tone=1.0)
-    low_out.grid(lower, thickness=T, sides=("bottom", "u0", "u1", "v0", "v1"), smooth=True, tone=0.95)
-    low_out.cyl((-0.32, H[1], H[2] + 0.05), (0.32, H[1], H[2] + 0.05), 0.12, segs=6, bevel=0, tone=0.85)   # hinge
+    low_in.shade(gradient(0.86, 1.0))
+    low_out.grid(lower, thickness=T, sides=("bottom", "u0", "u1", "v0", "v1"), smooth=True, tone=1.0)
+    low_out.shade(gradient(0.8, 1.0))
+    n0 = len(low_out.faces)
+    low_out.cyl((-0.32, H[1], H[2] + 0.05), (0.32, H[1], H[2] + 0.05), 0.12, segs=6, bevel=0, tone=0.78)   # hinge
     upper = _scallop(H, 0.46, 0.22, up=True)
-    top_out.grid(upper, thickness=T, sides=("top", "u0", "u1", "v0", "v1"), smooth=True, tone=0.97)
+    top_out.grid(upper, thickness=T, sides=("top", "u0", "u1", "v0", "v1"), smooth=True, tone=1.0)
+    top_out.shade(gradient(0.8, 1.0))
     top_in.grid(upper, thickness=T, sides=("bottom",), smooth=True, tone=1.0)
-    open_m = (P.Matrix.Translation(Vector(H)) @ P.Matrix.Rotation(math.radians(42), 4, "X")
+    top_in.shade(gradient(0.9, 1.0))
+    OPEN = 34   # rest pose (today 42): a little more closed so more pink shell shows
+    open_m = (P.Matrix.Translation(Vector(H)) @ P.Matrix.Rotation(math.radians(OPEN), 4, "X")
               @ P.Matrix.Translation(-Vector(H)))
     top_out.transform(open_m)
     top_in.transform(open_m)
@@ -608,16 +641,25 @@ def egg_nest():
     eggs = p.mesh("Eggs", "Bone", "Pearl", shadow=False)
     egg3 = p.mesh("EggCream", "Bone", "ClothCream", shadow=False)
     spots = p.mesh("Speckles", "Plain", "Speckle", shadow=False)
-    C, TOP = Vector((0.0, 4.6, 0.0)), 9.05
+    # 2026-10-19 (Agent B: the 5.1-wide ring overhung a narrow top): rock centre raised so the flat ledge at y 9.05 is
+    # wide, and the ledge's own vertices pushed out to r >= 2.85 (the ring's outer radius is 2.55)
+    C, TOP, LEDGE_R, SINK = Vector((0.0, 4.91, 0.0)), 9.05, 2.85, 0.12
 
-    def ledge(v):  # flat top for the nest (local y = world y - 4.6)
+    def ledge(v):  # flat top for the nest (local coordinates)
         if v.y > TOP - C.y:
             v.y = TOP - C.y
+            r = math.hypot(v.x, v.z)
+            if 1e-6 < r < LEDGE_R:
+                v.x, v.z = v.x * LEDGE_R / r, v.z * LEDGE_R / r
         return v
 
     rock.ico(tuple(C), 5.0, scale=(1.06, 1.0, 1.04), sub=2, jit=0.09, deform=ledge)
     rock.ico((3.9, 1.9, -2.6), 2.7, scale=(1.0, 0.85, 0.9), sub=1, jit=0.12, rot=(8, 25, -10), tone=0.93)
     rock.ico((-4.0, 1.3, 2.9), 1.8, scale=(1.1, 0.8, 1.0), sub=1, jit=0.12, rot=(0, 60, 6), tone=0.97)
+    # a flat ledge stone set into the top (r 2.95, top exactly at the ledge): the ring sits on it all round
+    rock.cyl((0, TOP - 0.3, 0), (0, TOP, 0), 2.95, segs=12, smooth=False, bevel=0.06, caps=(False, True), tone=0.92,
+             spin=7)
+    rock_pts = [(x, max(y, p.floor), z) for x, y, z in rock.verts]   # as the floor clamp of make() will leave them
     # cracks: dark lines traced on the facets from the shoulders down
     for path in ([(210, 58), (214, 42), (206, 26), (212, 10), (205, -6)], [(40, 52), (47, 36), (42, 20), (50, 6)],
                  [(120, 40), (116, 28), (124, 16)]):
@@ -638,17 +680,24 @@ def egg_nest():
             moss.ico(tuple(hit[0] + hit[1] * 0.03), r * rng.uniform(0.7, 1.0), scale=(1.8, 0.2, 0.9), sub=1, jit=0.2,
                      rot=(math.degrees(e.x), math.degrees(e.y), math.degrees(e.z)), tone=rng.uniform(0.72, 0.86))
     # the nest: woven straw ring, twigs, brown lining
-    ring.torus((0, 9.55, 0), 1.95, 0.6, segs=12, rsegs=5, scale=(1.0, 0.8, 1.0))
+    ring.torus((0, 9.55 - SINK, 0), 1.95, 0.6, segs=12, rsegs=5, scale=(1.0, 0.8, 1.0))   # bottom 8.95: into the ledge
     for i in range(14):
         a = math.radians(i * 360 / 14 + rng.uniform(-8, 8))
         rr = 1.95 + rng.uniform(0.15, 0.55)
-        y = 9.55 + rng.uniform(-0.15, 0.35)
+        y = 9.55 - SINK + rng.uniform(-0.15, 0.35)
         length = rng.uniform(1.5, 2.4)
         t = Vector((-math.sin(a), rng.uniform(-0.25, 0.3), math.cos(a))).normalized()
         cpt = Vector((rr * math.cos(a), y, rr * math.sin(a)))
         twigs.cyl(tuple(cpt - t * length / 2), tuple(cpt + t * length / 2 + Vector((0, 0, 0))), rng.uniform(0.05, 0.08),
                   segs=4, bevel=0, smooth=False)
-    lining.lathe([(0.15, 9.32), (1.0, 9.36), (1.75, 9.62), (1.78, 9.8), (1.0, 9.55), (0.15, 9.5)], segs=10, smooth=False)
+    for i in range(10):  # twig skirt from the ring's rim down onto the ledge: no gap shows from any side
+        a = math.radians(i * 36 + rng.uniform(-10, 10))
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        top_pt = d * 2.35 + Vector((0, 9.35 - SINK, 0)) + Vector((-d.z, 0, d.x)) * rng.uniform(-0.3, 0.3)
+        low_pt = d * 2.95 + Vector((0, 8.98, 0)) + Vector((-d.z, 0, d.x)) * rng.uniform(-0.4, 0.4)
+        twigs.cyl(tuple(top_pt), tuple(low_pt), rng.uniform(0.05, 0.07), segs=4, bevel=0, smooth=False)
+    lining.lathe([(r, y - SINK) for r, y in ((0.15, 9.32), (1.0, 9.36), (1.75, 9.62), (1.78, 9.8), (1.0, 9.55), (0.15, 9.5))],
+                 segs=10, smooth=False)
     # three slightly different pale eggs, with speckles
     for k, (x, z, r, tilt, yaw, mesh) in enumerate(((-0.55, -0.35, 0.53, 14, 20, eggs), (0.6, -0.2, 0.55, -10, 140, eggs),
                                                     (0.0, 0.62, 0.48, 18, 260, egg3))):
@@ -656,7 +705,7 @@ def egg_nest():
             v = Vector((v.x, v.y * 1.28, v.z))
             k2 = 1.0 - 0.16 * max(0.0, v.y / (r * 1.28))   # narrower top
             return Vector((v.x * k2, v.y, v.z * k2))
-        c = Vector((x, 9.52 + r * 1.2, z))
+        c = Vector((x, 9.52 - SINK + r * 1.2, z))
         mesh.ico(tuple(c), r, sub=2, jit=0.0, deform=egg, rot=(tilt, yaw, 0), smooth=True)
         R3 = P._rot((tilt, yaw, 0)).to_3x3()
         for s in range(9):
@@ -669,10 +718,11 @@ def egg_nest():
             tri = [surf + nrm * 0.004 + q * sz, surf + nrm * 0.004 - q * sz * 0.5 + w * sz * 0.8,
                    surf + nrm * 0.004 - q * sz * 0.5 - w * sz * 0.8]
             spots.poly([tuple(v) for v in tri], normal=tuple(nrm))
+    # collider: the true convex hull of the rock and its two boulders (CollisionFidelity Hull, like today's own hull)
     col = p.collider_mesh("Rock")
-    col.ico(tuple(C), 4.95, scale=(1.06, 1.0, 1.04), sub=1, jit=0.0, deform=ledge)
-    p.collider("Cylinder", (0, 9.6, 0), (1.0, 5.0, 5.0), (0, 0, 90), name="egg_nest_Collider_Nest")
-    p.attach("Sparkle", (0, 10.9, 0))
+    p.notes += f"; rock collider = convex hull of {col.hull(rock_pts)} vertices"
+    p.collider("Cylinder", (0, 9.6 - SINK, 0), (1.0, 5.0, 5.0), (0, 0, 90), name="egg_nest_Collider_Nest")
+    p.attach("Sparkle", (0, 10.9 - SINK, 0))
     return p
 
 

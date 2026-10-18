@@ -10,12 +10,12 @@
  "Bounds": {
   "Center": [
    0.0,
-   1.082,
+   0.952,
    0.066
   ],
   "Size": [
    2.728,
-   2.214,
+   1.955,
    2.676
   ],
   "Min": [
@@ -25,7 +25,7 @@
   ],
   "Max": [
    1.364,
-   2.189,
+   1.93,
    1.404
   ]
  },
@@ -36,7 +36,7 @@
  ],
  "Meshes": {
   "clam_pearl_ShellBottom": {
-   "Family": "Bone",
+   "Family": "Plain",
    "Role": "Solid",
    "Color": [
     255,
@@ -45,7 +45,7 @@
    ],
    "Target": "#FF5C78",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
+   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -64,19 +64,21 @@
     0.0
    ],
    "Triangles": 172,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "clam_pearl_ShellBottomInner": {
-   "Family": "Bone",
+   "Family": "Plain",
    "Role": "Solid",
    "Color": [
     255,
-    190,
-    190
+    138,
+    163
    ],
-   "Target": "#F7B8B8",
+   "Target": "#FF8AA3",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
+   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -95,10 +97,12 @@
     0.0
    ],
    "Triangles": 84,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "clam_pearl_ShellTop": {
-   "Family": "Bone",
+   "Family": "Plain",
    "Role": "Solid",
    "Color": [
     255,
@@ -107,18 +111,18 @@
    ],
    "Target": "#FF5C78",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
+   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
     0.0,
-    1.344,
-    0.376
+    1.219,
+    0.256
    ],
    "Size": [
     2.665,
-    1.69,
-    1.923
+    1.422,
+    2.114
    ],
    "Pivot": [
     0.0,
@@ -126,30 +130,32 @@
     1.25
    ],
    "Triangles": 152,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "clam_pearl_ShellTopInner": {
-   "Family": "Bone",
+   "Family": "Plain",
    "Role": "Solid",
    "Color": [
     255,
-    190,
-    190
+    138,
+    163
    ],
-   "Target": "#F7B8B8",
+   "Target": "#FF8AA3",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
+   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
     0.0,
-    1.318,
-    0.372
+    1.192,
+    0.256
    ],
    "Size": [
     2.625,
-    1.639,
-    1.915
+    1.367,
+    2.114
    ],
    "Pivot": [
     0.0,
@@ -157,7 +163,9 @@
     1.25
    ],
    "Triangles": 84,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "clam_pearl_Pearl": {
    "Family": "Plain",
@@ -188,7 +196,9 @@
     0.0
    ],
    "Triangles": 80,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   }
  },
  "Colliders": [],
@@ -203,5 +213,6 @@
    0.92,
    0.2
   ]
- }
+ },
+ "Placement": null
 }

@@ -3,19 +3,19 @@
  "Photo": "04_egg_nest.png",
  "Fbx": "Blender_Exports/Props/egg_nest.fbx",
  "Blend": "Blender/Props/egg_nest.blend",
- "Triangles": 1091,
+ "Triangles": 1245,
  "Budget": 1500,
  "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
  "PivotY": 0.0,
  "Bounds": {
   "Center": [
    0.36,
-   5.407,
+   5.347,
    0.188
   ],
   "Size": [
    12.024,
-   10.933,
+   10.813,
    9.912
   ],
   "Min": [
@@ -25,7 +25,7 @@
   ],
   "Max": [
    6.372,
-   10.873,
+   10.753,
    5.144
   ]
  },
@@ -63,8 +63,10 @@
     0.0,
     0.0
    ],
-   "Triangles": 120,
-   "Overlay": null
+   "Triangles": 154,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Cracks": {
    "Family": "Stone",
@@ -80,14 +82,14 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    -0.535,
-    6.277,
-    0.651
+    -0.534,
+    6.731,
+    0.652
    ],
    "Size": [
-    8.165,
-    4.473,
-    6.784
+    8.166,
+    4.762,
+    6.782
    ],
    "Pivot": [
     0.0,
@@ -95,7 +97,9 @@
     0.0
    ],
    "Triangles": 60,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Moss": {
    "Family": "Moss",
@@ -112,12 +116,12 @@
    "CastShadow": false,
    "Center": [
     -0.669,
-    6.018,
+    6.309,
     0.183
    ],
    "Size": [
     9.322,
-    6.038,
+    6.0,
     9.793
    ],
    "Pivot": [
@@ -126,7 +130,9 @@
     0.0
    ],
    "Triangles": 240,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_NestRing": {
    "Family": "Straw",
@@ -143,7 +149,7 @@
    "CastShadow": true,
    "Center": [
     0.0,
-    9.55,
+    9.43,
     0.0
    ],
    "Size": [
@@ -157,7 +163,9 @@
     0.0
    ],
    "Triangles": 120,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Twigs": {
    "Family": "Wood",
@@ -173,22 +181,24 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    -0.075,
-    9.539,
-    -0.051
+    0.046,
+    9.391,
+    -0.003
    ],
    "Size": [
-    5.092,
-    0.89,
-    5.357
+    5.886,
+    0.947,
+    5.984
    ],
    "Pivot": [
     0.0,
     0.0,
     0.0
    ],
-   "Triangles": 168,
-   "Overlay": null
+   "Triangles": 288,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Lining": {
    "Family": "Straw",
@@ -205,7 +215,7 @@
    "CastShadow": false,
    "Center": [
     0.0,
-    9.56,
+    9.44,
     0.0
    ],
    "Size": [
@@ -219,7 +229,9 @@
     0.0
    ],
    "Triangles": 116,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Eggs": {
    "Family": "Bone",
@@ -236,7 +248,7 @@
    "CastShadow": false,
    "Center": [
     0.034,
-    10.18,
+    10.06,
     -0.275
    ],
    "Size": [
@@ -250,7 +262,9 @@
     0.0
    ],
    "Triangles": 160,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_EggCream": {
    "Family": "Bone",
@@ -267,7 +281,7 @@
    "CastShadow": false,
    "Center": [
     0.0,
-    10.096,
+    9.976,
     0.609
    ],
    "Size": [
@@ -281,7 +295,9 @@
     0.0
    ],
    "Triangles": 80,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Speckles": {
    "Family": "Plain",
@@ -297,14 +313,14 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    -0.001,
-    10.366,
-    0.167
+    0.0,
+    10.221,
+    0.134
    ],
    "Size": [
-    2.115,
-    0.928,
-    1.811
+    1.953,
+    0.919,
+    1.904
    ],
    "Pivot": [
     0.0,
@@ -312,7 +328,9 @@
     0.0
    ],
    "Triangles": 27,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "egg_nest_Collider_Rock": {
    "Family": "Collider",
@@ -328,22 +346,24 @@
    "Transparency": 1.0,
    "CastShadow": false,
    "Center": [
-    0.0,
-    4.6,
-    0.0
+    0.36,
+    4.495,
+    0.188
    ],
    "Size": [
-    9.386,
-    8.421,
-    10.296
+    12.024,
+    9.11,
+    9.912
    ],
    "Pivot": [
     0.0,
     0.0,
     0.0
    ],
-   "Triangles": 20,
-   "Overlay": null
+   "Triangles": 100,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   }
  },
  "Colliders": [
@@ -351,9 +371,9 @@
    "Name": "egg_nest_Collider_Nest",
    "Shape": "Cylinder",
    "Center": [
-    0,
-    9.6,
-    0
+    0.0,
+    9.48,
+    0.0
    ],
    "Size": [
     1.0,
@@ -361,17 +381,18 @@
     5.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   }
  ],
  "Attachments": {
   "Sparkle": [
    0.0,
-   10.9,
+   10.78,
    0.0
   ]
- }
+ },
+ "Placement": null
 }

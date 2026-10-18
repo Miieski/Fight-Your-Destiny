@@ -36,15 +36,15 @@
     "rowboat_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://76907442521443"
+    "rbxassetid://105090937255120"
    ],
    "size": [
     1024,
-    91
+    94
    ],
    "meshes": 7,
-   "verts": 3999,
-   "tris": 1644
+   "verts": 4080,
+   "tris": 1676
   },
   "minecart": {
    "files": [
@@ -81,7 +81,7 @@
     "clam_pearl_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://89935697598144"
+    "rbxassetid://122490022754803"
    ],
    "size": [
     1024,
@@ -96,15 +96,15 @@
     "egg_nest_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://105270124758004"
+    "rbxassetid://85105593530507"
    ],
    "size": [
     1024,
-    66
+    73
    ],
    "meshes": 9,
-   "verts": 2861,
-   "tris": 1091
+   "verts": 3167,
+   "tris": 1245
   },
   "scarecrow": {
    "files": [

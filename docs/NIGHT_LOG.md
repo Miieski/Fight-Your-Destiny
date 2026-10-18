@@ -1947,3 +1947,12 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   Abyss per-instance colours); a collider mesh missing from the PNG gets an invisible box stand-in during the preview
   only; egg_nest drops the old Toolbox SourceAssetId / SourceCreator attributes on sync; Pale skull sockets darker
   (126,137,137) so the eyes read.
+- 04:45 FIXES after the batch 2 preview (Agent A; main agent looked at the new before/afters: approved).
+  rowboat 1,676 tris: hull back on today's bounding box (x -5.61..8.47, centre z -0.64, top 4.89), clinker strakes
+  read from +Z; the oar LEANS (grip on the low -Z gunwale at y 3.2, blade tip 0.04 above the pivot plane) inside
+  today's extent (x -3.59..5.11) so it neither sinks on sloped sand nor touches the Plains_2 clam; oar collider =
+  a cylinder along the shaft. clam_pearl 572: Plain / SmoothPlastic like today (the texture washed the pink out),
+  outer ClamPink #FF5C78, inner new ClamInner #FF8AA3, hinge-to-rim gradient, rest pose 34 deg (was 42). egg_nest
+  1,245 + a 100-tri collider: a ledge stone (r 2.95) on a wider rock top and the nest sunk 0.12 with skirt twigs
+  (36 rays: no gap from any side); egg_nest_Collider_Rock = the true convex hull of the rock + ledge + boulders
+  (52 verts, Hull). New preview ids: rowboat 105090937255120, clam 122490022754803, egg_nest 85105593530507.
