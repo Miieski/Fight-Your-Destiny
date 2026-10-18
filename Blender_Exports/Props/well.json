@@ -1,0 +1,520 @@
+{
+ "Id": "well",
+ "Photo": "16_well.png",
+ "Fbx": "Blender_Exports/Props/well.fbx",
+ "Blend": "Blender/Props/well.blend",
+ "Triangles": 3106,
+ "Budget": 3500,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.0,
+   6.563,
+   -0.032
+  ],
+  "Size": [
+   12.29,
+   13.246,
+   9.52
+  ],
+  "Min": [
+   -6.145,
+   -0.06,
+   -4.792
+  ],
+  "Max": [
+   6.145,
+   13.186,
+   4.728
+  ]
+ },
+ "StudioSize": [
+  11.4,
+  13.2,
+  9.6
+ ],
+ "Meshes": {
+  "well_Stones": {
+   "Family": "Stone",
+   "Role": "Solid",
+   "Color": [
+    170,
+    177,
+    191
+   ],
+   "Target": "#969CA8",
+   "Material": "Slate",
+   "Variant": "FYD_Stone",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.001,
+    1.547,
+    -0.016
+   ],
+   "Size": [
+    10.968,
+    3.215,
+    8.898
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 732,
+   "Overlay": null
+  },
+  "well_RimStones": {
+   "Family": "Stone",
+   "Role": "Solid",
+   "Color": [
+    118,
+    125,
+    141
+   ],
+   "Target": "#686E7C",
+   "Material": "Slate",
+   "Variant": "FYD_Stone",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.007,
+    3.517,
+    -0.026
+   ],
+   "Size": [
+    9.468,
+    0.741,
+    9.259
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 220,
+   "Overlay": null
+  },
+  "well_Mortar": {
+   "Family": "Stone",
+   "Role": "Solid",
+   "Color": [
+    95,
+    100,
+    114
+   ],
+   "Target": "#545864",
+   "Material": "Slate",
+   "Variant": "FYD_Stone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    1.6,
+    0.0
+   ],
+   "Size": [
+    8.48,
+    3.2,
+    8.48
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 130,
+   "Overlay": null
+  },
+  "well_Moss": {
+   "Family": "Moss",
+   "Role": "Solid",
+   "Color": [
+    118,
+    191,
+    82
+   ],
+   "Target": "#68A848",
+   "Material": "Grass",
+   "Variant": "FYD_Moss",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.009,
+    1.099,
+    -0.032
+   ],
+   "Size": [
+    9.141,
+    2.318,
+    9.52
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 180,
+   "Overlay": null
+  },
+  "well_Water": {
+   "Family": "Water",
+   "Role": "Water",
+   "Color": [
+    52,
+    214,
+    236
+   ],
+   "Target": "#34D6EC",
+   "Material": "Glass",
+   "Variant": null,
+   "Transparency": 0.35,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    3.39,
+    0.0
+   ],
+   "Size": [
+    7.44,
+    0.12,
+    7.44
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 60,
+   "Overlay": "water_ripple"
+  },
+  "well_Timber": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    6.555,
+    0.0
+   ],
+   "Size": [
+    12.29,
+    13.209,
+    8.671
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 504,
+   "Overlay": null
+  },
+  "well_Roof": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    218,
+    71,
+    64
+   ],
+   "Target": "#C4403A",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    11.362,
+    -0.003
+   ],
+   "Size": [
+    12.2,
+    3.65,
+    8.646
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 768,
+   "Overlay": null
+  },
+  "well_Bucket": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    187,
+    109,
+    62
+   ],
+   "Target": "#A86238",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.15,
+    5.0,
+    0.0
+   ],
+   "Size": [
+    1.852,
+    1.509,
+    1.798
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 156,
+   "Overlay": null
+  },
+  "well_Iron": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.165,
+    6.37,
+    0.0
+   ],
+   "Size": [
+    10.79,
+    3.88,
+    1.891
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 248,
+   "Overlay": null
+  },
+  "well_Rope": {
+   "Family": "Rope",
+   "Role": "Solid",
+   "Color": [
+    223,
+    182,
+    118
+   ],
+   "Target": "#C4A068",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.06,
+    7.497,
+    0.0
+   ],
+   "Size": [
+    2.08,
+    2.154,
+    1.148
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 108,
+   "Overlay": null
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "well_Collider_Wall",
+   "Shape": "Cylinder",
+   "Center": [
+    0,
+    1.7,
+    0
+   ],
+   "Size": [
+    3.4,
+    9.0,
+    9.0
+   ],
+   "Rotation": [
+    0,
+    0,
+    90
+   ]
+  },
+  {
+   "Name": "well_Collider_Rim",
+   "Shape": "Cylinder",
+   "Center": [
+    0,
+    3.5,
+    0
+   ],
+   "Size": [
+    0.7,
+    9.6,
+    9.6
+   ],
+   "Rotation": [
+    0,
+    0,
+    90
+   ]
+  },
+  {
+   "Name": "well_Collider_PostL",
+   "Shape": "Block",
+   "Center": [
+    -4.75,
+    4.775,
+    0
+   ],
+   "Size": [
+    0.8,
+    9.65,
+    0.8
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "well_Collider_PostR",
+   "Shape": "Block",
+   "Center": [
+    4.75,
+    4.775,
+    0
+   ],
+   "Size": [
+    0.8,
+    9.65,
+    0.8
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "well_Collider_Axle",
+   "Shape": "Cylinder",
+   "Center": [
+    0,
+    8.0,
+    0
+   ],
+   "Size": [
+    10.7,
+    0.6,
+    0.6
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "well_Collider_Bucket",
+   "Shape": "Cylinder",
+   "Center": [
+    0.15,
+    5.0,
+    0
+   ],
+   "Size": [
+    1.5,
+    1.7,
+    1.7
+   ],
+   "Rotation": [
+    0,
+    0,
+    90
+   ]
+  },
+  {
+   "Name": "well_Collider_RoofFront",
+   "Shape": "Wedge",
+   "Center": [
+    0,
+    11.265,
+    -2.07
+   ],
+   "Size": [
+    12.0,
+    3.47,
+    4.14
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "well_Collider_RoofBack",
+   "Shape": "Wedge",
+   "Center": [
+    0,
+    11.265,
+    2.07
+   ],
+   "Size": [
+    12.0,
+    3.47,
+    4.14
+   ],
+   "Rotation": [
+    0,
+    180,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "WaterSurface": [
+   0.0,
+   3.45,
+   0.0
+  ],
+  "BucketBottom": [
+   0.15,
+   4.25,
+   0.0
+  ],
+  "WinchAxis": [
+   0.0,
+   8.0,
+   0.0
+  ]
+ }
+}

@@ -149,6 +149,32 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-19: PROP MODEL UPGRADE IN PROGRESS (brief docs/model_upgrade_brief.txt; 18 props, "mallet" dropped - it is a
+bench armrest).** Inventory `docs/prop_inventory.md` (test area = `workspace._Staging.AssetPreview.ModelsA.Lineup`,
+X about -3000). Single source of truth: `ServerStorage.MapProps.<propId>` templates; every placed copy (214) carries
+the CollectionService tag `MapProp` + attribute `MapPropId` (Abyss recolours = attribute variants `Sunken` / `Pale`;
+props embedded in bigger kits - HunterCamp crate / barrel / laundry rack, Market_Awning barrel, WeaponShop anvil
+forge, TutorialGuide / EggStation / EntryArch lanterns - were wrapped in child Models in place, nothing moved).
+* `DevTools.SyncMapProps`: `run()` replaces every tagged `MapProp` instance with a clone of
+  `ServerStorage.MapProps.<propId>`, keeping pivot, scale, name, parent, attributes, tags and the functional children
+  (`Interact` / `NpcSpot` / `NPC`, prompts, GUIs, scripts, nested props); idempotent through `MapPropVersion` (a second
+  run replaces 0). `capture(propId, instance)` makes an instance (e.g. a hand-improved copy in the test area or the
+  map) the new template and syncs it everywhere = the reverse direction; `undoCapture(propId)` reverses it;
+  `check()` reports the status. Studio-built props: `DevTools.StudioProps`.
+* Blender props: pipeline `tools/blender/fyd_props*.py` (Prop Style Guide + naming contract in
+  `Blender/Props/README.txt`, shared 512 px texture sets uploaded, near-white and tinted, 1 tile = 4 studs), FBX in
+  `Blender_Exports/Props/` written in studs. The owner imports them (`Blender_Exports/Props/PROPS_IMPORT.md`: File >
+  Import 3D, Studio Default, Merge Meshes OFF), then runs
+  `print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())` (needs the latest
+  `PropMeshData.luau` pasted in `ServerStorage.DevTools.PropMeshData`): it builds `MapProps.<propId>` (shared
+  SurfaceAppearances, glow / water / glass roles, invisible data colliders, PropFX attachments) and syncs.
+  `ApplyPropMeshes.preview(propId, imageIds)` rebuilds a prop from its uploaded preview PNG (mesh data in the
+  pixels: "FYDM" + Adler-32 + JSON) with EditableMesh for a temporary look in Studio; `endPreview(propId)` MUST be run
+  after (EditableMesh parts cannot be saved).
+* Effects: `Config/PropFX` + client `Controllers/PropFX` (on within 80 studs, off beyond 100, 4 Hz check, Low FX).
+* Per-model backups of the old props: `BackUP_Files/old_props_2026-10-18_2328/` (+ MANIFEST.txt).
+Log: NIGHT_LOG "Prop model upgrade"; screenshots docs/screenshots/prop_upgrade/; previews Previews/Props/.
+
 **2026-10-18 (late night): EGG LIGHT V2 (owner: "During the haching, remove the cercle below the egg. It spoil the
 rarity and make the hacching uglier. For the light behind the egg put it progressly during the haching and relesing
 process, and make it more realistic.").** `UI/Hatching` `eggOnly(view)` deletes the `RarityRing` parts from the hatch

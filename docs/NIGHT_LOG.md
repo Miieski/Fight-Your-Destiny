@@ -1815,3 +1815,62 @@ Backups before_egg_light2 / after_egg_light2 (6 files each).
   rarity"): the rarity is hinted mid-way and clear only near the end.
 - The calm glow stays behind the pet until Close; with several pets (Hatch All) it fades out instead.
 - The case opening's flat flash disc and hard rays are left out on the hatch screen (they doubled the new light).
+
+# Prop model upgrade - 2026-10-18 (owner: "Read `docs/model_upgrade_brief.txt` first. The attached photos (folder Model_References) are 19 existing models I want upgraded to be a bit more realistic, keeping the low-poly fantasy style. You MUST use sub-agents, maximum 2 at the same time, and you may use Blender. Every decision is already in the brief; if something is missing, apply the closest rule, log it in docs/NIGHT_LOG.md and continue. Most of these models also exist in my test models area, to the right of the hub (lobby) map: every upgraded model must be updated there AND everywhere it is used in the main map, and the reverse (details in the brief). Backup in `BackUP_Files/` first, push to https://github.com/Miieski/Fight-Your-Destiny after each batch, and finish with a short report.")
+
+Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/01..20 (nested folder).
+
+## Status (newest first)
+
+- 23:10 Step 0 started. Backup before_prop_upgrade (6 .rbxm, 23:04; the .rbxl stays the owner's Save As).
+  Sub-agents (max 2): A = Blender modeler (style guide, shared textures, prop pipeline, import doc), B = Studio
+  builder and sync (inventory, old_props backup, MapProps + SyncMapProps + ApplyPropMeshes + PropFX, crate pilot).
+- 23:30 Inventory done (Agent B): docs/prop_inventory.md. Test area = workspace._Staging.AssetPreview.ModelsA.Lineup
+  (Common / Plains / Hub / Gates, X about -3000). Findings: photo 03 crate/barrel = Crate_A / Barrel_A, photos 12 / 10 =
+  the crate / barrel parts of Plains HunterCamp (with the laundry rack of photo 11); anvil_forge = loose parts of
+  Hub.WeaponShop; lantern (photo 15) = the ground lantern of Hub.TutorialGuide (lantern units also in Lantern_Post,
+  EggStation, EntryArch); photo 18's glass ball = the part CounterSkull; stall NPCs: WeaponShop -> npc_blacksmith,
+  TrophyMerchant -> npc_trophy_merchant, DiamondShop -> npc_gem_merchant.
+  DECISION: the "mallet" does not exist - photo 03 shows the armrest of a hub bench (AFK corner) and the brief puts
+  benches out of scope (section 3, photo 01) -> dropped, 18 models. Closest rule: "If it turns out to be a post,
+  upgrade it as a wooden post" does not apply (it is part of a bench, not a standalone post).
+- 00:00 Step 0 (Agent A) + WELL pilot mesh done: Blender/Props/README.txt = Prop Style Guide (palette = the real Part
+  colours from the inventory, since the photos are colour-graded; bevel 2.5 % of the smallest dimension; 9 shared
+  512 px seamless texture sets (wood grain / planks, iron, riveted metal, rough stone, stone blocks, canvas, straw,
+  ivory) + polished roughness + water ripple, uploaded, near-white ColorMaps tinted with SurfaceAppearance.Color /
+  BasePart.Color, 1 tile = 4 studs, world-scale UVs). Pipeline tools/blender/fyd_props*.py (headless; also runs in the
+  Blender MCP in its own scene). Well: 3,106 tris (budget 3,500), 10 meshes, 12.29 x 13.25 x 9.52 (x1.08 / 1.00 /
+  0.99), Previews/Props/well_before_after.png (main agent looked: approved).
+  DECISIONS (Agent A): FBX written in studs (Studio Default preset imports at the right size; avoids the weapons'
+  28x issue), no textures in the FBX (shared SurfaceAppearances applied in Studio from PropMeshData), one mesh per
+  material family / role, every important colour change = its own tinted mesh (imported vertex colours are only
+  used for subtle variation until verified); well water lowered 3.87 -> 3.45; posts moved from x +-4.2 (sunk in the
+  wall) to +-4.75 on footings; colliders kept as today's shapes (data, invisible parts); mallet row "dropped".
+  DECISION (main agent): prove the Blender chain in Studio BEFORE the owner imports, through a temporary preview:
+  the mesh data is encoded in a PNG ("FYDM" header + Adler-32 + JSON in RGB), uploaded, read back with
+  EditableImage and rebuilt with EditableMesh, then ApplyPropMeshes runs its normal path on it; the preview is
+  removed afterwards (EditableMesh parts cannot be saved).
+- 00:55 PILOT done (crate + well), chain proven.
+  * Agent B: 214 placed copies tagged; per-model backups `BackUP_Files/old_props_2026-10-18_2328/` (18 .rbxm +
+    MANIFEST.txt); `ServerStorage.MapProps` + `DevTools.SyncMapProps` / `StudioProps` / `ApplyPropMeshes` /
+    `PropMeshData`; 11 MaterialVariants `FYD_*` in MaterialService (Agent A's textures, 4 studs per tile);
+    `Config/PropFX` + `Controllers/PropFX` (loaded by Main.client automatically); collect_backup.py writes
+    "<folder>/<name>" ids into a subfolder.
+  * CRATE (Studio, 39 parts): planks with gaps, frame, corner braces, nails, a lid offset about 2 deg, worn edges,
+    FYD wood textures; footprint 4.13 x 4.26 (+6.5 % max), top still at 4.0 x scale, sides solid. Sync run 1: 43
+    found / 43 replaced / 0 skipped; run 2: 43 up to date. Reverse direction tested (capture of a red-lid crate ->
+    test area, then undoCapture). Hub parts 5,014 / 6,000 budget (+270): Studio props at 30-40 parts need watching.
+    Main agent looked at the lineup, the hub dock, the camp: approved.
+  * WELL preview: the uploaded PNG decoded losslessly (Adler-32 ok), 10 meshes, CCW winding right, the textures tile
+    outside 0..1, vertex colours show, scale / pivot right, water translucent, colliders = today's solids. Rolled back
+    with endPreview: the place keeps today's 12-part well (template = the captured old well) until the owner imports
+    well.fbx. Main agent looked at the hub and close-ups: approved.
+  * NOT done: a PropFX Play check (the sub-agent's Play start was denied by the permission classifier; to do in the
+    batch 1 check).
+  * DECISIONS (Agent B): embedded props wrapped in child Models in place (crate ref height 4.0, barrel 4.05, lantern
+    glass 1.5); camp crate / camp + market barrels = scale variants of one template (0.85 / 0.84 / 0.79); Abyss
+    recolours = attribute variants; kit copies (MapAssets) and boss-arena templates are synced too; the lamp posts'
+    own lanterns and the other zones' differently styled entry-arch lanterns are not tagged (the lamp_post template
+    carries its own lantern). Photo 18's "glass ball" is the part CounterSkull (a plain ivory ball): the brief's
+    crystal ball is kept (brief section 9 wins).
+  * The owner moved the photos to "REMAKE OBJECT/Model_References/Model_References/" during the work.

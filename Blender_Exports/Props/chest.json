@@ -1,0 +1,246 @@
+{
+ "Id": "chest",
+ "Photo": "17_chest.png",
+ "Fbx": "Blender_Exports/Props/chest.fbx",
+ "Blend": "Blender/Props/chest.blend",
+ "Triangles": 1170,
+ "Budget": 1500,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.0,
+   1.764,
+   0.009
+  ],
+  "Size": [
+   4.5,
+   3.529,
+   3.04
+  ],
+  "Min": [
+   -2.25,
+   0.0,
+   -1.511
+  ],
+  "Max": [
+   2.25,
+   3.529,
+   1.529
+  ]
+ },
+ "StudioSize": [
+  4.4,
+  3.48,
+  3.07
+ ],
+ "Meshes": {
+  "chest_Body": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    187,
+    109,
+    62
+   ],
+   "Target": "#A86238",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    1.02,
+    0.0
+   ],
+   "Size": [
+    4.4,
+    2.0,
+    2.8
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 346,
+   "Overlay": null
+  },
+  "chest_Lid": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    2.08,
+    0.0
+   ],
+   "Size": [
+    4.4,
+    2.64,
+    2.843
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 360,
+   "Overlay": null
+  },
+  "chest_Bands": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    1.764,
+    0.0
+   ],
+   "Size": [
+    3.5,
+    3.529,
+    3.022
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 280,
+   "Overlay": null
+  },
+  "chest_Iron": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    1.484,
+    0.04
+   ],
+   "Size": [
+    4.5,
+    2.967,
+    2.979
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 164,
+   "Overlay": null
+  },
+  "chest_Keyhole": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    30,
+    23,
+    20
+   ],
+   "Target": "#1E1714",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    1.712,
+    -1.475
+   ],
+   "Size": [
+    0.13,
+    0.285,
+    0.02
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 20,
+   "Overlay": null
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "chest_Collider_Base",
+   "Shape": "Block",
+   "Center": [
+    0,
+    1.0,
+    0
+   ],
+   "Size": [
+    4.4,
+    2.0,
+    2.8
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "chest_Collider_Lid",
+   "Shape": "Cylinder",
+   "Center": [
+    0,
+    2.0,
+    0
+   ],
+   "Size": [
+    4.4,
+    2.8,
+    2.8
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "Sparkle": [
+   0.0,
+   1.72,
+   -1.52
+  ],
+  "LidTop": [
+   0.0,
+   3.47,
+   0.0
+  ]
+ }
+}

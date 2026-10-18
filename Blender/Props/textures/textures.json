@@ -1,0 +1,151 @@
+{
+ "size": 512,
+ "studsPerTile": 4.0,
+ "normalFormat": "OpenGL tangent space (+Y = +V)",
+ "note": "ColorMaps are neutral gray; tint = target colour / colorMean (SurfaceAppearance.Color multiplies)",
+ "sets": {
+  "wood_grain": {
+   "colorMean": 0.9,
+   "colorMin": 0.656,
+   "roughnessMean": 0.721,
+   "seam": 0.75,
+   "files": {
+    "ColorMap": "wood_grain_color.png",
+    "NormalMap": "wood_grain_normal.png",
+    "RoughnessMap": "wood_grain_roughness.png"
+   }
+  },
+  "wood_planks": {
+   "colorMean": 0.9649,
+   "colorMin": 0.55,
+   "roughnessMean": 0.709,
+   "seam": 0.82,
+   "files": {
+    "ColorMap": "wood_planks_color.png",
+    "NormalMap": "wood_planks_normal.png",
+    "RoughnessMap": "wood_planks_roughness.png"
+   }
+  },
+  "metal_iron": {
+   "colorMean": 0.88,
+   "colorMin": 0.803,
+   "roughnessMean": 0.535,
+   "seam": 0.8,
+   "files": {
+    "ColorMap": "metal_iron_color.png",
+    "NormalMap": "metal_iron_normal.png",
+    "RoughnessMap": "metal_iron_roughness.png",
+    "MetalnessMap": "metal_iron_metalness.png",
+    "PolishedRoughnessMap": "metal_polished_roughness.png"
+   }
+  },
+  "metal_riveted": {
+   "colorMean": 0.9042,
+   "colorMin": 0.55,
+   "roughnessMean": 0.561,
+   "seam": 1.65,
+   "files": {
+    "ColorMap": "metal_riveted_color.png",
+    "NormalMap": "metal_riveted_normal.png",
+    "RoughnessMap": "metal_riveted_roughness.png",
+    "MetalnessMap": "metal_riveted_metalness.png"
+   }
+  },
+  "stone_rough": {
+   "colorMean": 0.88,
+   "colorMin": 0.686,
+   "roughnessMean": 0.891,
+   "seam": 0.88,
+   "files": {
+    "ColorMap": "stone_rough_color.png",
+    "NormalMap": "stone_rough_normal.png",
+    "RoughnessMap": "stone_rough_roughness.png"
+   }
+  },
+  "stone_blocks": {
+   "colorMean": 0.9094,
+   "colorMin": 0.55,
+   "roughnessMean": 0.87,
+   "seam": 0.82,
+   "files": {
+    "ColorMap": "stone_blocks_color.png",
+    "NormalMap": "stone_blocks_normal.png",
+    "RoughnessMap": "stone_blocks_roughness.png"
+   }
+  },
+  "cloth_canvas": {
+   "colorMean": 0.9,
+   "colorMin": 0.76,
+   "roughnessMean": 0.886,
+   "seam": 1.15,
+   "files": {
+    "ColorMap": "cloth_canvas_color.png",
+    "NormalMap": "cloth_canvas_normal.png",
+    "RoughnessMap": "cloth_canvas_roughness.png"
+   }
+  },
+  "straw_woven": {
+   "colorMean": 0.88,
+   "colorMin": 0.559,
+   "roughnessMean": 0.813,
+   "seam": 1.26,
+   "files": {
+    "ColorMap": "straw_woven_color.png",
+    "NormalMap": "straw_woven_normal.png",
+    "RoughnessMap": "straw_woven_roughness.png"
+   }
+  },
+  "bone_ivory": {
+   "colorMean": 0.9519,
+   "colorMin": 0.55,
+   "roughnessMean": 0.563,
+   "seam": 1.03,
+   "files": {
+    "ColorMap": "bone_ivory_color.png",
+    "NormalMap": "bone_ivory_normal.png",
+    "RoughnessMap": "bone_ivory_roughness.png"
+   }
+  },
+  "water_ripple": {
+   "alphaMean": 0.027,
+   "seam": 1.19,
+   "files": {
+    "ColorMap": "water_ripple_color.png"
+   }
+  }
+ },
+ "assetIds": {
+  "bone_ivory_color.png": "rbxassetid://129326962762155",
+  "bone_ivory_normal.png": "rbxassetid://123401090557220",
+  "bone_ivory_roughness.png": "rbxassetid://116742375558344",
+  "cloth_canvas_color.png": "rbxassetid://112531479292946",
+  "cloth_canvas_normal.png": "rbxassetid://135306887519638",
+  "cloth_canvas_roughness.png": "rbxassetid://107308943025432",
+  "metal_iron_color.png": "rbxassetid://135731262793033",
+  "metal_iron_metalness.png": "rbxassetid://111789210470609",
+  "metal_iron_normal.png": "rbxassetid://95603986153332",
+  "metal_iron_roughness.png": "rbxassetid://131380756886210",
+  "metal_polished_roughness.png": "rbxassetid://76471974811432",
+  "metal_riveted_color.png": "rbxassetid://136831119633013",
+  "metal_riveted_metalness.png": "rbxassetid://129055189097432",
+  "metal_riveted_normal.png": "rbxassetid://73927252058016",
+  "metal_riveted_roughness.png": "rbxassetid://106383785359918",
+  "stone_blocks_color.png": "rbxassetid://112829619167917",
+  "stone_blocks_normal.png": "rbxassetid://80658067793442",
+  "stone_blocks_roughness.png": "rbxassetid://104665814749700",
+  "stone_rough_color.png": "rbxassetid://113595820216745",
+  "stone_rough_normal.png": "rbxassetid://118192687069902",
+  "stone_rough_roughness.png": "rbxassetid://131523483608455",
+  "straw_woven_color.png": "rbxassetid://90752857691370",
+  "straw_woven_normal.png": "rbxassetid://73615548184266",
+  "straw_woven_roughness.png": "rbxassetid://81926772986745",
+  "water_ripple_color.png": "rbxassetid://130488259194169",
+  "wood_grain_color.png": "rbxassetid://89740758642776",
+  "wood_grain_normal.png": "rbxassetid://108234637428586",
+  "wood_grain_roughness.png": "rbxassetid://135239950193027",
+  "wood_planks_color.png": "rbxassetid://116360752066242",
+  "wood_planks_normal.png": "rbxassetid://75585161149742",
+  "wood_planks_roughness.png": "rbxassetid://78473445851411"
+ },
+ "uploaded": "2026-10-18, Studio MCP upload_image (owner's account)"
+}

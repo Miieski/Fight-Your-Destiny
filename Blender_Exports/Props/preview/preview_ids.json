@@ -1,0 +1,7 @@
+{
+ "format": "Blender/Props/README.txt section 12 (FYDM header, RGB payload, JSON meshes in studs, uv v=0 top, CCW)",
+ "props": {
+  "well": {"files": ["well_mesh.png"], "assetIds": ["rbxassetid://80102529524931"], "size": [1024, 163],
+           "meshes": 10, "verts": 7108, "tris": 3106}
+ }
+}

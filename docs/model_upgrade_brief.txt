@@ -1,0 +1,329 @@
+=====================================================================
+ FIGHT YOUR DESTINY - PROP, STALL & SCENERY MODEL UPGRADE
+ 20 reference photos -> 19 upgraded models, synced everywhere
+=====================================================================
+GOAL: make 19 existing models of the hub and the world a bit more REALISTIC (look, materials,
+details, lighting, small animations) while keeping them recognizable and keeping the low-poly
+fantasy identity of the map. The owner sends 20 photos in the folder `Model_References/`
+(files `01_fountain.png` ... `20_diamond_shop.png`). These photos show what exists NOW.
+
+OWNER DECISIONS (final, do not ask again)
+ - Style: **between low-poly and realistic** (same family as the new weapon models).
+ - Improve ALL FOUR aspects: shape and details, materials and textures, colors and light,
+   animations and effects.
+ - Shopkeeper NPCs and the scarecrow are improved too.
+ - Method: **mixed** (Blender for complex shapes, directly in Studio for simple ones).
+ - Most of these models also exist in the **test models area, to the right of the hub (lobby) map**
+   (the owner calls them "modeles tests"). Every upgraded model must be updated in the test area AND
+   everywhere it is used in the main map, and the reverse (section 4).
+Every other choice is in this document. If something is missing, apply the closest rule, log it in
+docs/NIGHT_LOG.md and continue. Do not stop to ask.
+
+READ FIRST: DESIGN.md (sections 1 and 12), HANDOFF.md (3b), docs/weapon_modeling_brief.txt (Blender
+conventions), docs/enemies_npcs_pets_brief.txt (Part D art direction, Part F hub NPCs),
+docs/zone_design_document.txt (palettes), Blender/Weapons/README.txt (axis/scale convention).
+
+RULES
+1. BEFORE any change: backup into `BackUP_Files/` (dated .rbxl, never overwrite). Also save the CURRENT
+   version of every model you are about to replace (serialize each as .rbxm if possible) into
+   `BackUP_Files/old_props_<YYYY-MM-DD_HHMM>/` so the owner can roll back.
+2. Commit and push to https://github.com/Miieski/Fight-Your-Destiny (main) after EACH batch (section 8).
+   Check `git status`: no .rbxl/.rbxm backups staged, no secrets, never put tokens in files.
+3. Keep docs/NIGHT_LOG.md updated after every finished item (usage limits can stop the work) and keep
+   `Blender/Props/props_manifest.csv` current (propId, photo, tool, triangles/parts, status, instances updated).
+4. IMPROVE ONLY. Do not move, rotate, rename or re-parent anything, do not change the hub layout, and do
+   not add gameplay. Interactions, scripts and attributes must keep working exactly as before (section 6).
+5. Mobile first: stay inside the budgets of section 5; effects only run near the player (section 7).
+6. If a step fails twice: log it, skip to the next item, continue. Keep Studio open and visible; do not
+   press Play while another agent edits.
+7. Blender tools execute arbitrary Python: stay inside the project folders, never delete files outside the
+   project, never open unknown .blend files, save the .blend after every prop. If the Blender connection is
+   not available, log it, upgrade the Studio-built props first, and come back to the Blender props when it returns.
+
+---------------------------------------------------------------------
+ 1. SUB-AGENTS (MANDATORY, MAXIMUM 2 AT THE SAME TIME)
+---------------------------------------------------------------------
+ - You MUST use sub-agents. Never run more than **2 at once** (usage limits). Brief each one with this file,
+   the photos, and the exact files/folders it owns.
+ - Only ONE agent may control Studio at a time, and only ONE may control Blender at a time. Two agents can
+   work in parallel only when one is in Blender and the other in Studio; when both need the same tool they take
+   turns. The main agent coordinates the turns.
+ - Suggested split:
+   * **Agent A, Blender modeler** (owns `Blender/Props/**`, `Blender_Exports/Props/**`, `Previews/Props/**`,
+     `props_manifest.csv`): models, textures, exports, lineup images for the Blender props.
+   * **Agent B, Studio builder and sync** (owns the Studio-built props, `ServerStorage.MapProps`, placement,
+     `tools/SyncMapProps.luau`, `tools/ApplyPropMeshes.luau`, `Config/PropFX.luau`, `GameClient/Controllers/PropFX.luau`).
+   * The main agent integrates, reviews screenshots and does the final verification. If a separate reviewer
+     sub-agent is used, run it only after A and B have finished (still max 2 at once).
+ - Each sub-agent ends with a report: exact names, paths and instance counts it created or changed.
+
+---------------------------------------------------------------------
+ 2. STYLE TARGET: BETWEEN LOW-POLY AND REALISTIC
+---------------------------------------------------------------------
+ - Believable real-world shapes and proportions (planked wood, riveted metal, cut stone, woven straw,
+   folded cloth), with clean faceted geometry and light bevels. Not photoreal, not noisy, not cartoon-flat.
+ - Keep each model's MAIN colors recognizable (orange crates, red well roof, blue/white diamond awning, cyan
+   fountain water...) and the map's bright, friendly palette. Add subtle variation: darker crevices, lighter
+   worn edges, gentle gradients, small wear. Do NOT recolor the world.
+ - Consistency: before modeling, write a **Prop Style Guide** in `Blender/Props/README.txt` with hex values
+   for the shared material families (wood light/mid/dark, iron, brass/gold, stone light/dark, moss, cloth
+   reds/blues/greens/orange, straw, bone), one bevel size ratio (about 2-3% of the object's smallest dimension),
+   and the shared textures. All 19 models must use this guide so they look like one family.
+ - Materials: `SurfaceAppearance` (ColorMap + NormalMap + Roughness/Metalness when useful) at 512 px (1024
+   only for the fountain and the stalls). **Share tileable textures per material family** (wood, metal, stone,
+   cloth, straw) across models to save memory, plus vertex colors for variation. Emissive parts (flames,
+   gems, crystals, lantern glass, coals) are SEPARATE meshes/parts so lights and glow can be tuned.
+
+---------------------------------------------------------------------
+ 3. THE 19 MODELS (photo -> model id)
+---------------------------------------------------------------------
+ Photo 01 fountain | 02 lamp_post | 03 crate + barrel + mallet (3 models) | 04 egg_nest | 05 rowboat |
+ 06 minecart | 07 skull_bones | 08 scarecrow | 09 clam_pearl | 10 barrel | 11 laundry_rack | 12 crate |
+ 13 anvil_forge | 14 weapon_stall (close-up of its counter) | 15 lantern | 16 well | 17 chest |
+ 18 trophy_stall | 19 weapon_stall | 20 diamond_shop.
+ Photos 03, 10 and 12 show the crate and the barrel: they are probably the same models. Check in Studio; if they
+ are different variants (size/color), keep them as VARIANTS of one improved template (scale and color through
+ attributes). Photos 13, 14 and 19 belong to the same corner of the hub: `anvil_forge` is its own prop, and
+ `weapon_stall` is the stall (frame, awning, counter, display, NPC).
+ The light-blue outlines in photos 19 and 20 are Studio's selection highlight, not part of the models. The
+ benches, signs and trees visible in photo 01 are out of scope.
+ Unique ids: fountain, lamp_post, crate, barrel, mallet, egg_nest, rowboat, minecart, skull_bones, scarecrow,
+ clam_pearl, laundry_rack, anvil_forge, weapon_stall, lantern, well, chest, trophy_stall, diamond_shop.
+
+---------------------------------------------------------------------
+ 4. FINDING EVERYTHING AND KEEPING IT SYNCED (BOTH DIRECTIONS)
+---------------------------------------------------------------------
+ STEP 4A - INVENTORY (do first, report it in NIGHT_LOG.md)
+ - Find the **test models area** (to the right of the hub when looking at the hub from its main spawn; likely a
+   Folder in Workspace). Search the whole Workspace for clusters of props that match the photos (names such as
+   Boat, Minecart, Skull, Scarecrow, Clam, Anvil, Well, Chest, Crate, Barrel, Lantern...). Write its exact path.
+ - Find EVERY instance of every model in the whole game: Workspace (hub and zones), ServerStorage,
+   ReplicatedStorage templates. Match by name, MeshId, shape and by comparing with the photos. Count them per
+   place (test area / hub / each zone). Note names that differ for the same model.
+ - Create `docs/prop_inventory.md` with one row per model: id, test-area path, main-map instance count per
+   zone, notes (variants, custom children such as prompts, scripts, NPCs, lights).
+ STEP 4B - SINGLE SOURCE OF TRUTH
+ - Create `ServerStorage.MapProps.<propId>`: the improved template (a Model with a PrimaryPart). Every placed
+   instance is tagged with `CollectionService` tag `MapProp` and attribute `MapPropId = "<propId>"`.
+ - Write `tools/SyncMapProps.luau` (runs from the Studio Command Bar or as a plugin script):
+   * `SyncMapProps.run()` replaces every tagged instance, in the test area AND in the main map, with a fresh
+     clone of its template, keeping CFrame, scale ratio, name, parent, ZIndex/order, attributes, tags and
+     the custom children listed in section 6 (re-parented onto the new model), then prints a report
+     (per model: instances found / replaced / skipped, with reasons).
+   * `SyncMapProps.capture(propId, instance)` stores a given instance as the NEW template, then runs the sync.
+     This is the **reverse direction**: if the owner improves a model by hand in the test area or in the main
+     map, `capture` pushes that version everywhere.
+   * Running it twice must change nothing the second time (idempotent) and must never duplicate or leave
+     orphans. Document both functions in HANDOFF.md.
+ STEP 4C - THE RULE
+ - After each batch, the improved version must be visible and IDENTICAL in the test area and at every place
+   the model is used in the main map. Never leave the two out of sync.
+ - A model that exists only in the main map -> add a display copy to the test area. A model that exists only
+   in the test area -> still improve it, keep it in `MapProps` so it is used when placed later.
+ - If you find a variant that was ALREADY improved in one place and is better than the photo, use it as the
+   starting point instead of discarding it, and sync the other place to it.
+ - Instances inside the test area keep their current layout (do not rearrange the area).
+
+---------------------------------------------------------------------
+ 5. PIPELINE, TOOLS AND BUDGETS (MIXED METHOD)
+---------------------------------------------------------------------
+ STUDIO-BUILT (simple props): lamp_post, crate, barrel, mallet, lantern, laundry_rack, and the frame
+ (posts, counter, backboard) of the stalls if cleaner in Studio. Rules: <= 40 Parts per small prop
+ (<= 80 for a stall frame), grouped in a Model with a PrimaryPart, Anchored, CanTouch false, CanQuery false
+ on decorative parts, `CastShadow` only for large parts, `Material` + SurfaceAppearance for wood/metal
+ textures. If a Studio prop needs more parts than allowed, merge it into one MeshPart through Blender.
+ BLENDER-BUILT (complex shapes): fountain, egg_nest, rowboat, minecart, skull_bones, scarecrow, clam_pearl,
+ anvil_forge, well, chest, and the awnings, display items and gems of the stalls (weapons, shield, axe,
+ trophy, crystal ball, diamonds).
+ If the agent judges a different method gives a clearly better result, it may switch a prop and note why.
+ Blender rules (same as docs/weapon_modeling_brief.txt):
+ - Real-world scale in meters, 1 stud = 0.28 m; apply transforms; correct normals; clean UVs, no overlapping
+   islands; no n-gons on the final mesh; origin and axis convention from Blender/Weapons/README.txt.
+ - Triangle budgets: small props 300-1,500 | medium 1,500-4,000 | large (fountain, stalls, well, forge) up to
+   8,000. One mesh per material family when possible; <= 4 materials per model.
+ - Files: `Blender/Props/<propId>.blend` (source of truth, packed or `textures/` next to it),
+   `Blender_Exports/Props/<propId>.fbx` (ONE FBX per prop containing all its meshes named
+   `<propId>_<part>`), `Previews/Props/<propId>_before_after.png`. Save after every prop. Update
+   `props_manifest.csv`.
+ - Export collision-friendly geometry: set `CollisionFidelity = Box` or `Hull` for big props in Studio, never
+   PreciseConvexDecomposition on large meshes.
+ STUDIO IMPORT: the owner imports the FBX files with Studio's Asset Manager -> Bulk Import (you cannot do it
+ yourself unless an approved route exists). Write `tools/ApplyPropMeshes.luau`: after the import it finds
+ each imported model by file name, builds `ServerStorage.MapProps.<propId>` from it (anchors the parts, sets
+ PrimaryPart, applies the right Material/SurfaceAppearance, adds the lights/emitters/attachments from
+ `Config/PropFX.luau`, tags it) and then calls `SyncMapProps.run()`. Until the owner imports, the current
+ models stay in place; Studio-built props are upgraded immediately. List the files to import in the report.
+
+---------------------------------------------------------------------
+ 6. KEEP EVERYTHING THAT ALREADY WORKS
+---------------------------------------------------------------------
+ - Same name, parent, position, rotation and ground contact. Footprint (bounding box) within +10% of the
+   current size; never overlap neighbors, never float or sink. Pivot/PrimaryPart in the same place.
+ - Copy over and keep: attributes, tags, CollisionGroup, ProximityPrompts (including the part named
+   "Interact"), Scripts and LocalScripts, BillboardGuis (for example the "Diamond Shop" and "Egg Station"
+   labels), lights, sounds, and every NPC or functional child of the stalls. If a child no longer fits the new
+   geometry, move only that child to the matching spot of the new model.
+ - Collision: solid things stay solid (fountain basin, well ring, boat hull, stalls' counters), walk-through
+   things stay walk-through. Use simple collision shapes (Box/Hull or invisible collider parts), never the
+   render mesh. Players must not be able to get stuck, stand on the roofs of stalls, or climb into the fountain
+   or the well (if they could not before, they must not now).
+ - Interaction ranges and clickable areas stay the same.
+ - Photo 01 shows portal labels and an "Egg Station" label that overlap: do not touch labels, just report it.
+
+---------------------------------------------------------------------
+ 7. EFFECTS AND SMALL ANIMATIONS (all client-side, only near the player)
+---------------------------------------------------------------------
+ - One module `GameClient/Controllers/PropFX.luau` drives every effect from `Config/PropFX.luau` (per propId:
+   lights, emitters, beams, sway/rotation tweens; offsets in studs relative to the PrimaryPart). It enables
+   effects only when the local player is within 80 studs (throttled check, 4 Hz) and disables them beyond
+   100 studs. No effect runs on the server. No per-frame allocations; reuse tweens.
+ - Settings: the existing `Settings.LowFx` turns off particles and sway but keeps static lights. Respect
+   mobile: lights `Shadows = false`, small `Range`, low particle rates, <= 6 emitters in view.
+ - Effects per model (details in section 9): lamp and lantern flame flicker (+-8% brightness at about 6 Hz),
+   forge fire/sparks/smoke, fountain streams and mist with water ripple scroll, laundry and scarecrow gentle
+   sway (+-2-3 degrees), clam slowly opening and closing with a pearl glint, diamond sign floating/rotating with
+   sparkle and gem glints, crystal ball shimmer, minecart crystal glow, a rare gold sparkle on the chest.
+ - Sound: optional very quiet loops (fire crackle, fountain water, wind chime) through the Ambient SoundGroup,
+   audible only within 25 studs, public/free audio only; list any missing sounds in the report.
+
+---------------------------------------------------------------------
+ 8. ORDER OF WORK
+---------------------------------------------------------------------
+ 0. Backup, inventory (4A), Prop Style Guide, sync tools skeleton.
+ 1. PILOT end-to-end: `crate` (Studio) and `well` (Blender). Prove the whole chain: build -> template ->
+    sync to the test area and the main map -> screenshots -> report. Fix the pipeline before continuing.
+ 2. Batch 1 (Studio): barrel, mallet, lamp_post, lantern, laundry_rack.
+ 3. Batch 2 (Blender, small/medium): chest, rowboat, minecart, skull_bones, clam_pearl, egg_nest, scarecrow.
+ 4. Batch 3 (large): fountain, anvil_forge.
+ 5. Batch 4 (stalls and NPCs): weapon_stall, trophy_stall, diamond_shop, then their shopkeepers.
+ After EACH batch: sync, screenshots (before/after, in the test area AND one placement in the main map),
+ update manifest/NIGHT_LOG.md, commit and push. Build ONE model at a time and look at it yourself before the
+ next. Render a lineup image of each batch into `Previews/Props/`.
+
+---------------------------------------------------------------------
+ 9. PER-MODEL TARGETS (current look -> target)
+---------------------------------------------------------------------
+ 01 FOUNTAIN (Blender, <= 6,000 tris, 1024 textures)
+   Now: three stacked round basins in smooth gray stone, flat cyan water, a central spire.
+   Target: cut stone blocks with visible joints and chipped, bevelled rims; a darker wet band near the
+   waterline; moss patches at the base; carved bands on the central column; slightly irregular basins. Water as
+   a separate translucent mesh (Transparency about 0.35, cyan kept) with scrolling ripples and a foam ring where
+   streams land. 6-8 thin translucent falling streams, soft mist emitter at the landing, gentle glints.
+   Keep the three-tier silhouette, the size and the collision of the basin walls.
+ 02 LAMP_POST (Studio)
+   Now: brown wooden post with a diagonal brace, hanging cream lantern, gray stone base.
+   Target: wood grain with a slight taper and carved end of the arm, iron bracket and a short chain, chipped
+   stone base with a metal collar, the improved `lantern` hanging from it. Warm PointLight (about 255,210,140,
+   Brightness 1.2, Range 16, no shadows) with a subtle flicker.
+ 03/12 CRATE (Studio) and 03/10 BARREL (Studio) and 03 MALLET (Studio)
+   Crate now: orange cube with a darker lid. Target: separate planks with small gaps, an edge frame and corner
+   braces, nails, grain, a lid slightly offset, lighter worn edges (keep orange and light orange).
+   Barrel now: orange cylinder with one gray band. Target: bulging staves (12-16 facets), 3 dark-steel hoops
+   with rivets, top planks, slightly worn bottom.
+   Mallet now: gray handle with a brown rounded head (to confirm in Studio). Target: tapered wooden handle with a
+   leather wrap and an iron/wood head with bevels. If it turns out to be a post, upgrade it as a wooden post.
+ 04 EGG_NEST (Blender, <= 1,500 tris)
+   Now: cream ring nest with a brown center and 3 white eggs on a gray-blue rock.
+   Target: woven ring of twigs and straw with a lining, 3 slightly different speckled eggs (keep them pale),
+   faceted rock with cracks and moss. Rare small sparkle.
+ 05 ROWBOAT (Blender, <= 2,500 tris)
+   Now: simple orange-brown hull with a pointed bow, two light benches, a red oar lying beside it.
+   Target: overlapping planks (clinker) with ribs inside, curved pointed bow, flatter stern, 2-3 thwarts,
+   oarlocks, a rope coil, a keel, faded worn paint (keep orange-brown), an oar with a long shaft and a shaped
+   blade. Keep the boat and the oar as two objects as they are placed now.
+ 06 MINECART (Blender, <= 2,500 tris)
+   Now: blue-gray box on four small brown wheels with a gray stone and two yellow spikes.
+   Target: riveted sheet-metal box with a flared rim and reinforcement bands, light rust streaks, four iron
+   wheels with wooden hubs on axles, a coupler, and an ore load of rock with faceted yellow crystals (emissive,
+   faint glow).
+ 07 SKULL_BONES (Blender, <= 1,500 tris)
+   Now: round white skull with square dark-blue eyes, crossed long bones, a row of flat ribs.
+   Target: a proper low-poly skull (cranium, cheekbones, dark eye sockets, nasal cavity, teeth, jaw), long
+   bones with knobby ends, 5-6 curved ribs, ivory color with slight yellowing and cracks. Keep the layout.
+ 08 SCARECROW (Blender, <= 3,000 tris)
+   Now: pale green head, brown hat, blue block torso, yellow hands, wooden pole and arms.
+   Target: burlap sack head with stitched mouth and button eyes, worn straw hat with a band (keep brown), straw
+   bunches at the sleeves, collar and pants, a patched blue shirt, rope belt, wooden post and crossbar with rope
+   lashing. Gentle sway (hat and straw only), client-side.
+ 09 CLAM_PEARL (Blender, <= 800 tris)
+   Now: two pink discs slightly open with a white ball (very small).
+   Target: two ridged scallop-shaped halves with fan ribs and growth lines (pink-to-cream gradient), a hinge, a
+   glossy pearl with a slight iridescent tint. Slowly opens/closes (about 12 degrees, 6 s loop) with a glint.
+ 11 LAUNDRY_RACK (Studio, <= 40 parts)
+   Now: red-brown A-frame with two orange cloths.
+   Target: round poles lashed with rope at the apex, a crossbar with a rope, 2-3 cloth pieces with folds and
+   slightly different tones (keep orange as the main one), a few clothespins. Gentle cloth sway.
+ 13 ANVIL_FORGE (Blender, <= 4,000 tris)
+   Now: gray anvil on an orange stump, a gray-white block with a yellow top and a gray chimney.
+   Target: an anvil with horn, face, waist and base (dark steel, soft highlights) on a wood stump with rings
+   and bark; a stone/brick hearth with an arched opening, glowing coals (emissive orange-yellow), a stone
+   chimney, up to 3 small extras (tongs, a bellows, a water bucket). Fire flames + sparks + thin smoke emitters,
+   orange PointLight with a pulse (no shadows).
+ 14/19 WEAPON_STALL (Blender for awning and display items, Studio for assembly)
+   Now: wood stall with a red-and-white awning, a plank counter, a backboard with 3 swords (dark-blue blades,
+   gold guards), a round blue shield with a gold center, an axe, a blue tray; a vendor with a straw hat.
+   Target: awning cloth with folds, a sagging line between the posts and a scalloped valance (8 stripes, keep red
+   and white); wood posts and counter with grain and trim; backboard of planks with a darker frame. Display
+   items: steel blades with a fuller, crossguards and leather-wrapped hilts, a shield with a metal rim, rivets
+   and a gold boss, an axe with a wooden handle and a steel head. If the new weapon models exist in
+   `ReplicatedStorage.Assets.Weapons`, clone them as non-interactive display props (no scripts, anchored);
+   otherwise build simple versions. The vendor becomes the hub blacksmith NPC (section 10).
+ 15 LANTERN (Studio, <= 20 parts)
+   Now: cream glowing box with gray caps.
+   Target: metal frame with four corner posts, a top cap with a ring handle and a base, glass panes
+   (Transparency about 0.3), a small visible flame (emissive mesh or emitter) and a warm PointLight (cream
+   color kept). Flame flicker.
+ 16 WELL (Blender, <= 3,500 tris)
+   Now: red gable roof, dark posts, a bucket on a rope, blue water in a gray-blue stone ring.
+   Target: a ring of individual irregular stones with mortar lines and moss at the base, two wooden posts with
+   joints, a crossbar with a winch and crank and a wound rope, a bucket with staves and metal hoops, a gable roof
+   with tiles/shingles, an overhang and a ridge cap (keep red), water as a separate translucent cyan surface
+   with soft ripples. Keep the silhouette and make the ring solid (nobody enters).
+ 17 CHEST (Blender, <= 1,500 tris)
+   Now: brown chest with a domed lid, yellow bands and a gold lock plate.
+   Target: planks with grain, a lid with seams, riveted brass/gold bands (keep yellow-gold, slightly worn),
+   hinges at the back, a lock plate with a keyhole, corner protections. Closed. A rare small gold sparkle.
+ 18 TROPHY_STALL (Blender for awning and items, Studio for assembly)
+   Now: green-and-white striped stall, a plank counter, a vendor with a red cap, a glass ball and a gold trophy.
+   Target: striped canvas with folds and a scalloped valance (keep green/white), wood posts and counter with
+   grain, a gold cup trophy with two handles, a base and a plaque, a crystal ball on a small stand with an inner
+   shimmer. The vendor becomes the hub trophy merchant NPC (section 10).
+ 20 DIAMOND_SHOP (Blender for sign, awning and gems, Studio for assembly)
+   Now: blue-and-white stall, a big diamond sign, three gems (cyan, yellow, cyan) and a vendor with a hat.
+   Target: striped canvas with folds (keep blue/white), a faceted brilliant-cut diamond sign (emissive cyan with
+   a bright rim) that floats and rotates slowly with a glow and sparkle, three properly cut gems on small
+   cushions with glints, wood posts and counter with grain. Keep the "Diamond Shop" label. The vendor becomes the
+   hub gem merchant NPC (section 10).
+
+---------------------------------------------------------------------
+ 10. SHOPKEEPER NPCs AND THE SCARECROW
+---------------------------------------------------------------------
+ - The three stall vendors (weapon stall, trophy stall, diamond shop) are replaced by low-poly humanoid NPCs in
+   the style of docs/enemies_npcs_pets_brief.txt (Part F, HUB NPCs): `npc_blacksmith` (weapon stall),
+   `npc_trophy_merchant` (trophy stall), `npc_gem_merchant` (diamond shop). Confirm which NPC stands where by the
+   names in the hub (for example workspace.Hub.WeaponShop), not by assuming from the photos.
+ - If `ServerStorage.NPCs.<id>` / `Blender/NPC/Hub/<id>.blend` already exist, reuse them. If not, create them
+   to that brief (1,000-2,500 tris, readable clothing layers, Idle + Wave + Talk) and save them in
+   `Blender/NPC/Hub/`. Keep the existing interaction exactly: ProximityPrompt, attributes, scripts, the part
+   named "Interact", the windows they open.
+ - NPC behavior: Idle loop, waves when a player comes within 15 studs, turns the head toward the player.
+ - The scarecrow is only a prop (section 9, model 08); it is not interactive.
+
+---------------------------------------------------------------------
+ 11. ACCEPTANCE (check everything before reporting)
+---------------------------------------------------------------------
+ - `docs/prop_inventory.md` is complete; every model has a template in `ServerStorage.MapProps`; every instance
+   is tagged; `SyncMapProps.run()` reports 0 skipped and a second run changes nothing.
+ - For every model: before/after screenshots in the test area AND at one placement of the main map, from 3
+   angles, taken by you and looked at by you. Test area and main map show IDENTICAL versions.
+ - Reverse direction tested once: improve a dummy variation in the main map, `capture` it, and see it appear in
+   the test area, then undo.
+ - Nothing moved or resized beyond +10%; collisions walked around; nobody can climb onto or into the stalls,
+   fountain or well; all ProximityPrompts, NPC interactions, labels and scripts still work.
+ - Performance: triangle and part counts in the manifest within budget; textures shared; hub tested in the Studio
+   phone emulator with all effects on (smooth, no hitching) and with Low FX on; effects off when far away.
+ - No errors or warnings in the Output; no leftover hidden parts or duplicate copies.
+ - Backups exist (`BackUP_Files/` .rbxl and `old_props_<date>/`); everything committed and pushed to GitHub.
+ - FINAL REPORT (short): what is finished, what is not, decisions taken, the list of FBX files the owner must
+   import (Asset Manager -> Bulk Import) and then the single command to run (`ApplyPropMeshes`), missing sounds,
+   and anything the owner must do by hand.

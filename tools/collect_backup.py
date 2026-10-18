@@ -8,13 +8,18 @@ reads those lines back, verifies them and writes one .rbxm per service.
 Usage:  python tools/collect_backup.py [--wait SECONDS]
 Exit code 0 = every backup found in the logs is on disk, 1 = something is missing.
 Existing files are never overwritten.
+A backup id "<folder>/<name>" (DevTools.SyncMapProps.backup, per-model backups) is written to
+BackUP_Files/<folder>/<name>.rbxm; both parts must be letters, digits, "_" or "-".
 """
 
 import base64
 import glob
 import os
+import re
 import sys
 import time
+
+SUBFOLDER_ID = re.compile(r"^[A-Za-z0-9_\-]+/[A-Za-z0-9_\-]+$")
 
 MARK = b"FYDBAK|"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -53,7 +58,12 @@ def collect():
 	"""Returns (written, already, failed) lists of (id, detail)."""
 	written, already, failed = [], [], []
 	for backup_id, entry in sorted(read_backups().items()):
-		dest = os.path.join(OUT_DIR, backup_id + ".rbxm")
+		if "/" in backup_id or "\\" in backup_id or ".." in backup_id:
+			if not SUBFOLDER_ID.match(backup_id):
+				failed.append((backup_id, "unsafe backup id (expected <folder>/<name>)"))
+				continue
+			os.makedirs(os.path.join(OUT_DIR, backup_id.split("/")[0]), exist_ok=True)
+		dest = os.path.join(OUT_DIR, *backup_id.split("/")) + ".rbxm"
 		if os.path.exists(dest):
 			already.append((backup_id, os.path.getsize(dest)))
 			continue
