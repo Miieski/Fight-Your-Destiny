@@ -149,6 +149,18 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-18 (night): THE PET'S LIGHT INSIDE THE EGG (owner: "make a emission of light during the animation in
+the egg according to the rarity of the pet inside").** New `UI/EggLight` (client, VFX sub-agent):
+`EggLight.new({ Holder, View, Tier, Low, Halo, Rays })`, `light:update(u, spread, dt, shell?)` every frame,
+`light:peak()` at the break, `light:destroy()` in reveal / close. A ViewportFrame renders no real lights, so the
+light = the cracks (new `EggCrack` `shell:glow(color, amount)`: Neon in the light's colour), the view's Ambient /
+LightColor tint, an outline of 3 flat egg copies in their own ViewportFrames behind the egg, an aura (7 round frames)
+and a bloom (3), sparks from Epic; it also drives the hatch screen's halo and rays (that colour code left Hatching,
+and the old "tease" - gold turning to the rarity colour in the last 40 % - is gone: the colour shows from the start).
+Per-rarity tuning in `EggLight.TUNE` (strength, aura, bloom, flicker, sparks/s, crack colour). `Hatching` now
+computes the crack spread every frame (also on the flat path) and calls `shell:open(f)` without a colour. Low FX =
+crack glow + tint + halo. Log: NIGHT_LOG "Egg light"; screenshots docs/screenshots/egg_light/.
+
 **2026-10-18 (evening): REAL EGG CRACKING (owner: "The egg skin should crack bit by bit and then break, just like a
 real egg. However, keep the egg skins").** New `UI/EggCrack` (client): reads the zone egg mesh with EditableMesh
 (cached per mesh), an untextured overlay MeshPart gets crack strips (3 jagged segments per mesh edge) in the order

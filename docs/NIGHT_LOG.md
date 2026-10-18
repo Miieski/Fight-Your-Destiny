@@ -1747,3 +1747,35 @@ pieces). Backups before_egg_hatch / after_egg_hatch (6 files each).
 - Light in the pet's rarity colour shines through the cracks just before the break (a hint of the rarity, like the
   existing glow).
 - Hatching lasts 3.4 s instead of 2.6 s so the cracks can spread in visible steps.
+
+# Egg light - 2026-10-18 (owner: "I reopened the place tell me what i need to do for step up the haching animation. + make a emission of light during the animation in the egg according to the rarity of the pet inside.")
+
+Backups before_egg_light / after_egg_light (6 files each).
+
+## Status (newest first)
+
+- 20:30 DONE. Studio = disk (pull: 171 scripts, 0 written).
+  * The owner's first question: nothing more to do. After the reopen, "Allow Mesh & Image APIs" works in Studio Play
+    (the 20:05 budget fix was tested there); keep it ON and publish as usual.
+  * VFX sub-agent: new `UI/EggLight`. The light fades in while the egg drops, grows with the crack spread and the
+    wobble, pulses like a heartbeat speeding up from about 1 to 4 beats a second, and `peak()` takes it to 125 % at
+    the break. It is made of: the cracks (new `EggCrack` `shell:glow`: Neon in the light's colour from the moment
+    they appear), the viewport's Ambient / LightColor tint, an outline of 3 flat egg copies (texture cleared) in
+    their own ViewportFrames behind the egg, an aura (7 round frames) and a bloom (3), sparks from Epic; the hatch
+    screen's halo and rays now follow the light's colour and strength.
+  * Per rarity (`TUNE`): Common silver, Uncommon green, Rare blue (soft glow, no sparks); Epic purple + 5 sparks/s;
+    Legendary gold and Mythic red flicker, wider aura, 12 / 15 sparks/s; Divine white-and-gold shimmer, 18/s;
+    Secret rainbow, the widest aura, 24/s. Low FX: crack glow + tint + halo only.
+  * `UI/Hatching`: creates the light after the egg view, updates it every frame (the crack spread is now computed
+    every frame, also on the flat path), `peak()` in breakEgg, `destroy()` in reveal / close. The halo / rays colour
+    code moved into EggLight; `tease` removed; `shell:open(f)` without a colour.
+  * Checked: Edit bench with all 8 rarities at 75 % and 97 % and Low FX; Play (Plains egg): tiers 1,
+    4, 5 and 8 with Next and Skip, no script error. Main agent re-checked the screenshots and the sync.
+  * NOT checked in Play: Fast Open, Hatch All, the flat path without the mesh APIs (all use the same code path).
+
+## Decisions taken without the owner
+
+- The light shows the pet's rarity colour from the start (before: gold, turning to the rarity colour only in the last
+  40 %). The owner asked for light "according to the rarity of the pet inside", so the whole animation now tells it.
+- Rarer = stronger, not only a different colour (sparks from Epic, flicker from Legendary, rainbow for Secret), so a
+  Secret egg feels different from a Common one even for colour-blind players.

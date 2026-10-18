@@ -371,6 +371,14 @@ redone after a Rebirth has its sub-zone prices reset.
     the cap pops off, 5 shards fall (3 with Low FX), the cup fades; a new pattern every hatch. Normal hatch 3.4 s
     (was 2.6). **Needs the place setting "Allow Mesh & Image APIs" (Game Settings > Security)**; without it the
     flat 2D cracks and flash are used.
+  * **The pet's light inside the egg (owner 2026-10-18: "make a emission of light during the animation in the egg
+    according to the rarity of the pet inside"):** `UI/EggLight`. From the drop, the egg glows in the pet's rarity
+    colour: faint at first, growing with the cracks, pulsing like a heartbeat that speeds up (about 1 -> 4 beats a
+    second), brightest at the break. Cracks shine in that colour as soon as they appear, the egg's lighting is
+    tinted, a glowing outline, an aura behind and a bloom over the egg; the halo and rays take the same colour.
+    Stronger for rarer pets: Common / Uncommon / Rare a soft silver / green / blue glow, Epic adds sparks,
+    Legendary and Mythic flicker with a wider aura and more sparks, Divine a white-and-gold shimmer, Secret a
+    rainbow with the most sparks. Low FX: only the crack glow, the tint and the halo.
 * A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)

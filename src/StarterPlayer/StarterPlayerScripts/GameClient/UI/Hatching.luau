@@ -14,6 +14,8 @@
 -- and around the cap), light in the pet's rarity colour shines through them at the end, then the shell breaks into
 -- skinned pieces (cap pops off, shards fall, the cup fades) and the pet appears. Without the mesh APIs (the place
 -- setting "Allow Mesh & Image APIs" off) the flat 2D cracks below are used instead.
+-- The pet's light inside the egg (owner 2026-10-18, UI/EggLight): from the start the egg glows in the pet's rarity
+-- colour through its cracks, outline, aura, halo and rays, pulsing like a heartbeat, stronger for rarer pets.
 --   Hatching.play(results, { NextText?, OnNext? })   results = the "results" list of HatchEgg / HatchAll / BuyPremiumEgg
 --   Hatching.isActive()
 local ContentProvider = game:GetService("ContentProvider")
@@ -34,6 +36,7 @@ local State = require(script.Parent.Parent.State)
 local Settings = require(script.Parent.Parent.Controllers.SettingsController)
 local CaseOpening = require(script.Parent.CaseOpening)
 local EggCrack = require(script.Parent.EggCrack)
+local EggLight = require(script.Parent.EggLight)
 local Notifier = require(script.Parent.Notifier)
 local Kit = script.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
@@ -62,6 +65,7 @@ type Show = {
 	spinConn: RBXScriptConnection?,
 	stopSpin: (() -> ())?,
 	shell: EggCrack.Shell?, -- the real cracks (nil: flat 2D cracks)
+	light: EggLight.Light?, -- the pet's light inside the egg
 	eggView: ViewportFrame?,
 	breaking: boolean,
 	panel: GuiObject,
@@ -137,6 +141,9 @@ local function close()
 	end
 	if show.shell then
 		show.shell:destroy()
+	end
+	if show.light then
+		show.light:destroy()
 	end
 	show.modal:Destroy()
 	Sfx.play("UIClose")
@@ -535,6 +542,10 @@ local function reveal(show: Show)
 		show.shell:destroy()
 		show.shell = nil
 	end
+	if show.light then
+		show.light:destroy() -- its glows fade out under the flash
+		show.light = nil
+	end
 	show.stage:ClearAllChildren()
 	show.cracks:ClearAllChildren()
 	show.stageHolder.Position = show.stageBase
@@ -590,6 +601,9 @@ breakEgg = function(show: Show)
 	if show.conn then
 		show.conn:Disconnect()
 		show.conn = nil
+	end
+	if show.light then
+		show.light:peak() -- the light at its brightest as the shell gives way (before the view grows)
 	end
 	-- room for the pieces: a bigger viewport with a wider camera, so the egg keeps its size on screen; it moves out
 	-- of the stage (cleared by the reveal) and stays above the pet until the pieces are gone
@@ -787,7 +801,7 @@ function Hatching.play(results: { any }, options: Options?)
 		buttons[name].Instance.Visible = false
 	end
 
-	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, spinConn = nil, stopSpin = nil, shell = nil, eggView = nil, breaking = false, panel = panel, halo = halo, rays = rays, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
+	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, spinConn = nil, stopSpin = nil, shell = nil, light = nil, eggView = nil, breaking = false, panel = panel, halo = halo, rays = rays, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
 	current = show
 	stageHolder.Activated:Connect(function()
 		reveal(show)
@@ -798,6 +812,9 @@ function Hatching.play(results: { any }, options: Options?)
 	show.eggView = eggView
 	local fast = Settings.get("FastOpen") == true
 	local low = Settings.get("LowFx") == true
+	-- the pet's light inside the egg: it drives the halo, the rays' colour and the cracks' glow
+	local light = EggLight.new({ Holder = stageHolder, View = eggView, Tier = best.rarity, Low = low, Halo = halo, Rays = rays })
+	show.light = light
 	-- the real cracks are prepared while the egg drops in (the mesh loads once per zone)
 	local eggModel = eggView:FindFirstChildOfClass("Model")
 	local eggPart = eggModel and eggModel:FindFirstChild("Egg", true)
@@ -829,7 +846,6 @@ function Hatching.play(results: { any }, options: Options?)
 	local crackSteps = { 0.35, 0.6, 0.82 }
 	local nextCrack = 1
 	local nextBurst = 1
-	local tease = Rarities.get(best.rarity).Color -- the glow turns to the pet's colour near the end
 	local shakeRng = Random.new()
 	show.conn = RunService.RenderStepped:Connect(function(dt)
 		local u = math.clamp((os.clock() - start) / duration, 0, 1)
@@ -839,33 +855,30 @@ function Hatching.play(results: { any }, options: Options?)
 			egg:PivotTo(base * CFrame.Angles(0, 0, angle))
 		end
 		squash.Scale = 1 + math.sin(phase * 0.5) * 0.05 * u
-		-- glow: grows, brightens, and takes the pet's colour in the last third
-		halo.Size = UDim2.fromScale(0.95 + 0.3 * u, 0.95 + 0.3 * u)
-		halo.BackgroundTransparency = 0.8 - 0.45 * u
-		halo.BackgroundColor3 = Theme.Colors.GoldFace:Lerp(tease, math.clamp((u - 0.6) / 0.4, 0, 1))
+		-- the rays turn faster and faster (their colour, the halo and the glow: the light, below)
 		if rays then
 			rays.Rotation += dt * (30 + 120 * u)
-			setRays(rays, Theme.Colors.GoldFace:Lerp(tease, math.clamp((u - 0.6) / 0.4, 0, 1)), 1 - 0.75 * u)
 		end
 		-- the whole stage trembles more and more
 		if not low and u > 0.2 then
 			local power = (u - 0.2) * (u - 0.2) * 10
 			stageHolder.Position = show.stageBase + UDim2.fromOffset(shakeRng:NextNumber(-power, power), shakeRng:NextNumber(-power, power))
 		end
+		-- how far the real cracks have spread (in bursts); the light grows with it too
+		local spread = 1
+		for i = 2, #CRACK_KEYS do
+			local a, b = CRACK_KEYS[i - 1], CRACK_KEYS[i]
+			if u <= b[1] then
+				spread = a[2] + (b[2] - a[2]) * (u - a[1]) / (b[1] - a[1])
+				break
+			end
+		end
 		local shell = show.shell
 		if shell then
-			-- the real cracks spread in bursts, then widen with the pet's light shining through
-			local spread = 1
-			for i = 2, #CRACK_KEYS do
-				local a, b = CRACK_KEYS[i - 1], CRACK_KEYS[i]
-				if u <= b[1] then
-					spread = a[2] + (b[2] - a[2]) * (u - a[1]) / (b[1] - a[1])
-					break
-				end
-			end
+			-- the real cracks spread, then widen just before the break (the light colours them)
 			shell:setCracks(spread)
 			if u > OPEN_FROM then
-				shell:open((u - OPEN_FROM) / (1 - OPEN_FROM), tease)
+				shell:open((u - OPEN_FROM) / (1 - OPEN_FROM))
 			end
 			if nextBurst <= #CRACK_BURSTS and u >= CRACK_BURSTS[nextBurst] then
 				crackLines(show, nextBurst, false)
@@ -875,6 +888,8 @@ function Hatching.play(results: { any }, options: Options?)
 			crackLines(show, nextCrack, true)
 			nextCrack += 1
 		end
+		-- the pet's light inside: faint, then growing with the cracks, pulsing faster and faster
+		light:update(u, spread, dt, shell)
 		if u >= 1 then
 			if shell then
 				breakEgg(show)

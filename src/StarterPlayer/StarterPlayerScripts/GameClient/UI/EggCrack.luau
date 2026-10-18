@@ -13,6 +13,7 @@
 --       the mesh loads (cached per mesh). opts = { Camera: Camera?, Seed: number?, Low: boolean? }
 --   shell:setCracks(p)   0..1: the cracks reached so far (only grows)
 --   shell:open(f, glow?) 0..1: the cracks widen just before the break and light (glow colour) shines through them
+--   shell:glow(color, a) 0..1: the cracks take the colour of the light inside (UI/EggLight, every frame)
 --   shell:shatter(view)  the break: the pieces fly inside the ViewportFrame view; returns at once, cleans up itself
 --   shell:destroy()
 -- A device allows only a few EditableMeshes at once (8 on a Studio client): a shell uses 3 (the crack overlay, all
@@ -644,6 +645,19 @@ function EggCrack.open(self: Shell, f: number, glow: Color3?)
 		em:SetPosition(s.ids[2], s.a - s.ext - s.side * w + s.lift)
 		em:SetPosition(s.ids[3], s.b + s.ext - s.side * w + s.lift)
 		em:SetPosition(s.ids[4], s.b + s.ext + s.side * w + s.lift)
+	end
+end
+
+-- The light inside the egg shines through the cracks: 0 = dark cracks .. 1 = the light's colour (Neon, self-lit).
+function EggCrack.glow(self: Shell, color: Color3, amount: number)
+	if self._dead then
+		return
+	end
+	local a = math.clamp(amount, 0, 1)
+	self._part.Color = CRACK_COLOR:Lerp(color, a)
+	local material = if a > 0 then Enum.Material.Neon else Enum.Material.SmoothPlastic
+	if self._part.Material ~= material then
+		self._part.Material = material
 	end
 end
 
