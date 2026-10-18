@@ -372,13 +372,18 @@ redone after a Rebirth has its sub-zone prices reset.
     (was 2.6). **Needs the place setting "Allow Mesh & Image APIs" (Game Settings > Security)**; without it the
     flat 2D cracks and flash are used.
   * **The pet's light inside the egg (owner 2026-10-18: "make a emission of light during the animation in the egg
-    according to the rarity of the pet inside"):** `UI/EggLight`. From the drop, the egg glows in the pet's rarity
-    colour: faint at first, growing with the cracks, pulsing like a heartbeat that speeds up (about 1 -> 4 beats a
-    second), brightest at the break. Cracks shine in that colour as soon as they appear, the egg's lighting is
-    tinted, a glowing outline, an aura behind and a bloom over the egg; the halo and rays take the same colour.
-    Stronger for rarer pets: Common / Uncommon / Rare a soft silver / green / blue glow, Epic adds sparks,
-    Legendary and Mythic flicker with a wider aura and more sparks, Divine a white-and-gold shimmer, Secret a
-    rainbow with the most sparks. Low FX: only the crack glow, the tint and the halo.
+    according to the rarity of the pet inside"; then: "remove the cercle below the egg. It spoil the rarity ... For
+    the light behind the egg put it progressly during the haching and relesing process, and make it more
+    realistic"):** `UI/EggLight`. No rarity ring under the egg on the hatch screen (the egg icons elsewhere keep
+    it). Almost no light while the egg drops in; it grows smoothly with the wobble and the cracks, pulsing like a
+    heartbeat that speeds up, and its colour goes from a warm white to the pet's rarity colour (a hint mid-way,
+    clear at the end); the cracks shine in that colour. At the break the light bursts out (hot core, wide aura,
+    flaring beams, sparks), then settles behind the revealed pet in about 1 s into a calm, slowly breathing glow.
+    Soft glow textures only (radial glow with a near-white core, tapering god-ray beams, an egg-shaped rim light,
+    soft sparks), no flat discs or hard rays. Stronger for rarer pets: Common / Uncommon / Rare a soft glow, Epic
+    adds sparks and keeps beams behind the pet, Legendary and Mythic flicker with a wider aura and more sparks,
+    Divine white-and-gold, Secret a cycling rainbow. Hatch All: the light fades away for the summary grid.
+    Low FX: one soft glow, the crack glow and the tint.
 * A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)

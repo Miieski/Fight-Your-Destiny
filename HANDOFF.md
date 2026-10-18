@@ -149,6 +149,21 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-18 (late night): EGG LIGHT V2 (owner: "During the haching, remove the cercle below the egg. It spoil the
+rarity and make the hacching uglier. For the light behind the egg put it progressly during the haching and relesing
+process, and make it more realistic.").** `UI/Hatching` `eggOnly(view)` deletes the `RarityRing` parts from the hatch
+screen's egg view (a clone; ModelIcon and the other egg icons unchanged) and re-frames the camera on the egg (zoom
+1.25). `UI/EggLight` rewritten (VFX sub-agent): image layers with 4 uploaded soft textures (ids in `EggLight` TEX;
+generator `Previews/EggLight/make_egg_light_textures.py`, PIL): aura + near-white core + 2 counter-rotating beam
+layers + an egg-shaped rim light (follows the egg's tilt / squash) behind the egg, a bloom and sparks (max 16) over
+it; about 6 ImageLabels. Intensity follows u and a smoothed crack spread; colour warm white -> rarity colour.
+New `light:burst()` (breakEgg, or reveal on Skip / the flat path) and `light:reveal(keep)` (settles into the calm
+glow behind the pet; `keep` false for Hatch All = fade out and remove). The old halo Frame, `makeRays` / `setRays`
+and the reveal-time halo/rays snap are gone. `CaseOpening.burst(fx, modal, tier, opts?)`: new `opts.NoLight` leaves
+out its flat flash disc and hard rays; the hatch screen passes it (sparkles and the Divine / Secret screen glow
+stay); the weapon / armor case opening is unchanged. Log: NIGHT_LOG "Egg light v2"; screenshots
+docs/screenshots/egg_light_v2/.
+
 **2026-10-18 (night): THE PET'S LIGHT INSIDE THE EGG (owner: "make a emission of light during the animation in
 the egg according to the rarity of the pet inside").** New `UI/EggLight` (client, VFX sub-agent):
 `EggLight.new({ Holder, View, Tier, Low, Halo, Rays })`, `light:update(u, spread, dt, shell?)` every frame,

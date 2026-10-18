@@ -1779,3 +1779,39 @@ Backups before_egg_light / after_egg_light (6 files each).
   40 %). The owner asked for light "according to the rarity of the pet inside", so the whole animation now tells it.
 - Rarer = stronger, not only a different colour (sparks from Epic, flicker from Legendary, rainbow for Secret), so a
   Secret egg feels different from a Common one even for colour-blind players.
+
+# Egg light v2 - 2026-10-18 (owner: "During the haching, remove the cercle below the egg. It spoil the rarity and make the hacching uglier. For the light behind the egg put it progressly during the haching and relesing process, and make it more realistic.")
+
+Backups before_egg_light2 / after_egg_light2 (6 files each).
+
+## Status (newest first)
+
+- 22:35 DONE. Studio = disk (pull: 171 scripts, 0 written).
+  * The circle = the egg model's `RarityRing` part (ModelIcon tints it with the rarity colour). `UI/Hatching`
+    `eggOnly(view)` removes it from the hatch screen's egg view only and re-frames the camera on the egg.
+  * VFX sub-agent rewrote `UI/EggLight` with soft image textures made by a PIL script
+    (`Previews/EggLight/make_egg_light_textures.py`: glow, beams, rim, spark; white RGB, light in the alpha) and
+    uploaded with upload_image: glow 86712078359989, beams 81406311014840, rim 138321255850643,
+    spark 110237868246803.
+    - Progressive: almost nothing during the drop, then grows with u and a smoothed crack spread (no jumps at the
+      crack bursts), gentle speeding heartbeat, brightest at the break; colour warm white -> rarity colour.
+    - Release: `burst()` at the break (hot core flash, wide aura, flaring beams, sparks), then `reveal(keep)`
+      settles it behind the pet in ~1 s into a calm breathing glow (beams kept from Epic); Hatch All fades it out.
+    - Realistic: radial glow with a near-white core, 2 counter-rotating god-ray layers, an egg-shaped rim light,
+      a bloom, soft sparks; no flat discs, no rectangle rays (the old halo / makeRays / setRays are removed).
+  * Main agent: the sub-agent removed CaseOpening.burst's flash disc and rays by matching children (a child named
+    "Rays" or with a UICorner). Replaced with `CaseOpening.burst(fx, modal, tier, { NoLight = true })`; checked in
+    Play: tier 8 without the option = flash + rays + screen glow (case opening unchanged), with it = sparkles +
+    screen glow only.
+  * Checked (sub-agent): Edit bench Legendary sequence (u 0.1 / 0.4 / 0.75 / 0.97, break, reveal +0.3 / +1.2 s),
+    Common / Epic / Divine / Secret at 0.97 and settled, Low FX; Play: Legendary single hatches with Next, Secret
+    with Skip, Hatch All of 13 eggs; no script errors.
+  * NOT checked: Fast Open, the flat path without a shell in Play, the phone layout, Low FX in Play, the exact
+    frame of the shell pieces flying with the new burst.
+
+## Decisions taken without the owner
+
+- The light starts warm white and turns into the rarity colour as it grows (the owner said the ring "spoil the
+  rarity"): the rarity is hinted mid-way and clear only near the end.
+- The calm glow stays behind the pet until Close; with several pets (Hatch All) it fades out instead.
+- The case opening's flat flash disc and hard rays are left out on the hatch screen (they doubled the new light).

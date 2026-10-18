@@ -6,7 +6,7 @@
 --   CaseOpening.play(result, onAgain)  result = the BuyWeapon / BuyArmor reply (weaponId or armorId); onAgain(itemId)
 --                                      buys the same again
 --   CaseOpening.isActive(), CaseOpening.Changed (fires with the new active flag)
---   CaseOpening.burst(fx, modal, tier): the rarity reveal effects (shared with the hatch screen)
+--   CaseOpening.burst(fx, modal, tier, opts?): the rarity reveal effects (shared with the hatch screen)
 -- One tween moves the strip. The per-frame check (tick sound, tile under the marker) recomputes the strip
 -- position from the clock with the same easing, so it only works with numbers: no allocation per frame.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -205,19 +205,23 @@ local function close()
 end
 
 -- Rarity effects, bigger for rarer tiers (Low FX keeps only the flash). fx = a small frame at the burst
--- center, modal = the full-screen layer (Divine / Secret glow). Also used by the hatch screen (UI/Hatching).
-function CaseOpening.burst(fx: Frame, modal: Frame, tier: number)
+-- center, modal = the full-screen layer (Divine / Secret glow). Also used by the hatch screen (UI/Hatching),
+-- which has its own light: opts.NoLight leaves out the flash disc and the rays.
+function CaseOpening.burst(fx: Frame, modal: Frame, tier: number, opts: { NoLight: boolean? }?)
 	local rarity = WeaponRarities.get(tier)
 	local low = Settings.get("LowFx") == true
-	local flash = Instance.new("Frame")
-	flash.AnchorPoint = Vector2.new(0.5, 0.5)
-	flash.Position = UDim2.fromScale(0.5, 0.5)
-	flash.Size = UDim2.fromOffset(40, 40)
-	flash.BackgroundColor3 = rarity.Color
-	flash.BackgroundTransparency = 0.3
-	Theme.round(flash)
-	flash.Parent = fx
-	TweenService:Create(flash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(260 + 40 * tier, 260 + 40 * tier), BackgroundTransparency = 1 }):Play()
+	local noLight = opts ~= nil and opts.NoLight == true
+	if not noLight then
+		local flash = Instance.new("Frame")
+		flash.AnchorPoint = Vector2.new(0.5, 0.5)
+		flash.Position = UDim2.fromScale(0.5, 0.5)
+		flash.Size = UDim2.fromOffset(40, 40)
+		flash.BackgroundColor3 = rarity.Color
+		flash.BackgroundTransparency = 0.3
+		Theme.round(flash)
+		flash.Parent = fx
+		TweenService:Create(flash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(260 + 40 * tier, 260 + 40 * tier), BackgroundTransparency = 1 }):Play()
+	end
 	if low or tier < 3 then
 		return
 	end
@@ -246,49 +250,51 @@ function CaseOpening.burst(fx: Frame, modal: Frame, tier: number)
 	if tier < CONFIG.BurstFrom then
 		return
 	end
-	local rays = Instance.new("Frame")
-	rays.Name = "Rays"
-	rays.AnchorPoint = Vector2.new(0.5, 0.5)
-	rays.Position = UDim2.fromScale(0.5, 0.5)
-	rays.Size = UDim2.fromOffset(10, 10)
-	rays.BackgroundTransparency = 1
-	rays.ZIndex = 0
-	rays.Parent = fx
-	for i = 1, 12 do
-		-- GUI objects turn around their own middle: each ray is twice as long, centered on the burst, and
-		-- only its upper half is drawn, so all rays start at the center of the winning tile
-		local ray = Instance.new("Frame")
-		ray.AnchorPoint = Vector2.new(0.5, 0.5)
-		ray.Position = UDim2.fromScale(0.5, 0.5)
-		ray.Size = UDim2.fromOffset(18, 640)
-		ray.Rotation = i * 30
-		ray.BackgroundColor3 = if rarity.Gradient then Color3.new(1, 1, 1) else rarity.Color
-		ray.BackgroundTransparency = 0.45
-		ray.BorderSizePixel = 0
-		local fade = Instance.new("UIGradient")
-		fade.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(0.42, 0.25),
-			NumberSequenceKeypoint.new(0.499, 0.1),
-			NumberSequenceKeypoint.new(0.5, 1),
-			NumberSequenceKeypoint.new(1, 1),
-		})
-		fade.Rotation = 90
-		if rarity.Gradient then
-			fade.Color = rarity.Gradient
-		end
-		fade.Parent = ray
-		ray.Parent = rays
-	end
-	local spin = if tier == #WeaponRarities.List then CONFIG.SecretStingSeconds + 1 else 1.6
-	TweenService:Create(rays, TweenInfo.new(spin, Enum.EasingStyle.Linear), { Rotation = 90 }):Play()
-	task.delay(spin - 0.5, function()
-		for _, ray in ipairs(rays:GetChildren()) do
-			if ray:IsA("Frame") then
-				TweenService:Create(ray, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+	if not noLight then
+		local rays = Instance.new("Frame")
+		rays.Name = "Rays"
+		rays.AnchorPoint = Vector2.new(0.5, 0.5)
+		rays.Position = UDim2.fromScale(0.5, 0.5)
+		rays.Size = UDim2.fromOffset(10, 10)
+		rays.BackgroundTransparency = 1
+		rays.ZIndex = 0
+		rays.Parent = fx
+		for i = 1, 12 do
+			-- GUI objects turn around their own middle: each ray is twice as long, centered on the burst, and
+			-- only its upper half is drawn, so all rays start at the center of the winning tile
+			local ray = Instance.new("Frame")
+			ray.AnchorPoint = Vector2.new(0.5, 0.5)
+			ray.Position = UDim2.fromScale(0.5, 0.5)
+			ray.Size = UDim2.fromOffset(18, 640)
+			ray.Rotation = i * 30
+			ray.BackgroundColor3 = if rarity.Gradient then Color3.new(1, 1, 1) else rarity.Color
+			ray.BackgroundTransparency = 0.45
+			ray.BorderSizePixel = 0
+			local fade = Instance.new("UIGradient")
+			fade.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.42, 0.25),
+				NumberSequenceKeypoint.new(0.499, 0.1),
+				NumberSequenceKeypoint.new(0.5, 1),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			fade.Rotation = 90
+			if rarity.Gradient then
+				fade.Color = rarity.Gradient
 			end
+			fade.Parent = ray
+			ray.Parent = rays
 		end
-	end)
+		local spin = if tier == #WeaponRarities.List then CONFIG.SecretStingSeconds + 1 else 1.6
+		TweenService:Create(rays, TweenInfo.new(spin, Enum.EasingStyle.Linear), { Rotation = 90 }):Play()
+		task.delay(spin - 0.5, function()
+			for _, ray in ipairs(rays:GetChildren()) do
+				if ray:IsA("Frame") then
+					TweenService:Create(ray, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+				end
+			end
+		end)
+	end
 	if tier >= #WeaponRarities.List - 1 then
 		local glow = Instance.new("Frame")
 		glow.Name = "ScreenGlow"

@@ -5,17 +5,18 @@
 -- Config/PetMutations) gets its own callout ("GOLDEN!", "HUGE RAINBOW!") and look. Buttons: Equip (when a slot is
 -- free), the caller's "next" action (Hatch next / Buy again), Close. Several results (Hatch All) end on a
 -- summary grid with Equip Best. A tap on the egg skips to the reveal. Fast Open shortens the wobble.
--- Big and flashy (owner 2026-10-13): the egg drops in and bounces, shakes harder and harder while a glow and
--- turning light rays build up (in the pet's rarity colour near the end), shell chips fly at every crack, then a
--- white flash, the rarity burst, confetti (more for rarer pets) and a screen shake from Legendary; the pet pops
--- in and its 3 Bonus Stats items (Config/PetTraits) pop in one by one. Low FX: no rays, chips, confetti or shake.
+-- Big and flashy (owner 2026-10-13): the egg drops in and bounces, shakes harder and harder while the light inside
+-- builds up, shell chips fly at every crack, then a white flash, the rarity burst, confetti (more for rarer pets)
+-- and a screen shake from Legendary; the pet pops in and its 3 Bonus Stats items (Config/PetTraits) pop in one by
+-- one. Low FX: no chips, confetti or shake.
 -- Real cracking (owner 2026-10-18: "the egg skin should crack bit by bit and then break, just like a real egg"):
 -- UI/EggCrack draws the cracks on the egg's own mesh in bursts (a starburst at the hit, then around the middle, up
 -- and around the cap), light in the pet's rarity colour shines through them at the end, then the shell breaks into
 -- skinned pieces (cap pops off, shards fall, the cup fades) and the pet appears. Without the mesh APIs (the place
 -- setting "Allow Mesh & Image APIs" off) the flat 2D cracks below are used instead.
--- The pet's light inside the egg (owner 2026-10-18, UI/EggLight): from the start the egg glows in the pet's rarity
--- colour through its cracks, outline, aura, halo and rays, pulsing like a heartbeat, stronger for rarer pets.
+-- The pet's light inside the egg (owner 2026-10-18, UI/EggLight): it grows from almost nothing to its brightest at
+-- the break, a warm white turning into the pet's rarity colour, then bursts out and settles behind the pet. The
+-- egg is shown alone, without its rarity ring (owner: the ring gave the rarity away).
 --   Hatching.play(results, { NextText?, OnNext? })   results = the "results" list of HatchEgg / HatchAll / BuyPremiumEgg
 --   Hatching.isActive()
 local ContentProvider = game:GetService("ContentProvider")
@@ -62,15 +63,12 @@ type Show = {
 	info: Frame,
 	buttons: { [string]: any },
 	conn: RBXScriptConnection?,
-	spinConn: RBXScriptConnection?,
 	stopSpin: (() -> ())?,
 	shell: EggCrack.Shell?, -- the real cracks (nil: flat 2D cracks)
 	light: EggLight.Light?, -- the pet's light inside the egg
 	eggView: ViewportFrame?,
 	breaking: boolean,
 	panel: GuiObject,
-	halo: Frame,
-	rays: Frame?,
 	stageBase: UDim2,
 	revealed: boolean,
 	results: { any },
@@ -86,9 +84,8 @@ local CRACK_BURSTS = { 0.2, 0.4, 0.58, 0.76 } -- a crack sound and a few chips a
 local OPEN_FROM = 0.9 -- the cracks widen and glow from here to the break
 local BREAK_REVEAL = 0.15 -- seconds between the shell breaking and the pet's reveal
 local BREAK_ROOM = 1.9 -- the egg's viewport grows by this at the break (camera widened) so the pieces can fly out
+local EGG_ZOOM = 1.25 -- the egg's framing (as Kit/ModelIcon frames the egg icons)
 -- effects (defined below reveal's helpers)
-local makeRays: (GuiObject) -> Frame
-local setRays: (Frame, Color3, number) -> ()
 local whiteFlash: (any, number) -> ()
 local confetti: (any, number) -> ()
 local shake: (GuiObject, number, number) -> ()
@@ -132,9 +129,6 @@ local function close()
 	current = nil
 	if show.conn then
 		show.conn:Disconnect()
-	end
-	if show.spinConn then
-		show.spinConn:Disconnect()
 	end
 	if show.stopSpin then
 		show.stopSpin()
@@ -356,45 +350,6 @@ local function revealMany(show: Show)
 	equip.Instance.Visible = true -- the check equips the best pets
 end
 
--- 12 light rays turning around the stage's middle (each ray is twice as long and only its top half shows)
-makeRays = function(parent: GuiObject): Frame
-	local rays = Instance.new("Frame")
-	rays.Name = "Rays"
-	rays.AnchorPoint = Vector2.new(0.5, 0.5)
-	rays.Position = UDim2.fromScale(0.5, 0.5)
-	rays.Size = UDim2.fromScale(1.6, 1.6)
-	rays.BackgroundTransparency = 1
-	rays.ZIndex = 3
-	for i = 1, 12 do
-		local ray = Instance.new("Frame")
-		ray.Name = "Ray"
-		ray.AnchorPoint = Vector2.new(0.5, 0.5)
-		ray.Position = UDim2.fromScale(0.5, 0.5)
-		ray.Size = UDim2.new(0, 26, 1, 0)
-		ray.Rotation = i * 30
-		ray.BackgroundColor3 = Theme.Colors.GoldFace
-		ray.BackgroundTransparency = 1
-		ray.BorderSizePixel = 0
-		ray.ZIndex = 3
-		local fade = Instance.new("UIGradient")
-		fade.Rotation = 90
-		fade.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(0.5, 0.75), NumberSequenceKeypoint.new(0.5001, 1), NumberSequenceKeypoint.new(1, 1) })
-		fade.Parent = ray
-		ray.Parent = rays
-	end
-	rays.Parent = parent
-	return rays
-end
-
-setRays = function(rays: Frame, color: Color3, transparency: number)
-	for _, ray in ipairs(rays:GetChildren()) do
-		if ray:IsA("Frame") then
-			ray.BackgroundColor3 = color
-			ray.BackgroundTransparency = transparency
-		end
-	end
-end
-
 -- a white flash over the whole screen (stronger for rarer pets)
 whiteFlash = function(show: Show, tier: number)
 	local flash = Instance.new("Frame")
@@ -542,10 +497,6 @@ local function reveal(show: Show)
 		show.shell:destroy()
 		show.shell = nil
 	end
-	if show.light then
-		show.light:destroy() -- its glows fade out under the flash
-		show.light = nil
-	end
 	show.stage:ClearAllChildren()
 	show.cracks:ClearAllChildren()
 	show.stageHolder.Position = show.stageBase
@@ -558,26 +509,18 @@ local function reveal(show: Show)
 			shake(show.panel, 6 + tier, 0.4)
 		end
 	end
-	-- the glow stays in the pet's colour; the rays keep turning slowly from Epic
-	show.halo.BackgroundColor3 = Rarities.get(tier).Color
-	show.halo.BackgroundTransparency = 0.55
-	show.halo.Size = UDim2.fromScale(1.05, 1.05)
-	local rays = show.rays
-	if rays then
-		if tier >= Rarities.GLOW_FROM and not low then
-			setRays(rays, Rarities.get(tier).Color, 0.45)
-			show.spinConn = RunService.RenderStepped:Connect(function(dt)
-				rays.Rotation += dt * 18
-			end)
-		else
-			rays.Visible = false
-		end
+	-- the light bursts out (if the egg did not break) and settles into a calm glow behind the pet; with several
+	-- pets (summary grid) it fades away
+	if show.light then
+		show.light:reveal(#show.results == 1)
 	end
 	Sfx.play("PetHatch")
 	-- a mutation always gets the big reveal sound
 	local mutated = PetMutations.get(show.best.mutation) ~= nil
 	Sfx.play(if tier >= Rarities.LEGENDARY_SOUND_FROM or mutated then "RarityLegendary" else "RarityReveal")
-	CaseOpening.burst(show.fx, show.modal, tier)
+	-- the egg's own light (UI/EggLight) is the burst of light here: no flat flash disc or hard rays from the case
+	-- opening (they would double it); its sparkles and the Divine / Secret screen glow stay
+	CaseOpening.burst(show.fx, show.modal, tier, { NoLight = true })
 	if #show.results == 1 then
 		revealOne(show, show.results[1])
 	else
@@ -603,7 +546,7 @@ breakEgg = function(show: Show)
 		show.conn = nil
 	end
 	if show.light then
-		show.light:peak() -- the light at its brightest as the shell gives way (before the view grows)
+		show.light:burst() -- the light bursts out as the shell gives way (before the view grows)
 	end
 	-- room for the pieces: a bigger viewport with a wider camera, so the egg keeps its size on screen; it moves out
 	-- of the stage (cleared by the reveal) and stays above the pet until the pieces are gone
@@ -625,6 +568,27 @@ breakEgg = function(show: Show)
 	task.delay(1.4, function()
 		view:Destroy()
 	end)
+end
+
+-- The hatch screen shows the egg alone: its rarity ring goes (owner 2026-10-18: it gave the pet's rarity away and
+-- looked ugly) and the camera is framed on the egg only (the view is a fresh clone of the icon template).
+local function eggOnly(view: ViewportFrame)
+	local model = view:FindFirstChildOfClass("Model")
+	if not model then
+		return
+	end
+	for _, part in ipairs(model:GetDescendants()) do
+		if part:IsA("BasePart") and part:GetAttribute("RarityRing") then
+			part:Destroy()
+		end
+	end
+	local egg = model:FindFirstChild("Egg", true)
+	local camera = view.CurrentCamera
+	if camera and egg and egg:IsA("BasePart") then
+		local radius = math.max(egg.Size.X, egg.Size.Y, egg.Size.Z) * 0.5
+		local distance = radius / math.tan(math.rad(camera.FieldOfView / 2)) * EGG_ZOOM
+		camera.CFrame = CFrame.lookAt(egg.Position + Vector3.new(0, radius * 0.45, -distance), egg.Position)
+	end
 end
 
 -- results: { { uid, petId, rarity, eggRarity, lucky, zone } }
@@ -690,21 +654,6 @@ function Hatching.play(results: { any }, options: Options?)
 	stageHolder.AnchorPoint = if compact then Vector2.zero else Vector2.new(0.5, 0)
 	stageHolder.ZIndex = 3
 	stageHolder.Parent = panel
-	local halo = Instance.new("Frame")
-	halo.Name = "Halo"
-	halo.AnchorPoint = Vector2.new(0.5, 0.5)
-	halo.Position = UDim2.fromScale(0.5, 0.5)
-	halo.Size = UDim2.fromScale(0.95, 0.95)
-	halo.BackgroundColor3 = Theme.Colors.GoldFace
-	halo.BackgroundTransparency = 0.8
-	halo.ZIndex = 3
-	Theme.round(halo)
-	halo.Parent = stageHolder
-	-- light rays behind the egg (they build up with the wobble)
-	local rays: Frame? = nil
-	if Settings.get("LowFx") ~= true then
-		rays = makeRays(stageHolder)
-	end
 	local stage = Instance.new("Frame")
 	stage.Name = "Model"
 	stage.BackgroundTransparency = 1
@@ -801,7 +750,7 @@ function Hatching.play(results: { any }, options: Options?)
 		buttons[name].Instance.Visible = false
 	end
 
-	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, spinConn = nil, stopSpin = nil, shell = nil, light = nil, eggView = nil, breaking = false, panel = panel, halo = halo, rays = rays, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
+	show = { modal = modal, stageHolder = stageHolder, stage = stage, fx = fx, cracks = cracks, info = infoFrame, buttons = buttons, conn = nil, stopSpin = nil, shell = nil, light = nil, eggView = nil, breaking = false, panel = panel, stageBase = stageHolder.Position, revealed = false, results = results, best = best, options = opts }
 	current = show
 	stageHolder.Activated:Connect(function()
 		reveal(show)
@@ -809,11 +758,12 @@ function Hatching.play(results: { any }, options: Options?)
 
 	-- the egg drops in and bounces, then rocks around its base, faster and wider, cracks at 35 / 60 / 82 %
 	local eggView = ModelIcon.egg(best.zone, if best.premiumEgg then nil else best.eggRarity, { Size = UDim2.fromScale(0.86, 0.86), ZIndex = 4, Parent = stage })
+	eggOnly(eggView)
 	show.eggView = eggView
 	local fast = Settings.get("FastOpen") == true
 	local low = Settings.get("LowFx") == true
-	-- the pet's light inside the egg: it drives the halo, the rays' colour and the cracks' glow
-	local light = EggLight.new({ Holder = stageHolder, View = eggView, Tier = best.rarity, Low = low, Halo = halo, Rays = rays })
+	-- the pet's light inside the egg: the glow and beams behind it, the egg's lighting and the cracks' glow
+	local light = EggLight.new({ Holder = stageHolder, View = eggView, Tier = best.rarity, Low = low })
 	show.light = light
 	-- the real cracks are prepared while the egg drops in (the mesh loads once per zone)
 	local eggModel = eggView:FindFirstChildOfClass("Model")
@@ -855,10 +805,6 @@ function Hatching.play(results: { any }, options: Options?)
 			egg:PivotTo(base * CFrame.Angles(0, 0, angle))
 		end
 		squash.Scale = 1 + math.sin(phase * 0.5) * 0.05 * u
-		-- the rays turn faster and faster (their colour, the halo and the glow: the light, below)
-		if rays then
-			rays.Rotation += dt * (30 + 120 * u)
-		end
 		-- the whole stage trembles more and more
 		if not low and u > 0.2 then
 			local power = (u - 0.2) * (u - 0.2) * 10
