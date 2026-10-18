@@ -85,6 +85,7 @@ PALETTE = {
     "Bone": "#F0E8D0", "BoneAged": "#D9CDA8", "BoneSocket": "#3E3C4E",
     "RoofRed": "#C4403A", "RoofRedDark": "#9C302C", "ClamPink": "#FF5C78", "Pearl": "#F5F6FA",
     "Water": "#34D6EC", "Lantern": "#FFD678", "Fire": "#FF8C28", "Diamond": "#5FD4FF", "OreGold": "#FFC43C",
+    "Flame": "#FFB648", "ClamCream": "#F7B8B8", "Thread": "#3A2A20", "ButtonDark": "#2E2B33", "Speckle": "#9C8A70",
 }
 
 # material family -> shared texture set (Blender/Props/textures/<set>_*.png), Studio fallbacks
@@ -600,6 +601,37 @@ class Mesh:
             bm.verts.remove(v)
         return self._commit(bm, Matrix.Identity(4), uv_mode="given", tone=tone, smooth_faces=faces if smooth else ())
 
+    def poly(self, points, normal=None, tone=None):
+        """One flat convex polygon (prop space), facing `normal` if given (decals: speckles, patches, stitches)."""
+        bm = bmesh.new()
+        f = bm.faces.new([bm.verts.new(Vector(p)) for p in points])
+        f.normal_update()
+        if normal is not None and f.normal.dot(Vector(normal)) < 0:
+            f.normal_flip()
+        return self._commit(bm, Matrix.Identity(4), tone=tone)
+
+    def spike(self, base, tip, r, segs=3, cap=True, tone=None):
+        """Thin pyramid from a base polygon (radius r) to a point (straw, thorns, crystal tips): segs side triangles
+        (+ the base cap). No degenerate faces."""
+        a, b = Vector(base), Vector(tip)
+        m = _frame(a, b)
+        length = (b - a).length
+        bm = bmesh.new()
+        ring = [bm.verts.new((r * math.cos(2 * math.pi * i / segs), r * math.sin(2 * math.pi * i / segs), -length / 2))
+                for i in range(segs)]
+        apex = bm.verts.new((0, 0, length / 2))
+        for i in range(segs):
+            bm.faces.new((ring[i], ring[(i + 1) % segs], apex))
+        if cap:
+            bm.faces.new(list(reversed(ring)))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:]) if cap else None
+        return self._commit(bm, m, grain=2, tone=tone)
+
+    def deform(self, fn, start=0):
+        """Applies fn(Vector prop-space) -> Vector to the vertices added since index `start` (e.g. a wavy brim)."""
+        self.verts[start:] = [tuple(fn(Vector(v))) for v in self.verts[start:]]
+        return len(self.verts)
+
     def transform(self, matrix, start=0):
         """Moves the vertices added since index `start` (default: all) by a 4x4 matrix in prop space; returns the
         new vertex count (use it as the next `start`)."""
@@ -963,6 +995,51 @@ def _frame_camera(cam, objs, az, el, margin=1.08):
     return center
 
 
+def _fit_camera(cam, objs, az, el, margin=0.06):
+    """Lineups: the camera looks from (az, el) and its distance / lens shift are fitted so every vertex lands inside
+    the frame with `margin` on each side (uses the full width of wide images)."""
+    bpy.context.view_layer.update()
+    pts = [ob.matrix_world @ v.co for ob in objs if ob.type == "MESH" and not ob.hide_render for v in ob.data.vertices]
+    lo = Vector([min(p[i] for p in pts) for i in range(3)])
+    hi = Vector([max(p[i] for p in pts) for i in range(3)])
+    center = (lo + hi) / 2
+    a, e = math.radians(az), math.radians(el)
+    d_b = R2B @ Vector((math.sin(a) * math.cos(e), math.sin(e), -math.cos(a) * math.cos(e)))
+    r = bpy.context.scene.render
+    aspect = r.resolution_x / r.resolution_y
+    th = math.tan(cam.data.angle / 2)          # horizontal (sensor fit AUTO, wide image)
+    tv = th / aspect
+    cam.data.shift_x = cam.data.shift_y = 0.0
+
+    def extents(dist):
+        cam.location = center + d_b * dist
+        cam.rotation_euler = (center - cam.location).to_track_quat("-Z", "Y").to_euler()
+        # (matrix_world is only refreshed by a depsgraph update: build it here)
+        inv = (Matrix.Translation(cam.location) @ cam.rotation_euler.to_matrix().to_4x4()).inverted()
+        xs, ys = [], []
+        for p in pts:
+            q = inv @ p
+            depth = -q.z
+            if depth <= 0.01:
+                return None
+            xs.append(q.x / depth / th)
+            ys.append(q.y / depth / tv)
+        return min(xs), max(xs), min(ys), max(ys)
+
+    near, far = 0.5, 2000.0
+    for _ in range(40):
+        mid = (near + far) / 2
+        ext = extents(mid)
+        if ext is not None and (ext[1] - ext[0]) <= 2 * (1 - margin) and (ext[3] - ext[2]) <= 2 * (1 - margin):
+            far = mid
+        else:
+            near = mid
+    ext = extents(far)
+    cam.data.shift_x = (ext[0] + ext[1]) / 2 * 0.5           # shift is in units of the larger frame side
+    cam.data.shift_y = (ext[2] + ext[3]) / 2 * 0.5 / aspect
+    return center
+
+
 def _load_rgba(path):
     img = bpy.data.images.load(path, check_existing=False)
     w, h = img.size
@@ -1058,13 +1135,14 @@ def lineup(name, ids, out=None, gap=2.0, az=-20, el=14):
         xs = [-(o.matrix_world @ v.co).x / STUD for o in obs for v in o.data.vertices]  # Roblox x in studs
         if not xs:
             continue
-        shift = x - min(xs)
+        # props go toward Roblox -X: seen from the front (camera on -Z) the first id is on the LEFT
+        shift = x - max(xs)
         for o in obs:
             o.location.x -= shift * STUD
             placed[o.name] = o
-        x += (max(xs) - min(xs)) + gap
+        x -= (max(xs) - min(xs)) + gap
     scn.render.resolution_x, scn.render.resolution_y = 1600, 640
-    _frame_camera(scn.camera, list(placed.values()), az, el, margin=1.0)
+    _fit_camera(scn.camera, list(placed.values()), az, el)
     tmp = os.path.join(PREVIEW_DIR, f"_{name}_lineup_tmp.png")
     scn.render.filepath = tmp
     bpy.ops.render.render(write_still=True)

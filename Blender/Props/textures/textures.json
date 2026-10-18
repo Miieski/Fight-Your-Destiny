@@ -107,8 +107,8 @@
    }
   },
   "water_ripple": {
-   "alphaMean": 0.027,
-   "seam": 1.19,
+   "alphaMean": 0.026,
+   "seam": 1.01,
    "files": {
     "ColorMap": "water_ripple_color.png"
    }
@@ -139,7 +139,7 @@
   "straw_woven_color.png": "rbxassetid://90752857691370",
   "straw_woven_normal.png": "rbxassetid://73615548184266",
   "straw_woven_roughness.png": "rbxassetid://81926772986745",
-  "water_ripple_color.png": "rbxassetid://130488259194169",
+  "water_ripple_color.png": "rbxassetid://85261602329011",
   "wood_grain_color.png": "rbxassetid://89740758642776",
   "wood_grain_normal.png": "rbxassetid://108234637428586",
   "wood_grain_roughness.png": "rbxassetid://135239950193027",
@@ -147,5 +147,5 @@
   "wood_planks_normal.png": "rbxassetid://75585161149742",
   "wood_planks_roughness.png": "rbxassetid://78473445851411"
  },
- "uploaded": "2026-10-18, Studio MCP upload_image (owner's account)"
+ "uploaded": "2026-10-18, Studio MCP upload_image (owner's account); water_ripple v2 re-uploaded 2026-10-19 (old id 130488259194169)"
 }

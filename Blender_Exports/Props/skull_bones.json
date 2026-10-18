@@ -1,0 +1,160 @@
+{
+ "Id": "skull_bones",
+ "Photo": "07_skull_and_bones.png",
+ "Fbx": "Blender_Exports/Props/skull_bones.fbx",
+ "Blend": "Blender/Props/skull_bones.blend",
+ "Triangles": 1254,
+ "Budget": 1500,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   -0.397,
+   1.438,
+   0.361
+  ],
+  "Size": [
+   6.436,
+   2.934,
+   6.001
+  ],
+  "Min": [
+   -3.615,
+   -0.029,
+   -2.64
+  ],
+  "Max": [
+   2.821,
+   2.906,
+   3.361
+  ]
+ },
+ "StudioSize": [
+  6.44,
+  2.88,
+  5.76
+ ],
+ "Meshes": {
+  "skull_bones_Bones": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    252,
+    244,
+    219
+   ],
+   "Target": "#F0E8D0",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.605,
+    1.438,
+    0.239
+   ],
+   "Size": [
+    6.02,
+    2.934,
+    5.757
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 760,
+   "Overlay": null
+  },
+  "skull_bones_Aged": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    228,
+    215,
+    176
+   ],
+   "Target": "#D9CDA8",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.005,
+    0.682,
+    0.911
+   ],
+   "Size": [
+    5.651,
+    1.316,
+    4.9
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 446,
+   "Overlay": null
+  },
+  "skull_bones_Sockets": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    65,
+    63,
+    82
+   ],
+   "Target": "#3E3C4E",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.298,
+    1.645,
+    -0.709
+   ],
+   "Size": [
+    1.275,
+    0.79,
+    0.302
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 48,
+   "Overlay": null
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "skull_bones_Collider_Skull",
+   "Shape": "Ball",
+   "Center": [
+    0.3,
+    1.7,
+    0.2
+   ],
+   "Size": [
+    2.4,
+    2.4,
+    2.4
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "Skull": [
+   0.3,
+   2.9,
+   0.2
+  ]
+ }
+}

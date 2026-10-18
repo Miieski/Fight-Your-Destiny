@@ -1,0 +1,377 @@
+{
+ "Id": "egg_nest",
+ "Photo": "04_egg_nest.png",
+ "Fbx": "Blender_Exports/Props/egg_nest.fbx",
+ "Blend": "Blender/Props/egg_nest.blend",
+ "Triangles": 1091,
+ "Budget": 1500,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.36,
+   5.407,
+   0.188
+  ],
+  "Size": [
+   12.024,
+   10.933,
+   9.912
+  ],
+  "Min": [
+   -5.653,
+   -0.06,
+   -4.768
+  ],
+  "Max": [
+   6.372,
+   10.873,
+   5.144
+  ]
+ },
+ "StudioSize": [
+  12.29,
+  10.95,
+  12.29
+ ],
+ "Meshes": {
+  "egg_nest_Rock": {
+   "Family": "Stone",
+   "Role": "Solid",
+   "Color": [
+    170,
+    177,
+    191
+   ],
+   "Target": "#969CA8",
+   "Material": "Slate",
+   "Variant": "FYD_Stone",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.36,
+    4.495,
+    0.188
+   ],
+   "Size": [
+    12.024,
+    9.11,
+    9.912
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 120,
+   "Overlay": null
+  },
+  "egg_nest_Cracks": {
+   "Family": "Stone",
+   "Role": "Solid",
+   "Color": [
+    95,
+    100,
+    114
+   ],
+   "Target": "#545864",
+   "Material": "Slate",
+   "Variant": "FYD_Stone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.535,
+    6.277,
+    0.651
+   ],
+   "Size": [
+    8.165,
+    4.473,
+    6.784
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 60,
+   "Overlay": null
+  },
+  "egg_nest_Moss": {
+   "Family": "Moss",
+   "Role": "Solid",
+   "Color": [
+    118,
+    191,
+    82
+   ],
+   "Target": "#68A848",
+   "Material": "Grass",
+   "Variant": "FYD_Moss",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.669,
+    6.018,
+    0.183
+   ],
+   "Size": [
+    9.322,
+    6.038,
+    9.793
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 240,
+   "Overlay": null
+  },
+  "egg_nest_NestRing": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    223,
+    182,
+    118
+   ],
+   "Target": "#C4A068",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    9.55,
+    0.0
+   ],
+   "Size": [
+    5.1,
+    0.913,
+    5.1
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 120,
+   "Overlay": null
+  },
+  "egg_nest_Twigs": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    187,
+    109,
+    62
+   ],
+   "Target": "#A86238",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.075,
+    9.539,
+    -0.051
+   ],
+   "Size": [
+    5.092,
+    0.89,
+    5.357
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 168,
+   "Overlay": null
+  },
+  "egg_nest_Lining": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    127,
+    70,
+    43
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    9.56,
+    0.0
+   ],
+   "Size": [
+    3.56,
+    0.48,
+    3.386
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 116,
+   "Overlay": null
+  },
+  "egg_nest_Eggs": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    250,
+    251,
+    255
+   ],
+   "Target": "#F5F6FA",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.034,
+    10.18,
+    -0.275
+   ],
+   "Size": [
+    2.221,
+    1.387,
+    1.223
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 160,
+   "Overlay": null
+  },
+  "egg_nest_EggCream": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    244,
+    237,
+    219
+   ],
+   "Target": "#E8E2D0",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    10.096,
+    0.609
+   ],
+   "Size": [
+    0.945,
+    1.169,
+    0.951
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 80,
+   "Overlay": null
+  },
+  "egg_nest_Speckles": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    156,
+    138,
+    112
+   ],
+   "Target": "#9C8A70",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.001,
+    10.366,
+    0.167
+   ],
+   "Size": [
+    2.115,
+    0.928,
+    1.811
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 27,
+   "Overlay": null
+  },
+  "egg_nest_Collider_Rock": {
+   "Family": "Collider",
+   "Role": "Collider",
+   "Color": [
+    255,
+    255,
+    255
+   ],
+   "Target": "#FFFFFF",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 1.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    4.6,
+    0.0
+   ],
+   "Size": [
+    9.386,
+    8.421,
+    10.296
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 20,
+   "Overlay": null
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "egg_nest_Collider_Nest",
+   "Shape": "Cylinder",
+   "Center": [
+    0,
+    9.6,
+    0
+   ],
+   "Size": [
+    1.0,
+    5.0,
+    5.0
+   ],
+   "Rotation": [
+    0,
+    0,
+    90
+   ]
+  }
+ ],
+ "Attachments": {
+  "Sparkle": [
+   0.0,
+   10.9,
+   0.0
+  ]
+ }
+}

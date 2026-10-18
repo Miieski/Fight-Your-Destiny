@@ -1,7 +1,125 @@
 {
- "format": "Blender/Props/README.txt section 12 (FYDM header, RGB payload, JSON meshes in studs, uv v=0 top, CCW)",
+ "format": "Blender/Props/README.txt section 11 (FYDM header, RGB payload, JSON meshes in studs, uv v=0 top, CCW)",
  "props": {
-  "well": {"files": ["well_mesh.png"], "assetIds": ["rbxassetid://80102529524931"], "size": [1024, 163],
-           "meshes": 10, "verts": 7108, "tris": 3106}
+  "well": {
+   "files": [
+    "well_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://80102529524931"
+   ],
+   "size": [
+    1024,
+    163
+   ],
+   "meshes": 10,
+   "verts": 7108,
+   "tris": 3106
+  },
+  "chest": {
+   "files": [
+    "chest_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://91198421411858"
+   ],
+   "size": [
+    1024,
+    45
+   ],
+   "meshes": 5,
+   "verts": 2116,
+   "tris": 1170
+  },
+  "rowboat": {
+   "files": [
+    "rowboat_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://76907442521443"
+   ],
+   "size": [
+    1024,
+    91
+   ],
+   "meshes": 7,
+   "verts": 3999,
+   "tris": 1644
+  },
+  "minecart": {
+   "files": [
+    "minecart_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://87079386271654"
+   ],
+   "size": [
+    1024,
+    78
+   ],
+   "meshes": 6,
+   "verts": 3496,
+   "tris": 1736
+  },
+  "skull_bones": {
+   "files": [
+    "skull_bones_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://86179103526619"
+   ],
+   "size": [
+    1024,
+    80
+   ],
+   "meshes": 3,
+   "verts": 3476,
+   "tris": 1254
+  },
+  "clam_pearl": {
+   "files": [
+    "clam_pearl_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://89935697598144"
+   ],
+   "size": [
+    1024,
+    36
+   ],
+   "meshes": 5,
+   "verts": 1580,
+   "tris": 572
+  },
+  "egg_nest": {
+   "files": [
+    "egg_nest_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://105270124758004"
+   ],
+   "size": [
+    1024,
+    66
+   ],
+   "meshes": 9,
+   "verts": 2861,
+   "tris": 1091
+  },
+  "scarecrow": {
+   "files": [
+    "scarecrow_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://119496532966562"
+   ],
+   "size": [
+    1024,
+    101
+   ],
+   "meshes": 13,
+   "verts": 4442,
+   "tris": 1848
+  }
  }
 }

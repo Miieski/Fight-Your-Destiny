@@ -37,7 +37,8 @@ TOOLS (headless Blender 5.2, or the same code from the Blender MCP; it then work
 2. PALETTE (hex = the colour the part must LOOK like = today's Part.Color)
 =================================================================
 Source: the current models use the BuildKit palette (tools/BuildKit.luau Kit.Palette Common / Hub / Plains),
-measured on every model by Agent B. The reference photos were sampled too (Model_References, median of lit
+measured on every model by Agent B. The reference photos ("REMAKE OBJECT/Model_References/Model_References/" at the
+project root, 01_fountain.png ... 20_diamond_shop.png) were sampled too (median of lit
 faces): they show the same colours after the hub's colour grading (about +15 % brightness and saturation, e.g.
 crate panel 214,150,92 -> #EFAE58 in photo 03, posts 112,62,38 -> #983C13 in photo 02, grass 98,208,64 ->
 #51E12B), so the real Part colours are used. Shades marked * are derived (darker crevices / worn variants).
@@ -87,6 +88,7 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
   BoneAged*     #D9CDA8   217,205,168    Bone                  228,215,176      yellowed ends, cracks
   BoneSocket    #3E3C4E    62, 60, 78    Bone                   65, 63, 82      eye sockets (CaveRockDark)
   ClamPink      #FF5C78   255, 92,120    Bone                  255, 92,120      clam shell (Plains Flower1)
+  ClamCream*    #F7B8B8   247,184,184    Bone                  255,190,190      clam insides (pink-cream)
   -- untextured (no ColorMap: tint = hex) --------------------------------------------------------------------
   Water         #34D6EC    52,214,236    Water (Glass, T 0.35)                  fountain / well water (Hub Water)
   Lantern       #FFD678   255,214,120    Glow (Neon)                            lantern glass, flames
@@ -94,6 +96,10 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
   Diamond       #5FD4FF    95,212,255    Glow                                   diamond sign, cyan gems, fountain crystal
   OreGold       #FFC43C   255,196, 60    Glow                                   minecart crystals, yellow gem
   Pearl         #F5F6FA   245,246,250    Plain / Bone                           pearl, eggs
+  Flame*        #FFB648   255,182, 72    Glow (Neon)                            lantern / lamp flames ("Flame" part)
+  Thread*       #3A2A20    58, 42, 32    Plain                                  stitches (scarecrow mouth)
+  ButtonDark*   #2E2B33    46, 43, 51    Plain                                  button eyes
+  Speckle*      #9C8A70   156,138,112    Plain                                  egg speckles
   The values live in fyd_props.py (PALETTE); a recipe names a palette key or gives a hex.
 
 =================================================================
@@ -133,7 +139,8 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
                                    90752857691370      73615548184266      81926772986745      -                   0.880
   bone_ivory (Bone: pores, hairline cracks)
                                    129326962762155     123401090557220     116742375558344     -                   0.952
-  water_ripple (overlay)           130488259194169 (RGBA: white caustic lines, alpha 0-0.6) - a Texture on the Top face of
+  water_ripple (overlay)           85261602329011 (v2, 2026-10-19; v1 130488259194169 showed faint square tiling at grazing
+                                   angles) (RGBA: white caustic lines, alpha 0-0.6) - a Texture on the Top face of
                                    a water part, StudsPerTileU/V = 4, scrolled by PropFX (ripples); not a SurfaceAppearance
   (all ids are rbxassetid://<id>, uploaded with the Studio MCP upload_image to the owner's account)
 
@@ -188,8 +195,13 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
   (a part already named after its role is not suffixed twice: well_Water)
 - Mesh colliders (convex shapes only): <propId>_Collider or <propId>_Collider_<Name> -> Transparency 1,
   CanCollide true, CollisionFidelity Hull, CastShadow false, CanQuery true, no SA. Simple colliders are DATA
-  (Colliders list: Name, Shape Block | Cylinder | Wedge, Center, Size, Rotation in degrees; Roblox Part
-  conventions: a Cylinder's axis is its X, rotation (0, 0, 90) stands it up) -> invisible anchored Parts.
+  (Colliders list: Name, Shape Block | Cylinder | Wedge | Ball, Center, Size, Rotation in degrees; Roblox Part
+  conventions: a Cylinder's axis is its X, rotation (0, 0, 90) stands it up; Rotation is a Roblox Orientation;
+  Ball = Part.Shape Ball) -> invisible anchored Parts. A collider mesh is in the FBX AND in the data (Role
+  "Collider"); it is never in the preview PNG (first one: egg_nest_Collider_Rock, the rock's convex hull).
+- Moving meshes carry their hinge / sway point as "Pivot" (also an attachment of the same name in the data):
+  clam_pearl_ShellTop + ShellTopInner (Hinge, X axis), scarecrow_Hat + HatBand (HatPivot), scarecrow_Straw*
+  (StrawWristL / StrawWristR / StrawCollar / StrawHem). Rotate them around Pivot; the other meshes stay put.
 - The family / tint / material of each mesh are NOT parsed from names: they are in
   Blender_Exports/Props/PropMeshData.luau (generated; paste it into ServerStorage.DevTools.PropMeshData):
     Textures[set] = { ColorMap, NormalMap, RoughnessMap, MetalnessMap, ColorMean }
@@ -274,6 +286,13 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
 - Uploaded ids (also in Blender_Exports/Props/preview/preview_ids.json):
     propId          asset id(s)                         size        meshes / vertices / triangles
     well            rbxassetid://80102529524931         1024 x 163  10 / 7,108 / 3,106
+    chest           rbxassetid://91198421411858         1024 x 45   5 / 2,116 / 1,170
+    rowboat         rbxassetid://76907442521443         1024 x 91   7 / 3,999 / 1,644
+    minecart        rbxassetid://87079386271654         1024 x 78   6 / 3,496 / 1,736
+    skull_bones     rbxassetid://86179103526619         1024 x 80   3 / 3,476 / 1,254
+    clam_pearl      rbxassetid://89935697598144         1024 x 36   5 / 1,580 / 572
+    egg_nest        rbxassetid://105270124758004        1024 x 66   9 / 2,861 / 1,091
+    scarecrow       rbxassetid://119496532966562        1024 x 101  13 / 4,442 / 1,848
 
 =================================================================
 12. PROPS DONE
@@ -287,3 +306,83 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
   with 5 rope coils, iron crank + wooden grip at +X (as today); bucket of 10 flared staves, 2 iron hoops, iron
   bail, rope. Colliders = today's solids (wall, rim, roof wedges, bucket) with the posts and axle where they are
   now. Attachments WaterSurface (0, 3.45, 0), BucketBottom, WinchAxis (0, 8, 0).
+BATCH 2 (2026-10-19; lineup Previews/Props/Batch2_lineup.png; sizes x y z vs today):
+- chest: 1,170 tris / 5 meshes (Body WoodMid, Lid WoodDark, Bands Gold, Iron, Keyhole Plain dark); 4.50 x 3.53 x 3.04
+  (today 4.40 x 3.48 x 3.07, placed copies 4.5 wide). 3 bevelled planks per wall, a lid of 7 staves + half-disc ends,
+  gold bands sitting on the lid facets, riveted front straps, lock plate with keyhole and hasp, iron corner plates,
+  2 back hinges; hidden dark fill inside (no light through the plank gaps). Colliders Base (Block) + Lid (Cylinder)
+  as today. Attachments Sparkle (lock, 0, 1.72, -1.52), LidTop.
+- rowboat: 1,644 tris / 7 meshes (Hull WoodMid, Timber WoodDark, Thwarts WoodLight, Iron, Rope = the boat;
+  Oar WoodDark + OarBlade WoodLight = the second object); 13.39 x 4.67 x 10.07 (today 14.10 x 4.98 x 11.14).
+  Clinker hull (4 overlapping strakes per side), flat bottom boards, transom, keel and stem, 4 ribs, gunwales,
+  3 thwarts, 2 oarlocks, a rope coil, a broken gap in the near (-Z) side (the wreck), the loose plank behind;
+  rolled 22 deg toward -Z, resting on its bilge; the oar lies on the -Z side, blade toward the bow (+X). LAYOUT
+  REBUILT from the bbox + photo 05 (no per-part CFrames in the inventory): compare with the old model in Studio.
+  Colliders Hull (Block, rotation (-22, 0, 0)) + Oar (Cylinder).
+- minecart: 1,736 tris / 6 meshes (Body Riveted Iron, Frame IronWorn, Running Iron, Hubs WoodDark, Ore CaveRock,
+  Crystals_Glow OreGold); 4.90 x 6.60 x 7.04 (today 5.12 x 6.24 x 6.61). Flared riveted box, rim, 2 bands, corner
+  posts, flanged iron wheels with wooden hubs at today's centres (+-1.6, 0.75, +-1.8) so they still sit on the
+  rails, axles, bearings, coupler at -Z, rubble load with 4 crystals (2 big as today). Colliders Body + Wheels
+  (Blocks). Attachments CrystalGlow (0, 5.7, 0), Coupler.
+- skull_bones: 1,254 tris / 3 meshes (Bones Bone, Aged BoneAged: knobs / jaw / teeth, Sockets BoneSocket);
+  6.44 x 2.93 x 6.00 (today 6.44 x 2.88 x 5.76). Faceted cranium, brow arcs, cheekbones, tapered maxilla, dark
+  sockets and nasal cavity, upper / lower teeth, U-shaped jaw; 3 long bones with knobbly condyles (2 crossed under
+  the skull, 1 behind), 5 curved ribs at the front on -X leaning 16-40 deg. LAYOUT REBUILT from bbox + photo 07.
+  Collider Skull (Ball 2.4, as today's ball). Recoloured copies (Abyss_3): set SA.Color per instance.
+- clam_pearl: 572 tris / 5 meshes (ShellBottom + ShellTop ClamPink outer / rims, ShellBottomInner + ShellTopInner
+  ClamCream #F7B8B8 insides, Pearl Plain); 2.73 x 2.21 x 2.68 (today 2.60 x 2.20 x 2.83). Fan-ribbed scallop valves
+  (7 ribs, scalloped edge, hinge "ears"), hinge pin at the back, top valve open 42 deg as today. Decor only: no
+  collider, no shadow. Animated: ShellTop + ShellTopInner around Hinge (0, 0.38, 1.25), X axis, about 12 deg;
+  PearlGlint (0, 0.92, 0.2).
+- egg_nest: 1,091 tris / 9 meshes (Rock Stone, Cracks StoneMortar, Moss, NestRing Straw/Rope, Twigs WoodMid, Lining
+  Straw/WoodDark, Eggs Bone/Pearl x2, EggCream Bone/ClothCream, Speckles Plain #9C8A70) + collider mesh
+  egg_nest_Collider_Rock (20 tris, Hull); 12.02 x 10.93 x 9.91 (today 12.29 x 10.95 x 12.29). Faceted rock with a flat
+  ledge at y 9.05, 2 side boulders, cracks traced on the facets, moss cushions lying on the facets; woven ring,
+  14 twigs, brown lining, 3 eggs of slightly different size / tilt / tint with speckles. The old rock was a Toolbox
+  mesh (attributes SourceAssetId / SourceCreator): the new rock is ours. Colliders Rock (mesh, Hull) + Nest
+  (Cylinder as today). Attachment Sparkle (0, 10.9, 0).
+- scarecrow: 1,848 tris / 13 meshes (Post WoodDark, Shirt ClothBlueAlt, Patches ClothTan, Head StrawPale burlap,
+  Buttons dark, Stitches Thread, Rope, Hat Straw/WoodMid, HatBand Cloth/WoodDark, StrawWristL / WristR / Collar /
+  Hem Straw); 7.64 x 9.39 x 3.72 (today 8.00 x 9.45 x 3.60). Rough post and crossbar, elliptical shirt with drooping
+  sleeves, folds and 2 patches, rope belt with knot, wrist and neck ties, sack head with button eyes and an
+  X-stitched smile, wavy-brimmed straw hat with a band tilted 6 deg like today, straw cores at the wrists, a ruff
+  at the collar, a straw band + long straws at the hem. Colliders Post, Arms, Shirt (Blocks) + Head (Ball) as
+  today. Sway: Hat + HatBand around HatPivot (0, 8, 0), each Straw mesh around its own pivot.
+
+=================================================================
+13. NOTES FOR THE STUDIO-BUILT PROPS (Agent B, batch 1) AND PIVOTS
+=================================================================
+PIVOT (confirmed for every prop of this guide): the data origin (0, 0, 0) = the ground contact point directly
+under the current Studio pivot, and PivotY = 0 for all of them, because every kit pivot already sits on the
+ground: bottom centre for well, chest, minecart, skull_bones, clam_pearl, egg_nest, scarecrow, fountain; the
+kit pivot itself (on the ground, NOT under the bbox centre) for rowboat (bbox centre (1.43, 2.49, 0.37)) and
+skull_bones (bbox centre (-0.30, 1.44, 0.46)); the foot of the post for lamp_post. So: template WorldPivot =
+CFrame at the origin, and every mesh at pivot * CFrame.new(Center).
+
+LANTERN / LAMP_POST (Studio-built; sizes = today, docs/prop_inventory.md; stay within +10 %)
+- lamp_post (Lantern_Post): bbox 3.85 x 9.75 x 1.50 (max 4.24 x 10.7 x 1.65), pivot at the FOOT of the post
+  (bbox centre (1.22, 4.88, 0)), the arm reaches +X; the lantern hangs at x 2.4: cap top y 8.35, lantern body
+  y 6.55-8.05, base bottom y 6.3. Post (0.8 square, y 0.25-9.75), arm (3.2 long at y 9.2), brace, chain y 8.3-9.0.
+- lantern units (no model of their own today):
+    ground lantern of TutorialGuide (photo 15) 1.3 x 1.8 x 1.3 (body 1.0 x 1.2 x 1.0, caps 1.3 x 0.3 x 1.3)
+    Lantern_Post unit 1.5 x 2.7 x 1.5 with its chain (body 1.2 x 1.5 x 1.2, cap / base 1.5 x 0.3 x 1.5)
+    EntryArch unit body 1.2 x 1.5 + cap 1.5 x 0.3 + arm 0.3 x 0.3 x 1.2; EggStation (hanging) 1.6 x 1.8 x 1.6 +
+    cap 2.0 x 0.4 + chain 1.6
+- Part names for PropFX: the emissive flame is a part named exactly "Flame" (Neon, colour Flame #FFB648
+  255,182,72) holding the PointLight (brief: 255,210,140, Brightness 1.2, Range 16, Shadows false; today
+  255,214,120 B0.7 R16 on the post, B0.6 R12 on the ground lantern); glass panes "Glass" (Material Glass,
+  Transparency 0.3, colour Lantern #FFD678 255,214,120 so the cream glow is kept); frame / caps / ring "Frame".
+  (Blender props name their emissive meshes <propId>_<Part>_Glow; after ApplyPropMeshes strips the prefix they
+  are "<Part>_Glow": a Blender flame would be "Flame_Glow", so PropFX should accept both.)
+
+TINTS FOR THE STUDIO-BUILT PROPS (BasePart.Color with the FYD_* MaterialVariant = the tint column of section 2)
+  crate         body WoodLight 238,167,102 (FYD_Wood or FYD_Planks 222,155,95) | frame, braces WoodMid 187,109,62 |
+                nails Iron 105,111,125 (FYD_Iron)
+  barrel        staves WoodMid 187,109,62 (FYD_Wood) | top planks WoodDark 124,69,42 | hoops, rivets Iron 105,111,125
+  lamp_post     post, arm, brace WoodDark 124,69,42 (FYD_Wood) | stone foot Stone 165,172,185 (FYD_StoneBlocks,
+                mean 0.909) or 170,177,191 (FYD_Stone) | bracket, chain, collar Iron 105,111,125 | lantern below
+  lantern       frame, caps, ring Iron 105,111,125 (FYD_Iron) | Glass 255,214,120 (no variant, Glass, T 0.3) |
+                Flame 255,182,72 (Neon)
+  laundry_rack  poles WoodDark 124,69,42 (FYD_Wood) | cloths ClothOrange 238,167,102 (main), ClothTan 218,178,116,
+                ClothCream 255,248,229 (FYD_Cloth) | rope Rope 223,182,118 (FYD_Straw) | pins WoodLight 238,167,102
+  Untextured parts (Neon / Glass / SmoothPlastic without a variant) take the hex itself, not the tint.

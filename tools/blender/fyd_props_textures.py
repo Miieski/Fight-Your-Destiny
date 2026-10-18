@@ -468,11 +468,15 @@ def tex_bone_ivory(rng):
 
 
 def tex_water_ripple(rng):
-    """RGBA overlay for a scrolling Texture on water surfaces: white caustic lines, alpha 0..0.6."""
-    f1, f2, _ = worley(SIZE, SIZE, 0, rng, grid=7)
-    lines = line_mask(f2 - f1, 2.2)
+    """RGBA overlay for a scrolling Texture on water surfaces: white caustic lines, alpha 0..0.6. v2 (2026-10-19,
+    Agent B saw faint square tiling at grazing angles): 9 x 9 cells with strong jitter, line width varied by noise
+    and a low-frequency fade, so no regular grid and no uniform density reads across tiles."""
+    f1, f2, _ = worley(SIZE, SIZE, 0, rng, grid=9, jitter=0.95)
+    width = 1.3 + 1.7 * fractal(SIZE, SIZE, 6, 6, rng, 3)
+    lines = line_mask(f2 - f1, width)
     soft = blur(lines, 2)
-    a = np.clip(0.55 * soft + 0.25 * lines, 0, 0.6)
+    fade = 0.3 + 0.7 * norm01(fractal(SIZE, SIZE, 3, 3, rng, 3))
+    a = np.clip((0.55 * soft + 0.25 * lines) * fade, 0, 0.6)
     rgb = np.ones((SIZE, SIZE, 3))
     return {"color_rgba": np.concatenate([rgb, a[..., None]], axis=2)}
 

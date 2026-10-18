@@ -1,0 +1,547 @@
+{
+ "Id": "scarecrow",
+ "Photo": "08_scarecrow.png",
+ "Fbx": "Blender_Exports/Props/scarecrow.fbx",
+ "Blend": "Blender/Props/scarecrow.blend",
+ "Triangles": 1848,
+ "Budget": 3000,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.054,
+   4.635,
+   0.0
+  ],
+  "Size": [
+   7.644,
+   9.39,
+   3.72
+  ],
+  "Min": [
+   -3.768,
+   -0.06,
+   -1.86
+  ],
+  "Max": [
+   3.876,
+   9.33,
+   1.86
+  ]
+ },
+ "StudioSize": [
+  8.0,
+  9.45,
+  3.6
+ ],
+ "Meshes": {
+  "scarecrow_Post": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.001,
+    3.48,
+    0.004
+   ],
+   "Size": [
+    6.936,
+    7.08,
+    0.571
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 56,
+   "Overlay": null
+  },
+  "scarecrow_Shirt": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    82,
+    120,
+    244
+   ],
+   "Target": "#4A6CDC",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    4.765,
+    -0.02
+   ],
+   "Size": [
+    5.945,
+    3.03,
+    1.72
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 320,
+   "Overlay": null
+  },
+  "scarecrow_Patches": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    218,
+    178,
+    116
+   ],
+   "Target": "#C4A068",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    1.284,
+    5.314,
+    -0.232
+   ],
+   "Size": [
+    2.235,
+    1.37,
+    1.202
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 4,
+   "Overlay": null
+  },
+  "scarecrow_Head": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    255,
+    236,
+    167
+   ],
+   "Target": "#F4E2A0",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.014,
+    7.226,
+    0.008
+   ],
+   "Size": [
+    2.13,
+    2.306,
+    2.031
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 116,
+   "Overlay": null
+  },
+  "scarecrow_Buttons": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    46,
+    43,
+    51
+   ],
+   "Target": "#2E2B33",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    7.481,
+    -0.947
+   ],
+   "Size": [
+    1.172,
+    0.404,
+    0.173
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 120,
+   "Overlay": null
+  },
+  "scarecrow_Stitches": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    58,
+    42,
+    32
+   ],
+   "Target": "#3A2A20",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.004,
+    6.901,
+    -0.896
+   ],
+   "Size": [
+    1.049,
+    0.245,
+    0.117
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 96,
+   "Overlay": null
+  },
+  "scarecrow_Rope": {
+   "Family": "Rope",
+   "Role": "Solid",
+   "Color": [
+    223,
+    182,
+    118
+   ],
+   "Target": "#C4A068",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    4.569,
+    -0.027
+   ],
+   "Size": [
+    5.744,
+    3.665,
+    1.705
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 288,
+   "Overlay": null
+  },
+  "scarecrow_Hat": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    191,
+    111,
+    64
+   ],
+   "Target": "#A86238",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    8.512,
+    0.0
+   ],
+   "Size": [
+    3.7,
+    1.637,
+    3.72
+   ],
+   "Pivot": [
+    0.0,
+    8.0,
+    0.0
+   ],
+   "Triangles": 240,
+   "Overlay": null
+  },
+  "scarecrow_HatBand": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.019,
+    8.179,
+    0.0
+   ],
+   "Size": [
+    2.114,
+    0.458,
+    2.1
+   ],
+   "Pivot": [
+    0.0,
+    8.0,
+    0.0
+   ],
+   "Triangles": 72,
+   "Overlay": null
+  },
+  "scarecrow_StrawWristL": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    255,
+    216,
+    104
+   ],
+   "Target": "#ECC860",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.227,
+    5.293,
+    0.107
+   ],
+   "Size": [
+    1.082,
+    1.653,
+    1.376
+   ],
+   "Pivot": [
+    -2.95,
+    5.38,
+    0.0
+   ],
+   "Triangles": 108,
+   "Overlay": null
+  },
+  "scarecrow_StrawWristR": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    255,
+    216,
+    104
+   ],
+   "Target": "#ECC860",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    3.294,
+    5.327,
+    -0.061
+   ],
+   "Size": [
+    1.164,
+    1.447,
+    1.338
+   ],
+   "Pivot": [
+    2.95,
+    5.38,
+    0.0
+   ],
+   "Triangles": 108,
+   "Overlay": null
+  },
+  "scarecrow_StrawCollar": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    255,
+    216,
+    104
+   ],
+   "Target": "#ECC860",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.05,
+    6.41,
+    -0.058
+   ],
+   "Size": [
+    2.549,
+    0.589,
+    2.049
+   ],
+   "Pivot": [
+    0.0,
+    6.22,
+    0.0
+   ],
+   "Triangles": 88,
+   "Overlay": null
+  },
+  "scarecrow_StrawHem": {
+   "Family": "Straw",
+   "Role": "Solid",
+   "Color": [
+    255,
+    216,
+    104
+   ],
+   "Target": "#ECC860",
+   "Material": "Fabric",
+   "Variant": "FYD_Straw",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.015,
+    2.558,
+    -0.086
+   ],
+   "Size": [
+    3.591,
+    1.884,
+    2.198
+   ],
+   "Pivot": [
+    0.0,
+    3.3,
+    0.0
+   ],
+   "Triangles": 232,
+   "Overlay": null
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "scarecrow_Collider_Post",
+   "Shape": "Block",
+   "Center": [
+    0,
+    3.5,
+    0
+   ],
+   "Size": [
+    0.6,
+    7.0,
+    0.6
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "scarecrow_Collider_Arms",
+   "Shape": "Block",
+   "Center": [
+    0,
+    5.4,
+    0
+   ],
+   "Size": [
+    7.0,
+    0.5,
+    0.5
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "scarecrow_Collider_Shirt",
+   "Shape": "Block",
+   "Center": [
+    0,
+    4.7,
+    0
+   ],
+   "Size": [
+    2.6,
+    3.0,
+    1.4
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "scarecrow_Collider_Head",
+   "Shape": "Ball",
+   "Center": [
+    0,
+    7.2,
+    0
+   ],
+   "Size": [
+    2.2,
+    2.2,
+    2.2
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "HatPivot": [
+   0.0,
+   8.0,
+   0.0
+  ],
+  "StrawWristL": [
+   -2.95,
+   5.38,
+   0.0
+  ],
+  "StrawWristR": [
+   2.95,
+   5.38,
+   0.0
+  ],
+  "StrawCollar": [
+   0.0,
+   6.22,
+   0.0
+  ],
+  "StrawHem": [
+   0.0,
+   3.3,
+   0.0
+  ]
+ }
+}

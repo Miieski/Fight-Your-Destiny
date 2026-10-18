@@ -1,0 +1,277 @@
+{
+ "Id": "minecart",
+ "Photo": "06_minecart.png",
+ "Fbx": "Blender_Exports/Props/minecart.fbx",
+ "Blend": "Blender/Props/minecart.blend",
+ "Triangles": 1736,
+ "Budget": 2500,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.0,
+   3.252,
+   -0.27
+  ],
+  "Size": [
+   4.9,
+   6.604,
+   7.04
+  ],
+  "Min": [
+   -2.45,
+   -0.05,
+   -3.79
+  ],
+  "Max": [
+   2.45,
+   6.554,
+   3.25
+  ]
+ },
+ "StudioSize": [
+  5.12,
+  6.24,
+  6.61
+ ],
+ "Meshes": {
+  "minecart_Body": {
+   "Family": "Riveted",
+   "Role": "Solid",
+   "Color": [
+    102,
+    108,
+    122
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Riveted",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    2.902,
+    0.0
+   ],
+   "Size": [
+    4.731,
+    3.204,
+    6.331
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 220,
+   "Overlay": null
+  },
+  "minecart_Frame": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    139,
+    145,
+    159
+   ],
+   "Target": "#7A808C",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.0,
+    2.972,
+    0.0
+   ],
+   "Size": [
+    4.9,
+    3.377,
+    6.5
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 304,
+   "Overlay": null
+  },
+  "minecart_Running": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    0.75,
+    -0.595
+   ],
+   "Size": [
+    3.9,
+    1.6,
+    6.39
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 684,
+   "Overlay": null
+  },
+  "minecart_Hubs": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    0.75,
+    0.0
+   ],
+   "Size": [
+    3.68,
+    0.56,
+    4.16
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 240,
+   "Overlay": null
+  },
+  "minecart_Ore": {
+   "Family": "Stone",
+   "Role": "Solid",
+   "Color": [
+    109,
+    105,
+    125
+   ],
+   "Target": "#605C6E",
+   "Material": "Slate",
+   "Variant": "FYD_Stone",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.014,
+    4.478,
+    0.053
+   ],
+   "Size": [
+    3.909,
+    2.278,
+    5.585
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 200,
+   "Overlay": null
+  },
+  "minecart_Crystals_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    255,
+    196,
+    60
+   ],
+   "Target": "#FFC43C",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.044,
+    5.595,
+    -0.083
+   ],
+   "Size": [
+    2.196,
+    1.918,
+    3.756
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 88,
+   "Overlay": null
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "minecart_Collider_Body",
+   "Shape": "Block",
+   "Center": [
+    0,
+    2.95,
+    0
+   ],
+   "Size": [
+    4.6,
+    3.3,
+    6.2
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "minecart_Collider_Wheels",
+   "Shape": "Block",
+   "Center": [
+    0,
+    0.675,
+    0
+   ],
+   "Size": [
+    3.8,
+    1.35,
+    5.2
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "CrystalGlow": [
+   0.0,
+   5.7,
+   0.0
+  ],
+  "Coupler": [
+   0.0,
+   1.28,
+   -3.58
+  ]
+ }
+}

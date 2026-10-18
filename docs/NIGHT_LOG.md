@@ -1891,3 +1891,14 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
     the cream glow); barrel bulge = 3 stacked cylinders with the hoops hiding the steps instead of 12-16 faceted
     staves (part budget: ~28 parts x 11 hub barrels); laundry ClothA a stronger orange (242,146,66) because the canvas
     texture washed the palette orange out. Main agent note: the cloths are flat (no folds) - acceptable in parts.
+- 02:05 BATCH 2 meshes done (Agent A, Blender; main agent looked at Batch2_lineup + before/afters: approved).
+  chest 1,170 tris (4.50 x 3.53 x 3.04), rowboat 1,644 (13.39 x 4.67 x 10.07, oar = separate object in the same
+  FBX), minecart 1,736 (4.90 x 6.60 x 7.04, wheels on today's rail centres, 4 glowing crystals), skull_bones 1,254
+  (6.44 x 2.93 x 6.00), clam_pearl 572 (top shell hinged for the open/close loop), egg_nest 1,091 + a 20-tri hull
+  collider for the rock (12.02 x 10.93 x 9.91; the old rock was a Toolbox mesh, the new one is ours), scarecrow 1,848
+  (7.64 x 9.39 x 3.72, hat and straw bunches pivoted for the sway). All pass fyd_props_check; preview PNGs uploaded
+  (ids in Blender/Props/README.txt section 12). They appear in the game only after the owner's FBX import.
+  Water ripple overlay v2 (85261602329011) fixes the faint square tiling at grazing angles.
+  DECISIONS (Agent A): photo orientation = a camera at -Z shows +X on the left; the rowboat rests rolled 22 deg on
+  its bilge with a broken gap in the near side (today's model is a wreck) - TO BE COMPARED in Studio with the old
+  layout; skull_bones ribs on -X; new palette colours Flame, ClamCream, Thread, ButtonDark, Speckle.

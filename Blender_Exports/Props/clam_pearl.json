@@ -1,0 +1,207 @@
+{
+ "Id": "clam_pearl",
+ "Photo": "09_clam_pearl.png",
+ "Fbx": "Blender_Exports/Props/clam_pearl.fbx",
+ "Blend": "Blender/Props/clam_pearl.blend",
+ "Triangles": 572,
+ "Budget": 800,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.0,
+   1.082,
+   0.066
+  ],
+  "Size": [
+   2.728,
+   2.214,
+   2.676
+  ],
+  "Min": [
+   -1.364,
+   -0.025,
+   -1.272
+  ],
+  "Max": [
+   1.364,
+   2.189,
+   1.404
+  ]
+ },
+ "StudioSize": [
+  2.6,
+  2.2,
+  2.83
+ ],
+ "Meshes": {
+  "clam_pearl_ShellBottom": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    255,
+    92,
+    120
+   ],
+   "Target": "#FF5C78",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    0.237,
+    0.066
+   ],
+   "Size": [
+    2.728,
+    0.525,
+    2.676
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 172,
+   "Overlay": null
+  },
+  "clam_pearl_ShellBottomInner": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    255,
+    190,
+    190
+   ],
+   "Target": "#F7B8B8",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    0.221,
+    -0.024
+   ],
+   "Size": [
+    2.665,
+    0.373,
+    2.452
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 84,
+   "Overlay": null
+  },
+  "clam_pearl_ShellTop": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    255,
+    92,
+    120
+   ],
+   "Target": "#FF5C78",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    1.344,
+    0.376
+   ],
+   "Size": [
+    2.665,
+    1.69,
+    1.923
+   ],
+   "Pivot": [
+    0.0,
+    0.38,
+    1.25
+   ],
+   "Triangles": 152,
+   "Overlay": null
+  },
+  "clam_pearl_ShellTopInner": {
+   "Family": "Bone",
+   "Role": "Solid",
+   "Color": [
+    255,
+    190,
+    190
+   ],
+   "Target": "#F7B8B8",
+   "Material": "SmoothPlastic",
+   "Variant": "FYD_Bone",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    1.318,
+    0.372
+   ],
+   "Size": [
+    2.625,
+    1.639,
+    1.915
+   ],
+   "Pivot": [
+    0.0,
+    0.38,
+    1.25
+   ],
+   "Triangles": 84,
+   "Overlay": null
+  },
+  "clam_pearl_Pearl": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    245,
+    246,
+    250
+   ],
+   "Target": "#F5F6FA",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    0.56,
+    0.2
+   ],
+   "Size": [
+    0.761,
+    0.8,
+    0.8
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 80,
+   "Overlay": null
+  }
+ },
+ "Colliders": [],
+ "Attachments": {
+  "Hinge": [
+   0.0,
+   0.38,
+   1.25
+  ],
+  "PearlGlint": [
+   0.0,
+   0.92,
+   0.2
+  ]
+ }
+}
