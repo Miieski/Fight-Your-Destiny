@@ -51,10 +51,12 @@ local function isEmitter(inst: Instance): boolean
 	return false
 end
 
+-- the parts named `name`, or the Blender glow name `name`_Glow
 local function partsNamed(model: Model, name: string): { BasePart }
 	local found = {}
+	local glow = name .. "_Glow"
 	for _, d in ipairs(model:GetDescendants()) do
-		if d.Name == name and d:IsA("BasePart") then
+		if (d.Name == name or d.Name == glow) and d:IsA("BasePart") then
 			table.insert(found, d)
 		end
 	end
@@ -105,8 +107,11 @@ local function scan(prop: Prop)
 				homeOf[part] = home
 				local angle = math.rad(spec.Degrees)
 				local axis = if spec.Axis == "X" then Vector3.xAxis else Vector3.zAxis
-				-- Hinge "Top": turn around the top edge (cloth hanging from a bar), else around the centre
-				local hinge = if spec.Hinge == "Top" then CFrame.new(0, part.Size.Y / 2, 0) else CFrame.identity
+				-- Hinge "Top": around the top edge (cloth hanging from a bar); "Pivot": around the part's pivot (the
+				-- hinge / hat / straw pivots of the Blender meshes); else around the centre
+				local hinge = if spec.Hinge == "Top" then CFrame.new(0, part.Size.Y / 2, 0)
+					elseif spec.Hinge == "Pivot" then CFrame.new(part.PivotOffset.Position)
+					else CFrame.identity
 				local function turned(a: number): CFrame
 					return home * hinge * CFrame.fromAxisAngle(axis, a) * hinge:Inverse()
 				end

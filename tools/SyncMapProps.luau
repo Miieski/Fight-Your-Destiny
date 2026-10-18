@@ -364,6 +364,13 @@ local function applyVariant(model: Model, template: Model, variant: string?): st
 			local color = attributes["Color_" .. d.Name]
 			if typeof(color) == "Color3" then
 				d.Color = color
+				-- imported meshes: the SurfaceAppearance tint is what shows (README: recolours = SA.Color)
+				local sa = d:FindFirstChildOfClass("SurfaceAppearance")
+				if sa then
+					pcall(function()
+						(sa :: any).Color = color
+					end)
+				end
 			end
 			local material = attributes["Material_" .. d.Name]
 			if type(material) == "string" then
@@ -448,6 +455,13 @@ local function replace(old: Model, template: Model): (Model?, string?)
 	end
 	for key, value in pairs(old:GetAttributes()) do
 		new:SetAttribute(key, value)
+	end
+	-- attributes the new model must not inherit (e.g. the Toolbox credit of a replaced mesh), comma separated
+	local drop = template:GetAttribute("MapPropDropAttributes")
+	if type(drop) == "string" then
+		for _, key in ipairs(string.split(drop, ",")) do
+			new:SetAttribute((string.gsub(key, "%s", "")), nil)
+		end
 	end
 	new:SetAttribute("MapPropId", template.Name)
 	new:SetAttribute("MapPropVersion", versionOf(template, if type(variant) == "string" then variant else nil))

@@ -19,10 +19,11 @@
 	    Transparency + the water_ripple Texture on the top face; Glass = Transparency; otherwise Material from the data
 	    and a SurfaceAppearance of the family's shared texture set with SurfaceAppearance.Color = the data tint
 	    (imported SurfaceAppearances are replaced);
-	  - invisible collider Parts from the data (Block / Cylinder / Wedge, Roblox orientation in degrees), and
-	    <propId>_Collider* meshes as invisible Hull colliders; render meshes never collide;
+	  - invisible collider Parts from the data (Block / Cylinder / Wedge / Ball, Roblox orientation in degrees), and
+	    collider meshes (Role "Collider" / <propId>_Collider*) as invisible Hull colliders; render meshes never collide;
 	  - an invisible "Root" Part (Bounds) as PrimaryPart, pivot (0, PivotY, 0), the data Attachments under Root,
-	    the static lights of Config/PropFX (Lights), the old template's _Variants;
+	    the static lights (Lights, on "<Part>" or "<Part>_Glow") and the particle emitters (Particles, off) of
+	    Config/PropFX, the recolour variants of VARIANTS (or the old template's _Variants), DROP_ATTRIBUTES;
 	the old template goes to ServerStorage.MapProps._Previous, then SyncMapProps.run updates the test area and the map.
 	The imports are not deleted (the owner deletes them after checking).
 
@@ -30,8 +31,11 @@
 		print(Apply.preview("well", { "rbxassetid://<id>" }))   -- decode, build, install, sync (TEMPORARY)
 		print(Apply.endPreview("well"))                          -- back to the template that was there before
 	Preview MeshParts are EditableMesh-backed: they do not survive a save, so endPreview must run before any save.
+	preview() keeps the untouched originals in MapProps._PreviewHold.<propId>; endPreview() puts them back exactly
+	(same instances) and restores the previous template; a collider mesh (never in the PNG) gets a stand-in box.
 ]]
 local AssetService = game:GetService("AssetService")
+local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -40,6 +44,26 @@ local ApplyPropMeshes = {}
 
 local SIZE_TOLERANCE = 0.02 -- relative: a mesh further off its data Size is resized
 local PREVIEW_ATTRIBUTE = "MapPropPreview" -- set on a template built from preview images
+local HOLD = "_PreviewHold" -- MapProps._PreviewHold.<propId>: the untouched originals during a preview
+
+local rgb3 = Color3.fromRGB
+-- recoloured placements (attribute Variant on the instance): SurfaceAppearance.Color per mesh (README section 12),
+-- = the old recolour's colour / the ColorMap mean. Used when the template has no _Variants of its own.
+ApplyPropMeshes.VARIANTS = {
+	rowboat = { -- Abyss_2: dark wet wood, rusty iron
+		Sunken = {
+			Hull = rgb3(111, 86, 71), Timber = rgb3(93, 71, 60), Thwarts = rgb3(91, 70, 59), Iron = rgb3(73, 82, 80),
+			Rope = rgb3(125, 111, 89), Oar = rgb3(84, 66, 54), OarBlade = rgb3(90, 70, 58),
+		},
+	},
+	skull_bones = { -- Abyss_3: bleached grey-green bones (sockets kept darker than today's pale ones so the skull reads)
+		Pale = { Bones = rgb3(228, 234, 228), Aged = rgb3(215, 222, 215), Sockets = rgb3(126, 137, 137) },
+	},
+}
+-- attributes the new model must not inherit from the instance it replaces (SyncMapProps MapPropDropAttributes)
+ApplyPropMeshes.DROP_ATTRIBUTES = {
+	egg_nest = "SourceAssetId,SourceCreator", -- the Toolbox rock is gone: the new rock is ours
+}
 
 local function fresh(module: Instance): any
 	local copy = module:Clone()
@@ -146,8 +170,20 @@ local function stripped(propId: string, name: string): string
 	return (string.gsub(name, "^" .. propId .. "_", ""))
 end
 
--- builds the template Model from a source Model holding MeshParts named like the data meshes
-local function build(propId: string, source: Instance, data: any, propFx: any): (Model?, { string })
+local function invisibleCollider(p: BasePart)
+	p.Transparency = 1
+	p.Anchored = true
+	p.CanCollide = true
+	p.CanQuery = true
+	p.CanTouch = false
+	p.CastShadow = false
+end
+
+-- builds the template Model from a source Model holding MeshParts named like the data meshes.
+-- opts.standIn: a collider MESH (Role "Collider") missing from the source (the preview PNGs never hold them) becomes
+-- an invisible box of its data Size (attribute PreviewStandIn)
+local function build(propId: string, source: Instance, data: any, propFx: any, opts: any?): (Model?, { string })
+	opts = opts or {}
 	local prop = data.Props[propId]
 	local notes = {}
 	if not prop then
@@ -176,8 +212,38 @@ local function build(propId: string, source: Instance, data: any, propFx: any): 
 	root.Parent = model
 	local pivot = CFrame.new(0, prop.PivotY or 0, 0)
 	local missing, resized = {}, {}
+	local renderTotal = 0
 	for meshName, info in pairs(prop.Meshes) do
 		local src = byName[meshName]
+		if roleOf(meshName, info) == "Collider" then
+			-- convex collision mesh: invisible Hull collider, never rendered
+			if src then
+				local cm = src:Clone()
+				for _, child in ipairs(cm:GetChildren()) do
+					child:Destroy()
+				end
+				invisibleCollider(cm)
+				pcall(function()
+					cm.CollisionFidelity = Enum.CollisionFidelity.Hull
+				end)
+				cm.CFrame = pivot * CFrame.new(v3(info.Center))
+				cm.Name = stripped(propId, meshName)
+				cm.Parent = model
+			elseif opts.standIn then
+				local box = Instance.new("Part")
+				box.Name = stripped(propId, meshName)
+				box.Size = v3(info.Size)
+				box.CFrame = pivot * CFrame.new(v3(info.Center))
+				invisibleCollider(box)
+				box:SetAttribute("PreviewStandIn", true)
+				box.Parent = model
+				table.insert(notes, `{meshName}: preview stand-in box {box.Size.X} x {box.Size.Y} x {box.Size.Z} (the import brings the Hull mesh)`)
+			else
+				table.insert(notes, `collider mesh {meshName} missing`)
+			end
+			continue
+		end
+		renderTotal += 1
 		if not src then
 			table.insert(missing, meshName)
 			continue
@@ -268,7 +334,9 @@ local function build(propId: string, source: Instance, data: any, propFx: any): 
 			p = Instance.new("WedgePart")
 		else
 			local part = Instance.new("Part")
-			part.Shape = if c.Shape == "Cylinder" then Enum.PartType.Cylinder else Enum.PartType.Block
+			part.Shape = if c.Shape == "Cylinder" then Enum.PartType.Cylinder
+				elseif c.Shape == "Ball" then Enum.PartType.Ball
+				else Enum.PartType.Block
 			p = part
 		end
 		local r = c.Rotation or { 0, 0, 0 }
@@ -292,7 +360,8 @@ local function build(propId: string, source: Instance, data: any, propFx: any): 
 	end
 	local entry = propFx and propFx.Props[propId]
 	for _, spec in ipairs(entry and entry.Lights or {}) do
-		local host = model:FindFirstChild(spec.Part, true)
+		-- "<Part>" or the Blender glow name "<Part>_Glow"
+		local host = model:FindFirstChild(spec.Part, true) or model:FindFirstChild(spec.Part .. "_Glow", true)
 		if host and host:IsA("BasePart") then
 			local light = Instance.new("PointLight")
 			light.Color, light.Brightness, light.Range, light.Shadows = spec.Color, spec.Brightness, spec.Range, false
@@ -301,9 +370,46 @@ local function build(propId: string, source: Instance, data: any, propFx: any): 
 			table.insert(notes, `light part "{spec.Part}" missing`)
 		end
 	end
+	-- particle effects at the data attachments (off: Controllers/PropFX turns them on near the player)
+	for _, spec in ipairs(entry and entry.Particles or {}) do
+		local att = root:FindFirstChild(spec.Attachment)
+		if att then
+			local pe = Instance.new("ParticleEmitter")
+			pe.Name = "PropFX_" .. spec.Attachment
+			pe.Enabled = false
+			pe.Color = ColorSequence.new(spec.Color)
+			pe.Rate = spec.Rate
+			pe.Lifetime = NumberRange.new(spec.Lifetime[1], spec.Lifetime[2])
+			pe.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.3, spec.Size), NumberSequenceKeypoint.new(1, 0) })
+			pe.Speed = NumberRange.new(spec.Speed or 0)
+			pe.SpreadAngle = Vector2.new(180, 180)
+			pe.LightEmission = spec.LightEmission or 1
+			pe.Rotation = NumberRange.new(0, 360)
+			pe.Parent = att
+		else
+			table.insert(notes, `particle attachment "{spec.Attachment}" missing`)
+		end
+	end
 	model.PrimaryPart = root
 	root.PivotOffset = root.CFrame:ToObjectSpace(pivot)
 	model:SetAttribute("MapPropId", propId)
+	if ApplyPropMeshes.DROP_ATTRIBUTES[propId] then
+		model:SetAttribute("MapPropDropAttributes", ApplyPropMeshes.DROP_ATTRIBUTES[propId])
+	end
+	local variants = ApplyPropMeshes.VARIANTS[propId]
+	if variants then
+		local folder = Instance.new("Folder")
+		folder.Name = "_Variants"
+		for variantName, colors in pairs(variants) do
+			local config = Instance.new("Configuration")
+			config.Name = variantName
+			for partName, color in pairs(colors) do
+				config:SetAttribute("Color_" .. partName, color)
+			end
+			config.Parent = folder
+		end
+		folder.Parent = model
+	end
 	if #missing > 0 then
 		table.sort(missing)
 		table.insert(notes, "MISSING meshes: " .. table.concat(missing, ", "))
@@ -311,11 +417,7 @@ local function build(propId: string, source: Instance, data: any, propFx: any): 
 	if #resized > 0 then
 		table.insert(notes, "resized: " .. table.concat(resized, ", "))
 	end
-	local total = 0
-	for _ in pairs(prop.Meshes) do
-		total += 1
-	end
-	if #missing == total then
+	if #missing == renderTotal then
 		model:Destroy()
 		return nil, notes
 	end
@@ -523,7 +625,7 @@ function ApplyPropMeshes.preview(propId: string, imageIds: { string }): string
 		source:Destroy()
 		return table.concat(lines, "\n")
 	end
-	local model, notes = build(propId, source, data, propFx)
+	local model, notes = build(propId, source, data, propFx, { standIn = true })
 	source:Destroy() -- the template holds clones
 	if #notes > 0 then
 		table.insert(lines, "  " .. table.concat(notes, "; "))
@@ -533,13 +635,39 @@ function ApplyPropMeshes.preview(propId: string, imageIds: { string }): string
 		return table.concat(lines, "\n")
 	end
 	model:SetAttribute(PREVIEW_ATTRIBUTE, true)
+	-- keep the untouched originals in MapProps._PreviewHold.<propId> (a template area: never synced); a copy of each
+	-- takes its place and is the one the sync replaces. endPreview puts the originals back exactly.
+	local folder = templateFolder()
+	local hold = folder:FindFirstChild(HOLD) or Instance.new("Folder")
+	hold.Name = HOLD
+	hold.Parent = folder
+	local held = 0
+	if not hold:FindFirstChild(propId) then
+		local propHold = Instance.new("Folder")
+		propHold.Name = propId
+		propHold.Parent = hold
+		for _, inst in ipairs(CollectionService:GetTagged("MapProp")) do
+			if inst:IsA("Model") and inst:GetAttribute("MapPropId") == propId and not inst:IsDescendantOf(folder) and inst.Parent then
+				local copy = inst:Clone()
+				copy.Parent = inst.Parent
+				local ref = Instance.new("ObjectValue")
+				ref.Name = "_HoldParent"
+				ref.Value = inst.Parent
+				ref.Parent = inst
+				inst.Parent = propHold
+				held += 1
+			end
+		end
+	end
+	table.insert(lines, `  originals held: {held}`)
 	install(propId, model)
 	table.insert(lines, Sync.run({ only = { propId } }))
 	return table.concat(lines, "\n")
 end
 
--- puts back the template that was there before the preview (MapProps._Previous.<propId>), syncs, and deletes the
--- preview template and every preview MeshPart left anywhere
+-- puts back the held originals (each replaces the preview instance standing at its place) and the template that was
+-- there before the preview (MapProps._Previous.<propId>), syncs, deletes the preview template and checks that no
+-- preview MeshPart is left anywhere
 function ApplyPropMeshes.endPreview(propId: string): string
 	local Sync = fresh(devTool("SyncMapProps"))
 	local folder = templateFolder()
@@ -547,11 +675,41 @@ function ApplyPropMeshes.endPreview(propId: string): string
 	local previous = folder:FindFirstChild("_Previous")
 	local old = previous and previous:FindFirstChild(propId)
 	local lines = { `ApplyPropMeshes.endPreview({propId})` }
+	local hold = folder:FindFirstChild(HOLD)
+	local propHold = hold and hold:FindFirstChild(propId)
+	if propHold then
+		local restored, lost = 0, 0
+		for _, original in ipairs(propHold:GetChildren()) do
+			local ref = original:FindFirstChild("_HoldParent")
+			local parent = ref and (ref :: ObjectValue).Value
+			if parent and original:IsA("Model") then
+				local at = original:GetPivot().Position
+				for _, c in ipairs(parent:GetChildren()) do
+					if c:IsA("Model") and c.Name == original.Name and c:GetAttribute("MapPropId") == propId and (c:GetPivot().Position - at).Magnitude < 1e-3 then
+						c:Destroy() -- the preview instance
+						break
+					end
+				end
+				(ref :: Instance):Destroy()
+				original.Parent = parent
+				restored += 1
+			else
+				lost += 1
+			end
+		end
+		propHold:Destroy()
+		if hold and #hold:GetChildren() == 0 then
+			hold:Destroy()
+		end
+		table.insert(lines, `  originals put back: {restored}` .. (if lost > 0 then `, {lost} without a parent (left in MapProps)` else ""))
+	end
 	if current and current:GetAttribute(PREVIEW_ATTRIBUTE) then
 		current:Destroy()
 		if old then
 			old.Parent = folder
 			table.insert(lines, "  previous template restored")
+		elseif propHold then
+			table.insert(lines, "  preview template removed (no template before the preview)")
 		else
 			table.insert(lines, "  no previous template: MapProps." .. propId .. " removed (the instances keep the preview until a template exists!)")
 		end

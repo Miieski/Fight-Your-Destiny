@@ -1929,3 +1929,21 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   the rims; forge = open fire bed on top where the Embers are + an arched fuel opening, bellows on the stall side.
   Pipeline made deterministic (sorted geometry before the jitter): builds are byte-identical; props built before
   the fix keep files that match their uploads (a rebuild of one of them needs a new preview upload).
+- 04:20 BATCH 2 PREVIEWED in Studio (Agent B; main agent looked at the rowboat / scarecrow / egg nest / clam /
+  minecart shots), then everything put back (0 EditableMesh parts, today's originals in place).
+  OK: chest, minecart, skull_bones (layout matches the old one: footprint within 0.3, skull at the same spot, ribs on
+  -X), scarecrow (pivots for the sway right; Plains_1 Farm). Abyss recolours via SurfaceAppearance.Color work
+  (rowboat Sunken, skull Pale). PropFX entries added: clam open/close +-6 deg / 6 s + pearl glint, scarecrow hat /
+  straw sway, minecart crystal light (slow pulse), chest + egg_nest rare sparkle; the controller accepts
+  "<Name>_Glow" and Hinge "Pivot".
+  TO FIX (sent to Agent A): rowboat hull +0.8 Z off and the oar moved +3.1 X (sinks on the hub's sloping sand,
+  touches a clam at Plains_2 Docks) -> back to the old extents, grounded; clam reads pale / grey inside -> stronger
+  pink; egg_nest ring hovers over the narrow rock top and its rock collider is too small -> ring seat + a real
+  collider.
+  NOT FIXED (owner's choice, reported): the minecart wheels sink 0.8 into the Plains_4 Mine rails - today's cart sinks
+  the same; raising the two Mine minecart pivots by 0.80 (y 0.25 -> 1.05) fixes it, but the brief forbids moving
+  placements, so it is left for the owner.
+  DECISIONS (Agent B): preview() holds the original instances aside and endPreview() restores them exactly (keeps the
+  Abyss per-instance colours); a collider mesh missing from the PNG gets an invisible box stand-in during the preview
+  only; egg_nest drops the old Toolbox SourceAssetId / SourceCreator attributes on sync; Pale skull sockets darker
+  (126,137,137) so the eyes read.
