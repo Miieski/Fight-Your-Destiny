@@ -369,6 +369,132 @@ function StudioProps.laundry_rack(): Model
 end
 
 ---------------------------------------------------------------------
+-- 14/19 WEAPON_STALL, 18 TROPHY_STALL, 20 DIAMOND_SHOP: the Studio half (the FRAME). The awning, the display items
+-- and the anvil_forge stay as they are (Blender, batches 3-4). Base = the current template, else the hub marker
+-- (workspace.Hub.<Marker>) without its functional children (Interact + prompt + NameTag, NpcSpot, NPC, nested props:
+-- they stay on each placed instance, SyncMapProps carries them over). The old frame (Post x4, SidePanel x2, Counter,
+-- CounterTop, BackWall, BackBeam: 10 parts) is replaced by 38 parts with the SAME collision envelope: the parts
+-- that collide fill exactly the old solid boxes (posts, side panels, counter + front planks + kick board, the 2
+-- counter-top boards, backboard planks + backing, back beam); every new trim (front beam, knee braces, rails, stiles,
+-- battens, post feet) is CanCollide false, so no new ledge to climb on. Stall space: pivot at the floor centre,
+-- front = -Z, counter front at z -3.8, backboard front at z 3.3.
+---------------------------------------------------------------------
+local STALL_MARKERS = { weapon_stall = "WeaponShop", trophy_stall = "TrophyMerchant", diamond_shop = "DiamondShop" }
+local FRAME_NAMES = {
+	Post = true, SidePanel = true, Counter = true, CounterTop = true, BackWall = true, BackBeam = true, -- old + kept names
+	PostFoot = true, FrontBeam = true, KneeBrace = true, SideRail = true, CounterPlank = true, CounterKick = true,
+	CounterStile = true, CounterLip = true, BackBoard = true, BackRail = true, BackBatten = true,
+}
+local FUNCTIONAL = { Interact = true, NpcSpot = true, NPC = true }
+local KEEP_CLASSES = { "LuaSourceContainer", "ProximityPrompt", "LayerCollector", "Sound", "ClickDetector", "Humanoid" }
+
+local function functional(child: Instance): boolean
+	if FUNCTIONAL[child.Name] or child:HasTag("MapProp") or child:GetAttribute("MapPropKeep") ~= nil then
+		return true
+	end
+	for _, d in ipairs(child:GetDescendants()) do
+		for _, className in ipairs(KEEP_CLASSES) do
+			if d:IsA(className) then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+local function stallFrame(m: Model): Part
+	local WOODV, PLANKSV, STONEV = "FYD_Wood", "FYD_Planks", "FYD_Stone"
+	local POST, BEAM = rgb(124, 69, 42), rgb(108, 60, 36)
+	local BOARD = { rgb(187, 109, 62), rgb(177, 102, 58), rgb(195, 116, 67) }
+	local TOP = { rgb(238, 167, 102), rgb(229, 158, 95) }
+	local function beamPart(name: string, size: Vector3, cf: CFrame)
+		part(m, { name = name, size = size, cf = cf, color = BEAM, variant = WOODV })
+	end
+	-- posts (same boxes as before) on stone footings
+	for _, sx in ipairs({ -1, 1 }) do
+		part(m, { name = "Post", size = Vector3.new(0.9, 8.4, 0.9), cf = CFrame.new(6.55 * sx, 4.2, -3.55), color = POST, variant = WOODV, collide = true, shadow = true })
+		part(m, { name = "Post", size = Vector3.new(0.9, 10.4, 0.9), cf = CFrame.new(6.55 * sx, 5.2, 3.55), color = POST, variant = WOODV, collide = true, shadow = true })
+		for _, z in ipairs({ -3.55, 3.55 }) do
+			part(m, { name = "PostFoot", size = Vector3.new(1.2, 0.3, 1.2), cf = CFrame.new(6.55 * sx, 0.15, z), color = rgb(118, 125, 141), material = Enum.Material.Slate, variant = STONEV })
+		end
+		-- knee brace from the front post up to the front beam
+		beamPart("KneeBrace", Vector3.new(0.3, 1.7, 0.3), CFrame.new(5.62 * sx, 7.33, -3.55) * CFrame.Angles(0, 0, math.rad(45 * sx)))
+		-- side panel (same box) with a top rail
+		part(m, { name = "SidePanel", size = Vector3.new(0.6, 3.2, 6.4), cf = CFrame.new(6.55 * sx, 1.6, 0), color = BOARD[1], material = Enum.Material.WoodPlanks, variant = PLANKSV, collide = true, shadow = true })
+		beamPart("SideRail", Vector3.new(0.76, 0.18, 6.5), CFrame.new(6.55 * sx, 3.29, 0))
+	end
+	beamPart("FrontBeam", Vector3.new(14.0, 0.5, 0.5), CFrame.new(0, 8.15, -3.55))
+	-- counter: dark core + 3 rows of front planks + kick board (together the old 12.4 x 3.2 x 1.8 box), stiles, top
+	local core = part(m, { name = "Counter", size = Vector3.new(12.4, 3.2, 1.6), cf = CFrame.new(0, 1.6, -2.8), color = rgb(100, 56, 32), variant = WOODV, collide = true, shadow = true })
+	local PLANK = { rgb(195, 116, 67), rgb(170, 98, 55), rgb(188, 110, 63) }
+	for i, y in ipairs({ 0.75, 1.74, 2.73 }) do
+		part(m, { name = "CounterPlank", size = Vector3.new(12.0, 0.9, 0.2), cf = CFrame.new(0, y, -3.7), color = PLANK[i], variant = WOODV, collide = true })
+	end
+	part(m, { name = "CounterKick", size = Vector3.new(12.4, 0.3, 0.24), cf = CFrame.new(0, 0.15, -3.68), color = BEAM, variant = WOODV, collide = true })
+	for _, x in ipairs({ -6.04, 0, 6.04 }) do
+		beamPart("CounterStile", Vector3.new(0.32, 2.9, 0.12), CFrame.new(x, 1.75, -3.84))
+	end
+	for i, z in ipairs({ -3.565, -2.235 }) do
+		part(m, { name = "CounterTop", size = Vector3.new(14.4, 0.5, 1.27), cf = CFrame.new(0, 3.45, z), color = TOP[i], variant = WOODV, collide = true, shadow = true })
+	end
+	beamPart("CounterLip", Vector3.new(14.4, 0.14, 0.1), CFrame.new(0, 3.13, -4.15))
+	-- backboard: 7 vertical boards (front face at z 3.3, as the old wall) over a planked backing, a darker frame
+	-- (posts, back beam, bottom rail) and two battens on the back
+	part(m, { name = "BackWall", size = Vector3.new(13.0, 7.4, 0.2), cf = CFrame.new(0, 5.6, 3.7), color = rgb(150, 86, 49), material = Enum.Material.WoodPlanks, variant = PLANKSV, collide = true, shadow = true })
+	for i = 0, 6 do
+		part(m, { name = "BackBoard", size = Vector3.new(1.7, 7.1, 0.3), cf = CFrame.new(-5.25 + i * 1.75, 5.45, 3.45), color = BOARD[i % 3 + 1], variant = WOODV, collide = true, shadow = true })
+	end
+	beamPart("BackRail", Vector3.new(12.2, 0.36, 0.12), CFrame.new(0, 2.2, 3.24))
+	part(m, { name = "BackBeam", size = Vector3.new(14.0, 0.6, 0.6), cf = CFrame.new(0, 9.3, 3.55), color = BEAM, variant = WOODV, collide = true, shadow = true })
+	for _, y in ipairs({ 3.2, 7.8 }) do
+		beamPart("BackBatten", Vector3.new(12.2, 0.4, 0.14), CFrame.new(0, y, 3.87))
+	end
+	return core
+end
+
+local function stall(propId: string): Model
+	local maps = ServerStorage:FindFirstChild("MapProps")
+	local base = maps and maps:FindFirstChild(propId)
+	local hub = workspace:FindFirstChild("Hub")
+	base = base or (hub and hub:FindFirstChild(STALL_MARKERS[propId]))
+	assert(base and base:IsA("Model"), `{propId}: no template and no workspace.Hub.{STALL_MARKERS[propId]}`)
+	local pivot = (base :: Model):GetPivot()
+	local m = base:Clone() :: Model
+	m.PrimaryPart = nil
+	for _, child in ipairs(m:GetChildren()) do
+		if functional(child) or child.Name == "_Variants" or (child:IsA("BasePart") and FRAME_NAMES[child.Name]) then
+			child:Destroy()
+		end
+	end
+	for key in pairs(m:GetAttributes()) do
+		m:SetAttribute(key, nil)
+	end
+	for _, tag in ipairs(m:GetTags()) do
+		m:RemoveTag(tag)
+	end
+	m.WorldPivot = pivot
+	m:PivotTo(CFrame.identity)
+	local core = stallFrame(m)
+	m.PrimaryPart = core
+	core.PivotOffset = core.CFrame:Inverse() -- pivot at the floor centre (the origin)
+	m.Name = propId
+	m:SetAttribute("MapPropId", propId)
+	return m
+end
+
+function StudioProps.weapon_stall(): Model
+	return stall("weapon_stall")
+end
+
+function StudioProps.trophy_stall(): Model
+	return stall("trophy_stall")
+end
+
+function StudioProps.diamond_shop(): Model
+	return stall("diamond_shop")
+end
+
+---------------------------------------------------------------------
 -- install: build, replace ServerStorage.MapProps.<propId> (the old template is kept in MapProps._Previous)
 ---------------------------------------------------------------------
 function StudioProps.install(propId: string): string

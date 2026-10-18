@@ -225,6 +225,9 @@ Pivot of every kit model = bottom centre on the ground (Y 0), front = -Z, unless
 | lamp_post | `MapProps.lamp_post`, 14 parts + the nested `Lantern` (14) = 28, 3.90 x 9.92 x 1.50, version 2afca0d4 | 8 / 8 | batch 1. Stone plinth + iron collar, two-step post with an iron band, cap, arm with a carved end, brace, iron band, hanger, 2 chain links, the lantern template hanging at the old lantern's place. |
 | barrel | `MapProps.barrel`, 13 parts, 3.46 x 4.05 x 3.46, version 7e489bad | 40 / 40 (incl. camp x3 at 0.84, market x4 at 0.79) | batch 1. Planks texture (FYD_Planks) staves in 3 stacked cylinders (bulge), 3 dark hoops with 6 rivets, plank lid. Same collision radius (1.5 / 1.69 / 1.5). |
 | laundry_rack | `MapProps.laundry_rack`, 22 parts, 8.40 x 6.99 x 4.00, version ba24ab5e | 3 / 3 | batch 1. Round poles, rope lashings, round bar, 3 cloths (front fold + back flap, `ClothA/B/C` sway in PropFX), 6 pegs. |
+| weapon_stall | `MapProps.weapon_stall` (frame rebuilt, awning / display items / AnvilForge unchanged), 67 parts in the template, version ffb64a2f | 3 / 3 | batch 4 Studio half, 2026-10-19. Frame 10 -> 38 parts (`StudioProps.stall`): posts on stone feet, front beam + knee braces, planked side panels with rails, counter of 3 front planks + kick board + stiles + 2 top boards + lip, backboard of 7 boards on a planked backing with a dark frame (posts, back beam, bottom rail, 2 back battens). Colliding parts stay inside the old solid boxes; all new trims are CanCollide false. Interact / NameTag / prompt / NpcSpot / NPC kept on each instance. |
+| trophy_stall | `MapProps.trophy_stall`, 71 parts, version be167422 | 3 / 3 | same frame. |
+| diamond_shop | `MapProps.diamond_shop`, 82 parts, version d7b4fff4 | 3 / 3 | same frame; Glow light, sign, gems, chest unchanged. |
 | all others | - | tagged, waiting for a template | |
 
 ## Related, not in scope (reported only)

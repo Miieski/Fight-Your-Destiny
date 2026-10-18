@@ -1902,3 +1902,14 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   DECISIONS (Agent A): photo orientation = a camera at -Z shows +X on the left; the rowboat rests rolled 22 deg on
   its bilge with a broken gap in the near side (today's model is a wreck) - TO BE COMPARED in Studio with the old
   layout; skull_bones ribs on -X; new palette colours Flame, ClamCream, Thread, ButtonDark, Speckle.
+- 02:30 BATCH 4 Studio half: STALL FRAMES (Agent B; main agent looked at the hub before/after of the 3 stalls).
+  One shared builder StudioProps.stall: dark posts on stone feet, front beam + knee braces, planked side panels,
+  planked counter with kick board / stiles / light top boards / lip, a 7-board backboard with a darker frame. 38
+  frame parts per stall (was 10); weapon_stall 67 / trophy_stall 71 / diamond_shop 82 template parts; footprint
+  14.40 x 10.40 x 8.35 (+4.4 % depth from the lip and back battens). Collision envelope unchanged (all 22 colliding
+  parts inside the old solid boxes, every new trim piece CanCollide off; probes: counter front / side / back hit at
+  the old planes; from above the awning is hit first). Kept: Interact + prompts + NameTags, NpcSpot, NPC stand-ins,
+  the diamond shop's Glow light, the nested AnvilForge, attributes. Awnings and display items unchanged until Agent
+  A's meshes. Sync run 2 = 0; full run 9 templates / 126 instances / 0 replaced. Hub parts 5,235 / 6,000.
+  Low FX test switch: LocalPlayer attribute PropFX_TestLowFx (tests only). Main agent Play check: Flicker 2 -> 0, the
+  lamp light stays at 1.200, the effects come back when it is cleared.

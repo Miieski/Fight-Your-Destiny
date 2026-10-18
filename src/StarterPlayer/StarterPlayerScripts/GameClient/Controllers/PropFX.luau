@@ -290,9 +290,18 @@ local function setLow(value: boolean)
 end
 
 function PropFXController:Start()
-	low = Settings.get("LowFx") == true
-	Settings.changed("LowFx", function(value)
-		setLow(value == true)
+	-- Low FX = the setting, or (tests only, e.g. from the MCP Client datamodel) the LocalPlayer attribute
+	-- PropFX_TestLowFx = true
+	local player = Players.LocalPlayer
+	local function wantLow(): boolean
+		return Settings.get("LowFx") == true or player:GetAttribute("PropFX_TestLowFx") == true
+	end
+	low = wantLow()
+	Settings.changed("LowFx", function()
+		setLow(wantLow())
+	end)
+	player:GetAttributeChangedSignal("PropFX_TestLowFx"):Connect(function()
+		setLow(wantLow())
 	end)
 	CollectionService:GetInstanceAddedSignal(TAG):Connect(function(inst)
 		task.defer(add, inst)
