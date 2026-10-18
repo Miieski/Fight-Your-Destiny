@@ -425,7 +425,10 @@ The hub is the central safe area (no combat). Players spawn here on join.
 * **Weapon Shop:** buy a weapon of a chosen zone; rarity is random (weapon doc). The Shop window also has an
   **Armor** tab (same rules, half price, own pity counters).
 * **Trainer:** stat upgrade menu.
-* **Egg Station:** hatch eggs, open premium eggs (diamonds). **Pet Manager** (equip/delete).
+* **Egg Station:** hatch eggs, open premium eggs (diamonds). **Pet Manager** (equip/delete). The nest shows the
+  game's own Plains / Desert / Jungle zone eggs (`Assets.Eggs`, 2026-10-18).
+* **Benches** (11, 2 seats each): one "Sit" prompt per bench (E / tap) seats the player on the nearest free seat;
+  touching a bench never seats anyone; jump to stand up (`BenchService`).
 * **Trophy Merchant:** sells head trophies.
 * **Rebirth Altar** and **Rebirth Shop.**
 * **Diamond Shop:** Robux packs, boosts, skins, game passes.

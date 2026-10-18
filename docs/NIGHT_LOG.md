@@ -1665,3 +1665,40 @@ Backups before_armor_shop / after_armor_shop (6 files each).
 - Every multi-sell asks once (even Common); hidden (filtered-out) items are never sold; the funnel's zone row only
   shows zones the player owns items from (no spoiler).
 - Not tested: the phone layout of the new inventory headers (select mode adds 3 controls to the header row).
+
+# Hub polish - 2026-10-18 (owner, 5 screenshots: "this tree had a problem. they (base and tree) are not aligned. fix this, + remove the mushroom on the base. on the rebirth altar, they have a texure lag with the stairs. fix it, same with the house windows. those egg are gross. remake it more smooth. Remake the bench, make it more smooth too and make a fontionality where you can sit on it.")
+
+Owner's answers (asked): eggs = "Game's zone eggs (Recommended)", sitting = "\"Sit\" button (Recommended)", bench =
+"Studio parts (Recommended)". Backups before_hub_fixes / after_hub_fixes (6 files each).
+
+## Status (newest first)
+
+- 15:50 DONE. Studio = disk (pull: 169 scripts, 0 written). Screenshots docs/screenshots/hub_fixes/.
+  * Tree (Plains_3 Decor.Landmark, the "AncientTree"): the trunk mesh has its own root flare and ends 3.8 studs above
+    the ground; the separate RootFlare cone sat ~4 studs west / 6 studs south of the trunk's foot (hull probes) in a
+    lighter brown, so it showed as a lump. RootFlare + the 8 Root wedges moved (+3.5, 0, +5.5) under the trunk
+    (attribute HubFixOldPos keeps the old spot), RootFlare color / material = Trunk; the 2-part Mushroom deleted.
+    Checked from W (owner's view), NW and SE. The NoClimb shell and TrunkCollision are unchanged.
+  * Rebirth Altar: the 3 Steps' tops were exactly at the round Tier tops (2.64 / 4.64 / 6.64) and overlapped them by
+    ~2 studs with other colors -> each Step 0.05 stud taller (tops 2.69 / 4.69 / 6.69). MapAudit.zfight found 0 in
+    the hub: it only compares exactly flush block faces (not cylinders, not near-flush).
+  * Windows: hub cottages (3 Cottage_A, 2 Cottage_B, 24 panes): wall 0, timber belt +0.30, glass +0.33/0.36,
+    frame bars +0.40 -> 0.04-0.07 gaps flickered at a distance. Every pane now 0.12 out of the wall (belt and bars in
+    front: a clean window cross). Same fix on the Plains_1 FarmHouse (5 panes); Tundra_1 Cabin_Broken's dark pane
+    recessed 0.2 behind its bars. Other zone houses (Cabins 1-7, ClayHouse A/B) have >= 0.3 gaps.
+  * Egg Station: each egg was 2 overlapping balls + ball spots (12 parts) -> 3 smooth textured zone eggs from
+    ReplicatedStorage.Assets.Eggs (Plains in the middle 5.2 studs tall, Desert and Jungle 3.9; first zones only, so
+    no spoiler), resting 0.35 stud in the nest, rarity rings removed. PetService only uses the Interact prompt.
+  * Bench (models sub-agent): `Bench` = 59 Parts + 2 Seats, rounded planks (block core + edge cylinders), curved back,
+    dark-grey tube frame with ball joints, armrests; same pivot / size as Bench_A (8 x 4.8 x 3, seat top 2.5). The 11
+    hub Bench_A (AFKCorner 3, PlazaFurniture 8) replaced at the same pivots (feet within 0.1 of the ground).
+  * `Services/BenchService`: one "Sit" prompt per bench (Attachment SitPoint 1.5 above the seats, 7 studs), seats the
+    player on the nearest free Seat (Seat:Sit), hidden while all seats are taken; Seat.CanTouch off. Play test: E ->
+    Seated on the near seat, jump -> standing (on the slats, not re-seated). The Studio screen capture does not show
+    the prompt billboard (AlwaysOnTop) but the client has it enabled at the right place.
+
+## Decisions taken without the owner
+
+- Tree: the base was re-centered (not removed); the trunk mesh itself was not moved or scaled.
+- Window panes moved behind the timber cross (the owner's screenshot shows a window cross) instead of in front of it.
+- One Sit prompt per bench (2 seats) instead of one per seat, so two prompts never overlap.

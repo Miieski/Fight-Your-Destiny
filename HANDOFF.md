@@ -149,6 +149,19 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-18: HUB / MAP POLISH (owner screenshots: misaligned tree base + mushroom, flickering Rebirth Altar stairs
+and house windows, "gross" Egg Station eggs, a smoother bench you can sit on).** Plains_3 `AncientTree`
+(Decor.Landmark): RootFlare + the 8 Root wedges moved under the trunk (+3.5, 0, +5.5; old position in attribute
+HubFixOldPos), flare recolored like the trunk, mushroom removed. Rebirth Altar: the 3 Steps were flush with the round
+Tier tops -> 0.05 stud higher. Windows: the panes of the 5 hub cottages, the Plains FarmHouse and the Tundra
+Cabin_Broken sat 0.03-0.07 stud from the timber / bars -> panes now 0.12 stud out of the wall (cross bars in front).
+MapAudit.zfight only checks exactly flush faces of blocks: near-flush (< 0.1) and cylinder faces need a manual check.
+Egg Station: the 12 ball parts became 3 `Assets.Eggs` zone eggs (plains, desert, jungle; `DisplayEgg_<zone>`, rings
+removed). Benches: models sub-agent built `Bench` (61 Parts, rounded slats / curved frame, 2 invisible `Seat`s with
+CanTouch off; template `_Staging.BenchWork.Bench_Smooth`), it replaced the 11 hub `Bench_A`; new
+`Services/BenchService` gives each bench one "Sit" prompt. Log: NIGHT_LOG "Hub polish"; screenshots
+docs/screenshots/hub_fixes/. The map lives in the place file: the owner saves the .rbxl.
+
 **2026-10-15: ARMOR SHOP + INVENTORY FILTERS AND MULTI-SELL (owner: "Create a shop for Armors too, same as the weapon
 shop. And in the inventory for weapon, create a filter and an select option to sell many items at the same time for
 each category").** Shop window tabs Weapons / Armor / Diamonds. `UI/Pages/WeaponShopPage` is now one page factory
