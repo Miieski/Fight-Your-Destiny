@@ -105,9 +105,14 @@ local function scan(prop: Prop)
 				homeOf[part] = home
 				local angle = math.rad(spec.Degrees)
 				local axis = if spec.Axis == "X" then Vector3.xAxis else Vector3.zAxis
+				-- Hinge "Top": turn around the top edge (cloth hanging from a bar), else around the centre
+				local hinge = if spec.Hinge == "Top" then CFrame.new(0, part.Size.Y / 2, 0) else CFrame.identity
+				local function turned(a: number): CFrame
+					return home * hinge * CFrame.fromAxisAngle(axis, a) * hinge:Inverse()
+				end
 				local info = TweenInfo.new(spec.Seconds / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-				local tween = TweenService:Create(part, info, { CFrame = home * CFrame.fromAxisAngle(axis, angle) })
-				table.insert(prop.sways, { part = part, home = home, from = home * CFrame.fromAxisAngle(axis, -angle), tween = tween })
+				local tween = TweenService:Create(part, info, { CFrame = turned(angle) })
+				table.insert(prop.sways, { part = part, home = home, from = turned(-angle), tween = tween })
 			end
 		end
 	end
@@ -242,6 +247,28 @@ local function check()
 	table.sort(withEmitters, byDistance)
 	for i, prop in ipairs(withEmitters) do
 		setEmitters(prop, not low and i <= Config.MAX_EMITTER_PROPS)
+	end
+	-- debug counters for a Play check (client): workspace.CurrentCamera:GetAttributes()
+	local camera = workspace.CurrentCamera
+	if camera then
+		local active, sways, emitting = 0, 0, 0
+		for _, prop in ipairs(list) do
+			if prop.active then
+				active += 1
+				if not low then
+					sways += #prop.sways
+				end
+				if prop.emitting then
+					emitting += 1
+				end
+			end
+		end
+		camera:SetAttribute("PropFX_Tracked", #list)
+		camera:SetAttribute("PropFX_Active", active)
+		camera:SetAttribute("PropFX_Flicker", #flickering)
+		camera:SetAttribute("PropFX_Sway", sways)
+		camera:SetAttribute("PropFX_Emitting", emitting)
+		camera:SetAttribute("PropFX_LowFx", low)
 	end
 end
 

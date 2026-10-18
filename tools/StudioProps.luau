@@ -94,6 +94,9 @@ local function part(model: Model, opts: any): Part
 	p.CanQuery = opts.query == true or opts.collide == true
 	p.CanTouch = false
 	p.CastShadow = opts.shadow == true
+	if opts.transparency then
+		p.Transparency = opts.transparency
+	end
 	p.TopSurface = Enum.SurfaceType.Smooth
 	p.BottomSurface = Enum.SurfaceType.Smooth
 	p.Parent = model
@@ -178,6 +181,190 @@ function StudioProps.crate(): Model
 			Color_Cap = rgb(66, 76, 76), Color_Nail = rgb(52, 58, 58),
 		},
 	})
+	return m
+end
+
+-- a standing cylinder (Roblox cylinders run along X: turned 90 degrees about Z)
+local UP = CFrame.Angles(0, 0, math.rad(90))
+local function cylinder(model: Model, opts: any): Part
+	opts.shape = Enum.PartType.Cylinder
+	opts.size = Vector3.new(opts.height, opts.diameter, opts.diameter)
+	opts.cf = (opts.cf or CFrame.new()) * UP
+	return part(model, opts)
+end
+
+---------------------------------------------------------------------
+-- 15 LANTERN  (old units: glass Neon 1.2 x 1.5 + caps; the template's PIVOT = the centre of the old glass,
+-- glass height reference 1.5, see SyncMapProps.REF; the bottom at -1.125 keeps the TutorialGuide lantern (scale 0.8)
+-- on its rim). Iron frame with 4 corner posts, glowing cream panes (Neon, T 0.5), a candle with a small Neon flame
+-- ("Flame", PointLight of Config/PropFX), top plate, stepped roof and a ring handle. 14 parts.
+---------------------------------------------------------------------
+local function propFxLights(propId: string): { any }
+	local module = game:GetService("ReplicatedStorage").GameSystem.Config.PropFX
+	local copy = module:Clone() -- (require caches modules)
+	copy.Parent = module.Parent
+	local ok, config = pcall(require, copy)
+	copy:Destroy()
+	local entry = ok and config.Props[propId]
+	return entry and entry.Lights or {}
+end
+
+function StudioProps.lantern(): Model
+	local m = Instance.new("Model")
+	m.Name = "lantern"
+	local IRON, IRONV = rgb(105, 111, 125), "FYD_Iron"
+	part(m, { name = "Base", size = Vector3.new(1.5, 0.26, 1.5), cf = CFrame.new(0, -0.995, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV, collide = true })
+	-- the panes glow softly (Neon at T 0.5) so the lantern keeps the old cream glow; the candle and flame show through
+	local glass = part(m, { name = "Glass", size = Vector3.new(1.16, 1.55, 1.16), cf = CFrame.new(0, -0.09, 0), color = rgb(255, 226, 150), material = Enum.Material.Neon, transparency = 0.5, collide = true })
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			part(m, { name = "Frame", size = Vector3.new(0.14, 1.55, 0.14), cf = CFrame.new(0.6 * sx, -0.09, 0.6 * sz), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+		end
+	end
+	part(m, { name = "Top", size = Vector3.new(1.5, 0.22, 1.5), cf = CFrame.new(0, 0.795, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	part(m, { name = "Roof", size = Vector3.new(1.0, 0.2, 1.0), cf = CFrame.new(0, 1.005, 0) * CFrame.Angles(0, math.rad(45), 0), color = rgb(92, 98, 112), material = Enum.Material.Metal, variant = IRONV })
+	part(m, { name = "RoofTop", size = Vector3.new(0.5, 0.16, 0.5), cf = CFrame.new(0, 1.185, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	for _, x in ipairs({ -0.2, 0.2 }) do
+		part(m, { name = "Handle", size = Vector3.new(0.08, 0.32, 0.08), cf = CFrame.new(x, 1.42, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	end
+	part(m, { name = "Handle", size = Vector3.new(0.48, 0.08, 0.08), cf = CFrame.new(0, 1.58, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	cylinder(m, { name = "Candle", height = 0.34, diameter = 0.3, cf = CFrame.new(0, -0.695, 0), color = rgb(240, 228, 196), material = Enum.Material.SmoothPlastic })
+	local flame = part(m, { name = "Flame", size = Vector3.new(0.26, 0.26, 0.26), cf = CFrame.new(0, -0.38, 0), color = rgb(255, 186, 84), material = Enum.Material.Neon, shape = Enum.PartType.Ball })
+	for _, spec in ipairs(propFxLights("lantern")) do
+		if spec.Part == "Flame" then
+			local light = Instance.new("PointLight")
+			light.Color, light.Brightness, light.Range, light.Shadows = spec.Color, spec.Brightness, spec.Range, false
+			light.Parent = flame
+		end
+	end
+	m.PrimaryPart = glass
+	glass.PivotOffset = CFrame.new(0, 0.09, 0) -- pivot = centre of the old glass
+	m:SetAttribute("MapPropId", "lantern")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 02 LAMP_POST  (old Lantern_Post: 3.85 x 9.75 x 1.50, 9 parts, pivot at the foot of the post, arm towards +X)
+-- chipped stone plinth with an iron collar, a tapered post (lower / upper with an iron band), a cap, the arm with a
+-- carved end and its brace, an iron bracket and hanger, a short chain, and the "lantern" template hanging from it
+-- (a nested MapProp: it follows the lantern template). 13 parts + the lantern.
+---------------------------------------------------------------------
+function StudioProps.lamp_post(): Model
+	local m = Instance.new("Model")
+	m.Name = "lamp_post"
+	local WOOD, WOODV = rgb(124, 69, 42), "FYD_Wood"
+	local IRON, IRONV = rgb(105, 111, 125), "FYD_Iron"
+	local STONE, STONEV = rgb(170, 177, 191), "FYD_Stone"
+	part(m, { name = "Plinth", size = Vector3.new(1.5, 0.5, 1.5), cf = CFrame.new(0, 0.25, 0), color = STONE, material = Enum.Material.Slate, variant = STONEV, collide = true, shadow = true })
+	part(m, { name = "PlinthTop", size = Vector3.new(1.0, 0.22, 1.0), cf = CFrame.new(0, 0.61, 0) * CFrame.Angles(0, math.rad(45), 0), color = rgb(150, 157, 172), material = Enum.Material.Slate, variant = STONEV, collide = true })
+	part(m, { name = "Collar", size = Vector3.new(0.98, 0.4, 0.98), cf = CFrame.new(0, 0.92, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV, collide = true })
+	local post = part(m, { name = "Post", size = Vector3.new(0.84, 4.9, 0.84), cf = CFrame.new(0, 3.17, 0), color = WOOD, variant = WOODV, collide = true, shadow = true })
+	part(m, { name = "PostBand", size = Vector3.new(0.92, 0.22, 0.92), cf = CFrame.new(0, 5.62, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	part(m, { name = "PostTop", size = Vector3.new(0.74, 4.13, 0.74), cf = CFrame.new(0, 7.685, 0), color = rgb(132, 74, 45), variant = WOODV, collide = true, shadow = true })
+	part(m, { name = "PostCap", size = Vector3.new(0.88, 0.2, 0.88), cf = CFrame.new(0, 9.82, 0), color = rgb(116, 64, 39), variant = WOODV })
+	part(m, { name = "Arm", size = Vector3.new(2.95, 0.46, 0.46), cf = CFrame.new(1.1, 9.2, 0), color = WOOD, variant = WOODV, collide = true })
+	part(m, { name = "ArmEnd", size = Vector3.new(0.38, 0.38, 0.46), cf = CFrame.new(2.72, 9.2, 0) * CFrame.Angles(0, 0, math.rad(45)), color = rgb(132, 74, 45), variant = WOODV })
+	part(m, { name = "Brace", size = Vector3.new(0.42, 2.0, 0.42), cf = CFrame.new(0.9, 8.3, 0) * CFrame.Angles(0, 0, math.rad(-45)), color = WOOD, variant = WOODV })
+	part(m, { name = "ArmBand", size = Vector3.new(0.82, 0.58, 0.82), cf = CFrame.new(0, 9.2, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	part(m, { name = "Hanger", size = Vector3.new(0.14, 0.32, 0.5), cf = CFrame.new(2.4, 8.82, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+	part(m, { name = "Chain", size = Vector3.new(0.1, 0.24, 0.06), cf = CFrame.new(2.4, 8.56, 0), color = rgb(80, 84, 96), material = Enum.Material.Metal, variant = IRONV })
+	part(m, { name = "Chain", size = Vector3.new(0.06, 0.24, 0.1), cf = CFrame.new(2.4, 8.39, 0), color = rgb(80, 84, 96), material = Enum.Material.Metal, variant = IRONV })
+	-- the improved lantern, hanging from the chain: glass centre 6.72 (handle top at 8.30)
+	local maps = ServerStorage:FindFirstChild("MapProps")
+	local source = maps and maps:FindFirstChild("lantern")
+	assert(source, "lamp_post needs ServerStorage.MapProps.lantern: install the lantern first")
+	local lantern = source:Clone()
+	lantern.Name = "Lantern"
+	lantern:PivotTo(CFrame.new(2.4, 6.72, 0))
+	for key in pairs(lantern:GetAttributes()) do
+		lantern:SetAttribute(key, nil)
+	end
+	lantern:SetAttribute("MapPropId", "lantern")
+	lantern:SetAttribute("MapPropVersion", (source:GetAttribute("MapPropVersion") or "?") .. "|")
+	lantern:AddTag("MapProp")
+	lantern.Parent = m
+	m.PrimaryPart = post
+	post.PivotOffset = CFrame.new(0, -3.17, 0) -- pivot at the foot of the post, like Lantern_Post
+	m:SetAttribute("MapPropId", "lamp_post")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 03/10 BARREL  (old Barrel_A: 3.45 x 4.05 x 3.45, 5 parts; reference height 4.05 for the camp / market barrels)
+-- staves: three stacked cylinders (worn bottom, bulging belly, top) in the shared planks texture, 3 dark-steel hoops
+-- (two hide the belly steps) with rivets, a lid of planks. 13 parts. A truly faceted 12-16 stave barrel needs a
+-- Blender mesh (part-built it costs about 28 parts x 11 copies in the hub).
+---------------------------------------------------------------------
+function StudioProps.barrel(): Model
+	local m = Instance.new("Model")
+	m.Name = "barrel"
+	local PLANKS = "FYD_Planks"
+	local IRON, IRONV = rgb(84, 89, 102), "FYD_Iron"
+	cylinder(m, { name = "StaveLow", height = 1.05, diameter = 3.0, cf = CFrame.new(0, 0.525, 0), color = rgb(172, 100, 57), material = Enum.Material.WoodPlanks, variant = PLANKS, collide = true, shadow = true })
+	local belly = cylinder(m, { name = "StaveBelly", height = 1.95, diameter = 3.38, cf = CFrame.new(0, 2.025, 0), color = rgb(187, 109, 62), material = Enum.Material.WoodPlanks, variant = PLANKS, collide = true, shadow = true })
+	cylinder(m, { name = "StaveHigh", height = 1.02, diameter = 3.0, cf = CFrame.new(0, 3.51, 0), color = rgb(192, 113, 65), material = Enum.Material.WoodPlanks, variant = PLANKS, collide = true, shadow = true })
+	cylinder(m, { name = "Lid", height = 0.05, diameter = 2.7, cf = CFrame.new(0, 4.025, 0), color = rgb(124, 69, 42), material = Enum.Material.WoodPlanks, variant = PLANKS })
+	local hoops = { { y = 1.05, d = 3.46 }, { y = 3.0, d = 3.46 }, { y = 3.72, d = 3.08 } }
+	for _, h in ipairs(hoops) do
+		cylinder(m, { name = "Hoop", height = 0.3, diameter = h.d, cf = CFrame.new(0, h.y, 0), color = IRON, material = Enum.Material.Metal, variant = IRONV })
+		for _, deg in ipairs({ 30, 210 }) do
+			local a = math.rad(deg)
+			local r = h.d / 2 + 0.02
+			part(m, { name = "Rivet", size = Vector3.new(0.14, 0.14, 0.08), cf = CFrame.new(r * math.sin(a), h.y, r * math.cos(a)) * CFrame.Angles(0, a, 0), color = rgb(120, 124, 134), material = Enum.Material.Metal, variant = IRONV })
+		end
+	end
+	m.PrimaryPart = belly
+	belly.PivotOffset = (CFrame.new(0, 2.025, 0) * UP):ToObjectSpace(CFrame.new()) -- pivot at the bottom centre
+	m:SetAttribute("MapPropId", "barrel")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 11 LAUNDRY_RACK  (old: 4 square legs, a square crossbar, 2 hides; 8.4 x 6.9 x 4.05 in the rack's frame: X along
+-- the crossbar, pivot on the camp floor under its middle)
+-- round poles lashed with rope at the two apexes, a round crossbar, 3 cloths (orange, tan, light orange) draped over
+-- the bar, each with a two-strip front (a fold) and a back flap ("ClothA/B/C": they sway, Config/PropFX), 6 pegs.
+-- 22 parts.
+---------------------------------------------------------------------
+function StudioProps.laundry_rack(): Model
+	local m = Instance.new("Model")
+	m.Name = "laundry_rack"
+	local WOOD, WOODV = rgb(124, 69, 42), "FYD_Wood"
+	local ROPE, ROPEV = rgb(223, 182, 118), "FYD_Straw"
+	local CLOTHV = "FYD_Cloth"
+	for _, x in ipairs({ -3.5, 3.5 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			-- the old legs: centre (x, 3.3, 0.9 * sz), 7 long, tilted 15 degrees towards the bar
+			local cf = CFrame.new(x, 3.3, 0.9 * sz) * CFrame.Angles(math.rad(-15 * sz), 0, 0)
+			cylinder(m, { name = "Leg", height = 7.0, diameter = 0.4, cf = cf, color = rgb(118 + 8 * sz, 66 + 4 * sz, 40 + 2 * sz), variant = WOODV, collide = true, shadow = true })
+		end
+		part(m, { name = "Lashing", shape = Enum.PartType.Cylinder, size = Vector3.new(0.55, 0.62, 0.62), cf = CFrame.new(x, 6.55, 0), color = ROPE, material = Enum.Material.Fabric, variant = ROPEV })
+	end
+	local bar = part(m, { name = "Bar", shape = Enum.PartType.Cylinder, size = Vector3.new(8.4, 0.4, 0.4), cf = CFrame.new(0, 6.5, 0), color = WOOD, variant = WOODV, collide = true })
+	-- cloths: x centre, width, length, tint (a saturated orange - the canvas weave washes ClothOrange out -, ClothTan,
+	-- a lighter orange)
+	local cloths = {
+		{ name = "ClothA", x = -2.0, w = 2.2, h = 3.0, color = rgb(242, 146, 66) },
+		{ name = "ClothB", x = 0.55, w = 1.7, h = 2.5, color = rgb(218, 178, 116) },
+		{ name = "ClothC", x = 2.55, w = 1.3, h = 2.1, color = rgb(248, 178, 104) },
+	}
+	for _, c in ipairs(cloths) do
+		local top = 6.5
+		-- front: two strips meeting at a soft fold (each turned 7 degrees), hinged on the bar
+		for _, side in ipairs({ -1, 1 }) do
+			local strip = CFrame.new(c.x + side * c.w / 4, top - c.h / 2, -0.24) * CFrame.Angles(0, math.rad(7 * side), 0)
+			part(m, { name = c.name, size = Vector3.new(c.w / 2, c.h, 0.07), cf = strip, color = if side < 0 then c.color else c.color:Lerp(Color3.new(0, 0, 0), 0.06), material = Enum.Material.Fabric, variant = CLOTHV, collide = true })
+		end
+		-- back flap over the bar
+		part(m, { name = c.name, size = Vector3.new(c.w, c.h * 0.45, 0.07), cf = CFrame.new(c.x, top - c.h * 0.225, 0.24), color = c.color:Lerp(Color3.new(0, 0, 0), 0.12), material = Enum.Material.Fabric, variant = CLOTHV })
+		-- two pegs on the bar
+		for _, side in ipairs({ -1, 1 }) do
+			part(m, { name = "Peg", size = Vector3.new(0.1, 0.42, 0.16), cf = CFrame.new(c.x + side * (c.w / 2 - 0.2), top + 0.1, -0.12), color = rgb(214, 170, 118), variant = WOODV })
+		end
+	end
+	m.PrimaryPart = bar
+	bar.PivotOffset = CFrame.new(0, -6.5, 0) -- pivot on the floor under the middle of the bar
+	m:SetAttribute("MapPropId", "laundry_rack")
 	return m
 end
 

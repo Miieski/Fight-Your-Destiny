@@ -816,7 +816,9 @@ function SyncMapProps.check(): string
 	local lines = { "SyncMapProps.check" }
 	for _, inst in ipairs(CollectionService:GetTagged(TAG)) do
 		if isTemplateArea(inst) then
-			table.insert(lines, "  WARNING tagged template: " .. inst:GetFullName())
+			if inst.Parent and inst.Parent.Name == FOLDER then -- (a nested prop inside a template is normal)
+				table.insert(lines, "  WARNING tagged template: " .. inst:GetFullName())
+			end
 			continue
 		end
 		local id = inst:GetAttribute("MapPropId")

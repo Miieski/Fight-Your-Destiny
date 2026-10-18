@@ -1874,3 +1874,20 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
     carries its own lantern). Photo 18's "glass ball" is the part CounterSkull (a plain ivory ball): the brief's
     crystal ball is kept (brief section 9 wins).
   * The owner moved the photos to "REMAKE OBJECT/Model_References/Model_References/" during the work.
+- 01:25 BATCH 1 done (Agent B, Studio-built; main agent looked at the screenshots and ran the Play check).
+  * lantern 14 parts (1.50 x 2.74 x 1.50; taller than the old 1.80 box because of the roof + ring handle the brief
+    asks for, same width), 20 copies (incl. the 8 hanging from lamp posts, which are nested lantern props so they
+    follow the lantern template); variants by wrapper scale: TutorialGuide 0.8, EggStation 1.2, EntryArch 1.0.
+    lamp_post 28 (14 + the lantern), 3.90 x 9.92 x 1.50 (+1.3 / +1.7 %), 8 copies. barrel 13 parts, 3.46 x 4.05 x
+    3.46, 40 copies (camp 0.84, market 0.79), still solid. laundry_rack 22 parts, 8.40 x 6.99 x 4.00 (+1.6 % height),
+    3 copies (no hub copy: Plains_3 HunterCamp is its main-map placement). Sync run 2 = 0 replaced for each; full run
+    6 templates / 117 instances / 0 replaced / 0 skipped. Hub parts 5,014 -> 5,151 / 6,000 (849 left for batch 4).
+  * PropFX: lantern Flame PointLight (255,210,140, 1.2, range 16, no shadows) + flicker +-8 % at 6 Hz; laundry
+    cloths sway +-2-3 deg hinged at the top bar; debug counters PropFX_* on the client camera.
+  * PLAY CHECK (main agent): flicker measured 1.13-1.29 around 1.2 at the AFK-corner lamp post; 9 cloth strips
+    swaying near the Plains_3 rack; everything off far away (Active 0); no script errors. Low FX could NOT be toggled
+    through the Settings UI from the MCP (clicks did not reach the toggle) - the code path was reviewed only.
+  * DECISIONS (Agent B): lantern panes Neon at Transparency 0.5 instead of Glass 0.3 (glass looked dark and broke
+    the cream glow); barrel bulge = 3 stacked cylinders with the hoops hiding the steps instead of 12-16 faceted
+    staves (part budget: ~28 parts x 11 hub barrels); laundry ClothA a stronger orange (242,146,66) because the canvas
+    texture washed the palette orange out. Main agent note: the cloths are flat (no folds) - acceptable in parts.
