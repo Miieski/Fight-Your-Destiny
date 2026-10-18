@@ -115,7 +115,14 @@ def registry():
 def run(args):
     results = []
     if args and args[0] == "--lineup":
-        results.append({"lineup": P.lineup(args[1], args[2:])})
+        recipes = registry()
+        contexts = {}
+        for pid in args[2:]:
+            if pid in recipes:
+                ctx = recipes[pid]().context
+                if ctx:
+                    contexts[pid] = ctx
+        results.append({"lineup": P.lineup(args[1], args[2:], contexts=contexts)})
     elif args == ["--init-manifest"]:
         results.append({"manifest": init_manifest()})
     elif args == ["--luau"]:

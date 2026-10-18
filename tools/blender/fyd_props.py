@@ -106,10 +106,12 @@ FAMILIES = {
     "Glow": {"set": None, "material": "Neon", "role": "Glow"},
     "Water": {"set": None, "material": "Glass", "role": "Water", "transparency": 0.35, "overlay": "water_ripple"},
     "Glass": {"set": None, "material": "Glass", "role": "Glass", "transparency": 0.3},
+    "Stream": {"set": None, "material": "Glass", "role": "Stream", "transparency": 0.45, "overlay": "water_ripple"},
+    "Foam": {"set": None, "material": "SmoothPlastic", "role": "Foam", "transparency": 0.2},
     "Plain": {"set": None, "material": "SmoothPlastic"},
     "Collider": {"set": None, "material": "SmoothPlastic", "role": "Collider", "transparency": 1.0},
 }
-ROLE_SUFFIX = {"Glow": "_Glow", "Water": "_Water", "Glass": "_Glass"}
+ROLE_SUFFIX = {"Glow": "_Glow", "Water": "_Water", "Glass": "_Glass", "Stream": "_Stream", "Foam": "_Foam"}
 
 MANIFEST_FIELDS = ["propId", "photo", "tool", "triangles/parts", "budget", "status", "instances updated", "notes"]
 PROP_ORDER = ["fountain", "lamp_post", "crate", "barrel", "mallet", "egg_nest", "rowboat", "minecart", "skull_bones",
@@ -181,8 +183,10 @@ AXES = {"x": 0, "y": 1, "z": 2, None: None}
 class Mesh:
     """One exported mesh object: a material family, one tint, primitives in prop space (studs)."""
 
-    def __init__(self, prop, part, family, color, pivot=None, shadow=None, transparency=None):
+    def __init__(self, prop, part, family, color, pivot=None, shadow=None, transparency=None, anchor=None, replaces=None):
         assert family in FAMILIES, family
+        self.anchor = anchor        # {"Part", "Pick", "AssumedPosition", "AssumedRotation", "PartSize"} (see README 7)
+        self.replaces = replaces    # what this mesh replaces in Studio (part names / descriptions)
         self.prop, self.part, self.family = prop, part, family
         self.role = FAMILIES[family].get("role", "Solid")
         suffix = ROLE_SUFFIX.get(self.role, "")
@@ -241,6 +245,12 @@ class Mesh:
         uvl = bm.loops.layers.uv.get("UV")
         off = (rng.random(), rng.random())
         tone = (0.965 + rng.uniform(-0.035, 0.035)) if tone is None else tone
+        # bmesh ops (bevel) return elements in a run-dependent order: rank the vertices by position so jitter,
+        # face order and vertex numbering are the same on every run (reproducible files and preview PNGs)
+        bm.verts.index_update()
+        bm.verts.ensure_lookup_table()
+        order = sorted(range(len(bm.verts)), key=lambda i: tuple(round(c, 5) for c in bm.verts[i].co))
+        rank = {i: r for r, i in enumerate(order)}
         face_data = []
         for f in bm.faces:
             if uv_mode == "given" and uvl is not None:
@@ -255,14 +265,24 @@ class Mesh:
             shade = min(1.0, tone + 0.06) if f[tag] == 1 else tone
             face_data.append(([l.vert.index for l in f.loops], uvs, shade, f[tag] == 2))
         if jit > 0:
-            for v in bm.verts:
-                v.co += Vector((rng.uniform(-jit, jit), rng.uniform(-jit, jit), rng.uniform(-jit, jit)))
-        bm.verts.index_update()
-        base = len(self.verts)
-        for v in bm.verts:
-            self.verts.append(tuple(matrix @ v.co))
+            for i in order:
+                bm.verts[i].co += Vector((rng.uniform(-jit, jit), rng.uniform(-jit, jit), rng.uniform(-jit, jit)))
+        # canonical faces: each loop starts at its lowest-ranked vertex (winding kept), faces sorted by their ranks,
+        # vertices numbered by first use
+        canon = []
         for idx, uvs, shade, smooth in face_data:
-            self.faces.append(tuple(base + i for i in idx))
+            k = min(range(len(idx)), key=lambda j: rank[idx[j]])
+            idx, uvs = idx[k:] + idx[:k], uvs[k:] + uvs[:k]
+            canon.append((tuple(sorted(rank[i] for i in idx)), tuple(rank[i] for i in idx), idx, uvs, shade, smooth))
+        canon.sort(key=lambda c: (c[0], c[1]))
+        base = len(self.verts)
+        new_index = {}
+        for _, _, idx, uvs, shade, smooth in canon:
+            for i in idx:
+                if i not in new_index:
+                    new_index[i] = len(new_index)
+                    self.verts.append(tuple(matrix @ bm.verts[i].co))
+            self.faces.append(tuple(base + new_index[i] for i in idx))
             self.loop_uv.extend(uvs)
             self.loop_shade.extend([shade] * len(idx))
             self.face_smooth.append(smooth)
@@ -696,9 +716,11 @@ class Prop:
         self.meshes = {}
         self.colliders = []
         self.attachments = {}
+        self.placement = None   # free-form dict written to the data (e.g. where a sub-model sits in its host)
+        self.context = []       # render-only boxes (center, size, hex, rotation) drawn in the previews, never exported
 
-    def mesh(self, part, family, color=None, pivot=None, shadow=None, transparency=None):
-        m = Mesh(self, part, family, color, pivot, shadow, transparency)
+    def mesh(self, part, family, color=None, pivot=None, shadow=None, transparency=None, anchor=None, replaces=None):
+        m = Mesh(self, part, family, color, pivot, shadow, transparency, anchor, replaces)
         assert m.name not in self.meshes, m.name
         self.meshes[m.name] = m
         return m
@@ -889,7 +911,7 @@ def preview_material(mesh):
         if mesh.role == "Glow":
             bsdf.inputs["Emission Color"].default_value = tint + (1,)
             bsdf.inputs["Emission Strength"].default_value = 4.0
-        elif mesh.role in ("Water", "Glass"):
+        elif mesh.role in ("Water", "Glass", "Stream", "Foam"):
             bsdf.inputs["Alpha"].default_value = 1.0 - mesh.transparency
             bsdf.inputs["Roughness"].default_value = 0.06
             _try(lambda: setattr(m, "surface_render_method", "BLENDED"))
@@ -1086,6 +1108,41 @@ def render_views(prop, objs, views, tmp_prefix):
     return paths
 
 
+def build_context(prop, col):
+    """Render-only grey/coloured boxes (e.g. today's stall frame) so pieces-only props read in the previews."""
+    made = []
+    for i, (c, size, color, rot) in enumerate(prop.context):
+        bm = bmesh.new()
+        bmesh.ops.create_cube(bm, size=1.0)
+        m = Matrix.Translation(Vector(c)) @ _rot(rot)
+        for v in bm.verts:
+            v.co = R2B @ (m @ Vector((v.co.x * size[0], v.co.y * size[1], v.co.z * size[2]))) * STUD
+        me = bpy.data.meshes.new(f"CTX_{i}")
+        bm.to_mesh(me)
+        bm.free()
+        mat = bpy.data.materials.new(f"CTX_{i}")
+        _try(lambda: setattr(mat, "use_nodes", True))
+        b = mat.node_tree.nodes.get("Principled BSDF")
+        b.inputs["Base Color"].default_value = tuple(srgb_to_linear(x / 255) for x in hex_rgb(color_hex(color))) + (1,)
+        b.inputs["Roughness"].default_value = 0.8
+        me.materials.append(mat)
+        ob = bpy.data.objects.new(f"CTX_{i}", me)
+        col.objects.link(ob)
+        made.append(ob)
+    return made
+
+
+def remove_context(made):
+    for ob in made:
+        me = ob.data
+        mats = list(me.materials)
+        bpy.data.objects.remove(ob, do_unlink=True)
+        bpy.data.meshes.remove(me)
+        for mt in mats:
+            if mt is not None and mt.users == 0:
+                bpy.data.materials.remove(mt)
+
+
 def before_after(prop, objs):
     os.makedirs(PREVIEW_DIR, exist_ok=True)
     tmp = os.path.join(PREVIEW_DIR, "_tmp")
@@ -1114,8 +1171,9 @@ def before_after(prop, objs):
     return out
 
 
-def lineup(name, ids, out=None, gap=2.0, az=-20, el=14):
-    """Every prop .blend of `ids` side by side at real relative scale (Roblox +x), one wide render."""
+def lineup(name, ids, out=None, gap=2.0, az=-20, el=14, contexts=None):
+    """Every prop .blend of `ids` side by side at real relative scale (Roblox -x), one wide render. contexts:
+    {propId: [render-only boxes]} drawn with their prop (e.g. the stall frames around the stall pieces)."""
     scn = scene()
     setup_rig(scn)
     clear_subject(scn)
@@ -1140,6 +1198,12 @@ def lineup(name, ids, out=None, gap=2.0, az=-20, el=14):
         for o in obs:
             o.location.x -= shift * STUD
             placed[o.name] = o
+        if contexts and contexts.get(pid):
+            class _Ctx:
+                context = [((c[0] + shift, c[1], c[2]), size, color, rot) for c, size, color, rot in contexts[pid]]
+            for ob in build_context(_Ctx, col):
+                ob.name = f"CTX_{pid}_{ob.name}"
+                placed[ob.name] = ob
         x -= (max(xs) - min(xs)) + gap
     scn.render.resolution_x, scn.render.resolution_y = 1600, 640
     _fit_camera(scn.camera, list(placed.values()), az, el)
@@ -1213,7 +1277,7 @@ def prop_data(prop):
             "Material": fam["material"], "Variant": fam.get("variant"), "Transparency": m.transparency,
             "CastShadow": bool(m.shadow if m.shadow is not None else (big and m.role == "Solid")),
             "Center": _r3(c), "Size": _r3(s), "Pivot": _r3(m.pivot), "Triangles": m.tris(),
-            "Overlay": fam.get("overlay"),
+            "Overlay": fam.get("overlay"), "Anchor": m.anchor, "Replaces": m.replaces,
         }
     return {
         "Id": prop.id, "Photo": prop.photo, "Fbx": f"Blender_Exports/Props/{prop.id}.fbx",
@@ -1222,6 +1286,7 @@ def prop_data(prop):
         "PivotY": prop.pivot_y, "Bounds": {"Center": _r3(center), "Size": _r3(size), "Min": _r3(lo), "Max": _r3(hi)},
         "StudioSize": _r3(prop.size), "Meshes": meshes, "Colliders": prop.colliders,
         "Attachments": {k: _r3(v) for k, v in prop.attachments.items()},
+        "Placement": prop.placement,
     }
 
 
@@ -1478,7 +1543,10 @@ def make(prop, previews=True, manifest=True):
     tris = prop.tris()
     bad = [n for n, m in prop.meshes.items() if any(len(f) != 3 for f in m.faces)]
     assert not bad, f"non-triangle faces in {bad}"
-    sheet = before_after(prop, objs) if previews else None
+    ctx = build_context(prop, collection(RIG, scn)) if (previews and prop.context) else []
+    view_objs = dict(objs, **{o.name: o for o in ctx})
+    sheet = before_after(prop, view_objs) if previews else None
+    remove_context(ctx)
     blend = save_blend(prop, scn)
     fbx = export_fbx(prop, objs)
     pngs = write_preview_png(prop.id, objs)

@@ -1,0 +1,593 @@
+{
+ "Id": "anvil_forge",
+ "Photo": "13_anvil_forge.png",
+ "Fbx": "Blender_Exports/Props/anvil_forge.fbx",
+ "Blend": "Blender/Props/anvil_forge.blend",
+ "Triangles": 1950,
+ "Budget": 4000,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   -0.035,
+   4.661,
+   -0.209
+  ],
+  "Size": [
+   5.57,
+   9.328,
+   9.235
+  ],
+  "Min": [
+   -2.82,
+   -0.003,
+   -4.826
+  ],
+  "Max": [
+   2.75,
+   9.325,
+   4.408
+  ]
+ },
+ "StudioSize": [
+  5.3,
+  9.0,
+  8.8
+ ],
+ "Meshes": {
+  "anvil_forge_Hearth": {
+   "Family": "StoneBlocks",
+   "Role": "Solid",
+   "Color": [
+    165,
+    172,
+    185
+   ],
+   "Target": "#969CA8",
+   "Material": "Cobblestone",
+   "Variant": "FYD_StoneBlocks",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.35,
+    1.4,
+    2.1
+   ],
+   "Size": [
+    4.0,
+    2.8,
+    4.0
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 350,
+   "Overlay": null
+  },
+  "anvil_forge_Upper": {
+   "Family": "StoneBlocks",
+   "Role": "Solid",
+   "Color": [
+    114,
+    121,
+    136
+   ],
+   "Target": "#686E7C",
+   "Material": "Cobblestone",
+   "Variant": "FYD_StoneBlocks",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.348,
+    5.404,
+    2.099
+   ],
+   "Size": [
+    4.62,
+    7.792,
+    4.619
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 362,
+   "Overlay": null
+  },
+  "anvil_forge_Soot": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    42,
+    37,
+    34
+   ],
+   "Target": "#2A2522",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.345,
+    5.163,
+    0.405
+   ],
+   "Size": [
+    3.19,
+    8.325,
+    6.79
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 44,
+   "Overlay": null
+  },
+  "anvil_forge_Coal": {
+   "Family": "Plain",
+   "Role": "Solid",
+   "Color": [
+    46,
+    39,
+    35
+   ],
+   "Target": "#2E2723",
+   "Material": "SmoothPlastic",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.35,
+    3.178,
+    2.1
+   ],
+   "Size": [
+    3.0,
+    0.646,
+    3.0
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 90,
+   "Overlay": null
+  },
+  "anvil_forge_Coals_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    255,
+    140,
+    40
+   ],
+   "Target": "#FF8C28",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.511,
+    3.292,
+    2.175
+   ],
+   "Size": [
+    2.743,
+    0.415,
+    2.664
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 200,
+   "Overlay": null
+  },
+  "anvil_forge_Stump": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    142,
+    87,
+    53
+   ],
+   "Target": "#804E30",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.35,
+    0.98,
+    -2.9
+   ],
+   "Size": [
+    3.853,
+    1.96,
+    3.853
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 64,
+   "Overlay": null
+  },
+  "anvil_forge_StumpTop": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    238,
+    167,
+    102
+   ],
+   "Target": "#D6965C",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.35,
+    1.992,
+    -2.9
+   ],
+   "Size": [
+    2.84,
+    0.084,
+    2.769
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 176,
+   "Overlay": null
+  },
+  "anvil_forge_Anvil": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.025,
+    2.089,
+    -1.763
+   ],
+   "Size": [
+    5.449,
+    4.162,
+    5.625
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 382,
+   "Overlay": null
+  },
+  "anvil_forge_AnvilFace": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    139,
+    145,
+    159
+   ],
+   "Target": "#7A808C",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.6,
+    4.04,
+    -2.9
+   ],
+   "Size": [
+    2.85,
+    0.1,
+    1.2
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 42,
+   "Overlay": null
+  },
+  "anvil_forge_Wood": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    187,
+    109,
+    62
+   ],
+   "Target": "#A86238",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.035,
+    1.148,
+    0.173
+   ],
+   "Size": [
+    5.569,
+    2.303,
+    3.895
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 176,
+   "Overlay": null
+  },
+  "anvil_forge_Leather": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -2.63,
+    1.682,
+    1.7
+   ],
+   "Size": [
+    0.28,
+    1.125,
+    0.756
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 28,
+   "Overlay": null
+  },
+  "anvil_forge_Water": {
+   "Family": "Water",
+   "Role": "Water",
+   "Color": [
+    52,
+    214,
+    236
+   ],
+   "Target": "#34D6EC",
+   "Material": "Glass",
+   "Variant": null,
+   "Transparency": 0.35,
+   "CastShadow": false,
+   "Center": [
+    2.0,
+    0.85,
+    -1.05
+   ],
+   "Size": [
+    1.24,
+    0.1,
+    1.179
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 36,
+   "Overlay": "water_ripple"
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "anvil_forge_Collider_Forge",
+   "Shape": "Block",
+   "Center": [
+    -0.34999999999999964,
+    1.5,
+    2.1
+   ],
+   "Size": [
+    4.0,
+    3.0,
+    4.0
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "anvil_forge_Collider_ForgeTop",
+   "Shape": "Block",
+   "Center": [
+    -0.34999999999999964,
+    3.1,
+    2.1
+   ],
+   "Size": [
+    4.6,
+    0.6,
+    4.6
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "anvil_forge_Collider_Chimney",
+   "Shape": "Block",
+   "Center": [
+    0.75,
+    6.15,
+    3.3000000000000003
+   ],
+   "Size": [
+    2.0,
+    6.3,
+    2.0
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "anvil_forge_Collider_Stump",
+   "Shape": "Cylinder",
+   "Center": [
+    -0.34999999999999964,
+    1.0,
+    -2.9
+   ],
+   "Size": [
+    2.0,
+    3.0,
+    3.0
+   ],
+   "Rotation": [
+    0,
+    0,
+    90
+   ]
+  },
+  {
+   "Name": "anvil_forge_Collider_Anvil",
+   "Shape": "Block",
+   "Center": [
+    -0.4499999999999993,
+    3.15,
+    -2.9
+   ],
+   "Size": [
+    3.2,
+    2.3,
+    1.4
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "anvil_forge_Collider_Horn",
+   "Shape": "Block",
+   "Center": [
+    1.950000000000001,
+    3.75,
+    -2.9
+   ],
+   "Size": [
+    1.4,
+    0.9,
+    1.0
+   ],
+   "Rotation": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "Name": "anvil_forge_Collider_Bucket",
+   "Shape": "Cylinder",
+   "Center": [
+    2.0,
+    0.55,
+    -1.0499999999999998
+   ],
+   "Size": [
+    1.1,
+    1.4,
+    1.4
+   ],
+   "Rotation": [
+    0,
+    0,
+    90
+   ]
+  }
+ ],
+ "Attachments": {
+  "Fire": [
+   -0.35,
+   3.5,
+   2.1
+  ],
+  "ForgeLight": [
+   -0.35,
+   4.1,
+   1.8
+  ],
+  "Sparks": [
+   -0.6,
+   4.12,
+   -2.9
+  ],
+  "Smoke": [
+   0.75,
+   9.4,
+   3.3
+  ]
+ },
+ "Placement": {
+  "Host": "Hub.WeaponShop (and the kit / test copies of Station_WeaponShop)",
+  "OriginInHost": [
+   10.85,
+   0.0,
+   1.9
+  ],
+  "RotationInHost": [
+   0,
+   0,
+   0
+  ],
+  "Replaces": [
+   "Forge",
+   "Forge",
+   "Chimney",
+   "Embers",
+   "Stump",
+   "Anvil",
+   "Anvil",
+   "Anvil",
+   "AnvilHorn"
+  ],
+  "Keep": "the Embers' PointLight (255,140,40) and Attachment FirePoint: move them to the ForgeLight / Fire attachments of this model"
+ }
+}

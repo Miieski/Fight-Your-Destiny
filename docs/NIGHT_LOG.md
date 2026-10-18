@@ -1913,3 +1913,19 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   A's meshes. Sync run 2 = 0; full run 9 templates / 126 instances / 0 replaced. Hub parts 5,235 / 6,000.
   Low FX test switch: LocalPlayer attribute PropFX_TestLowFx (tests only). Main agent Play check: Flicker 2 -> 0, the
   lamp light stays at 1.200, the effects come back when it is cleared.
+- 03:40 BATCH 3 + BATCH 4 Blender half done (Agent A; main agent looked at fountain_before_after, Batch3_lineup,
+  Batch4_lineup: approved). fountain 5,018 tris (30.70 x 22.36 x 30.21 vs 30.00 x 22.30 x 30.00; cut stone, moss,
+  carved column bands, 6 falling streams = new role _Stream, foam rings = _Foam, colliders = today's 8 cylinders so
+  access to the water is unchanged, the crystal rebuilt as fountain_Crystal_Glow); anvil_forge 1,950 (sub-model of
+  the weapon stall at stall-space (10.85, 0, 1.9); replaces Forge x2, Chimney, Embers, Stump, Anvil x3, AnvilHorn;
+  keeps the Embers' PointLight / FirePoint); weapon_stall 2,672 / trophy_stall 2,246 / diamond_shop 2,656 (pieces
+  only: scalloped awnings with folds and sag, swords / shield / axe / tray, gold trophy + crystal ball (role _Glass +
+  inner glow; the brief's crystal ball replaces today's CounterSkull), the brilliant-cut diamond sign pivoted at its
+  centre for the float / spin, 3 cut gems on cushions). Items without known positions carry an Anchor (re-based on
+  the real part in Studio) and a Replaces list. 13 props, all preview PNGs uploaded (README section 12).
+  DECISIONS (Agent A): weapon awning 8 stripes (brief), trophy / diamond keep today's 7; assumed wall-item layout
+  from photo 19; double-bit axe head and a shield boss on both faces (read right whatever the part's rotation); the
+  "blue tray" = a wooden tray with grey-blue velvet and a dagger; fountain 6 streams (6-8 allowed), water 0.35 below
+  the rims; forge = open fire bed on top where the Embers are + an arched fuel opening, bellows on the stall side.
+  Pipeline made deterministic (sorted geometry before the jitter): builds are byte-identical; props built before
+  the fix keep files that match their uploads (a rebuild of one of them needs a new preview upload).

@@ -1,0 +1,518 @@
+{
+ "Id": "diamond_shop",
+ "Photo": "20_diamond_shop.png",
+ "Fbx": "Blender_Exports/Props/diamond_shop.fbx",
+ "Blend": "Blender/Props/diamond_shop.blend",
+ "Triangles": 2656,
+ "Budget": 8000,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   -0.001,
+   11.418,
+   -1.128
+  ],
+  "Size": [
+   15.603,
+   15.677,
+   11.384
+  ],
+  "Min": [
+   -7.803,
+   3.58,
+   -6.82
+  ],
+  "Max": [
+   7.8,
+   19.257,
+   4.564
+  ]
+ },
+ "StudioSize": [
+  15.6,
+  11.11,
+  15.5
+ ],
+ "Meshes": {
+  "diamond_shop_AwningBlue": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    71,
+    133,
+    236
+   ],
+   "Target": "#4078D4",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.001,
+    8.944,
+    -1.128
+   ],
+   "Size": [
+    15.603,
+    3.952,
+    11.384
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 560,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": [
+    {
+     "What": "awning stripes",
+     "Count": 7,
+     "Size": [
+      2.23,
+      0.45,
+      11.6
+     ],
+     "At": "y 9.6, pitch -13 (front lower)"
+    },
+    {
+     "What": "awning fringe blocks",
+     "Count": 7,
+     "Size": [
+      2.23,
+      1.2,
+      0.35
+     ],
+     "At": "(x, 7.75, -6.75)"
+    }
+   ]
+  },
+  "diamond_shop_AwningWhite": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    250,
+    251,
+    255
+   ],
+   "Target": "#F5F6FA",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.001,
+    8.934,
+    -1.128
+   ],
+   "Size": [
+    11.145,
+    3.972,
+    11.384
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 420,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": "(same awning as diamond_shop_AwningBlue)"
+  },
+  "diamond_shop_Diamond_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    95,
+    212,
+    255
+   ],
+   "Target": "#5FD4FF",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    17.807,
+    1.0
+   ],
+   "Size": [
+    4.9,
+    2.9,
+    1.519
+   ],
+   "Pivot": [
+    0.0,
+    17.8,
+    1.0
+   ],
+   "Triangles": 156,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DiamondGirdle",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     0.0,
+     18.3,
+     1.0
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     4.9,
+     0.3,
+     1.5
+    ]
+   },
+   "Replaces": [
+    "Diamond (block + 4 wedges)",
+    "DiamondGirdle"
+   ]
+  },
+  "diamond_shop_DiamondRim_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    245,
+    246,
+    250
+   ],
+   "Target": "#F5F6FA",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    18.3,
+    1.0
+   ],
+   "Size": [
+    5.08,
+    0.24,
+    1.575
+   ],
+   "Pivot": [
+    0.0,
+    17.8,
+    1.0
+   ],
+   "Triangles": 128,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DiamondGirdle",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     0.0,
+     18.3,
+     1.0
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     4.9,
+     0.3,
+     1.5
+    ]
+   },
+   "Replaces": "(the bright rim)"
+  },
+  "diamond_shop_SignGold": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    14.164,
+    1.0
+   ],
+   "Size": [
+    9.772,
+    4.472,
+    0.951
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 204,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SignBar",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     0.0,
+     12.2,
+     1.0
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     9,
+     0.6,
+     0.6
+    ]
+   },
+   "Replaces": [
+    "SignBar",
+    "SignPost"
+   ]
+  },
+  "diamond_shop_Cushions": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    82,
+    120,
+    244
+   ],
+   "Target": "#4A6CDC",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    3.94,
+    -2.9
+   ],
+   "Size": [
+    10.14,
+    0.6,
+    1.6
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 240,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": [
+    "Cushion x3 (2.2 x 0.5 x 1.6 at x -4 / 0 / 4)"
+   ]
+  },
+  "diamond_shop_Tassels": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    3.77,
+    -2.9
+   ],
+   "Size": [
+    10.185,
+    0.38,
+    1.62
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 312,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": "(cushion tassels)"
+  },
+  "diamond_shop_GemsCyan_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    95,
+    212,
+    255
+   ],
+   "Target": "#5FD4FF",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    4.374,
+    -2.9
+   ],
+   "Size": [
+    9.12,
+    0.86,
+    1.12
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 232,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": [
+    "the 2 cyan gems (5 Neon pieces each) at x -4 / 4"
+   ]
+  },
+  "diamond_shop_GemGold_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    255,
+    196,
+    60
+   ],
+   "Target": "#FFC43C",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    4.374,
+    -2.9
+   ],
+   "Size": [
+    1.12,
+    0.86,
+    1.12
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 116,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": [
+    "the gold gem (5 Neon pieces) at x 0"
+   ]
+  },
+  "diamond_shop_GemRims_Glow": {
+   "Family": "Glow",
+   "Role": "Glow",
+   "Color": [
+    245,
+    246,
+    250
+   ],
+   "Target": "#F5F6FA",
+   "Material": "Neon",
+   "Variant": null,
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    0.0,
+    4.52,
+    -2.9
+   ],
+   "Size": [
+    9.17,
+    0.07,
+    1.17
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 288,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": "(bright girdles of the 3 gems)"
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "diamond_shop_Collider_Awning",
+   "Shape": "Block",
+   "Center": [
+    0,
+    9.6,
+    -1.1
+   ],
+   "Size": [
+    15.6,
+    0.45,
+    11.6
+   ],
+   "Rotation": [
+    -13,
+    0,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "GemGlint1": [
+   -3.85,
+   4.7,
+   -3.1
+  ],
+  "GemGlint2": [
+   0.15,
+   4.7,
+   -3.1
+  ],
+  "GemGlint3": [
+   4.15,
+   4.7,
+   -3.1
+  ],
+  "DiamondCenter": [
+   0.0,
+   17.8,
+   1.0
+  ],
+  "SignGlint": [
+   0.8,
+   18.9,
+   0.7
+  ]
+ },
+ "Placement": {
+  "Host": "Hub.DiamondShop (and the kit / test copies of Station_DiamondShop)",
+  "OriginInHost": [
+   0,
+   0,
+   0
+  ],
+  "RotationInHost": [
+   0,
+   0,
+   0
+  ],
+  "Note": "pieces only: the frame (posts, counter, backboard) is Studio-built by Agent B; Interact, NameTag, NpcSpot and NPC stay Studio children"
+ }
+}

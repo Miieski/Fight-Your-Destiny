@@ -1,0 +1,1159 @@
+{
+ "Id": "weapon_stall",
+ "Photo": "19_weapon_stall.png",
+ "Fbx": "Blender_Exports/Props/weapon_stall.fbx",
+ "Blend": "Blender/Props/weapon_stall.blend",
+ "Triangles": 2672,
+ "Budget": 8000,
+ "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
+ "PivotY": 0.0,
+ "Bounds": {
+  "Center": [
+   0.003,
+   6.873,
+   -1.128
+  ],
+  "Size": [
+   15.614,
+   8.077,
+   11.384
+  ],
+  "Min": [
+   -7.804,
+   2.834,
+   -6.82
+  ],
+  "Max": [
+   7.81,
+   10.911,
+   4.564
+  ]
+ },
+ "StudioSize": [
+  15.6,
+  11.11,
+  15.5
+ ],
+ "Meshes": {
+  "weapon_stall_AwningRed": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    236,
+    58,
+    67
+   ],
+   "Target": "#D4343C",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    -0.972,
+    8.903,
+    -1.128
+   ],
+   "Size": [
+    13.663,
+    4.016,
+    11.384
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 560,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": [
+    {
+     "What": "awning stripes",
+     "Count": 7,
+     "Size": [
+      2.23,
+      0.45,
+      11.6
+     ],
+     "At": "y 9.6, pitch -13 (front lower)"
+    },
+    {
+     "What": "awning fringe blocks",
+     "Count": 7,
+     "Size": [
+      2.23,
+      1.2,
+      0.35
+     ],
+     "At": "(x, 7.75, -6.75)"
+    }
+   ]
+  },
+  "weapon_stall_AwningCream": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    255,
+    248,
+    229
+   ],
+   "Target": "#E8E2D0",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": true,
+   "Center": [
+    0.979,
+    8.903,
+    -1.128
+   ],
+   "Size": [
+    13.663,
+    4.016,
+    11.384
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 560,
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": "(same awning as weapon_stall_AwningRed)"
+  },
+  "weapon_stall_Sword1Blade": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.6,
+    6.385,
+    3.2
+   ],
+   "Size": [
+    0.459,
+    4.369,
+    0.136
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 52,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -0.6,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": [
+    "SwordBlade",
+    "SwordGuard",
+    "SwordGrip"
+   ]
+  },
+  "weapon_stall_Sword1Gold": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.6,
+    3.537,
+    3.2
+   ],
+   "Size": [
+    1.493,
+    1.406,
+    0.32
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 88,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -0.6,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": "(with the blade)"
+  },
+  "weapon_stall_Sword1Grip": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -0.6,
+    3.525,
+    3.2
+   ],
+   "Size": [
+    0.217,
+    0.95,
+    0.25
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 80,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -0.6,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": "(with the blade)"
+  },
+  "weapon_stall_Sword2Blade": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -2.2,
+    6.385,
+    3.2
+   ],
+   "Size": [
+    0.459,
+    4.369,
+    0.136
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 52,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -2.2,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": [
+    "SwordBlade",
+    "SwordGuard",
+    "SwordGrip"
+   ]
+  },
+  "weapon_stall_Sword2Gold": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -2.2,
+    3.537,
+    3.2
+   ],
+   "Size": [
+    1.493,
+    1.406,
+    0.32
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 88,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -2.2,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": "(with the blade)"
+  },
+  "weapon_stall_Sword2Grip": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -2.2,
+    3.525,
+    3.2
+   ],
+   "Size": [
+    0.217,
+    0.95,
+    0.25
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 80,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -2.2,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": "(with the blade)"
+  },
+  "weapon_stall_Sword3Blade": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.8,
+    6.385,
+    3.2
+   ],
+   "Size": [
+    0.459,
+    4.369,
+    0.136
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 52,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.8,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": [
+    "SwordBlade",
+    "SwordGuard",
+    "SwordGrip"
+   ]
+  },
+  "weapon_stall_Sword3Gold": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.8,
+    3.537,
+    3.2
+   ],
+   "Size": [
+    1.493,
+    1.406,
+    0.32
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 88,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.8,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": "(with the blade)"
+  },
+  "weapon_stall_Sword3Grip": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.8,
+    3.525,
+    3.2
+   ],
+   "Size": [
+    0.217,
+    0.95,
+    0.25
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 80,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "SwordBlade",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.8,
+     6.4,
+     3.2
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "PartSize": [
+     0.5,
+     4.4,
+     0.2
+    ]
+   },
+   "Replaces": "(with the blade)"
+  },
+  "weapon_stall_ShieldFace": {
+   "Family": "Planks",
+   "Role": "Solid",
+   "Color": [
+    77,
+    112,
+    228
+   ],
+   "Target": "#4A6CDC",
+   "Material": "WoodPlanks",
+   "Variant": "FYD_Planks",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    3.6,
+    6.3,
+    3.15
+   ],
+   "Size": [
+    2.48,
+    2.48,
+    0.34
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 60,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "Shield",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     3.6,
+     6.3,
+     3.15
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     0.4,
+     2.6,
+     2.6
+    ]
+   },
+   "Replaces": [
+    "Shield",
+    "ShieldBoss"
+   ]
+  },
+  "weapon_stall_ShieldRim": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    3.6,
+    6.3,
+    3.13
+   ],
+   "Size": [
+    2.64,
+    2.64,
+    0.46
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 176,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "Shield",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     3.6,
+     6.3,
+     3.15
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     0.4,
+     2.6,
+     2.6
+    ]
+   },
+   "Replaces": "(with the shield)"
+  },
+  "weapon_stall_ShieldBoss": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    3.6,
+    6.3,
+    3.125
+   ],
+   "Size": [
+    1.1,
+    1.1,
+    0.811
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 172,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "Shield",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     3.6,
+     6.3,
+     3.15
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     0.4,
+     2.6,
+     2.6
+    ]
+   },
+   "Replaces": "(with the shield)"
+  },
+  "weapon_stall_AxeHandle": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    2.387,
+    5.875,
+    3.15
+   ],
+   "Size": [
+    1.945,
+    4.743,
+    0.34
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 56,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "AxeHandle",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     2.4,
+     5.9,
+     3.15
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     -20.0
+    ],
+    "PartSize": [
+     0.4,
+     5,
+     0.4
+    ]
+   },
+   "Replaces": [
+    "AxeHandle"
+   ]
+  },
+  "weapon_stall_AxeHead": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    139,
+    145,
+    159
+   ],
+   "Target": "#7A808C",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    3.084,
+    7.779,
+    3.15
+   ],
+   "Size": [
+    2.344,
+    2.174,
+    0.22
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 108,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "AxeHead",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     3.084,
+     7.779,
+     3.15
+    ],
+    "AssumedRotation": [
+     0.0,
+     0.0,
+     -20.0
+    ],
+    "PartSize": [
+     2,
+     1.8,
+     0.3
+    ]
+   },
+   "Replaces": [
+    "AxeHead"
+   ]
+  },
+  "weapon_stall_TrayWood": {
+   "Family": "Wood",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Wood",
+   "Variant": "FYD_Wood",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.6,
+    3.815,
+    -2.9
+   ],
+   "Size": [
+    4.7,
+    0.23,
+    1.7
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 90,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DisplaySword",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.6,
+     3.85,
+     -2.9
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     1.6,
+     0.3,
+     4.6
+    ]
+   },
+   "Replaces": [
+    "DisplaySword (blade 1.6 x 0.3 x 4.6)",
+    "DisplaySword guard (0.5 x 0.4 x 1.4)"
+   ]
+  },
+  "weapon_stall_TrayVelvet": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    102,
+    109,
+    122
+   ],
+   "Target": "#5C626E",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.6,
+    3.85,
+    -2.9
+   ],
+   "Size": [
+    4.5,
+    0.06,
+    1.5
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 10,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DisplaySword",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.6,
+     3.85,
+     -2.9
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     1.6,
+     0.3,
+     4.6
+    ]
+   },
+   "Replaces": "(with the tray)"
+  },
+  "weapon_stall_DaggerBlade": {
+   "Family": "Iron",
+   "Role": "Solid",
+   "Color": [
+    105,
+    111,
+    125
+   ],
+   "Target": "#5C626E",
+   "Material": "Metal",
+   "Variant": "FYD_Iron",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -3.415,
+    3.97,
+    -2.9
+   ],
+   "Size": [
+    2.27,
+    0.136,
+    0.339
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 52,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DisplaySword",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.6,
+     3.85,
+     -2.9
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     1.6,
+     0.3,
+     4.6
+    ]
+   },
+   "Replaces": "(with the tray)"
+  },
+  "weapon_stall_DaggerGold": {
+   "Family": "Gold",
+   "Role": "Solid",
+   "Color": [
+    255,
+    201,
+    60
+   ],
+   "Target": "#FFC93C",
+   "Material": "Metal",
+   "Variant": "FYD_Gold",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -5.043,
+    3.97,
+    -2.9
+   ],
+   "Size": [
+    1.044,
+    0.201,
+    1.123
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 88,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DisplaySword",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.6,
+     3.85,
+     -2.9
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     1.6,
+     0.3,
+     4.6
+    ]
+   },
+   "Replaces": "(with the tray)"
+  },
+  "weapon_stall_DaggerGrip": {
+   "Family": "Cloth",
+   "Role": "Solid",
+   "Color": [
+    124,
+    69,
+    42
+   ],
+   "Target": "#703E26",
+   "Material": "Fabric",
+   "Variant": "FYD_Cloth",
+   "Transparency": 0.0,
+   "CastShadow": false,
+   "Center": [
+    -5.049,
+    3.97,
+    -2.9
+   ],
+   "Size": [
+    0.702,
+    0.16,
+    0.185
+   ],
+   "Pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "Triangles": 80,
+   "Overlay": null,
+   "Anchor": {
+    "Part": "DisplaySword",
+    "Pick": "nearest",
+    "AssumedPosition": [
+     -3.6,
+     3.85,
+     -2.9
+    ],
+    "AssumedRotation": [
+     0.0,
+     90.0,
+     0.0
+    ],
+    "PartSize": [
+     1.6,
+     0.3,
+     4.6
+    ]
+   },
+   "Replaces": "(with the tray)"
+  }
+ },
+ "Colliders": [
+  {
+   "Name": "weapon_stall_Collider_Awning",
+   "Shape": "Block",
+   "Center": [
+    0,
+    9.6,
+    -1.1
+   ],
+   "Size": [
+    15.6,
+    0.45,
+    11.6
+   ],
+   "Rotation": [
+    -13,
+    0,
+    0
+   ]
+  }
+ ],
+ "Attachments": {
+  "ShieldGlint": [
+   3.6,
+   6.3,
+   2.9
+  ]
+ },
+ "Placement": {
+  "Host": "Hub.WeaponShop (and the kit / test copies of Station_WeaponShop)",
+  "OriginInHost": [
+   0,
+   0,
+   0
+  ],
+  "RotationInHost": [
+   0,
+   0,
+   0
+  ],
+  "Note": "pieces only: the frame (posts, counter, backboard) is Studio-built by Agent B; Interact, NameTag, NpcSpot and NPC stay Studio children"
+ }
+}

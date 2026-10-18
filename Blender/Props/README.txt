@@ -19,6 +19,9 @@ TOOLS (headless Blender 5.2, or the same code from the Blender MCP; it then work
                                         compares names / triangles / raw size / vertex colours with the JSON
   The .blend files are the SOURCE OF TRUTH; to change a convention, change fyd_props.py and re-run the recipes
   (a prop rebuilds in a few seconds).
+  Builds are DETERMINISTIC since 2026-10-19 (same recipe -> same meshes, same preview PNG bytes; only the FBX
+  timestamp changes). Props built before that fix (well ... trophy_stall) keep their files and uploads, which match;
+  rebuilding one of them gives slightly different random jitter (same look): re-upload its preview PNG then.
 
 =================================================================
 1. STYLE (brief section 2)
@@ -192,6 +195,8 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
     <propId>_<Part>_Glow     emissive: Material Neon, Color = its colour, no SurfaceAppearance, CastShadow false
     <propId>_<Part>_Water    water: Transparency 0.35 (Glass / SmoothPlastic), no SA, optional water_ripple Texture
     <propId>_<Part>_Glass    glass panes: Transparency 0.3
+    <propId>_<Part>_Stream   falling water (fountain): Transparency 0.45, Glass / SmoothPlastic, no SA, optional ripple
+    <propId>_<Part>_Foam     foam rings: ClothWhite, Transparency 0.2, SmoothPlastic, no SA
   (a part already named after its role is not suffixed twice: well_Water)
 - Mesh colliders (convex shapes only): <propId>_Collider or <propId>_Collider_<Name> -> Transparency 1,
   CanCollide true, CollisionFidelity Hull, CastShadow false, CanQuery true, no SA. Simple colliders are DATA
@@ -202,6 +207,20 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
 - Moving meshes carry their hinge / sway point as "Pivot" (also an attachment of the same name in the data):
   clam_pearl_ShellTop + ShellTopInner (Hinge, X axis), scarecrow_Hat + HatBand (HatPivot), scarecrow_Straw*
   (StrawWristL / StrawWristR / StrawCollar / StrawHem). Rotate them around Pivot; the other meshes stay put.
+- PLACEMENT (prop level, optional): {Host, OriginInHost, RotationInHost, Replaces, Keep, Note}. anvil_forge is a
+  sub-model of the weapon stall: OriginInHost = stall-space (10.85, 0, 1.9). The 3 stalls: origin = the stall pivot
+  (floor centre), the FBX holds only the Blender pieces (frames are Studio-built by Agent B).
+- REPLACES (per mesh): the current Studio part(s) the mesh takes over (names, or {What, Count, Size, At} for unnamed
+  parts such as the awning stripes / fringe blocks); "(with the blade)" etc. = same group as the mesh before it.
+- ANCHOR (per mesh, stall pieces whose position is not in the inventory): {Part, Pick "nearest", AssumedPosition,
+  AssumedRotation (Roblox Orientation, deg), PartSize}. The mesh is modelled (and shown in the FBX / preview PNG)
+  where that part is ASSUMED to be. ApplyPropMeshes finds the real part named Part (the copy nearest to
+  AssumedPosition, in the host stall) and re-bases, all CFrames in world space:
+      assumed = stallPivot * CFrame.new(AssumedPosition) * CFrame.Angles(rad(rx), rad(ry), rad(rz))
+      MeshPart.CFrame = realPart.CFrame * assumed:Inverse() * (stallPivot * CFrame.new(Center))
+  (the rotations used here are single-axis, so Orientation and CFrame.Angles agree).
+  All meshes of one item share the same anchor (e.g. Sword1Blade / Sword1Gold / Sword1Grip -> one SwordBlade), so
+  the item moves as a whole. Without an anchor a mesh is placed at stallPivot * CFrame.new(Center).
 - The family / tint / material of each mesh are NOT parsed from names: they are in
   Blender_Exports/Props/PropMeshData.luau (generated; paste it into ServerStorage.DevTools.PropMeshData):
     Textures[set] = { ColorMap, NormalMap, RoughnessMap, MetalnessMap, ColorMean }
@@ -293,6 +312,11 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
     clam_pearl      rbxassetid://89935697598144         1024 x 36   5 / 1,580 / 572
     egg_nest        rbxassetid://105270124758004        1024 x 66   9 / 2,861 / 1,091
     scarecrow       rbxassetid://119496532966562        1024 x 101  13 / 4,442 / 1,848
+    fountain        rbxassetid://115702162046935        1024 x 253  12 / 11,016 / 5,018
+    anvil_forge     rbxassetid://79286061632425         1024 x 98   12 / 4,434 / 1,950
+    weapon_stall    rbxassetid://138468857077719        1024 x 139  21 / 6,239 / 2,672
+    trophy_stall    rbxassetid://130620008564858        1024 x 126  6 / 5,592 / 2,246
+    diamond_shop    rbxassetid://101265120883414        1024 x 140  10 / 6,240 / 2,656
 
 =================================================================
 12. PROPS DONE
@@ -348,6 +372,52 @@ BATCH 2 (2026-10-19; lineup Previews/Props/Batch2_lineup.png; sizes x y z vs tod
   X-stitched smile, wavy-brimmed straw hat with a band tilted 6 deg like today, straw cores at the wrists, a ruff
   at the collar, a straw band + long straws at the hem. Colliders Post, Arms, Shirt (Blocks) + Head (Ball) as
   today. Sway: Hat + HatBand around HatPivot (0, 8, 0), each Straw mesh around its own pivot.
+BATCH 3 (2026-10-19; lineup Previews/Props/Batch3_lineup.png):
+- fountain: 5,018 tris / 12 meshes (DarkStone StoneDark: step slabs, coping, carved bands, upper bowl, spout lips;
+  Wall StoneBlocks/Stone; Pedestal Stone; Column StonePale; Wet StoneMortar: wet bands + basin floor; Moss; Gold collar;
+  Crystal_Glow Diamond; LowerWater + UpperWater (Water, T 0.35); Stream (new role Stream, T 0.45: the 6 falling
+  streams); Foam (new role Foam, ClothWhite, T 0.2: rings where the streams land + round the spout)); 30.70 x 22.36 x
+  30.21 (today 30.00 x 22.30 x 30.00). Three tiers kept: 16 step slabs, cut-stone wall, 16 chipped coping stones,
+  wet band at the waterline, carved pedestal (3 bands), pale column flaring into an irregular-rimmed upper bowl with
+  6 carved lips, spout column, gold collar, hexagonal crystal with 2 small ones (replaces TopCrystal: move its
+  WaterPoint attachment + PointLight to the Crystal_Glow mesh / the WaterPoint point). Water 0.35 below the rims.
+  Colliders = today's 8 full cylinders (Step, Basin, Rim, Pedestal, PedestalTop, UpperBowl, Spout, SpoutRing): nobody
+  climbs in more than today. Attachments WaterLower (0, 4.25, 0), WaterUpper (0, 12.3, 0), WaterPoint (0, 19.6, 0),
+  Mist1-6 (stream landings), Glint1-3. Keep Hub.Decor.VFX.Water_Ripple (separate part).
+- anvil_forge: 1,950 tris / 12 meshes (Hearth StoneBlocks/Stone, Upper StoneBlocks/StoneDark: voussoirs, fire-bed
+  frame, chimney + cap; Soot + Coal Plain dark; Coals_Glow Fire; Stump WoodTrunk; StumpTop WoodLight rings; Anvil
+  Iron (+ tongs, hoops, nozzle); AnvilFace IronWorn; Wood WoodMid (bucket staves, bellows boards); Leather Cloth/
+  WoodDark; Water); 5.57 x 9.33 x 9.24 (today's parts 5.30 x 9.00 x 8.80). A SUB-MODEL of the weapon stall: data
+  Placement.OriginInHost = stall-space (10.85, 0, 1.9), no rotation; replaces Forge x2, Chimney, Embers, Stump, Anvil
+  x3, AnvilHorn (keep the Embers' PointLight + FirePoint: move them to ForgeLight / Fire). Hearth with an arched opening
+  (5 voussoirs), stone frame round a coal bed (glowing + dark lumps, where today's Embers are), tapered chimney with cap
+  and flue, anvil (feet, waist, body, heel + hardy hole, polished face, horn toward +X as today) on a ridged stump with
+  growth rings and roots; extras: tongs, quench bucket with water, bellows on the hearth's -X side. Colliders: today's
+  solids (+ bucket). Attachments Fire (FirePoint), ForgeLight, Sparks (anvil face), Smoke (chimney top).
+BATCH 4, Blender half (2026-10-19; lineup Previews/Props/Batch4_lineup.png, frames drawn render-only):
+- weapon_stall: 2,672 tris / 21 meshes. Awning (8 stripes per the brief: AwningRed ClothRed + AwningCream
+  ClothCream; cloth sagging between the back beam and the front posts, drooping overhang, folds, dip along the front
+  edge between the posts, scalloped valance) replacing today's 7 stripes + 7 fringe blocks; collider Awning (Block
+  15.6 x 0.45 x 11.6 at (0, 9.6, -1.1), rotation (-13, 0, 0) = today's slab). Anchored items: 3 swords (SwordNBlade
+  Iron with a dark fuller, SwordNGold guard + ball quillons + pommel, SwordNGrip leather wrap; anchor SwordBlade,
+  assumed x -0.6 / -2.2 / -3.8, y 6.4, z 3.2, tips up), ShieldFace (Planks, ClothBlueAlt) + ShieldRim (Iron, rim +
+  8 rivets) + ShieldBoss (Gold, both sides) anchored to Shield (assumed (3.6, 6.3, 3.15), rotation (0, 90, 0)),
+  AxeHandle (anchor AxeHandle) + AxeHead (double-bit, anchor AxeHead) leaning -20 deg, TrayWood + TrayVelvet (Cloth,
+  Iron tint = today's grey-blue) + a dagger (DaggerBlade / Gold / Grip) anchored to DisplaySword (the 1.6 x 0.3 x 4.6
+  "blue tray", assumed (-3.6, 3.85, -2.9), rotation (0, 90, 0)). Attachment ShieldGlint.
+- trophy_stall: 2,246 tris / 6 meshes, no anchors (positions from the inventory). Awning (7 stripes, AwningGreen
+  ClothGreen + AwningCream). Gold (cup with 2 handles, knop and foot, plaque, ball stand + 3 claws) + Wood (plinth,
+  stand base) replacing the TrophyCup's 3 gold cylinders at (-3.5, 3.7, -2.9); Ball_Glass (#CDEBF5, T 0.3) +
+  BallCore_Glow (#B39DFF) at (2.5, 4.85, -2.9) replacing CounterSkull (the brief's crystal ball wins). Attachments
+  BallShimmer, TrophyGlint.
+- diamond_shop: 2,656 tris / 10 meshes. Awning (7 stripes, AwningBlue ClothBlue + AwningWhite ClothWhite).
+  Diamond_Glow (brilliant cut: crown, table, pavilion, culet; depth squashed to 1.5 like today) + DiamondRim_Glow
+  (white girdle) with Pivot = the diamond's centre (0, 17.8, 1.0 assumed) for the float / spin, anchored to
+  DiamondGirdle (assumed (0, 18.3, 1.0)), replacing Diamond (block + 4 wedges) + DiamondGirdle; SignGold (bar with
+  finials + moulded post) anchored to SignBar (assumed (0, 12.2, 1.0)), replacing SignBar + SignPost. Cushions
+  (pillows, ClothBlueAlt) + Tassels (Gold) + GemsCyan_Glow (x -4 / 4) + GemGold_Glow (x 0) + GemRims_Glow (white
+  girdles) at today's x -4 / 0 / 4 on the counter (no anchor). Attachments DiamondCenter, SignGlint, GemGlint1-3.
+  The "Diamond Shop" BillboardGui stays a Studio child.
 
 =================================================================
 13. NOTES FOR THE STUDIO-BUILT PROPS (Agent B, batch 1) AND PIVOTS

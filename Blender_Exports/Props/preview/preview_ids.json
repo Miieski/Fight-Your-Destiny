@@ -120,6 +120,81 @@
    "meshes": 13,
    "verts": 4442,
    "tris": 1848
+  },
+  "fountain": {
+   "files": [
+    "fountain_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://115702162046935"
+   ],
+   "size": [
+    1024,
+    253
+   ],
+   "meshes": 12,
+   "verts": 11016,
+   "tris": 5018
+  },
+  "anvil_forge": {
+   "files": [
+    "anvil_forge_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://79286061632425"
+   ],
+   "size": [
+    1024,
+    98
+   ],
+   "meshes": 12,
+   "verts": 4434,
+   "tris": 1950
+  },
+  "weapon_stall": {
+   "files": [
+    "weapon_stall_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://138468857077719"
+   ],
+   "size": [
+    1024,
+    139
+   ],
+   "meshes": 21,
+   "verts": 6239,
+   "tris": 2672
+  },
+  "trophy_stall": {
+   "files": [
+    "trophy_stall_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://130620008564858"
+   ],
+   "size": [
+    1024,
+    126
+   ],
+   "meshes": 6,
+   "verts": 5592,
+   "tris": 2246
+  },
+  "diamond_shop": {
+   "files": [
+    "diamond_shop_mesh.png"
+   ],
+   "assetIds": [
+    "rbxassetid://101265120883414"
+   ],
+   "size": [
+    1024,
+    140
+   ],
+   "meshes": 10,
+   "verts": 6240,
+   "tris": 2656
   }
  }
 }
