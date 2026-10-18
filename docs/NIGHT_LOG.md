@@ -1710,6 +1710,12 @@ pieces). Backups before_egg_hatch / after_egg_hatch (6 files each).
 
 ## Status (newest first)
 
+- 20:05 Real Play test after the owner reopened the place: the API worked, but the first hatch hit "Failed to create
+  empty EditableMesh ... memory budget limits": a client allows only 8 EditableMeshes at once and the shell used 15
+  (overlay + 2 per piece). Rebuilt: all pieces' outsides in one mesh and all insides in another (3 per shell),
+  each piece moved by its own vertices (5,000 SetPosition = 0.44 ms a frame), fixed flight bounds so nothing
+  rescales, per-piece fade by vertex colour alpha + a final part fade. Play: real cracks on the hatch screen, three
+  hatches in a row, no error, all 8 mesh slots free afterwards.
 - 18:15 DONE except the real Play test. Studio = disk (pull: 170 scripts, 0 written).
   * The 12 zone eggs are AI-generated textured meshes (generate_mesh), ~2,000 triangles, 1024 px textures, owned by
     the owner: EditableMesh / EditableImage load them in Studio. New `UI/EggCrack`: welds the mesh, outward normals,

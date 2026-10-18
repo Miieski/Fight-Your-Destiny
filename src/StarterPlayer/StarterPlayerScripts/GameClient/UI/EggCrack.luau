@@ -15,6 +15,8 @@
 --   shell:open(f, glow?) 0..1: the cracks widen just before the break and light (glow colour) shines through them
 --   shell:shatter(view)  the break: the pieces fly inside the ViewportFrame view; returns at once, cleans up itself
 --   shell:destroy()
+-- A device allows only a few EditableMeshes at once (8 on a Studio client): a shell uses 3 (the crack overlay, all
+-- the pieces' outsides, all the pieces' insides). The pieces move by moving their own vertices.
 local AssetService = game:GetService("AssetService")
 local RunService = game:GetService("RunService")
 
@@ -31,6 +33,8 @@ local SHELL_THICKNESS = 0.028 -- of the egg's height
 local BOUNDS_MARGIN = 0.03 -- of the egg's height: room for the crack strips, so the copy never rescales
 local STARBURST = 4 -- little cracks around the first hit (Low FX: 2)
 local PIECE_SECONDS = 1.15 -- how long the pieces fly before they are gone
+-- the pieces' meshes have fixed bounds that hold the whole flight (of the egg's height, around its centre)
+local FLIGHT_SIDE, FLIGHT_UP, FLIGHT_DOWN = 3.4, 2.6, 4.6
 
 type Face = { k: { number }, uv: { Vector2 }, n: { Vector3 } }
 type Data = {
@@ -44,7 +48,8 @@ type Data = {
 	winding: number, -- +1: a face's front is where (p2 - p1) x (p3 - p1) points, -1: the other side
 }
 type Strip = { ids: { number }, a: Vector3, b: Vector3, side: Vector3, lift: Vector3, ext: Vector3, w: number }
-type Piece = { parts: { MeshPart }, offsets: { CFrame }, center: Vector3, cell: number }
+type Vert = { id: number, rest: Vector3 } -- a piece's vertex and where it sits around the piece's centre
+type Piece = { cell: number, center: Vector3, outer: { Vert }, inner: { Vert }, outerColor: number, innerColor: number }
 type Crack = { edge: number, at: number, w: number } -- w = width factor (the starburst tapers)
 
 export type Shell = typeof(setmetatable({} :: {
@@ -60,6 +65,11 @@ export type Shell = typeof(setmetatable({} :: {
 	_strips: { Strip },
 	_pieces: { Piece },
 	_meshes: { EditableMesh },
+	_outer: EditableMesh?,
+	_inner: EditableMesh?,
+	_pieceParts: { MeshPart },
+	_partOffset: CFrame,
+	_bounds: { Vector3 },
 	_shards: number,
 	_dead: boolean,
 	_conn: RBXScriptConnection?,
@@ -179,16 +189,30 @@ local function load(meshId: string): Data?
 	return nil
 end
 
--- A triangle whose front side faces `out`, with that normal on its 3 corners.
-local function triangle(em: EditableMesh, winding: number, ids: { number }, ps: { Vector3 }, out: Vector3): number
+-- A triangle whose front side faces `out` (normals left to the engine).
+local function orient(em: EditableMesh, winding: number, ids: { number }, ps: { Vector3 }, out: Vector3): number
 	local a, b, c = ids[1], ids[2], ids[3]
 	if (ps[2] - ps[1]):Cross(ps[3] - ps[1]):Dot(out) * winding < 0 then
 		b, c = c, b
 	end
-	local f = em:AddTriangle(a, b, c)
+	return em:AddTriangle(a, b, c)
+end
+
+-- The same, with that normal on its 3 corners (the crack strips, which never move).
+local function triangle(em: EditableMesh, winding: number, ids: { number }, ps: { Vector3 }, out: Vector3): number
+	local f = orient(em, winding, ids, ps, out)
 	local n = em:AddNormal(if out.Magnitude > 1e-12 then out.Unit else Vector3.yAxis)
 	em:SetFaceNormals(f, { n, n, n })
 	return f
+end
+
+-- An empty EditableMesh, or an error when the device's budget is used up.
+local function newMesh(): EditableMesh
+	local em = AssetService:CreateEditableMesh({})
+	if not em then
+		error("EditableMesh budget reached")
+	end
+	return em
 end
 
 local function zig(x: number): number
@@ -344,11 +368,23 @@ local function boundsOf(points: { Vector3 }): (Vector3, Vector3)
 	return minv, maxv
 end
 
--- The broken pieces (built before the break, shown at the break): textured outside + plain inside and rims.
+-- The broken pieces, all in two meshes (built before the break, shown at the break): the egg's own faces with their
+-- UVs and texture outside, a plain shell-white inside with broken rims. Every piece has its own vertices.
 local function buildPieces(self: Shell, cellOf: { number }, texture: Content)
 	local data = self._data
-	local thick = self._height * SHELL_THICKNESS
+	local h = self._height
+	local thick = h * SHELL_THICKNESS
 	local eggCenter = (data.min + data.max) / 2
+	local outer, inner = newMesh(), newMesh()
+	table.insert(self._meshes, outer)
+	table.insert(self._meshes, inner)
+	-- fixed bounds that hold the whole flight, so moving the pieces never rescales the parts
+	local lo = eggCenter - Vector3.new(FLIGHT_SIDE, FLIGHT_DOWN, FLIGHT_SIDE) * h
+	local hi = eggCenter + Vector3.new(FLIGHT_SIDE, FLIGHT_UP, FLIGHT_SIDE) * h
+	for _, em in ipairs({ outer, inner }) do
+		em:AddTriangle(em:AddVertex(lo), em:AddVertex(lo), em:AddVertex(lo))
+		em:AddTriangle(em:AddVertex(hi), em:AddVertex(hi), em:AddVertex(hi))
+	end
 	for cell = 0, self._shards + 1 do
 		local faceIds = {}
 		for fi, c in ipairs(cellOf) do
@@ -359,53 +395,60 @@ local function buildPieces(self: Shell, cellOf: { number }, texture: Content)
 		if #faceIds == 0 then
 			continue
 		end
-		-- outside: the egg's own faces with their UVs and normals
-		local outer = AssetService:CreateEditableMesh({})
-		local map: { [number]: number } = {}
-		local outerPoints: { Vector3 } = {}
+		local points = {}
+		for _, fi in ipairs(faceIds) do
+			for i = 1, 3 do
+				table.insert(points, data.pos[data.faces[fi].k[i]])
+			end
+		end
+		local pMin, pMax = boundsOf(points)
+		local center = (pMin + pMax) / 2
+		local piece: Piece = {
+			cell = cell,
+			center = center,
+			outer = {},
+			inner = {},
+			outerColor = outer:AddColor(Color3.new(1, 1, 1), 1),
+			innerColor = inner:AddColor(Color3.new(1, 1, 1), 1),
+		}
+		-- outside: the egg's own faces with their UVs
+		local outerMap: { [number]: number } = {}
+		local oc = piece.outerColor
 		for _, fi in ipairs(faceIds) do
 			local face = data.faces[fi]
 			local ids = {}
 			for i = 1, 3 do
 				local k = face.k[i]
-				if not map[k] then
-					map[k] = outer:AddVertex(data.pos[k])
-					table.insert(outerPoints, data.pos[k])
+				if not outerMap[k] then
+					outerMap[k] = outer:AddVertex(data.pos[k])
+					table.insert(piece.outer, { id = outerMap[k], rest = data.pos[k] - center })
 				end
-				ids[i] = map[k]
+				ids[i] = outerMap[k]
 			end
 			local f = outer:AddTriangle(ids[1], ids[2], ids[3])
 			outer:SetFaceUVs(f, { outer:AddUV(face.uv[1]), outer:AddUV(face.uv[2]), outer:AddUV(face.uv[3]) })
-			outer:SetFaceNormals(f, { outer:AddNormal(face.n[1]), outer:AddNormal(face.n[2]), outer:AddNormal(face.n[3]) })
+			outer:SetFaceColors(f, { oc, oc, oc })
 		end
 		-- inside (the faces pushed in by the shell thickness, facing in) and the broken rims along the cracks
-		local inner = AssetService:CreateEditableMesh({})
 		local innerMap: { [number]: number } = {}
 		local rimMap: { [number]: number } = {}
-		local innerPoints: { Vector3 } = {}
-		local function innerVertex(k: number): number
-			if not innerMap[k] then
-				local p = data.pos[k] - data.vnormal[k] * thick
-				innerMap[k] = inner:AddVertex(p)
-				table.insert(innerPoints, p)
+		local function vertex(map: { [number]: number }, k: number, p: Vector3): number
+			if not map[k] then
+				map[k] = inner:AddVertex(p)
+				table.insert(piece.inner, { id = map[k], rest = p - center })
 			end
-			return innerMap[k]
+			return map[k]
 		end
-		local function rimVertex(k: number): number
-			if not rimMap[k] then
-				rimMap[k] = inner:AddVertex(data.pos[k])
-				table.insert(innerPoints, data.pos[k])
-			end
-			return rimMap[k]
-		end
+		local ic = piece.innerColor
 		for _, fi in ipairs(faceIds) do
 			local face = data.faces[fi]
 			local k1, k2, k3 = face.k[1], face.k[2], face.k[3]
 			local p1, p2, p3 = data.pos[k1], data.pos[k2], data.pos[k3]
 			local mid = (p1 + p2 + p3) / 3
-			local outward = (data.vnormal[k1] + data.vnormal[k2] + data.vnormal[k3])
+			local outward = data.vnormal[k1] + data.vnormal[k2] + data.vnormal[k3]
 			local q1, q2, q3 = p1 - data.vnormal[k1] * thick, p2 - data.vnormal[k2] * thick, p3 - data.vnormal[k3] * thick
-			triangle(inner, data.winding, { innerVertex(k1), innerVertex(k2), innerVertex(k3) }, { q1, q2, q3 }, -outward)
+			local f = orient(inner, data.winding, { vertex(innerMap, k1, q1), vertex(innerMap, k2, q2), vertex(innerMap, k3, q3) }, { q1, q2, q3 }, -outward)
+			inner:SetFaceColors(f, { ic, ic, ic })
 			for i = 1, 3 do
 				local a, b = face.k[i], face.k[i % 3 + 1]
 				local around = data.edgeFaces[edgeKey(a, b)]
@@ -419,39 +462,35 @@ local function buildPieces(self: Shell, cellOf: { number }, texture: Content)
 					local pa, pb = data.pos[a], data.pos[b]
 					local ia, ib = pa - data.vnormal[a] * thick, pb - data.vnormal[b] * thick
 					local away = (pa + pb) / 2 - mid
-					local oa, ob = rimVertex(a), rimVertex(b)
-					local va, vb = innerVertex(a), innerVertex(b)
-					triangle(inner, data.winding, { oa, ob, vb }, { pa, pb, ib }, away)
-					triangle(inner, data.winding, { oa, vb, va }, { pa, ib, ia }, away)
+					local oa, ob = vertex(rimMap, a, pa), vertex(rimMap, b, pb)
+					local va, vb = vertex(innerMap, a, ia), vertex(innerMap, b, ib)
+					local r1 = orient(inner, data.winding, { oa, ob, vb }, { pa, pb, ib }, away)
+					local r2 = orient(inner, data.winding, { oa, vb, va }, { pa, ib, ia }, away)
+					inner:SetFaceColors(r1, { ic, ic, ic })
+					inner:SetFaceColors(r2, { ic, ic, ic })
 				end
 			end
 		end
-		table.insert(self._meshes, outer)
-		table.insert(self._meshes, inner)
-		local oMin, oMax = boundsOf(outerPoints)
-		local iMin, iMax = boundsOf(innerPoints)
-		local scale = self._scale
-		local outerPart = AssetService:CreateMeshPartAsync(Content.fromObject(outer))
-		outerPart.Size = (oMax - oMin) * scale
-		outerPart.TextureContent = texture
-		local innerPart = AssetService:CreateMeshPartAsync(Content.fromObject(inner))
-		innerPart.Size = (iMax - iMin) * scale
-		innerPart.Color = SHELL_INSIDE
-		innerPart.Material = Enum.Material.SmoothPlastic
-		for _, p in ipairs({ outerPart, innerPart }) do
-			p.Name = "Shell" .. cell
-			p.Anchored = true
-			p.CanCollide = false
-			p.CastShadow = false
-		end
-		local oCenter, iCenter = (oMin + oMax) / 2, (iMin + iMax) / 2
-		table.insert(self._pieces, {
-			parts = { outerPart, innerPart },
-			offsets = { CFrame.identity, CFrame.new((iCenter - oCenter) * scale) },
-			center = (oCenter - eggCenter) * scale,
-			cell = cell,
-		})
+		table.insert(self._pieces, piece)
 	end
+	local scale = self._scale
+	local outerPart = AssetService:CreateMeshPartAsync(Content.fromObject(outer))
+	outerPart.Name = "ShellOutside"
+	outerPart.TextureContent = texture
+	local innerPart = AssetService:CreateMeshPartAsync(Content.fromObject(inner))
+	innerPart.Name = "ShellInside"
+	innerPart.Color = SHELL_INSIDE
+	innerPart.Material = Enum.Material.SmoothPlastic
+	for _, p in ipairs({ outerPart, innerPart }) do
+		p.Size = (hi - lo) * scale
+		p.Anchored = true
+		p.CanCollide = false
+		p.CastShadow = false
+	end
+	self._outer, self._inner = outer, inner
+	self._pieceParts = { outerPart, innerPart }
+	self._partOffset = CFrame.new(((lo + hi) / 2 - eggCenter) * scale)
+	self._bounds = { lo, hi }
 end
 
 function EggCrack.new(eggPart: MeshPart, opts: { [string]: any }?): Shell?
@@ -470,7 +509,7 @@ function EggCrack.new(eggPart: MeshPart, opts: { [string]: any }?): Shell?
 		-- the cracks: an untextured overlay mesh on the egg; it starts empty and gets a strip per crack.
 		-- Two invisible (zero-size) triangles fix its bounds a little outside the egg (centred on it, so the overlay
 		-- sits exactly on the egg), and adding cracks never rescales it.
-		local em = AssetService:CreateEditableMesh({})
+		local em = newMesh()
 		local margin = Vector3.one * height * BOUNDS_MARGIN
 		local lo, hi = data.min - margin, data.max + margin
 		em:AddTriangle(em:AddVertex(lo), em:AddVertex(lo), em:AddVertex(lo))
@@ -497,6 +536,11 @@ function EggCrack.new(eggPart: MeshPart, opts: { [string]: any }?): Shell?
 			_strips = {},
 			_pieces = {},
 			_meshes = { em },
+			_outer = nil,
+			_inner = nil,
+			_pieceParts = {},
+			_partOffset = CFrame.identity,
+			_bounds = {},
 			_shards = if low then 3 else SIDE_SHARDS,
 			_dead = false,
 			_conn = nil,
@@ -603,25 +647,31 @@ function EggCrack.open(self: Shell, f: number, glow: Color3?)
 	end
 end
 
--- The break: the cracked egg is replaced by its pieces, which fly in the viewport.
+-- The break: the cracked egg is replaced by its pieces, which fly in the viewport. The motion is worked out in the
+-- egg's mesh space and applied by moving each piece's vertices (about 0.5 ms per frame).
 function EggCrack.shatter(self: Shell, view: ViewportFrame)
-	if self._dead or self._conn then
+	local outer, inner = self._outer, self._inner
+	if self._dead or self._conn or not outer or not inner then
 		return
 	end
 	self:setCracks(1)
 	local eggCF = self._egg.CFrame
-	local eggPos = eggCF.Position
-	local h = self._egg.Size.Y
+	local h = self._height
 	local rng = self._rng
-	local up = Vector3.yAxis
+	-- world up in mesh space (the wobble may have tilted the egg)
+	local up = eggCF:VectorToObjectSpace(Vector3.yAxis) / self._scale
+	up = if up.Magnitude > 1e-6 then up.Unit else Vector3.yAxis
+	local eggCenter = (self._data.min + self._data.max) / 2
 	type Flying = { piece: Piece, pos: Vector3, rot: CFrame, vel: Vector3, axis: Vector3, spin: number, fadeFrom: number, fadeTo: number, delay: number }
 	local flying: { Flying } = {}
 	for _, piece in ipairs(self._pieces) do
-		local cf = eggCF * CFrame.new(piece.center)
-		local outward = cf.Position - eggPos
-		outward = Vector3.new(outward.X, 0, outward.Z)
-		outward = if outward.Magnitude > 1e-6 then outward.Unit else Vector3.new(rng:NextNumber(-1, 1), 0, rng:NextNumber(-1, 1)).Unit
-		local f: Flying = { piece = piece, pos = cf.Position, rot = cf.Rotation, vel = Vector3.zero, axis = Vector3.xAxis, spin = 0, fadeFrom = 0.55, fadeTo = 1.0, delay = 0 }
+		local away = piece.center - eggCenter
+		local outward = away - up * away:Dot(up)
+		if outward.Magnitude < 1e-6 then
+			outward = up:Cross(Vector3.new(rng:NextNumber(-1, 1), 0.1, rng:NextNumber(-1, 1)))
+		end
+		outward = outward.Unit
+		local f: Flying = { piece = piece, pos = piece.center, rot = CFrame.identity, vel = Vector3.zero, axis = Vector3.xAxis, spin = 0, fadeFrom = 0.55, fadeTo = 1.0, delay = 0 }
 		if piece.cell == 0 then
 			-- the bottom cup stays, sinks a little and fades while the pet appears
 			f.vel = -up * 0.25 * h
@@ -635,16 +685,16 @@ function EggCrack.shatter(self: Shell, view: ViewportFrame)
 		else
 			-- the side shards tip outward and fall
 			f.vel = outward * rng:NextNumber(1.5, 2.3) * h + up * rng:NextNumber(0.5, 1.1) * h
-			f.axis = (outward:Cross(up) + Vector3.new(rng:NextNumber(-0.3, 0.3), rng:NextNumber(-0.3, 0.3), rng:NextNumber(-0.3, 0.3)))
+			f.axis = outward:Cross(up) + Vector3.new(rng:NextNumber(-0.3, 0.3), rng:NextNumber(-0.3, 0.3), rng:NextNumber(-0.3, 0.3))
 			f.axis = if f.axis.Magnitude > 1e-6 then f.axis.Unit else Vector3.zAxis
 			f.spin = -rng:NextNumber(5, 10)
 			f.delay = rng:NextNumber(0, 0.06)
 		end
-		for i, part in ipairs(piece.parts) do
-			part.CFrame = CFrame.new(f.pos) * f.rot * piece.offsets[i]
-			part.Parent = view
-		end
 		table.insert(flying, f)
+	end
+	for _, part in ipairs(self._pieceParts) do
+		part.CFrame = eggCF * self._partOffset
+		part.Parent = view
 	end
 	self._part.Transparency = 1
 	self._egg.Transparency = 1
@@ -659,6 +709,9 @@ function EggCrack.shatter(self: Shell, view: ViewportFrame)
 		end
 	end
 	local gravity = -up * 7 * h
+	-- keep every piece inside the meshes' fixed bounds (a piece leaving them would rescale the whole part)
+	local keepLo = self._bounds[1] + Vector3.one * 0.6 * h
+	local keepHi = self._bounds[2] - Vector3.one * 0.6 * h
 	local t = 0
 	self._conn = RunService.RenderStepped:Connect(function(dt)
 		t += dt
@@ -675,12 +728,23 @@ function EggCrack.shatter(self: Shell, view: ViewportFrame)
 				if f.spin ~= 0 then
 					f.rot = CFrame.fromAxisAngle(f.axis, f.spin * dt) * f.rot
 				end
+				f.pos = f.pos:Max(keepLo):Min(keepHi)
+			end
+			local cf = CFrame.new(f.pos) * f.rot
+			for _, v in ipairs(f.piece.outer) do
+				outer:SetPosition(v.id, cf * v.rest)
+			end
+			for _, v in ipairs(f.piece.inner) do
+				inner:SetPosition(v.id, cf * v.rest)
 			end
 			local fade = math.clamp((t - f.fadeFrom) / (f.fadeTo - f.fadeFrom), 0, 1)
-			for i, part in ipairs(f.piece.parts) do
-				part.CFrame = CFrame.new(f.pos) * f.rot * f.piece.offsets[i]
-				part.Transparency = fade
-			end
+			outer:SetColorAlpha(f.piece.outerColor, 1 - fade)
+			inner:SetColorAlpha(f.piece.innerColor, 1 - fade)
+		end
+		-- whatever the vertex alpha does on a device, everything is gone at the end
+		local endFade = math.clamp((t - 0.8) / 0.3, 0, 1)
+		for _, part in ipairs(self._pieceParts) do
+			part.Transparency = endFade
 		end
 		if t >= PIECE_SECONDS then
 			self:destroy()
@@ -697,10 +761,8 @@ function EggCrack.destroy(self: Shell)
 		self._conn:Disconnect()
 		self._conn = nil
 	end
-	for _, piece in ipairs(self._pieces) do
-		for _, part in ipairs(piece.parts) do
-			part:Destroy()
-		end
+	for _, part in ipairs(self._pieceParts) do
+		part:Destroy()
 	end
 	if self._part then
 		self._part:Destroy()
@@ -709,7 +771,9 @@ function EggCrack.destroy(self: Shell)
 		em:Destroy()
 	end
 	table.clear(self._pieces)
+	table.clear(self._pieceParts)
 	table.clear(self._meshes)
+	self._outer, self._inner = nil, nil
 end
 
 return EggCrack

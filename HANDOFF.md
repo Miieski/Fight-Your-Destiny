@@ -160,9 +160,9 @@ cracks when `EggCrack.new` returns nil. `Config/PetRarities.HatchSeconds` 2.6 ->
 EggCrackSmall1-3 per burst (trimmed ProSoundEffects "Crack Egg Crunchy 5", vol 0.6), EggShellBreak at the break
 (Crunchy 13, vol 0.7), preloaded by Hatching. **The place setting "Allow Mesh & Image APIs" (Game Settings >
 Security) must be ON** - without it Roblox blocks EditableMesh even in Studio Play ("EditableMesh is not
-accessible"). The owner switched it on 2026-10-18 but Studio still blocked it in that session: the real hatch has
-only been checked in an Edit-mode bench (same viewport / camera / timeline), NOT yet in Play - test it after the
-place is reopened. Log: NIGHT_LOG "Real egg cracking"; screenshots docs/screenshots/egg_crack/.
+accessible"); after the owner reopened the place it works in Play. A client may hold only 8 EditableMeshes at once:
+a shell uses 3 (crack overlay + all pieces' outsides + all insides; the pieces move by their vertices, ~0.5 ms a
+frame) and frees them when done. Log: NIGHT_LOG "Real egg cracking"; screenshots docs/screenshots/egg_crack/.
 
 **2026-10-18: HUB / MAP POLISH (owner screenshots: misaligned tree base + mushroom, flickering Rebirth Altar stairs
 and house windows, "gross" Egg Station eggs, a smoother bench you can sit on).** Plains_3 `AncientTree`
