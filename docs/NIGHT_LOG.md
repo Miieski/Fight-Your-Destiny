@@ -2100,3 +2100,19 @@ top of docs/model_upgrade_brief.txt.
   their stalls at run time (6-7 MeshParts each, Imported = true); walking into the well stops at 5.25 from its
   centre (ring 4.8), into the weapon stall at the counter, into the fountain only onto its low step (as before); no
   errors or warnings in the Output.
+- 12:15 FINAL CHECK. Agent B (read-only): screenshots of all 18 props in the test area AND at one main-map
+  placement (docs/screenshots/prop_upgrade/implanted/<id>_test.jpg / <id>_main.jpg + Abyss variants): every one shows
+  the NEW shape in the low-poly colours, no old model left anywhere; final table at the top of
+  docs/prop_inventory.md (222 copies up to date: test 25, main map 159, storage 38; every template low-poly; 0 MeshId
+  mismatches; 120 template MeshParts with real uploaded MeshIds). Agent B FOUND A BUG: the 3 NPC rigs carried the
+  importer's nested child meshes (ArmL / ArmR / Head / LegL / LegR under Torso, unscaled, up to 168 studs) because
+  EnemyModels.build cloned each piece WITH its children -> giant dark shapes around the stalls in Edit (at run time
+  they fell away unanchored, so the Play check missed them). FIXED by the main agent (EnemyModels.build drops the
+  BasePart children of each cloned piece; disk + Studio), the 3 imports moved back to the Workspace top and the
+  command re-run: ServerStorage.NPCs rigs 7 / 7 / 8 parts, 6.0 studs tall, the 3 stall copies replaced, 0 giant parts
+  in Edit and at run time. The stall / well / forge / lantern main shots were retaken after the fix
+  (hub_stalls_final.jpg, *_main.jpg); zz_BUG_* show the state before it. SyncMapProps second run 0 replaced; disk ==
+  Studio (178 scripts, 0 written); no errors in the Output.
+  Reported, not changed (placements, brief rule 4): 5 Plains_2 clam_pearl copies sit 0.20 below the ground and the
+  new thin lower shell now looks half-buried (raise them by 0.2 to fix); the hub rowboat's bow passes through the beach
+  rock RockBlue_M_A (same in the approved preview); the Plains_4 minecart wheels sink into the rails (as before).

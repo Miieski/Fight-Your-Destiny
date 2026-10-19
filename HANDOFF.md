@@ -154,7 +154,9 @@ new shapes; re-texture them in the flat low-poly look of the 20 reference photos
 palette docs/prop_texture_guide.md, ids Config/PropTextures.luau); import and place every generated model
 (13 Blender props + the 3 stall NPCs) in MapProps, the test area and every main-map placement. Full text at the
 top of docs/model_upgrade_brief.txt; log NIGHT_LOG "Low-poly retexture + implant". STATE: the 8 Studio-built
-templates are low-poly and synced everywhere; the 13 Blender props are re-materialed low-poly (geometry identical,
+templates are low-poly and synced everywhere. UPDATE 2026-10-19 12:15: the owner imported the 16 FBX and the
+main agent implanted EVERYTHING (13 Blender props + 3 stall NPCs; 222 tagged copies up to date, final table in
+docs/prop_inventory.md). Before that: the 13 Blender props were re-materialed low-poly (geometry identical,
 PropMeshData v2, grey vertex-colour gradient x MeshPart.Color, overlays = ColorMap-only SurfaceAppearance "Overlay")
 and previewed in Studio; they + the 3 shopkeepers wait for the owner's ONE import step
 (`Blender_Exports/ToImport/`, 16 FBX, then the ApplyPropMeshes command, which also builds `ServerStorage.NPCs` and

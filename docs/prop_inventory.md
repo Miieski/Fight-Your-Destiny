@@ -1,44 +1,48 @@
 # Prop inventory - model upgrade (docs/model_upgrade_brief.txt, step 4A)
 
-## Implant status (OWNER CORRECTION, 2026-10-19, read from Studio; updated after the low-poly pass)
+## Implant status (OWNER CORRECTION, 2026-10-19, FINAL state after the owner's import, read from Studio)
 
 Read by Agent B from the live place (Studio id ab74fac5..., Edit mode), not from notes. "Generated" = the files exist:
 `Blender/Props/<id>.blend` + `Blender_Exports/Props/<id>.fbx` (Blender), `tools/StudioProps.luau` (Studio-built),
-`Blender_Exports/NPC/Hub/<id>.fbx` (NPCs). "Imported" = an imported Model / ServerStorage.NPCs entry exists in the
-place. "Replaced n/total" = main-map copies (Hub + Zones) whose MapPropVersion is the current template's; the kit /
-boss-arena copies in ServerStorage follow the same template (counts in the notes). "Low-poly" = the owner
-correction's look (docs/prop_texture_guide.md: palette Color, SmoothPlastic / Neon / Glass, no PBR maps, no
-MaterialVariants; Studio parts in 3 height bands, Blender meshes with grey-multiplier vertex colours).
+`Blender_Exports/NPC/Hub/<id>.fbx` (NPCs). "Imported" = the applied import kept in `ServerStorage.ImportedProps.<id>`
+(props) / the rig in `ServerStorage.NPCs.<id>` (NPCs). "n/total" = copies whose MapPropVersion is the current
+template's: test area (`workspace._Staging`), main map (`workspace.Hub` + `workspace.Zones`), storage (kit
+`ServerStorage.MapAssets` + `ServerStorage.BossArenas`). "Low-poly" = docs/prop_texture_guide.md: every visible
+template part SmoothPlastic / Neon / Glass, no MaterialVariant, no SurfaceAppearance except the ColorMap-only
+"Overlay" ones. "MeshIds" = every MeshPart of every tagged copy (nested props excepted) uses a MeshId of its
+template (0 mismatches everywhere; the 120 template MeshParts all have an uploaded MeshId, 0 EditableMesh parts).
 
-| model | generated? | imported into Studio? | template in ServerStorage.MapProps? | in the test area? | main-map replaced n/total | low-poly textured? | notes |
-|---|---|---|---|---|---|---|---|
-| fountain | yes, Blender (12 meshes, PropMeshData v2) | no | no | yes, today's model (1) | 0/1 | previewed low-poly (v2 PNG), Wall with the stone_block_lines overlay | waits for the owner's FBX import |
-| lamp_post | yes, Studio-built (28 parts with the nested lantern) | n/a | yes | yes, new (1/1) | 6/6 | YES: SmoothPlastic + bands, Plinth stone_block_lines | + MapAssets 1/1 |
-| crate | yes, Studio-built (39 parts) | n/a | yes | yes, new (2/2) | 39/39 | YES: SmoothPlastic + bands (planks are geometry: no overlay) | + MapAssets 2/2; Abyss "Sunken" variant converted |
-| barrel | yes, Studio-built (13 parts) | n/a | yes | yes, new (3/3) | 33/33 | YES: SmoothPlastic + bands | + storage 4/4 |
-| egg_nest | yes, Blender (9 meshes + Hull collider) | no | no | yes, today's model (1) | 0/5 | previewed low-poly (v2 PNG) | waits for the import |
-| rowboat | yes, Blender (7 meshes) | no | no | yes, today's model (1) | 0/6 | previewed low-poly; Abyss "Sunken" = Color only | waits for the import |
-| minecart | yes, Blender (6 meshes) | no | no | yes, today's model (1) | 0/2 | previewed low-poly | waits for the import |
-| skull_bones | yes, Blender (3 meshes) | no | no | yes, today's model (1) | 0/16 | previewed low-poly; Abyss "Pale" = Color only | + BossArenas 12, MapAssets 1 |
-| scarecrow | yes, Blender (13 meshes) | no | no | yes, today's model (1) | 0/1 | previewed low-poly | waits for the import |
-| clam_pearl | yes, Blender (5 meshes) | no | no | yes, today's model (1) | 0/29 | previewed low-poly | waits for the import |
-| laundry_rack | yes, Studio-built (22 parts) | n/a | yes | yes, new (1/1) | 1/1 | YES: SmoothPlastic + bands | + MapAssets 1/1 |
-| anvil_forge | yes, Blender (12 meshes, nested in the weapon stall) | no | no | yes, today's parts (1) | 0/1 | previewed low-poly, Hearth / Upper with stone_block_lines | waits for the import |
-| weapon_stall | frame Studio-built (38 parts) + Blender pieces (21 meshes) | pieces: no | yes, low-poly frame (old awning / items) | yes, frame new (1/1) | 1/1 frame, 0/1 pieces | frame YES (bands, CounterTop + SidePanel plank_lines); pieces previewed (ShieldFace plank_lines) | NPC / NpcSpot / Interact kept |
-| lantern | yes, Studio-built (14 parts) | n/a | yes | yes, new (5/5) | 10/10 | YES: SmoothPlastic + bands, Neon glass / flame | + storage 5/5 |
-| well | yes, Blender (10 meshes) | no | yes, but it is TODAY's 12-part well (captured) | today's model (1/1) | 0/1 new (1/1 synced to the old well) | previewed low-poly | waits for the import |
-| chest | yes, Blender (5 meshes) | no | no | yes, today's model (1) | 0/5 | previewed low-poly | waits for the import |
-| trophy_stall | frame Studio-built + Blender pieces (6 meshes) | pieces: no | yes, low-poly frame | yes, frame new (1/1) | 1/1 frame, 0/1 pieces | frame YES; pieces previewed | NPC / NpcSpot / Interact kept |
-| diamond_shop | frame Studio-built + Blender pieces (10 meshes) | pieces: no | yes, low-poly frame | yes, frame new (1/1) | 1/1 frame, 0/1 pieces | frame YES (banded up to the roof like the other stalls); pieces previewed | NPC / NpcSpot / Interact kept |
-| stall items / gems (swords, shield, axe, tray, trophy, crystal ball, diamond sign, gems, cushions, awnings) | yes, in the 3 stall FBX (pieces) | no | no (the stall templates hold today's items, now flat colours) | today's items | 0/3 stalls | previewed low-poly | come with the stall FBX |
-| npc_blacksmith | yes, Blender_Exports/NPC/Hub (2026-10-05, palette texture) | no (ServerStorage.NPCs is empty) | n/a (ServerStorage.NPCs.<id>, used by NPCService at run time) | stand-in only | 0/1 (WeaponShop runs a part-built placeholder) | palette (flat swatches): yes once imported | the same ApplyPropMeshes.run() builds it and replaces the stand-in |
-| npc_trophy_merchant | yes, same | no | n/a | stand-in only | 0/1 (TrophyMerchant) | same | same |
-| npc_gem_merchant | yes, same | no | n/a | stand-in only | 0/1 (DiamondShop) | same | same |
+| model | generated? | imported? | template (ServerStorage.MapProps) | test area n/total | main map n/total | storage n/total | low-poly textured? | MeshIds = template's | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| fountain | yes, Blender | yes (ImportedProps.fountain) | yes, 12 meshes + 13 parts | 1/1 | 1/1 | 1/1 | yes (Wall stone_block_lines Overlay, water_lines Ripples) | yes | |
+| lamp_post | yes, Studio-built | n/a | yes, 14 parts + nested lantern | 1/1 | 6/6 | 1/1 | yes (bands, Plinth stone_block_lines) | yes (no meshes) | |
+| crate | yes, Studio-built | n/a | yes, 39 parts | 2/2 | 39/39 | 2/2 | yes (bands) | yes (no meshes) | Abyss "Sunken" variant |
+| barrel | yes, Studio-built | n/a | yes, 13 parts | 3/3 | 33/33 | 4/4 | yes (bands) | yes (no meshes) | |
+| egg_nest | yes, Blender | yes | yes, 10 meshes (incl. Hull collider) + 2 parts | 1/1 | 5/5 | 1/1 | yes | yes | |
+| rowboat | yes, Blender | yes | yes, 7 meshes + 3 parts | 1/1 | 6/6 | 1/1 | yes; Abyss "Sunken" = Color only | yes | hub copy: a beach rock goes through the bow (placement, as before) |
+| minecart | yes, Blender | yes | yes, 6 meshes + 3 parts | 1/1 | 2/2 | 1/1 | yes | yes | |
+| skull_bones | yes, Blender | yes | yes, 3 meshes + 2 parts | 1/1 | 16/16 | 13/13 | yes; Abyss "Pale" = Color only | yes | storage = BossArenas 12 + MapAssets 1 |
+| scarecrow | yes, Blender | yes | yes, 13 meshes + 5 parts | 1/1 | 1/1 | 1/1 | yes | yes | |
+| clam_pearl | yes, Blender | yes | yes, 5 meshes + 1 part | 1/1 | 29/29 | 1/1 | yes | yes | 5 Plains_2 copies sit 0.2 stud low (old placement): the lower shell is half in the sand |
+| laundry_rack | yes, Studio-built | n/a | yes, 22 parts | 1/1 | 1/1 | 1/1 | yes (bands) | yes (no meshes) | |
+| anvil_forge | yes, Blender | yes | yes, 12 meshes + 8 parts | 1/1 | 1/1 | 1/1 | yes (Hearth / Upper stone_block_lines) | yes | nested in each weapon stall |
+| weapon_stall | frame Studio-built + Blender pieces | yes (pieces) | yes, pieces on the low-poly frame: 21 meshes + 62 parts | 1/1 | 1/1 | 1/1 | yes (ShieldFace plank_lines, frame bands + plank_lines) | yes | NPC / NpcSpot / Interact / prompt kept |
+| lantern | yes, Studio-built | n/a | yes, 14 parts | 5/5 | 10/10 | 5/5 | yes (bands, Neon glass / flame) | yes (no meshes) | main count includes the lamp-post lanterns |
+| well | yes, Blender | yes | yes, 10 meshes + 9 parts (the new well) | 1/1 | 1/1 | 1/1 | yes | yes | |
+| chest | yes, Blender | yes | yes, 5 meshes + 3 parts | 1/1 | 5/5 | 1/1 | yes | yes | |
+| trophy_stall | frame Studio-built + Blender pieces | yes (pieces) | yes, 6 meshes + 66 parts | 1/1 | 1/1 | 1/1 | yes | yes | NPC / NpcSpot / Interact / prompt kept |
+| diamond_shop | frame Studio-built + Blender pieces | yes (pieces) | yes, 10 meshes + 56 parts | 1/1 | 1/1 | 1/1 | yes | yes | diamond sign, gems, cushions in place |
+| npc_blacksmith | yes, Blender_Exports/NPC/Hub | yes (ServerStorage.NPCs, scaled back x28 to 6 studs; import in ImportedProps) | n/a | no stand-in in the Station copies | hub WeaponShop: imported rig in place of the stand-in | n/a | palette texture | n/a | FIXED (main agent, EnemyModels.build drops the importer's nested child meshes; rebuilt: 7 parts, 6.0 studs tall, in Edit and at run time) |
+| npc_trophy_merchant | yes, same | yes, same | n/a | same | hub TrophyMerchant: imported rig | n/a | same | n/a | FIXED, same (7 parts, 6.0 studs) |
+| npc_gem_merchant | yes, same | yes, same | n/a | same | hub DiamondShop: imported rig | n/a | same | n/a | FIXED, same (8 parts, 6.0 studs) |
 
-Totals: 13 Blender FBX generated (low-poly v2), 0 imported, all 13 previewed in the low-poly look (EditableMesh,
-removed after each); 8 Studio-built templates in the low-poly look and synced (92 main-map copies, second sync 0
-replaced); the 11 FYD_* MaterialVariants are deleted (no part of the game used them; only the undo templates in
-MapProps._Previous still name them). Overlay ids: Config/PropTextures. Mallet: dropped (brief).
+Totals: 18 props, 222 tagged copies all up to date (test 25, main map 159, storage 38); 13 Blender props imported
+(ServerStorage.ImportedProps) + 5 Studio-built; every template low-poly; MeshIds match everywhere. The 3 hub NPCs
+are built (ServerStorage.NPCs, 6 studs tall) and stand at their stalls. Their first build carried the raw import
+pieces nested under the Torso; FIXED 2026-10-19 12:10 (EnemyModels.build drops the importer's nested child meshes,
+the 3 rigs rebuilt; checked in Edit and at run time: 7-8 parts, 0 giant parts; screenshots `implanted/*_main.jpg`
+and `hub_stalls_final.jpg` retaken after the fix, the `zz_BUG_*` shots show the state before it). Mallet: dropped
+(brief).
 
 ---
 

@@ -126,6 +126,13 @@ function EnemyModels.build(imported: Instance, id: string?): (Model?, string?)
 	local parts: { [string]: BasePart } = { Root = root }
 	for _, piece in ipairs(pieces) do
 		local part = piece.part:Clone()
+		-- the importer nests child meshes under their parent mesh (ArmL under Torso...): every piece is cloned on its
+		-- own, so the raw copies of its children must not come along
+		for _, child in ipairs(part:GetChildren()) do
+			if child:IsA("BasePart") then
+				child:Destroy()
+			end
+		end
 		if k ~= 1 then
 			part.Size = part.Size / k
 			part.CFrame = CFrame.new(origin + (part.Position - origin) / k) * part.CFrame.Rotation
