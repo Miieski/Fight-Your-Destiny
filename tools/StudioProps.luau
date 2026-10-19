@@ -55,7 +55,300 @@ StudioProps.VARIANTS = {
 	FYD_Bone = { Base = Enum.Material.SmoothPlastic, Set = "bone_ivory" },
 }
 
+---------------------------------------------------------------------
+-- LOW-POLY (owner correction of 2026-10-19, docs/model_upgrade_brief.txt top block, docs/prop_texture_guide.md): no
+-- realistic textures. install() runs lowPoly() on the built template:
+--   - every part made with a FYD_* MaterialVariant becomes SmoothPlastic, no variant, Color = the palette colour it
+--     must LOOK like (the variant's tint x the ColorMap mean; the clamped light tints by name);
+--   - the guide's gradient on Parts: 3 bands by the height of the part's centre in the model (lowest 25 % x 0.90,
+--     25-60 % x 0.96, top 40 % the palette colour; the stalls up to their roof); Neon, Glass and invisible parts are
+--     not banded; nested props (the lamp post's lantern) keep their own template's look. The unbanded colour is kept
+--     in the part's attribute LowPolyColor, so a rebuild of a stall from its current template does not darken it
+--     twice;
+--   - the _Variants recolours (Color_<Part>) get the same conversion;
+--   - the stylized overlays (OVERLAYS below: plank_lines, stone_block_lines) as Texture instances, StudsPerTile 4,
+--     once Config/PropTextures holds their ids.
+---------------------------------------------------------------------
+StudioProps.LOWPOLY = true
+StudioProps.LOWPOLY_MATERIAL = Enum.Material.SmoothPlastic
+-- ColorMap means of the texture sets (PropMeshData Textures.*.ColorMean); Gold's tint is its hex already
+local MEAN = {
+	FYD_Wood = 0.9, FYD_Planks = 0.965, FYD_Iron = 0.88, FYD_Gold = 1, FYD_Riveted = 0.904, FYD_Stone = 0.88,
+	FYD_StoneBlocks = 0.909, FYD_Moss = 0.88, FYD_Cloth = 0.9, FYD_Straw = 0.88, FYD_Bone = 0.952,
+}
+-- the light tints the guide clamped at 255 (tint != hex / mean): their hex (Blender/Props/README.txt section 2)
+local EXACT = {
+	["228,175,52"] = rgb(201, 154, 46), ["255,248,229"] = rgb(232, 226, 208), ["250,251,255"] = rgb(245, 246, 250),
+	["255,216,104"] = rgb(236, 200, 96), ["255,236,167"] = rgb(244, 226, 160), ["252,244,219"] = rgb(240, 232, 208),
+}
+-- (docs/prop_texture_guide.md section 3 = these hexes; a tint whose guide colour changes: "r,g,b" tint -> hex here)
+StudioProps.PALETTE = {} :: { [string]: Color3 }
+
+local function key(c: Color3): string
+	return string.format("%d,%d,%d", math.round(c.R * 255), math.round(c.G * 255), math.round(c.B * 255))
+end
+
+local function flat(color: Color3, variant: string): Color3
+	local k = key(color)
+	if StudioProps.PALETTE[k] then
+		return StudioProps.PALETTE[k]
+	end
+	if EXACT[k] then
+		return EXACT[k]
+	end
+	local m = MEAN[variant] or 1
+	return Color3.fromRGB(math.round(math.min(color.R * m, 1) * 255), math.round(math.min(color.G * m, 1) * 255), math.round(math.min(color.B * m, 1) * 255))
+end
+
+local function scaled(c: Color3, f: number): Color3
+	return Color3.new(c.R * f, c.G * f, c.B * f)
+end
+
+-- the guide's band factor of a height fraction t (0 = the model's bottom, 1 = its top)
+local function band(t: number): number
+	return if t < 0.25 then 0.90 elseif t < 0.60 then 0.96 else 1
+end
+
+-- the 3 stalls are banded up to their roof (the top of the "Awning" parts), not to the top of the whole model: the
+-- diamond shop's sign rises 9 studs above its roof and would otherwise put its counter and posts a band darker than
+-- the same frame of the two other stalls
+local BAND_TOP_PART = { weapon_stall = "Awning", trophy_stall = "Awning", diamond_shop = "Awning" }
+
+local function topOf(part: BasePart): number
+	local cf, s = part.CFrame, part.Size
+	return cf.Position.Y + math.abs(cf.RightVector.Y) * s.X / 2 + math.abs(cf.UpVector.Y) * s.Y / 2 + math.abs(cf.LookVector.Y) * s.Z / 2
+end
+
+-- inside a nested prop of the model (the lamp post's lantern: it has its own template)
+local function inNestedProp(d: Instance, model: Instance): boolean
+	local p = d.Parent
+	while p and p ~= model do
+		if p:IsA("Model") and p:HasTag("MapProp") then
+			return true
+		end
+		p = p.Parent
+	end
+	return false
+end
+
+-- stylized overlays on Studio parts (docs/prop_texture_guide.md section 5): propId -> { part name = overlay name }.
+-- Only the plain surfaces: the parts already built as separate planks (the crate's sides and lid, the stalls' counter
+-- front rows and back boards) get none (a Texture cannot turn, so plank_lines would cross those planks). The faces:
+-- the two large faces of a board (its thinnest axis), the top of a counter top, the four sides of a plinth.
+StudioProps.OVERLAYS = {
+	lamp_post = { Plinth = "stone_block_lines" },
+	weapon_stall = { CounterTop = "plank_lines", SidePanel = "plank_lines" },
+	trophy_stall = { CounterTop = "plank_lines", SidePanel = "plank_lines" },
+	diamond_shop = { CounterTop = "plank_lines", SidePanel = "plank_lines" },
+}
+
+-- the asset id of an overlay in Config/PropTextures (nil until Agent A uploads it)
+local function overlayId(name: string): string?
+	local config = game:GetService("ReplicatedStorage").GameSystem.Config:FindFirstChild("PropTextures")
+	if not config then
+		return nil
+	end
+	local copy = config:Clone()
+	copy.Parent = config.Parent
+	local ok, textures = pcall(require, copy)
+	copy:Destroy()
+	if not ok or type(textures) ~= "table" then
+		return nil
+	end
+	local entry = (type(textures.Ids) == "table" and textures.Ids[name]) or textures[name] or (type(textures.Textures) == "table" and textures.Textures[name])
+	local id = if type(entry) == "string" then entry elseif type(entry) == "table" then (entry.Id or entry.ColorMap or entry.Texture) else nil
+	if type(id) == "number" then
+		id = "rbxassetid://" .. tostring(id)
+	end
+	return if type(id) == "string" and id ~= "" then id else nil
+end
+
+local function faceList(part: BasePart, name: string): { Enum.NormalId }
+	local s = part.Size
+	if name == "CounterTop" then
+		return { Enum.NormalId.Top }
+	elseif name == "Plinth" then
+		return { Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right }
+	elseif s.X <= s.Y and s.X <= s.Z then
+		return { Enum.NormalId.Left, Enum.NormalId.Right }
+	elseif s.Z <= s.X and s.Z <= s.Y then
+		return { Enum.NormalId.Front, Enum.NormalId.Back }
+	end
+	return { Enum.NormalId.Top, Enum.NormalId.Bottom }
+end
+
+-- the overlays of propId on its model (every old "Overlay" Texture of the model goes first: a part may have left
+-- the table). Returns the count, or nil when an id is missing (Config/PropTextures not there yet; nothing changed)
+local function addOverlays(model: Instance, propId: string): number?
+	local spec = StudioProps.OVERLAYS[propId] or {}
+	local ids = {}
+	for _, overlay in pairs(spec) do
+		ids[overlay] = ids[overlay] or overlayId(overlay)
+		if not ids[overlay] then
+			return nil
+		end
+	end
+	for _, d in ipairs(model:GetDescendants()) do
+		local parent = d.Parent
+		if d:IsA("Texture") and d.Name == "Overlay" and parent and parent:IsA("BasePart") and not inNestedProp(parent, model) then
+			d:Destroy()
+		end
+	end
+	local n = 0
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") and spec[d.Name] and not inNestedProp(d, model) then
+			for _, face in ipairs(faceList(d, d.Name)) do
+				local tex = Instance.new("Texture")
+				tex.Name = "Overlay"
+				tex.Face = face
+				tex.Texture = ids[spec[d.Name]]
+				tex.StudsPerTileU = 4
+				tex.StudsPerTileV = 4
+				tex.Parent = d
+				n += 1
+			end
+		end
+	end
+	return n
+end
+
+-- the low-poly look on a built template (see above). Returns the parts made flat, the parts banded and the overlay
+-- count (nil = overlay ids missing)
+function StudioProps.lowPoly(model: Model, propId: string?): (number, number, number?)
+	local cf, size = model:GetBoundingBox()
+	local bottom = cf.Position.Y - size.Y / 2
+	local height = math.max(size.Y, 0.01)
+	local roofName = propId and BAND_TOP_PART[propId]
+	if roofName then
+		local roof = -math.huge
+		for _, d in ipairs(model:GetDescendants()) do
+			if d:IsA("BasePart") and d.Name == roofName then
+				roof = math.max(roof, topOf(d))
+			end
+		end
+		if roof > bottom then
+			height = math.max(roof - bottom, 0.01)
+		end
+	end
+	local flatParts, banded = 0, 0
+	local variantOf: { [string]: string } = {}
+	local bandOf: { [string]: number } = {}
+	for _, d in ipairs(model:GetDescendants()) do
+		if not d:IsA("BasePart") or inNestedProp(d, model) then
+			continue
+		end
+		local fyd = string.sub(d.MaterialVariant, 1, 4) == "FYD_"
+		local base = d:GetAttribute("LowPolyColor")
+		if typeof(base) ~= "Color3" then
+			base = if fyd then flat(d.Color, d.MaterialVariant) else d.Color
+		end
+		if fyd then
+			variantOf[d.Name] = variantOf[d.Name] or d.MaterialVariant
+			d.Material = StudioProps.LOWPOLY_MATERIAL
+			d.MaterialVariant = ""
+			flatParts += 1
+		end
+		local plain = d.Material ~= Enum.Material.Neon and d.Material ~= Enum.Material.Glass and d.Transparency < 1
+		if plain then
+			local f = band((d.Position.Y - bottom) / height)
+			d:SetAttribute("LowPolyColor", base)
+			d.Color = scaled(base :: Color3, f)
+			bandOf[d.Name] = bandOf[d.Name] or f
+			banded += 1
+		elseif fyd then
+			d.Color = base :: Color3
+		end
+	end
+	-- the recolour variants of the parts made flat in this pass (fresh builds only)
+	for _, folder in ipairs(model:GetDescendants()) do
+		if folder:IsA("Folder") and folder.Name == "_Variants" then
+			for _, config in ipairs(folder:GetChildren()) do
+				for name, value in pairs(config:GetAttributes()) do
+					local partName = string.match(name, "^Color_(.+)$")
+					if partName and variantOf[partName] and typeof(value) == "Color3" then
+						config:SetAttribute(name, scaled(flat(value, variantOf[partName]), bandOf[partName] or 1))
+					end
+				end
+			end
+		end
+	end
+	local overlays = if propId then addOverlays(model, propId) else 0
+	return flatParts, banded, overlays
+end
+
+-- the overlays alone on the current template (and on the bare frame MapProps._Base.<propId> of a pieces stall), no
+-- rebuild: MapProps._Previous keeps the template from before the low-poly pass. Then SyncMapProps.run()
+function StudioProps.applyOverlays(propId: string): string
+	local folder = ServerStorage:FindFirstChild("MapProps")
+	local targets = {}
+	for _, place in ipairs({ folder, folder and folder:FindFirstChild("_Base") }) do
+		local model = place and place:FindFirstChild(propId)
+		if model and model:IsA("Model") then
+			table.insert(targets, model)
+		end
+	end
+	if #targets == 0 then
+		return `{propId}: no template`
+	end
+	local counts = {}
+	for _, model in ipairs(targets) do
+		local n = addOverlays(model, propId)
+		if n == nil then
+			return `{propId}: refused, an overlay id is missing in Config/PropTextures`
+		end
+		table.insert(counts, `{n} on {model:GetFullName()}`)
+	end
+	return `{propId}: overlay textures ` .. table.concat(counts, ", ")
+end
+
+-- the parts of the place that still use a FYD_* variant (outside MaterialService). The undo copies in
+-- ServerStorage.MapProps._Previous (never in the game) are left out unless includePrevious; the second result is
+-- their count
+function StudioProps.realisticUsers(includePrevious: boolean?): ({ string }, number)
+	local list, previousCount = {}, 0
+	local maps = ServerStorage:FindFirstChild("MapProps")
+	local previous = maps and maps:FindFirstChild("_Previous")
+	local roots = { workspace, ServerStorage, game:GetService("ReplicatedStorage"), game:GetService("StarterPack"), game:GetService("StarterGui"), game:GetService("Lighting"), game:GetService("StarterPlayer"), game:GetService("ReplicatedFirst") }
+	for _, root in ipairs(roots) do
+		for _, d in ipairs(root:GetDescendants()) do
+			if d:IsA("BasePart") and StudioProps.VARIANTS[d.MaterialVariant] then
+				if previous and d:IsDescendantOf(previous) then
+					previousCount += 1
+					if not includePrevious then
+						continue
+					end
+				end
+				table.insert(list, d:GetFullName())
+			end
+		end
+	end
+	return list, previousCount
+end
+
+-- deletes the FYD_* MaterialVariants once no part of the game uses them. The undo templates in MapProps._Previous
+-- keep the variant names: restored, they show their base material until StudioProps.materials() (LOWPOLY = false)
+-- makes the variants again from the same texture ids
+function StudioProps.removeRealisticVariants(): string
+	local users, previousCount = StudioProps.realisticUsers()
+	if #users > 0 then
+		return `refused: {#users} part(s) still use a FYD_* variant, e.g. {users[1]}`
+	end
+	local removed = {}
+	for name in pairs(StudioProps.VARIANTS) do
+		local mv = MaterialService:FindFirstChild(name)
+		if mv and mv:IsA("MaterialVariant") then
+			mv:Destroy()
+			table.insert(removed, name)
+		end
+	end
+	table.sort(removed)
+	return `removed {#removed} MaterialVariant(s): {table.concat(removed, ", ")}` .. (if previousCount > 0 then ` ({previousCount} part(s) of the undo templates in MapProps._Previous still name them)` else "")
+end
+
 function StudioProps.materials(): string
+	if StudioProps.LOWPOLY then
+		return "refused: low-poly mode (StudioProps.LOWPOLY): the realistic FYD_* variants are not used any more"
+	end
 	local made, updated = 0, 0
 	for name, spec in pairs(StudioProps.VARIANTS) do
 		local set = TEXTURES[spec.Set]
@@ -525,6 +818,11 @@ function StudioProps.install(propId: string): string
 	local model = builder()
 	model.Name = propId
 	model:PivotTo(CFrame.identity)
+	local lowNote = ""
+	if StudioProps.LOWPOLY then
+		local flatParts, banded, overlays = StudioProps.lowPoly(model, propId)
+		lowNote = `; low-poly: {flatParts} part(s) made flat, {banded} banded, ` .. (if overlays then `{overlays} overlay texture(s)` else "overlays waiting for Config/PropTextures")
+	end
 	local parts = 0
 	for _, d in ipairs(model:GetDescendants()) do
 		if d:IsA("BasePart") then
@@ -547,7 +845,7 @@ function StudioProps.install(propId: string): string
 			oldBase.Parent = previous
 		end
 		model.Parent = store
-		return string.format("rebuilt the bare frame into ServerStorage.MapProps._Base.%s (%d parts); MapProps.%s (the Blender pieces) is unchanged: run ApplyPropMeshes.run({ only = { \"%s\" } }) to put the pieces on the new frame", propId, parts, propId, propId)
+		return string.format("rebuilt the bare frame into ServerStorage.MapProps._Base.%s (%d parts%s); MapProps.%s (the Blender pieces) is unchanged: run ApplyPropMeshes.run({ only = { \"%s\" } }) to put the pieces on the new frame", propId, parts, lowNote, propId, propId)
 	end
 	local old = folder:FindFirstChild(propId)
 	if old then
@@ -562,7 +860,7 @@ function StudioProps.install(propId: string): string
 	end
 	model.Parent = folder
 	local _, size = model:GetBoundingBox()
-	return string.format("installed ServerStorage.MapProps.%s: %d parts, bbox %.2f x %.2f x %.2f", propId, parts, size.X, size.Y, size.Z)
+	return string.format("installed ServerStorage.MapProps.%s: %d parts, bbox %.2f x %.2f x %.2f%s", propId, parts, size.X, size.Y, size.Z, lowNote)
 end
 
 return StudioProps

@@ -12,6 +12,11 @@
 --   enemies / mini-bosses: ServerStorage.Enemies.<id>   bosses: ServerStorage.Bosses.<id>
 --   pets: ReplicatedStorage.Assets.Pets.<id>          NPCs: ServerStorage.NPCs.<id>
 -- EnemyService uses ServerStorage.Enemies / Bosses automatically (placeholders otherwise).
+-- Import unit: the files are written in metres, but any Scale Unit works: the Root box's imported size is compared
+-- with the size written in its name (studs) and the whole model is scaled back uniformly (attribute ImportScaleFixed
+-- = the factor found); a distorted Root (axes off by different factors) is refused.
+--   require(...).buildOne(importedModel) -> ok, id or reason, note: one import -> its destination (used by
+--   DevTools.ApplyPropMeshes.run() for the npc_* imports, so the props and the NPCs share one command)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -82,7 +87,18 @@ function EnemyModels.build(imported: Instance, id: string?): (Model?, string?)
 	if not (rootSource and center and size) then
 		return nil, "no Root__ part (was it exported by tools/blender/fyd_creatures.py?)"
 	end
-	local origin = rootSource.Position - center -- feet center (the importer keeps the relative positions)
+	-- import unit: k = imported Root size / the size in its name; every piece is scaled back by 1/k around the feet
+	local rs = rootSource.Size
+	local kx, ky, kz = rs.X / size.X, rs.Y / size.Y, rs.Z / size.Z
+	local lo, hi = math.min(kx, ky, kz), math.max(kx, ky, kz)
+	if lo <= 0 or hi / lo - 1 > 0.03 then
+		return nil, string.format("the Root box (%.3f, %.3f, %.3f) is not its named size (%.3f, %.3f, %.3f) scaled evenly: distorted or turned import", rs.X, rs.Y, rs.Z, size.X, size.Y, size.Z)
+	end
+	local k = (kx + ky + kz) / 3
+	if math.abs(k - 1) <= 0.01 then
+		k = 1
+	end
+	local origin = rootSource.Position - center * k -- feet center (the importer keeps the relative positions)
 	local model = Instance.new("Model")
 	model.Name = rid
 	local root = Instance.new("Part")
@@ -99,6 +115,10 @@ function EnemyModels.build(imported: Instance, id: string?): (Model?, string?)
 	local parts: { [string]: BasePart } = { Root = root }
 	for _, piece in ipairs(pieces) do
 		local part = piece.part:Clone()
+		if k ~= 1 then
+			part.Size = part.Size / k
+			part.CFrame = CFrame.new(origin + (part.Position - origin) / k) * part.CFrame.Rotation
+		end
 		part.Name = piece.name
 		part.Anchored = false
 		part.CanCollide, part.CanTouch = false, false
@@ -130,27 +150,41 @@ function EnemyModels.build(imported: Instance, id: string?): (Model?, string?)
 	root.PivotOffset = root.CFrame:Inverse() * CFrame.new(origin)
 	model:SetAttribute("HalfHeight", size.Y / 2)
 	model:SetAttribute("Imported", true)
+	if k ~= 1 then
+		model:SetAttribute("ImportScaleFixed", math.round(k * 1000) / 1000)
+	end
 	return model, nil
+end
+
+-- one imported Model -> its destination (the old rig of that id is replaced). Returns ok, id (or the reason) and a
+-- note (the scale fix, if any)
+function EnemyModels.buildOne(imported: Instance): (boolean, string, string?)
+	local id = (string.gsub(imported.Name, "%.fbx$", ""))
+	local model, reason = EnemyModels.build(imported, id)
+	if not model then
+		return false, `{imported.Name}: {reason}`, nil
+	end
+	local target, rig = destination(id)
+	model:SetAttribute("Rig", rig)
+	local old = target:FindFirstChild(id)
+	if old then
+		old:Destroy()
+	end
+	model.Parent = target
+	local k = model:GetAttribute("ImportScaleFixed")
+	return true, id, if k then `import unit off by x{k}: scaled back to {model:GetAttribute("HalfHeight") * 2} studs tall` else nil
 end
 
 function EnemyModels.fromImport(folder: Instance): ({ string }, { string })
 	local built, skipped = {}, {}
 	for _, child in ipairs(folder:GetChildren()) do
 		if child:IsA("Model") or child:IsA("Folder") then
-			local id = string.gsub(child.Name, "%.fbx$", "")
-			local model, reason = EnemyModels.build(child, id)
-			if model then
-				local target, rig = destination(id)
-				model:SetAttribute("Rig", rig)
-				local old = target:FindFirstChild(id)
-				if old then
-					old:Destroy()
-				end
-				model.Parent = target
-				table.insert(built, id)
+			local ok, idOrReason, note = EnemyModels.buildOne(child)
+			if ok then
+				table.insert(built, idOrReason .. (if note then ` ({note})` else ""))
 			else
-				table.insert(skipped, `{child.Name}: {reason}`)
-				warn(`EnemyModels: {child.Name} skipped - {reason}`)
+				table.insert(skipped, idOrReason)
+				warn(`EnemyModels: skipped - {idOrReason}`)
 			end
 		end
 	end

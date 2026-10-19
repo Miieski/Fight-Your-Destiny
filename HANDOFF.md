@@ -153,7 +153,13 @@ Work boss by boss and system by system with sub-agents:
 new shapes; re-texture them in the flat low-poly look of the 20 reference photos (no PBR / realistic textures;
 palette docs/prop_texture_guide.md, ids Config/PropTextures.luau); import and place every generated model
 (13 Blender props + the 3 stall NPCs) in MapProps, the test area and every main-map placement. Full text at the
-top of docs/model_upgrade_brief.txt; log NIGHT_LOG "Low-poly retexture + implant".
+top of docs/model_upgrade_brief.txt; log NIGHT_LOG "Low-poly retexture + implant". STATE: the 8 Studio-built
+templates are low-poly and synced everywhere; the 13 Blender props are re-materialed low-poly (geometry identical,
+PropMeshData v2, grey vertex-colour gradient x MeshPart.Color, overlays = ColorMap-only SurfaceAppearance "Overlay")
+and previewed in Studio; they + the 3 shopkeepers wait for the owner's ONE import step
+(`Blender_Exports/ToImport/`, 16 FBX, then the ApplyPropMeshes command, which also builds `ServerStorage.NPCs` and
+replaces the stand-ins; `restoreNpcStandIns()` undoes that). No automated import route exists: CreateAssetAsync is
+"not available yet", AssetImportService is unreachable, computer control of Studio was declined.
 
 **2026-10-19: PROP MODEL UPGRADE (brief docs/model_upgrade_brief.txt; 18 props - the "mallet" of photo 03 is a bench
 armrest, benches are out of scope).** Inventory `docs/prop_inventory.md` (test area =
@@ -174,8 +180,11 @@ import (`Blender_Exports/CREATURES_IMPORT.md`).
   `MapPropVersion` (second run = 0 replaced); nested copies (lamp_post > lantern, weapon_stall > anvil_forge) are
   synced in later passes. `capture(propId, instance)` = the reverse direction (a hand-improved copy becomes the
   template and is synced everywhere); `undoCapture(propId)`; `check()` = status. Always `require(module:Clone())`.
-* Studio-built props: `DevTools.StudioProps` (builders; `StudioProps.stall` = the shared stall frame). Shared look:
-  11 MaterialVariants `FYD_*` in MaterialService (the Prop Style Guide textures, 4 studs per tile).
+* Studio-built props: `DevTools.StudioProps` (builders; `StudioProps.stall` = the shared stall frame). Low-poly look
+  (owner correction): SmoothPlastic + the colours of `docs/prop_texture_guide.md`, 3 height bands (x0.90 / x0.96 /
+  x1.0, the unbanded colour kept in attribute `LowPolyColor`), `Texture` overlays from `Config/PropTextures` only on
+  plain surfaces (`StudioProps.applyOverlays(id)`). The realistic FYD_* MaterialVariants were deleted (undo templates
+  in `MapProps._Previous` still name them; `materials()` with LOWPOLY = false recreates them).
 * Blender props: pipeline `tools/blender/fyd_props*.py`, Prop Style Guide + naming contract `Blender/Props/README.txt`,
   manifest `Blender/Props/props_manifest.csv`, FBX in `Blender_Exports/Props/` (written in studs, no textures),
   data `Blender_Exports/Props/PropMeshData.luau` (pasted as `DevTools.PropMeshData`; `tools/PropMeshData.luau` must

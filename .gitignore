@@ -35,3 +35,6 @@ _to_delete/
 
 # Flat copy of the 84 weapon FBX for one 3D Importer selection (sources stay in Blender_Exports/Weapons/<Category>/)
 Blender_Exports/Weapons_ALL_import/
+
+# copies of the FBX for the owner's one-step import (sources: Blender_Exports/Props, Blender_Exports/NPC/Hub)
+Blender_Exports/ToImport/

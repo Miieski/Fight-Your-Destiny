@@ -26,11 +26,15 @@
 	  - Anchored, CanCollide false, CanTouch false, CanQuery false, CollisionFidelity Box (collider meshes Hull: set on a
 	    short visit of the new template to a stage in the Workspace far from the map, the only place where Studio
 	    applies it), CastShadow from the data;
-	  - role from the data (Role, or the _Glow / _Water / _Glass / _Stream / _Foam suffix): Glow = Neon + Color;
-	    Water = Glass + Transparency + the water_ripple Texture ("Ripples") on the top face; Stream (falling water) =
-	    Glass + Transparency 0.45 + "Ripples" on the four side faces; Foam = SmoothPlastic + Transparency 0.2; Glass =
-	    Transparency; none of them has a SurfaceAppearance. Otherwise Material from the data and a SurfaceAppearance
-	    of the family's shared texture set with SurfaceAppearance.Color = the data tint (imported SAs are replaced);
+	  - the LOW-POLY look (PropMeshData version 2, docs/prop_texture_guide.md): Color = the data Color (the palette
+	    colour), Material and Transparency from the data, the mesh's own vertex colours kept (a grey multiplier of
+	    Color), no PBR SurfaceAppearance (imported SAs are removed). Role from the data (Role, or the _Glow / _Water /
+	    _Glass / _Stream / _Foam suffix): Glow = Neon; Water = Glass, Transparency 0.15 + the water_lines Texture
+	    ("Ripples") on the top face; Stream (falling water) = Glass, 0.3 + "Ripples" on the four side faces; Glass =
+	    0.3; Foam = SmoothPlastic, 0.2. A mesh with a data Texture (a stylized overlay: fountain_Wall, anvil_forge
+	    Hearth / Upper, weapon_stall ShieldFace) gets a SurfaceAppearance "Overlay" with that ColorMap ONLY, AlphaMode
+	    Overlay, Color white: the lines darken Color and the vertex colours still show (MeshPart.TextureID was
+	    tested too and renders the transparent pixels black). An older PropMeshData (not version 2) is refused;
 	  - invisible collider Parts from the data (Block / Cylinder / Wedge / Ball, Roblox orientation in degrees), and
 	    collider meshes (data Role "Collider") as invisible Hull colliders of their data Size; render meshes never
 	    collide;
@@ -60,6 +64,13 @@
 	Nested props (anvil_forge = the AnvilForge sub-model of each weapon stall, data Placement.OriginInHost) are normal
 	templates synced over their nested instances; preview / run check the host offset against OriginInHost.
 
+	Hub NPCs in the same command: run() also takes the imported npc_<id> Models (Blender_Exports/NPC/Hub, any id of
+	Config/NPCs) found at the top of the Workspace or in Workspace.ImportedProps, builds each rig with
+	DevTools.EnemyModels.buildOne (ServerStorage.NPCs.<id>, used by NPCService at run time; any import Scale Unit: the
+	rig is scaled back from its Root box), puts an anchored copy in place of the "NPC" stand-in of its marker (hub
+	marker, test-area and kit Station_<Marker>; NpcSpot / Interact / prompts untouched; the first stand-in is kept in
+	ServerStorage.ImportedProps._OldStandIns) and moves the import to ServerStorage.ImportedProps.
+
 	Studio preview without an import (Agent A encodes a prop's meshes in PNGs, README "Preview images"):
 		print(Apply.preview("well", { "rbxassetid://<id>" }))   -- decode, build, install, sync (TEMPORARY)
 		print(Apply.endPreview("well"))                          -- back to the template that was there before
@@ -86,17 +97,18 @@ local HOLD = "_PreviewHold" -- MapProps._PreviewHold.<propId>: the untouched ori
 local IMPORTED = "ImportedProps" -- ServerStorage.ImportedProps: the applied imports (sources of later runs)
 
 local rgb3 = Color3.fromRGB
--- recoloured placements (attribute Variant on the instance): SurfaceAppearance.Color per mesh (README section 12),
--- = the old recolour's colour / the ColorMap mean. Used when the template has no _Variants of its own.
+-- recoloured placements (attribute Variant on the instance): MeshPart.Color per mesh (README section 12; the low-poly
+-- vertex colours multiply it like the template's own colour) = the old recolour's colour. Used when the template has
+-- no _Variants of its own.
 ApplyPropMeshes.VARIANTS = {
 	rowboat = { -- Abyss_2: dark wet wood, rusty iron
 		Sunken = {
-			Hull = rgb3(111, 86, 71), Timber = rgb3(93, 71, 60), Thwarts = rgb3(91, 70, 59), Iron = rgb3(73, 82, 80),
-			Rope = rgb3(125, 111, 89), Oar = rgb3(84, 66, 54), OarBlade = rgb3(90, 70, 58),
+			Hull = rgb3(100, 77, 64), Timber = rgb3(84, 64, 54), Thwarts = rgb3(82, 63, 53), Iron = rgb3(64, 72, 70),
+			Rope = rgb3(110, 98, 78), Oar = rgb3(76, 59, 49), OarBlade = rgb3(81, 63, 52),
 		},
 	},
 	skull_bones = { -- Abyss_3: bleached grey-green bones (sockets kept darker than today's pale ones so the skull reads)
-		Pale = { Bones = rgb3(228, 234, 228), Aged = rgb3(215, 222, 215), Sockets = rgb3(126, 137, 137) },
+		Pale = { Bones = rgb3(217, 223, 217), Aged = rgb3(205, 211, 205), Sockets = rgb3(120, 130, 130) },
 	},
 }
 -- attributes the new model must not inherit from the instance it replaces (SyncMapProps MapPropDropAttributes)
@@ -197,24 +209,28 @@ local function setContent(inst: Instance, property: string, uri: string?)
 	end
 end
 
-local function surfaceFor(data: any, family: any, tint: Color3): SurfaceAppearance?
-	local set = family.Set and data.Textures[family.Set]
-	if not set then
+-- the stylized overlay of a mesh (data Texture = a name of data.Textures): a SurfaceAppearance with the ColorMap only,
+-- AlphaMode Overlay, Color white (the transparent pixels show the MeshPart Color x the vertex colours)
+local function overlaySurface(data: any, overlayName: string?): SurfaceAppearance?
+	local overlay = overlayName and data.Textures and data.Textures[overlayName]
+	if not (overlay and overlay.ColorMap) then
 		return nil
 	end
 	local sa = Instance.new("SurfaceAppearance")
-	sa.Name = "SurfaceAppearance"
-	setContent(sa, "ColorMap", set.ColorMap)
-	setContent(sa, "NormalMap", set.NormalMap)
-	setContent(sa, "RoughnessMap", family.RoughnessMap or set.RoughnessMap)
-	setContent(sa, "MetalnessMap", set.MetalnessMap)
+	sa.Name = "Overlay"
+	setContent(sa, "ColorMap", overlay.ColorMap)
 	pcall(function()
 		sa.AlphaMode = Enum.AlphaMode.Overlay
 	end)
 	pcall(function()
-		(sa :: any).Color = tint
+		(sa :: any).Color = Color3.new(1, 1, 1)
 	end)
 	return sa
+end
+
+-- the PropMeshData this tool reads: the low-poly version 2 (version 1 had the PBR texture sets)
+local function lowPolyData(data: any): boolean
+	return type(data) == "table" and ((tonumber(data.Version) or 0) >= 2 or data.Style == "lowpoly")
 end
 
 local function roleOf(name: string, info: any): string
@@ -402,11 +418,12 @@ end
 ApplyPropMeshes.validate = validate
 
 -- one render MeshPart (a clone of the import / preview mesh, already validated) -> its template look; placed by the
--- caller
-local function dress(mp: MeshPart, propId: string, meshName: string, info: any, data: any)
+-- caller. The vertex colours of the mesh are kept (nothing here touches them)
+local function dress(mp: MeshPart, propId: string, meshName: string, info: any, data: any, notes: { string })
 	for _, child in ipairs(mp:GetChildren()) do
 		child:Destroy() -- imported SurfaceAppearance / welds: replaced below
 	end
+	mp.TextureID = "" -- (an imported texture would hide the Color)
 	mp.Size = v3(info.Size) -- (validated: equal, or off by the common import factor)
 	mp.Anchored = true
 	mp.CanCollide = false
@@ -418,16 +435,15 @@ local function dress(mp: MeshPart, propId: string, meshName: string, info: any, 
 	end)
 	local center = v3(info.Center)
 	mp.PivotOffset = CFrame.new(v3(info.Pivot or { 0, 0, 0 }) - center)
-	local tint = rgb(info.Color)
 	local role = roleOf(meshName, info)
 	local family = data.Families[info.Family] or {}
-	mp.Color = tint
+	mp.Color = rgb(info.Color)
 	mp.Transparency = info.Transparency or 0
 	if role == "Glow" then
 		mp.Material = Enum.Material.Neon
 	elseif role == "Water" or role == "Glass" or role == "Stream" then
 		mp.Material = material(info.Material or family.Material, "Glass")
-		mp.Transparency = info.Transparency or family.Transparency or (if role == "Water" then 0.35 elseif role == "Stream" then 0.45 else 0.3)
+		mp.Transparency = info.Transparency or family.Transparency or (if role == "Water" then 0.15 else 0.3)
 		if role == "Water" then
 			ripples(mp, data, info.Overlay or family.Overlay, { Enum.NormalId.Top })
 		elseif role == "Stream" then
@@ -438,9 +454,13 @@ local function dress(mp: MeshPart, propId: string, meshName: string, info: any, 
 		mp.Transparency = info.Transparency or family.Transparency or 0.2
 	else
 		mp.Material = material(info.Material or family.Material, "SmoothPlastic")
-		local sa = surfaceFor(data, family, tint)
-		if sa then
-			sa.Parent = mp
+		if info.Texture then
+			local sa = overlaySurface(data, info.Texture)
+			if sa then
+				sa.Parent = mp
+			else
+				table.insert(notes, `{meshName}: overlay "{info.Texture}" not in PropMeshData.Textures (left plain)`)
+			end
 		end
 	end
 	mp.Name = stripped(propId, meshName)
@@ -661,7 +681,7 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 			continue -- (only with opts.allowMissing; reported by validate)
 		end
 		local mp = src:Clone()
-		dress(mp, propId, meshName, info, data)
+		dress(mp, propId, meshName, info, data, notes)
 		mp.CFrame = pivot * CFrame.new(v3(info.Center))
 		mp.Parent = model
 	end
@@ -816,7 +836,7 @@ local function buildPieces(propId: string, source: Instance, data: any, propFx: 
 			continue -- (only with opts.allowMissing; reported by validate)
 		end
 		local mp = src:Clone()
-		dress(mp, propId, meshName, info, data)
+		dress(mp, propId, meshName, info, data, notes)
 		mp.CFrame = at
 		mp.Parent = model
 	end
@@ -978,8 +998,169 @@ local function install(propId: string, model: Model)
 	model.Parent = folder
 end
 
+---------------------------------------------------------------------
+-- hub NPCs (see the header)
+---------------------------------------------------------------------
+local NPC_STALLS = { "npc_blacksmith", "npc_trophy_merchant", "npc_gem_merchant" } -- reported even when not imported
+
+-- the npc_<id> imports waiting in the Workspace (top level or Workspace.ImportedProps)
+local function npcImports(npcConfig: any): { Model }
+	local list = {}
+	local places: { Instance } = { workspace }
+	local inWorkspace = workspace:FindFirstChild(IMPORTED)
+	if inWorkspace then
+		table.insert(places, inWorkspace)
+	end
+	for _, place in ipairs(places) do
+		for _, item in ipairs(place:GetChildren()) do
+			local id = string.gsub(string.lower(item.Name), "%.fbx$", "")
+			if item:IsA("Model") and npcConfig.ById[id] then
+				table.insert(list, item)
+			end
+		end
+	end
+	return list
+end
+
+-- the stand-in "NPC" Models of an NPC's marker: the hub marker and the test-area / kit Station_<Marker> copies
+local function standInHosts(marker: string): { Instance }
+	local hosts = {}
+	local hub = workspace:FindFirstChild("Hub")
+	local direct = hub and hub:FindFirstChild(marker)
+	if direct then
+		table.insert(hosts, direct)
+	end
+	for _, root in ipairs({ workspace:FindFirstChild("_Staging"), ServerStorage:FindFirstChild("MapAssets") }) do
+		if root then
+			for _, d in ipairs(root:GetDescendants()) do
+				if d:IsA("Model") and d.Name == "Station_" .. marker then
+					table.insert(hosts, d)
+				end
+			end
+		end
+	end
+	return hosts
+end
+
+-- an anchored copy of the built NPC where the stand-in stood (on the NpcSpot when there is one, facing like the
+-- stand-in); the first (part-built) stand-in goes to ServerStorage.ImportedProps._OldStandIns
+local function replaceStandIn(host: Instance, rig: Model, id: string): boolean
+	local old = host:FindFirstChild("NPC")
+	if not (old and old:IsA("Model")) then
+		return false
+	end
+	local cf, size = old:GetBoundingBox()
+	local position = cf.Position - Vector3.new(0, size.Y / 2, 0)
+	local spot = host:FindFirstChild("NpcSpot")
+	if spot and spot:IsA("BasePart") then
+		position = spot.Position - Vector3.new(0, spot.Size.Y / 2, 0)
+	end
+	local look = old:GetPivot().LookVector
+	local flat = Vector3.new(look.X, 0, look.Z)
+	if flat.Magnitude < 1e-3 then
+		flat = -Vector3.zAxis
+	end
+	local copy = rig:Clone()
+	copy.Name = "NPC"
+	for _, d in ipairs(copy:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+			d.CanCollide = false
+			d.CanTouch = false
+		end
+	end
+	copy:PivotTo(CFrame.lookAt(position, position + flat.Unit))
+	copy:SetAttribute("NpcStandIn", id)
+	if old:GetAttribute("NpcStandIn") then
+		old:Destroy() -- an earlier copy of an imported rig
+	else
+		local store = ServerStorage:FindFirstChild(IMPORTED) or Instance.new("Folder")
+		store.Name = IMPORTED
+		store.Parent = ServerStorage
+		local keep = store:FindFirstChild("_OldStandIns") or Instance.new("Folder")
+		keep.Name = "_OldStandIns"
+		keep.Parent = store
+		local ref = Instance.new("ObjectValue")
+		ref.Name = "_From"
+		ref.Value = host
+		ref.Parent = old
+		old.Parent = keep
+	end
+	copy.Parent = host
+	return true
+end
+
+-- rollback: the part-built stand-ins kept in ServerStorage.ImportedProps._OldStandIns go back to their markers (the
+-- imported copies there are removed); ServerStorage.NPCs is left as it is
+function ApplyPropMeshes.restoreNpcStandIns(): string
+	local store = ServerStorage:FindFirstChild(IMPORTED)
+	local keep = store and store:FindFirstChild("_OldStandIns")
+	if not keep then
+		return "restoreNpcStandIns: nothing kept"
+	end
+	local restored = 0
+	for _, old in ipairs(keep:GetChildren()) do
+		local ref = old:FindFirstChild("_From")
+		local host = ref and (ref :: ObjectValue).Value
+		if host and host.Parent then
+			local current = host:FindFirstChild("NPC")
+			if current and current:GetAttribute("NpcStandIn") then
+				current:Destroy()
+			end
+			(ref :: Instance):Destroy()
+			old.Parent = host
+			restored += 1
+		end
+	end
+	if #keep:GetChildren() == 0 then
+		keep:Destroy()
+	end
+	return `restoreNpcStandIns: {restored} stand-in(s) put back`
+end
+
+local function npcStep(opts: any, lines: { string })
+	local npcConfig = fresh(ReplicatedStorage.GameSystem.Config.NPCs)
+	local imports = npcImports(npcConfig)
+	local seen = {}
+	if #imports > 0 and not opts.dryRun then
+		local EnemyModels = fresh(devTool("EnemyModels"))
+		for _, import in ipairs(imports) do
+			local from = import:GetFullName()
+			local ok, idOrReason, note = EnemyModels.buildOne(import)
+			if not ok then
+				table.insert(lines, `NPC SKIPPED, nothing changed: {idOrReason}`)
+				continue
+			end
+			local id = idOrReason
+			seen[id] = true
+			local rig = ServerStorage.NPCs:FindFirstChild(id) :: Model
+			local def = npcConfig.ById[id]
+			local placed = 0
+			for _, host in ipairs(standInHosts(def.Marker)) do
+				if replaceStandIn(host, rig, id) then
+					placed += 1
+				end
+			end
+			table.insert(lines, `{id}: ServerStorage.NPCs.{id} built from {from}` .. (if note then ` ({note})` else "") .. `, {placed} stand-in(s) replaced; import moved to {stashImport(import)}`)
+		end
+	else
+		for _, import in ipairs(imports) do
+			local id = string.gsub(string.lower(import.Name), "%.fbx$", "")
+			seen[id] = true
+			table.insert(lines, `{id}: would build ServerStorage.NPCs.{id} from {import:GetFullName()}`)
+		end
+	end
+	local folder = ServerStorage:FindFirstChild("NPCs")
+	for _, id in ipairs(NPC_STALLS) do
+		if not seen[id] then
+			local built = folder and folder:FindFirstChild(id)
+			table.insert(lines, if built then `{id}: built earlier (ServerStorage.NPCs.{id})` else `{id}: not imported yet (Blender_Exports/NPC/Hub/{id}.fbx)`)
+		end
+	end
+end
+
 -- opts: only = { propId }, dryRun (report only), allowMissing (accept missing / unknown meshes), data (tests: a
--- PropMeshData table instead of DevTools.PropMeshData)
+-- PropMeshData table instead of DevTools.PropMeshData), noNpcs (props only)
 function ApplyPropMeshes.run(opts: any?): string
 	opts = opts or {}
 	local data = opts.data or fresh(devTool("PropMeshData"))
@@ -994,8 +1175,15 @@ function ApplyPropMeshes.run(opts: any?): string
 		table.sort(ids)
 	end
 	local lines, applied = { if opts.dryRun then "ApplyPropMeshes (DRY RUN, nothing changed)" else "ApplyPropMeshes" }, {}
+	if not lowPolyData(data) then
+		table.insert(lines, `REFUSED, nothing changed: DevTools.PropMeshData is version {data.Version} (paste the low-poly version 2 of Blender_Exports/Props/PropMeshData.luau)`)
+		return table.concat(lines, "\n")
+	end
 	local buildOpts = { allowMissing = opts.allowMissing == true }
 	for _, propId in ipairs(ids) do
+		if string.match(propId, "^npc_") then
+			continue -- (the NPC step below)
+		end
 		local import = findImport(propId)
 		if not import then
 			table.insert(lines, `{propId}: not imported yet (Blender_Exports/Props/{propId}.fbx)`)
@@ -1057,6 +1245,15 @@ function ApplyPropMeshes.run(opts: any?): string
 	end
 	if #applied > 0 then
 		table.insert(lines, Sync.run({ only = applied }))
+	end
+	local npcsWanted = not opts.noNpcs and opts.only == nil
+	for _, id in ipairs(opts.only or {}) do
+		if string.match(id, "^npc_") then
+			npcsWanted = not opts.noNpcs
+		end
+	end
+	if npcsWanted then
+		npcStep(opts, lines)
 	end
 	return table.concat(lines, "\n")
 end
@@ -1169,6 +1366,10 @@ function ApplyPropMeshes.preview(propId: string, imageIds: { string }): string
 	local Sync = fresh(devTool("SyncMapProps"))
 	local propFx = fresh(ReplicatedStorage.GameSystem.Config.PropFX)
 	local lines = { `ApplyPropMeshes.preview({propId}) - TEMPORARY, run endPreview("{propId}") before any save` }
+	if not lowPolyData(data) then
+		table.insert(lines, `  REFUSED: DevTools.PropMeshData is version {data.Version} (paste the low-poly version 2)`)
+		return table.concat(lines, "\n")
+	end
 	if previewBusy(propId) then
 		-- a second preview would push the first one into _Previous and lose the real previous template
 		table.insert(lines, `  REFUSED: a preview of {propId} is already installed: run endPreview("{propId}") first`)

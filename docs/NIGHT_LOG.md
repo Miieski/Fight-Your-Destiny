@@ -2061,3 +2061,21 @@ top of docs/model_upgrade_brief.txt.
   13 (new --lowpoly mode re-materials the existing .blend; fyd_props_geomcheck.py: FBX positions / polygons / UVs and
   the preview PNG triangles / normals / UVs exactly equal). PropMeshData version 2 ("lowpoly"); new preview ids in
   Blender/Props/README.txt section 12. The old PBR sets and FYD_* MaterialVariants are retired.
+- 11:10 STUDIO SIDE done (Agent B; main agent looked at the stalls, camp, fountain, weapon-stall and well shots):
+  the 8 Studio-built templates are low-poly (SmoothPlastic + guide colours + 3 height bands; overlays only on the
+  lamp plinth (stone lines) and the stall counter tops / side panels (plank lines) - a Texture cannot rotate, so on
+  separate planks the seams crossed them: rejected) and synced (123 copies, then 52 after the overlays; next runs 0);
+  the 11 FYD_* MaterialVariants deleted after a usage check (0 game parts used them). ApplyPropMeshes low-poly path:
+  data Color / Material / Transparency, imported SAs and TextureIDs removed, vertex colours kept, overlay meshes get a
+  ColorMap-only "Overlay" SurfaceAppearance (tested: keeps the lines AND the vertex colours; a MeshPart TextureID
+  renders transparent pixels black), PropMeshData v2 required. All 13 Blender props previewed low-poly (test area +
+  one main-map placement each, Abyss variants) and removed again. NPC hook: the same command builds the 3
+  shopkeepers into ServerStorage.NPCs (scale normalised from the Root box, any import unit; a distorted import is
+  refused) and replaces the Edit stand-ins (backups in ImportedProps._OldStandIns, restoreNpcStandIns()). Dry run:
+  13 props + 3 NPCs "not imported yet", no error. Backups old_props_2026-10-19_pre_lowpoly/ (8 .rbxm).
+  Main agent Play check (phone emulator, landscape): hub plaza 144 fps, worst frame 9.4 ms; lamp flicker 1.13-1.27;
+  0 parts still using a MaterialVariant; no errors in the log; disk == Studio (178 scripts, 0 written).
+  ONE OWNER STEP prepared: Blender_Exports/ToImport/ (16 FBX = 13 props + 3 NPCs, git-ignored copies) + the command
+  (PROPS_IMPORT.md "THE ONE STEP").
+  Reported, not changed (existing placements): 5 Plains_2 clam_pearl copies sit 0.2 below the local ground, 1 sits 1.05
+  below a Stone part.

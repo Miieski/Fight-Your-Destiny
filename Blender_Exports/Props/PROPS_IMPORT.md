@@ -1,5 +1,22 @@
 # Prop FBX files to import (model upgrade: hub and world props)
 
+## THE ONE STEP (owner, 2026-10-19)
+
+1. Studio: **File > Import 3D**, open the folder `Blender_Exports\ToImport\` (16 files: the 13 props + the 3 stall
+   shopkeepers `npc_blacksmith`, `npc_trophy_merchant`, `npc_gem_merchant`), Ctrl+A, **Open**.
+2. Keep the preset **Studio Default** for all files (right-click a file > *Apply settings to all*); check
+   **Merge Meshes = OFF**, Scale Unit = Studs, World Forward = Front, World Up = Top. Click **Import**.
+3. Leave the models where the importer puts them, then run in the command bar (or tell Claude):
+
+   `print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())`
+
+   It builds every prop template, replaces the old models in the test area and at every map placement, builds the 3
+   shopkeepers (any scale unit) in `ServerStorage.NPCs`, and prints a report. A file that came in wrong is SKIPPED
+   (nothing changes for it): import that file again and re-run the command.
+4. Look at the hub, then **File > Save to File As**.
+
+The details below explain each setting.
+
 Made by `tools/blender/fyd_props.py` (conventions: `Blender/Props/README.txt`, the Prop Style Guide). Until a prop is
 imported, the current model stays in place, so nothing is blocked. Studio-built props (crate, barrel, lamp post,
 lantern, laundry rack, stall frames) need no import.

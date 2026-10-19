@@ -367,9 +367,10 @@ local function applyVariant(model: Model, template: Model, variant: string?): st
 			local color = attributes["Color_" .. d.Name]
 			if typeof(color) == "Color3" then
 				d.Color = color
-				-- imported meshes: the SurfaceAppearance tint is what shows (README: recolours = SA.Color)
+				-- a tinted SurfaceAppearance follows the recolour; the low-poly overlay SA ("Overlay", Color white) is
+				-- left white (its lines darken the new Color)
 				local sa = d:FindFirstChildOfClass("SurfaceAppearance")
-				if sa then
+				if sa and sa.Name ~= "Overlay" then
 					pcall(function()
 						(sa :: any).Color = color
 					end)
