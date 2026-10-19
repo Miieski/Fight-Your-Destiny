@@ -186,6 +186,10 @@ SyncMapProps.RULES = {
 	{ propId = "sandstone_wall_gate", names = { "Gate_Desert_2" }, match = function(m)
 		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Desert_2"
 	end },
+	-- desert nature (owner, 2026-10-20): 04 the cacti (desert test row, kit Desert.Cactus_A / _B / _C, Desert_1-3)
+	{ propId = "cactus_tall", names = { "Cactus_A" } },
+	{ propId = "cactus_barrel", names = { "Cactus_B" } },
+	{ propId = "cactus_pear", names = { "Cactus_C" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

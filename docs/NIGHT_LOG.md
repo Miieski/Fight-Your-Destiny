@@ -2464,3 +2464,17 @@ every rock intersection in sub-zone 1.
   PrimaryPart, attribute), SubZoneId, PriceSign ("5K Gold"), the 2 Ember flames + FirePoints kept. 50 -> 15 parts;
   collision = invisible union of today's parts (differences only on the pyramid tips, <= 0.3). 52 templates / 385
   copies up to date.
+- 01:30 Inventory + PILOT 04 CACTI done (Agent B; main agent looked at the test and Desert_1 shots). Kits: 01 red rock
+  stack = Mesa_Strata_A (Desert_3 Formations x4 colliding canyon walls; Desert_1 / 2 Backdrop.Mesas x6 non-colliding;
+  kit + test). DECISION (main agent): the 5 Desert_3 Hoodoo stacks (the same layered red rock) are in scope; the
+  Desert_1 RockArch landmark is out (separate landmark); Canyon_Cliff_A is Toolbox mesh rock, out. No invisible wall
+  belongs to the rock (the zones' Bounds are separate). Backups old_props_2026-10-20_pre_desert_nature/.
+  Agent A: red rock facets - v1 (followed the boxes) rejected by the main agent as still "stacked bevelled slabs";
+  v2 natural (irregular 9-10-sided band outlines, leaning faceted walls, uneven crumbling ledges, alcoves, runnels,
+  eroded caprock, fallen blocks; within ~0.8 of today's boxes): mesa_strata__column_L/R_lower/upper + base_scree,
+  hoodoo__variant_A/B_lower/upper (scaled per hoodoo 1.0-1.7).
+  04 cacti: 3 props - cactus_tall (Cactus_A) 33 / 33, cactus_barrel (Cactus_B) 20 / 20, cactus_pear (Cactus_C) 20 / 20
+  (incl. test + kit; every copy keeps position / scale / rotation): ribbed octagonal segments with elbows and rounded
+  tops, spine dots, dark-to-light green, flowers (petals around a yellow centre), barrel crowns with ribs, prickly pear
+  oval pads in two greens with spine rows, 2 small fruits, sand mounds with pebbles. Collision = today's boxes as
+  invisible parts (a single union filled the arm gaps - rejected); rays on all 70 placed copies: 0 different.

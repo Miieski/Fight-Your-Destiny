@@ -227,6 +227,39 @@ Builders in `DevTools.PropsDesert` (01, disk `tools/PropsDesert.luau`) and `DevT
 Desert gates final (01-04 done): `Sync.check()` 52 templates / 385 instances, all up to date (no duplicate, nothing
 waiting); a full `Sync.run()` replaces 0. 04 (`Gate_Desert_2`) added on the owner's request on 2026-10-20.
 
+### Desert nature: rocks, ruins and nature (owner, 2026-10-20): inventory before the remake (read from Studio)
+
+Images: `docs/Desert_Images/03_Rocks_Ruins_Nature/` (01-04 + overview). Kit = `ServerStorage.MapAssets.Desert.<Kit>`;
+test zone = `workspace._Staging.AssetPreview.Desert.<Kit>`. Every copy was found by name in Workspace and ServerStorage,
+and box rocks of the same kit inside other models were found by part name (`Strata` / `Talus`). No script reads any
+of these models (src / tools grep). None has a tag, a PrimaryPart or an attribute, except the Desert_1 `Landmark`
+(`LandmarkName=RockArch`). Backups (kit + test + every game copy):
+`BackUP_Files/old_props_2026-10-20_pre_desert_nature/` (`01_red_rock_stack_Mesa_Strata_A` 12, `01b_red_rock_strata_Hoodoo_x5_Desert_1_Landmark` 6,
+`02_sandstone_blocks_Sandstone_Block` 6, `03_ribs_and_bull_skull_Ribcage_A_Skull_Animal` 25, `04_cacti_Cactus_A_B_C` 73).
+
+| # | object | kit (parts, size) | game copies (count, scale) | collision | notes |
+|---|---|---|---|---|---|
+| 01 | red rock stack | `Mesa_Strata_A`, 18 parts: 14 `Strata` boxes (2 columns at x -9 / +9, about 21-23 x 4-11 x 13-21, turned -4..+4 degrees), 2 `Cap` boxes, 2 `Talus` wedges; 42.4 x 54.0 x 24.7 | Desert_3 `Decor.Formations` 4 (scale 0.62 / 1.00 / 1.20 / 1.25, turned +-90 / 80: the canyon walls of Desert_3); Desert_1 `Decor.Backdrop.Mesas` 4 (scale 1.5-2.3) and Desert_2 `Decor.Backdrop.Mesas` 2 (scale 1.4 / 2.0): the far backdrop | Formations copies: every part collides (as the kit); backdrop copies: CanCollide / CanQuery / CastShadow false (a backdrop variant, same shapes) | no invisible wall belongs to the rock: the zones' `Bounds` walls (Transparency 1, 4 thick, 110 high) are separate parts and stay as they are |
+| 01b | box rocks of the same kit inside other models | Desert_3 `Decor.Formations.Hoodoo` x5: 5 `Strata` + 1 `Cap` each (stacked, 11-15 wide, 23-40 high, turned); Desert_1 `Decor.Landmark` (`LandmarkName=RockArch`): 17 `Strata` boxes (2 legs of 7 boxes at x +-31 and 3 long boxes across the top, up to 88 x 9 x 27, top at 69) + 4 `SandRock_L` / 2 `SandRock_M` mesh rocks | 5 + 1 | all collide | same strata palette as the kit: red C25337 / CA5639 / C95639 / BC5035 / C65438 / C75538, orange DF7D4E / E17E4F / E48050 / E78251, dark 953D2F / 9A3F31 / 963E30 / 8E3B2D. `Canyon_Cliff_A` (4 Toolbox mesh rocks, 21 copies in Desert_3 `Decor.Cliffs` + 4 backdrop) is not a box rock: not in 01 |
+| 02 | sandstone blocks | `Sandstone_Block`, 2 parts: `Block` 6 x 3 x 4 (E2BE84, turned 6), `Block` 3.4 x 2.4 x 3 on top (D5B37C, turned -18); 6.4 x 5.4 x 4.6 | Desert_3 `Decor.Ruins` 4 (scale 1.0) | both collide | |
+| 03 | ribs + bull skull | `Ribcage_A`, 11 parts: `Spine` 1 x 1 x 11 at y 4.8, 10 `Rib` 0.7 x 4.4-5.4 x 0.7 at +-31 degrees (F0E8D0 / E3DBC4); 7.2 x 5.4 x 11.0. `Skull_Animal`, 8 parts: `Cranium` 2.4 x 1.8 x 2.6, `Snout`, 2 `Horn` bars + 2 horn tips, 2 dark `Eye` plates (533E28); 8.6 x 3.8 x 4.7 | Ribcage_A: Desert_1 `Decor.Bones` 3, Desert_3 `Decor.Plants` 5 (scale 1.0-1.5); Skull_Animal: Desert_1 `Decor.Bones` 8, Desert_2 `Decor.Rocks` 3, Desert_3 `Decor.Plants` 2 (scale 0.9-1.4) | every part collides | |
+| 04 | cacti | `Cactus_A` (tall, 7 parts: `Trunk` 2.2 x 11 x 2.2, 4 `Arm` boxes, `Top`, red `Flower`; 7.3 x 12.4 x 2.2); `Cactus_B` (barrel cluster, 9 parts: 3 `Barrel` pairs (a box and a copy turned 45), 2 red + 1 yellow `Flower`; 7.0 x 3.8 x 5.7); `Cactus_C` (prickly pear, 6 parts: 4 `Pad` plates tilted, 2 red `Flower`; 7.1 x 7.5 x 2.7); greens 4CA454 / 55B85E, flowers D64A3E / FFC93C | Cactus_A: Desert_1 `Decor.Cacti` 19, Desert_2 `Decor.Cacti` 7, Desert_3 `Decor.Plants` 5 = 31; Cactus_B: Desert_1 6, Desert_2 6, Desert_3 6 = 18; Cactus_C: Desert_1 9, Desert_2 9 = 18 (scales 0.80-1.29, all the kit's shape) | every part collides | |
+
+Scope decisions (coordinator / main agent, 2026-10-20): 01 = every `Mesa_Strata_A` copy (10 placed + kit + test) AND the
+5 Desert_3 `Hoodoo` stacks, from Agent A's facets; the colliding copies keep today's boxes as invisible colliders, the
+backdrop copies stay non-colliding. The Desert_1 `Landmark` (RockArch) and `Canyon_Cliff_A` (mesh rocks) are out of scope.
+
+#### Desert nature remake status
+
+Builders in `DevTools.PropsDesertNature` (disk `tools/PropsDesertNature.luau`), recipe docs/prop_texture_guide.md
+section B, today's colours, places, scales and turns (SyncMapProps keeps each copy's pivot and scale). Collision: the
+visible unions never collide; invisible `Collision` parts are today's colliding parts (separate parts where one union's
+convex hull would fill a gap). Screenshots: `docs/screenshots/desert_nature/`.
+
+| # | object | MapProps id (rule) | replaced | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 04 | cacti (pilot) | `cactus_tall` (names `Cactus_A`), `cactus_barrel` (`Cactus_B`), `cactus_pear` (`Cactus_C`) | 33 / 33, 20 / 20, 20 / 20 (test 1 + kit 1 + 31 / 18 / 18 in Desert_1-3); 2nd run 0 | 7 -> 11 (4 unions Body, Spines, Flower, Sand + 7 invisible Collision); 9 -> 13; 6 -> 10; about 4,500 / 3,000 / 2,200 triangles | tall: today's trunk and 2 arms as ribbed octagonal segments (soft joints, elbows, rounded domes), 8 ribs, spine dots, a dark-to-light green gradient, today's red flower as petals round a yellow heart; barrel: today's 3 barrels in place as ribbed octagons with rounded feet and crowns, ribs over the crown, spine dots, today's red / yellow / red flowers; prickly pear: today's 4 pads (same places, sizes, tilts) as bevelled ovals in 2 greens with rows of spine dots on both faces, today's 2 red flowers and 2 small fruits; each on a sand mound with pebbles. Collision check (all 70 placed copies, rays every 0.5 against today's parts at each copy's scale): 24,990 downward rays, 0 off |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

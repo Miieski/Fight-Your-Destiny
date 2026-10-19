@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -869,11 +869,483 @@ def preview_canyon(pieces):
     return render_sheet("canyon", [(objs + ctx, [(-20, 10), (150, 20)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# DESERT 01 RED ROCK STACK (MapAssets.Desert.Mesa_Strata_A) + the Desert_3 HOODOOS
+# today's parts (BackUP_Files/old_props_2026-10-20_pre_desert_nature/*.rbxm), relative to the BASE CENTRE of the
+# model's bounding box (42.44 x 54.0 x 24.69; y 0 = the bottom): (name, centre, size, yaw deg, colour)
+# ------------------------------------------------------------------------------------------------
+MESA_PARTS = [
+    ("Talus", [9.89, 2.5, -4.27], [10.0, 5.0, 6.0], -10.0, "#C45438"),
+    ("Talus", [-8.11, 3.5, -4.77], [14.0, 7.0, 8.0], 8.0, "#E48050"),
+    ("Strata", [-9.01, 4.5, -0.13], [21.38, 9.0, 17.73], 3.0, "#C25337"),
+    ("Strata", [9.61, 4.5, -0.84], [21.84, 9.0, 19.14], 4.3, "#CA5639"),
+    ("Strata", [-8.91, 11.0, -1.11], [21.13, 4.0, 20.69], -3.4, "#DF7D4E"),
+    ("Strata", [8.88, 11.0, -1.29], [22.9, 4.0, 21.04], 2.8, "#E17E4F"),
+    ("Strata", [-9.26, 18.5, 1.31], [21.75, 11.0, 16.85], -0.6, "#C95639"),
+    ("Strata", [9.04, 18.5, 1.23], [21.7, 11.0, 17.0], -3.5, "#CA5639"),
+    ("Strata", [-9.68, 26.0, 0.43], [21.53, 4.0, 19.6], -2.0, "#953D2F"),
+    ("Strata", [9.22, 26.0, 1.42], [21.05, 4.0, 17.63], 4.3, "#9A3F31"),
+    ("Strata", [-9.2, 33.5, 2.3], [22.99, 11.0, 16.87], -3.8, "#C25337"),
+    ("Strata", [9.07, 33.5, 3.55], [22.55, 11.0, 14.37], 0.2, "#BC5035"),
+    ("Strata", [-8.91, 41.0, 2.09], [22.19, 4.0, 18.29], -4.2, "#DF7D4E"),
+    ("Strata", [9.31, 41.0, 3.05], [21.55, 4.0, 16.37], -2.9, "#E37F4F"),
+    ("Strata", [-9.24, 46.5, 5.06], [22.11, 7.0, 13.34], -3.0, "#C75E3C"),
+    ("Strata", [8.95, 46.5, 4.19], [21.57, 7.0, 15.08], 3.3, "#D1623F"),
+    ("Cap", [-11.11, 51.0, 5.23], [9.0, 6.0, 8.0], 20.0, "#C45438"),
+    ("Cap", [7.89, 51.0, 6.23], [7.0, 4.0, 7.0], -15.0, "#E48050"),
+]
+# the smallest hoodoo (Desert_3 Formations; the 5 hoodoos are this one at uniform scale 1.0 / 1.1 / 1.3 / 1.5 / 1.7)
+HOODOO_PARTS_A = [
+    ("Strata", [0.27, 2.6, 0.3], [7.2, 5.2, 6.48], 4.3, "#C75538"),
+    ("Strata", [0.06, 6.4, -0.19], [7.36, 2.4, 6.62], 55.0, "#DF7D4E"),
+    ("Strata", [0.01, 10.2, -0.11], [5.6, 5.2, 5.04], 39.6, "#BC5035"),
+    ("Strata", [-0.39, 14.0, -0.51], [5.52, 2.4, 4.97], 11.1, "#963E30"),
+    ("Strata", [-0.14, 17.8, -0.05], [4.0, 5.2, 3.6], 63.7, "#C65438"),
+    ("Cap", [0.0, 21.8, 0.0], [8.4, 2.8, 7.6], 48.5, "#963E30"),
+]
+# the second hoodoo's yaws and colours on the same sizes (variant B)
+HOODOO_PARTS_B = [
+    ("Strata", [0.18, 2.6, 0.4], [7.2, 5.2, 6.48], 62.0, "#C25337"),
+    ("Strata", [0.06, 6.4, -0.4], [7.36, 2.4, 6.62], 28.2, "#E78251"),
+    ("Strata", [-0.19, 10.2, -0.39], [5.6, 5.2, 5.04], 58.6, "#C85539"),
+    ("Strata", [0.44, 14.0, -0.23], [5.52, 2.4, 4.97], 12.8, "#943D2F"),
+    ("Strata", [-0.44, 17.8, 0.33], [4.0, 5.2, 3.6], 42.5, "#C65438"),
+    ("Cap", [0.12, 21.8, -0.18], [8.4, 2.8, 7.6], 36.8, "#963E30"),
+]
+ROCK_ORIGIN = ("the BASE CENTRE of today's model bounding box (centre in x / z, y 0 = the bottom), front -Z = the "
+               "model's front; place at the model pivot (if the pivot is not at the base centre, offset by the "
+               "difference)")
+
+
+def _yaw(p, c, deg):
+    """Roblox yaw about +Y through c (x' = cos x + sin z, z' = -sin x + cos z)."""
+    a = math.radians(deg)
+    dx, dz = p.x - c.x, p.z - c.z
+    return Vector((c.x + math.cos(a) * dx + math.sin(a) * dz, p.y, c.z - math.sin(a) * dx + math.cos(a) * dz))
+
+
+def _inside(poly, p):
+    """Point (x, z) inside a convex ccw-from-above polygon (all at the same y)."""
+    for i in range(len(poly)):
+        a, b = poly[i], poly[(i + 1) % len(poly)]
+        if (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x) > 1e-6:
+            return False
+    return True
+
+
+def strata_bands(pc, bands, rng, height, vcracks=2, hcracks=3, t=0.6):
+    """Faceted strata bands: bands = (y0, y1, colour, centre (x, z), size (sx, sz), yaw, recess, chip). Each band a
+    vertical-sided chamfered rectangle (chipped corners) turned by its yaw: rectangle side faces, a lit top ledge,
+    an underside where it overhangs the band below, horizontal and vertical crack strips on long faces."""
+    prev = None
+    long_faces = []
+    for (y0, y1, col, cxz, sxz, yaw, rec, chip) in bands:
+        c = Vector((cxz[0], 0, cxz[1]))
+        sx, sz = sxz[0] - 2 * rec, sxz[1] - 2 * rec
+        ch = [rng.uniform(chip[0], chip[1]) * min(sx, sz) for _ in range(4)]
+        poly = [_yaw(p, c, yaw) for p in _octagon(c.x - sx / 2, c.x + sx / 2, c.z - sz / 2, c.z + sz / 2, ch)]
+        lo = [p + Vector((0, y0, 0)) for p in poly]
+        hi = [p + Vector((0, y1, 0)) for p in poly]
+        tt = max(0.0, min(1.0, (y0 + y1) / 2 / height))
+        g = 0.88 + 0.12 * (tt * tt * (3 - 2 * tt))
+        for i in range(8):
+            j = (i + 1) % 8
+            m = (lo[i] + lo[j]) / 2
+            out = Vector((m.x - c.x, 0, m.z - c.z))
+            pc.face([lo[i], lo[j], hi[j], hi[i]], tone(col, g * rng.choice((1.0, 0.97, 0.94))), "SmoothPlastic", t, out)
+            if (lo[j] - lo[i]).length > 4.0:
+                long_faces.append((lo[i], lo[j], y0, y1, out.normalized(), col))
+        polygon_fill(pc, hi, tone(col, min(1.1, g * 1.07)), "SmoothPlastic", t, Vector((0, 1, 0)))
+        if prev is not None and any(not _inside(prev, p) for p in poly):
+            polygon_fill(pc, lo, tone(col, 0.72), "SmoothPlastic", t, Vector((0, -1, 0)))
+        prev = poly
+    rng.shuffle(long_faces)
+    k = 0
+    for a, b, y0, y1, n, col in long_faces:      # horizontal cracks on tall bands
+        if k >= hcracks or y1 - y0 < 3.0:
+            continue
+        e = (b - a)
+        u0, u1 = rng.uniform(0.1, 0.3), rng.uniform(0.65, 0.9)
+        y = y0 + (y1 - y0) * rng.uniform(0.35, 0.65)
+        p0, p1 = a + e * u0 + n * 0.03, a + e * u1 + n * 0.03
+        pc.face([Vector((p0.x, y - 0.12, p0.z)), Vector((p1.x, y - 0.12, p1.z)), Vector((p1.x, y + 0.12, p1.z)),
+                 Vector((p0.x, y + 0.12, p0.z))], tone(col, 0.5), "SmoothPlastic", 0.05, n)
+        k += 1
+    k = 0
+    for a, b, y0, y1, n, col in reversed(long_faces):   # vertical zig-zag cracks
+        if k >= vcracks or y1 - y0 < 2.5:
+            continue
+        e = (b - a).normalized()
+        base = a + (b - a) * rng.uniform(0.25, 0.75) + n * 0.03
+        mid_y = y0 + (y1 - y0) * rng.uniform(0.4, 0.6)
+        pts = [Vector((base.x, y1 - 0.05, base.z)), Vector((base.x, mid_y, base.z)) + e * rng.uniform(-0.7, 0.7),
+               Vector((base.x, y0 + 0.3, base.z)) + e * rng.uniform(-0.5, 0.5)]
+        for q0, q1 in zip(pts, pts[1:]):
+            wv = e * 0.14
+            pc.face([q0 - wv, q0 + wv, q1 + wv, q1 - wv], tone(col, 0.5), "SmoothPlastic", 0.05, n)
+        k += 1
+
+
+def split_bands(parts, rng, max_band=4.5, chip=(0.06, 0.14), recess_soft=0.45):
+    """Today's strata boxes -> bands: thick layers split into 2-3 sub-bands (alternating tone, a thin recessed
+    erosion notch between them), thin (soft, orange) layers recessed; the envelope stays within 0.5 of the box."""
+    bands = []
+    for name, cpos, size, yaw, col in parts:
+        if name != "Strata":
+            continue
+        y0, y1 = cpos[1] - size[1] / 2, cpos[1] + size[1] / 2
+        h = y1 - y0
+        n = max(1, int(math.ceil(h / max_band)))
+        soft = h <= 4.0
+        cuts = [y0 + h * i / n + (rng.uniform(-0.4, 0.4) if 0 < i < n else 0.0) for i in range(n + 1)]
+        for i in range(n):
+            a, b = cuts[i], cuts[i + 1]
+            rec = recess_soft if soft else (0.0 if i % 2 == 0 else 0.3)
+            ctone = tone(col, 1.0 if i % 2 == 0 else 0.94)
+            if i > 0:   # erosion notch: a 0.5-tall band recessed a further 0.5 at the joint
+                bands.append((a, a + 0.5, tone(col, 0.85), (cpos[0], cpos[2]), (size[0], size[2]), yaw, rec + 0.5, chip))
+                a += 0.5
+            bands.append((a, b, ctone, (cpos[0], cpos[2]), (size[0], size[2]), yaw, rec, chip))
+    return bands
+
+
+def cap_rock(pc, cpos, size, yaw, col, rng, tilt=(0.1, -0.06), t=0.6):
+    """A cap block: chipped plan turned by yaw, two tiers (a 60 % lower tier and a smaller sloped top tier)."""
+    c = Vector((cpos[0], 0, cpos[2]))
+    y0 = cpos[1] - size[1] / 2
+    sx, sy, sz = size
+    tiers = [(y0, y0 + sy * 0.6, sx, sz, False), (y0 + sy * 0.6, y0 + sy, sx * 0.82, sz * 0.8, True)]
+    for (a, b, wx, wz, sloped) in tiers:
+        poly = [_yaw(p, c, yaw) for p in _octagon(c.x - wx / 2, c.x + wx / 2, c.z - wz / 2, c.z + wz / 2,
+                                                  [rng.uniform(0.08, 0.16) * min(wx, wz) for _ in range(4)])]
+        lo = [p + Vector((0, a, 0)) for p in poly]
+        hi = [Vector((p.x, b + (tilt[0] * (p.x - c.x) + tilt[1] * (p.z - c.z) if sloped else 0.0), p.z)) for p in poly]
+        for i in range(8):
+            j = (i + 1) % 8
+            m = (lo[i] + lo[j]) / 2
+            pc.face([lo[i], lo[j], hi[j], hi[i]], tone(col, rng.choice((1.0, 0.96, 0.92))), "SmoothPlastic", t,
+                    Vector((m.x - c.x, 0, m.z - c.z)))
+        polygon_fill(pc, hi, tone(col, 1.07), "SmoothPlastic", t, Vector((0, 1, 0)))
+
+
+def scree_pile(pc, cpos, size, yaw, col, rng, n=9, t=0.4, reach=0.0):
+    """Natural scree replacing a talus WedgePart (high at the back +z, low at the front -z): convex hull of
+    jittered points on the wedge's footprint and slope, faces toned by height."""
+    c = Vector((cpos[0], 0, cpos[2]))
+    sx, sy, sz = size
+    pts = []
+    for i in range(n):
+        u = (i + 0.5) / n
+        x = c.x - sx / 2 + sx * u + rng.uniform(-0.3, 0.3)
+        pts.append(Vector((x, 0.0, c.z - sz / 2 - reach * rng.uniform(0.7, 1.0))))           # front foot
+        pts.append(Vector((x, 0.0, c.z + sz / 2 - rng.uniform(0.0, 0.4))))                    # back foot
+        top = sy * (0.75 + 0.25 * math.sin(math.pi * u)) * rng.uniform(0.85, 1.0)
+        pts.append(Vector((x, top, c.z + sz / 2 - rng.uniform(0.3, 1.0))))                    # back crest
+        pts.append(Vector((x, top * rng.uniform(0.35, 0.55), c.z - reach * 0.4 + rng.uniform(-0.6, 0.6))))   # mid slope
+    pts = [_yaw(p, c, yaw) for p in pts]
+    hull_faces(pc, pts, col, rng, sy, t)
+
+
+def hull_faces(pc, pts, col, rng, height, t):
+    bm = bmesh.new()
+    vs = [bm.verts.new(p) for p in pts]
+    bmesh.ops.convex_hull(bm, input=vs)
+    bm.normal_update()
+    center = sum(pts, Vector()) / len(pts)
+    for f in bm.faces:
+        ring = [l.vert.co.copy() for l in f.loops]
+        cc = sum(ring, Vector()) / len(ring)
+        if all(abs(p.y) < 1e-4 for p in ring):
+            continue                       # the flat bottom lies on the ground: no face
+        h = max(0.0, min(1.0, cc.y / max(height, 1e-3)))
+        colr = tone(col, (0.84 + 0.16 * h) * rng.choice((1.0, 0.95, 0.9)))
+        out = cc - center
+        if len(ring) == 3:
+            pc.face(ring, colr, "SmoothPlastic", t, out)
+        elif len(ring) == 4:
+            pc.quad_or_tris(ring, colr, "SmoothPlastic", t, out)
+        else:
+            polygon_fill(pc, ring, colr, "SmoothPlastic", t, out)
+    bm.free()
+
+
+def small_rock(pc, cpos, size, col, rng):
+    boulder_start = len(pc.faces)
+    tmp = Piece(pc.obj, pc.name, pc.origin)
+    boulder(tmp, size, rng.randrange(10 ** 6), col, n_pts=9, t=0.3, jit=(0.75, 1.1))
+    for f in tmp.faces:
+        f["v"] = [p + Vector(cpos) for p in f["v"]]
+        if not all(abs(p.y - cpos[1]) < 1e-4 for p in f["v"]):
+            pc.faces.append(f)
+
+
+# ------------------------------------------------------------------------------------------------
+# v2 (2026-10-20): NATURAL canyon rock. Each stratum = a lofted irregular ring (10 vertices: bulges and bites, no
+# long straight edge) with 2-3 sloped facet rows (lean 5-15 deg), a soft bevel at the top, an uneven ledge (inset
+# 0.2-1.0, crumbling spots), alcoves low on the column, runnels, per-facet tone steps. Triangles (always planar).
+# The collision stays today's boxes: the visible rock stays within about 0.8 of their faces.
+# ------------------------------------------------------------------------------------------------
+STEPS = (1.0, 0.93, 0.86)
+
+
+def _box_radius(theta, hx, hz, n=6.0):
+    """Superellipse 'rounded box' radius at angle theta (local frame) for half sizes hx, hz."""
+    c, s = abs(math.cos(theta)), abs(math.sin(theta))
+    return 1.0 / ((c / hx) ** n + (s / hz) ** n) ** (1.0 / n)
+
+
+def _ray_poly(c, d, poly):
+    """Distance from c along unit d (x, z) to the polygon outline (list of Vector, y ignored); None if no hit."""
+    best = None
+    for i in range(len(poly)):
+        a, b = poly[i], poly[(i + 1) % len(poly)]
+        ex, ez = b.x - a.x, b.z - a.z
+        den = d[0] * ez - d[1] * ex
+        if abs(den) < 1e-9:
+            continue
+        t = ((a.x - c.x) * ez - (a.z - c.z) * ex) / den
+        u = ((a.x - c.x) * d[1] - (a.z - c.z) * d[0]) / den
+        if t > 0 and -1e-6 <= u <= 1 + 1e-6 and (best is None or t < best):
+            best = t
+    return best
+
+
+def natural_band(pc, y0, y1, col, cxz, sxz, yaw, rng, prev_top=None, n=10, alcoves=0, t=0.6, runnels=1,
+                 lean_max=12.0, height=54.0):
+    """One natural stratum. Returns its top ring (for the next band). prev_top: the band below's top ring; this
+    band's foot is kept inside it (ledge 0.2-1.0) so nothing overhangs without an underside."""
+    c = Vector((cxz[0], 0, cxz[1]))
+    hx, hz = sxz[0] / 2, sxz[1] / 2
+    a0 = math.radians(yaw)
+    h = y1 - y0
+    thick = h >= 5.0
+    th0 = rng.uniform(0, 2 * math.pi / n)
+    thetas = [th0 + 2 * math.pi * i / n + rng.uniform(-0.18, 0.18) * 2 * math.pi / n for i in range(n)]
+    # per-vertex outline offsets: bulges (+0.3 .. +0.7) and bites (-0.4 .. -1.2), clamped to +-0.8 of the envelope
+    base_off = [rng.choice((rng.uniform(0.2, 0.6), rng.uniform(-0.4, 0.1), rng.uniform(-1.1, -0.5))) for _ in range(n)]
+    lean = Vector((rng.uniform(-1, 1), 0, rng.uniform(-1, 1)))
+    lean = lean.normalized() * math.tan(math.radians(rng.uniform(5.0, lean_max))) if lean.length > 1e-6 else Vector()
+    alc = set(rng.sample(range(n), alcoves)) if alcoves else set()
+    levels = [0.0, 0.5, 1.0] if not thick else [0.0, 0.42, 0.78, 1.0]
+
+    def ring(fy, extra_in):
+        pts = []
+        for i, th in enumerate(thetas):
+            r = _box_radius(th, hx, hz)
+            off = base_off[i] + rng.uniform(-0.25, 0.25) - extra_in
+            if i in alc and 0.15 < fy < 0.9:
+                off -= rng.uniform(0.8, 1.5)
+            off = max(-1.6, min(0.8, off))
+            lx, lz = math.cos(th) * (r + off), math.sin(th) * (r + off)
+            x = c.x + math.cos(a0) * lx + math.sin(a0) * lz
+            z = c.z - math.sin(a0) * lx + math.cos(a0) * lz
+            dy = fy * h
+            lean_off = lean * (dy - h / 2)     # the band leans: it moves out at one side, in at the other
+            pts.append(Vector((x + lean_off.x, y0 + dy, z + lean_off.z)))
+        return pts
+
+    rings = []
+    for li, fy in enumerate(levels):
+        extra = 0.0
+        if li == len(levels) - 1:
+            extra = rng.uniform(0.3, 0.7)          # soft bevel at the top
+        rings.append(ring(fy, extra))
+    # top ledge uneven + crumbling: lower 1-2 top vertices
+    for i in rng.sample(range(n), rng.randint(1, 2)):
+        rings[-1][i].y -= rng.uniform(0.25, 0.6)
+    # keep the foot inside the band below's top ring (ledge 0.2 .. 1.0)
+    if prev_top is not None:
+        pc_ = sum(prev_top, Vector()) / len(prev_top)
+        for i, p in enumerate(rings[0]):
+            d = Vector((p.x - pc_.x, 0, p.z - pc_.z))
+            if d.length < 1e-6:
+                continue
+            dn = d.normalized()
+            lim = _ray_poly(pc_, (dn.x, dn.z), prev_top)
+            if lim is not None:
+                want = min(d.length, lim - rng.uniform(0.2, 1.0))
+                rings[0][i] = Vector((pc_.x + dn.x * want, p.y, pc_.z + dn.z * want))
+    ctr = Vector((c.x, (y0 + y1) / 2, c.z))
+    tt = max(0.0, min(1.0, (y0 + y1) / 2 / height))
+    g = 0.88 + 0.12 * (tt * tt * (3 - 2 * tt))
+    for li in range(len(rings) - 1):
+        lo, hi = rings[li], rings[li + 1]
+        for i in range(n):
+            j = (i + 1) % n
+            for tri in ((lo[i], lo[j], hi[j]), (lo[i], hi[j], hi[i])):
+                m = sum(tri, Vector()) / 3
+                out = Vector((m.x - ctr.x, 0, m.z - ctr.z))
+                k = rng.choice(STEPS)
+                if li == len(rings) - 2:
+                    k = min(1.0, k * 1.04)            # the bevel catches light
+                pc.face(list(tri), tone(col, g * k), "SmoothPlastic", t, out)
+    top = rings[-1]
+    tc = sum(top, Vector()) / n
+    tc.y = max(p.y for p in top) - 0.1
+    for i in range(n):
+        j = (i + 1) % n
+        pc.face([top[i], top[j], tc], tone(col, min(1.12, g * 1.08 * rng.choice((1.0, 0.95)))), "SmoothPlastic", t,
+                Vector((0, 1, 0)))
+    # vertical runnels: dark strips on a facet of the middle row
+    for _ in range(runnels):
+        li = rng.randrange(len(rings) - 1)
+        i = rng.randrange(n)
+        j = (i + 1) % n
+        a, b, top_ = rings[li][i], rings[li][j], rings[li + 1][j]
+        nrm = (b - a).cross(top_ - a)
+        if nrm.length < 1e-6:
+            continue
+        nrm = nrm.normalized()
+        if Vector((nrm.x, 0, nrm.z)).dot(Vector((a.x - ctr.x, 0, a.z - ctr.z))) < 0:
+            nrm = -nrm
+        u = rng.uniform(0.35, 0.65)
+        p0 = a + (b - a) * u
+        p1 = p0 + (top_ - b) * 0.85
+        e = (b - a).normalized() * 0.18
+        q = [p0 - e, p0 + e, p1 + e, p1 - e]
+        q = [p + nrm * 0.03 for p in q]
+        pc.face(q, tone(col, 0.62), "SmoothPlastic", 0.05, nrm)
+    return top
+
+
+def caprock(pc, cpos, size, yaw, col, rng, t=0.6, n_pts=16):
+    """Eroded caprock: convex hull of jittered points on the cap box (turned by yaw), a weathered uneven top."""
+    c = Vector((cpos[0], 0, cpos[2]))
+    sx, sy, sz = size
+    y0 = cpos[1] - sy / 2
+    pts = []
+    for i in range(n_pts):
+        th = 2 * math.pi * i / n_pts + rng.uniform(-0.15, 0.15)
+        r = _box_radius(th, sx / 2, sz / 2, 4.0) * rng.uniform(0.82, 1.05)
+        lx, lz = math.cos(th) * r, math.sin(th) * r
+        y = y0 + (sy * rng.uniform(0.55, 1.0) if i % 2 else rng.uniform(0.0, sy * 0.35))
+        if i % 2:
+            lx, lz = lx * 0.85, lz * 0.85
+        pts.append(_yaw(Vector((c.x + lx, y, c.z + lz)), c, yaw))
+    pts.append(Vector((c.x, y0 + sy, c.z)))
+    pts += [_yaw(Vector((c.x + math.cos(a) * sx * 0.3, y0, c.z + math.sin(a) * sz * 0.3)), c, yaw) for a in (0.5, 2.6, 4.4)]
+    tmp_h = y0 + sy
+    bm = bmesh.new()
+    vs = [bm.verts.new(p) for p in pts]
+    bmesh.ops.convex_hull(bm, input=vs)
+    bm.normal_update()
+    center = sum(pts, Vector()) / len(pts)
+    for f in bm.faces:
+        ring = [l.vert.co.copy() for l in f.loops]
+        cc = sum(ring, Vector()) / len(ring)
+        if all(abs(p.y - y0) < 1e-4 for p in ring):
+            continue
+        h = max(0.0, min(1.0, (cc.y - y0) / sy))
+        colr = tone(col, (0.86 + 0.18 * h) * rng.choice(STEPS))
+        if len(ring) == 3:
+            pc.face(ring, colr, "SmoothPlastic", t, cc - center)
+        else:
+            polygon_fill(pc, ring, colr, "SmoothPlastic", t, cc - center)
+    bm.free()
+
+
+def natural_column(pieces_out, obj, base_name, parts, rng, height, split_at, origin, note, place, n=10, t=0.6,
+                   alcove_bands=2, lean_max=12.0, caps=None):
+    """Bands of `parts` (today's Strata boxes, bottom to top) -> 2 pieces: <base>_lower (bands < split_at) and
+    <base>_upper (the rest + caps)."""
+    lower = Piece(obj, base_name + "_lower", origin, notes=note, place=place)
+    upper = Piece(obj, base_name + "_upper", origin, notes=note, place=place)
+    prev = None
+    strata = [p for p in parts if p[0] == "Strata"]
+    for k, (nm, cpos, size, yaw, col) in enumerate(strata):
+        y0, y1 = cpos[1] - size[1] / 2, cpos[1] + size[1] / 2
+        target = lower if k < split_at else upper
+        prev = natural_band(target, y0, y1, col, (cpos[0], cpos[2]), (size[0], size[2]), yaw, rng, prev_top=prev, n=n,
+                            alcoves=(rng.randint(2, 3) if k < alcove_bands else 0), t=t,
+                            runnels=(2 if size[1] >= 5 else 1), lean_max=lean_max, height=height)
+    for nm, cpos, size, yaw, col in (caps or []):
+        caprock(upper, cpos, size, yaw, col, rng, t=t)
+    pieces_out += [lower, upper]
+
+
+def mesa_strata():
+    rng = random.Random(601)
+    pieces = []
+    left = [p for p in MESA_PARTS if p[0] == "Strata" and p[1][0] < 0]
+    right = [p for p in MESA_PARTS if p[0] == "Strata" and p[1][0] > 0]
+    cap_l = [p for p in MESA_PARTS if p[0] == "Cap" and p[1][0] < 0]
+    cap_r = [p for p in MESA_PARTS if p[0] == "Cap" and p[1][0] > 0]
+    note = ("v2 natural canyon rock over today's Strata boxes (the collision stays today's boxes, invisible): each "
+            "stratum an irregular 10-sided ring (bulges / bites, no straight edges), 2-3 sloped facet rows (lean "
+            "5-12 deg), a soft top bevel, uneven crumbling ledges, alcoves on the 2 lowest strata, runnels, per-facet "
+            "tone steps; within about 0.8 of the box faces (bites and alcoves go deeper). Triangles. t 0.6.")
+    for side, parts, caps in (("L", left, cap_l), ("R", right, cap_r)):
+        natural_column(pieces, "mesa_strata", f"column_{side}", parts, rng, 54.0, 4, ROCK_ORIGIN, note,
+                       {"relativeTo": "the Mesa_Strata_A model (base centre)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                        "replaces": f"the 7 Strata boxes at x {'~ -9' if side == 'L' else '~ +9'} (lower = y 0 .. 28, "
+                                    f"upper = y 28 .. 50 + its cap rock)"},
+                       caps=caps)
+    base = Piece("mesa_strata", "base_scree", ROCK_ORIGIN,
+                 notes="the 2 talus wedges as natural scree piles (same width and height; the foot spills 2.6 past "
+                       "today's wedge front so it shows), a sand pile #F4D07C, 5 small rocks and 3 fallen blocks "
+                       "(2.2-3.4) at the foot. t 0.4.",
+                 place={"relativeTo": "the Mesa_Strata_A model (base centre)", "position": [0, 0, 0],
+                        "orientation": [0, 0, 0], "replaces": "the 2 Talus WedgeParts (+ new sand pile, small rocks, fallen blocks)"})
+    for name, cpos, size, yaw, col in MESA_PARTS:
+        if name == "Talus":
+            scree_pile(base, cpos, size, yaw, col, rng, reach=2.6)
+    sand = [Vector((0.8 + 4.5 * math.cos(a) * rng.uniform(0.8, 1.0), 0.0, -9.0 + 2.2 * math.sin(a) * rng.uniform(0.8, 1.0)))
+            for a in [2 * math.pi * k / 9 for k in range(9)]]
+    sand += [Vector((0.8 + rng.uniform(-2.0, 2.0), rng.uniform(0.9, 1.3), -8.6 + rng.uniform(-0.8, 0.8))) for _ in range(3)]
+    hull_faces(base, sand, "#F4D07C", rng, 1.3, 0.3)
+    for cpos, size, col in (((4.0, 0.0, -11.0), (2.4, 1.6, 2.1), "#C45438"), ((-2.8, 0.0, -11.3), (1.6, 1.1, 1.5), "#953D2F"),
+                            ((16.0, 0.0, -10.4), (3.2, 2.0, 2.7), "#CA5639"), ((-17.0, 0.0, -10.6), (2.6, 1.7, 2.2), "#E17E4F"),
+                            ((-1.0, 0.0, -9.6), (1.4, 1.0, 1.3), "#C25337"), ((-12.5, 0.0, -11.2), (3.4, 2.2, 2.8), "#C95639"),
+                            ((11.0, 0.0, -11.4), (2.8, 1.9, 2.4), "#BC5035"), ((19.6, 0.0, -6.0), (2.2, 1.6, 2.0), "#DF7D4E")):
+        small_rock(base, cpos, size, col, rng)
+    pieces.append(base)
+    return pieces
+
+
+def hoodoo():
+    rng = random.Random(602)
+    pieces = []
+    for name, parts in (("variant_A", HOODOO_PARTS_A), ("variant_B", HOODOO_PARTS_B)):
+        note = ("v2 natural hoodoo at scale 1.0 = the smallest Desert_3 hoodoo (7.2 wide, cap 8.4 x 2.8 x 7.6, top "
+                "y 23.2); the 5 hoodoos are this shape at uniform scale 1.0 / 1.1 / 1.3 / 1.5 / 1.7 (scale the "
+                "coordinates and t), any turn. Irregular 9-sided strata rings, sloped facets, uneven ledges, runnels, "
+                "an eroded caprock; lower = strata 1-3, upper = strata 4-5 + the cap. The collision stays today's "
+                "boxes. Triangles, t 0.4.")
+        place = {"relativeTo": "each Hoodoo model (base centre)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                 "scale": "1.0, 1.1, 1.3, 1.5 or 1.7 (= today's hoodoo size)", "replaces": "5 Strata boxes + the Cap"}
+        natural_column(pieces, "hoodoo", name, parts, rng, 23.2, 3, "the BASE CENTRE of the hoodoo (y 0 = the bottom), front -Z",
+                       note, place, n=9, t=0.4, alcove_bands=1, lean_max=10.0,
+                       caps=[p for p in parts if p[0] == "Cap"])
+    return pieces
+
+
+def red_rock():
+    return mesa_strata() + hoodoo()
+
+
+def preview_red_rock_all(pieces):
+    mesa = [p for p in pieces if p.obj == "mesa_strata"]
+    hood = [p for p in pieces if p.obj == "hoodoo"]
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    off = 50.0
+    ctx = context_boxes([((c[0] - off, c[1], c[2]), s, colr, (0, yaw, 0)) for n, c, s, yaw, colr in MESA_PARTS], col)
+    objs = [piece_object(pc, col) for pc in mesa]
+    hctx = context_boxes([((c[0] - 14, c[1], c[2]), s, colr, (0, yaw, 0)) for n, c, s, yaw, colr in HOODOO_PARTS_A], col)
+    hobjs = []
+    for pc in hood:
+        dx = 0.0 if "variant_A" in pc.name else 14.0
+        hobjs.append(piece_object(pc, col, Vector((dx, 0, 0))))
+    out = os.path.join(P.PREVIEW_DIR, "desert_red_rock_facets.png")
+    return render_sheet("redrock", [(objs + ctx, [(-15, 12)]), (objs, [(150, 18)]), (hobjs + hctx, [(-15, 10)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
     for obj, fn, prev in (("rebirth_altar", rebirth_altar, preview_altar), ("ship", ship, preview_ship),
-                          ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon)):
+                          ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon),
+                          ("red_rock", red_rock, preview_red_rock_all)):
         if only and obj not in only:
             continue
         pieces = fn()
