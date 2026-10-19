@@ -1224,10 +1224,315 @@ function PropsDesert.ruined_wall(): Model
 end
 
 ---------------------------------------------------------------------
+-- DESERT GATES (owner, 2026-10-19): docs/Desert_Images/02_Gates_and_Entrances. Same collision rule as the buildings:
+-- the visible unions do not collide; one invisible "Collision" union rebuilds today's colliding parts.
+---------------------------------------------------------------------
+PropsDesert.ENVELOPES.egyptian_arch = { -- EntryArch_Desert: every part (all collide today)
+	{ "Block", 5, 18, 5, { -14.5, 9, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 6.6, 2, 6.6, { -14.5, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 5.3, 1, 5.3, { -14.5, 6.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 5.3, 1, 5.3, { -14.5, 13.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { -18, 24.2, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { -16, 24.2, 1, 0, 0, 1, 0, 1, 0, -1, 0, 0 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { -16, 24.2, -1, -1, 0, 0, 0, 1, 0, 0, 0, -1 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { -18, 24.2, -1, 0, 0, -1, 0, 1, 0, 1, 0, 0 } },
+	{ "Block", 2.6, 7, 0.2, { -8.5, 14.5, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 2.6, 1, 0.2, { -8.5, 10.7, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 1, 1.4, 2, { -14.5, 8.3, -3.3, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 2.2, 0.7, 2.2, { -14.5, 9.35, -4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 1.6, 0.6, 1.6, { -14.5, 9.9, -4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 5, 18, 5, { 14.5, 9, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 6.6, 2, 6.6, { 14.5, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 5.3, 1, 5.3, { 14.5, 6.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 5.3, 1, 5.3, { 14.5, 13.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { 16, 24.2, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { 18, 24.2, 1, 0, 0, 1, 0, 1, 0, -1, 0, 0 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { 18, 24.2, -1, -1, 0, 0, 0, 1, 0, 0, 0, -1 } },
+	{ "CornerWedgePart", 2, 3.4, 2, { 16, 24.2, -1, 0, 0, -1, 0, 1, 0, 1, 0, 0 } },
+	{ "Block", 2.6, 7, 0.2, { 8.5, 14.5, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 2.6, 1, 0.2, { 8.5, 10.7, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 1, 1.4, 2, { 14.5, 8.3, -3.3, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 2.2, 0.7, 2.2, { 14.5, 9.35, -4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 1.6, 0.6, 1.6, { 14.5, 9.9, -4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 36, 3.5, 5.6, { 0, 19.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 36, 0.8, 5.9, { 0, 19.8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 38.5, 1, 6.8, { 0, 22, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 16.4, 5.2, 1.6, { 0, 25.1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 17.4, 0.8, 2.2, { 0, 28.1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 14, 4, 0.5, { 0, 25.1, -0.9, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	{ "Block", 14, 4, 0.5, { 0, 25.1, 0.9, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+}
+
+-- a band of inlay around a square pier (w across, h tall, centre height y): the band in `color`, 0.15 proud, with a row
+-- of small inlaid diamonds / squares in `accent` on each of its 4 faces
+local function inlayBand(list: { BasePart }, cx: number, y: number, w: number, h: number, color: Color3, accent: Color3, diamonds: boolean)
+	table.insert(list, chamfered(Vector3.new(w, h, w), CFrame.new(cx, y, 0), color, { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.08))
+	if color ~= C.Gold then
+		-- 0.12 gold rules above and below the band
+		for _, sy in ipairs({ -1, 1 }) do
+			table.insert(list, piece("Part", Vector3.new(w + 0.08, 0.12, w + 0.08), CFrame.new(cx, y + sy * (h / 2 + 0.06), 0), C.Gold))
+		end
+	end
+	for face = 0, 3 do
+		local turn = CFrame.new(cx, y, 0) * CFrame.Angles(0, face * math.pi / 2, 0)
+		for k = -1, 1 do
+			local cf = turn * CFrame.new(k * w / 3.2, 0, -w / 2 - 0.02)
+			if diamonds then
+				cf *= CFrame.Angles(0, 0, rad(45))
+			end
+			local s = h * (if diamonds then 0.42 else 0.5)
+			table.insert(list, piece("Part", Vector3.new(s, s, 0.1), cf, accent))
+		end
+	end
+end
+
+---------------------------------------------------------------------
+-- 01 EGYPTIAN ARCH (kit Gates.EntryArch_Desert, 38.5 x 28.5 x 8.5; Zones.Desert.Desert_1.EntryArch, attr ZoneId; its
+-- NameSign carries the NameGuiFront / Back "Desert", moved onto the new NameSign by SyncMapProps). Today's layout,
+-- passage and colours: stepped bases (footing slabs and a chamfered plinth), the 2 piers in courses of cut sandstone
+-- blocks (alternating joints, chamfers, tone steps) with today's gold and lapis bands as inlay bands with diamonds /
+-- squares and a turquoise capital band; the lintel of 5 cut blocks with today's turquoise band as an inlay band
+-- (lapis squares, gold dots); a cavetto cornice (a roll moulding and 3 slabs flaring out); today's golden pyramid tips
+-- as faceted pyramids on plinths with a glowing pyramidion and a soft light; the name board: lapis back in a gold
+-- frame, today's sandstone NameSign / SignRear plates, the gold cap with a small sun disc; the 2 red banners as pleated
+-- cloth on gold rods with gold side trims, today's gold tail band, a pointed end and a gold tassel; the 2 lamps (iron
+-- scroll brackets, brass bowls with a rim, a Neon flame "Ember" with today's PointLight 14 / 1 / FFD678 and FirePoint);
+-- small sand drifts at the bases.
+-- Parts: Stone, Inlay, Gold, Cloth, Iron, Ember x2, Glow, NameSign, SignRear, Sand, Collision.
+---------------------------------------------------------------------
+function PropsDesert.egyptian_arch(): Model
+	local m = Instance.new("Model")
+	m.Name = "egyptian_arch"
+	local rng = Random.new(20261110)
+	H.setBevelSelf(true)
+	local Ht = 28.5
+	local U, add = lists()
+	U.Inlay, U.Iron = {}, {}
+	local GAP_D = 0.09
+	local BRASS = rgb(201, 154, 46)
+	local SAND_DARK2 = C.Footing
+	local MORTAR = scaled(C.Footing, 0.72)
+	for _, sx in ipairs({ -1, 1 }) do
+		local cx = sx * 14.5
+		-- stepped base: 4 slabs, a chamfered plinth
+		local prev = nil
+		for _, ix in ipairs({ -1, 1 }) do
+			for _, iz in ipairs({ -1, 1 }) do
+				local ti = toneIndex(rng, prev)
+				prev = ti
+				add("Stone", chamfered(Vector3.new(3.33, 0.8, 3.33), CFrame.new(cx + ix * 1.71, 0.4, iz * 1.71), soft(SAND_DARK2, 0.4, Ht, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.12))
+			end
+		end
+		add("Stone", piece("Part", Vector3.new(6.6, 0.76, 6.6), CFrame.new(cx, 0.4, 0), MORTAR))
+		add("Stone", chamfered(Vector3.new(6.2, 1.2, 6.2), CFrame.new(cx, 1.4, 0), soft(SAND_DARK2, 1.4, Ht, 1.04), { "vertical", "topFrontBack", "topSides" }, 0.22))
+		-- the pier: courses of 2 blocks (split along X, then along Z) over a core; today's gold band (6 .. 7) and lapis
+		-- band (13 .. 14) as inlay bands; a turquoise capital band and an abacus under the lintel
+		add("Stone", piece("Part", Vector3.new(4.5, 16, 4.5), CFrame.new(cx, 10, 0), MORTAR))
+		local courses = { { 2.0, 1.4 }, { 3.4, 1.4 }, { 4.8, 1.2 }, { 6.0, 1.0, "gold" }, { 7.0, 1.5 }, { 8.5, 1.5 }, { 10.0, 1.5 }, { 11.5, 1.5 }, { 13.0, 1.0, "lapis" }, { 14.0, 1.6 }, { 15.6, 1.65 } }
+		for ci, c in ipairs(courses) do
+			local y0, h = c[1], c[2]
+			local yc = y0 + h / 2
+			if c[3] == "gold" then
+				inlayBand(U.Inlay, cx, yc, 5.3, 1.0, C.Gold, C.Lapis, true)
+			elseif c[3] == "lapis" then
+				inlayBand(U.Inlay, cx, yc, 5.3, 1.0, C.Lapis, C.Gold, false)
+			else
+				local alongX = ci % 2 == 0
+				local split = rng:NextNumber(-0.6, 0.6)
+				for _, half in ipairs({ -1, 1 }) do
+					local a = if half < 0 then -2.5 else split + GAP_D / 2
+					local b = if half < 0 then split - GAP_D / 2 else 2.5
+					local len = b - a
+					local mid = (a + b) / 2
+					local size = if alongX then Vector3.new(len, h - 0.05, 5) else Vector3.new(5, h - 0.05, len)
+					local cf = if alongX then CFrame.new(cx + mid, yc, 0) else CFrame.new(cx, yc, mid)
+					add("Stone", chamfered(size, cf, soft(C.Sandstone, yc, Ht, TONES[rng:NextInteger(1, 3)]), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.14))
+				end
+			end
+		end
+		inlayBand(U.Inlay, cx, 17.55, 5.4, 0.6, C.Turquoise, C.Gold, false)
+		add("Stone", chamfered(Vector3.new(5.6, 0.16, 5.6), CFrame.new(cx, 17.93, 0), C.Footing, { "vertical" }, 0.05))
+	end
+	-- the lintel: 5 cut blocks over a core, today's turquoise band as an inlay band with lapis squares and gold dots
+	add("Stone", piece("Part", Vector3.new(35.6, 2.4, 5.2), CFrame.new(0, 19.25, 0), MORTAR))
+	do
+		local edges = { -18, -10.6, -3.4, 3.6, 10.8, 18 }
+		local prev = nil
+		for i = 1, 5 do
+			local a, b = edges[i] + (if i > 1 then GAP_D / 2 else 0), edges[i + 1] - (if i < 5 then GAP_D / 2 else 0)
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			add("Stone", chamfered(Vector3.new(b - a, 2.5, 5.6), CFrame.new((a + b) / 2, 19.25, 0), soft(C.Sandstone, 19.25, Ht, TONES[ti]), { "vertical", "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, 0.16))
+		end
+	end
+	add("Inlay", piece("Part", Vector3.new(36.1, 0.8, 5.8), CFrame.new(0, 19.6, 0), C.Turquoise))
+	for _, y in ipairs({ 19.14, 20.06 }) do
+		add("Gold", piece("Part", Vector3.new(36.15, 0.12, 5.86), CFrame.new(0, y, 0), C.Gold))
+	end
+	for _, z in ipairs({ -2.97, 2.97 }) do
+		for k = 0, 16 do
+			local x = -16 + k * 2
+			if k % 2 == 0 then
+				add("Inlay", piece("Part", Vector3.new(0.5, 0.5, 0.08), CFrame.new(x, 19.6, z * 0.985) * CFrame.Angles(0, 0, rad(45)), C.Lapis))
+			else
+				add("Inlay", piece("Part", Vector3.new(0.28, 0.28, 0.08), CFrame.new(x, 19.6, z * 0.985), C.Gold))
+			end
+		end
+	end
+	-- the cavetto cornice: a roll moulding, 3 slabs flaring out, a top fillet (today's 38.5 x 1 x 6.8 at 21.5 .. 22.5)
+	-- the cavetto cornice (B12): a torus roll, a fillet, a cove of 3 slabs stepping out on a concave curve with wedges
+	-- filling the steps, a flat top slab; 2.05 tall (20.5 .. 22.55), 0.8 of projection over the 5.6 lintel
+	add("Stone", piece("Part", Vector3.new(36.0, 0.25, 5.6), CFrame.new(0, 20.62, 0), MORTAR))
+	for _, z in ipairs({ -2.85, 2.85 }) do
+		add("Stone", octagon(0.55, 36.2, CFrame.new(0, 20.78, z) * CFrame.Angles(0, 0, rad(90)), scaled(C.Footing, 1.08)))
+	end
+	add("Stone", piece("Part", Vector3.new(36.6, 0.25, 6.0), CFrame.new(0, 21.17, 0), soft(C.Footing, 21.1, Ht, 0.95)))
+	local cove = { { 21.45, 0.3, 37.0, 6.12 }, { 21.75, 0.3, 37.4, 6.4 }, { 22.0, 0.2, 37.9, 6.84 } }
+	for i, f in ipairs(cove) do
+		add("Stone", piece("Part", Vector3.new(f[3], f[2], f[4]), CFrame.new(0, f[1], 0), soft(C.Footing, f[1], Ht, ({ 0.92, 0.96, 1.0 })[i])))
+	end
+	for _, sz in ipairs({ -1, 1 }) do
+		local turn = if sz < 0 then CFrame.identity else CFrame.Angles(0, math.pi, 0)
+		add("Stone", piece("WedgePart", Vector3.new(37.8, 0.8, 0.44), CFrame.new(0, 21.7, sz * 3.2) * turn * CFrame.Angles(math.pi, 0, 0), soft(C.Footing, 21.7, Ht, 0.98)))
+		-- reed grooves on the cove face, every 0.8
+		for k = -22, 22 do
+			add("Stone", piece("Part", Vector3.new(0.1, 0.62, 0.06), CFrame.new(k * 0.8, 21.62, sz * 3.25) * CFrame.Angles(sz * rad(-28), 0, 0), scaled(C.Footing, 0.86)))
+		end
+	end
+	add("Stone", chamfered(Vector3.new(38.5, 0.4, 7.04), CFrame.new(0, 22.35, 0), soft(C.Footing, 22.35, Ht, 1.05), { "vertical", "topFrontBack", "topSides" }, 0.08))
+	-- the golden pyramid tips (today's at x +-17, base 4 x 4, top 25.9): a plinth, a faceted pyramid, a glowing pyramidion
+	for _, sx in ipairs({ -1, 1 }) do
+		local cx = sx * 17
+		add("Stone", chamfered(Vector3.new(4.4, 0.15, 4.4), CFrame.new(cx, 22.62, 0), C.Footing, { "vertical", "topFrontBack", "topSides" }, 0.05))
+		add("Stone", chamfered(Vector3.new(4.15, 0.15, 4.15), CFrame.new(cx, 22.77, 0), scaled(C.Footing, 1.05), { "vertical", "topFrontBack", "topSides" }, 0.05))
+		-- today's tip (4 x 4 base, 3.4 tall): the lower 60 % gold, the top 40 % Neon gold
+		local apex = Vector3.new(0, 26.25, 0)
+		local split = 22.85 + 3.4 * 0.6
+		local function pyramid(y0: number, y1: number, material: Enum.Material?): BasePart
+			local planes = { { 0, -1, 0, -y0 }, { 0, 1, 0, y1 } }
+			for k = 0, 3 do
+				local a = k * math.pi / 2
+				local d = Vector3.new(math.cos(a), 0, math.sin(a))
+				local n = (d * 3.4 + Vector3.new(0, 2.0, 0)).Unit
+				table.insert(planes, { n.X, n.Y, n.Z, n:Dot(apex), scaled(C.Gold, ({ 1, 0.92, 0.86, 0.95 })[k + 1]) })
+			end
+			return convexSolid(Vector3.new(-2.02, y0, -2.02), Vector3.new(2.02, y1, 2.02), CFrame.new(cx, 0, 0), C.Gold, planes, material)
+		end
+		add("Gold", pyramid(22.85, split))
+		add("Glow", pyramid(split, 26.25, Enum.Material.Neon))
+	end
+	-- the name board: lapis back, gold frame, today's NameSign / SignRear plates (plain parts), the gold cap and sun
+	add("Inlay", chamfered(Vector3.new(16.4, 5.2, 1.6), CFrame.new(0, 25.1, 0), C.Lapis, { "vertical" }, 0.12))
+	for _, z in ipairs({ -1, 1 }) do
+		for _, e in ipairs({ { 0, 2.35, 15.4, 0.35 }, { 0, -2.35, 15.4, 0.35 }, { -7.55, 0, 0.35, 4.35 }, { 7.55, 0, 0.35, 4.35 } }) do
+			add("Gold", chamfered(Vector3.new(e[3], e[4], 0.3), CFrame.new(e[1], 25.1 + e[2], z * 0.95), C.Gold, { "topFrontBack", "bottomFrontBack" }, 0.06))
+		end
+		for _, sx in ipairs({ -1, 1 }) do
+			add("Gold", piece("Part", Vector3.new(0.4, 0.4, 0.4), CFrame.new(sx * 7.55, 27.45, z * 0.95) * CFrame.Angles(rad(45), rad(45), 0), C.Gold))
+		end
+	end
+	add("Gold", chamfered(Vector3.new(17.4, 0.8, 2.2), CFrame.new(0, 28.1, 0), C.Gold, { "vertical", "topFrontBack", "topSides" }, 0.18))
+	add("Gold", chamfered(Vector3.new(16.8, 0.3, 1.9), CFrame.new(0, 27.55, 0), scaled(C.Gold, 0.86), { "vertical" }, 0.1))
+	for _, z in ipairs({ -1.12, 1.12 }) do
+		add("Gold", octagon(0.9, 0.12, CFrame.new(0, 28.1, z) * CFrame.Angles(rad(90), 0, 0), scaled(C.Gold, 1.05)))
+		for _, sx in ipairs({ -1, 1 }) do
+			add("Gold", piece("Part", Vector3.new(1.6, 0.22, 0.1), CFrame.new(sx * 1.25, 28.15, z) * CFrame.Angles(0, 0, sx * rad(8)), scaled(C.Gold, 0.9)))
+		end
+	end
+	local sign = piece("Part", Vector3.new(14, 4, 0.5), CFrame.new(0, 25.1, -0.9), C.Sandstone)
+	sign.Name = "NameSign"
+	local rear = piece("Part", Vector3.new(14, 4, 0.5), CFrame.new(0, 25.1, 0.9), C.Sandstone)
+	rear.Name = "SignRear"
+	-- the banners (today's at x +-8.5, 2.6 wide, 11 .. 18): a gold rod with knobs, pleated cloth, gold trims, today's
+	-- gold tail band, a pointed end with a gold tassel, a small gold ankh
+	U.Cloth = {}
+	for _, sx in ipairs({ -1, 1 }) do
+		local cx = sx * 8.5
+		add("Gold", octagon(0.22, 3.4, CFrame.new(cx, 17.85, -2.2) * CFrame.Angles(0, 0, rad(90)), C.Gold))
+		for _, e in ipairs({ -1.75, 1.75 }) do
+			add("Gold", piece("Part", Vector3.new(0.34, 0.34, 0.34), CFrame.new(cx + e, 17.85, -2.2), C.Gold, { shape = Enum.PartType.Ball }))
+		end
+		for k = 0, 3 do
+			local x = cx - 0.975 + k * 0.65
+			table.insert(U.Cloth, piece("Part", Vector3.new(0.67, 6.4, 0.14), CFrame.new(x, 14.5, -2.2 + (if k % 2 == 0 then -0.05 else 0.05)), scaled(C.Red, if k % 2 == 0 then 1 else 0.9)))
+		end
+		H.triangleParts(U.Cloth, Vector3.new(cx - 1.3, 11.3, -2.2), Vector3.new(cx + 1.3, 11.3, -2.2), Vector3.new(cx, 10.1, -2.2), 0.14, CFrame.identity, scaled(C.Red, 0.95))
+		for _, e in ipairs({ -1.36, 1.36 }) do
+			add("Gold", piece("Part", Vector3.new(0.14, 6.6, 0.2), CFrame.new(cx + e, 14.5, -2.2), C.Gold))
+		end
+		add("Gold", piece("Part", Vector3.new(2.7, 0.9, 0.22), CFrame.new(cx, 11.75, -2.2), C.Gold))
+		add("Gold", piece("Part", Vector3.new(2.6, 0.12, 0.24), CFrame.new(cx, 12.1, -2.2), scaled(C.Gold, 0.85)))
+		add("Gold", piece("Part", Vector3.new(0.1, 0.5, 0.1), CFrame.new(cx, 9.85, -2.2), C.Gold))
+		add("Gold", chamfered(Vector3.new(0.34, 0.55, 0.34), CFrame.new(cx, 9.4, -2.2), C.Gold, { "bottomFrontBack", "bottomSides" }, 0.1))
+		-- the ankh
+		add("Gold", piece("Part", Vector3.new(0.14, 1.3, 0.06), CFrame.new(cx, 14.3, -2.33), C.Gold))
+		add("Gold", piece("Part", Vector3.new(0.8, 0.14, 0.06), CFrame.new(cx, 14.75, -2.33), C.Gold))
+		for _, e in ipairs({ { 0, 15.5, 0.6, 0.12 }, { -0.25, 15.2, 0.12, 0.5 }, { 0.25, 15.2, 0.12, 0.5 } }) do
+			add("Gold", piece("Part", Vector3.new(e[3], e[4], 0.06), CFrame.new(cx + e[1], e[2], -2.33), C.Gold))
+		end
+	end
+	-- the lamps: an iron scroll bracket, a brass bowl with a rim, the flame (Ember) with today's light and FirePoint
+	local embers = {}
+	for _, sx in ipairs({ -1, 1 }) do
+		local cx = sx * 14.5
+		add("Iron", chamfered(Vector3.new(1.0, 1.6, 0.25), CFrame.new(cx, 8.3, -2.6), C.Iron, { "frontFace" }, 0.08))
+		add("Iron", bar(Vector3.new(cx, 7.7, -2.6), Vector3.new(cx, 8.95, -4.0), 0.22, C.Iron))
+		add("Iron", bar(Vector3.new(cx, 8.95, -2.6), Vector3.new(cx, 8.95, -4.0), 0.2, C.Iron))
+		H.scroll(U.Iron, Vector3.new(cx, 9.15, -2.75), Vector3.new(0, 0, -1), 0.28, C.Iron, 0.1)
+		local bowl = CFrame.new(cx, 8.95, -4.0)
+		add("Iron", frustum8(0.45, 1.05, 0, 0.62, bowl, BRASS))
+		add("Iron", octagon(2.25, 0.14, bowl * CFrame.new(0, 0.66, 0), scaled(BRASS, 1.12)))
+		add("Iron", octagon(0.7, 0.16, bowl * CFrame.new(0, 0.02, 0), scaled(BRASS, 0.85)))
+		local fl = H.flame(bowl * CFrame.new(0, 0.55, 0), 0.62, 0.35, 1.5, rgb(255, 190, 80))
+		table.insert(embers, fl)
+	end
+	-- sand drifts at the bases (front and back of each pier)
+	U.Sand = {}
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			local turn = if sz < 0 then CFrame.identity else CFrame.Angles(0, math.pi, 0)
+			table.insert(U.Sand, piece("WedgePart", Vector3.new(4.2, 0.6, 1.1), CFrame.new(sx * 14.5 + sx * 0.6, 0.3, sz * 3.85) * turn, rgb(244, 208, 124)))
+			table.insert(U.Sand, piece("Part", Vector3.new(3.6, 0.45, 0.45), CFrame.new(sx * 14.5 + sx * 0.6, 0.38, sz * 3.4), rgb(244, 208, 124), { shape = Enum.PartType.Cylinder }))
+		end
+	end
+
+	envelope(m, "egyptian_arch")
+	finishVisual(m, "egyptian_arch", U, "Stone", { Stone = true })
+	for i, fl in ipairs(embers) do
+		local e = merge(m, "Ember", { fl }, { material = Enum.Material.Neon, shadow = false })
+		local light = Instance.new("PointLight")
+		light.Range, light.Brightness, light.Color = 14, 1, rgb(255, 214, 120)
+		light.Parent = e
+		local fp = Instance.new("Attachment")
+		fp.Name = "FirePoint"
+		fp.Parent = e
+		fp.WorldPosition = Vector3.new((if i == 1 then -1 else 1) * 14.5, 9.9 + 0.4, -4.0)
+	end
+	for _, p in ipairs({ sign, rear }) do
+		p.CanCollide = false
+		p.CanQuery = true
+		p.CanTouch = false
+		p.Parent = m
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		local l = Instance.new("PointLight")
+		l.Range, l.Brightness, l.Color, l.Shadows = 8, 0.4, rgb(255, 214, 110), false
+		local a = Instance.new("Attachment")
+		a.Name = "TipGlow"
+		a.Parent = m:FindFirstChild("Glow")
+		a.WorldPosition = Vector3.new(sx * 17, 25.0, 0)
+		l.Parent = a
+	end
+	H.setBevelSelf(false)
+	return m
+end
+
+---------------------------------------------------------------------
 -- registration: the builders go into the fresh PropsBatch2 table; its install() builds them
 ---------------------------------------------------------------------
 PropsDesert.BUILDERS = {
 	adobe_house_a = true, adobe_house_b = true, market_stall = true, canopy_pavilion = true, desert_tent = true, ruined_wall = true,
+	egyptian_arch = true,
 }
 for id in pairs(PropsDesert.BUILDERS) do
 	B2[id] = (PropsDesert :: any)[id]

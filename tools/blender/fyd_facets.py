@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -717,15 +717,170 @@ def preview_golem(pieces):
     return render_sheet("golem", [(objs + ctx, [(-25, 12), (155, 20)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# DESERT 03 CANYON BARRICADE GATE (MapAssets.Gates.Gate_Desert_3; game Zones.Desert.Desert_3.Gate)
+# today (kit space = the gate's origin, opening centre at ground level, Barrier 24 x 16 x 2 at (0, 8, 0)): each side
+# a Pillar of 6 stacked boxes (inner face x +-13.0 at every height, outer edge 27.9 -> 22.4, depth 16.9 -> 11.4, y 0 ..
+# 38) + a tilted PillarCap 6 x 5 x 7 at (+-19, 39.5, 0.5); further out 4 SideRocks at x +-36, z 1.5 (15 x 8 x 14,
+# 14 x 4 x 13, 13 x 7 x 12, 12 x 4 x 11; y 0 .. 23). Beam 30 x 1.8 x 1.8 at y 21.1 and the Barrier anchors (x +-12.6)
+# go into the pillars' inner faces. Colours = strata: red #C55438 / orange #E88251 / dark #9C4032 ...
+# ------------------------------------------------------------------------------------------------
+GATE_ORIGIN = ("the gate model's origin (Gate_Desert_3 kit space: the centre of the opening at ground level; the "
+               "Barrier is at (0, 8, 0)); place the piece at the gate pivot with no offset")
+
+
+def _octagon(xmin, xmax, zmin, zmax, ch):
+    """Rectangle with chamfered corners, ccw seen from above (+y): ch = chamfers (x0z0, x1z0, x1z1, x0z1)."""
+    a, b, c, d = ch
+    return [Vector((xmin + a, 0, zmin)), Vector((xmax - b, 0, zmin)), Vector((xmax, 0, zmin + b)),
+            Vector((xmax, 0, zmax - c)), Vector((xmax - c, 0, zmax)), Vector((xmin + d, 0, zmax)),
+            Vector((xmin, 0, zmax - d)), Vector((xmin, 0, zmin + a))]
+
+
+def strata_column(pc, layers, rng, inner_x=None, cracks=4, height=40.0):
+    """Layered canyon rock: one vertical-sided slab per stratum (chamfered rectangle in plan: every side face is a
+    RECTANGLE), soft layers recessed (erosion grooves), a lit top ledge per layer, undersides where a layer overhangs
+    the one below, thin dark crack strips on some faces. layers: (y0, y1, colour, xmin, xmax, zmin, zmax, recess).
+    inner_x: the face that must stay flat at that x (the gate opening)."""
+    prev = None
+    faces_for_cracks = []
+    for k, (y0, y1, col, xmin, xmax, zmin, zmax, rec) in enumerate(layers):
+        if inner_x is not None and inner_x < 0:      # left rock: inner face = xmax
+            xmax2, xmin2 = min(xmax, inner_x) - min(rec, 0.25), xmin + rec
+        elif inner_x is not None:                     # right rock: inner face = xmin
+            xmin2, xmax2 = max(xmin, inner_x) + min(rec, 0.25), xmax - rec
+        else:
+            xmin2, xmax2 = xmin + rec, xmax - rec
+        zmin2, zmax2 = zmin + rec, zmax - rec
+        w, d = xmax2 - xmin2, zmax2 - zmin2
+        big = [rng.uniform(0.12, 0.26) * min(w, d) for _ in range(4)]
+        if inner_x is not None:                       # small chamfers on the two corners of the inner face
+            if inner_x < 0:
+                big[1], big[2] = rng.uniform(0.2, 0.45), rng.uniform(0.2, 0.45)
+            else:
+                big[0], big[3] = rng.uniform(0.2, 0.45), rng.uniform(0.2, 0.45)
+        poly = _octagon(xmin2, xmax2, zmin2, zmax2, big)
+        lo = [p + Vector((0, y0, 0)) for p in poly]
+        hi = [p + Vector((0, y1, 0)) for p in poly]
+        t = max(0.0, min(1.0, (y0 + y1) / 2 / height))
+        g = 0.88 + 0.12 * (t * t * (3 - 2 * t))
+        cx, cz = (xmin2 + xmax2) / 2, (zmin2 + zmax2) / 2
+        for i in range(8):
+            j = (i + 1) % 8
+            c = tone(col, g * rng.choice((1.0, 0.97, 0.94)))
+            m = (lo[i] + lo[j]) / 2
+            out = Vector((m.x - cx, 0, m.z - cz))
+            pc.face([lo[i], lo[j], hi[j], hi[i]], c, "SmoothPlastic", 0.6, out)
+            if (lo[j] - lo[i]).length > 3.0 and y1 - y0 >= 2.0:
+                faces_for_cracks.append((lo[i], lo[j], y0, y1, out.normalized(), col))
+        polygon_fill(pc, hi, tone(col, min(1.08, g * 1.06)), "SmoothPlastic", 0.6, Vector((0, 1, 0)))
+        if prev is not None:
+            pxmin, pxmax, pzmin, pzmax = prev
+            if xmin2 < pxmin - 1e-3 or xmax2 > pxmax + 1e-3 or zmin2 < pzmin - 1e-3 or zmax2 > pzmax + 1e-3:
+                polygon_fill(pc, lo, tone(col, 0.75), "SmoothPlastic", 0.6, Vector((0, -1, 0)))
+        prev = (xmin2, xmax2, zmin2, zmax2)
+    # cracks: a vertical zig-zag of 2 thin dark strips, 0.03 in front of a long face
+    rng.shuffle(faces_for_cracks)
+    for a, b, y0, y1, n, col in faces_for_cracks[:cracks]:
+        e = (b - a).normalized()
+        base = a + (b - a) * rng.uniform(0.3, 0.7) + n * 0.03
+        mid_y = y0 + (y1 - y0) * rng.uniform(0.4, 0.6)
+        pts = [Vector((base.x, y1 - 0.05, base.z)), Vector((base.x, mid_y, base.z)) + e * rng.uniform(-0.6, 0.6),
+               Vector((base.x, y0 + 0.4, base.z)) + e * rng.uniform(-0.4, 0.4)]
+        for p0, p1 in zip(pts, pts[1:]):
+            wv = e * 0.14
+            pc.face([p0 - wv, p0 + wv, p1 + wv, p1 - wv], tone(col, 0.5), "SmoothPlastic", 0.05, n)
+
+
+def tilted_cap(pc, cx, cz, y0, size, tilt, col, rng):
+    """A tilted rock block on top (today's PillarCap 6 x 5 x 7): chamfered plan, vertical sides, a sloped planar top."""
+    sx, sy, sz = size
+    poly = _octagon(cx - sx / 2, cx + sx / 2, cz - sz / 2, cz + sz / 2, [rng.uniform(0.6, 1.4) for _ in range(4)])
+    ax, az = tilt
+    lo = [p + Vector((0, y0, 0)) for p in poly]
+    hi = [Vector((p.x, y0 + sy + ax * (p.x - cx) + az * (p.z - cz), p.z)) for p in poly]
+    for i in range(8):
+        j = (i + 1) % 8
+        m = (lo[i] + lo[j]) / 2
+        pc.face([lo[i], lo[j], hi[j], hi[i]], tone(col, rng.choice((1.0, 0.96, 0.92))), "SmoothPlastic", 0.6,
+                Vector((m.x - cx, 0, m.z - cz)))
+    polygon_fill(pc, hi, tone(col, 1.06), "SmoothPlastic", 0.6, Vector((0, 1, 0)))
+
+
+def canyon_gate():
+    pieces = []
+    rng = random.Random(403)
+    # pillar strata (y0, y1, colour, xmin, xmax, zmin, zmax, recess) from today's 6 boxes, thick layers split into bands
+    L = [(0.0, 3.0, "#B84D33", -27.9, -13.0, -8.45, 8.45, 0.0), (3.0, 6.2, "#C55438", -27.9, -13.0, -8.45, 8.45, 0.35),
+         (6.2, 9.0, "#C55438", -27.9, -13.0, -8.45, 8.45, 0.1), (9.0, 13.0, "#E88251", -26.8, -13.0, -7.9, 7.9, 0.6),
+         (13.0, 16.5, "#C55438", -25.7, -13.0, -7.35, 7.35, 0.0), (16.5, 19.5, "#B84D33", -25.7, -13.0, -7.35, 7.35, 0.4),
+         (19.5, 22.0, "#C55438", -25.7, -13.0, -7.35, 7.35, 0.1), (22.0, 26.0, "#9C4032", -24.6, -13.0, -6.8, 6.8, 0.5),
+         (26.0, 29.0, "#C15237", -23.5, -13.0, -6.25, 6.25, 0.0), (29.0, 31.8, "#B04A32", -23.5, -13.0, -6.25, 6.25, 0.35),
+         (31.8, 34.0, "#C15237", -23.5, -13.0, -6.25, 6.25, 0.1), (34.0, 38.0, "#E78151", -22.4, -13.0, -5.7, 5.7, 0.5)]
+    R = [(0.0, 3.0, "#BA4F35", 13.0, 27.9, -8.45, 8.45, 0.0), (3.0, 6.0, "#C95639", 13.0, 27.9, -8.45, 8.45, 0.3),
+         (6.0, 9.0, "#C95639", 13.0, 27.9, -8.45, 8.45, 0.05), (9.0, 13.0, "#E48050", 13.0, 26.8, -7.9, 7.9, 0.6),
+         (13.0, 15.8, "#C05236", 13.0, 25.7, -7.35, 7.35, 0.0), (15.8, 19.0, "#B04A32", 13.0, 25.7, -7.35, 7.35, 0.45),
+         (19.0, 22.0, "#C05236", 13.0, 25.7, -7.35, 7.35, 0.1), (22.0, 26.0, "#963E30", 13.0, 24.6, -6.8, 6.8, 0.5),
+         (26.0, 28.6, "#C35337", 13.0, 23.5, -6.25, 6.25, 0.0), (28.6, 31.4, "#B24B33", 13.0, 23.5, -6.25, 6.25, 0.3),
+         (31.4, 34.0, "#C35337", 13.0, 23.5, -6.25, 6.25, 0.1), (34.0, 38.0, "#E07D4E", 13.0, 22.4, -5.7, 5.7, 0.5)]
+    note = ("layered canyon rock replacing today's 6 stacked Pillar boxes + PillarCap; same bounding box (outer edge "
+            "27.9 at the ground -> 22.4 at y 38, depth 16.9 -> 11.4, cap to y ~42); the INNER FACE STAYS FLAT AT "
+            "x = +-13.0 (the opening stays 26 wide: Barrier 24 wide, anchors at +-12.6, the Beam ends at +-15 inside the "
+            "rock). 12 strata (red / dark red / orange like today's boxes), vertical rectangle sides (1 part each), "
+            "soft layers recessed 0.3-0.6 (erosion grooves), a lit ledge on each step, 5 dark crack strips, a tilted "
+            "cap block. t 0.6.")
+    for name, layers, inner, cap_x, tilt in (("pillar_L", L, -13.0, -19.0, (0.12, -0.08)),
+                                             ("pillar_R", R, 13.0, 19.0, (-0.12, -0.08))):
+        pc = Piece("canyon_gate", name, GATE_ORIGIN, notes=note,
+                   place={"relativeTo": "the Gate_Desert_3 / Desert_3.Gate pivot", "position": [0, 0, 0],
+                          "orientation": [0, 0, 0], "replaces": "the 6 Pillar boxes and the PillarCap of this side"})
+        strata_column(pc, layers, rng, inner_x=inner, cracks=5, height=42.0)
+        tilted_cap(pc, cap_x, 0.5, 38.0, (6.0, 3.6, 7.0), tilt, "#E48050", rng)
+        pieces.append(pc)
+    for name, sx, cols in (("side_rock_L", -1, ("#BE5136", "#E58150", "#BD5136", "#913C2E")),
+                           ("side_rock_R", 1, ("#C85539", "#E68150", "#BE5136", "#923C2E"))):
+        c0 = 36.0 * sx
+        layers = [(0.0, 4.0, tone(cols[0], 0.95), c0 - 7.5, c0 + 7.5, -5.5, 8.5, 0.0),
+                  (4.0, 8.0, cols[0], c0 - 7.5, c0 + 7.5, -5.5, 8.5, 0.3),
+                  (8.0, 12.0, cols[1], c0 - 7.0, c0 + 7.0, -5.0, 8.0, 0.6),
+                  (12.0, 15.5, cols[2], c0 - 6.5, c0 + 6.5, -4.5, 7.5, 0.0),
+                  (15.5, 19.0, tone(cols[2], 0.93), c0 - 6.5, c0 + 6.5, -4.5, 7.5, 0.35),
+                  (19.0, 23.0, cols[3], c0 - 6.0, c0 + 6.0, -4.0, 7.0, 0.3)]
+        pc = Piece("canyon_gate", name, GATE_ORIGIN,
+                   notes="layered rock replacing today's 4 SideRock boxes of this side (centre x +-36, z 1.5; 15 x 23 x "
+                         "14, 12 wide at the top); its inner edge stays at |x| >= 28.5 (0.6 from the pillar). 6 strata, "
+                         "erosion grooves, ledges, 3 cracks. t 0.6.",
+                   place={"relativeTo": "the Gate_Desert_3 / Desert_3.Gate pivot", "position": [0, 0, 0],
+                          "orientation": [0, 0, 0], "replaces": "the 4 SideRock boxes of this side"})
+        strata_column(pc, layers, rng, inner_x=None, cracks=3, height=42.0)
+        pieces.append(pc)
+    return pieces
+
+
+def preview_canyon(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    ctx = context_boxes([((0, 8, 0.3), (24, 15, 0.9), "#A86238", (0, 0, 0)), ((0, 21.1, 0), (30, 1.8, 1.8), "#703E26", (0, 0, 0)),
+                         ((0, 8, -0.8), (26, 2.2, 0.7), "#D6965C", (0, 0, 26.6)),
+                         ((0, 8, -1.1), (26, 2.2, 0.7), "#D6965C", (0, 0, -26.6)),
+                         ((0, 18.4, -1.5), (12, 4, 0.5), "#D6965C", (0, 0, 0))], col)
+    objs = [placed(pc, col) for pc in pieces]
+    out = os.path.join(P.PREVIEW_DIR, "desert_canyon_gate_facets.png")
+    return render_sheet("canyon", [(objs + ctx, [(-20, 10), (150, 20)])], None, out)
+
+
 def main():
+    only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
     for obj, fn, prev in (("rebirth_altar", rebirth_altar, preview_altar), ("ship", ship, preview_ship),
-                          ("golem", golem, preview_golem)):
+                          ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon)):
+        if only and obj not in only:
+            continue
         pieces = fn()
         for pc in pieces:
             d = pc.data()
             report.append({"file": os.path.relpath(write_piece(pc), P.ROOT).replace("\\", "/"), "faces": d["faceCount"],
-                           "rect": d["rectCount"], "size": d["size"], "problems": pc.check()})
+                           "rect": d["rectCount"], "size": d["size"], "bounds": d["bounds"], "problems": pc.check()})
         report.append({"preview": os.path.relpath(prev(pieces), P.ROOT).replace("\\", "/")})
     print("FACETS " + json.dumps(report))
 

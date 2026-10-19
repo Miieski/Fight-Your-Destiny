@@ -2398,3 +2398,27 @@ every rock intersection in sub-zone 1.
   Desert_1 camp 144 fps / worst 8.5 ms / render CPU 2.5 ms; Desert_2 village 36 fps = Studio's unfocused cap, render
   CPU 2.9 ms; no errors. FINAL: 48 templates / 373 tagged copies up to date, run 2 = 0; disk == Studio (181 scripts,
   0 written); backup after_desert_buildings.
+
+# Desert props: gates and entrances - 2026-10-20 (owner: "DESERT ZONE PROP IMPROVEMENT - Gates and entrances" - 01 egyptian arch, 02 pylon temple gate (KEEP the hieroglyph symbols exactly: "they may be a clue or a puzzle"; keep the door scripts / prompts / glow), 03 canyon barricade gate (natural layered canyon rock; keep it blocking and openable exactly as now))
+
+## Status (newest first)
+
+- 12:00 Started. The 4 attached images stored in docs/Desert_Images/02_Gates_and_Entrances/ (the folder did not
+  exist). Backup before_desert_gates. The desert recipe (guide section B) already exists; Agent A adds the gate parts
+  (cavetto cornice, inlay bands, relief depth, winged sun disk, canyon strata). Same route: Studio parts + unions,
+  facet data for the canyon rock.
+- 12:50 Recipe + inventory + PILOT 01 EGYPTIAN ARCH done. Agent A: guide section B12 (cavetto cornice, torus rolls,
+  inlay bands, glowing pyramid tips, banners, brass bowl lamps, stepped bases, pylons, sunk relief, niches, winged sun
+  disk, door, canyon strata) + the GLYPH RECORD of Gate_Desert_4 (37 Barrier glyphs + borders + seam + 2 tower
+  figures, to verify after the rebuild) + canyon facet data (canyon_gate__pillar_L/R, side_rock_L/R; the opening stays
+  26 wide). Agent B: kits EntryArch_Desert -> Desert_1.EntryArch, Gate_Desert_4 -> Desert_4.Gate (a sub-zone Gate:
+  Barrier / PriceSign / SubZoneId; the "glow" is Neon parts, no glow script), Gate_Desert_3 -> Desert_3.Gate; Gate_Desert_2
+  (sandstone wall + plank door) is not in the owner's list - backed up, untouched. Backups
+  old_props_2026-10-19_pre_desert_gates/.
+  01 egyptian arch (egyptian_arch): replaced 3 / 3 (test, kit, Desert_1.EntryArch); stepped bases, cut-block piers,
+  inlaid lapis / gold / turquoise bands with diamonds and squares, a 5-block lintel with a turquoise inlay band, a
+  2-stud cavetto cornice (roll, fillet, 3-step reeded cove, top slab), pyramid tips with Neon gold tops and a soft light,
+  a lapis name board in a gold frame with a small winged disc, red banners with folds / gold trims / ankh / tassel,
+  brass bowl lamps on iron brackets (Neon flame "Ember" keeps today's PointLight + FirePoint); ZoneId and the "Desert"
+  sign texts kept; 33 -> 12 parts; passage 24 x 18 unchanged; collision = invisible union of today's parts.
+  Main agent Play check: 4 / 4 lights lit, "Desert" on both sides, walked through the arch; no errors.

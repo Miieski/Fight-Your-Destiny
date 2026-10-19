@@ -169,6 +169,11 @@ SyncMapProps.RULES = {
 	{ propId = "canopy_pavilion", names = { "NomadTent_B" } },
 	{ propId = "desert_tent", names = { "NomadTent_A" } },
 	{ propId = "ruined_wall", names = { "Sandstone_Wall_Ruin" } },
+	-- desert gates (owner, 2026-10-19): 01 the Egyptian arch (desert test row, kit Gates.EntryArch_Desert,
+	-- Zones.Desert.Desert_1.EntryArch: ZoneId and the NameSign texts kept)
+	{ propId = "egyptian_arch", names = { "EntryArch_Desert" }, match = function(m)
+		return m.Name == "EntryArch" and m.Parent ~= nil and m.Parent.Name == "Desert_1"
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

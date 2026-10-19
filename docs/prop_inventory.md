@@ -197,6 +197,30 @@ Screenshots: `docs/screenshots/desert_buildings/<nn>_<object>_*_before.jpg` / `_
 
 Collision check of 02-05 (Edit, rays every 0.5 on one game copy each, the new `Collision` against today's parts rebuilt at the same place): downward rays tent 986 / ruin 990 / stall 682 / pavilion 1,156 with no height difference over 0.25 (the ruin has 7 extra hits at the edge of a loose block's precise hull); horizontal rays at 1 / 2.5 / 4 / 5.5 through every side: no difference (1 on the ruin). The visible unions never collide. After 02-05: `Sync.check()` 48 templates / 373 instances all up to date, full run twice 0 / 0; hub 5,051.
 
+
+### Desert gates and entrances (owner, 2026-10-19): inventory before the remake (read from Studio)
+
+Test zone = `workspace._Staging.AssetPreview.Desert.<Kit>`; kit = `ServerStorage.MapAssets.Gates.<Kit>`. One game copy
+each (no renamed copy elsewhere). Backups: `BackUP_Files/old_props_2026-10-19_pre_desert_gates/<nn>_<object>_<kit>.rbxm`
+(test + kit + game copy).
+
+| # | object | test zone (kit) | game copy | parts | functional content to keep | what reads it |
+|---|---|---|---|---|---|---|
+| 01 | Egyptian arch | Desert.EntryArch_Desert (Gates) | Zones.Desert.Desert_1.EntryArch (attr ZoneId=Desert) | 33 | NameSign SurfaceGuis NameGuiFront / NameGuiBack ("Desert"); 2 `Ember` Neon parts with PointLight 14 / 1 / FFD678 and a FirePoint attachment | nothing reads the arch by name (src grep); the zone portals use their own ZoneId attribute |
+| 02 | pylon temple gate | Desert.Gate_Desert_4 (Gates) | Zones.Desert.Desert_4.Gate (attr SubZoneId=Desert_4, PrimaryPart Barrier) | 81 | Barrier (attr BarrierDecorIsChildOfBarrier) with its children: 37 Glyph, 4 Border, Seam (the hieroglyph door, hidden with the Barrier when the gate opens); 10 more Glyph on the towers; PriceSign SurfaceGuis PriceGuiFront / Back | GateController (client): `gate.PrimaryPart or Barrier`, hides the Barrier and its children, writes the PriceSign label; ZoneService (server): `subZone.folder.Gate`, attr SubZoneId, the gate prompt in the Barrier. No glow script: the "glow" is Neon parts (SunDisc) |
+| 03 | canyon barricade gate | Desert.Gate_Desert_3 (Gates) | Zones.Desert.Desert_3.Gate (SubZoneId=Desert_3, PrimaryPart Barrier) | 49 | Barrier (invisible, T 1) with Plank x5, Cross x2, Chain x6, Lock, Keyhole under it; PriceSign SurfaceGuis | same Gate contract (GateController / ZoneService) |
+| - | (not in the owner's list) | Desert.Gate_Desert_2 | Zones.Desert.Desert_2.Gate (SubZoneId=Desert_2) | 50 | sandstone wall with a plank door under Barrier, PriceSign, 2 Ember FirePoints | backed up (`xx_not_in_scope_Gate_Desert_2.rbxm`), not touched |
+
+#### Desert gates remake status
+
+Builders in `DevTools.PropsDesert` (disk `tools/PropsDesert.luau`), recipe docs/prop_texture_guide.md sections A, B and
+B12, today's colours. Collision rule of the desert buildings: the visible unions never collide, one invisible union
+`Collision` rebuilds today's colliding parts. Screenshots: `docs/screenshots/desert_gates/`.
+
+| # | object | MapProps id (rule) | replaced | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 01 | Egyptian arch | `egyptian_arch` (names `EntryArch_Desert`; `match` = `Desert_1.EntryArch`) | 3 / 3 (test 1, kit 1, Desert_1 1); 2nd run 0 | 33 -> 12 (Stone, Inlay, Gold, Cloth, Iron, Glow, Sand, Ember x2, NameSign, SignRear + `Collision`); about 14,800 triangles | 38.5 x 28.6 x 9.5 (was 38.5 x 28.5 x 8.5), passage unchanged (24 wide, 18 high): stepped bases (4 footing slabs, a chamfered plinth), the 2 piers in courses of cut sandstone blocks (alternating joints, chamfers, tones) with today's gold band (lapis diamonds) and lapis band (gold squares, gold rules) and a turquoise capital band with an abacus; the lintel of 5 cut blocks with today's turquoise band (lapis diamonds, gold dots, gold rules); a 2-stud cavetto cornice (torus rolls, fillet, 3 cove slabs with wedges and reed grooves, top slab); today's gold pyramid tips on stepped plinths, the top 40 % Neon gold with a soft PointLight (8 / 0.4); the name board (lapis back, gold frame and corner studs, today's NameSign / SignRear plates, a gold cap with a small winged disc); the 2 red banners on gold rods (4 folds, gold edge trims, today's gold tail band, a pointed end with a tassel, a gold ankh); the lamps (iron bracket and scroll, brass bowl with a rim, a Neon flame `Ember` with today's PointLight and FirePoint); sand drifts at the bases. ZoneId kept; the NameGuiFront / Back ("Desert") moved onto the new NameSign. Collision check (rays every 0.5 on the Desert_1 copy against today's parts): 1,701 downward rays, 2 off (the pyramid tips' precise hull), 405 sideways rays at 1 / 3 / 6 / 10 / 15: no difference |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

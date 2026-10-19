@@ -461,6 +461,155 @@ Per object, the main colours that must stay:
 - New colours that are not in the table.
 - PBR, Metal or grain.
 
+### B12. Desert gates and entrances (owner task 2026-10-19)
+
+Images: `docs/Desert_Images/02_Gates_and_Entrances/`. Read from `BackUP_Files/FightYourDestiny_2026-10-19_224157_before_desert_gates_{ServerStorage,Workspace}.rbxm`. All parts are SmoothPlastic, the lamps and glyph lights Neon.
+
+| # | Gate | Kit (`ServerStorage.MapAssets.Gates.`) | Parts | Copies | Notes |
+|---|---|---|---|---|---|
+| 01 | Egyptian arch | `EntryArch_Desert` | 33 | test `_Staging.AssetPreview.Desert.EntryArch_Desert`; game `Zones.Desert.Desert_1.EntryArch` | the game copy has 2 ClothTails 2.7 x 1 x 0.3 (kit 2.6 x 1 x 0.2) and its teal Band is 36.1 long |
+| 02 | pylon temple gate | `Gate_Desert_4` | 81 | test; game `Zones.Desert.Desert_4.Gate` | Gate contract: the glyphs, borders and seam are children of `Barrier` and vanish when it opens; the game copy's two figure bars are 0.4 thick (kit 0.3) |
+| 03 | canyon barricade gate | `Gate_Desert_3` | 49 | test; game `Zones.Desert.Desert_3.Gate` (identical) | Barrier invisible (T 1) with the planks / crosses / chains / lock under it. No boulder in the model: the boulder in the photo is a separate map rock. |
+
+**Real colours** (keep them; tone steps as in B1):
+
+| Gate | Part | Colour |
+|---|---|---|
+| Arch | piers | sandstone #E2BE84 |
+| | pier bases, cornice | #B89262 |
+| | lower pier band | gold #FFC93C |
+| | upper pier band, SignBack | lapis #2C5CC8 |
+| | lintel band | turquoise #40D0C4 |
+| | cloth banners | red #D64A3E with gold tails |
+| | bowl lamps | iron #5C626E with an Ember Neon #FFD678 |
+| | pyramid tips, SignCap | gold #FFC93C |
+| Pylon | towers, lintel | #CCA064 |
+| | tower slopes | #C1985F |
+| | carving panels | #D8AA6A |
+| | cornices, footings, jambs, header, glyphs | #B89262 |
+| | trim bands | lapis #2C5CC8 and gold #FFC93C |
+| | door (Barrier) | sandstone #E2BE84 |
+| | price sign | #F1CA8C on gold |
+| | wings | gold, lapis, turquoise #40D0C4 |
+| | sun disc | Neon gold |
+| Canyon | pillar strata | red #C55438 / #C95639 / #C15237 / #C05236, orange #E88251 / #E48050 / #E78151, dark #9C4032 / #963E30 |
+| | side rocks | #BE5136 / #C85539, #E58150, #913C2E |
+| | planks | #A86238 / #703E26 |
+| | crosses | #D6965C |
+| | chains, anchors, lock | iron #5C626E |
+| | keyhole | gold |
+| | rope | #C4A068 |
+| | beam | #703E26 |
+| | sign | #D6965C on #703E26 |
+
+**Parts rules** (sizes in studs; joints, chamfers, gradient as in section A):
+
+- **Cavetto cornice** (the Egyptian gorge: a concave cove that flares out to a flat top):
+  - **Profile, bottom to top:** a torus roll (below); a 0.3 fillet; the cove; a flat top slab.
+  - **Cove:** 3-4 stacked slabs, each stepping out further than the one below: +0.15, +0.3, +0.5, +0.8 of the total projection, so the steps follow a concave curve. Each slab is 0.3-0.5 tall.
+  - **Flat top slab:** 0.4 thick, stepping out 0.1 beyond the last cove slab.
+  - **Total:** height about 0.6 x the cornice's projection; projection 1.0-1.6 on a 5-6 deep lintel. Today's single 38.5 x 1 x 6.8 slab becomes about 2.0 tall.
+  - **Smoother cove:** fill each step with a WedgePart (the slope facing down and out).
+  - **Colours:** #B89262; optional vertical reed grooves on the cove face, every 0.8 (0.1 wide, dark tone step).
+- **Torus roll mouldings:** a horizontal Cylinder 0.5-0.6 across along every top edge under the cornice, plus vertical rolls on the outer corners of the pylon towers and piers (0.5 across, full height). Banded every 2-3 studs with a thin wrap ring 0.15 in lapis or gold.
+- **Inlay bands** (lapis / turquoise / gold; today's plain 1.0 bands):
+  - band 0.8-1.0 tall, 0.05-0.1 proud;
+  - patterns:
+    - **zigzag:** small wedges (0.5 x 0.5) alternating up and down;
+    - **chequer:** squares 0.5, two colours;
+    - **lotus:** a gold 0.6 x 0.9 petal (a wedge pair) every 1.2 on lapis;
+  - a 0.12 gold rule line above and below each band.
+- **Glowing gold pyramid tips** (arch, today 4 CornerWedges 2 x 3.4 x 2 per tip): keep the size.
+  - Add a 0.3 stepped plinth under each tip.
+  - Neon gold #FFC93C for the top 40 % of each tip; the lower 60 % stays SmoothPlastic gold.
+  - Optional small PointLight (warm, range 8).
+- **Cloth banners** (today 2.6 x 7 x 0.2 red):
+  - 0.12-0.15 thick, hung from a gold rod 0.25 across, 0.6 longer than the banner;
+  - 3-4 vertical folds: strips tilted ±4°;
+  - gold trim 0.2 along both long edges and the bottom;
+  - a pointed or forked tail, tassels 0.25 x 0.5 at the corners;
+  - an emblem: a lapis eye or ankh 1.0, 0.05 proud.
+- **Brass bowl lamps on iron brackets** (today an iron Bowl 2.2-2.4 x 0.7-0.8 on a 1 x 1.4-1.6 x 2-2.4 bracket):
+  - bowl = a ring 0.3 tall on a cone (a Ball scaled 1 : 0.45), in brass #C99A2E with a 0.15 gold rim;
+  - bracket = iron arm 0.3 x 0.3 with a 45° brace and a wall plate 0.8 x 1.2 x 0.1 with 4 rivets;
+  - the Ember (Neon, #FFD678 or #FF8C28) is 0.2 below the rim; 3 small flame wedges above it.
+- **Stepped bases** (piers, footings): 2-3 steps, each 0.4-0.6 tall and stepping in 0.3-0.5, chamfered 0.15. Today's 2-stud PierBase becomes 3 steps.
+- **Tapered pylon towers** (today 20 x 38 x 12 boxes with side wedges):
+  - **batter:** the front and sides lean in 1 per 10 of height (WedgeParts or tilted face plates);
+  - **courses:** lines every 1.5-2.0, 0.08 wide, staggered vertical joints (blocks 3-5 long);
+  - torus rolls on the outer corners; a cavetto cornice on top.
+- **Carved relief figures WITH DEPTH:**
+  - **sunk relief:** the figure is CUT INTO the panel 0.15-0.3 deep;
+  - the inner edge has a bevel: a 0.1 chamfer strip around the cut, 1 tone step lighter;
+  - the figure's floor is 1 tone step darker;
+  - details (belt, collar, eye) are raised 0.05 inside the cut;
+  - with parts: the panel (today's Carving 12 x 20 x 0.4 at z -4.1) as a frame of 4 strips, with the figure parts placed 0.2 deeper than the panel face (today they sit in front of it);
+  - **keep each figure part's x / y and size exactly** (record below); only their depth and the bevel change.
+- **Niches with flag poles and banners** (pylon):
+  - a niche 1.5 wide x 10-14 tall x 0.6 deep, cut into the tower front;
+  - a pole 0.5 across, rising 4-6 above the cornice, with a gold cap;
+  - a banner 1.5 x 6 (rules above), hanging from the pole top.
+- **Winged sun disk** (today a SunDisc 5 dia Neon gold + 3 pairs of Wing bars gold / lapis / turquoise):
+  - **feathers:** each wing is 3 rows of feathers, 6-8 per row, each 0.8-1.2 long x 0.6, tips rounded or pointed (a wedge), alternating gold / lapis / turquoise per row as today;
+  - **disc:** Neon gold 5 dia, keeping today's size and position, with a 0.3 gold ring;
+  - **uraei:** 2 small cobras 1.2 tall on either side of the disc: an S of 2-3 tilted cylinders 0.3 across plus a 0.6 hood wedge, in gold.
+- **Heavy dark-wood double door** (pylon Barrier, today a 24 x 16 x 3 sandstone slab with glyphs):
+  - **keep the sandstone face and the glyphs exactly** (record below);
+  - add the door construction AROUND the glyph field: a dark wood frame #703E26 0.8 wide;
+  - 2 leaves, split by today's Seam (keep it);
+  - gold studs, 0.3 balls every 1.5, on the frame;
+  - 2 gold ring handles 1.0 (like the Gate_Desert_2 Rings).
+  - (For Gate_Desert_2, wooden planks: 2.7 wide planks with 0.06 gaps, iron bands 0.9 tall at 1/4 and 3/4, studs every 1.5.)
+- **Canyon rock strata** (03; facet data below):
+  - horizontal layers 2.2-4.0 thick, in today's sequence from the ground up: red, orange, red, dark red, red, orange, then a tilted orange cap;
+  - soft (orange or thin) layers recessed 0.3-0.6 to form erosion grooves; a lit ledge on top of every step;
+  - cracks are dark strips 0.28 wide, 0.03 proud, zig-zagging down 1 layer;
+  - each layer steps in 0.5-1.1 going up; the opening face stays flat.
+- **Sand drifts** (all three gates): as B8, against the bases and the canyon rocks; never in the gate opening or on the door's path.
+
+**Glyph record (keep EXACTLY).** Owner: "keep the hieroglyph symbols exactly as they are (same symbols, same positions: they may be a clue or a puzzle)".
+
+Gate_Desert_4 kit space: the gate origin at ground centre; the Barrier is at (0, 8, 0), its front face at z -1.5.
+
+**Barrier glyphs** (children of Barrier):
+- 37 parts named `Glyph`, all at z -1.6, 0.3 thick.
+- Size codes:
+  - H = 2.0 x 0.6 (bar);
+  - V = 0.6 x 2.2 (tall bar);
+  - v = 0.6 x 1.5 (short bar);
+  - D = 1.5 x 1.5 turned 45° about Z (diamond).
+- Colour codes: g = Neon gold #FFC93C; s = SmoothPlastic #B89262.
+- Listed per column x as y:code, bottom to top:
+
+| Column x | Glyphs (y:code) |
+|---|---|
+| -9.4 | 3.5:Vs, 5.8:Hs, 7.2:Hs, 9.75:Ds, 12.0:Hg, 13.4:Hg |
+| -6.0 | 2.7:Hg, 4.1:Hg, 6.6:Vs, 9.7:Vs, 12.45:vs, 13.5:Hs |
+| -2.6 | 3.55:Ds, 6.6:Vg, 9.75:Ds, 12.45:vs, 13.5:Hs |
+| 2.6 | 2.7:Hs, 4.1:Hs, 6.25:vg, 7.3:Hg, 9.75:Ds, 12.8:Vs |
+| 6.0 | 2.7:Hg, 4.1:Hg, 6.25:vs, 7.3:Hs, 8.9:Hs, 10.3:Hs, 12.85:Ds |
+| 9.4 | 3.5:Vs, 6.25:vs, 7.3:Hs, 8.9:Hs, 10.3:Hs, 12.45:vg, 13.5:Hg |
+
+**Other Barrier parts:**
+- 4 `Border` bars 10.6 x 0.6 x 0.3, gold SmoothPlastic, at (±6.0, 1.1) and (±6.0, 14.9), z -1.6;
+- `Seam` 0.5 x 16 x 0.3, #B89262, at (0, 8, -1.6).
+
+**Tower figures** (children of the gate model, z -4.4, 0.3 thick, on the Carving panels 12 x 20 x 0.4 #D8AA6A at (±22, 16, -4.1)):
+- body 5 x 8 at (±22, 16.5);
+- gold Neon belt bar 8 x 0.8 at (±22, 17.9) (0.4 thick in the game copy);
+- head 3 x 3 at (±22, 22.5);
+- 2 legs 2 x 5.5 at (±20.4, 9.75) and (±23.6, 9.75);
+- the body, head and legs are #B89262.
+
+After the rebuild, Agent B checks every glyph by name, x / y position, size and colour. Only the depth changes: sunk relief, if wanted, for the tower figures; the door glyphs stay raised on the Barrier.
+
+**Canyon facet data (03):**
+- Files `Blender_Exports/Props/facets/canyon_gate__{pillar_L, pillar_R, side_rock_L, side_rock_R}.json`, generated by `tools/blender/fyd_facets.py -- canyon_gate`.
+- Origin = the gate pivot (kit space); place every piece with no offset.
+- The pillars keep today's bounding box: x 13.0 .. 27.9, y 0 .. 42.1, z ±8.45. The inner face stays flat at x ±13.0, so the opening stays 26 wide.
+- The side rocks keep x 28.5 .. 43.5, y 0 .. 23, z -5.5 .. 8.5.
+- Preview: `Previews/Props/desert_canyon_gate_facets.png`.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
