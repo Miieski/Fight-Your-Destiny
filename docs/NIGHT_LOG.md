@@ -2249,3 +2249,15 @@ every rock intersection in sub-zone 1.
   PortalController darkens unioned frames for locked zones and restores their own colours on reveal.
   Main agent Play check: the locked Void frame is fully dark at run time, Plains / Desert lit; walking into
   Portal_Plains through the new frame teleports to Plains (2000, 3, -105); no errors.
+- 20:10 BATCH A done (Agent B; main agent looked at the hub wall, arch and arena pillar shots):
+  01 wall (hub_wall): replaced 6 / 6 (test 1, kit 1, hub 4); 4 courses of real blocks in running bond (joints 0.09
+  over a dark mortar core, both faces), a wider slab base step, an overhanging dark slab cap, the end pier in coursed
+  blocks with its own cap, the 3 window plates now stone-framed openings with sill, lintel and iron grille, moss on
+  the base; 5 unions, ~4,000 tris; 20.7 x 7.9 x 4.8 (was 20.3).
+  08 stone arch (stone_arch): replaced 2 / 2 (test 1, kit 1; no game copy exists - nothing added): coursed piers on
+  two-step plinths, bevelled capitals, 11 voussoirs with a proud wedge keystone, moss + 3 ivy strands; 4 unions,
+  ~7,400 tris; 37.7 x 27.9 x 6.5 (was 36.4 x 27.5 x 6.0).
+  09 pillar (stone_pillar): replaced 14 / 14 (test 1, kit 1, the 12 Plains boss-arena pillars at their x3 scale): 4-block
+  plinth, carved base, fluted octagonal shaft of 4 drums with a band and rings, carved capital, light moss; 4 unions,
+  ~1,550 tris; same size; collisions as before; no script reads the pillars (BossService uses only the arena's
+  PrimaryPart and Door). Sync run 2 = 0 for each. Hub parts 5,278 -> 5,266.

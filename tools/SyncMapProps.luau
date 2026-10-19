@@ -101,6 +101,11 @@ SyncMapProps.RULES = {
 	end, variant = function(m)
 		return string.match(m.Name, "^PortalFrame_(%w+)$")
 	end },
+	-- props batch 2, batch A: 01 wall (test zone, kit, the hub's 4 Hub_Wall_Section), 08 stone arch (test zone and kit
+	-- only: no game copy), 09 pillar (test zone, kit and the 12 x3-scaled pillars of the Plains boss arena, scale kept)
+	{ propId = "hub_wall", names = { "Hub_Wall_Section" } },
+	{ propId = "stone_arch", names = { "Stone_Arch_A" } },
+	{ propId = "stone_pillar", names = { "Stone_Pillar_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

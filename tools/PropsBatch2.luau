@@ -495,6 +495,484 @@ function PropsBatch2.portal_frame(): Model
 end
 
 ---------------------------------------------------------------------
+-- shared: coursed stone, slabs, octagons, ivy (batch A)
+---------------------------------------------------------------------
+local GAP = 0.09 -- vertical joint between blocks
+
+-- one course of chamfered blocks along X from o.x0 to o.x1 (o.y = course bottom, o.h = course height with its 0.05
+-- bed joint, o.depth = the wall thickness centred on z 0), leaving the openings o.gaps ({a, b}) and laying the fixed
+-- blocks o.fixed ({a, b, color}: lintels). Blocks 1.8-2.8 x the course height, joints 0.09, kept 0.35 away from the
+-- joints of the course below (o.below: running bond), depth jitter 0 / 0.04 / 0.07 on both faces, tones never
+-- repeated on a neighbour, A9 gradient. A mortar core 0.25 behind both faces fills every stretch that is not an
+-- opening. Returns the joints of the course.
+local function course(list: { BasePart }, rng: Random, o: any): { number }
+	local h = o.h
+	local bh = h - 0.05
+	local yc = o.y + 0.025 + bh / 2
+	local minL, maxL = (o.minL or 1.8) * h, (o.maxL or 2.8) * h
+	local sets = o.sets or { "vertical", "topFrontBack" }
+	local c = o.c or 0.18
+	local cuts = {}
+	for _, g in ipairs(o.gaps or {}) do
+		table.insert(cuts, { g[1], g[2], nil })
+	end
+	for _, f in ipairs(o.fixed or {}) do
+		table.insert(cuts, { f[1], f[2], f[3] })
+	end
+	table.sort(cuts, function(a, b)
+		return a[1] < b[1]
+	end)
+	local joints: { number } = {}
+	local prev = nil
+	local function block(a: number, b: number, color: Color3)
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		local jitter = ({ 0, 0.04, 0.07 })[rng:NextInteger(1, 3)]
+		table.insert(list, chamfered(Vector3.new(b - a, bh, o.depth + 2 * jitter), CFrame.new((a + b) / 2, yc, 0), graded(color, yc, o.H, TONES[ti]), sets, c))
+	end
+	local function near(x: number): boolean
+		for _, j in ipairs(o.below or {}) do
+			if math.abs(j - x) < 0.35 then
+				return true
+			end
+		end
+		return false
+	end
+	local function fill(a: number, b: number, first: boolean)
+		local pos = a
+		local start = true
+		while b - pos > 0.05 do
+			local L = rng:NextNumber(minL, maxL)
+			if start and first and o.half then
+				L = rng:NextNumber(0.5, 0.65) * maxL
+			end
+			if b - pos - L - GAP < minL * 0.55 then
+				L = if b - pos > maxL * 1.25 then (b - pos - GAP) / 2 else b - pos
+			end
+			if pos + L < b - 0.05 and near(pos + L + GAP / 2) then
+				local alt = L + 0.45
+				if b - (pos + alt + GAP) < minL * 0.55 then
+					alt = L - 0.45
+				end
+				if alt >= minL * 0.5 then
+					L = alt
+				end
+			end
+			L = math.min(L, b - pos)
+			block(pos, pos + L, o.color)
+			if pos + L < b - 0.05 then
+				table.insert(joints, pos + L + GAP / 2)
+			end
+			pos += L + GAP
+			start = false
+		end
+	end
+	local cursor = o.x0
+	local first = true
+	for _, cut in ipairs(cuts) do
+		local e = if cut[3] then cut[1] - GAP else cut[1]
+		if e - cursor > 0.3 then
+			fill(cursor, e, first)
+			first = false
+		end
+		if cut[3] then
+			block(cut[1], cut[2], cut[3])
+			table.insert(joints, cut[1] - GAP / 2)
+			table.insert(joints, cut[2] + GAP / 2)
+		end
+		cursor = if cut[3] then cut[2] + GAP else cut[2]
+	end
+	if o.x1 - cursor > 0.3 then
+		fill(cursor, o.x1, first)
+	end
+	-- mortar core over the stretches between the openings (0.25 short of an opening and of the free end)
+	local gaps = table.clone(o.gaps or {})
+	table.sort(gaps, function(a, b)
+		return a[1] < b[1]
+	end)
+	local cur = o.x0
+	local spans = {}
+	for _, g in ipairs(gaps) do
+		table.insert(spans, { cur, g[1] - 0.25 })
+		cur = g[2] + 0.25
+	end
+	table.insert(spans, { cur, o.x1 - (o.endInset or 0.25) })
+	for _, s in ipairs(spans) do
+		if s[2] - s[1] > 0.1 then
+			table.insert(list, piece("Part", Vector3.new(s[2] - s[1], h, o.depth - 0.5), CFrame.new((s[1] + s[2]) / 2, o.y + h / 2, 0), P.Mortar))
+		end
+	end
+	return joints
+end
+
+-- a row of `count` slabs (random lengths) along X from x0 to x1, y0..y0+h, depth d, centred on z 0, with joints 0.1
+-- (+ a mortar core 0.15 behind the faces), top edges chamfered
+local function slabs(list: { BasePart }, rng: Random, x0: number, x1: number, y0: number, h: number, d: number, count: number, color: Color3, H: number, c: number?)
+	local lens, total = {}, 0
+	for i = 1, count do
+		lens[i] = rng:NextNumber(0.8, 1.2)
+		total += lens[i]
+	end
+	local gap = 0.1
+	local x = x0
+	local prev = nil
+	for i = 1, count do
+		local len = lens[i] / total * (x1 - x0 - gap * (count - 1))
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(list, chamfered(Vector3.new(len, h - 0.02, d), CFrame.new(x + len / 2, y0 + (h - 0.02) / 2, 0), graded(color, y0 + h / 2, H, TONES[ti]), { "topFrontBack", "topSides" }, c or 0.16))
+		x += len + gap
+	end
+	table.insert(list, piece("Part", Vector3.new(x1 - x0 - 0.3, h - 0.1, d - 0.3), CFrame.new((x0 + x1) / 2, y0 + (h - 0.1) / 2, 0), P.Mortar))
+end
+
+-- a regular octagonal prism (w across the flats, h tall) at cf; flutes = a vertical groove on each of the 8 faces
+-- (0.42 wide, 0.12 deep, stopping 0.25 short of both ends)
+local function octagon(w: number, h: number, cf: CFrame, color: Color3, flutes: boolean?): BasePart
+	local c = w / (2 + math.sqrt(2))
+	local negs = {}
+	if flutes then
+		for k = 0, 7 do
+			table.insert(negs, piece("Part", Vector3.new(0.42, h - 0.5, 0.3), cf * CFrame.Angles(0, k * math.pi / 4, 0) * CFrame.new(0, 0, w / 2 + 0.15 - 0.12), P.Stone))
+		end
+	end
+	return chamfered(Vector3.new(w, h, w), cf, color, { "vertical" }, c, negs)
+end
+
+-- an ivy strand climbing a vertical face (the plane z = zf of the model, leaves facing -Z when front, +Z when not):
+-- stem segments and diamond leaves, from (x, y0) up `height`, wandering at most 0.8 left / right of x
+local function ivy(list: { BasePart }, rng: Random, x: number, y0: number, zf: number, height: number)
+	local pos = Vector2.new(x, y0)
+	local top = y0 + height
+	local side = 1
+	while pos.Y < top do
+		local nxt = Vector2.new(math.clamp(pos.X + rng:NextNumber(-0.28, 0.28), x - 0.8, x + 0.8), pos.Y + rng:NextNumber(0.45, 0.65))
+		local mid = (pos + nxt) / 2
+		local d = nxt - pos
+		table.insert(list, piece("Part", Vector3.new(0.1, d.Magnitude + 0.06, 0.08), CFrame.new(mid.X, mid.Y, zf) * CFrame.Angles(0, 0, math.atan2(-d.X, d.Y)), scaled(P.WoodDark, 0.9)))
+		-- a leaf (sometimes two) on alternate sides of the node
+		local count = if rng:NextNumber() < 0.35 then 2 else 1
+		for _ = 1, count do
+			local s = rng:NextNumber(0.42, 0.6) * (1 - 0.3 * (nxt.Y - y0) / height)
+			local off = Vector2.new(side * rng:NextNumber(0.18, 0.32), rng:NextNumber(-0.05, 0.12))
+			local col = if rng:NextNumber() < 0.5 then P.Moss else P.MossDark
+			table.insert(list, piece("Part", Vector3.new(s, s, 0.05), CFrame.new(nxt.X + off.X, nxt.Y + off.Y, zf + (if zf < 0 then -0.03 else 0.03)) * CFrame.Angles(0, 0, math.rad(45 + rng:NextNumber(-15, 15))), scaled(col, rng:NextNumber(0.85, 1.0))))
+			side = -side
+		end
+		pos = nxt
+	end
+end
+
+---------------------------------------------------------------------
+-- 01 WALL (kit Hub.Hub_Wall_Section, 20.3 x 7.9 x 4.8; the hub's 4 Hub_Wall_Section in Hub.Decor.Village). A
+-- free-standing wall of real stone blocks (4 courses of 1.0, running bond, 0.09 joints over a mortar core, both faces
+-- shown) on a wider base step of slabs, capped with overhanging dark slabs; an end pier of coursed blocks with a
+-- proud top course and a cushioned cap; the 3 small windows of the old wall (the 3 "Brick" plates) are kept as
+-- stone-framed openings (sill, lintel) with an iron grille; moss on the base step against the wall.
+-- Parts: Base, Stones, Cap, Grilles, Moss (5; the old one had 8).
+---------------------------------------------------------------------
+PropsBatch2.WALL_WINDOWS = { { x = 7.0, k = 2 }, { x = 2.0, k = 1 }, { x = -3.0, k = 2 } } -- the old Brick plates
+
+function PropsBatch2.hub_wall(): Model
+	local m = Instance.new("Model")
+	m.Name = "hub_wall"
+	local rng = Random.new(20261001)
+	local H = 7.9
+	local base, stones, caps, iron, mossList = {}, {}, {}, {}, {}
+	local px = -8.2 -- the pier's centre (it spans x -10.0 .. -6.4, z +-2.1)
+
+	-- 1. base: the pier plinth and a wider step of slabs under the wall (tread 0.8 on both faces)
+	table.insert(base, chamfered(Vector3.new(4.4, 0.98, 4.8), CFrame.new(px - 0.0, 0.49, 0), graded(P.StoneDark, 0.5, H, 0.93), { "topFrontBack", "topSides" }, 0.15))
+	slabs(base, rng, -5.91, 10.3, 0, 1.0, 4.2, 5, scaled(P.StoneDark, 0.93), H, 0.15)
+	merge(m, "Base", base, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. the wall: 4 courses from y 1, from inside the pier (x -6.6) to the free end (x 10); openings 2.0 wide, one
+	-- course tall; a lighter lintel block over each, a dark sill under each
+	local below = {}
+	for k = 0, 3 do
+		local gaps, fixed = {}, {}
+		for _, w in ipairs(PropsBatch2.WALL_WINDOWS) do
+			if w.k == k then
+				table.insert(gaps, { w.x - 1.0, w.x + 1.0 })
+			elseif w.k == k - 1 then
+				table.insert(fixed, { w.x - 1.6, w.x + 1.6, P.StoneLight })
+			end
+		end
+		below = course(stones, rng, { x0 = -6.6, x1 = 10.0, y = 1 + k, h = 1.0, depth = 2.6, color = P.Stone, H = H, gaps = gaps, fixed = fixed, below = below, half = k % 2 == 1, c = 0.17 })
+	end
+	for _, w in ipairs(PropsBatch2.WALL_WINDOWS) do
+		local y0 = 1 + w.k
+		-- sill (0.15 proud of both faces) and the grille: 3 square bars into the sill and the lintel, a cross bar
+		table.insert(caps, chamfered(Vector3.new(2.5, 0.22, 2.9), CFrame.new(w.x, y0 + 0.11, 0), graded(P.StoneDark, y0, H, 1), { "topFrontBack" }, 0.07))
+		for _, bx in ipairs({ -0.5, 0, 0.5 }) do
+			table.insert(iron, piece("Part", Vector3.new(0.14, 0.9, 0.14), CFrame.new(w.x + bx, y0 + 0.22 + 0.42, 0), P.Iron))
+		end
+		table.insert(iron, piece("Part", Vector3.new(2.1, 0.12, 0.12), CFrame.new(w.x, y0 + 0.62, 0), P.Iron))
+	end
+
+	-- 3. the pier: 6 courses of 1.0 from y 1, two blocks a course (split along z, then along x), the top course proud
+	table.insert(stones, piece("Part", Vector3.new(3.1, 6.0, 3.7), CFrame.new(px, 4.0, 0), P.Mortar))
+	local prev = nil
+	for k = 0, 5 do
+		local yc = 1 + k + 0.025 + 0.475
+		local function blk(size: Vector3, pos: Vector3, color: Color3)
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			table.insert(stones, chamfered(size, CFrame.new(pos), graded(color, yc, H, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.16))
+		end
+		local j1, j2 = ({ 0, 0.04, 0.07 })[rng:NextInteger(1, 3)], ({ 0, 0.04, 0.07 })[rng:NextInteger(1, 3)]
+		if k == 5 then
+			blk(Vector3.new(3.84, 0.95, 4.44), Vector3.new(px, yc, 0), P.Stone)
+		elseif k % 2 == 0 then
+			local d1 = rng:NextNumber(1.8, 2.3)
+			local d2 = 4.2 - d1 - GAP
+			blk(Vector3.new(3.6 + 2 * j1, 0.95, d1 + j1), Vector3.new(px, yc, -2.1 + d1 / 2 - j1 / 2), P.StoneLight)
+			blk(Vector3.new(3.6 + 2 * j2, 0.95, d2 + j2), Vector3.new(px, yc, 2.1 - d2 / 2 + j2 / 2), P.StoneLight)
+		else
+			local w1 = rng:NextNumber(1.5, 2.0)
+			local w2 = 3.6 - w1 - GAP
+			blk(Vector3.new(w1 + j1, 0.95, 4.2 + 2 * j1), Vector3.new(-10.0 + w1 / 2 - j1 / 2, yc, 0), P.StoneLight)
+			blk(Vector3.new(w2 + j2, 0.95, 4.2 + 2 * j2), Vector3.new(-6.4 - w2 / 2 + j2 / 2, yc, 0), P.StoneLight)
+		end
+	end
+	merge(m, "Stones", stones, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 4. caps: the wall's coping (0.8 thick, 0.4 overhang on both faces, 0.3 at the free end) and the pier cap
+	slabs(caps, rng, -6.45, 10.3, 5.0, 0.8, 3.4, 6, P.StoneDark, H, 0.18)
+	table.insert(caps, chamfered(Vector3.new(4.2, 0.9, 4.8), CFrame.new(px, 7.0 + 0.45, 0), graded(P.StoneDark, 7.45, H, 1), { "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.2))
+	merge(m, "Cap", caps, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Grilles", iron, { collide = true, fidelity = Enum.CollisionFidelity.Box })
+
+	-- 5. moss on the base step against both faces (and one against the pier)
+	for _, sz in ipairs({ -1, 1 }) do
+		for _, range in ipairs({ { -5.2, 1.0 }, { 3.0, 9.0 } }) do
+			local len = rng:NextNumber(1.5, 2.0)
+			moss(mossList, rng, Vector3.new(rng:NextNumber(range[1], range[2]), 0.98, sz * (1.3 + len * 0.18 - 0.07)), 0, len)
+		end
+	end
+	moss(mossList, rng, Vector3.new(-5.85, 0.98, -(1.3 + 1.3 * 0.18 - 0.07)), math.rad(rng:NextNumber(-10, 10)), 1.3)
+	merge(m, "Moss", mossList, { shadow = false })
+
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "hub_wall")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 08 STONE ARCH (kit Common.Stone_Arch_A, 36.4 x 27.5 x 6; test zone + kit only). Two piers of coursed blocks (10
+-- courses of 1.3, two blocks a course, alternating) on two-step plinths, bevelled capitals (a carved band and an
+-- impost slab), a round arch of 11 voussoirs with radial joints springing from the imposts (inner span 25, inner apex
+-- 23.5) and a proud wedge-shaped keystone; moss at the foot of the steps and on them, ivy climbing two pier faces.
+-- Parts: Steps, Piers, Arch, Moss (4; the old one had 11).
+---------------------------------------------------------------------
+function PropsBatch2.stone_arch(): Model
+	local m = Instance.new("Model")
+	m.Name = "stone_arch"
+	local rng = Random.new(20261008)
+	local H = 27.5
+	local steps, piers, arch, mossList = {}, {}, {}, {}
+	for _, side in ipairs({ -1, 1 }) do
+		local x0 = 15 * side
+		-- two-step plinth: lower 6.5 square (2 slabs split along z), upper 5.9 (2 slabs split along x), mortar
+		for t = 0, 1 do
+			local w = if t == 0 then 6.5 else 5.9
+			local y0 = t * 1.0
+			local col = if t == 0 then scaled(P.StoneDark, 0.93) else P.StoneDark
+			local a = w * rng:NextNumber(0.42, 0.58) - 0.05
+			local b = w - a - 0.1
+			local sets = { "topFrontBack", "topSides" }
+			local yc = y0 + 0.49
+			local t1, t2 = rng:NextInteger(1, 3), 0
+			t2 = t1 % 3 + 1
+			if t == 0 then
+				table.insert(steps, chamfered(Vector3.new(w, 0.98, a), CFrame.new(x0, yc, -w / 2 + a / 2), graded(col, yc, H, TONES[t1]), sets, 0.16))
+				table.insert(steps, chamfered(Vector3.new(w, 0.98, b), CFrame.new(x0, yc, w / 2 - b / 2), graded(col, yc, H, TONES[t2]), sets, 0.16))
+			else
+				table.insert(steps, chamfered(Vector3.new(a, 0.98, w), CFrame.new(x0 - w / 2 + a / 2, yc, 0), graded(col, yc, H, TONES[t1]), sets, 0.16))
+				table.insert(steps, chamfered(Vector3.new(b, 0.98, w), CFrame.new(x0 + w / 2 - b / 2, yc, 0), graded(col, yc, H, TONES[t2]), sets, 0.16))
+			end
+			table.insert(steps, piece("Part", Vector3.new(w - 0.3, 0.9, w - 0.3), CFrame.new(x0, y0 + 0.45, 0), P.Mortar))
+		end
+		-- pier: 5 x 5, y 2 .. 15, 10 courses of 1.3 (blocks 1.25), two blocks a course
+		table.insert(piers, piece("Part", Vector3.new(4.5, 13.0, 4.5), CFrame.new(x0, 8.5, 0), P.Mortar))
+		local prev = nil
+		for k = 0, 9 do
+			local yc = 2 + k * 1.3 + 0.025 + 0.625
+			local s = rng:NextNumber(0.4, 0.6)
+			local w1 = 5 * s - GAP / 2
+			local w2 = 5 - w1 - GAP
+			local j1, j2 = ({ 0, 0.04, 0.07 })[rng:NextInteger(1, 3)], ({ 0, 0.04, 0.07 })[rng:NextInteger(1, 3)]
+			local ti1 = toneIndex(rng, prev)
+			local ti2 = toneIndex(rng, ti1)
+			prev = ti2
+			local sets = { "vertical", "topFrontBack", "topSides" }
+			if k % 2 == 0 then
+				table.insert(piers, chamfered(Vector3.new(w1 + j1, 1.25, 5 + 2 * j1), CFrame.new(x0 - 2.5 + w1 / 2 - j1 / 2, yc, 0), graded(P.Stone, yc, H, TONES[ti1]), sets, 0.2))
+				table.insert(piers, chamfered(Vector3.new(w2 + j2, 1.25, 5 + 2 * j2), CFrame.new(x0 + 2.5 - w2 / 2 + j2 / 2, yc, 0), graded(P.Stone, yc, H, TONES[ti2]), sets, 0.2))
+			else
+				table.insert(piers, chamfered(Vector3.new(5 + 2 * j1, 1.25, w1 + j1), CFrame.new(x0, yc, -2.5 + w1 / 2 - j1 / 2), graded(P.Stone, yc, H, TONES[ti1]), sets, 0.2))
+				table.insert(piers, chamfered(Vector3.new(5 + 2 * j2, 1.25, w2 + j2), CFrame.new(x0, yc, 2.5 - w2 / 2 + j2 / 2), graded(P.Stone, yc, H, TONES[ti2]), sets, 0.2))
+			end
+		end
+		-- bevelled capital: a carved band (chamfered underside) and the impost slab
+		table.insert(piers, chamfered(Vector3.new(5.5, 0.4, 5.5), CFrame.new(x0, 15.2, 0), graded(P.StoneDark, 15.2, H, 1), { "bottomFrontBack", "bottomSides" }, 0.2))
+		table.insert(piers, chamfered(Vector3.new(6.0, 0.7, 6.0), CFrame.new(x0, 15.75, 0), graded(P.StoneDark, 15.75, H, 0.93), { "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.2))
+		-- moss: on the ground against the lower step (passage side and outer side), a cushion on the upper step
+		-- against the pier
+		for _, sx in ipairs({ -1, 1 }) do
+			local len = rng:NextNumber(1.6, 2.2)
+			moss(mossList, rng, Vector3.new(x0 + sx * (3.25 + len * 0.18 - 0.08), 0.0, rng:NextNumber(-1.8, 1.8)), math.rad(90), len)
+		end
+		local cl = rng:NextNumber(1.0, 1.25)
+		moss(mossList, rng, Vector3.new(x0 + rng:NextNumber(-1.5, 1.5), 1.98, -(2.5 + cl * 0.18 - 0.05)), 0, cl)
+	end
+	-- ivy up the left pier's front face and the right pier's back face
+	ivy(mossList, rng, -15 + 0.8, 2.05, -2.6, 8.5)
+	ivy(mossList, rng, -15 - 0.9, 2.05, -2.6, 4.5)
+	ivy(mossList, rng, 15 - 0.8, 2.05, 2.6, 6.0)
+	merge(m, "Steps", steps, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Piers", piers, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- the arch: centre (0, 9.242), radii 14.258 - 18.158 (inner springing (+-12.5, 16.1), inner apex 23.5), 11
+	-- voussoirs with V-grooved radial joints; the springers sit on the imposts (bed at y 16.1, back cut at |x| 17.8);
+	-- the keystone is proud (0.5 above, 0.3 below, 0.3 in front and behind)
+	local cy, ri, ro, D = 9.242, 14.258, 18.158, 4.6
+	local half = math.asin(12.5 / ri)
+	local n = 11
+	local step = 2 * half / n
+	local aStart = math.pi / 2 + half
+	local prev = nil
+	for i = 0, n - 1 do
+		local key = i == (n - 1) / 2
+		local springer = i == 0 or i == n - 1
+		local a1, a2 = aStart - i * step, aStart - (i + 1) * step
+		local am = (a1 + a2) / 2
+		local rIn = if key then ri - 0.3 else ri
+		local rOut = if key then ro + 0.5 else ro
+		local depth = if key then D + 0.6 else D
+		local rm = (rIn + rOut) / 2
+		local h = (rOut - rIn) * math.cos(step / 2)
+		local dir = Vector3.new(math.cos(am), math.sin(am), 0)
+		local tan = Vector3.new(-math.sin(am), math.cos(am), 0)
+		local mid = Vector3.new(0, cy, 0) + dir * (rm * math.cos(step / 2))
+		local width = 2 * rOut * math.sin(step / 2) + (if springer then 7.6 else 0.6)
+		local cf = CFrame.fromMatrix(mid, -tan, dir)
+		local negs = {}
+		for _, bound in ipairs({ { a1, 1 }, { a2, -1 } }) do
+			local ab, s = bound[1], bound[2]
+			if springer and ((i == 0 and s == 1) or (i == n - 1 and s == -1)) then
+				-- bed on the impost and a vertical back over the pier's outer face
+				local sx = math.sign(mid.X)
+				table.insert(negs, piece("Part", Vector3.new(10, 10, depth + 2), CFrame.new(sx * 15, 16.1 - 5, 0), P.Stone))
+				table.insert(negs, piece("Part", Vector3.new(6, 20, depth + 2), CFrame.new(sx * (17.8 + 3), 18, 0), P.Stone))
+				continue
+			end
+			local ang = ab - s * (0.05 / rm)
+			local rdir = Vector3.new(math.cos(ang), math.sin(ang), 0)
+			local rtan = Vector3.new(-math.sin(ang), math.cos(ang), 0) * s
+			local centre = Vector3.new(0, cy, 0) + rdir * rm + rtan * 5
+			table.insert(negs, piece("Part", Vector3.new(20, 10, depth + 2), CFrame.fromMatrix(centre, rdir, rtan), P.Stone))
+			-- V-groove: the voussoir's edges along this joint (front and back faces) chamfered, as the top edges of a
+			-- virtual block whose top face is the joint plane
+			local jb = CFrame.fromMatrix(Vector3.new(0, cy, 0) + rdir * rm - rtan * 1, rdir, rtan)
+			for _, bz in ipairs({ 1, -1 }) do
+				table.insert(negs, negWedge(jb, Vector3.new(rOut - rIn + 0.6, 2, depth), "X", 1, bz, 0.2))
+			end
+		end
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		local color = if key then scaled(P.StoneLight, 1.03) elseif i % 2 == 0 then P.Stone else P.StoneLight
+		table.insert(arch, chamfered(Vector3.new(width, h, depth), cf, graded(color, mid.Y, H, if key then 1 else TONES[ti]), { "topFrontBack", "bottomFrontBack" }, 0.2, negs))
+	end
+	for i = 1, n - 1 do
+		local am = aStart - i * step
+		local dir = Vector3.new(math.cos(am), math.sin(am), 0)
+		local tan = Vector3.new(-math.sin(am), math.cos(am), 0)
+		table.insert(arch, piece("Part", Vector3.new(1.0, ro - ri - 0.6, D - 0.5), CFrame.fromMatrix(Vector3.new(0, cy, 0) + dir * ((ri + ro) / 2), -tan, dir), P.Mortar))
+	end
+	merge(m, "Arch", arch, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Moss", mossList, { shadow = false })
+
+	local root = m:FindFirstChild("Steps") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "stone_arch")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 09 PILLAR (kit Common.Stone_Pillar_A, 5.4 x 16.4 x 5.4; the 12 x3-scaled copies of the Plains boss arena,
+-- ServerStorage.BossArenas.Plains.Decor). A plinth of 4 stone blocks, a carved base (bevelled square torus and two
+-- octagonal fillets), a fluted octagonal shaft of 4 drums with a middle band and two astragals, a carved capital
+-- (bevelled echinus and abacus), light moss at the foot. Same size; every piece collides as before (moss excepted).
+-- Parts: Base, Shaft, Capital, Moss (4; the old one had 6).
+---------------------------------------------------------------------
+function PropsBatch2.stone_pillar(): Model
+	local m = Instance.new("Model")
+	m.Name = "stone_pillar"
+	local rng = Random.new(20261009)
+	local H = 16.4
+	local base, shaft, cap, mossList = {}, {}, {}, {}
+	-- 1. plinth: 4 blocks (2 x 2) of 2.655 with 0.09 joints over a mortar core
+	local w = (5.4 - GAP) / 2
+	local prev = nil
+	for _, ix in ipairs({ -1, 1 }) do
+		for _, iz in ipairs({ -1, 1 }) do
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			table.insert(base, chamfered(Vector3.new(w, 1.16, w), CFrame.new(ix * (w / 2 + GAP / 2), 0.58, iz * (w / 2 + GAP / 2)), graded(P.StoneDark, 0.6, H, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.15))
+		end
+	end
+	table.insert(base, piece("Part", Vector3.new(4.9, 1.1, 4.9), CFrame.new(0, 0.55, 0), P.Mortar))
+	-- 2. carved base: a bevelled square torus, an octagonal fillet and a thin octagonal ring
+	table.insert(base, chamfered(Vector3.new(4.6, 0.45, 4.6), CFrame.new(0, 1.18 + 0.225, 0), graded(P.Stone, 1.4, H, 0.93), { "topFrontBack", "topSides", "vertical" }, 0.2))
+	table.insert(base, octagon(4.1, 0.4, CFrame.new(0, 1.63 + 0.2, 0), graded(P.Stone, 1.8, H, 1)))
+	table.insert(base, octagon(3.75, 0.25, CFrame.new(0, 2.03 + 0.125, 0), graded(P.StoneDark, 2.1, H, 1)))
+	merge(m, "Base", base, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 3. shaft: astragal, 2 fluted drums, the middle band, 2 fluted drums, astragal (0.05 joints, mortar core)
+	table.insert(shaft, piece("Part", Vector3.new(2.1, 11.9, 2.1), CFrame.new(0, 2.28 + 5.95, 0), P.Mortar)) -- corners inside the flutes
+	table.insert(shaft, octagon(3.7, 0.25, CFrame.new(0, 2.28 + 0.125, 0), graded(P.StoneDark, 2.4, H, 1)))
+	table.insert(shaft, octagon(3.85, 0.8, CFrame.new(0, 7.6 + 0.4, 0), graded(P.StoneDark, 8.0, H, 1)))
+	table.insert(shaft, octagon(3.7, 0.25, CFrame.new(0, 13.9 + 0.125, 0), graded(P.StoneDark, 14.0, H, 1)))
+	local tprev = nil
+	for _, span in ipairs({ { 2.53, 7.6 }, { 8.4, 13.9 } }) do
+		local hDrum = (span[2] - span[1] - 0.05) / 2
+		for d = 0, 1 do
+			local y0 = span[1] + d * (hDrum + 0.05) + 0.025
+			local ti = toneIndex(rng, tprev)
+			tprev = ti
+			table.insert(shaft, octagon(3.4, hDrum - 0.025, CFrame.new(0, y0 + hDrum / 2, 0), graded(P.Stone, y0 + hDrum / 2, H, TONES[ti]), true))
+		end
+	end
+	merge(m, "Shaft", shaft, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 4. capital: echinus (square, deep bevel underneath) and the abacus (all edges chamfered)
+	local echinusCF = CFrame.new(0, 14.15 + 0.5, 0)
+	local vert = {}
+	for _, e in ipairs(EDGES.vertical) do
+		table.insert(vert, negWedge(echinusCF, Vector3.new(4.6, 1.0, 4.6), e[1], e[2], e[3], 0.15))
+	end
+	table.insert(cap, chamfered(Vector3.new(4.6, 1.0, 4.6), echinusCF, graded(P.Stone, 14.65, H, 1), { "bottomFrontBack", "bottomSides" }, 0.5, vert))
+	table.insert(cap, chamfered(Vector3.new(5.4, 1.25, 5.4), CFrame.new(0, 15.15 + 0.625, 0), graded(P.StoneDark, 15.8, H, 1), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.2))
+	merge(m, "Capital", cap, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 5. light moss: three cushions on the plinth against the base (nothing outside the plinth: same footprint)
+	moss(mossList, rng, Vector3.new(rng:NextNumber(-1.2, 1.2), 1.16, -(2.3 + 0.2 - 0.05)), 0, 1.1)
+	moss(mossList, rng, Vector3.new(2.3 + 0.18 - 0.05, 1.16, rng:NextNumber(-1.2, 1.2)), math.rad(90), 1.0)
+	moss(mossList, rng, Vector3.new(-(2.3 + 0.18 - 0.05), 1.16, rng:NextNumber(-1.2, 1.2)), math.rad(90), 0.95)
+	merge(m, "Moss", mossList, { shadow = false })
+
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "stone_pillar")
+	return m
+end
+
+---------------------------------------------------------------------
 -- install: build, replace ServerStorage.MapProps.<propId> (the old template goes to MapProps._Previous)
 ---------------------------------------------------------------------
 function PropsBatch2.stats(model: Instance): (number, number, number)
@@ -543,6 +1021,6 @@ function PropsBatch2.install(propId: string): string
 	return string.format("installed ServerStorage.MapProps.%s: %d parts (%d unions), about %d triangles, bbox %.2f x %.2f x %.2f, built in %.1f s", propId, parts, unions, triangles, size.X, size.Y, size.Z, os.clock() - t0)
 end
 
-PropsBatch2.BUILDERS = { portal_frame = true }
+PropsBatch2.BUILDERS = { portal_frame = true, hub_wall = true, stone_arch = true, stone_pillar = true }
 
 return PropsBatch2
