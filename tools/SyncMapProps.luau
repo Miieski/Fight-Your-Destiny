@@ -127,6 +127,17 @@ SyncMapProps.RULES = {
 	{ propId = "egg_station", names = { "Station_EggStation" }, hubNames = { "EggStation" } },
 	{ propId = "moon_gazebo", names = { "Station_RebirthShop" }, hubNames = { "RebirthShop" } },
 	{ propId = "fruit_stall", names = { "Market_Awning_A" } },
+	-- batch D: 12 training area, 13 boards (the 5 hub Leaderboard_<Stat>, the codes board, the team board), 14a the
+	-- test zone's rustic Bench_A (now an exact copy of the hub bench; the hub benches themselves are the reference and
+	-- are not synced), 14b the street lamps (Hub.Decor.Props.Lamps)
+	{ propId = "training_area", names = { "Station_Trainer" }, hubNames = { "Trainer" } },
+	{ propId = "leaderboard", names = { "Leaderboard_Board" }, match = function(m)
+		return m.Parent ~= nil and m.Parent == workspace:FindFirstChild("Hub") and string.match(m.Name, "^Leaderboard_%w+$") ~= nil
+	end },
+	{ propId = "codes_board", names = { "Station_CodesBoard" }, hubNames = { "CodesBoard" } },
+	{ propId = "team_board", names = { "Station_TeamBoard" }, hubNames = { "TeamBoard" } },
+	{ propId = "park_bench", names = { "Bench_A" } },
+	{ propId = "street_lamp", names = { "LampPost_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

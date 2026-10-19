@@ -2802,6 +2802,708 @@ function PropsBatch2.fruit_stall(): Model
 end
 
 ---------------------------------------------------------------------
+-- shared (batch D)
+---------------------------------------------------------------------
+-- a frame CFrame at `pos` whose local Y is `up` (any X)
+local function frameY(pos: Vector3, up: Vector3): CFrame
+	local u = up.Unit
+	local helper = if math.abs(u.Y) < 0.9 then Vector3.yAxis else Vector3.xAxis
+	local x = helper:Cross(u).Unit
+	return CFrame.fromMatrix(pos, x, u)
+end
+
+-- a square bar from a to b (thickness t, square), as a piece
+local function bar(a: Vector3, b: Vector3, t: number, color: Color3): BasePart
+	return piece("Part", Vector3.new(t, t, (b - a).Magnitude + t * 0.5), CFrame.lookAt((a + b) / 2, b), color)
+end
+
+-- a slatted crate (w x h x d, its floor centre at cf): corner posts, 2 rows of slats on each side, a dark core
+local function slatCrate(list: { BasePart }, rng: Random, cf: CFrame, w: number, h: number, d: number, colors: { Color3 }, core: Color3)
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			table.insert(list, timber(Vector3.new(0.22, h, 0.22), cf * CFrame.new(sx * (w / 2 - 0.11), h / 2, sz * (d / 2 - 0.11)), scaled(colors[3], 0.85), 0.04))
+		end
+	end
+	local rowH = (h - 0.1) / 2 - 0.06
+	for r = 0, 1 do
+		local y = 0.05 + rowH / 2 + r * (rowH + 0.12)
+		for _, sz in ipairs({ -1, 1 }) do
+			table.insert(list, timber(Vector3.new(w - 0.2, rowH, 0.1), cf * CFrame.new(0, y, sz * (d / 2 - 0.02)), colors[rng:NextInteger(1, 3)], 0.03))
+		end
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(list, timber(Vector3.new(0.1, rowH, d - 0.2), cf * CFrame.new(sx * (w / 2 - 0.02), y, 0), colors[rng:NextInteger(1, 3)], 0.03))
+		end
+	end
+	-- a lid of 3 planks
+	for i = -1, 1 do
+		table.insert(list, timber(Vector3.new(w - 0.06, 0.12, d / 3 - 0.05), cf * CFrame.new(0, h - 0.06, i * d / 3), colors[rng:NextInteger(1, 3)], 0.03))
+	end
+	table.insert(list, piece("Part", Vector3.new(w - 0.3, h - 0.3, d - 0.3), cf * CFrame.new(0, h / 2, 0), core))
+end
+
+-- an iron S-scroll in the plane spanned by `out` (horizontal) and Y, from `root` (on a pole) outward: a quarter arc up
+-- then a small curl back, made of short square bars
+local function scroll(list: { BasePart }, root: Vector3, out: Vector3, r: number, color: Color3, t: number)
+	local pts = {}
+	-- main arc: centre root + out * r, from angle 180 (the root) down and out to angle 270, up the far side to 360
+	local c1 = root + out * r
+	for k = 0, 6 do
+		local a = math.rad(180 + k * 30)
+		table.insert(pts, c1 + out * (math.cos(a) * r) + Vector3.new(0, math.sin(a) * r, 0) * -1)
+	end
+	-- the curl at the end: a smaller circle turning inward
+	local last = pts[#pts]
+	local r2 = r * 0.45
+	local c2 = last - Vector3.new(0, r2, 0)
+	for k = 1, 5 do
+		local a = math.rad(90 - k * 55)
+		table.insert(pts, c2 + out * (math.cos(a) * r2) + Vector3.new(0, math.sin(a) * r2, 0))
+	end
+	for i = 1, #pts - 1 do
+		table.insert(list, bar(pts[i], pts[i + 1], t, color))
+	end
+end
+
+---------------------------------------------------------------------
+-- 12 TRAINING AREA (kit Hub.Station_Trainer, 24.4 x 11.4 x 18; Hub.Trainer: the Trainer's marker, its Interact
+-- prompt opens Stats; NpcSpot + NPC stand-in). A sand yard (today's 22 x 18) inside a border of cut stones, today's
+-- fences (back and right) rebuilt as chamfered posts on footing stones with pointed tops and nailed rails, the weapon
+-- rack (2 uprights on cross feet, 2 bars with pegs) holding 2 wooden practice swords, an iron sword, 2 spears and 2
+-- round shields, 2 training dummies (post on cross feet, a straw-stuffed sack body tied with rope, a sack head, arm bar
+-- with straw ends, a painted target on the chest), 2 archery targets on tripods (straw face with painted rings, arrows),
+-- the banner (stone foot, pole with a gold finial, swallow-tail cloth with gold trim and emblem), 2 slatted crates; the
+-- synced `barrel` prop stands next to them on every copy (a custom child). Same footprint; the fences, rack, dummies,
+-- targets, banner and crates collide as before.
+-- Parts: Ground, Fence, Rack, Dummies, Targets, Banner, Crates (7).
+---------------------------------------------------------------------
+function PropsBatch2.training_area(): Model
+	local m = Instance.new("Model")
+	m.Name = "training_area"
+	local rng = Random.new(20261212)
+	BEVEL_SELF = true
+	local H = 11.4
+	local SAND = rgb(226, 200, 150)
+	local BURLAP = rgb(196, 160, 104)
+	local STRAW = { rgb(236, 200, 96), rgb(222, 186, 88), rgb(206, 172, 82) }
+	local RED, WHITE = rgb(212, 52, 60), rgb(245, 246, 250)
+	local ground, fence, rack, dummies, targets, banner, crates = {}, {}, {}, {}, {}, {}, {}
+
+	-- 1. ground: the sand (today's 22 x 18 at 0.4), a few darker patches and pebbles, a border of cut stones
+	table.insert(ground, piece("Part", Vector3.new(21.0, 0.38, 17.0), CFrame.new(0, 0.19, 0), SAND))
+	for _ = 1, 5 do
+		local cf = CFrame.new(rng:NextNumber(-8, 8), 0.39, rng:NextNumber(-6.5, 6.5)) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0)
+		table.insert(ground, chamfered(Vector3.new(rng:NextNumber(2.2, 3.6), 0.04, rng:NextNumber(1.4, 2.4)), cf, scaled(SAND, 0.92), { "vertical" }, 0.4))
+	end
+	for _ = 1, 9 do
+		local s = rng:NextNumber(0.25, 0.45)
+		table.insert(ground, chamfered(Vector3.new(s, s * 0.5, s * 0.8), CFrame.new(rng:NextNumber(-9.5, 9.5), 0.38 + s * 0.2, rng:NextNumber(-7.5, 7.5)) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), scaled(P.Stone, rng:NextNumber(0.85, 1.0)), { "vertical", "topFrontBack", "topSides" }, s * 0.2))
+	end
+	local function run(fixedAxis: string, fixed: number, a: number, b: number)
+		local pos = a
+		local prev = nil
+		while b - pos > 0.05 do
+			local L = rng:NextNumber(1.4, 2.4)
+			if b - pos - L - 0.09 < 0.8 then
+				L = b - pos
+			end
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			local size, cf
+			if fixedAxis == "z" then
+				size, cf = Vector3.new(L, 0.5, 0.62 + jit(rng)), CFrame.new(pos + L / 2, 0.25, fixed)
+			else
+				size, cf = Vector3.new(0.62 + jit(rng), 0.5, L), CFrame.new(fixed, 0.25, pos + L / 2)
+			end
+			table.insert(ground, chamfered(size, cf, graded(P.Stone, 0.25, H, TONES[ti]), { "topFrontBack", "topSides" }, 0.1))
+			pos += L + 0.09
+		end
+	end
+	run("z", -8.69, -11.0, 11.0)
+	run("z", 8.69, -11.0, 11.0)
+	run("x", -10.69, -8.38, 8.38)
+	run("x", 10.69, -8.38, 8.38)
+	table.insert(ground, piece("Part", Vector3.new(21.9, 0.36, 17.9), CFrame.new(0, 0.18, 0), P.Mortar))
+	moss(ground, rng, Vector3.new(-11.0 - 0.2, 0, -5.5), math.rad(90), 1.4)
+	moss(ground, rng, Vector3.new(6.0, 0, -9.0 - 0.2), 0, 1.5)
+	merge(m, "Ground", ground, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. fences (today's posts and rails): posts on footing stones, pointed tops, nailed rails
+	local posts = { Vector3.new(-11.5, 0, 8.5), Vector3.new(-3.5, 0, 8.5), Vector3.new(4.5, 0, 8.5), Vector3.new(11.5, 0, 8.5), Vector3.new(11.5, 0, 0.5), Vector3.new(11.5, 0, -7.5) }
+	for _, p in ipairs(posts) do
+		table.insert(fence, chamfered(Vector3.new(1.2, 0.4, 1.2), CFrame.new(p.X, 0.2, p.Z), graded(P.StoneDark, 0.2, H, 0.93), { "topFrontBack", "topSides" }, 0.1))
+		local negs = {}
+		local cf = CFrame.new(p.X, 2.3, p.Z)
+		for _, e in ipairs(EDGES.vertical) do
+			table.insert(negs, negWedge(cf, Vector3.new(0.9, 3.8, 0.9), e[1], e[2], e[3], 0.14))
+		end
+		table.insert(fence, chamfered(Vector3.new(0.9, 3.8, 0.9), cf, graded(P.WoodDark, 2.3, H, rng:NextNumber(0.93, 1)), { "topFrontBack", "topSides" }, 0.32, negs))
+	end
+	local function rails(p0: Vector3, p1: Vector3)
+		local d = (p1 - p0).Unit
+		local mid = (p0 + p1) / 2
+		local len = (p1 - p0).Magnitude + 0.4
+		for _, y in ipairs({ 1.6, 3.2 }) do
+			local cf = CFrame.lookAt(Vector3.new(mid.X, y, mid.Z), Vector3.new(mid.X, y, mid.Z) + d) * CFrame.Angles(0, math.rad(90), 0)
+			table.insert(fence, timber(Vector3.new(len, 0.62, 0.36), cf, graded(P.WoodMid, y, H, TONES[rng:NextInteger(1, 3)]), 0.08))
+			for _, s in ipairs({ -1, 1 }) do
+				local nailAt = Vector3.new(mid.X, y, mid.Z) + d * (s * (len / 2 - 0.35))
+				local side = Vector3.new(-d.Z, 0, d.X)
+				for _, dy in ipairs({ -0.15, 0.15 }) do
+					rivet(fence, nailAt + side * 0.19 + Vector3.new(0, dy, 0), 0.11)
+					rivet(fence, nailAt - side * 0.19 + Vector3.new(0, dy, 0), 0.11)
+				end
+			end
+		end
+	end
+	for i = 1, 3 do
+		rails(posts[i], posts[i + 1])
+	end
+	rails(posts[4], posts[5])
+	rails(posts[5], posts[6])
+	merge(m, "Fence", fence, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 3. the weapon rack (today's: uprights at x -10.4 / -5.6, bars at y 1.6 / 4.0, z 6.5)
+	for _, x in ipairs({ -10.4, -5.6 }) do
+		table.insert(rack, timber(Vector3.new(0.6, 4.5, 0.6), CFrame.new(x, 2.65, 6.5), graded(P.WoodDark, 2.6, H, 1), 0.1))
+		table.insert(rack, timber(Vector3.new(0.5, 0.4, 1.8), CFrame.new(x, 0.6, 6.5), graded(P.WoodDark, 0.6, H, 0.93), 0.08))
+		table.insert(rack, chamfered(Vector3.new(0.72, 0.2, 0.72), CFrame.new(x, 5.0, 6.5), graded(P.WoodDark, 5, H, 0.93), { "topFrontBack", "topSides" }, 0.08))
+	end
+	for _, y in ipairs({ 1.6, 4.0 }) do
+		table.insert(rack, timber(Vector3.new(5.6, 0.45, 0.7), CFrame.new(-8.0, y, 6.5), graded(P.WoodMid, y, H, 0.93), 0.08))
+	end
+	for i = 0, 3 do
+		table.insert(rack, piece("Part", Vector3.new(0.14, 0.14, 0.5), CFrame.new(-9.6 + i * 1.07, 4.1, 6.05), P.WoodDark))
+	end
+	-- weapons standing tip down on the sand, leaning back on the top bar (8 degrees)
+	local lean = CFrame.Angles(math.rad(8), 0, 0)
+	local function sword(x: number, blade: Color3, guard: Color3)
+		local base = CFrame.new(x, 0.42, 5.55) * lean -- the tip
+		table.insert(rack, chamfered(Vector3.new(0.36, 2.8, 0.12), base * CFrame.new(0, 1.65, 0), blade, { "vertical" }, 0.08))
+		table.insert(rack, chamfered(Vector3.new(0.25, 0.25, 0.12), base * CFrame.new(0, 0.25, 0) * CFrame.Angles(0, 0, math.rad(45)), blade, {}, 0))
+		table.insert(rack, timber(Vector3.new(1.1, 0.18, 0.24), base * CFrame.new(0, 3.1, 0), guard, 0.04))
+		table.insert(rack, piece("Part", Vector3.new(0.18, 0.75, 0.18), base * CFrame.new(0, 3.55, 0), rgb(92, 56, 40)))
+		table.insert(rack, piece("Part", Vector3.new(0.26, 0.26, 0.26), base * CFrame.new(0, 4.0, 0) * CFrame.Angles(math.rad(45), math.rad(45), 0), guard))
+	end
+	sword(-9.2, P.WoodLight, P.WoodMid)
+	sword(-8.4, P.WoodLight, P.WoodMid)
+	sword(-7.6, P.IronWorn, P.Brass)
+	for _, x in ipairs({ -7.0, -6.75 }) do
+		local base = CFrame.new(x, 0.42, 5.7) * CFrame.Angles(math.rad(6), 0, math.rad(x < -6.9 and 3 or -3))
+		table.insert(rack, timber(Vector3.new(0.16, 5.4, 0.16), base * CFrame.new(0, 2.7, 0), P.WoodMid, 0.03))
+		table.insert(rack, piece("Part", Vector3.new(0.2, 0.3, 0.2), base * CFrame.new(0, 5.4, 0), P.Iron))
+		table.insert(rack, chamfered(Vector3.new(0.34, 0.75, 0.1), base * CFrame.new(0, 5.9, 0), P.IronWorn, { "vertical" }, 0.13))
+		table.insert(rack, chamfered(Vector3.new(0.2, 0.2, 0.1), base * CFrame.new(0, 6.32, 0) * CFrame.Angles(0, 0, math.rad(45)), P.IronWorn, {}, 0))
+	end
+	-- 2 round shields on the uprights' fronts
+	for i, x in ipairs({ -10.4, -5.6 }) do
+		local f = CFrame.new(x, 3.0, 6.1) * CFrame.Angles(math.rad(90), 0, 0)
+		table.insert(rack, octagon(2.0, 0.14, f * CFrame.new(0, 0.05, 0), P.Iron))
+		table.insert(rack, octagon(1.8, 0.16, f * CFrame.new(0, -0.05, 0), if i == 1 then rgb(64, 120, 212) else RED))
+		table.insert(rack, timber(Vector3.new(0.3, 0.18, 1.7), f * CFrame.new(0, -0.1, 0), WHITE, 0.03))
+		table.insert(rack, octagon(0.55, 0.22, f * CFrame.new(0, -0.17, 0), P.Iron))
+		for k = 0, 5 do
+			local a = k * math.pi / 3
+			rivet(rack, (f * CFrame.new(math.cos(a) * 0.82, -0.14, math.sin(a) * 0.82)).Position, 0.1)
+		end
+	end
+	merge(m, "Rack", rack, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 4. two training dummies (today's at (-3, 2), a new one at (-6.6, -2.4), clear of the rack)
+	for di, spot in ipairs({ { -3, 2, 0 }, { -6.6, -2.4, math.rad(18) } }) do
+		local f = CFrame.new(spot[1], 0.4, spot[2]) * CFrame.Angles(0, spot[3], 0)
+		table.insert(dummies, timber(Vector3.new(2.6, 0.35, 0.45), f * CFrame.new(0, 0.18, 0), graded(P.WoodDark, 0.5, H, 1), 0.06))
+		table.insert(dummies, timber(Vector3.new(0.45, 0.35, 2.6), f * CFrame.new(0, 0.2, 0), graded(P.WoodDark, 0.5, H, 0.93), 0.06))
+		table.insert(dummies, octagon(0.7, 6.4, f * CFrame.new(0, 3.2, 0), graded(P.WoodDark, 3.2, H, 1)))
+		-- the sack body, 2 rope ties, straw poking out at the top and bottom
+		table.insert(dummies, chamfered(Vector3.new(2.6, 2.8, 1.6), f * CFrame.new(0, 3.9, 0), BURLAP, { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.35))
+		for _, y in ipairs({ 3.0, 4.85 }) do
+			table.insert(dummies, chamfered(Vector3.new(2.66, 0.2, 1.66), f * CFrame.new(0, y, 0), scaled(ROPE, 0.8), { "vertical" }, 0.38))
+		end
+		for k = 0, 5 do
+			local a = k * math.pi / 3 + rng:NextNumber(-0.2, 0.2)
+			local dir = Vector3.new(math.cos(a) * 1.0, 0, math.sin(a) * 0.55)
+			table.insert(dummies, piece("Part", Vector3.new(0.08, 0.5, 0.08), f * CFrame.new(dir + Vector3.new(0, 2.45, 0)) * CFrame.Angles(rng:NextNumber(-0.5, 0.5), 0, rng:NextNumber(-0.5, 0.5)), STRAW[rng:NextInteger(1, 3)]))
+		end
+		-- the painted target on the chest (front, -Z)
+		local chest = f * CFrame.new(0, 4.0, -0.82) * CFrame.Angles(math.rad(90), 0, 0)
+		table.insert(dummies, octagon(1.4, 0.04, chest, RED))
+		table.insert(dummies, octagon(0.9, 0.06, chest * CFrame.new(0, -0.01, 0), WHITE))
+		table.insert(dummies, octagon(0.42, 0.08, chest * CFrame.new(0, -0.02, 0), RED))
+		-- arm bar with straw bundles at the ends
+		table.insert(dummies, timber(Vector3.new(5.6, 0.45, 0.45), f * CFrame.new(0, 5.0, 0), graded(P.WoodDark, 5, H, 0.93), 0.07))
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(dummies, chamfered(Vector3.new(0.8, 0.7, 0.7), f * CFrame.new(sx * 2.95, 5.0, 0), STRAW[di], { "vertical", "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, 0.16))
+			table.insert(dummies, chamfered(Vector3.new(0.86, 0.14, 0.76), f * CFrame.new(sx * 2.95, 5.0, 0), scaled(ROPE, 0.8), { "vertical" }, 0.16))
+		end
+		-- the sack head with a rope tie at the neck and 2 stitched eyes
+		table.insert(dummies, fruitPiece(1.8, f * CFrame.new(0, 6.55, 0), scaled(BURLAP, 1.06)))
+		table.insert(dummies, octagon(0.95, 0.22, f * CFrame.new(0, 5.6, 0), scaled(ROPE, 0.8)))
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(dummies, piece("Part", Vector3.new(0.3, 0.07, 0.05), f * CFrame.new(sx * 0.38, 6.7, -0.92) * CFrame.Angles(0, 0, math.rad(45)), rgb(60, 40, 30)))
+			table.insert(dummies, piece("Part", Vector3.new(0.3, 0.07, 0.05), f * CFrame.new(sx * 0.38, 6.7, -0.92) * CFrame.Angles(0, 0, math.rad(-45)), rgb(60, 40, 30)))
+		end
+	end
+	merge(m, "Dummies", dummies, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 5. two archery targets on tripods (today's at (6.5, 4.2, 5) facing yaw 70, a new one by the right fence)
+	for ti2, spec in ipairs({ { Vector3.new(6.5, 4.2, 5.0), math.rad(70) }, { Vector3.new(8.6, 3.9, -3.4), math.rad(140) } }) do
+		local C, yaw = spec[1], spec[2]
+		local n = Vector3.new(math.cos(yaw), 0, -math.sin(yaw)) -- the face's normal (today's cylinder axis)
+		local up = Vector3.yAxis
+		local t = n:Cross(up).Unit
+		local face = frameY(C, n)
+		table.insert(targets, prism16(4.6, 0.6, face, rgb(236, 200, 96)))
+		table.insert(targets, prism16(4.75, 0.3, face * CFrame.new(0, -0.1, 0), scaled(ROPE, 0.82)))
+		local rings = { { 3.7, rgb(212, 52, 60) }, { 2.8, WHITE }, { 1.9, rgb(212, 52, 60) }, { 1.0, rgb(255, 201, 60) } }
+		for k, r in ipairs(rings) do
+			table.insert(targets, prism16(r[1], 0.05, face * CFrame.new(0, 0.3 + 0.025 + (k - 1) * 0.02, 0), r[2]))
+		end
+		-- tripod: 2 front legs and a back leg, a cross bar under the face
+		local foot = Vector3.new(C.X, 0.4, C.Z)
+		local feet = { foot + t * 1.9 - n * 0.4, foot - t * 1.9 - n * 0.4, foot - n * 2.4 }
+		local tops = { C + up * 1.6 - n * 0.42 + t * 0.5, C + up * 1.6 - n * 0.42 - t * 0.5, C + up * 1.2 - n * 0.5 }
+		for k = 1, 3 do
+			table.insert(targets, bar(feet[k], tops[k], 0.42, graded(P.WoodDark, 3, H, if k == 3 then 0.93 else 1)))
+		end
+		table.insert(targets, bar(C - up * 1.75 - n * 0.4 + t * 1.45, C - up * 1.75 - n * 0.4 - t * 1.45, 0.34, P.WoodDark))
+		-- arrows stuck in the face
+		for _, o in ipairs({ { 0.35, 0.5, 0.15 }, { -0.9, -0.3, -0.1 }, { 0.6, -1.1, 0.05 } }) do
+			local hit = C + t * o[1] + up * o[2] + n * 0.32
+			local dir = (n + t * o[3] + up * 0.08).Unit
+			local tail = hit + dir * 1.5
+			table.insert(targets, bar(hit - dir * 0.2, tail, 0.07, P.WoodLight))
+			for _, s in ipairs({ -1, 1 }) do
+				table.insert(targets, piece("Part", Vector3.new(0.04, 0.2, 0.36), CFrame.lookAt(tail - dir * 0.2, tail + dir) * CFrame.new(0, s * 0.08, 0) * CFrame.Angles(0, 0, math.rad(s * 25)), if ti2 == 1 then RED else WHITE))
+			end
+		end
+	end
+	merge(m, "Targets", targets, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 6. the banner (today's pole at (-10.4, z 8.5), cloth at z 7.9 facing -Z)
+	table.insert(banner, chamfered(Vector3.new(1.3, 0.6, 1.3), CFrame.new(-10.4, 0.7, 8.5), graded(P.StoneDark, 0.7, H, 1), { "topFrontBack", "topSides" }, 0.12))
+	table.insert(banner, octagon(0.6, 10.8, CFrame.new(-10.4, 5.8, 8.5), graded(P.WoodDark, 5.8, H, 1)))
+	table.insert(banner, octagon(0.85, 0.3, CFrame.new(-10.4, 1.15, 8.5), P.Iron))
+	table.insert(banner, octagon(0.5, 0.35, CFrame.new(-10.4, 11.3, 8.5), P.Gold))
+	table.insert(banner, fruitPiece(0.6, CFrame.new(-10.4, 11.7, 8.5) * CFrame.Angles(0, math.pi / 4, 0), P.Gold))
+	table.insert(banner, timber(Vector3.new(4.0, 0.36, 0.36), CFrame.new(-10.4, 10.6, 8.2), P.WoodDark, 0.06))
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(banner, piece("Part", Vector3.new(0.26, 0.26, 0.26), CFrame.new(-10.4 + sx * 2.05, 10.6, 8.2) * CFrame.Angles(math.rad(45), math.rad(45), 0), P.Gold))
+	end
+	table.insert(banner, piece("Part", Vector3.new(3.4, 4.6, 0.16), CFrame.new(-10.4, 8.05, 7.95), RED))
+	for _, sx in ipairs({ -1, 1 }) do
+		-- the swallow tail: a half-width panel under each side, cut on the inside
+		local tailCF = CFrame.new(-10.4 + sx * 0.85, 5.15, 7.95)
+		table.insert(banner, chamfered(Vector3.new(1.7, 1.2, 0.16), tailCF, RED, {}, 0, { negWedge(tailCF, Vector3.new(1.7, 1.2, 0.16), "Z", -sx, -1, 1.1) }))
+	end
+	for _, y in ipairs({ 10.3, 5.75 }) do
+		table.insert(banner, piece("Part", Vector3.new(3.42, 0.16, 0.2), CFrame.new(-10.4, y, 7.94), P.Gold))
+	end
+	table.insert(banner, piece("Part", Vector3.new(1.4, 1.4, 0.08), CFrame.new(-10.4, 8.2, 7.84) * CFrame.Angles(0, 0, math.rad(45)), P.Gold))
+	table.insert(banner, piece("Part", Vector3.new(0.18, 1.6, 0.06), CFrame.new(-10.4, 8.25, 7.78), RED))
+	table.insert(banner, piece("Part", Vector3.new(0.8, 0.16, 0.06), CFrame.new(-10.4, 7.7, 7.78), RED))
+	merge(m, "Banner", banner, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 7. two slatted crates by the left border (the barrel prop stands next to them)
+	local CR = { rgb(214, 150, 92), rgb(199, 139, 85), rgb(184, 128, 79) }
+	slatCrate(crates, rng, CFrame.new(-9.2, 0.4, -6.9) * CFrame.Angles(0, math.rad(8), 0), 2.2, 2.0, 2.2, CR, rgb(81, 45, 26))
+	slatCrate(crates, rng, CFrame.new(-9.1, 2.4, -6.8) * CFrame.Angles(0, math.rad(-14), 0), 1.8, 1.6, 1.8, CR, rgb(81, 45, 26))
+	merge(m, "Crates", crates, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	local root = m:FindFirstChild("Ground") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "training_area")
+	BEVEL_SELF = false
+	return m
+end
+-- where the trainer's barrel prop stands (model space) and its scale
+PropsBatch2.TRAINER_BARREL = { CFrame.new(-9.4, 0.4, -3.9) * CFrame.Angles(0, math.rad(25), 0), 0.8 }
+
+---------------------------------------------------------------------
+-- 13 BOARDS. LEADERBOARD (kit Hub.Leaderboard_Board, 14 x 19.5 x 3; the hub's 5 Leaderboard_<Stat>: BoardGui on
+-- "Screen", nothing writes it yet). A stone base of slabs on a step, thick posts (chamfered, iron bands, pegs) on
+-- footing blocks, top and bottom beams running past the posts, a backing of vertical planks, a moulding around the
+-- kept Screen (same part, same size and place: the SurfaceGui fits as before), iron corner brackets with rivets, a
+-- small gable of blue shingles over the top beam and the gold trophy on its ridge.
+-- Parts: Base, Frame, Iron, Roof, Trophy, Screen (6).
+---------------------------------------------------------------------
+function PropsBatch2.leaderboard(): Model
+	local m = Instance.new("Model")
+	m.Name = "leaderboard"
+	local rng = Random.new(20261301)
+	BEVEL_SELF = true
+	local H = 19.5
+	local base, frame, iron, roof, trophy = {}, {}, {}, {}, {}
+	slabs(base, rng, -7.0, 7.0, 0, 0.6, 3.0, 4, scaled(P.StoneDark, 0.93), H, 0.14)
+	slabs(base, rng, -6.6, 6.6, 0.6, 0.45, 2.4, 3, P.StoneDark, H, 0.12)
+	merge(m, "Base", base, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(frame, timber(Vector3.new(1.2, 15.95, 1.2), CFrame.new(sx * 5.8, 1.05 + 7.975, 0), graded(P.WoodDark, 9, H, 1), 0.22))
+		band(iron, sx * 5.8 - 0.6, sx * 5.8 + 0.6, -0.6, 0.6, 1.5, 0.4)
+		band(iron, sx * 5.8 - 0.6, sx * 5.8 + 0.6, -0.6, 0.6, 15.2, 0.4)
+		for _, y in ipairs({ 16.1, 16.7, 1.4, 1.8 }) do
+			table.insert(frame, piece("Part", Vector3.new(0.26, 0.26, 1.6), CFrame.new(sx * 5.8, y, 0), LOG_END))
+		end
+		-- corner brackets (front and back) where the beams meet the posts
+		for _, fz in ipairs({ -1, 1 }) do
+			for _, y in ipairs({ 15.35, 2.45 }) do
+				local up = if y > 9 then -1 else 1
+				table.insert(iron, piece("Part", Vector3.new(1.2, 0.3, 0.06), CFrame.new(sx * 5.2, y, fz * 0.72), P.Iron))
+				table.insert(iron, piece("Part", Vector3.new(0.3, 1.2, 0.06), CFrame.new(sx * 4.75, y + up * 0.45, fz * 0.72), P.Iron))
+				rivet(iron, Vector3.new(sx * 5.5, y, fz * 0.76), 0.12)
+				rivet(iron, Vector3.new(sx * 4.75, y + up * 0.8, fz * 0.76), 0.12)
+			end
+		end
+	end
+	table.insert(frame, timber(Vector3.new(14.0, 1.2, 1.4), CFrame.new(0, 16.4, 0), graded(P.WoodDark, 16.4, H, 0.93), 0.2))
+	table.insert(frame, timber(Vector3.new(13.4, 0.8, 1.2), CFrame.new(0, 1.6, 0), graded(P.WoodDark, 1.6, H, 0.93), 0.16))
+	-- backing: 6 vertical planks over a dark core, the moulding around the screen
+	table.insert(frame, piece("Part", Vector3.new(10.8, 13.8, 0.4), CFrame.new(0, 9.0, 0.05), rgb(81, 45, 26)))
+	local prev = nil
+	for i = 0, 5 do
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(frame, timber(Vector3.new(1.78, 13.9, 0.3), CFrame.new(-4.5 + i * 1.8, 9.0, 0.12), graded(P.WoodMid, 9, H, TONES[ti]), 0.06))
+	end
+	for _, sy in ipairs({ -1, 1 }) do
+		table.insert(frame, timber(Vector3.new(11.0, 0.4, 0.3), CFrame.new(0, 8.6 + sy * 6.5, -0.45), graded(P.WoodDark, 9, H, 1), 0.08))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(frame, timber(Vector3.new(0.4, 13.4, 0.3), CFrame.new(sx * 5.3, 8.6, -0.45), graded(P.WoodDark, 9, H, 1), 0.08))
+	end
+	merge(m, "Frame", frame, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Iron", iron, {})
+	plain(m, "Screen", Vector3.new(10.2, 12.6, 0.2), CFrame.new(0, 8.6, -0.4), rgb(92, 98, 110), { collide = true })
+	shingleRoof(roof, roof, rng, { x0 = -6.9, x1 = 6.9, e = 1.25, yE = 17.0, yR = 17.85, color = rgb(64, 120, 212), ridge = rgb(47, 92, 170), overhang = 0.2 })
+	merge(m, "Roof", roof, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+	-- the trophy on the ridge (today's place: cup centre y 18.85)
+	table.insert(trophy, octagon(1.3, 0.35, CFrame.new(0, 18.05, 0), scaled(P.Gold, 0.9)))
+	table.insert(trophy, octagon(0.45, 0.5, CFrame.new(0, 18.45, 0), P.Gold))
+	local cupPlanes = { { 0, 1, 0, 0.55 }, { 0, -1, 0, 0.55 } }
+	for k = 0, 7 do
+		-- 8 sides flaring upward: radius 0.75 at the middle, about 0.98 at the rim and 0.52 at the foot
+		local a = k * math.pi / 4 + math.pi / 8
+		local n = Vector3.new(math.cos(a), -0.42, math.sin(a)).Unit
+		table.insert(cupPlanes, { n.X, n.Y, n.Z, n:Dot(Vector3.new(math.cos(a), 0, math.sin(a)) * 0.75) })
+	end
+	table.insert(trophy, convexSolid(Vector3.new(-1.0, -0.55, -1.0), Vector3.new(1.0, 0.55, 1.0), CFrame.new(0, 19.25, 0), P.Gold, cupPlanes))
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(trophy, piece("Part", Vector3.new(0.3, 0.6, 0.14), CFrame.new(sx * 0.98, 19.25, 0), P.Gold))
+	end
+	merge(m, "Trophy", trophy, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "leaderboard")
+	BEVEL_SELF = false
+	return m
+end
+
+-- the shared frame of the codes board and the team board (kits Hub.Station_CodesBoard / Station_TeamBoard, 13.4 wide):
+-- stone footing blocks, posts, a top beam under the roof, a bottom rail, a planked backing, the board with a moulding,
+-- iron brackets, a gable of shingles (colour, ridge)
+local function noticeFrame(m: Model, rng: Random, H: number, roofColor: Color3, ridgeColor: Color3)
+	local base, frame, iron, roof = {}, {}, {}, {}
+	for _, sx in ipairs({ -1, 1 }) do
+		pier2(base, rng, { cx = sx * 5.4, cz = 0, w = 1.8, d = 1.8, y0 = 0, y1 = 0.8, n = 2, color = P.StoneDark, H = H, c = 0.1 })
+		table.insert(frame, timber(Vector3.new(1.0, 8.8, 1.0), CFrame.new(sx * 5.4, 0.8 + 4.4, 0), graded(P.WoodDark, 5, H, 1), 0.18))
+		band(iron, sx * 5.4 - 0.5, sx * 5.4 + 0.5, -0.5, 0.5, 1.2, 0.35)
+		for _, fz in ipairs({ -1, 1 }) do
+			table.insert(iron, piece("Part", Vector3.new(1.0, 0.28, 0.06), CFrame.new(sx * 4.95, 8.95, fz * 0.53), P.Iron))
+			table.insert(iron, piece("Part", Vector3.new(0.28, 1.0, 0.06), CFrame.new(sx * 4.6, 8.6, fz * 0.53), P.Iron))
+			rivet(iron, Vector3.new(sx * 5.2, 8.95, fz * 0.57), 0.12)
+			rivet(iron, Vector3.new(sx * 4.6, 8.3, fz * 0.57), 0.12)
+		end
+	end
+	table.insert(frame, timber(Vector3.new(12.6, 0.6, 0.9), CFrame.new(0, 9.3, 0), graded(P.WoodDark, 9.3, H, 0.93), 0.12))
+	table.insert(frame, timber(Vector3.new(11.6, 0.5, 0.7), CFrame.new(0, 2.0, 0), graded(P.WoodDark, 2, H, 0.93), 0.1))
+	table.insert(frame, piece("Part", Vector3.new(9.7, 6.6, 0.3), CFrame.new(0, 5.6, 0.12), rgb(81, 45, 26)))
+	local prev = nil
+	for i = 0, 5 do
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(frame, timber(Vector3.new(1.62, 6.8, 0.36), CFrame.new(-4.05 + i * 1.62, 5.6, -0.03), graded(P.WoodMid, 5.6, H, TONES[ti]), 0.05))
+	end
+	for _, sy in ipairs({ -1, 1 }) do
+		table.insert(frame, timber(Vector3.new(10.6, 0.36, 0.3), CFrame.new(0, 5.6 + sy * 2.98, -0.42), P.WoodDark, 0.07))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(frame, timber(Vector3.new(0.36, 6.32, 0.3), CFrame.new(sx * 5.12, 5.6, -0.42), P.WoodDark, 0.07))
+	end
+	shingleRoof(roof, frame, rng, { x0 = -6.5, x1 = 6.5, e = 2.0, yE = 9.6, yR = 11.0, color = roofColor, ridge = ridgeColor, overhang = 0.2 })
+	merge(m, "Base", base, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Frame", frame, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Iron", iron, {})
+	merge(m, "Roof", roof, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+	-- the board (today's 10 x 5.6 x 0.3, front face z -0.5)
+	plain(m, "Board", Vector3.new(10.0, 5.6, 0.3), CFrame.new(0, 5.6, -0.35), rgb(201, 152, 98), { collide = true })
+end
+
+---------------------------------------------------------------------
+-- 13 BOARDS. CODES BOARD (kit Hub.Station_CodesBoard; Hub.CodesBoard: its Interact prompt opens Quests > Codes): the
+-- notice frame with a red shingle gable, pinned papers of different shapes (tall, wide, folded corner, torn edge, a
+-- small note) with written lines and coloured pins, the gold scroll ornament on the ridge.
+-- Parts: Base, Frame, Iron, Roof, Board, Papers, Ornament (7, + the kept Interact).
+---------------------------------------------------------------------
+function PropsBatch2.codes_board(): Model
+	local m = Instance.new("Model")
+	m.Name = "codes_board"
+	local rng = Random.new(20261302)
+	BEVEL_SELF = true
+	local H = 11.9
+	noticeFrame(m, rng, H, rgb(196, 64, 58), rgb(156, 48, 44))
+	local papers, ornament = {}, {}
+	local INK = rgb(110, 104, 96)
+	local PINS = { rgb(212, 52, 60), rgb(64, 120, 212), rgb(255, 201, 60), rgb(88, 204, 52) }
+	local specs = {
+		{ -3.2, 6.1, 2.2, 2.8, 5, rgb(245, 246, 250), "fold" },
+		{ 0.1, 5.3, 2.6, 2.0, -4, rgb(232, 226, 208), "torn" },
+		{ 3.2, 6.3, 2.4, 2.1, 3, rgb(240, 232, 190), "plain" },
+		{ -0.6, 7.25, 1.4, 1.2, 8, rgb(214, 232, 245), "plain" },
+		{ 3.5, 3.95, 1.5, 1.3, -6, rgb(245, 246, 250), "fold" },
+	}
+	for i, s in ipairs(specs) do
+		local cf = CFrame.new(s[1], s[2], -0.53) * CFrame.Angles(0, 0, math.rad(s[5]))
+		local size = Vector3.new(s[3], s[4], 0.05)
+		local negs = {}
+		if s[7] == "fold" then
+			table.insert(negs, negWedge(cf, size, "Z", 1, 1, 0.55))
+		elseif s[7] == "torn" then
+			for k = 0, 5 do
+				local x = -s[3] / 2 + 0.22 + k * (s[3] - 0.44) / 5
+				table.insert(negs, piece("Part", Vector3.new(0.3, 0.3, 0.3), cf * CFrame.new(x, -s[4] / 2, 0) * CFrame.Angles(0, 0, math.rad(45)), s[6]))
+			end
+		end
+		table.insert(papers, chamfered(size, cf, s[6], {}, 0, negs))
+		if s[7] == "fold" then
+			-- the folded corner flap: the mirror of the cut triangle (solid corner toward the middle), a bit proud
+			local flap = Instance.new("WedgePart")
+			flap.Size = Vector3.new(0.05, 0.55, 0.55)
+			flap.CFrame = cf * CFrame.new(s[3] / 2 - 0.275, s[4] / 2 - 0.275, -0.04) * CFrame.Angles(0, math.rad(-90), 0)
+			flap.Color = scaled(s[6], 0.86)
+			flap.Anchored = true
+			table.insert(papers, flap)
+		end
+		-- written lines
+		local lines = math.max(2, math.floor((s[4] - 0.7) / 0.32))
+		for k = 0, lines - 1 do
+			local w = (s[3] - 0.5) * (if k == lines - 1 then 0.55 else rng:NextNumber(0.75, 1.0))
+			table.insert(papers, piece("Part", Vector3.new(w, 0.07, 0.03), cf * CFrame.new(-(s[3] - 0.5) / 2 + w / 2, s[4] / 2 - 0.45 - k * 0.32, -0.035), INK))
+		end
+		-- the pin: a coloured head on an iron needle
+		local pin = cf * CFrame.new(0, s[4] / 2 - 0.2, -0.06)
+		table.insert(papers, chamfered(Vector3.new(0.3, 0.3, 0.2), pin * CFrame.new(0, 0, -0.1), PINS[(i - 1) % #PINS + 1], { "vertical", "topFrontBack", "bottomFrontBack" }, 0.08))
+		table.insert(papers, piece("Part", Vector3.new(0.05, 0.05, 0.2), pin, P.IronWorn))
+	end
+	merge(m, "Papers", papers, { shadow = false })
+	-- the gold scroll ornament standing on the ridge (today's crown: y 10.4 .. 11.9)
+	table.insert(ornament, timber(Vector3.new(0.3, 0.5, 0.2), CFrame.new(0, 11.25, 0), P.Gold, 0.04))
+	table.insert(ornament, timber(Vector3.new(1.2, 0.18, 0.2), CFrame.new(0, 11.45, 0), P.Gold, 0.04))
+	table.insert(ornament, piece("Part", Vector3.new(0.5, 0.5, 0.2), CFrame.new(0, 11.8, 0) * CFrame.Angles(0, 0, math.rad(45)), P.Gold))
+	for _, sx in ipairs({ -1, 1 }) do
+		scroll(ornament, Vector3.new(sx * 0.55, 11.45, 0), Vector3.new(sx, 0, 0), 0.26, P.Gold, 0.12)
+	end
+	table.insert(ornament, piece("Part", Vector3.new(0.24, 0.24, 0.24), CFrame.new(0, 12.15, 0) * CFrame.Angles(math.rad(45), math.rad(45), 0), P.Gold))
+	merge(m, "Ornament", ornament, { collide = true, fidelity = Enum.CollisionFidelity.Box })
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "codes_board")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 13 BOARDS. TEAM BOARD (kit Hub.Station_TeamBoard; Hub.TeamBoard: the Quartermaster's marker, its Interact prompt
+-- opens Team): the notice frame with a blue shingle gable, the 2 team shields (red / blue, today's places) in iron
+-- rims with a white chevron, crossed swords between them, 2 flag poles with pennants (red left, blue right, today's).
+-- Parts: Base, Frame, Iron, Roof, Board, Icons, Flags (7, + the kept Interact).
+---------------------------------------------------------------------
+function PropsBatch2.team_board(): Model
+	local m = Instance.new("Model")
+	m.Name = "team_board"
+	local rng = Random.new(20261303)
+	BEVEL_SELF = true
+	local H = 13.2
+	noticeFrame(m, rng, H, rgb(74, 108, 220), rgb(54, 80, 170))
+	local icons, flags = {}, {}
+	local RED, BLUE = rgb(212, 52, 60), rgb(74, 108, 220)
+	for _, spec in ipairs({ { -2.4, RED }, { 2.4, BLUE } }) do
+		local f = CFrame.new(spec[1], 5.6, -0.6) * CFrame.Angles(math.rad(90), 0, 0)
+		table.insert(icons, octagon(2.2, 0.12, f * CFrame.new(0, 0.04, 0), P.Iron))
+		table.insert(icons, octagon(2.0, 0.16, f * CFrame.new(0, -0.04, 0), spec[2]))
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(icons, piece("Part", Vector3.new(0.3, 0.06, 1.1), f * CFrame.new(sx * 0.3, -0.13, 0.05) * CFrame.Angles(0, math.rad(sx * 40), 0), rgb(245, 246, 250)))
+		end
+		for k = 0, 7 do
+			local a = k * math.pi / 4
+			rivet(icons, (f * CFrame.new(math.cos(a) * 0.98, -0.1, math.sin(a) * 0.98)).Position, 0.1)
+		end
+	end
+	for _, s in ipairs({ -1, 1 }) do
+		local cf = CFrame.new(0, 5.6, -0.6) * CFrame.Angles(0, 0, math.rad(s * 40))
+		table.insert(icons, piece("Part", Vector3.new(0.18, 2.2, 0.06), cf * CFrame.new(0, 0.3, 0), P.IronWorn))
+		table.insert(icons, piece("Part", Vector3.new(0.6, 0.12, 0.08), cf * CFrame.new(0, -0.8, 0), P.Brass))
+		table.insert(icons, piece("Part", Vector3.new(0.12, 0.45, 0.08), cf * CFrame.new(0, -1.1, 0), P.WoodDark))
+	end
+	merge(m, "Icons", icons, { collide = true, fidelity = Enum.CollisionFidelity.Box })
+	-- flag poles on the top beam ends (today's at x +-6.4, y 8.8 .. 13.2) with pennants pointing outward
+	for _, spec in ipairs({ { -1, RED }, { 1, BLUE } }) do
+		local x = spec[1] * 6.4
+		table.insert(flags, octagon(0.36, 4.4, CFrame.new(x, 11.0, 0), P.WoodDark))
+		table.insert(flags, fruitPiece(0.42, CFrame.new(x, 13.3, 0), P.Gold))
+		local cloth = Instance.new("WedgePart")
+		cloth.Size = Vector3.new(0.16, 2.0, 3.4)
+		cloth.CFrame = CFrame.new(x + spec[1] * 1.9, 12.0, 0) * CFrame.Angles(0, math.rad(-90 * spec[1]), 0)
+		cloth.Color = spec[2]
+		cloth.Anchored = true
+		table.insert(flags, cloth)
+	end
+	merge(m, "Flags", flags, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "team_board")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 14a BENCH (kit Hub.Bench_A, the old rustic bench of the test zone; no copy in the game): an exact copy of the
+-- current hub bench (workspace.Hub.Decor.Props.AFKCorner.Bench: wood slats, blue-grey frame, 2 Seats; BenchService
+-- gives hub benches their Sit prompt at run time). Same pivot convention (floor centre, front -Z).
+---------------------------------------------------------------------
+function PropsBatch2.park_bench(): Model
+	local hub = workspace:FindFirstChild("Hub")
+	local source: Instance? = nil
+	for _, d in ipairs(if hub then hub:GetDescendants() else {}) do
+		if d:IsA("Model") and d.Name == "Bench" and d:GetAttribute("BenchVersion") ~= nil then
+			source = d
+			break
+		end
+	end
+	assert(source, "PropsBatch2.park_bench: no hub Bench to copy")
+	local m = (source :: Model):Clone()
+	m.Name = "park_bench"
+	m:PivotTo(CFrame.identity)
+	for key in pairs(m:GetAttributes()) do
+		m:SetAttribute(key, nil)
+	end
+	for _, tag in ipairs(m:GetTags()) do
+		m:RemoveTag(tag)
+	end
+	m:SetAttribute("BenchVersion", (source :: Model):GetAttribute("BenchVersion"))
+	local root: BasePart? = nil
+	for _, d in ipairs(m:GetChildren()) do
+		if d:IsA("BasePart") and not d:IsA("Seat") then
+			root = d
+			break
+		end
+	end
+	assert(root, "PropsBatch2.park_bench: no frame part")
+	m.PrimaryPart = root
+	;(root :: BasePart).PivotOffset = (root :: BasePart).CFrame:Inverse()
+	m:SetAttribute("MapPropId", "park_bench")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 14b STREET LAMP (kit Hub.LampPost_A, 2.4 x 15.3 x 2.4; the hub's 8 LampPost_A in Hub.Decor.Props.Lamps: always on,
+-- no script switches them). A village lamp: a stone base of blocks (plinth, a smaller course, a cap slab), a dark
+-- wrought-iron pole (foot collar, rings, a twisted section, a top collar) with 4 scroll brackets under the lantern, the
+-- lantern on top (base plate, corner posts and bars, a pyramid roof, finial and ring) around warm glass with a candle
+-- flame holding today's PointLight (range 24, brightness 0.9, FFD678) at today's height.
+-- Parts: Base, Iron, Glass, Lamp (4).
+---------------------------------------------------------------------
+function PropsBatch2.street_lamp(): Model
+	local m = Instance.new("Model")
+	m.Name = "street_lamp"
+	local rng = Random.new(20261402)
+	BEVEL_SELF = true
+	local H = 15.3
+	local IRON = rgb(52, 56, 66)
+	local base, iron = {}, {}
+	-- 1. stone base: plinth of 4 blocks, a course of 2 blocks, a cap slab
+	local w = (2.4 - GAP) / 2
+	local prev = nil
+	for _, ix in ipairs({ -1, 1 }) do
+		for _, iz in ipairs({ -1, 1 }) do
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			table.insert(base, chamfered(Vector3.new(w, 0.6, w), CFrame.new(ix * (w / 2 + GAP / 2), 0.3, iz * (w / 2 + GAP / 2)), graded(P.StoneDark, 0.3, H, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.1))
+		end
+	end
+	table.insert(base, piece("Part", Vector3.new(2.1, 0.55, 2.1), CFrame.new(0, 0.3, 0), P.Mortar))
+	local w1 = 1.8 * rng:NextNumber(0.42, 0.58) - GAP / 2
+	table.insert(base, chamfered(Vector3.new(w1, 0.85, 1.8), CFrame.new(-0.9 + w1 / 2, 0.625 + 0.425, 0), graded(P.Stone, 1, H, 1), { "vertical", "topFrontBack", "topSides" }, 0.1))
+	table.insert(base, chamfered(Vector3.new(1.8 - w1 - GAP, 0.85, 1.8), CFrame.new(0.9 - (1.8 - w1 - GAP) / 2, 0.625 + 0.425, 0), graded(P.Stone, 1, H, 0.93), { "vertical", "topFrontBack", "topSides" }, 0.1))
+	table.insert(base, piece("Part", Vector3.new(1.5, 0.8, 1.5), CFrame.new(0, 1.05, 0), P.Mortar))
+	table.insert(base, chamfered(Vector3.new(2.1, 0.32, 2.1), CFrame.new(0, 1.5 + 0.16, 0), graded(P.StoneDark, 1.7, H, 1), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.1))
+	merge(m, "Base", base, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. the iron pole: foot collar, shaft, 2 rings, a twisted section, the top collar
+	table.insert(iron, octagon(1.0, 0.25, CFrame.new(0, 1.945, 0), IRON))
+	table.insert(iron, octagon(0.75, 0.4, CFrame.new(0, 2.27, 0), IRON))
+	table.insert(iron, octagon(0.46, 9.4, CFrame.new(0, 2.47 + 4.7, 0), IRON))
+	for _, y in ipairs({ 3.4, 9.8 }) do
+		table.insert(iron, octagon(0.66, 0.2, CFrame.new(0, y, 0), IRON))
+	end
+	for k = 0, 9 do
+		table.insert(iron, piece("Part", Vector3.new(0.5, 0.2, 0.5), CFrame.new(0, 6.0 + k * 0.2, 0) * CFrame.Angles(0, math.rad(k * 9), 0), IRON))
+	end
+	table.insert(iron, octagon(0.8, 0.3, CFrame.new(0, 11.75, 0), IRON))
+	-- 4 scroll brackets from the pole up to the lantern's base plate corners
+	for k = 0, 3 do
+		local a = math.rad(45 + 90 * k)
+		local out = Vector3.new(math.cos(a), 0, math.sin(a))
+		scroll(iron, Vector3.new(0, 10.6, 0) + out * 0.23, out, 0.34, IRON, 0.1)
+		table.insert(iron, bar(Vector3.new(0, 11.2, 0) + out * 0.25, Vector3.new(0, 12.05, 0) + out * 0.85, 0.1, IRON))
+	end
+	-- 3. the lantern (centre y 13.3 as today's lamp): base plate, corner posts, bars, roof, finial, ring
+	table.insert(iron, chamfered(Vector3.new(1.9, 0.22, 1.9), CFrame.new(0, 12.11, 0), IRON, { "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.07))
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			table.insert(iron, piece("Part", Vector3.new(0.14, 2.06, 0.14), CFrame.new(sx * 0.72, 13.25, sz * 0.72), IRON))
+		end
+	end
+	for _, y in ipairs({ 12.36, 14.18 }) do
+		for _, s in ipairs({ -1, 1 }) do
+			table.insert(iron, piece("Part", Vector3.new(1.58, 0.1, 0.1), CFrame.new(0, y, s * 0.72), IRON))
+			table.insert(iron, piece("Part", Vector3.new(0.1, 0.1, 1.58), CFrame.new(s * 0.72, y, 0), IRON))
+		end
+	end
+	-- the roof: a 4-sided pyramid from the eave (2.3 wide, y 14.3) to the apex (y 15.0), then a cap and a ring
+	local planes = { { 0, -1, 0, -14.28 } }
+	for k = 0, 3 do
+		local a = k * math.pi / 2
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		local n = (d * 0.7 + Vector3.new(0, 1.15, 0)).Unit
+		table.insert(planes, { n.X, n.Y, n.Z, n:Dot(Vector3.new(0, 15.0, 0)) })
+	end
+	table.insert(iron, convexSolid(Vector3.new(-1.2, 14.28, -1.2), Vector3.new(1.2, 15.0, 1.2), CFrame.identity, IRON, planes))
+	table.insert(iron, octagon(0.36, 0.2, CFrame.new(0, 14.95, 0), IRON))
+	table.insert(iron, piece("Part", Vector3.new(0.08, 0.32, 0.26), CFrame.new(0, 15.2, 0), IRON))
+	-- the candle inside
+	table.insert(iron, octagon(0.32, 0.5, CFrame.new(0, 12.47, 0), rgb(232, 226, 208)))
+	merge(m, "Iron", iron, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 4. warm glass (as the lantern prop's: Neon, transparency 0.5) and the flame with today's light
+	local glass = plain(m, "Glass", Vector3.new(1.36, 1.72, 1.36), CFrame.new(0, 13.27, 0), rgb(255, 226, 150), { material = Enum.Material.Neon, collide = true, shadow = false })
+	glass.Transparency = 0.5
+	local lamp = merge(m, "Lamp", { flame(CFrame.new(0, 12.72, 0), 0.17, 0.25, 0.75, rgb(255, 182, 72)) }, { material = Enum.Material.Neon, shadow = false })
+	local light = Instance.new("PointLight")
+	light.Range, light.Brightness, light.Color = 24, 0.9, rgb(255, 214, 120)
+	light.Parent = lamp
+
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "street_lamp")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
 -- install: build, replace ServerStorage.MapProps.<propId> (the old template goes to MapProps._Previous)
 ---------------------------------------------------------------------
 function PropsBatch2.stats(model: Instance): (number, number, number)
@@ -2854,6 +3556,7 @@ PropsBatch2.BUILDERS = {
 	portal_frame = true, hub_wall = true, stone_arch = true, stone_pillar = true,
 	entry_arch = true, gate_palisade = true, gate_barricade = true, gate_mine = true,
 	rebirth_altar = true, egg_station = true, moon_gazebo = true, fruit_stall = true,
+	training_area = true, leaderboard = true, codes_board = true, team_board = true, park_bench = true, street_lamp = true,
 }
 
 return PropsBatch2

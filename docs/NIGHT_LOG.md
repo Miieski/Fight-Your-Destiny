@@ -2305,3 +2305,20 @@ every rock intersection in sub-zone 1.
   MAIN AGENT PLAY CHECK: RebirthAltar "Rebirth / Priest" -> RebirthWindow; EggStation "Hatch eggs / Egg Keeper" ->
   PetsWindow; RebirthShop "Open / Rebirth Shop" -> RebirthWindow (unchanged behaviour); exactly one prompt each, on
   Interact; walking onto the altar without jumping reaches the top platform (+7.8 studs); no game errors.
+- 01:05 BATCH D done (Agent B; main agent looked at the training, codes, leaderboard and lamp shots and Play-checked):
+  12 training area (training_area): replaced 3 / 3; the 22 x 18 sand yard inside a cut-stone border with moss and
+  pebbles, the fences rebuilt at the same places (pointed chamfered posts on footing stones, nailed rails), a weapon
+  rack (2 wooden swords, an iron sword, 2 spears, 2 riveted shields), 2 training dummies (burlap bodies tied with
+  rope, straw, painted targets, sack heads), 2 archery targets on tripods with arrows, a swallow-tail banner, crates
+  + the synced barrel; Interact "Train" / NameTag / NpcSpot / NPC stand-in kept; hub 65 -> 39 parts.
+  13 boards: leaderboard 7 / 7 (stone base, iron-banded posts, planked backing, corner brackets, blue shingle roof,
+  gold trophy; each Screen + BoardGui kept; 12 -> 6 parts), codes_board 3 / 3 (red shingle roof, 5 pinned papers of
+  different shapes with coloured pins, gold scroll; 20 -> 8), team_board 3 / 3 (blue roof, the 2 team shields in iron
+  rims, crossed swords, pennants; 15 -> 8). No script reads the boards by name.
+  14a bench (park_bench): 2 / 2 (test + kit; no rustic bench is placed in the game) = exact clones of the hub bench.
+  14b street lamp (street_lamp): 10 / 10 (test, kit, 8 hub): block stone base, dark wrought-iron pole with collars, a
+  twisted section and 4 scroll brackets, a glass lantern with candle and flame; today's light kept (range 24,
+  brightness 0.9, FFD678; always on, no script toggles it); 7 -> 4 parts.
+  Sync run 2 = 0; hub parts 5,150 -> 5,051.
+  MAIN AGENT PLAY CHECK: Trainer "Train" -> StatsWindow; CodesBoard "Redeem codes" -> QuestsWindow; TeamBoard "Teams"
+  -> TeamWindow; a hub bench SitPrompt seats the player; 8 / 8 street lamps lit; no game errors.
