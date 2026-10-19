@@ -2478,3 +2478,20 @@ every rock intersection in sub-zone 1.
   tops, spine dots, dark-to-light green, flowers (petals around a yellow centre), barrel crowns with ribs, prickly pear
   oval pads in two greens with spine rows, 2 small fruits, sand mounds with pebbles. Collision = today's boxes as
   invisible parts (a single union filled the arm gaps - rejected); rays on all 70 placed copies: 0 different.
+- 02:50 DESERT NATURE COMPLETE (Agent B; main agent looked at the rock, blocks, ribs / skull shots and Play-checked).
+  02 sandstone blocks: 6 / 6 (chipped corners, darker weathered foot, weathering and carved joint lines, a faint
+  carved ankh and eye, sand drifts with pebbles; both tones kept). 03 ribs + bull skull: ribcage 10 / 10 (a spine of 9
+  vertebrae, 10 curved tapering ribs half-buried), skull 15 / 15 (deep eye sockets, nose bridge, nostrils, teeth,
+  curved horns ending at the old tips, a sand mound). 01 red rock stack (mesa_strata): 12 / 12 (test, kit, 4 Desert_3
+  canyon walls, 6 Desert_1 / 2 backdrop copies at up to x2.3) from Agent A's v2 natural facets, ~65k tris per copy in 5
+  unions; the 18 old boxes kept as invisible colliders (backdrop copies stay non-colliding / no shadow / no query via
+  new per-part variant flags in SyncMapProps). 01b: the 5 Desert_3 hoodoos rebuilt in place (variants A / B scaled
+  1.0-1.7, old boxes kept as colliders) by PropsDesertNature.rebuildHoodoos() - they have no kit, so not tracked by
+  the sync. Collision ray checks on every placed copy: 0 differences. New modules tools/PropsDesertNature.luau +
+  tools/PropsDesertNatureData.luau. Known: the natural rock overhangs its box colliders by up to ~1 stud at some column
+  edges (a player standing there sinks ~1 stud into the rock).
+  MAIN AGENT PLAY CHECK (phone emulator, landscape; fresh lockAll + unlockZone Desert): Desert_2 gate blocks while
+  closed, "Open (5K Gold)" hides its 3 door pieces and the player walks through; the Desert_3 canyon-wall mesas block
+  the player as before; Desert_1 144 fps / render CPU 2.2 ms, Desert_2 village 144 fps / 2.8 ms, Desert_3 canyon 144
+  fps / 2.4 ms; no errors. FINAL: 59 templates / 501 tagged copies up to date, run 2 = 0; disk == Studio (184
+  scripts, 0 written); backup after_desert_nature.

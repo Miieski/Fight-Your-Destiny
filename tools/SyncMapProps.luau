@@ -5,7 +5,7 @@
 	Templates  ServerStorage.MapProps.<propId>   Model with a PrimaryPart and attribute MapPropId. Optional child
 	           Folder "_Variants" with one Configuration per variant; its attributes recolour the clone by part name:
 	           Color_<PartName> (Color3), Material_<PartName> (string), MaterialVariant_<PartName> (string),
-	           Transparency_<PartName> (number).
+	           Transparency_<PartName> (number), CanCollide_ / CanQuery_ / CastShadow_<PartName> (boolean).
 	Instances  every Model tagged "MapProp" with attribute MapPropId, in the test area
 	           (workspace._Staging.AssetPreview.ModelsA.Lineup and the desert row AssetPreview.Desert), the main map
 	           (workspace.Hub, workspace.Zones), the
@@ -190,6 +190,15 @@ SyncMapProps.RULES = {
 	{ propId = "cactus_tall", names = { "Cactus_A" } },
 	{ propId = "cactus_barrel", names = { "Cactus_B" } },
 	{ propId = "cactus_pear", names = { "Cactus_C" } },
+	-- 02 the sandstone blocks (Desert_3 Decor.Ruins), 03 the rib cage and the bull skull (Desert_1-3)
+	{ propId = "sandstone_blocks", names = { "Sandstone_Block" } },
+	{ propId = "ribcage", names = { "Ribcage_A" } },
+	{ propId = "bull_skull", names = { "Skull_Animal" } },
+	-- 01 the red rock stack (test row, kit, Desert_3 Formations; the Desert_1 / Desert_2 backdrop copies take the
+	-- non-colliding variant "Backdrop", as today)
+	{ propId = "mesa_strata", names = { "Mesa_Strata_A" }, variant = function(m)
+		return if m.Parent ~= nil and m.Parent.Name == "Mesas" then "Backdrop" else nil
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -501,6 +510,12 @@ local function applyVariant(model: Model, template: Model, variant: string?): st
 			local transparency = attributes["Transparency_" .. d.Name]
 			if type(transparency) == "number" then
 				d.Transparency = transparency
+			end
+			for _, flag in ipairs({ "CanCollide", "CanQuery", "CastShadow" }) do
+				local value = attributes[flag .. "_" .. d.Name]
+				if type(value) == "boolean" then
+					(d :: any)[flag] = value
+				end
 			end
 		end
 	end
