@@ -7,7 +7,8 @@
 	           Color_<PartName> (Color3), Material_<PartName> (string), MaterialVariant_<PartName> (string),
 	           Transparency_<PartName> (number).
 	Instances  every Model tagged "MapProp" with attribute MapPropId, in the test area
-	           (workspace._Staging.AssetPreview.ModelsA.Lineup), the main map (workspace.Hub, workspace.Zones), the
+	           (workspace._Staging.AssetPreview.ModelsA.Lineup and the desert row AssetPreview.Desert), the main map
+	           (workspace.Hub, workspace.Zones), the
 	           kit copies (ServerStorage.MapAssets) and the boss-arena templates (ServerStorage.BossArenas).
 	           Optional attribute Variant = "<name>" (a Configuration of the template's _Variants).
 
@@ -158,6 +159,10 @@ SyncMapProps.RULES = {
 		local landmark = if parent ~= nil and parent.Name == "Landmark" then parent:GetAttribute("LandmarkName") else nil
 		return if landmark == "FrozenShip" then "Frozen" elseif landmark == "SunkenGalleon" then "Sunken" else nil
 	end },
+	-- desert buildings and shelters (owner, 2026-10-19; DevTools.PropsDesert): 01 the adobe houses (desert test row,
+	-- kit, Desert_2.Decor.Village)
+	{ propId = "adobe_house_a", names = { "ClayHouse_A" } },
+	{ propId = "adobe_house_b", names = { "ClayHouse_B" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -315,6 +320,7 @@ local function searchRoots(): { Instance }
 	local staging = workspace:FindFirstChild("_Staging")
 	local preview = staging and staging:FindFirstChild("AssetPreview")
 	add(preview and preview:FindFirstChild("ModelsA"))
+	add(preview and preview:FindFirstChild("Desert")) -- the desert test row (desert buildings, 2026-10-19)
 	add(ServerStorage:FindFirstChild("MapAssets"))
 	add(ServerStorage:FindFirstChild("BossArenas"))
 	return list
@@ -513,7 +519,8 @@ local function instancesOf(propId: string): { Model }
 end
 
 local function shortPath(inst: Instance): string
-	return (string.gsub(inst:GetFullName(), "^Workspace%._Staging%.AssetPreview%.ModelsA%.Lineup", "TEST"))
+	local path = string.gsub(inst:GetFullName(), "^Workspace%._Staging%.AssetPreview%.ModelsA%.Lineup", "TEST")
+	return (string.gsub(path, "^Workspace%._Staging%.AssetPreview%.Desert", "TEST-DESERT"))
 end
 
 ---------------------------------------------------------------------

@@ -5258,6 +5258,22 @@ function PropsBatch2.install(propId: string): string
 	return string.format("installed ServerStorage.MapProps.%s: %d parts (%d unions), about %d triangles, bbox %.2f x %.2f x %.2f, built in %.1f s", propId, parts, unions, triangles, size.X, size.Y, size.Z, os.clock() - t0)
 end
 
+-- the shared helpers, for the builder modules that follow this one (DevTools.PropsDesert ...): this module is over
+-- Studio's 200,000-character Source limit, so new builders live in their own modules and register into a fresh
+-- PropsBatch2 table (its install() then builds them)
+PropsBatch2.H = {
+	P = P, TONES = TONES, GAP = GAP, LOG_END = LOG_END, ROPE = ROPE, EDGES = EDGES,
+	smoothstep = smoothstep, scaled = scaled, graded = graded, toneIndex = toneIndex, jit = jit,
+	piece = piece, negWedge = negWedge, chamfered = chamfered, subtractKeep = subtractKeep, convexSolid = convexSolid,
+	merge = merge, plain = plain, timber = timber, rivet = rivet, band = band, bar = bar, frameY = frameY,
+	octagon = octagon, prism16 = prism16, disc16 = disc16, ringBlocks = ringBlocks, pyramidPlanes = pyramidPlanes,
+	flame = flame, shingleRoof = shingleRoof, slatCrate = slatCrate, fruitPiece = fruitPiece, scroll = scroll,
+	mossPad = mossPad, cutSegments = cutSegments, triangleParts = triangleParts, course = course, slabs = slabs,
+	setBevelSelf = function(on: boolean)
+		BEVEL_SELF = on
+	end,
+}
+
 PropsBatch2.BUILDERS = {
 	portal_frame = true, hub_wall = true, stone_arch = true, stone_pillar = true,
 	entry_arch = true, gate_palisade = true, gate_barricade = true, gate_mine = true,

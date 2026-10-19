@@ -2352,3 +2352,29 @@ every rock intersection in sub-zone 1.
   template cloned for boss fights). Phone emulator (landscape) at the plaza / portal row / stalls: 36 fps everywhere,
   the same as an empty sky far from the map = Studio's unfocused-window frame cap; real render CPU 3.7 ms per frame at
   the plaza -> smooth. Backup after_props_batch2.
+
+# Desert props: buildings and shelters - 2026-10-20 (owner: "DESERT ZONE PROP IMPROVEMENT - Buildings and shelters" - 01 adobe houses, 02 market stall, 03 canopy pavilion, 04 tent, 05 ruined wall, to the fountain / well quality, synced test zone <-> game; desert palette section in docs/prop_texture_guide.md)
+
+## Status (newest first)
+
+- 08:00 Started. The owner's text says the images are in docs/Desert_Images/01_Buildings_and_Shelters/; that folder
+  did not exist, so the 6 attached images (5 objects + the overview sheet) were stored there under the brief's names.
+  Backup before_desert_buildings. Same route as props batch 2: Studio parts to the recipe + one-colour CSG unions,
+  facet data from Agent A only for organic accents (dome ribs, cloth folds if needed).
+- 09:40 PILOT 01 ADOBE HOUSES done (Agent B; Agent A's desert recipe = docs/prop_texture_guide.md section B). Kits:
+  ClayHouse_A (adobe_house_a) replaced 7 / 7 (test, kit, 5 in Desert_2), ClayHouse_B (adobe_house_b) 4 / 4 (test,
+  kit, 2 in Desert_2); today's colours. Battered plaster walls with layer lines, chipped corners, exposed block
+  patches, a wider footing, plaster bands, parapets with caps / merlons / drain spouts, vigas with 28-deg carved ends,
+  plank doors with battens / gold studs / iron hinges in the terracotta frames with lintels and thresholds, recessed
+  windows with frames / sills / open turquoise shutters, pleated awnings with tabbed valances and rope ties; A: a
+  chimney and a roof hatch with a ladder; B: the dome on a drum with 8 ribs and a gold finial, terrace pots, a ladder.
+  B's left window narrowed / moved (fixes the 0.3 overlap with the door frame), B's 2 front vigas removed (they cut
+  the lintel), A's awning raised 1. No prompt / script / interior exists on these houses. Desert builders in the new
+  tools/PropsDesert.luau (PropsBatch2 is over the .Source limit; it now exports its helpers as PropsBatch2.H).
+  PLAY BUG FOUND (main agent): the first build could be climbed onto the roofs (6 / 7 houses) - the footing, sills,
+  vigas and awnings made steps. FIX: every visible piece non-colliding except the Door (and B's dome), plus invisible
+  "Collision" boxes rebuilding today's wall envelope with straight sides (and one flush box above each door). Re-test
+  (jumping at every house from 4 sides): ClayHouse_A cannot be climbed at all; ClayHouse_B's back / side ground-floor
+  wall tops at 11.0 (today's height) are reachable only from the dune (4.9 high) and the village jars standing against
+  them - the same as with the old house, so accepted. Out of scope (logged): Common.Tent_A and Volcano.Miner_Tent share
+  NomadTent_A's shape in other colours - different kits, not synced.

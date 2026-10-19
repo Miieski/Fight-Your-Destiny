@@ -1,4 +1,4 @@
-# Prop texture guide: low-poly look (owner correction 2026-10-19) + fountain / well recipe
+# Prop texture guide: low-poly look (owner correction 2026-10-19) + fountain / well recipe + desert
 
 Applies to every upgraded prop, both the Blender meshes (Agent A) and the Studio-built props (Agent B).
 Owner rule (top of `docs/model_upgrade_brief.txt`): keep the new shapes, but make them look like the 20 reference
@@ -222,6 +222,244 @@ How to build a chamfered block from parts:
 - Pieces poking through each other: the axe handle through its head.
 - Hollow boxes that show light through plank gaps (fill them dark, like the chest).
 - Photo textures, grain, noise, PBR, Metal material, or tiny 0.02 details that turn into noise at distance.
+
+## B. Desert: buildings and shelters (owner task 2026-10-19)
+
+The same quality target as section A (the fountain and the well), applied to the 5 desert objects of
+`docs/Desert_Images/01_Buildings_and_Shelters/`. Everything is built from parts and unions in Studio. The joint,
+chamfer, cap, moss (none here), tone-step and gradient rules of section A apply unchanged. This section adds the
+desert colours and the desert-specific pieces.
+
+### B0. Today's kits (read from `BackUP_Files/FightYourDestiny_2026-10-19_212529_before_desert_buildings_*.rbxm`)
+
+All parts are SmoothPlastic. The game copies have exactly the kit colours.
+
+| # | Object | Kit (`ServerStorage.MapAssets.Desert.`) | Parts | Copies | Today's shape |
+|---|---|---|---|---|---|
+| 01 | adobe houses | `ClayHouse_A` | 22 | test + Desert_2 Village x5 | wall 20 x 12 x 16 on a footing 20.3 x 1.4 x 16.3, parapet 1.6 x 1.6, 5 vigas 0.9 dia (2.6 long, every 4.0), door 6 x 9 x 0.6 in a frame (posts 0.8 x 9 x 1, lintel 7.6 x 1 x 1), 2 windows 3 x 3.2 with sills 3.8 x 0.5 x 1, awning 8.4 x 0.4 x 3.4, chimney 3 x 2.2 x 3 |
+| 01 | | `ClayHouse_B` | 29 | test + Desert_2 Village x2 | wall 24 x 11 x 18, upper storey 13 x 9 x 12 with cap 14 x 1.2 x 13, dome ball 8 + finial 0.6 x 1.6, 9 vigas, awning 7 x 0.4 x 3.2 |
+| 02 | market stall | `MarketStall_A` | 23 | test + Desert_2 Village x4 | counter 11.6 x 3.2 x 2.2 + top 12.2 x 0.4 x 2.9, back 11.6 x 5 x 0.4, shelf, 4 posts 0.7 (7.4 front / 9.4 back), awning 6 strips 2.05 x 0.3 x 8.6 red / linen, 3 jars, fruit, cloths, tray |
+| 03 | canopy pavilion | `NomadTent_B` | 19 | test + Desert_1 Camps | 4 roof wedges 7 x 5.2 x 7 (red / blue), 3 walls (red back, blue sides), 4 linen valances 14.2 x 1 x 0.3, 4 poles 0.7 x 7, centre pole 0.8 x 12.4, gold finial 0.9, rug 9 x 9 red + 5 x 5 gold |
+| 04 | tent | `NomadTent_A` | 9 | test + Desert_1 Camps x2, Desert_3 Camp | 2 cloth wedges 12 x 8 x 5.5 (red / darker red), gold trim wedges at the front, entrance flaps, 2 poles 0.5 x 8.6, ridge pole 14 |
+| 05 | ruined wall | `Sandstone_Wall_Ruin` | 9 | test + Desert_2 Village, Desert_3 Ruins x2 | 3 wall blocks 7 x 12 x 3 / 6 x 8.5 x 3 / 7 x 5 x 3, 2 loose blocks, cap 7.4 x 1 x 3.6, 2 flat glyph plaques (1 x 3, 3 x 2, 0.3 thick), footing 20.4 x 1.4 x 3.6 |
+
+### B1. Desert palette
+
+The owner's rule: **"keep each object's own main colors (they are the desert identity)"**. So the Color to set is
+today's real part colour (BuildKit `Kit.Palette.Desert`, measured in the backups).
+
+**Owner's example hexes, checked against the real colours.** All of them are close; use the real value:
+
+| Owner's example | Real colour to use |
+|---|---|
+| sandstone #E8D59A / #CDB26E / #A88E55 | #E2BE84 / #D7B57E / #B89262 |
+| canyon red #B84A2E / #D8703A / #8E2F22 | #C45438 / #E48050 / #963E30 |
+| gold #F2C230 | #FFC93C |
+| lapis #1E55C8 | #2C5CC8 |
+| turquoise #2BD3C8 | #40D0C4 |
+| linen #E9E6D6 | #E8E2D0 |
+| terracotta #C8643A | #CC603E |
+| cactus #2FA84F | #4CA454 |
+| dark wood #4A2A1A | #533E28 for the window recesses; #703E26 for poles and tent wood |
+
+Each colour below is given with its 3 tone steps (x1 / x0.93 / x0.86, section A1):
+
+| Family | Name | x1 | x0.93 | x0.86 | Used by today |
+|---|---|---|---|---|---|
+| Adobe | clay wall | #DEA46E | #CE9966 | #BF8D5F | house walls (Desert Clay) |
+| | light clay | #F2B378 | #E1A670 | #D09A67 | parapets, upper storey, chimney, plaster bands |
+| | footing / dark sandstone | #B89262 | #AB885B | #9E7E54 | footings, caps, glyph plaques (SandstoneDark) |
+| Sandstone | sandstone | #E2BE84 | #D2B17B | #C2A372 | ruin walls and blocks (Desert Sandstone) |
+| | sandstone mid | #D7B57E | #C8A875 | #B99C6C | ruin centre wall |
+| | sandstone block | #D2B17B | #C3A572 | #B5986A | loose blocks |
+| Sand | sand / light / dark | #F4D07C / #FCE2A0 / #D6A860 | | | sand drifts (Desert Sand, SandLight, SandDark) |
+| Canyon | red / light / dark | #C45438 / #E48050 / #963E30 | | | cliffs (accent only) |
+| Trims | terracotta | #CC603E | #BE593A | #AF5335 | door frames, sills, caps (red door frame) |
+| | turquoise | #40D0C4 | #3CC1B6 | #37B3A9 | doors, a stall jar (cyan door) |
+| | desert blue | #3C96AA | #388C9E | #348192 | house B awning, pavilion roof / walls, stall cloth (TentAlt) |
+| | lapis | #2C5CC8 | | | glyph inlays, pot bands (accent) |
+| | gold | #FFC93C | #EDBB38 | #DBAD34 | knobs, finials, tent trim, rug centre, tassels |
+| Cloth | tent red | #D64A3E | #C7453A | #B84035 | tent, awnings, stall stripes, pavilion roof (Desert Tent) |
+| | tent red alt | #C14238 | #B33D34 | #A63930 | the tent's second side, darker panels |
+| | rug red | #BC4136 | #AF3C32 | #A2382E | rugs |
+| | linen | #E8E2D0 | #D8D2C1 | #C8C2B3 | stall stripes, valances, house B dome |
+| Wood | trunk (vigas, posts) | #966840 | #8C613C | #815937 | vigas, stall / pavilion posts (Desert Trunk) |
+| | dark wood | #703E26 | #683A23 | #603521 | tent poles, stall back, trays |
+| | recess | #533E28 | | | window openings, door shadow |
+| | counter | #A86238, top #D6965C | | | stall counter |
+| Plants | cactus | #4CA454 | | | fruit, cactus accents |
+
+Per object, the main colours that must stay:
+
+| Object | Colours |
+|---|---|
+| Houses | clay #DEA46E, light clay #F2B378, footing #B89262, terracotta frames #CC603E, turquoise doors #40D0C4, awning red #D64A3E (A) / blue #3C96AA (B), vigas #966840, linen dome #E8E2D0 + gold finial |
+| Stall | red #D64A3E / linen #E8E2D0 stripes, counter #A86238 / #D6965C, posts #966840, cloths #3C96AA / #FFC93C, jars terracotta / clay / turquoise |
+| Pavilion | red #D64A3E / blue #3C96AA gores and walls, linen valance, gold finial, red rug #BC4136 with a gold centre |
+| Tent | red #D64A3E / #C14238, gold trim #FFC93C, dark wood #703E26 |
+| Ruin | sandstone #E2BE84 / #D7B57E / #D2B17B, dark sandstone #B89262 |
+
+### B2. Adobe and plastered sandstone (houses)
+
+| Rule | Value (studs) | How with parts |
+|---|---|---|
+| Wall batter | walls lean in: top 0.25-0.4 narrower than the base on each face | a thin wedge (0.3 x full height) along the bottom of each face, or slightly tilted face plates |
+| Plaster layers | horizontal layer lines every **1.6-2.0** (6 layers on a 12 wall), **0.08** wide | each layer one face plate 0.1 thick in front of the core; alternate plates 0.04 proud / flush; tone step per layer (x1 / x0.93) |
+| Exposed blocks | 2-4 patches per facade where the plaster fell off: 1.2-2.0 x 0.6-0.8 sandstone blocks, 0.05 proud, joints 0.08, in groups of 2-3 | sandstone #E2BE84 parts, a dark #B89262 plate 0.05 behind them |
+| Base (wider) | footing 0.4-0.5 wider than the wall on every side (today 0.15), 1.2-1.4 tall, chamfered top 0.2, footing colour, joints every 2.5-3.5 | footing slabs as section A3 |
+| Plaster band | a 0.35-0.4 tall band, 0.1 proud, light clay, at lintel height (top of the doors) and under the parapet | thin strips |
+| Chipped corners | vertical corners chamfered 0.25-0.35; 2-3 notches per corner (0.4-0.8 tall, 0.2-0.35 deep) showing the darker block colour | CSG-subtract small wedges / blocks, or dark #B89262 inner blocks behind |
+| Parapet | 1.2-1.6 tall x 1.2-1.6 thick (today 1.6 x 1.6), cap 0.25 thick overhanging 0.15, top edges chamfered 0.2 | corner merlons 0.5 higher and 2.0 long; a step down at the middle of long sides |
+| Drain spouts (canales) | 0.5 wide x 0.4 tall x 1.4 long, sticking out 1.0 under the parapet, one every 6-8, sloping 10° down | trunk wood or terracotta, a dark inner strip on top |
+| Chimney | keep today's 3 x 2.2 x 3; add a cap 0.25 overhang and a dark 1 x 1 opening | |
+
+### B3. Vigas (round roof beams)
+
+| Rule | Value (studs) |
+|---|---|
+| Diameter | **0.8-0.9** (today 0.9) |
+| Spacing | **3.5-4.0** (today 4.0), all at one height just under the parapet, matching on the front and back |
+| Overhang | sticks out **1.2-1.6** from the wall face (today about 1.9: shorten a little) |
+| Carved end | the end cut at 25-30° (a CSG wedge subtract, top longer than the bottom), plus a darker end-grain disc 0.05 proud (#703E26, 0.7 dia), or a stepped end (a 0.7-dia, 0.25-long cylinder) |
+| Colour | trunk #966840 with the 3 tone steps per viga |
+| Support | a 0.15 terracotta or dark socket ring where it enters the wall (dia + 0.2) |
+
+### B4. Doors, frames, shutters and windows
+
+**Door** (today turquoise 6 x 9 x 0.6 in a terracotta frame):
+- Recess the door 0.3 into the wall; the frame stands 0.2 proud of the plaster.
+- Door = 4-5 vertical planks, 1.1-1.4 wide, 0.06 gaps, alternating tone steps.
+- 2 horizontal battens 0.3 tall at 1/5 and 4/5 of the height, with 2-3 gold or iron studs (0.15 balls) on each.
+- A gold ring or knob (today 0.5).
+
+**Frame** (keep the terracotta posts 0.8 and lintel 1.0):
+- A **wooden lintel beam** above the frame (trunk #966840, 0.5 x 0.5, 0.6 longer than the frame on each side), the adobe way.
+- A threshold step 0.3 tall, 0.4 deep, footing colour.
+
+**Windows** (today 3 x 3.2 dark recess, terracotta sill):
+- Opening #533E28 recessed 0.3; a 0.3 terracotta frame around it.
+- Sill and lintel each 0.6 longer than the opening (0.3 each side) and 0.3 proud.
+- Optional grille: 3 vertical bars 0.12, dark wood.
+
+**Shutters:** 2 leaves, each half the opening width, 0.15 thick, 3 planks, opened at 100-120° against the wall. Use a door colour (turquoise) or a blue (#3C96AA), with 2 small dark hinges each.
+
+### B5. Cloth awnings and canopies (folds, trimmed / scalloped edge, tassels, ropes)
+
+**House awning** (today a flat 8.4 x 0.4 x 3.4 red / 7 x 0.4 x 3.2 blue slab):
+- 3-4 cloth panels 0.15 thick, pitched 15-20° down from the wall.
+- Folds: alternate panels tilted ±3° and 0.05 offset (pleats).
+- Front valance: 0.6-0.8 deep with scallops (half-discs: Cylinder parts 0.12 thick, 1.0-1.2 dia, one per panel) or zig-zag wedges, in the same colour or linen.
+- Carried by 2 wall brackets (0.3 x 0.3 struts at 45°) or 2 thin poles 0.3.
+- Rope ties 0.12 thick from the outer corners back to the wall, rope colour #C4A068.
+
+**Stall awning** (today 6 strips 2.05 x 0.3 x 8.6, red / linen):
+- Keep the 6 strips. Each strip is 2 parts with a 4-6° break at the middle (a sag).
+- A front valance 0.8 deep with one scallop per strip, and a gold tassel (0.25 x 0.5) at each scallop point.
+- A gold finial 0.5 on each front post; posts get a footing block 1.0 x 0.4 x 1.0.
+
+**Pavilion canopy** (today 4 roof wedges red / blue, linen valance):
+- 8 gores alternating red / blue (each gore a pair of wedges).
+- Seams: 0.15 gold or linen piping strips along the 8 ridges.
+- A scalloped linen valance (scallops 1.2 dia every 1.4), tassels at the 4 corners.
+- Gold finial on a 0.4 collar.
+- The blue side walls as tie-back curtains gathered at the poles with rope ties (2-3 thin bulging parts each).
+- Rug with a 0.6 gold border band and a gold centre diamond (today 5 x 5).
+
+**Cloth thickness:** 0.12-0.2. Never a 0.4 slab.
+
+### B6. Tent canvas with stitched seams (tent)
+
+- Each side is 3-4 canvas panels running from the ridge to the ground (3-4 wide), alternating tent red / red alt.
+- **Seams:** raised strips 0.12 wide, 0.04 proud, in the darker red, along every panel joint.
+- **Hem:** a 0.3 tall strip, one step darker, along the bottom edge.
+- **Entrance:**
+  - the 2 flaps folded back as triangles showing a gold lining (today's gold trim);
+  - a rope tie on each flap.
+- **Ridge pole:** 0.5, running 0.4 past the canvas at both ends with a gold cap 0.6.
+- **Guy ropes:** 0.12 thick, from each pole top to a wooden stake (0.3 x 0.8, leaning out) 2.5-3 out from the tent at about 40°.
+- A low sand drift (B8) along one side.
+
+### B7. Dome with ribs and a finial (house B)
+
+- **Drum:** a 0.8-tall cylinder, diameter = the dome's + 0.4, light clay, chamfered top.
+- **Dome:** the upper half of a Ball 8 (today's size, linen #E8E2D0). CSG-subtract a block to cut off the lower half, or sink it into the drum.
+- **Ribs:**
+  - make 8 ribs: intersect a Ball 2 % bigger with 4 slabs 0.2 thick through the axis (at 0 / 45 / 90 / 135°), then union;
+  - colour gold #FFC93C, or linen x0.86 for a quieter look.
+- **Base ring:** 0.3 tall at the dome's foot, terracotta or gold.
+- **Finial (gold), from the bottom up:** a 0.6 ball, a 0.3-tall collar, then a 1.2 spike or crescent. 2.0-2.4 total, today 1.6.
+
+### B8. Ruins: broken top, glyph plaques with depth, rubble, sand drifts
+
+- **Walls of real blocks** (section A2 with sandstone colours):
+  - courses 1.2-1.5 tall on a 12-stud wall;
+  - blocks 2-3.5 long, joints 0.08-0.10, a dark #B89262 core behind the joints;
+  - chamfer 0.25.
+- **Broken top edge:**
+  - the top courses step down irregularly by 1-3 courses along the wall, with missing blocks;
+  - the last blocks rotate 3-8° and slide 0.1-0.3 outward (loose);
+  - 1-2 blocks are cracked: two parts with a 0.08 gap at an angle.
+  - Keep the cap (#B89262) only on the tallest piece, broken off at one end.
+- **Glyph plaques with depth** (today flat 3 x 2 x 0.3 and 1 x 3 x 0.3):
+  - a frame border 0.25 wide, 0.15 proud;
+  - the inner panel recessed 0.1;
+  - glyphs as small raised parts 0.08 proud (an eye, an ankh, wavy water lines, a bird) in dark sandstone;
+  - 1-2 lapis #2C5CC8 or gold inlay accents per plaque, 0.3-0.5 in size.
+- **Rubble:** 4-8 fallen blocks at the base:
+  - 0.8-2.0 in size, chamfered;
+  - tilted 10-30° and half-buried (sunk 0.3-0.6);
+  - the 3 sandstone tone steps.
+- **Sand drifts:** wedges of sand colour against the wall base and between the rubble:
+  - 2-4 long, 0.6-1.5 tall, slope 20-30°;
+  - a rounded crest (a flattened Ball or a half cylinder on top);
+  - sand #F4D07C at the crest, sand dark #D6A860 at the foot;
+  - they hide the wall's bottom joint line.
+
+### B9. Clay pots and a ladder
+
+**Clay pots** (today's stall jars 1.4-2.0 terracotta / clay / turquoise):
+- Body: a Ball scaled to width w (1.2-2.0) and height 0.9-1.4 x w.
+- Neck: a cylinder 0.45 w across, 0.3 tall.
+- Lip: a ring 0.55 w across, 0.12 tall.
+- Foot: a ring 0.5 w across.
+- One painted band at 60 % of the height: a 0.15 ring in a contrast colour (gold / turquoise / lapis / linen).
+- Groups of 2-4 beside doors and walls; one may lie tipped over, half in a sand drift.
+
+**Ladder** (adobe roof access, optional on house A):
+- 2 trunk-wood rails 0.35 x 0.35, leaning 15° against the wall, ending 1.0 above the parapet.
+- Rungs 0.25 across, every 1.0-1.2, with a dark 0.1 rope lashing ring at each end of each rung.
+
+### B10. Gradient, materials, consistency
+
+- Same as section A:
+  - per-part gradient Color x (0.82 + 0.18 smoothstep(h / H));
+  - the 3 tone steps per block / panel / plank;
+  - SmoothPlastic everywhere;
+  - Neon only for a lamp flame or glow;
+  - no Metal, no textures with grain.
+- The darkest parts are the recesses (#533E28) and the joint cores (#B89262). Joints in the plaster are finer (0.08) than in block walls.
+- Minimum readable detail: 0.06 (a seam 0.04 proud is the one exception: it reads as a line along its length).
+
+### B11. Do / don't (desert)
+
+**Do:**
+- Battered plaster walls with layer lines and a few exposed blocks.
+- A wider, darker footing; chipped corners; a parapet with a cap and corner merlons; drain spouts.
+- Vigas in a row with carved ends.
+- Recessed plank doors in proud frames with a wooden lintel; deep-set windows with shutters.
+- Cloth that sags and folds, with scalloped valances, tassels and ropes.
+- Tents in stitched panels with guy ropes; a dome on a drum with ribs and a tall finial.
+- Ruins of real blocks with a stepped broken top, deep glyph plaques, rubble and sand drifts.
+- Every object keeps today's own colours.
+
+**Don't:**
+- One smooth box per wall (today's 20 x 12 x 16 Wall block).
+- Flat 0.4 cloth slabs.
+- Flush painted-looking doors.
+- Equal blocks, or joints wider than 0.15.
+- Moss in the desert: replace the moss of section A by sand drifts at the base.
+- New colours that are not in the table.
+- PBR, Metal or grain.
 
 ## 1. Which colours: the real Part colours, not the photo pixels
 

@@ -156,6 +156,41 @@ their pale grey bevels).
 100 / 100 copies replaced. `SyncMapProps.check()` (2026-10-19, after batch E): 42 templates, 343 tagged instances, all
 up to date; a full `run()` twice: 0 replaced both times. Hub: 5,051 BaseParts (5,350 before props batch 2).
 
+
+### Desert buildings and shelters (owner, 2026-10-19): inventory before the remake (read from Studio)
+
+Test zone = `workspace._Staging.AssetPreview.Desert.<Kit name>` (the desert test row, not the ModelsA lineup); kit =
+`ServerStorage.MapAssets.Desert.<Kit name>`. Game copies found by name and by part-signature similarity (part name +
+size, every model of workspace and the boss arenas): no renamed copy exists, the boss arenas hold none. All copies are
+at scale 1, none is tagged MapProp yet, none has a prompt, script, GUI, light, NPC, interior or attribute (the house
+walls are solid blocks: the doors are decor plates on the wall, no prompt). No script reads these names (src and tools
+grep). Backups: `BackUP_Files/old_props_2026-10-19_pre_desert_buildings/<nn>_<object>_<kit>.rbxm` (test + kit + every
+game copy; manifest with pivots in the session log). "Parts" = BaseParts of one copy (every copy is identical).
+
+| # | object | test zone (kit) | game copies | parts | functional content to keep | notes |
+|---|---|---|---|---|---|---|
+| 01a | adobe house, single storey (red door frame / awning) | Desert.ClayHouse_A (MapAssets.Desert) | Zones.Desert.Desert_2.Decor.Village.ClayHouse_A x5 (yaw -90 / -50 / -180 / 35 / 150) | 22 | none (the turquoise Door 6 x 9 x 0.6 is a plate on the wall; keep its place and collision) | 21.0 x 14.2 x 19.8; all parts collide |
+| 01b | adobe house, two storeys (dome, terrace, blue awning) | Desert.ClayHouse_B (MapAssets.Desert) | Desert_2.Decor.Village.ClayHouse_B x2 (yaw -90 / 0) | 29 | none (Door plate as 01a) | 25 x 21.2 x 21.5; its left window overlaps the door frame by 0.3 (fix in the remake) |
+| 02 | market stall (red / linen stripes) | Desert.MarketStall_A (MapAssets.Desert) | Desert_2.Decor.Village.MarketStall_A x4 | 23 | none: no prompt, no NPC, no shop interaction on the stall or in it | 12.3 x 9.5 x 8.5 |
+| 03 | canopy pavilion (red / blue roof, rug) | Desert.NomadTent_B (MapAssets.Desert) | Desert_1.Decor.Camps.NomadTent_B x1 | 19 | none | 14.3 x 13.1 x 14.3; 2 parts already non-colliding |
+| 04 | tent (red / gold) | Desert.NomadTent_A (MapAssets.Desert) | Desert_1.Decor.Camps.NomadTent_A x2, Desert_3.Decor.Camp.NomadTent_A x1 | 9 | none | 11.1 x 8.6 x 14.0. The same 9-part model (same part names and sizes, other colours) is also Common.Tent_A (red / linen: test lineup, Hub.Decor.Props.AFKCorner, Plains_2.Decor.PirateCamp) and Volcano.Miner_Tent (dark: test Volcano row, Volcano_1.Decor.Camp x2): other kits: OUT of scope (coordinator 2026-10-19: different kits / colours, the owner asked for the desert tent only; backed up in `04_tent_lookalikes_Tent_A_Miner_Tent.rbxm`) |
+| 05 | ruined wall (sandstone, plaques) | Desert.Sandstone_Wall_Ruin (MapAssets.Desert) | Desert_2.Decor.Village.Sandstone_Wall_Ruin x1, Desert_3.Decor.Ruins.Sandstone_Wall_Ruin x2 (on a raised floor, y 24.3 / 20.3) | 9 | none | 20.4 x 13 x 8 |
+
+Copies to sync: 01a 7 (test, kit, 5 game), 01b 4 (test, kit, 2), 02 6, 03 3, 04 5, 05 5 = 30.
+
+#### Desert buildings remake status
+
+Built from parts in Studio (`DevTools.PropsDesert`, disk `tools/PropsDesert.luau`; it reuses PropsBatch2's helpers
+through `PropsBatch2.H` and its `install()`), merged into a few unions per colour group, synced by
+`DevTools.SyncMapProps` (its search roots now include the desert test row `workspace._Staging.AssetPreview.Desert`;
+no other rule finds anything new there). Recipe: docs/prop_texture_guide.md sections A and B, today's colours kept.
+Screenshots: `docs/screenshots/desert_buildings/<nn>_<object>_*_before.jpg` / `_after.jpg`.
+
+| # | object | MapProps id (rule) | replaced (test + kit + game) | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 01a | adobe house, one storey | `adobe_house_a` (names `ClayHouse_A`) | 7 / 7 (test 1, kit 1, Desert_2 5); 2nd run 0 | 22 -> 17: 9 unions (Walls, Frames, Door, Wood, Shutters, Awning, Pots, Ladder, Details) + 8 invisible `Collision` boxes; about 8,200 triangles | 22.8 x 15.5 x 20.4 (was 21.0 x 14.2 x 19.8): 6 battered plaster layers (layer lines, alternate layers proud, chipped corners, 4 exposed sandstone patches) on a 0.5-wider footing of blocks, light plaster bands at the lintel and under the parapet, parapet with caps, corner merlons and a lower middle, 5 drain spouts, 5 + 5 vigas with 28-degree cut ends and socket rings; the turquoise door at today's place (planks, battens, gold studs, iron hinge straps, gold knob) in today's terracotta frame with a wooden lintel and a threshold step; 2 windows cut 0.3 deep with terracotta frames, wooden lintels, today's sills, turquoise shutters open; the red awning as pleated cloth with a tabbed valance, linen piping, struts and rope ties (raised 1 stud: it crossed the vigas); chimney with a cap and a dark flue; roof hatch with a ladder; 2 clay pots on the roof. Door: same x / width / face, planks from the footing top (1.4) to 9, collides (box). Not climbable (main agent's Play test of the first version: the sills, vigas, awnings, spouts and thresholds let players reach the roof): the visible unions no longer collide (except the Door and B's Dome); invisible `Collision` boxes rebuild today's envelope (footing, walls, parapets, chimney; B: upper storey, cap) with vertical sides, plus a box flush with the door above it (no ledge on its top). Edit check: downward rays every 0.2 around each copy (outside the walls, out to 4 studs) find no standable top between 1.45 and 11.5 |
+| 01b | adobe house, two storeys | `adobe_house_b` (names `ClayHouse_B`) | 4 / 4 (test 1, kit 1, Desert_2 2); 2nd run 0 | 29 -> 18: 10 unions (+ Dome) + 8 invisible `Collision` boxes; about 12,400 triangles | 26.1 x 22.4 x 22.4 (was 25 x 21.2 x 21.5): the lower block (5 layers) and the upper storey in light plaster (5 layers) under today's terracotta cap (2 capped slabs), bands, patches, the terrace parapet (today's 3 runs) with merlons and 4 spouts; vigas 4 front (the 2 over the door, which crossed its lintel, removed) + 6 back + 3 + 3 upper; the turquoise plank door at today's place with a lintel beam, threshold and a new gold knob; the lower left window narrowed to 2.6 and moved 0.7 left (it overlapped the door frame by 0.3) with a grille, the 2 others with turquoise shutters; the blue awning as pleated cloth; the dome on a light-clay drum with a terracotta base ring, 8 ribs (a ball intersected with 4 slabs) and a 2.1 gold finial (ball, collar, spike); 3 pots on the terrace; a ladder from the terrace to the upper roof. No ground pots on either house: the village has its own jars by the doors. Collisions as 01a (envelope boxes, the door and the dome collide) |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).
