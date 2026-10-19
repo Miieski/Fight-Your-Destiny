@@ -2237,3 +2237,15 @@ every rock intersection in sub-zone 1.
   Guide corrections from the real part colours: the "pink" Neon is #966EFF (Neon renders it pink); the shrine stone
   is the normal stone palette (its lavender look in the photo is the crystal's light). Generator
   tools/blender/fyd_facets.py; previews Previews/Props/batch2_*_facets.png.
+- 19:00 PILOT 02 PORTAL done (Agent B; main agent looked at the test / hub shots and Play-checked): new MapProps
+  portal_frame, replaced 14 / 14 (test 1, kit 1, hub 12; each hub frame keeps its zone Variant: the gem settings and
+  keystone take the zone colour; NamePlate texts kept). Pillars of cut blocks with joints and chamfers, capitals,
+  base steps, moss, a segmental arch of 7 voussoirs (the first semicircular arch hid the floating zone name tag of
+  Hub.Portals at y 24 -> lowered to an apex of 20.6 / keystone top 22.5), the name plate in a dark wood frame with
+  iron corners, rivets and straps, the yellow diamonds now Neon gems in gold settings (built from parts; Agent A's
+  faceted portal_gem not used yet). 10 parts per hub frame (9 unions + NamePlate), ~4,050 triangles; hub parts 5,350
+  -> 5,278. New tools/PropsBatch2.luau (batch-2 builders; chamfered() retries in reverse order when a CSG subtract
+  returns a near-empty fragment); SyncMapProps portal_frame rule (zone variant, NameGui moved over);
+  PortalController darkens unioned frames for locked zones and restores their own colours on reveal.
+  Main agent Play check: the locked Void frame is fully dark at run time, Plains / Desert lit; walking into
+  Portal_Plains through the new frame teleports to Plains (2000, 3, -105); no errors.

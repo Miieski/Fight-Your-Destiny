@@ -86,6 +86,18 @@ every game copy). "Parts" = BaseParts of one copy (test / game).
 Hub part budget: 5,350 BaseParts today (0 unions) for a 6,000 budget. The batch 2 objects use 696 of them in the hub
 (wall 32, portal frames 192, egg station 33, gazebo 57, fruit stalls 132, trainer 65, boards 95, lamps 56, altar 34).
 
+#### Props batch 2 remake status
+
+Built from parts in Studio (`DevTools.PropsBatch2`, disk `tools/PropsBatch2.luau`) and merged into a few unions per
+colour / material group (each union = 1 part of the hub budget), synced by `DevTools.SyncMapProps`. Screenshots:
+`docs/screenshots/props_batch2/<nn>_<object>_*_before.jpg` / `_after.jpg`.
+
+| # | object | MapProps id (rule) | replaced (test + kit + game) | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 02 | portal frame | `portal_frame` (names `PortalFrame`; `match` = `Hub.Decor.PortalFrames.PortalFrame_<Zone>`; variant = the zone) | 14 / 14 (test 1, kit 1, hub 12); 2nd run 0 | test 17 -> 11 (10 + its own pink `Surface`, kept with MapPropKeep); hub 16 -> 10 (9 unions + the `NamePlate` Part); about 4,050 triangles per copy | stone steps, coursed pillars with chamfered blocks and capitals, segmental arch with 7 voussoirs (keystone under y 22.6 so the portal's floating `NameTag` stays visible), name plate in a wooden frame with iron corner plates, glowing gem settings (old yellow diamonds), moss at the foot. `_Variants`: 12 zones (`Color_Gem` + `Color_Keystone`). The NameGui on NamePlate is carried over (texts kept); `Hub.Portals` and the teleport untouched. PortalController: locked-zone black filter turns `UsePartColor` on for unions and gives it back on reveal |
+
+Hub part budget after 02: 5,278 BaseParts (-72).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

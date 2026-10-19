@@ -61,7 +61,8 @@ local function rgbOf(part: Instance?): (number, number, number)
 	return -1, -1, -1
 end
 
--- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule)
+-- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
+-- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
 SyncMapProps.RULES = {
 	{ propId = "crate", names = { "Crate_A" }, variant = function(m)
 		local r = rgbOf(m:FindFirstChild("Body"))
@@ -92,6 +93,14 @@ SyncMapProps.RULES = {
 	-- so only the Plains_1 copy, the test-area copy and the kit copy are synced (filter)
 	{ propId = "wheat_patch", names = { "WheatPatch_A" } },
 	{ propId = "hay_bale", names = { "HayBale_A" } },
+	-- props batch 2 (owner, 2026-10-19; DevTools.PropsBatch2): the portal frame of the test zone / kit, and the hub's
+	-- 12 PortalFrame_<Zone> (Hub.Decor.PortalFrames; PortalController finds them by name), Variant = the zone id
+	{ propId = "portal_frame", names = { "PortalFrame" }, match = function(m)
+		local parent = m.Parent
+		return parent ~= nil and parent.Name == "PortalFrames" and string.match(m.Name, "^PortalFrame_%w+$") ~= nil
+	end, variant = function(m)
+		return string.match(m.Name, "^PortalFrame_(%w+)$")
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -509,9 +518,33 @@ local function replace(old: Model, template: Model): (Model?, string?)
 			kept += 1
 		end
 	end
+	-- signs: a SurfaceGui / BillboardGui on a part of the old model (a name plate, a price sign, a screen) moves onto
+	-- the new model's part of the same name, replacing the template's GUI of that name (texts, sizes kept)
+	local guis = 0
+	for _, gui in ipairs(old:GetDescendants()) do
+		local host = gui.Parent
+		if gui:IsA("LayerCollector") and host and host:IsA("BasePart") and host.Parent == old then
+			local target = new:FindFirstChild(host.Name)
+			if target and target:IsA("BasePart") then
+				local same = target:FindFirstChild(gui.Name)
+				if same and same:IsA("LayerCollector") then
+					same:Destroy()
+				end
+				gui.Parent = target
+				guis += 1
+			end
+		end
+	end
 	new.Parent = parent
 	old:Destroy()
-	return new, if kept > 0 then `kept {kept} custom child(ren)` else nil
+	local notes = {}
+	if kept > 0 then
+		table.insert(notes, `kept {kept} custom child(ren)`)
+	end
+	if guis > 0 then
+		table.insert(notes, `moved {guis} sign GUI(s)`)
+	end
+	return new, if #notes > 0 then table.concat(notes, ", ") else nil
 end
 
 ---------------------------------------------------------------------
@@ -777,9 +810,11 @@ function SyncMapProps.find(propId: string, forBackup: boolean?): ({ Instance }, 
 	local names: { [string]: boolean } = {}
 	local hubNames: { [string]: boolean } = {}
 	local filter: ((Instance) -> boolean)? = nil
+	local match: ((Instance) -> boolean)? = nil
 	for _, rule in ipairs(SyncMapProps.RULES) do
 		if rule.propId == propId then
 			filter = rule.filter
+			match = rule.match
 			for _, n in ipairs(rule.names) do
 				names[n] = true
 			end
@@ -804,7 +839,7 @@ function SyncMapProps.find(propId: string, forBackup: boolean?): ({ Instance }, 
 	for _, root in ipairs(searchRoots()) do
 		for _, d in ipairs(root:GetDescendants()) do
 			if d:IsA("Model") then
-				if (names[d.Name] and (filter == nil or filter(d))) or (hubNames[d.Name] and d.Parent == hub) then
+				if (names[d.Name] and (filter == nil or filter(d))) or (hubNames[d.Name] and d.Parent == hub) or (match ~= nil and match(d)) then
 					table.insert(found, d)
 				elseif (hostNames[d.Name] and (not hostFilter or hostFilter(d))) or (hostTest and hostTest(d)) then
 					table.insert(hosts, d)

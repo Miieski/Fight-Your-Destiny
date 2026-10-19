@@ -104,7 +104,9 @@ local function sign(portal: BasePart): BillboardGui
 	return gui
 end
 
-type Look = { color: Color3, material: Enum.Material }
+-- usePartColor: a union's own UsePartColor (the props batch 2 frames are unions that keep the colours of their
+-- pieces; the black filter needs UsePartColor on to paint them, and gives the union its own setting back)
+type Look = { color: Color3, material: Enum.Material, usePartColor: boolean? }
 local looks: { [BasePart]: Look } = {}
 local revealed: { [string]: boolean } = {}
 
@@ -136,7 +138,7 @@ end
 
 local function remember(part: BasePart)
 	if not looks[part] then
-		looks[part] = { color = part.Color, material = part.Material }
+		looks[part] = { color = part.Color, material = part.Material, usePartColor = if part:IsA("PartOperation") then part.UsePartColor else nil }
 		part:SetAttribute("RealName", nil)
 	end
 end
@@ -206,6 +208,9 @@ local function filter(portal: BasePart, hidden: boolean, animate: boolean)
 	zoneEffects(portal:GetAttribute("ZoneId") :: string, not hidden)
 	if hidden then
 		for i, part in ipairs(parts) do
+			if part:IsA("PartOperation") then
+				part.UsePartColor = true
+			end
 			part.Color = if i == 1 then FILTER_PORTAL else FILTER_DARK
 		end
 		for _, label in ipairs(texts) do
@@ -219,6 +224,10 @@ local function filter(portal: BasePart, hidden: boolean, animate: boolean)
 	if not animate then
 		for _, part in ipairs(parts) do
 			part.Color = looks[part].color
+			local own = looks[part].usePartColor
+			if own ~= nil and part:IsA("PartOperation") then
+				part.UsePartColor = own
+			end
 		end
 		return
 	end
@@ -240,6 +249,14 @@ local function filter(portal: BasePart, hidden: boolean, animate: boolean)
 	for _, part in ipairs(parts) do
 		part.Color = Color3.new(1, 1, 1)
 		TweenService:Create(part, TweenInfo.new(REVEAL_SECONDS, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Color = looks[part].color }):Play()
+		local own = looks[part].usePartColor
+		if own ~= nil and part:IsA("PartOperation") then
+			task.delay(REVEAL_SECONDS, function()
+				if part.Parent then
+					part.UsePartColor = own
+				end
+			end)
+		end
 	end
 	Sfx.play("Unlock", portal.Position)
 end
