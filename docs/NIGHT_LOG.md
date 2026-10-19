@@ -2447,3 +2447,20 @@ every rock intersection in sub-zone 1.
   later - it streamed in after the open, then hidden), the player walks through. Phone emulator at the temple gate:
   144 fps, worst 8.5 ms, render CPU 2.6 ms. No errors. FINAL: 51 templates / 382 tagged copies up to date, run 2 = 0;
   disk == Studio (182 scripts, 0 written); backup after_desert_gates.
+
+# Desert_2 gate + desert rocks, ruins and nature - 2026-10-20 (owner: "do the same with the Desert_2 gate. After execute the prompt: DESERT ZONE PROP IMPROVEMENT - Rocks, ruins and nature" - 01 red rock stack (ALL instances, small rotation / scale variations only, invisible walls must still match), 02 sandstone blocks, 03 ribs and bull skull, 04 cacti (keep positions and the 3 shapes))
+
+## Status (newest first)
+
+- 14:00 Started. Images stored in docs/Desert_Images/03_Rocks_Ruins_Nature/ (folder created). Backup
+  before_desert2_gate_and_nature. Order: Desert_2 gate first (same treatment as the other gates), then the 4 nature
+  objects with a pilot.
+- 00:20 DESERT_2 GATE done (Agent B; main agent looked at the Desert_2 shot; Play check together with the nature
+  batch): sandstone_wall_gate (Gate_Desert_2) replaced 3 / 3; piers with stepped bases, cut block courses, the
+  turquoise band as an inlay band, cavetto caps, two-tone pyramid tips; side walls in courses with a capped roll; a
+  coursed lintel with inlay band, cavetto cornice and capped merlons; plank sign board with iron corners; iron lamps
+  with brass rims; door = today's 8 plank colours with grain / knots / studs, riveted iron straps with hinge knuckles,
+  a seam strip, gold ring handles, back battens and braces (all under Barrier); sand drifts. Barrier (exact copy,
+  PrimaryPart, attribute), SubZoneId, PriceSign ("5K Gold"), the 2 Ember flames + FirePoints kept. 50 -> 15 parts;
+  collision = invisible union of today's parts (differences only on the pyramid tips, <= 0.3). 52 templates / 385
+  copies up to date.

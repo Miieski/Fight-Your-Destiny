@@ -1727,9 +1727,305 @@ function Gates.canyon_barricade(): Model
 end
 
 ---------------------------------------------------------------------
+-- 04 SANDSTONE WALL GATE (kit Gates.Gate_Desert_2, 50 parts; Zones.Desert.Desert_2.Gate, attr SubZoneId).
+---------------------------------------------------------------------
+-- today's colliding parts except the Barrier and the PriceSign (their own collision is kept)
+D.ENVELOPES.sandstone_wall_gate = {
+	{ "Block", 9, 22, 9, { -16.5, 11, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Pier
+	{ "Block", 10.6, 2, 10.6, { -16.5, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- PierBase
+	{ "Block", 11, 13, 5, { -26, 6.5, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- SideWall
+	{ "CornerWedgePart", 4.6, 4, 4.6, { -18.8, 25.5, -2.3, 0, 0, -1, 0, 1, 0, 1, 0, 0 } }, -- PierTop
+	{ "Block", 1, 1.6, 2.4, { 16.5, 9.4, -5.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Bracket
+	{ "Block", 10.6, 1.5, 10.6, { -16.5, 22.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- PierCap
+	{ "Block", 9.2, 1, 9.2, { -16.5, 14.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Band
+	{ "CornerWedgePart", 4.6, 4, 4.6, { -18.8, 25.5, 2.3, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- PierTop
+	{ "Block", 1.8, 0.3, 1.8, { 16.5, 11.15, -6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Ember
+	{ "Block", 2.4, 0.8, 2.4, { 16.5, 10.6, -6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Bowl
+	{ "CornerWedgePart", 4.6, 4, 4.6, { 18.8, 25.5, 2.3, 0, 0, 1, 0, 1, 0, -1, 0, 0 } }, -- PierTop
+	{ "Block", 11.6, 1.2, 6, { 26, 13.6, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- SideCap
+	{ "Block", 24.1, 1, 7.4, { 0, 20.7, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Band
+	{ "Block", 24, 6, 7, { 0, 19, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Lintel
+	{ "Block", 1, 1.6, 2.4, { -16.5, 9.4, -5.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Bracket
+	{ "Block", 1.8, 0.3, 1.8, { -16.5, 11.15, -6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Ember
+	{ "Block", 10.6, 2, 10.6, { 16.5, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- PierBase
+	{ "CornerWedgePart", 4.6, 4, 4.6, { -14.2, 25.5, -2.3, -1, 0, 0, 0, 1, 0, 0, 0, -1 } }, -- PierTop
+	{ "CornerWedgePart", 4.6, 4, 4.6, { -14.2, 25.5, 2.3, 0, 0, 1, 0, 1, 0, -1, 0, 0 } }, -- PierTop
+	{ "Block", 9, 22, 9, { 16.5, 11, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Pier
+	{ "Block", 11.6, 1.2, 6, { -26, 13.6, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- SideCap
+	{ "Block", 2.4, 0.8, 2.4, { -16.5, 10.6, -6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Bowl
+	{ "CornerWedgePart", 4.6, 4, 4.6, { 14.2, 25.5, -2.3, 0, 0, -1, 0, 1, 0, 1, 0, 0 } }, -- PierTop
+	{ "CornerWedgePart", 4.6, 4, 4.6, { 18.8, 25.5, -2.3, -1, 0, 0, 0, 1, 0, 0, 0, -1 } }, -- PierTop
+	{ "Block", 10.6, 1.5, 10.6, { 16.5, 22.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- PierCap
+	{ "Block", 9.2, 1, 9.2, { 16.5, 14.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Band
+	{ "CornerWedgePart", 4.6, 4, 4.6, { 14.2, 25.5, 2.3, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- PierTop
+	{ "Block", 11, 13, 5, { 26, 6.5, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- SideWall
+	{ "Block", 13.2, 5, 0.5, { 0, 19, -3.55, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- SignBack
+	{ "Block", 3, 1.6, 7, { -10, 24, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Merlon
+	{ "Block", 26.5, 1.2, 8.6, { 0, 22.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Cornice
+	{ "Block", 3, 1.6, 7, { -5, 24, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Merlon
+	{ "Block", 3, 1.6, 7, { 5, 24, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Merlon
+	{ "Block", 3, 1.6, 7, { 0, 24, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Merlon
+	{ "Block", 3, 1.6, 7, { 10, 24, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Merlon
+}
+
+---------------------------------------------------------------------
+-- Today's layout, opening (24 x 16), colours and gate contract (docs B12). The 2 piers on stepped bases (4 footing
+-- slabs, a chamfered plinth), in courses of 2 cut sandstone blocks (alternating joints, chamfers, tone steps) over a
+-- mortar core, today's turquoise band as an inlay band (gold rules, gold diamonds), a small cavetto cap and today's
+-- two-tone pyramid tips with joint lines; the side walls in courses of cut blocks with a chamfered cap and a roll; the
+-- lintel in courses with a soffit, today's turquoise band as an inlay band (lapis diamonds, gold dots, gold rules), a
+-- cavetto cornice and today's 5 merlons as capped blocks; the sign board of 3 nailed planks with iron corner plates
+-- behind today's PriceSign; the 2 lamps (iron wall plate, brace, arm and scroll, an iron bowl with a brass rim, a Neon
+-- flame "Ember" with today's colour and FirePoint). The door (the Barrier, today's dark-wood slab): today's 8 planks
+-- as chamfered boards (0.06 gaps, grain, knots, iron studs), today's 2 bands as riveted iron straps with hinge knuckles,
+-- today's seam as a riveted iron astragal, today's 2 gold ring handles as rings on bosses, 2 battens and 2 braces
+-- behind (all children of the Barrier). Sand drifts at the feet (never in the opening).
+-- Collision: the visible unions do not collide; an invisible "Collision" union is today's colliding parts; the
+-- Barrier and the PriceSign keep their own collision as today.
+-- Parts: Stone, Wall, Inlay, Gold, Iron, SignBoard, Sand, Ember x2, Collision, Barrier (+ Planks, Straps, DoorGold),
+-- PriceSign.
+---------------------------------------------------------------------
+function Gates.sandstone_wall_gate(): Model
+	local m = Instance.new("Model")
+	m.Name = "sandstone_wall_gate"
+	local rng = Random.new(20261121)
+	H.setBevelSelf(true)
+	local Ht = 27.5
+	local STONE, WALL, FOOT, TIP2 = C.Sandstone, rgb(218, 183, 127), C.Footing, rgb(213, 179, 124)
+	local IRON = rgb(92, 98, 110)
+	local BRASS = rgb(201, 154, 46)
+	local MORTAR = scaled(STONE, 0.72)
+	local U, add = lists()
+	U.Inlay, U.Gold, U.Iron, U.Stone = {}, {}, {}, {}
+	local embers = {}
+	for _, sx in ipairs({ -1, 1 }) do
+		local cx = sx * 16.5
+		-- the stepped base (today's 10.6 x 2 x 10.6)
+		local prev = nil
+		for _, ix in ipairs({ -1, 1 }) do
+			for _, iz in ipairs({ -1, 1 }) do
+				local ti = toneIndex(rng, prev)
+				prev = ti
+				add("Stone", chamfered(Vector3.new(5.24, 1.1, 5.24), CFrame.new(cx + ix * 2.66, 0.55, iz * 2.66), soft(FOOT, 0.5, Ht, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.14))
+			end
+		end
+		add("Stone", piece("Part", Vector3.new(10.5, 1.0, 10.5), CFrame.new(cx, 0.55, 0), scaled(FOOT, 0.72)))
+		add("Stone", chamfered(Vector3.new(10.0, 0.9, 10.0), CFrame.new(cx, 1.55, 0), soft(FOOT, 1.5, Ht, 1.04), { "vertical", "topFrontBack", "topSides" }, 0.18))
+		-- the pier: courses of 2 blocks (split along X, then along Z) over a mortar core; today's turquoise band
+		add("Stone", piece("Part", Vector3.new(8.6, 20, 8.6), CFrame.new(cx, 12, 0), MORTAR))
+		local courses = { { 2, 1.7 }, { 3.7, 1.7 }, { 5.4, 1.7 }, { 7.1, 1.7 }, { 8.8, 1.8 }, { 10.6, 1.8 }, { 12.4, 1.6 }, { 14.0, 1.0, "band" }, { 15.0, 1.75 }, { 16.75, 1.75 }, { 18.5, 1.75 }, { 20.25, 1.75 } }
+		for ci, c in ipairs(courses) do
+			local y0, h = c[1], c[2]
+			local yc = y0 + h / 2
+			if c[3] == "band" then
+				L.inlayBand(U.Inlay, cx, yc, 9.2, 1.0, C.Turquoise, C.Gold, true)
+			else
+				local alongX = ci % 2 == 0
+				local split = rng:NextNumber(-0.9, 0.9)
+				for _, half in ipairs({ -1, 1 }) do
+					local a = if half < 0 then -4.5 else split + 0.045
+					local b = if half < 0 then split - 0.045 else 4.5
+					local len = b - a
+					local mid = (a + b) / 2
+					local size = if alongX then Vector3.new(len, h - 0.05, 9) else Vector3.new(9, h - 0.05, len)
+					local cf = if alongX then CFrame.new(cx + mid, yc, 0) else CFrame.new(cx, yc, mid)
+					add("Stone", chamfered(size, cf, soft(STONE, yc, Ht, TONES[rng:NextInteger(1, 3)]), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.15))
+				end
+			end
+		end
+		-- the cap (today's 10.6 x 1.5 x 10.6): a small cavetto
+		cavetto(U.Stone, function(f: number)
+			return cx - 4.5 - 0.8 * f, cx + 4.5 + 0.8 * f, -4.5 - 0.8 * f, 4.5 + 0.8 * f
+		end, 22, 1.5 / 2.4, FOOT, Ht, { "front", "back", "left", "right" })
+		-- today's two-tone pyramid tip (9.2 wide, 23.5 .. 27.5) with joint lines on its faces
+		local apexLocal = Vector3.new(0, 27.5, 0)
+		local planes = { { 0, -1, 0, -23.5 }, { 0, 1, 0, 27.5 } }
+		for k = 0, 3 do
+			local a = k * math.pi / 2
+			local d = Vector3.new(math.cos(a), 0, math.sin(a))
+			local nrm = (d * 4 + UP * 4.6).Unit
+			table.insert(planes, { nrm.X, nrm.Y, nrm.Z, nrm:Dot(apexLocal), if k % 2 == 0 then TIP2 else STONE })
+			local along = UP:Cross(d)
+			local dirUp = (UP * 4 - d * 4.6).Unit
+			for _, y in ipairs({ 24.5, 25.5, 26.5 }) do
+				local hw = 4.6 * (1 - (y - 23.5) / 4)
+				local p = Vector3.new(cx, y, 0) + d * hw + nrm * 0.02
+				table.insert(U.Stone, piece("Part", Vector3.new(2 * hw, 0.08, 0.04), CFrame.fromMatrix(p, along, dirUp), scaled(STONE, 0.78)))
+			end
+		end
+		add("Stone", H.convexSolid(Vector3.new(-4.62, 23.5, -4.62), Vector3.new(4.62, 27.5, 4.62), CFrame.new(cx, 0, 0), STONE, planes))
+		-- the side wall (today's 11 x 13 x 5) in courses of cut blocks, the cap with a roll
+		local rows = {}
+		for k = 0, 7 do
+			table.insert(rows, { k * 13 / 8, (k + 1) * 13 / 8 })
+		end
+		U.Wall = U.Wall or {}
+		local u0 = if sx > 0 then 21 else -31.5
+		local u1 = if sx > 0 then 31.5 else -21
+		faceCourses(U.Wall, rng, CFrame.new(0, 0, -2), u0, u1, rows, 5, WALL, Ht, true)
+		table.insert(U.Wall, chamfered(Vector3.new(11.6, 1.2, 6), CFrame.new(sx * 26, 13.6, 0.5), soft(FOOT, 13.6, Ht, 1.02), { "vertical", "topFrontBack", "topSides" }, 0.14))
+		table.insert(U.Wall, cyl(Vector3.new(sx * 21, 12.95, -2.0), Vector3.new(sx * 31.5, 12.95, -2.0), 0.36, scaled(FOOT, 1.08)))
+		table.insert(U.Wall, cyl(Vector3.new(sx * 31.5, 12.95, -2.0), Vector3.new(sx * 31.5, 12.95, 3.0), 0.36, scaled(FOOT, 1.08)))
+		-- the lamp (today's bracket, bowl and Ember at x +-16.5): wall plate, brace, arm, scroll, bowl, brass rim, flame
+		table.insert(U.Iron, chamfered(Vector3.new(1.0, 1.6, 0.25), CFrame.new(cx, 9.4, -4.62), IRON, { "frontFace" }, 0.08))
+		for _, dy in ipairs({ -0.55, 0.55 }) do
+			table.insert(U.Iron, piece("Part", Vector3.new(0.14, 0.14, 0.14), CFrame.new(cx, 9.4 + dy, -4.77) * CFrame.Angles(rad(45), rad(45), 0), scaled(IRON, 0.8)))
+		end
+		table.insert(U.Iron, H.bar(Vector3.new(cx, 8.8, -4.62), Vector3.new(cx, 10.2, -6.0), 0.22, IRON))
+		table.insert(U.Iron, H.bar(Vector3.new(cx, 10.2, -4.62), Vector3.new(cx, 10.2, -6.0), 0.2, IRON))
+		H.scroll(U.Iron, Vector3.new(cx, 10.4, -4.8), Vector3.new(0, 0, -1), 0.26, IRON, 0.1)
+		local bowl = CFrame.new(cx, 10.2, -6.0)
+		table.insert(U.Iron, L.frustum8(0.5, 1.15, 0, 0.74, bowl, IRON))
+		table.insert(U.Gold, H.octagon(2.42, 0.14, bowl * CFrame.new(0, 0.78, 0), BRASS))
+		table.insert(U.Iron, H.octagon(0.8, 0.16, bowl * CFrame.new(0, 0.02, 0), scaled(IRON, 0.85)))
+		table.insert(embers, H.flame(bowl * CFrame.new(0, 0.62, 0), 0.62, 0.35, 1.25, rgb(255, 140, 40)))
+		-- sand drifts at the feet of the pier and the side wall, front and back
+		U.Sand = U.Sand or {}
+		for _, d in ipairs({ { 17.0, 8.6, -5.3, -1 }, { 17.0, 8.6, 5.3, 1 }, { 26.5, 9.6, -2.0, -1 }, { 26.5, 9.6, 3.0, 1 } }) do
+			local turn = if d[4] < 0 then CFrame.identity else CFrame.Angles(0, math.pi, 0)
+			table.insert(U.Sand, piece("WedgePart", Vector3.new(d[2], 0.55, 1.1), CFrame.new(sx * d[1], 0.275, d[3] + d[4] * 0.55) * turn, SAND))
+			table.insert(U.Sand, piece("Part", Vector3.new(d[2] - 0.8, 0.45, 0.45), CFrame.new(sx * d[1], 0.33, d[3] + d[4] * 0.1), SAND, { shape = Enum.PartType.Cylinder }))
+		end
+	end
+
+	-- the lintel (today's 24 x 6 x 7 at y 16 .. 22): courses over a core, a soffit, today's turquoise band as an inlay
+	-- band, a cavetto cornice (today's 26.5 x 1.2 x 8.6), today's 5 merlons as capped blocks
+	add("Stone", piece("Part", Vector3.new(24, 6, 5.8), CFrame.new(0, 19, 0), MORTAR))
+	local LROWS = { { 16, 17.6 }, { 17.6, 19.2 }, { 19.2, 20.2 }, { 21.2, 22 } }
+	faceCourses(U.Stone, rng, CFrame.new(0, 0, -3.5), -12, 12, LROWS, 0.6, STONE, Ht, true)
+	faceCourses(U.Stone, rng, CFrame.new(0, 0, 3.5) * CFrame.Angles(0, math.pi, 0), -12, 12, LROWS, 0.6, STONE, Ht, false)
+	add("Stone", piece("Part", Vector3.new(23.9, 0.25, 5.8), CFrame.new(0, 16.125, 0), soft(STONE, 16, Ht, 0.9)))
+	table.insert(U.Inlay, chamfered(Vector3.new(24.1, 1, 7.4), CFrame.new(0, 20.7, 0), C.Turquoise, { "topFrontBack", "bottomFrontBack" }, 0.06))
+	for _, y in ipairs({ 20.14, 21.26 }) do
+		table.insert(U.Gold, piece("Part", Vector3.new(24.15, 0.12, 7.46), CFrame.new(0, y, 0), C.Gold))
+	end
+	for _, z in ipairs({ -3.73, 3.73 }) do
+		for k = 0, 10 do
+			local x = -10 + k * 2
+			if k % 2 == 0 then
+				table.insert(U.Inlay, piece("Part", Vector3.new(0.5, 0.5, 0.08), CFrame.new(x, 20.7, z) * CFrame.Angles(0, 0, rad(45)), C.Lapis))
+			else
+				table.insert(U.Gold, piece("Part", Vector3.new(0.28, 0.28, 0.08), CFrame.new(x, 20.7, z), C.Gold))
+			end
+		end
+	end
+	cavetto(U.Stone, function(f: number)
+		return -12 - 1.25 * f, 12 + 1.25 * f, -3.5 - 0.8 * f, 3.5 + 0.8 * f
+	end, 22, 0.5, FOOT, Ht, { "front", "back" })
+	for i = -2, 2 do
+		local ti = toneIndex(rng, nil)
+		add("Stone", chamfered(Vector3.new(3, 1.25, 7), CFrame.new(i * 5, 23.825, 0), soft(STONE, 23.8, Ht, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.12))
+		add("Stone", chamfered(Vector3.new(3.3, 0.35, 7.3), CFrame.new(i * 5, 24.625, 0), soft(FOOT, 24.6, Ht, 1.04), { "vertical", "topFrontBack", "topSides" }, 0.08))
+	end
+
+	-- the sign board (today's SignBack 13.2 x 5 x 0.5): 3 nailed planks, iron corner plates
+	U.SignBoard = {}
+	for i = 0, 2 do
+		local y = 17.33 + i * 1.67
+		table.insert(U.SignBoard, H.timber(Vector3.new(13.2 + rng:NextNumber(-0.2, 0.1), 1.62, 0.5), CFrame.new(rng:NextNumber(-0.1, 0.1), y, -3.55), scaled(C.DarkWood, ({ 1, 0.9, 1.06 })[i + 1]), 0.1))
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(U.SignBoard, piece("Part", Vector3.new(0.16, 0.16, 0.1), CFrame.new(sx * 6.3, y, -3.83) * CFrame.Angles(0, 0, rad(45)), scaled(IRON, 0.8)))
+		end
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sy in ipairs({ -1, 1 }) do
+			table.insert(U.Iron, piece("Part", Vector3.new(0.9, 0.22, 0.06), CFrame.new(sx * 6.15, 19 + sy * 2.38, -3.83), IRON))
+			table.insert(U.Iron, piece("Part", Vector3.new(0.22, 0.9, 0.06), CFrame.new(sx * 6.49, 19 + sy * 2.04, -3.83), IRON))
+		end
+	end
+
+	envelope(m, "sandstone_wall_gate")
+	local names = {}
+	for name in pairs(U) do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _, name in ipairs(names) do
+		merge(m, name, U[name], { query = name == "Stone" or name == "Wall" })
+		task.wait()
+	end
+	for i, fl in ipairs(embers) do
+		local e = merge(m, "Ember", { fl }, { material = Enum.Material.Neon, shadow = false })
+		local fp = Instance.new("Attachment")
+		fp.Name = "FirePoint"
+		fp.Parent = e
+		fp.WorldPosition = Vector3.new((if i == 1 then -1 else 1) * 16.5, 11.45, -6)
+	end
+
+	-- the Barrier exactly as today and the door under it
+	local barrier = exact(m, { "Barrier", 24, 16, 1.4, 0, 8, 0, "703e26" }, { collide = true, query = true, touch = true })
+	barrier:SetAttribute("BarrierDecorIsChildOfBarrier", true)
+	local planks, straps, gold = {}, {}, {}
+	local function stud(list: { BasePart }, pos: Vector3, s: number, color: Color3)
+		table.insert(list, piece("Part", Vector3.new(s, s, s), CFrame.new(pos) * CFrame.Angles(rad(45), rad(45), 0), color))
+	end
+	-- today's 8 planks (x, colour), 0.06 gaps, grain, knots, iron studs
+	for _, p in ipairs({ { -10.5, "a86238" }, { -7.5, "ae653a" }, { -4.5, "a35f36" }, { -1.5, "a05d35" }, { 1.5, "a76137" }, { 4.5, "b0663a" }, { 7.5, "a45f36" }, { 10.5, "9e5c34" } }) do
+		local col = Color3.fromHex(p[2])
+		local cf = CFrame.new(p[1], 8, -0.9)
+		table.insert(planks, chamfered(Vector3.new(2.64, 15.4, 0.5), cf, col, { "vertical" }, 0.1))
+		for _ = 1, 2 do
+			local len = rng:NextNumber(3.5, 8)
+			table.insert(planks, piece("Part", Vector3.new(0.06, len, 0.03), cf * CFrame.new(rng:NextNumber(-1.1, 1.1), rng:NextNumber(-7.2 + len / 2, 7.2 - len / 2), -0.26), scaled(col, 0.74)))
+		end
+		if rng:NextNumber() < 0.6 then
+			table.insert(planks, piece("Part", Vector3.new(0.04, 0.34, 0.34), cf * CFrame.new(rng:NextNumber(-0.8, 0.8), rng:NextNumber(-2.5, 2.5), -0.26) * CFrame.Angles(0, rad(90), 0), scaled(col, 0.6), { shape = Enum.PartType.Cylinder }))
+		end
+		for _, y in ipairs({ 1.0, 8.0, 15.0 }) do
+			if not (y == 8.0 and math.abs(p[1]) < 2) then
+				for _, dx in ipairs({ -0.7, 0.7 }) do
+					stud(straps, Vector3.new(p[1] + dx, y, -1.17), 0.2, scaled(IRON, 0.85))
+				end
+			end
+		end
+	end
+	-- 2 battens and 2 braces on the back
+	for _, y in ipairs({ 4.0, 12.0 }) do
+		table.insert(planks, H.timber(Vector3.new(23.6, 0.9, 0.3), CFrame.new(0, y, 0.85), scaled(C.DarkWood, 0.9), 0.08))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(planks, H.bar(Vector3.new(sx * 10.8, 4.5, 0.9), Vector3.new(sx * 1.2, 11.5, 0.9), 0.4, scaled(C.DarkWood, 0.85)))
+	end
+	-- today's 2 bands as riveted iron straps with hinge knuckles; today's seam as a riveted astragal
+	for _, y in ipairs({ 4.05, 12.05 }) do
+		table.insert(straps, chamfered(Vector3.new(24, 0.9, 0.3), CFrame.new(0, y, -1.3), IRON, { "frontFace" }, 0.06))
+		for i = 0, 15 do
+			stud(straps, Vector3.new(-11.25 + i * 1.5, y, -1.46), 0.18, scaled(IRON, 0.8))
+		end
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(straps, cyl(Vector3.new(sx * 11.8, y - 0.6, -1.3), Vector3.new(sx * 11.8, y + 0.6, -1.3), 0.5, scaled(IRON, 0.9)))
+		end
+	end
+	table.insert(straps, chamfered(Vector3.new(0.5, 16, 0.4), CFrame.new(0, 8, -1.3), scaled(IRON, 0.94), { "frontFace" }, 0.06))
+	for i = 0, 9 do
+		stud(straps, Vector3.new(0, 0.8 + i * 1.6, -1.52), 0.16, scaled(IRON, 0.8))
+	end
+	-- today's 2 gold rings (x +-1.6, y 7.9) as ring handles on bosses
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(gold, piece("Part", Vector3.new(0.1, 0.6, 0.6), CFrame.new(sx * 1.6, 8.45, -1.2) * CFrame.Angles(0, rad(90), 0), scaled(C.Gold, 0.9), { shape = Enum.PartType.Cylinder }))
+		stud(gold, Vector3.new(sx * 1.6, 8.45, -1.27), 0.18, C.Gold)
+		ring(gold, Vector3.new(sx * 1.6, 7.95, -1.32), Vector3.xAxis, UP, 0.45, 0.13, 12, C.Gold)
+	end
+	for _, e in ipairs({ { "Planks", planks }, { "Straps", straps }, { "DoorGold", gold } }) do
+		local u = merge(m, e[1], e[2], {})
+		u.Parent = barrier
+		task.wait()
+	end
+
+	-- today's PriceSign, exactly
+	exact(m, { "PriceSign", 12, 4, 0.5, 0, 19, -3.9, "d6965c" }, { collide = true, query = true, touch = true })
+
+	m.PrimaryPart = barrier
+	barrier.PivotOffset = barrier.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "sandstone_wall_gate")
+	H.setBevelSelf(false)
+	return m
+end
+
+---------------------------------------------------------------------
 -- registration: the builders go into PropsDesert's fresh PropsBatch2 table; its install() builds them
 ---------------------------------------------------------------------
-Gates.BUILDERS = { pylon_temple_gate = true, canyon_barricade = true }
+Gates.BUILDERS = { pylon_temple_gate = true, canyon_barricade = true, sandstone_wall_gate = true }
 for id in pairs(Gates.BUILDERS) do
 	B2[id] = (Gates :: any)[id]
 	B2.BUILDERS[id] = true

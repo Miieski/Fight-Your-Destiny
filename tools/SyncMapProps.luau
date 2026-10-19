@@ -183,6 +183,9 @@ SyncMapProps.RULES = {
 	{ propId = "canyon_barricade", names = { "Gate_Desert_3" }, match = function(m)
 		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Desert_3"
 	end },
+	{ propId = "sandstone_wall_gate", names = { "Gate_Desert_2" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Desert_2"
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
