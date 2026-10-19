@@ -1956,3 +1956,21 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   1,245 + a 100-tri collider: a ledge stone (r 2.95) on a wider rock top and the nest sunk 0.12 with skirt twigs
   (36 rays: no gap from any side); egg_nest_Collider_Rock = the true convex hull of the rock + ledge + boulders
   (52 verts, Hull). New preview ids: rowboat 105090937255120, clam 122490022754803, egg_nest 85105593530507.
+- 05:30 BATCH 3/4 PREVIEWED in Studio + batch 2 fixes re-previewed (Agent B; main agent looked at the hub shots of
+  the fountain, weapon / trophy / diamond stalls and the forge), all put back (0 EditableMesh parts).
+  ApplyPropMeshes now handles _Stream / _Foam roles, lights on data attachments, richer particles, the "pieces only"
+  stalls (frame template saved once as MapProps._Base.<id>, anchored items re-based on the real parts, replaced solid
+  parts kept as invisible colliders), the nested anvil_forge (host offset checked: 3/3 at (10.85, 0, 1.9)); nested
+  previews must end host-first. Results: fountain colliders = today's 8 cylinders, crystal light kept on WaterPoint;
+  forge light identical to today's Embers light; trophy cup + crystal ball sit on the counter; awning roofs were
+  standable before (solid stripes) and the data slab keeps that unchanged. Rowboat v2 matches today's layout, the
+  Docks clam overlap is gone, but a hub clam is 0.75 from the blade (sent back to Agent A); clam v2 pink reads like
+  today's; egg_nest v2 seated (ring underside -0.07..+0.06 on the rock), hull collider contains the whole rock.
+  TO FIX (sent to Agent A): the diamond sign is 61 % / 48 % of today's size; AxeHead anchored apart from its handle;
+  awning cloth hovers 0.5-0.6 above the front beam; fountain SpoutLip colliders missing; moss flaps over the
+  fountain step; the rowboat blade vs the hub clam.
+  PropFX: fountain mist (Mist1-6) / glints / water + stream texture scroll; forge fire / sparks / thin smoke + light
+  pulse +-18 % at 1.3 Hz; diamond sign spin (1 turn / 14 s) + upward float 0.5 + sparkle, gem glints; crystal ball
+  shimmer, trophy and shield glints; Spin / Scroll added to the controller (Low FX stops them). Max 6 props emit at
+  once (plaza worst case about 40 particles).
+  MISSING SOUNDS (not added): fire crackle loop, fountain water loop, wind chime; there is no Ambient SoundGroup.

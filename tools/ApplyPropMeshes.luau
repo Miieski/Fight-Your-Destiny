@@ -15,17 +15,35 @@
 	  - size check: a mesh about 28x / 100x / 0.036x off (wrong import unit), or more than 2 % off, is resized to the
 	    data Size; CFrame = pivot * CFrame.new(Center) (no rotation), PivotOffset = CFrame.new(Pivot - Center);
 	  - Anchored, CanCollide false, CanTouch false, CanQuery false, CollisionFidelity Box, CastShadow from the data;
-	  - role from the data (Role, or the _Glow / _Water / _Glass suffix): Glow = Neon + Color; Water = Glass +
-	    Transparency + the water_ripple Texture on the top face; Glass = Transparency; otherwise Material from the data
-	    and a SurfaceAppearance of the family's shared texture set with SurfaceAppearance.Color = the data tint
-	    (imported SurfaceAppearances are replaced);
+	  - role from the data (Role, or the _Glow / _Water / _Glass / _Stream / _Foam suffix): Glow = Neon + Color;
+	    Water = Glass + Transparency + the water_ripple Texture ("Ripples") on the top face; Stream (falling water) =
+	    Glass + Transparency 0.45 + "Ripples" on the four side faces; Foam = SmoothPlastic + Transparency 0.2; Glass =
+	    Transparency; none of them has a SurfaceAppearance. Otherwise Material from the data and a SurfaceAppearance
+	    of the family's shared texture set with SurfaceAppearance.Color = the data tint (imported SAs are replaced);
 	  - invisible collider Parts from the data (Block / Cylinder / Wedge / Ball, Roblox orientation in degrees), and
 	    collider meshes (Role "Collider" / <propId>_Collider*) as invisible Hull colliders; render meshes never collide;
 	  - an invisible "Root" Part (Bounds) as PrimaryPart, pivot (0, PivotY, 0), the data Attachments under Root,
-	    the static lights (Lights, on "<Part>" or "<Part>_Glow") and the particle emitters (Particles, off) of
-	    Config/PropFX, the recolour variants of VARIANTS (or the old template's _Variants), DROP_ATTRIBUTES;
+	    the static lights of Config/PropFX (Lights, on the part "<Part>" / "<Part>_Glow" or on an Attachment) and
+	    its particle emitters (Particles, off), the recolour variants of VARIANTS (or the old template's _Variants),
+	    DROP_ATTRIBUTES;
 	the old template goes to ServerStorage.MapProps._Previous, then SyncMapProps.run updates the test area and the map.
 	The imports are not deleted (the owner deletes them after checking).
+
+	"Pieces only" props (PIECES below: the 3 stalls; data Placement "pieces only"): the FBX holds only the Blender
+	pieces (awning, display items, sign, gems); the frame is the Studio-built template. The new template = a copy of
+	that frame template (the base; saved once in MapProps._Base.<propId> by the first real run, so later runs start
+	from the same frame) where:
+	  - every mesh with an Anchor is re-based on the real part it was modelled on (README section 7, world CFrames):
+	        assumed = stallPivot * CFrame.new(AssumedPosition) * CFrame.fromOrientation(rotation in degrees)
+	        MeshPart.CFrame = realPart.CFrame * assumed:Inverse() * (stallPivot * CFrame.new(Center))
+	    realPart = the part named Anchor.Part (of size PartSize when there is one) nearest to the assumed position;
+	    meshes without an anchor go to stallPivot * CFrame.new(Center);
+	  - the replaced parts (PIECES[propId].Remove, = the data Replaces) leave; the ones that collided stay as invisible
+	    colliders "Collider_<Name>" (solid stays solid) unless a data collider takes over (DataColliders: the awning);
+	  - the data colliders, an invisible "PiecesRoot" part holding the data Attachments (an attachment inside an
+	    anchored item moves with it), the PropFX lights / emitters; attribute MapPropPieces.
+	Nested props (anvil_forge = the AnvilForge sub-model of each weapon stall, data Placement.OriginInHost) are normal
+	templates synced over their nested instances; preview / run check the host offset against OriginInHost.
 
 	Studio preview without an import (Agent A encodes a prop's meshes in PNGs, README "Preview images"):
 		print(Apply.preview("well", { "rbxassetid://<id>" }))   -- decode, build, install, sync (TEMPORARY)
@@ -33,6 +51,7 @@
 	Preview MeshParts are EditableMesh-backed: they do not survive a save, so endPreview must run before any save.
 	preview() keeps the untouched originals in MapProps._PreviewHold.<propId>; endPreview() puts them back exactly
 	(same instances) and restores the previous template; a collider mesh (never in the PNG) gets a stand-in box.
+	A nested prop and its host (anvil_forge in weapon_stall): end the previews in the reverse order (the host first).
 ]]
 local AssetService = game:GetService("AssetService")
 local CollectionService = game:GetService("CollectionService")
@@ -64,6 +83,24 @@ ApplyPropMeshes.VARIANTS = {
 ApplyPropMeshes.DROP_ATTRIBUTES = {
 	egg_nest = "SourceAssetId,SourceCreator", -- the Toolbox rock is gone: the new rock is ours
 }
+-- "pieces only" props: the frame template's parts the Blender pieces replace (= the data Replaces: awning stripes
+-- "Awning" x7 + fringe blocks "AwningFringe" x7, then the display items), and the ones a data collider takes over
+ApplyPropMeshes.PIECES = {
+	weapon_stall = {
+		Remove = { "Awning", "AwningFringe", "SwordBlade", "SwordGuard", "SwordGrip", "Shield", "ShieldBoss", "AxeHandle", "AxeHead", "DisplaySword" },
+		DataColliders = { Awning = true },
+	},
+	trophy_stall = {
+		Remove = { "Awning", "AwningFringe", "TrophyCup", "CounterSkull" },
+		DataColliders = { Awning = true },
+	},
+	diamond_shop = {
+		Remove = { "Awning", "AwningFringe", "Diamond", "DiamondGirdle", "SignBar", "SignPost", "Cushion", "Gem" },
+		DataColliders = { Awning = true },
+	},
+}
+local PIECES_ROOT = "PiecesRoot"
+local BASE = "_Base" -- MapProps._Base.<propId>: the frame template a pieces prop is built from
 
 local function fresh(module: Instance): any
 	local copy = module:Clone()
@@ -158,7 +195,7 @@ local function roleOf(name: string, info: any): string
 	if info.Role and info.Role ~= "" then
 		return info.Role
 	end
-	for _, role in ipairs({ "Glow", "Water", "Glass" }) do
+	for _, role in ipairs({ "Glow", "Water", "Glass", "Stream", "Foam" }) do
 		if string.find(name, "_" .. role .. "$") then
 			return role
 		end
@@ -177,6 +214,247 @@ local function invisibleCollider(p: BasePart)
 	p.CanQuery = true
 	p.CanTouch = false
 	p.CastShadow = false
+end
+
+local function material(name: string?, default: string): Enum.Material
+	local ok, value = pcall(function()
+		return (Enum.Material :: any)[name or default]
+	end)
+	return if ok and value then value else (Enum.Material :: any)[default]
+end
+
+-- the water_ripple overlay ("Ripples" Textures; Controllers/PropFX scrolls them)
+local SIDES = { Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right }
+local function ripples(mp: BasePart, data: any, overlayName: string?, faces: { Enum.NormalId })
+	local overlay = overlayName and data.Textures[overlayName]
+	if not overlay then
+		return
+	end
+	for _, face in ipairs(faces) do
+		local tex = Instance.new("Texture")
+		tex.Name = "Ripples"
+		tex.Face = face
+		tex.Texture = overlay.ColorMap
+		tex.StudsPerTileU = data.StudsPerTile or 4
+		tex.StudsPerTileV = data.StudsPerTile or 4
+		tex.Parent = mp
+	end
+end
+
+-- one render MeshPart (a clone of the import / preview mesh) -> its template look; placed by the caller
+local function dress(mp: MeshPart, propId: string, meshName: string, info: any, data: any, resized: { string })
+	for _, child in ipairs(mp:GetChildren()) do
+		child:Destroy() -- imported SurfaceAppearance / welds: replaced below
+	end
+	local want = v3(info.Size)
+	local off = 0
+	for _, axis in ipairs({ "X", "Y", "Z" }) do
+		local a, b = (mp.Size :: any)[axis], (want :: any)[axis]
+		if b > 0.05 then
+			off = math.max(off, math.abs(a / b - 1))
+		end
+	end
+	if off > SIZE_TOLERANCE then
+		table.insert(resized, string.format("%s x%.3f", meshName, want.Magnitude / math.max(mp.Size.Magnitude, 1e-6)))
+		mp.Size = want
+	end
+	mp.Anchored = true
+	mp.CanCollide = false
+	mp.CanTouch = false
+	mp.CanQuery = false
+	mp.CastShadow = info.CastShadow == true
+	pcall(function()
+		mp.CollisionFidelity = Enum.CollisionFidelity.Box
+	end)
+	local center = v3(info.Center)
+	mp.PivotOffset = CFrame.new(v3(info.Pivot or { 0, 0, 0 }) - center)
+	local tint = rgb(info.Color)
+	local role = roleOf(meshName, info)
+	local family = data.Families[info.Family] or {}
+	mp.Color = tint
+	mp.Transparency = info.Transparency or 0
+	if role == "Glow" then
+		mp.Material = Enum.Material.Neon
+	elseif role == "Water" or role == "Glass" or role == "Stream" then
+		mp.Material = material(info.Material or family.Material, "Glass")
+		mp.Transparency = info.Transparency or family.Transparency or (if role == "Water" then 0.35 elseif role == "Stream" then 0.45 else 0.3)
+		if role == "Water" then
+			ripples(mp, data, info.Overlay or family.Overlay, { Enum.NormalId.Top })
+		elseif role == "Stream" then
+			ripples(mp, data, info.Overlay or family.Overlay, SIDES)
+		end
+	elseif role == "Foam" then
+		mp.Material = material(info.Material or family.Material, "SmoothPlastic")
+		mp.Transparency = info.Transparency or family.Transparency or 0.2
+	else
+		mp.Material = material(info.Material or family.Material, "SmoothPlastic")
+		local sa = surfaceFor(data, family, tint)
+		if sa then
+			sa.Parent = mp
+		end
+	end
+	mp.Name = stripped(propId, meshName)
+end
+
+-- a collider mesh (Role "Collider"): the imported Hull mesh, or (preview) a stand-in box of its data size
+local function colliderMesh(propId: string, meshName: string, info: any, src: MeshPart?, at: CFrame, model: Model, opts: any, notes: { string })
+	if src then
+		local cm = src:Clone()
+		for _, child in ipairs(cm:GetChildren()) do
+			child:Destroy()
+		end
+		invisibleCollider(cm)
+		pcall(function()
+			cm.CollisionFidelity = Enum.CollisionFidelity.Hull
+		end)
+		cm.CFrame = at
+		cm.Name = stripped(propId, meshName)
+		cm.Parent = model
+	elseif opts.standIn then
+		local box = Instance.new("Part")
+		box.Name = stripped(propId, meshName)
+		box.Size = v3(info.Size)
+		box.CFrame = at
+		invisibleCollider(box)
+		box:SetAttribute("PreviewStandIn", true)
+		box.Parent = model
+		table.insert(notes, `{meshName}: preview stand-in box {box.Size.X} x {box.Size.Y} x {box.Size.Z} (the import brings the Hull mesh)`)
+	else
+		table.insert(notes, `collider mesh {meshName} missing`)
+	end
+end
+
+-- the data colliders (invisible simple parts)
+local function addColliders(model: Model, propId: string, prop: any, pivot: CFrame)
+	for _, c in ipairs(prop.Colliders or {}) do
+		local p: BasePart
+		if c.Shape == "Wedge" then
+			p = Instance.new("WedgePart")
+		else
+			local part = Instance.new("Part")
+			part.Shape = if c.Shape == "Cylinder" then Enum.PartType.Cylinder
+				elseif c.Shape == "Ball" then Enum.PartType.Ball
+				else Enum.PartType.Block
+			p = part
+		end
+		local r = c.Rotation or { 0, 0, 0 }
+		p.Name = stripped(propId, c.Name)
+		p.Size = v3(c.Size)
+		p.CFrame = pivot * CFrame.new(v3(c.Center)) * CFrame.fromOrientation(math.rad(r[1]), math.rad(r[2]), math.rad(r[3]))
+		invisibleCollider(p)
+		p.Parent = model
+	end
+end
+
+local function attachmentNamed(model: Instance, name: string): Attachment?
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("Attachment") and d.Name == name then
+			return d
+		end
+	end
+	return nil
+end
+
+-- one Config/PropFX Particles spec -> a ParticleEmitter (off; Controllers/PropFX runs it near the player)
+local function emitter(spec: any): ParticleEmitter
+	local pe = Instance.new("ParticleEmitter")
+	pe.Name = "PropFX_" .. spec.Attachment
+	pe.Enabled = false
+	if spec.Texture then
+		pe.Texture = spec.Texture
+	end
+	pe.Color = ColorSequence.new(spec.Color)
+	pe.Rate = spec.Rate
+	pe.Lifetime = NumberRange.new(spec.Lifetime[1], spec.Lifetime[2])
+	if spec.SizeEnd then
+		pe.Size = NumberSequence.new(spec.Size, spec.SizeEnd)
+	else
+		pe.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.3, spec.Size), NumberSequenceKeypoint.new(1, 0) })
+	end
+	if spec.Transparency then
+		pe.Transparency = NumberSequence.new(spec.Transparency[1], spec.Transparency[2])
+	end
+	local speed = spec.Speed or 0
+	pe.Speed = if type(speed) == "table" then NumberRange.new(speed[1], speed[2]) else NumberRange.new(speed)
+	local spread = spec.Spread or 180
+	pe.SpreadAngle = Vector2.new(spread, spread)
+	if spec.Acceleration then
+		pe.Acceleration = v3(spec.Acceleration)
+	end
+	pe.Drag = spec.Drag or 0
+	pe.LightEmission = spec.LightEmission or 1
+	if spec.LightInfluence then
+		pe.LightInfluence = spec.LightInfluence
+	end
+	pe.Rotation = NumberRange.new(0, 360)
+	if spec.RotSpeed then
+		pe.RotSpeed = NumberRange.new(-spec.RotSpeed, spec.RotSpeed)
+	end
+	return pe
+end
+
+-- the data Attachments under fxRoot (moveOf(position) = the re-basing of the item an attachment sits in), then the
+-- PropFX static lights and particle emitters
+local function addEffects(model: Model, fxRoot: BasePart, prop: any, pivot: CFrame, entry: any, notes: { string }, moveOf: ((Vector3) -> CFrame)?)
+	for name, pos in pairs(prop.Attachments or {}) do
+		local att = Instance.new("Attachment")
+		att.Name = name
+		local at = pivot * CFrame.new(v3(pos))
+		if moveOf then
+			at = moveOf(v3(pos)) * at
+		end
+		att.CFrame = fxRoot.CFrame:ToObjectSpace(at)
+		att.Parent = fxRoot
+	end
+	for _, spec in ipairs(entry and entry.Lights or {}) do
+		-- on an Attachment, or on the part "<Part>" / the Blender glow name "<Part>_Glow"
+		local host: Instance? = if spec.Attachment then attachmentNamed(model, spec.Attachment)
+			else model:FindFirstChild(spec.Part, true) or model:FindFirstChild(spec.Part .. "_Glow", true)
+		if host and (host:IsA("BasePart") or host:IsA("Attachment")) then
+			local light = Instance.new("PointLight")
+			light.Color, light.Brightness, light.Range, light.Shadows = spec.Color, spec.Brightness, spec.Range, false
+			light.Parent = host
+		else
+			table.insert(notes, `light host "{spec.Attachment or spec.Part}" missing`)
+		end
+	end
+	for _, spec in ipairs(entry and entry.Particles or {}) do
+		local att = fxRoot:FindFirstChild(spec.Attachment)
+		if att then
+			emitter(spec).Parent = att
+		else
+			table.insert(notes, `particle attachment "{spec.Attachment}" missing`)
+		end
+	end
+end
+
+-- the part named `name` (of size `size` when some are) nearest to `at`, among the direct children of `model`
+local function partNear(model: Instance, name: string, at: Vector3, size: Vector3?): (BasePart?, number)
+	local candidates = {}
+	for _, c in ipairs(model:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == name then
+			table.insert(candidates, c)
+		end
+	end
+	if size then
+		local fit = {}
+		for _, c in ipairs(candidates) do
+			if (c.Size - size).Magnitude < 0.05 then
+				table.insert(fit, c)
+			end
+		end
+		if #fit > 0 then
+			candidates = fit
+		end
+	end
+	local best, bestD = nil, math.huge
+	for _, c in ipairs(candidates) do
+		local d = (c.Position - at).Magnitude
+		if d < bestD then
+			best, bestD = c, d
+		end
+	end
+	return best, bestD
 end
 
 -- builds the template Model from a source Model holding MeshParts named like the data meshes.
@@ -217,30 +495,7 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 		local src = byName[meshName]
 		if roleOf(meshName, info) == "Collider" then
 			-- convex collision mesh: invisible Hull collider, never rendered
-			if src then
-				local cm = src:Clone()
-				for _, child in ipairs(cm:GetChildren()) do
-					child:Destroy()
-				end
-				invisibleCollider(cm)
-				pcall(function()
-					cm.CollisionFidelity = Enum.CollisionFidelity.Hull
-				end)
-				cm.CFrame = pivot * CFrame.new(v3(info.Center))
-				cm.Name = stripped(propId, meshName)
-				cm.Parent = model
-			elseif opts.standIn then
-				local box = Instance.new("Part")
-				box.Name = stripped(propId, meshName)
-				box.Size = v3(info.Size)
-				box.CFrame = pivot * CFrame.new(v3(info.Center))
-				invisibleCollider(box)
-				box:SetAttribute("PreviewStandIn", true)
-				box.Parent = model
-				table.insert(notes, `{meshName}: preview stand-in box {box.Size.X} x {box.Size.Y} x {box.Size.Z} (the import brings the Hull mesh)`)
-			else
-				table.insert(notes, `collider mesh {meshName} missing`)
-			end
+			colliderMesh(propId, meshName, info, src, pivot * CFrame.new(v3(info.Center)), model, opts, notes)
 			continue
 		end
 		renderTotal += 1
@@ -249,62 +504,8 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 			continue
 		end
 		local mp = src:Clone()
-		for _, child in ipairs(mp:GetChildren()) do
-			child:Destroy() -- imported SurfaceAppearance / welds: replaced below
-		end
-		local want = v3(info.Size)
-		local off = 0
-		for _, axis in ipairs({ "X", "Y", "Z" }) do
-			local a, b = (mp.Size :: any)[axis], (want :: any)[axis]
-			if b > 0.05 then
-				off = math.max(off, math.abs(a / b - 1))
-			end
-		end
-		if off > SIZE_TOLERANCE then
-			table.insert(resized, string.format("%s x%.3f", meshName, want.Magnitude / math.max(mp.Size.Magnitude, 1e-6)))
-			mp.Size = want
-		end
-		mp.Anchored = true
-		mp.CanCollide = false
-		mp.CanTouch = false
-		mp.CanQuery = false
-		mp.CastShadow = info.CastShadow == true
-		pcall(function()
-			mp.CollisionFidelity = Enum.CollisionFidelity.Box
-		end)
-		local center = v3(info.Center)
-		mp.CFrame = pivot * CFrame.new(center)
-		mp.PivotOffset = CFrame.new(v3(info.Pivot or { 0, 0, 0 }) - center)
-		local tint = rgb(info.Color)
-		local role = roleOf(meshName, info)
-		local family = data.Families[info.Family] or {}
-		mp.Color = tint
-		mp.Transparency = info.Transparency or 0
-		if role == "Glow" then
-			mp.Material = Enum.Material.Neon
-		elseif role == "Water" or role == "Glass" then
-			mp.Material = Enum.Material.Glass
-			mp.Transparency = info.Transparency or family.Transparency or (if role == "Water" then 0.35 else 0.3)
-			local overlay = info.Overlay and data.Textures[info.Overlay]
-			if overlay then
-				local tex = Instance.new("Texture")
-				tex.Name = "Ripples"
-				tex.Face = Enum.NormalId.Top
-				tex.Texture = overlay.ColorMap
-				tex.StudsPerTileU = data.StudsPerTile or 4
-				tex.StudsPerTileV = data.StudsPerTile or 4
-				tex.Parent = mp
-			end
-		else
-			pcall(function()
-				mp.Material = (Enum.Material :: any)[info.Material or family.Material or "SmoothPlastic"]
-			end)
-			local sa = surfaceFor(data, family, tint)
-			if sa then
-				sa.Parent = mp
-			end
-		end
-		mp.Name = stripped(propId, meshName)
+		dress(mp, propId, meshName, info, data, resized)
+		mp.CFrame = pivot * CFrame.new(v3(info.Center))
 		mp.Parent = model
 	end
 	-- convex mesh colliders exported as meshes
@@ -327,69 +528,9 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 			mp.Parent = model
 		end
 	end
-	-- data colliders (invisible simple parts)
-	for _, c in ipairs(prop.Colliders or {}) do
-		local p: BasePart
-		if c.Shape == "Wedge" then
-			p = Instance.new("WedgePart")
-		else
-			local part = Instance.new("Part")
-			part.Shape = if c.Shape == "Cylinder" then Enum.PartType.Cylinder
-				elseif c.Shape == "Ball" then Enum.PartType.Ball
-				else Enum.PartType.Block
-			p = part
-		end
-		local r = c.Rotation or { 0, 0, 0 }
-		p.Name = stripped(propId, c.Name)
-		p.Size = v3(c.Size)
-		p.CFrame = pivot * CFrame.new(v3(c.Center)) * CFrame.fromOrientation(math.rad(r[1]), math.rad(r[2]), math.rad(r[3]))
-		p.Transparency = 1
-		p.Anchored = true
-		p.CanCollide = true
-		p.CanQuery = true
-		p.CanTouch = false
-		p.CastShadow = false
-		p.Parent = model
-	end
-	-- effect points and static lights
-	for name, pos in pairs(prop.Attachments or {}) do
-		local att = Instance.new("Attachment")
-		att.Name = name
-		att.CFrame = root.CFrame:ToObjectSpace(pivot * CFrame.new(v3(pos)))
-		att.Parent = root
-	end
-	local entry = propFx and propFx.Props[propId]
-	for _, spec in ipairs(entry and entry.Lights or {}) do
-		-- "<Part>" or the Blender glow name "<Part>_Glow"
-		local host = model:FindFirstChild(spec.Part, true) or model:FindFirstChild(spec.Part .. "_Glow", true)
-		if host and host:IsA("BasePart") then
-			local light = Instance.new("PointLight")
-			light.Color, light.Brightness, light.Range, light.Shadows = spec.Color, spec.Brightness, spec.Range, false
-			light.Parent = host
-		else
-			table.insert(notes, `light part "{spec.Part}" missing`)
-		end
-	end
-	-- particle effects at the data attachments (off: Controllers/PropFX turns them on near the player)
-	for _, spec in ipairs(entry and entry.Particles or {}) do
-		local att = root:FindFirstChild(spec.Attachment)
-		if att then
-			local pe = Instance.new("ParticleEmitter")
-			pe.Name = "PropFX_" .. spec.Attachment
-			pe.Enabled = false
-			pe.Color = ColorSequence.new(spec.Color)
-			pe.Rate = spec.Rate
-			pe.Lifetime = NumberRange.new(spec.Lifetime[1], spec.Lifetime[2])
-			pe.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.3, spec.Size), NumberSequenceKeypoint.new(1, 0) })
-			pe.Speed = NumberRange.new(spec.Speed or 0)
-			pe.SpreadAngle = Vector2.new(180, 180)
-			pe.LightEmission = spec.LightEmission or 1
-			pe.Rotation = NumberRange.new(0, 360)
-			pe.Parent = att
-		else
-			table.insert(notes, `particle attachment "{spec.Attachment}" missing`)
-		end
-	end
+	addColliders(model, propId, prop, pivot)
+	-- effect points, static lights, particle emitters (off: Controllers/PropFX turns them on near the player)
+	addEffects(model, root, prop, pivot, propFx and propFx.Props[propId], notes, nil)
 	model.PrimaryPart = root
 	root.PivotOffset = root.CFrame:ToObjectSpace(pivot)
 	model:SetAttribute("MapPropId", propId)
@@ -424,6 +565,206 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 	return model, notes
 end
 ApplyPropMeshes.build = build
+
+-- the frame template a pieces prop starts from: MapProps._Base.<propId> (saved by the first real run), else the
+-- current template when it is the bare Studio-built frame
+local function piecesBase(propId: string): (Model?, string?)
+	local folder = templateFolder()
+	local saved = folder:FindFirstChild(BASE) and folder[BASE]:FindFirstChild(propId)
+	if saved and saved:IsA("Model") then
+		return saved, nil
+	end
+	local current = folder:FindFirstChild(propId)
+	if not current or not current:IsA("Model") then
+		return nil, `no frame template MapProps.{propId} (Studio-built, StudioProps)`
+	end
+	if current:GetAttribute(PREVIEW_ATTRIBUTE) then
+		return nil, `a preview is installed: run endPreview("{propId}") first`
+	end
+	if current:GetAttribute("MapPropPieces") then
+		return nil, `the pieces are already in MapProps.{propId} and MapProps.{BASE}.{propId} is missing`
+	end
+	return current, nil
+end
+
+local function savePiecesBase(propId: string, base: Model)
+	local folder = templateFolder()
+	local store = folder:FindFirstChild(BASE) or Instance.new("Folder")
+	store.Name = BASE
+	store.Parent = folder
+	if not store:FindFirstChild(propId) then
+		local copy = base:Clone()
+		copy.Parent = store
+	end
+end
+
+-- a "pieces only" prop: the Blender pieces in a copy of the frame template (see the header)
+local function buildPieces(propId: string, source: Instance, data: any, propFx: any, base: Model, opts: any?): (Model?, { string })
+	opts = opts or {}
+	local prop = data.Props[propId]
+	local spec = ApplyPropMeshes.PIECES[propId]
+	local notes = {}
+	if not prop then
+		return nil, { `no PropMeshData entry for {propId}` }
+	end
+	local byName: { [string]: MeshPart } = {}
+	for _, d in ipairs(source:GetDescendants()) do
+		if d:IsA("MeshPart") and not byName[d.Name] then
+			byName[d.Name] = d
+		end
+	end
+	local model = base:Clone()
+	model.Name = propId
+	for _, key in ipairs({ "MapPropVersion", PREVIEW_ATTRIBUTE, "MapPropPieces" }) do
+		model:SetAttribute(key, nil)
+	end
+	local oldRoot = model:FindFirstChild(PIECES_ROOT)
+	if oldRoot then
+		oldRoot:Destroy()
+	end
+	local pivot = model:GetPivot()
+	-- 1. anchors, found on the frame's parts before anything leaves
+	local moves: { [string]: CFrame } = {}
+	local anchored: { { lo: Vector3, hi: Vector3, move: CFrame, volume: number } } = {}
+	local seenAnchor: { [string]: boolean } = {}
+	for meshName, info in pairs(prop.Meshes) do
+		local a = info.Anchor
+		if a then
+			local r = a.AssumedRotation or { 0, 0, 0 }
+			local assumed = pivot * CFrame.new(v3(a.AssumedPosition)) * CFrame.fromOrientation(math.rad(r[1]), math.rad(r[2]), math.rad(r[3]))
+			local real, dist = partNear(model, a.Part, assumed.Position, if a.PartSize then v3(a.PartSize) else nil)
+			if real then
+				local move = real.CFrame * assumed:Inverse()
+				moves[meshName] = move
+				local half = v3(info.Size) / 2 + Vector3.one * 0.6
+				local c = v3(info.Center)
+				table.insert(anchored, { lo = c - half, hi = c + half, move = move, volume = info.Size[1] * info.Size[2] * info.Size[3] })
+				local key = `{a.Part}@{a.AssumedPosition[1]},{a.AssumedPosition[2]},{a.AssumedPosition[3]}`
+				if not seenAnchor[key] then
+					seenAnchor[key] = true
+					local rp = pivot:PointToObjectSpace(real.Position)
+					local rx, ry, rz = pivot:ToObjectSpace(real.CFrame):ToOrientation()
+					table.insert(notes, string.format("anchor %s: assumed (%.2f, %.2f, %.2f) rot (%g, %g, %g) -> real (%.2f, %.2f, %.2f) rot (%.0f, %.0f, %.0f), %.2f away",
+						a.Part, a.AssumedPosition[1], a.AssumedPosition[2], a.AssumedPosition[3], r[1], r[2], r[3], rp.X, rp.Y, rp.Z, math.deg(rx), math.deg(ry), math.deg(rz), dist))
+				end
+			else
+				table.insert(notes, `anchor part "{a.Part}" of {meshName} not found: placed as modelled`)
+			end
+		end
+	end
+	-- 2. the replaced frame parts (solid ones stay as invisible colliders unless a data collider takes over)
+	local remove: { [string]: boolean } = {}
+	for _, name in ipairs(spec.Remove) do
+		remove[name] = true
+	end
+	local gone, solid = 0, 0
+	local found: { [string]: number } = {}
+	for _, c in ipairs(model:GetChildren()) do
+		if c:IsA("BasePart") and remove[c.Name] then
+			found[c.Name] = (found[c.Name] or 0) + 1
+			if c.CanCollide and not (spec.DataColliders and spec.DataColliders[c.Name]) then
+				for _, child in ipairs(c:GetChildren()) do
+					child:Destroy()
+				end
+				c.Name = "Collider_" .. c.Name
+				invisibleCollider(c)
+				solid += 1
+			else
+				c:Destroy()
+				gone += 1
+			end
+		end
+	end
+	local counts = {}
+	for _, name in ipairs(spec.Remove) do
+		table.insert(counts, `{name} x{found[name] or 0}`)
+	end
+	table.insert(notes, `replaced frame parts: {table.concat(counts, ", ")} ({gone} removed, {solid} kept as invisible colliders)`)
+	-- 3. the meshes
+	local missing, resized = {}, {}
+	local renderTotal = 0
+	for meshName, info in pairs(prop.Meshes) do
+		local src = byName[meshName]
+		local at = (moves[meshName] or CFrame.identity) * pivot * CFrame.new(v3(info.Center))
+		if roleOf(meshName, info) == "Collider" then
+			colliderMesh(propId, meshName, info, src, at, model, opts, notes)
+			continue
+		end
+		renderTotal += 1
+		if not src then
+			table.insert(missing, meshName)
+			continue
+		end
+		local mp = src:Clone()
+		dress(mp, propId, meshName, info, data, resized)
+		mp.CFrame = at
+		mp.Parent = model
+	end
+	-- 4. data colliders, effects root, attachments (re-based with the smallest anchored item holding them)
+	addColliders(model, propId, prop, pivot)
+	local fxRoot = Instance.new("Part")
+	fxRoot.Name = PIECES_ROOT
+	fxRoot.Size = Vector3.one
+	fxRoot.CFrame = pivot * CFrame.new(v3(prop.Bounds.Center))
+	fxRoot.Transparency = 1
+	fxRoot.Anchored = true
+	fxRoot.CanCollide = false
+	fxRoot.CanQuery = false
+	fxRoot.CanTouch = false
+	fxRoot.CastShadow = false
+	fxRoot.Parent = model
+	local function moveOf(pos: Vector3): CFrame
+		local best, volume = CFrame.identity, math.huge
+		for _, item in ipairs(anchored) do
+			if pos.X >= item.lo.X and pos.X <= item.hi.X and pos.Y >= item.lo.Y and pos.Y <= item.hi.Y and pos.Z >= item.lo.Z and pos.Z <= item.hi.Z and item.volume < volume then
+				best, volume = item.move, item.volume
+			end
+		end
+		return best
+	end
+	addEffects(model, fxRoot, prop, pivot, propFx and propFx.Props[propId], notes, moveOf)
+	model:SetAttribute("MapPropId", propId)
+	model:SetAttribute("MapPropPieces", true)
+	if #missing > 0 then
+		table.sort(missing)
+		table.insert(notes, "MISSING meshes: " .. table.concat(missing, ", "))
+	end
+	if #resized > 0 then
+		table.insert(notes, "resized: " .. table.concat(resized, ", "))
+	end
+	if #missing == renderTotal then
+		model:Destroy()
+		return nil, notes
+	end
+	return model, notes
+end
+ApplyPropMeshes.buildPieces = buildPieces
+
+-- nested props (data Placement.OriginInHost): the offset of every nested instance in its host, against the data
+local function placementCheck(propId: string, prop: any): string?
+	local placement = prop and prop.Placement
+	if not placement or not placement.OriginInHost then
+		return nil
+	end
+	local want = v3(placement.OriginInHost)
+	local wantRot = placement.RotationInHost or { 0, 0, 0 }
+	local ok, bad = 0, {}
+	for _, inst in ipairs(CollectionService:GetTagged("MapProp")) do
+		if inst:IsA("Model") and inst:GetAttribute("MapPropId") == propId and inst.Parent and inst.Parent:IsA("Model") and inst.Parent:GetAttribute("MapPropId") then
+			local rel = (inst.Parent :: Model):GetPivot():ToObjectSpace(inst:GetPivot())
+			local _, ry = rel:ToOrientation()
+			if (rel.Position - want).Magnitude < 0.01 and math.abs(math.deg(ry) - wantRot[2]) < 0.1 then
+				ok += 1
+			else
+				table.insert(bad, string.format("%s at (%.3f, %.3f, %.3f) yaw %.1f", inst:GetFullName(), rel.X, rel.Y, rel.Z, math.deg(ry)))
+			end
+		end
+	end
+	if ok == 0 and #bad == 0 then
+		return nil -- a top-level prop (the stalls: Placement without nesting)
+	end
+	return `nested in the host at OriginInHost ({want.X}, {want.Y}, {want.Z}): {ok} ok` .. (if #bad > 0 then "; OFF: " .. table.concat(bad, "; ") else "")
+end
 
 -- puts a template in ServerStorage.MapProps (the old one, with its _Variants copied over, goes to _Previous)
 local function install(propId: string, model: Model)
@@ -466,7 +807,22 @@ function ApplyPropMeshes.run(opts: any?): string
 			table.insert(lines, `{propId}: not imported yet (Blender_Exports/Props/{propId}.fbx)`)
 			continue
 		end
-		local model, notes = build(propId, import, data, propFx)
+		local model, notes, base
+		if ApplyPropMeshes.PIECES[propId] then
+			local why
+			base, why = piecesBase(propId)
+			if not base then
+				table.insert(lines, `{propId}: SKIPPED - {why}`)
+				continue
+			end
+			model, notes = buildPieces(propId, import, data, propFx, base)
+		else
+			model, notes = build(propId, import, data, propFx)
+		end
+		local check = placementCheck(propId, data.Props[propId])
+		if check then
+			table.insert(notes, check)
+		end
 		local detail = if #notes > 0 then " - " .. table.concat(notes, "; ") else ""
 		if not model then
 			table.insert(lines, `{propId}: SKIPPED{detail}`)
@@ -476,6 +832,9 @@ function ApplyPropMeshes.run(opts: any?): string
 			model:Destroy()
 			table.insert(lines, `{propId}: would apply {import:GetFullName()}{detail}`)
 			continue
+		end
+		if base then
+			savePiecesBase(propId, base) -- the next run starts from the same frame
 		end
 		install(propId, model)
 		table.insert(applied, propId)
@@ -625,10 +984,25 @@ function ApplyPropMeshes.preview(propId: string, imageIds: { string }): string
 		source:Destroy()
 		return table.concat(lines, "\n")
 	end
-	local model, notes = build(propId, source, data, propFx, { standIn = true })
+	local model, notes
+	if ApplyPropMeshes.PIECES[propId] then
+		local base, why = piecesBase(propId)
+		if not base then
+			source:Destroy()
+			table.insert(lines, "  SKIPPED: " .. tostring(why))
+			return table.concat(lines, "\n")
+		end
+		model, notes = buildPieces(propId, source, data, propFx, base, { standIn = true })
+	else
+		model, notes = build(propId, source, data, propFx, { standIn = true })
+	end
 	source:Destroy() -- the template holds clones
-	if #notes > 0 then
-		table.insert(lines, "  " .. table.concat(notes, "; "))
+	local check = placementCheck(propId, data.Props[propId])
+	if check then
+		table.insert(notes, check)
+	end
+	for _, note in ipairs(notes) do
+		table.insert(lines, "  " .. note)
 	end
 	if not model then
 		table.insert(lines, "  SKIPPED: no template built")
