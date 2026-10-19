@@ -610,6 +610,136 @@ After the rebuild, Agent B checks every glyph by name, x / y position, size and 
 - The side rocks keep x 28.5 .. 43.5, y 0 .. 23, z -5.5 .. 8.5.
 - Preview: `Previews/Props/desert_canyon_gate_facets.png`.
 
+### B13. Desert monuments, statues and columns (owner task 2026-10-20)
+
+Images: `docs/Desert_Images/04_Monuments_Statues_Columns/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_005329_before_desert_monuments_{ServerStorage,Workspace}.rbxm`.
+
+**Kits and copies.** All parts are SmoothPlastic; eyes, glyph lights and gems are Neon. Every copy is the kit at a
+uniform scale; no copy has its own colours or glyph layout (checked part by part).
+
+| # | Object | Kit (`MapAssets.Desert.`) | Parts | Copies (scale) |
+|---|---|---|---|---|
+| 01 | column | `Sandstone_Column` | 7 | test; Desert_3 Ruins x2 (1.0, 0.8) |
+| 02 | fallen columns | `Sandstone_Column_Broken` | 6 | test; Desert_2 Village x1; Desert_3 Ruins x2 (one at 0.8) |
+| 03 | obelisk | `Obelisk_A` | 15 | test; Desert_3 Ruins x1; Desert_4 Props x2 (0.8) |
+| 04 | Anubis statue | `JackalStatue` | 34 | test; Desert_3 Ruins x2; Desert_4 Props x6; Desert_4 BossGate x2; BossArenas.Desert x4 (1.0 / 1.25 / 1.5) |
+| 05 | golden guardian | `Sarcophagus_Small` | 12 | test; Desert_4 Props x4 (1.2) |
+| 06 | hieroglyph tablet | `Hieroglyph_Panel` | 22 | test; Desert_3 Ruins x1; Desert_4 Props x24; BossArenas.Desert x20 (1.0 / 1.3 / 1.4) |
+| 07 | golden pyramid altar | `GoldPile_A` | 11 | test; Desert_4 Props x8; Jungle_4 Props x2; BossArenas.Desert x11 (0.8 .. 1.6) |
+
+**Real colours** (keep them; tone steps x1 / x0.93 / x0.86):
+
+| Object | Colours |
+|---|---|
+| Column | base #B89262 + #E2BE84; shaft #E2BE84 (cylinder 3.6 dia, y 2.4..22.4); gold band #FFC93C at y 6.4; lapis band #2C5CC8 at y 19.4 (3.9 dia, 0.8 tall); capital 4.6 x 1 x 4.6 #E2BE84 + top slab 5.6 x 1.6 x 5.6 #B89262 (y 22.4..25.0) |
+| Fallen columns | base as the column; standing shaft 7 tall #E2BE84 + broken piece 2.2 #D5B37C tilted 78°; 2 drums on the ground (3.0 and 7.0 long, 3.6 dia, #D5B37C / #E2BE84) |
+| Obelisk | bases 6.5 x 1.5 #B89262 + 5 x 1.5 #E2BE84; 3 shaft blocks 3.8 / 3.3 / 2.8 square (#E2BE84 / #E9C488 / #E2BE84, y 3..29); pyramidion 4 gold CornerWedges 1.4 x 3 (y 29..32); 6 glyphs on the -Z face |
+| Anubis | plinth #B89262 + #E2BE84; body / limbs #8C6844; head, snout, ears, feet #533E28; kilt, collar and nemes lappets lapis #2C5CC8; belt, collar, crown, nose, arm bands and anklets gold #FFC93C; eyes Neon turquoise #40D0C4; seat and back #E2BE84 |
+| Guardian | base #B89262; box #E2BE84; lid gold #FFC93C + upper lid #EAB837; 4 lapis stripes; nemes lapis; head gold; eyes Neon #40D0C4 |
+| Tablet | panel 12 x 10 x 0.5 #E2BE84; gold border #FFC93C; glyphs #B89262 or Neon gold |
+| Altar | heaps #EAB837 / #FFC93C / #FFC93B (3 tiers 8 x 1 x 7.4, 5.6 x 1.1 x 5.2, 3.2 x 1.1 x 3.0); goblet #F2BE38; coins #FFC93B; gems Neon #5FD4FF and #40D0C4 (0.8 and 1.0 cubes) |
+
+**Parts rules** (sizes in studs; joints, chamfers and the gradient as in sections A and B):
+
+- **Column:**
+  - **Carved square base:** 2-3 steps (5.4 / 4.6 as today), each with a 0.15 chamfer, plus a torus roll 0.4 at the shaft foot.
+  - **Fluted shaft:** 16-20 shallow flutes: CSG-subtract cylinders 0.35 across, 0.1 deep, running full height; or a 16-sided prism with every other face 0.08 recessed.
+  - **Drum joints:** every 4-5 studs of height, 0.08 wide.
+  - **Bands:** keep the gold band at y 6.4 and the lapis band at y 19.4. Each band is 0.8 tall and 0.15 proud, carrying a pattern of 8-12 small elements:
+    - chequer squares 0.4;
+    - lotus petals 0.5 x 0.7 in gold on lapis;
+    - zigzag wedges.
+  - **Papyrus / lotus capital** (facet piece `column__capital`): a bell flaring from the shaft radius 1.8 to 2.6 over 3.2 studs. It has 12 petal ribs alternating x1 / x0.93, a gold rim ring 0.3 at the top, and lapis or turquoise petal tips. The 5.6 top slab (abacus) stays, with a 0.15 chamfer.
+- **Fallen columns:**
+  - The drums keep their size and place, with drum joints every 3.5 (0.08).
+  - **Broken ends:** cap each break with the facet piece `fallen_columns__drum_broken_end`: a jagged break surface with darker crack strips, the rim chipped 0.1-0.3.
+  - **Plinth:** chipped corners (notches 0.3-0.6), split into 2-3 slabs with joints.
+  - **Ground:** 3-5 rubble chips (0.4-1.2) and sand drifts (B8) around the base and against the drums.
+- **Obelisk:**
+  - **Taper:** one monolith narrowing from 3.8 at the base to 2.6 under the pyramidion. Make each face a tilted plate, or keep the 3 blocks but make each block taper (a 0.25 wedge strip per face). Joints only between the 3 blocks (0.08).
+  - **Glyph columns:**
+    - a recessed band 1.0 wide, 0.1 deep, down the middle of the front (-Z) face;
+    - glyphs inside it 0.05 proud;
+    - optional side faces with plain cartouche frames 0.1 proud.
+    - **Keep the 6 glyphs exactly** (record below).
+  - **Pyramidion:** gold, 4 faces (today 4 CornerWedges, 2.8 square x 3), with a Neon gold top 40 % and a PointLight warm (#FFD678, range 10, brightness 1). A 0.3 gold collar ring under it.
+  - **Stepped base:** today's 2 steps plus a third step 7.5 x 0.6; block joints every 2.5.
+- **Anubis** (seated pose and sizes as today; facet pieces `anubis__head` and `anubis__collar`):
+  - **Head:** a jackal skull block 2.8 wide, a long tapered snout to z -1.9 (tip 0.7 wide), a gold nose tip, a dark mouth line.
+  - **Ears:** tall and pointed, 0.9 wide at the base, 2.8 tall, leaning out 6°, with a gold or lapis inner face.
+  - **Eyes:** almond-shaped Neon turquoise faces at today's eye places (±0.7, 16.8, front of the head).
+  - **Headdress:** a gold crown band around the top of the skull (today's Crown). Lapis nemes lappets (today 0.9 x 4.4 x 2.2, parts) with 3-4 gold stripe strips 0.15 wide.
+  - **Collar (usekh):** a broad beaded collar of 3 rings (gold / lapis / turquoise), 0.35 wide each, over the shoulders; a bead row = alternating colour facets. Facet piece `anubis__collar`.
+  - **Arms and legs:**
+    - arm bands and anklets: gold rings 0.5 tall, 0.1 proud, with one lapis stripe;
+    - strong legs: the shin tapers from 1.6 to 1.3 toward the ankle, with a knee cap 0.2 proud;
+    - forearms resting on the thighs as today, with hands (a 1.0 block with 3 finger grooves 0.05).
+  - **Kilt (shendyt):** pleats as 5-7 vertical strips 0.25 wide, alternating x1 / x0.93 lapis, fanning slightly; the gold belt 0.6 with a buckle panel.
+  - **Sandals:** a 0.2 sole under each foot (WoodTrunk #966840), plus a gold strap 0.15 over the toes.
+  - **Plinth:** 2 steps with a 0.15 chamfer, a front inscription panel (recessed 0.1, a gold frame 0.15), corner notches.
+- **Golden guardian / sphinx** (lying, head toward -Z, inside today's 5 x 5.1 x 10 box; facet pieces `sphinx__head` and `sphinx__paws`):
+  - **Nemes stripes:** alternating gold / lapis 0.3 wide.
+  - **Face:** eyes Neon turquoise (today's places: ±0.6, 4.75, -4.4), a nose ridge, a smooth closed mouth.
+  - **Cobra (uraeus) badge:** on the forehead, gold, 0.5 tall.
+  - **Paws:** stretched forward on both sides of the head: 2 paws 0.9 x 0.6 x 3.4 with 4 toe grooves.
+  - **Body:** gold plates on the lid as 4-6 transverse plates 0.08 proud with lapis inlay strips between them (today's 4 stripes stay at the same z).
+  - **Base:** carved: a 0.15 chamfer, a lapis band 0.3 around it, corner blocks.
+- **Hieroglyph tablet:**
+  - **Slab:** 0.5 -> 1.0 thick, front face chamfered 0.15.
+  - **Carved gold frame:** border 0.5 wide, 0.15 proud, with an inner bevel strip 0.1 and corner rosettes (gold discs 0.6).
+  - **Stand:** 2 side posts 0.8 x 3 x 1.2 plus a stepped foot 13 x 0.6 x 2.0, in dark sandstone #B89262.
+  - **Glyphs:** carved with depth. Each glyph is sunk 0.15 into the slab with a 0.05 bevel, or kept raised 0.05 with a dark outline. **Shapes, positions and sizes stay exactly as below.**
+- **Golden pyramid altar** (GoldPile_A):
+  - **Tiers:** sandstone steps (#E2BE84 / #B89262) plated with gold: each tier has a gold top plate 0.2 and a gold edge band 0.3, with carved edges (0.15 chamfer). Keep today's 3 tier sizes and their turns.
+  - **Steps:** small steps on the front: 2 risers 0.4.
+  - **Corner ornaments:** small gold pyramids 0.6 or lotus buds.
+  - **Gem setting:** the cyan gem (facet piece `altar__gem`) sits in a gold claw setting of 4 prongs 0.15 x 0.6 and a ring 0.2; Neon #5FD4FF with a cyan PointLight (range 8).
+  - Coins and goblet stay.
+
+**Glyph record (keep EXACTLY; kit space, after scaling each copy by its scale).**
+
+*Hieroglyph_Panel* (front = -Z):
+- **Common to all glyphs:** on the panel front at z -0.6, 0.2 thick.
+- **Parts:**
+  - Bars are Blocks.
+  - Circles are Cylinders 0.2 x 1.6 x 1.6, axis along Z (orientation (0, 90, 0)).
+  - The diamond is a Block 1.3 x 1.3 x 0.2 turned 45° about Z.
+- **Colours:** g = Neon #FFC93C; s = SmoothPlastic #B89262.
+- **The 12 symbols:** 4 columns (x -3.9 / -1.3 / 1.3 / 3.9) x 3 rows. As in all front views, +X shows on the LEFT, so x 3.9 is the left column seen from the front.
+
+| Symbol | Column x | Row | Shape | Parts |
+|---|---|---|---|---|
+| 1 | -3.9 | bottom | Π | legs 0.5 x 1.4 at (-4.55, 2.0) and (-3.25, 2.0) + bar 1.8 x 0.5 at (-3.9, 2.95), s |
+| 2 | -1.3 | bottom | circle | at (-1.3, 2.3), **g** |
+| 3 | 1.3 | bottom | circle | at (1.3, 2.3), s |
+| 4 | 3.9 | bottom | Π | legs at (3.25, 2.0) and (4.55, 2.0) + bar at (3.9, 2.95), s |
+| 5 | -3.9 | middle | circle | at (-3.9, 5.1), s |
+| 6 | -1.3 | middle | circle | at (-1.3, 5.1), s |
+| 7 | 1.3 | middle | diamond | at (1.3, 5.05), **g** |
+| 8 | 3.9 | middle | vertical bar | 0.5 x 2.0 at (3.9, 5.1), s |
+| 9 | -3.9 | top | ⊥ | bar 1.8 x 0.5 at (-3.9, 7.35) + stem 0.5 x 1.4 at (-3.9, 8.3), s |
+| 10 | -1.3 | top | vertical bar | 0.5 x 2.0 at (-1.3, 7.9), s |
+| 11 | 1.3 | top | vertical bar | 0.5 x 2.0 at (1.3, 7.9), s |
+| 12 | 3.9 | top | circle | at (3.9, 7.9), **g** |
+
+The 4 gold borders (12 x 0.5 at y 0.25 and 9.75; 0.5 x 9 at x ±5.75) also sit at z -0.6; the panel itself is 12 x 10 x 0.5 at (0, 5, -0.25).
+
+*Obelisk_A* (front -Z; all glyphs are Blocks 0.3 thick on the shaft's front face):
+
+| y | Size | z | Colour |
+|---|---|---|---|
+| 5.9 | 0.7 x 1.8 | -1.95 | s |
+| 8.8 | 1.6 x 0.6 | -1.95 | s |
+| **14.9** | 0.7 x 1.8 | -1.7 | **Neon gold #FFC93C: the glowing yellow mark** |
+| 17.8 | 1.6 x 0.6 | -1.7 | s |
+| 23.9 | 0.7 x 1.8 | -1.45 | s |
+| 26.3 | 1.6 x 0.6 | -1.45 | s |
+
+The glyphs are all at x 0. The same layout is on every copy.
+
+After the rebuild, Agent B checks each glyph by position, size, shape and colour (x scale) on the test copy and one game copy.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

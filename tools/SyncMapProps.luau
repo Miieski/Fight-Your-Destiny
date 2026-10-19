@@ -199,6 +199,8 @@ SyncMapProps.RULES = {
 	{ propId = "mesa_strata", names = { "Mesa_Strata_A" }, variant = function(m)
 		return if m.Parent ~= nil and m.Parent.Name == "Mesas" then "Backdrop" else nil
 	end },
+	-- desert monuments (owner PROMPT_04, 2026-10-20): 01 the column (test row, kit, Desert_3 Ruins)
+	{ propId = "desert_column", names = { "Sandstone_Column" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

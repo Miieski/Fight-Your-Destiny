@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -1340,12 +1340,361 @@ def preview_red_rock_all(pieces):
     return render_sheet("redrock", [(objs + ctx, [(-15, 12)]), (objs, [(150, 18)]), (hobjs + hctx, [(-15, 10)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# DESERT MONUMENTS (B13): organic accents. Kit space of each kit (MapAssets.Desert.<kit>), front -Z.
+# ------------------------------------------------------------------------------------------------
+LAPIS, TURQ, GOLD, DARKJ, SAND, SAND_D = "#2C5CC8", "#40D0C4", "#FFC93C", "#533E28", "#E2BE84", "#B89262"
+
+
+def hull_into(pc, pts, colfn, t, m="SmoothPlastic", skip=None):
+    """Convex hull of pts as faces; colfn(face centroid, normal) -> colour; skip(ring) -> True drops a face."""
+    bm = bmesh.new()
+    vs = [bm.verts.new(Vector(p)) for p in pts]
+    bmesh.ops.convex_hull(bm, input=vs)
+    bm.normal_update()
+    center = sum((Vector(p) for p in pts), Vector()) / len(pts)
+    from mathutils.bvhtree import BVHTree
+    tree = BVHTree.FromBMesh(bm)
+    for f in bm.faces:
+        ring = [l.vert.co.copy() for l in f.loops]
+        if skip and skip(ring):
+            continue
+        cc = sum(ring, Vector()) / len(ring)
+        col = colfn(cc, f.normal.copy())
+        if len(ring) <= 3:
+            pc.face(ring, col, m, t, cc - center)
+        elif len(ring) == 4:
+            pc.quad_or_tris(ring, col, m, t, cc - center)
+        else:
+            polygon_fill(pc, ring, col, m, t, cc - center)
+    bm.free()
+    return tree
+
+
+def surface_quad(pc, tree, origin, direction, pts2d, col, m, t, lift=0.03):
+    """A small flat quad / triangle laid on a hull surface: ray from origin along direction, pts2d in the hit
+    plane's (u, v) frame (u horizontal, v up-ish)."""
+    hit = tree.ray_cast(Vector(origin), Vector(direction).normalized())
+    if hit[0] is None:
+        return False
+    p, n = hit[0], hit[1].normalized()
+    if n.dot(Vector(direction)) > 0:
+        n = -n
+    u = Vector((0, 1, 0)).cross(n)
+    if u.length < 1e-6:
+        u = Vector((1, 0, 0))
+    u.normalize()
+    v = n.cross(u).normalized()
+    q = [p + n * lift + u * a + v * b for a, b in pts2d]
+    pc.face(q, col, m, t, n)
+    return True
+
+
+def anubis():
+    rng = random.Random(701)
+    pieces = []
+    ORIG = "the JackalStatue kit pivot (kit space: plinth base centre, front -Z); place with no offset"
+    place = {"relativeTo": "the JackalStatue model", "position": [0, 0, 0], "orientation": [0, 0, 0],
+             "scale": "the copy's own scale (1.0 / 1.25 / 1.5)"}
+    head = Piece("anubis", "head", ORIG,
+                 notes="jackal head over today's Head 2.8 x 2.8 x 3 at (0, 16.4, 2.1), Snout 1.5 x 1.3 x 2.8 at (0, 15.85, "
+                       "-0.4) and the 2 Ears 0.7 x 2.6 x 0.7 at (+-0.95, 18.9, 2.2): one faceted skull + long tapered snout "
+                       "(tip z -1.9), a gold nose tip, almond Neon turquoise eyes at today's eye places (+-0.7, 16.8), tall "
+                       "pointed ears leaning out 6 deg with gold inner faces, a gold crown band (today's Crown, y 17.4 .. "
+                       "18.1). Dark #533E28 with tone steps. The nemes lappets stay parts (B13).",
+                 place=dict(place, replaces="Head, Snout, Nose, the 2 Eyes, the 2 Ears, Crown"))
+    pts = []
+    for y, hx, z0, z1 in ((15.1, 1.0, 0.9, 3.1), (15.7, 1.35, 0.7, 3.5), (16.6, 1.42, 0.65, 3.6), (17.4, 1.2, 0.95, 3.4),
+                          (17.75, 0.85, 1.4, 3.0)):
+        for sx in (-1, 1):
+            pts += [(sx * hx, y, z0 + 0.2), (sx * hx * 0.9, y, z1), (sx * hx * 0.6, y, z0), (sx * hx * 0.55, y, z1 + 0.15)]
+    for zz, yt, yb, w in ((0.4, 16.35, 15.2, 0.78), (-0.6, 16.15, 15.25, 0.6), (-1.5, 15.98, 15.32, 0.42),
+                          (-1.88, 15.88, 15.42, 0.3)):
+        for sx in (-1, 1):
+            pts += [(sx * w, yt, zz), (sx * w, yb, zz)]
+    tree = hull_into(head, pts, lambda cc, n: tone(DARKJ, (1.12 if n.y > 0.5 else 1.0) * rng.choice(STEPS)), 0.3)
+    for sx in (-1, 1):   # eyes: almond quads on the skull front, at today's eye places
+        surface_quad(head, tree, (sx * 0.72, 16.82, -3.0), (0, 0, 1),
+                     [(-0.3 * sx, -0.02), (0.0, 0.14), (0.32 * sx, 0.05), (0.02, -0.12)], TURQ, "Neon", 0.08)
+    # gold nose tip
+    nose = [(sx * 0.32, y, z) for sx in (-1, 1) for y, z in ((15.98, -1.75), (15.62, -1.95), (15.98, -2.02), (15.6, -1.75))]
+    hull_into(head, nose, lambda cc, n: tone(GOLD, rng.choice(STEPS)), 0.2)
+    # mouth line: a dark strip along each side of the snout
+    for sx in (-1, 1):
+        surface_quad(head, tree, (sx * 3.0, 15.42, -0.6), (-sx, 0, 0), [(-1.0, -0.04), (0.9, -0.04), (0.9, 0.04), (-1.0, 0.04)],
+                     "#2A1F14", "SmoothPlastic", 0.05)
+    # ears: pyramids leaning out, gold inner face
+    for sx in (-1, 1):
+        base = [(sx * 0.55, 17.45, 1.85), (sx * 1.4, 17.45, 1.85), (sx * 1.4, 17.45, 2.55), (sx * 0.55, 17.45, 2.55)]
+        tip = (sx * 1.25, 20.3, 2.35)
+        ear = base + [tip, (sx * 0.95, 18.9, 1.95)]
+        etree = hull_into(head, ear, lambda cc, n: tone(DARKJ, rng.choice(STEPS)), 0.25)
+        surface_quad(head, etree, (sx * 0.98, 18.4, -2.0), (0, 0, 1), [(-0.28, -0.7), (0.28, -0.7), (0.0, 0.9)],
+                     GOLD, "SmoothPlastic", 0.05)
+    # crown band: an octagonal gold ring around the skull top
+    cz, cy0, cy1 = 2.2, 17.35, 18.05
+    ring_o = [Vector((1.55 * math.cos(a), 0, cz + 1.65 * math.sin(a))) for a in [math.radians(22.5 + 45 * k) for k in range(8)]]
+    ring_i = [Vector((1.15 * math.cos(a), 0, cz + 1.25 * math.sin(a))) for a in [math.radians(22.5 + 45 * k) for k in range(8)]]
+    for k in range(8):
+        j = (k + 1) % 8
+        a, b = ring_o[k], ring_o[j]
+        out = (a + b) / 2 - Vector((0, 0, cz))
+        head.face([a + Vector((0, cy0, 0)), b + Vector((0, cy0, 0)), b + Vector((0, cy1, 0)), a + Vector((0, cy1, 0))],
+                  tone(GOLD, rng.choice(STEPS)), "SmoothPlastic", 0.25, out)
+        head.face([ring_o[k] + Vector((0, cy1, 0)), ring_o[j] + Vector((0, cy1, 0)), ring_i[j] + Vector((0, cy1, 0)),
+                   ring_i[k] + Vector((0, cy1, 0))], tone(GOLD, 1.0), "SmoothPlastic", 0.25, Vector((0, 1, 0)))
+    pieces.append(head)
+    # usekh collar: 3 bead rings sloping down over the shoulders
+    col = Piece("anubis", "collar", ORIG,
+                notes="broad beaded usekh collar over today's 2 Collar blocks (gold 5.2 x 1 x 3.2 at y 13.5, lapis 3.6 x 0.6 x "
+                      "2.9 at y 12.8): 3 rings sloping down from the neck (y 14.1) to the shoulders (y 12.6), gold / lapis "
+                      "/ turquoise, each ring a row of 16 bead facets alternating tone, a gold edge. t 0.2.",
+                place=dict(place, replaces="the 2 Collar blocks"))
+    cx0, cz0 = 0.0, 2.1
+    rings = [(0.85, 0.95, 14.1), (1.45, 1.25, 13.75), (2.0, 1.55, 13.3), (2.55, 1.8, 12.75), (2.7, 1.88, 12.55)]
+    cols_ = [GOLD, LAPIS, TURQ, GOLD]
+    angs = [math.radians(360.0 * k / 16) for k in range(16)]
+    for r in range(len(rings) - 1):
+        (ax, az, ay), (bx, bz, by) = rings[r], rings[r + 1]
+        for k in range(16):
+            j = (k + 1) % 16
+            pa = [Vector((cx0 + ax * math.cos(angs[i]), ay, cz0 + az * math.sin(angs[i]))) for i in (k, j)]
+            pb = [Vector((cx0 + bx * math.cos(angs[i]), by, cz0 + bz * math.sin(angs[i]))) for i in (k, j)]
+            c = tone(cols_[r], 1.0 if k % 2 == 0 else 0.86)
+            mid = (pa[0] + pb[1]) / 2
+            out = Vector((mid.x - cx0, 0.6, mid.z - cz0))
+            col.face([pa[0], pa[1], pb[1]], c, "SmoothPlastic", 0.2, out)
+            col.face([pa[0], pb[1], pb[0]], c, "SmoothPlastic", 0.2, out)
+    pieces.append(col)
+    return pieces
+
+
+def sphinx():
+    rng = random.Random(702)
+    pieces = []
+    ORIG = "the Sarcophagus_Small kit pivot (kit space: base centre, the head toward -Z); place with no offset"
+    place = {"relativeTo": "the Sarcophagus_Small model", "position": [0, 0, 0], "orientation": [0, 0, 0],
+             "scale": "the copy's own scale (1.0 / 1.2)"}
+    head = Piece("sphinx", "head", ORIG,
+                 notes="sphinx head inside today's Head 2.6 x 1.2 x 2.2 at (0, 4.5, -3.3) + Nemes 3.4 x 1 x 0.8 at (0, 4.4, "
+                       "-2.2): a gold face (forehead, cheeks, chin, nose ridge, a smooth closed mouth), Neon turquoise "
+                       "eyes at today's places (+-0.6, 4.75, z -4.4), a nemes headdress of 6 horizontal stripe bands "
+                       "alternating gold / lapis (0.25 tall) wrapping the head from the sides round the back, a gold top, a "
+                       "gold cobra (uraeus) badge on the forehead. Top y 5.6. t 0.2.",
+                 place=dict(place, replaces="Head, Nemes, the 2 Eyes"))
+    face = []
+    for y, hx, zf in ((3.95, 0.45, -4.3), (4.25, 0.8, -4.42), (4.75, 0.95, -4.45), (5.15, 0.9, -4.4), (5.35, 0.75, -4.3)):
+        for sx in (-1, 1):
+            face += [(sx * hx, y, zf), (sx * hx, y, -3.4)]
+    ftree = hull_into(head, face, lambda cc, n: tone(GOLD, (1.05 if n.y > 0.4 else 1.0) * rng.choice(STEPS)), 0.2)
+    for sx in (-1, 1):
+        surface_quad(head, ftree, (sx * 0.6, 4.75, -6.0), (0, 0, 1),
+                     [(-0.2 * sx, 0.0), (0.0, 0.09), (0.22 * sx, 0.02), (0.0, -0.08)], TURQ, "Neon", 0.06)
+    nose = [(sx * 0.13, y, z) for sx in (-1, 1) for y, z in ((4.75, -4.47), (4.38, -4.47), (4.4, -4.62))]
+    hull_into(head, nose, lambda cc, n: tone(GOLD, 0.93), 0.1)
+    surface_quad(head, ftree, (0.0, 4.2, -6.0), (0, 0, 1), [(-0.3, -0.035), (0.3, -0.035), (0.3, 0.035), (-0.3, 0.035)],
+                 "#8A6A1E", "SmoothPlastic", 0.04)
+    # nemes: U-shaped bands round the head (open at the face), 6 stripes + a gold top fan
+    levels = [3.95, 4.2, 4.45, 4.7, 4.95, 5.2, 5.45]
+    ang = [math.radians(a) for a in (-120, -90, -55, -20, 20, 55, 90, 120)]   # 0 = the back (+Z), +-120 = beside the face
+    cz = -3.15
+    rings_ = []
+    for y in levels:
+        rx = 1.62 - 0.3 * (y - 3.95) / 1.5
+        rz = 1.3 - 0.2 * (y - 3.95) / 1.5
+        rings_.append([Vector((rx * math.sin(a), y, cz + rz * math.cos(a))) for a in ang])
+    for li in range(len(levels) - 1):
+        lo, hi = rings_[li], rings_[li + 1]
+        c = GOLD if li % 2 == 0 else LAPIS
+        for k in range(len(ang) - 1):
+            mid = (lo[k] + hi[k + 1]) / 2
+            out = Vector((mid.x, 0, mid.z - cz))
+            head.face([lo[k], lo[k + 1], hi[k + 1]], tone(c, rng.choice(STEPS)), "SmoothPlastic", 0.2, out)
+            head.face([lo[k], hi[k + 1], hi[k]], tone(c, rng.choice(STEPS)), "SmoothPlastic", 0.2, out)
+    top = rings_[-1]
+    apex = Vector((0, 5.62, cz))
+    for k in range(len(ang) - 1):
+        head.face([top[k], top[k + 1], apex], tone(GOLD, 1.06), "SmoothPlastic", 0.2, Vector((0, 1, 0)))
+    head.face([top[-1], top[0], apex], tone(GOLD, 1.06), "SmoothPlastic", 0.2, Vector((0, 1, 0)))
+    # uraeus on the forehead: a small gold hood + raised head
+    cobra = [(sx * w, y, z) for sx in (-1, 1) for w, y, z in ((0.22, 5.2, -4.38), (0.12, 5.6, -4.42), (0.08, 5.35, -4.55),
+                                                               (0.15, 5.25, -4.25))]
+    hull_into(head, cobra, lambda cc, n: tone(GOLD, rng.choice(STEPS)), 0.1)
+    pieces.append(head)
+    paws = Piece("sphinx", "paws", ORIG,
+                 notes="2 forward-stretched paws on the lid beside the head (x +-1.75, y 3.9 .. 4.5, z -4.95 .. -1.6), gold, "
+                       "rounded fronts with 3 dark toe grooves each. New (no part today). t 0.2.",
+                 place=dict(place, replaces="(new)"))
+    for sx in (-1, 1):
+        x = sx * 1.75
+        pts = []
+        for z, w, h in ((-1.6, 0.45, 0.5), (-3.0, 0.45, 0.58), (-4.4, 0.47, 0.6), (-4.82, 0.38, 0.5), (-4.95, 0.25, 0.35)):
+            pts += [(x - w, 3.9, z), (x + w, 3.9, z), (x - w * 0.85, 3.9 + h, z), (x + w * 0.85, 3.9 + h, z)]
+        tree = hull_into(paws, pts, lambda cc, n: tone(GOLD, (1.05 if n.y > 0.5 else 0.97) * rng.choice(STEPS)), 0.2,
+                         skip=lambda ring: all(abs(p.y - 3.9) < 1e-4 for p in ring))
+        for dx in (-0.22, 0.0, 0.22):
+            surface_quad(paws, tree, (x + dx, 4.15, -7.0), (0, 0, 1), [(-0.03, -0.18), (0.03, -0.18), (0.03, 0.18), (-0.03, 0.18)],
+                         "#8A6A1E", "SmoothPlastic", 0.04)
+    pieces.append(paws)
+    return pieces
+
+
+def column_capital():
+    rng = random.Random(703)
+    pc = Piece("column", "capital", "the Sandstone_Column kit pivot (kit space: base centre); place with no offset",
+               notes="papyrus / lotus bell from above today's lapis band (y 19.8, radius 1.85) flaring to radius 2.75 at "
+                     "y 23.2, under today's 5.6 top slab (y 23.4 .. 25.0, keep it): 12 petal ribs (alternating radius and "
+                     "tone), 3 gold binding rings at the neck, the top petal row painted lapis / turquoise, a gold lip. "
+                     "Replaces the 4.6 x 1 x 4.6 Capital block (and hides the shaft top above y 19.8). t 0.3.",
+               place={"relativeTo": "the Sandstone_Column model", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's own scale", "replaces": "the lower Capital block 4.6 x 1 x 4.6"})
+    prof = [(19.8, 1.85, 0.0), (20.5, 1.92, 0.0), (21.3, 2.1, 0.06), (22.1, 2.38, 0.1), (22.8, 2.62, 0.12), (23.25, 2.78, 0.1),
+            (23.4, 2.55, 0.0)]
+    n = 12
+    angs = [2 * math.pi * k / n for k in range(n)]
+    rings = []
+    for y, r, rib in prof:
+        rings.append([Vector((math.cos(a) * r * (1.0 if k % 2 == 0 else 1.0 - rib), y, math.sin(a) * r * (1.0 if k % 2 == 0 else 1.0 - rib)))
+                      for k, a in enumerate(angs)])
+    for li in range(len(rings) - 1):
+        lo, hi = rings[li], rings[li + 1]
+        for k in range(n):
+            j = (k + 1) % n
+            if li == len(rings) - 2:
+                c = GOLD
+            elif li == len(rings) - 3:
+                c = LAPIS if k % 2 == 0 else TURQ
+            else:
+                c = tone(SAND, 1.0 if k % 2 == 0 else 0.93)
+            mid = (lo[k] + hi[j]) / 2
+            out = Vector((mid.x, 0, mid.z))
+            pc.face([lo[k], lo[j], hi[j]], c, "SmoothPlastic", 0.3, out)
+            pc.face([lo[k], hi[j], hi[k]], c, "SmoothPlastic", 0.3, out)
+    for y in (20.0, 20.25, 20.5):   # binding rings: 12 vertical gold quads each, 0.12 tall, just outside the neck
+        rr = 1.98
+        for k in range(n):
+            j = (k + 1) % n
+            a = Vector((math.cos(angs[k]) * rr, y, math.sin(angs[k]) * rr))
+            b = Vector((math.cos(angs[j]) * rr, y, math.sin(angs[j]) * rr))
+            pc.face([a, b, b + Vector((0, 0.12, 0)), a + Vector((0, 0.12, 0))], GOLD, "SmoothPlastic", 0.1, (a + b) / 2)
+    return [pc]
+
+
+def broken_end():
+    rng = random.Random(704)
+    pc = Piece("fallen_columns", "drum_broken_end",
+               "the CENTRE OF THE DRUM'S END CIRCLE; the break faces +Y (local): turn it so +Y runs along the drum "
+               "axis out of the broken end",
+               notes="jagged break surface for a 3.6-dia drum (radius 1.8): a chipped rim (16 points, 0.1-0.3 lower / "
+                     "0.05-0.2 smaller in places), an uneven inner field (-0.3 .. +0.5), a short skirt (y -0.45 .. rim) "
+                     "that sleeves over the drum end (radius 1.82), 3 dark crack strips. #D5B37C with tone steps; use "
+                     "#E2BE84 for the #E2BE84 drums. t 0.3.",
+               place={"relativeTo": "each broken drum end (Shaft top, the broken piece, the fallen Drums)",
+                      "position": "the end centre", "orientation": "+Y along the drum axis"})
+    col = "#D5B37C"
+    n = 16
+    rim, skirt = [], []
+    for k in range(n):
+        a = 2 * math.pi * k / n
+        chip = rng.random() < 0.35
+        r = 1.82 - (rng.uniform(0.05, 0.2) if chip else 0.0)
+        y = -(rng.uniform(0.1, 0.3) if chip else rng.uniform(0.0, 0.08))
+        rim.append(Vector((math.cos(a) * r, y, math.sin(a) * r)))
+        skirt.append(Vector((math.cos(a) * 1.82, -0.45, math.sin(a) * 1.82)))
+    inner = []
+    for k in range(8):
+        a = 2 * math.pi * (k + 0.5) / 8
+        r = rng.uniform(0.7, 1.15)
+        inner.append(Vector((math.cos(a) * r, rng.uniform(-0.3, 0.5), math.sin(a) * r)))
+    ctr = Vector((rng.uniform(-0.2, 0.2), rng.uniform(-0.1, 0.4), rng.uniform(-0.2, 0.2)))
+    for k in range(n):
+        j = (k + 1) % n
+        out = Vector((rim[k].x, 0, rim[k].z))
+        pc.face([skirt[k], skirt[j], rim[j]], tone(col, rng.choice(STEPS)), "SmoothPlastic", 0.3, out)
+        pc.face([skirt[k], rim[j], rim[k]], tone(col, rng.choice(STEPS)), "SmoothPlastic", 0.3, out)
+    for k in range(n):     # rim -> inner ring
+        j = (k + 1) % n
+        ik = (k // 2) % 8
+        pc.face([rim[k], rim[j], inner[ik]], tone(col, 0.9 * rng.choice(STEPS)), "SmoothPlastic", 0.3, Vector((0, 1, 0)))
+    for i in range(8):
+        a, b = inner[i], inner[(i + 1) % 8]
+        rj = rim[(2 * i + 2) % n]
+        pc.face([inner[i], rj, inner[(i + 1) % 8]], tone(col, 0.88 * rng.choice(STEPS)), "SmoothPlastic", 0.3, Vector((0, 1, 0)))
+        pc.face([a, b, ctr], tone(col, 0.82 * rng.choice(STEPS)), "SmoothPlastic", 0.3, Vector((0, 1, 0)))
+    for _ in range(3):     # dark crack strips across the break
+        k = rng.randrange(8)
+        a, b = inner[k] + Vector((0, 0.04, 0)), rim[(2 * k + rng.randrange(2)) % n] + Vector((0, 0.04, 0))
+        e = (b - a)
+        w = Vector((-e.z, 0, e.x)).normalized() * 0.06
+        pc.face([a - w, b - w, b + w, a + w], "#7A6440", "SmoothPlastic", 0.04, Vector((0, 1, 0)))
+    return [pc]
+
+
+def altar_gem():
+    pc = Piece("altar", "gem", "the CENTRE of the gem (its girdle centre)",
+               notes="cut cyan gem (octagonal brilliant: girdle 1.2 across, crown to a table 0.7 across 0.35 up, pavilion to a "
+                     "culet 0.65 down), Neon #5FD4FF with lighter crown facets. Replaces today's 1.0 Neon cube gem; set it in "
+                     "a gold 4-prong setting on the top tier (B13). t 0.15.",
+               place={"relativeTo": "the GoldPile_A model", "position": [-0.2, 3.75, 0.2], "orientation": [0, 22.5, 0],
+                      "scale": "the copy's own scale", "replaces": "the Gem 1.0 cube (#40D0C4) on the top tier; the second gem "
+                                                                   "0.8 (#5FD4FF) can use it at scale 0.7"})
+    R, RT, YG, YT, YC = 0.6, 0.35, 0.08, 0.35, -0.65
+    cyan = "#5FD4FF"
+    angs = [math.radians(22.5 + 45 * k) for k in range(8)]
+    g0 = [Vector((R * math.cos(a), -YG, R * math.sin(a))) for a in angs]
+    g1 = [Vector((R * math.cos(a), YG, R * math.sin(a))) for a in angs]
+    tb = [Vector((RT * math.cos(a), YT, RT * math.sin(a))) for a in angs]
+    cul = Vector((0, YC, 0))
+    for k in range(8):
+        j = (k + 1) % 8
+        mid = (g0[k] + g0[j]) / 2
+        pc.face([g0[k], g0[j], g1[j], g1[k]], tone(cyan, 0.9), "Neon", 0.15, Vector((mid.x, 0, mid.z)))
+        pc.face([g1[k], g1[j], tb[j], tb[k]], mix(cyan, "#FFFFFF", 0.12 if k % 2 else 0.24), "Neon", 0.15,
+                Vector((mid.x, 0.8, mid.z)))
+        pc.face([g0[j], g0[k], cul], tone(cyan, 0.86 if k % 2 else 0.95), "Neon", 0.15, Vector((mid.x, -0.8, mid.z)))
+    polygon_fill(pc, list(reversed(tb)), mix(cyan, "#FFFFFF", 0.35), "Neon", 0.15, Vector((0, 1, 0)))
+    return [pc]
+
+
+def monuments():
+    return anubis() + sphinx() + column_capital() + broken_end() + altar_gem()
+
+
+def preview_monuments(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    # Anubis: today's body parts as context (plinth, seat, legs, torso, arms, nemes lappets)
+    an_ctx = [((0, 1.0, 0), (8, 2, 11), SAND_D, (0, 0, 0)), ((0, 2.3, 0), (7, 0.6, 10), SAND, (0, 0, 0)),
+              ((0, 4.7, 2.2), (5.2, 4.2, 4.6), SAND, (0, 0, 0)), ((0, 6.6, 4.6), (5.6, 8, 1.2), SAND, (0, 0, 0)),
+              ((-1.3, 4.75, -1.6), (1.6, 4.3, 1.6), "#8C6844", (0, 0, 0)), ((1.3, 4.75, -1.6), (1.6, 4.3, 1.6), "#8C6844", (0, 0, 0)),
+              ((-1.3, 7.65, 0.2), (1.8, 1.7, 4.8), "#8C6844", (0, 0, 0)), ((1.3, 7.65, 0.2), (1.8, 1.7, 4.8), "#8C6844", (0, 0, 0)),
+              ((0, 10.3, 2.1), (4.6, 6.2, 2.6), "#8C6844", (0, 0, 0)), ((-2.9, 11.1, 1.9), (1.3, 3.8, 1.3), "#8C6844", (0, 0, 0)),
+              ((2.9, 11.1, 1.9), (1.3, 3.8, 1.3), "#8C6844", (0, 0, 0)), ((0, 14.6, 2.1), (1.6, 1.2, 1.6), "#8C6844", (0, 0, 0)),
+              ((-1.85, 14.8, 2.4), (0.9, 4.4, 2.2), LAPIS, (0, 0, 0)), ((1.85, 14.8, 2.4), (0.9, 4.4, 2.2), LAPIS, (0, 0, 0)),
+              ((-1.3, 3.0, -2.2), (1.8, 0.8, 2.6), DARKJ, (0, 0, 0)), ((1.3, 3.0, -2.2), (1.8, 0.8, 2.6), DARKJ, (0, 0, 0))]
+    a_objs = context_boxes(an_ctx, col) + [piece_object(by["anubis__head"], col), piece_object(by["anubis__collar"], col)]
+    sp_ctx = [((30, 0.4, 0), (5, 0.8, 10), SAND_D, (0, 0, 0)), ((30, 1.9, 0), (4, 2.2, 9), SAND, (0, 0, 0)),
+              ((30, 3.45, 0), (4.3, 0.9, 9.3), GOLD, (0, 0, 0)), ((30, 4.2, 0.8), (3.0, 0.6, 6.5), "#EAB837", (0, 0, 0))]
+    s_objs = context_boxes(sp_ctx, col) + [piece_object(by["sphinx__head"], col, Vector((30, 0, 0))),
+                                          piece_object(by["sphinx__paws"], col, Vector((30, 0, 0)))]
+    c_ctx = [((60, 12.4, 0), (3.6, 20, 3.6), SAND, (0, 0, 0)), ((60, 19.4, 0), (3.9, 0.8, 3.9), LAPIS, (0, 0, 0)),
+             ((60, 24.2, 0), (5.6, 1.6, 5.6), SAND_D, (0, 0, 0))]
+    c_objs = context_boxes(c_ctx, col) + [piece_object(by["column__capital"], col, Vector((60, 0, 0)))]
+    d_ctx = [((90, 1.8, 0), (3.6, 3.6, 3.6), "#D5B37C", (0, 0, 0))]
+    d_objs = context_boxes(d_ctx, col) + [piece_object(by["fallen_columns__drum_broken_end"], col, Vector((90, 3.6, 0))),
+                                          piece_object(by["altar__gem"], col, Vector((94, 2.0, 0)))]
+    out = os.path.join(P.PREVIEW_DIR, "desert_monuments_facets.png")
+    return render_sheet("monuments", [(a_objs, [(-25, 10)]), (a_objs[-2:], [(-35, 8)]), (s_objs, [(-30, 22)]),
+                                      (c_objs, [(-20, 12)]), (d_objs, [(-25, 30)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
     for obj, fn, prev in (("rebirth_altar", rebirth_altar, preview_altar), ("ship", ship, preview_ship),
                           ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon),
-                          ("red_rock", red_rock, preview_red_rock_all)):
+                          ("red_rock", red_rock, preview_red_rock_all), ("monuments", monuments, preview_monuments)):
         if only and obj not in only:
             continue
         pieces = fn()

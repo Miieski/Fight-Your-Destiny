@@ -2495,3 +2495,26 @@ every rock intersection in sub-zone 1.
   the player as before; Desert_1 144 fps / render CPU 2.2 ms, Desert_2 village 144 fps / 2.8 ms, Desert_3 canyon 144
   fps / 2.4 ms; no errors. FINAL: 59 templates / 501 tagged copies up to date, run 2 = 0; disk == Studio (184
   scripts, 0 written); backup after_desert_nature.
+
+# Desert monuments, statues and columns (PROMPT 04) - 2026-10-20, overnight (owner: "Since I'm going to bed, I'll give you two prompts to complete overnight. First, complete this prompt: PROMPT_04_Monuments_Statues_Columns.txt. Follow the prompt exactly as written. Once and ONLY once you've FINISHED, run the second prompt named PROMPT_05_Props_Furniture_Treasures.txt.")
+
+Objects: 01 column, 02 fallen columns, 03 obelisk (keep the glowing yellow mark if it is a clue), 04 anubis statue,
+05 golden guardian (sphinx), 06 hieroglyph tablet (KEEP the 12 symbols exactly), 07 golden pyramid altar.
+
+## Status (newest first)
+
+- 03:10 Started. The prompt files and images are in REMAKE OBJECT/Desert_Images_By_Category/...; the images were copied
+  to docs/Desert_Images/04_Monuments_Statues_Columns/ and 05_Props_Furniture_Treasures/ (the paths the prompts name).
+  Backup before_desert_monuments. The owner is asleep: the pilot screenshot is sent, and the work continues without
+  waiting for a reply (the owner asked for both prompts to be completed overnight).
+- 04:00 Guide B13 + facets + PILOT 01 COLUMN done. Agent A: section B13 (kits: Sandstone_Column, Sandstone_Column_Broken,
+  Obelisk_A, JackalStatue (Desert_3 / 4 + BossGate x2 + BossArenas x4), Sarcophagus_Small = the golden guardian,
+  Hieroglyph_Panel (46 copies incl. 20 in BossArenas), GoldPile_A = the altar (incl. Jungle_4 x2 and BossArenas x11);
+  every copy = its kit at a uniform scale) with RECORDS of the 12 tablet symbols and the obelisk's 6 glyphs (the
+  glowing yellow mark = the 0.7 x 1.8 Neon gold glyph at y 14.9); facets anubis__head / collar, sphinx__head / paws,
+  column__capital, fallen_columns__drum_broken_end, altar__gem (main agent approved the preview).
+  01 column (desert_column): replaced 4 / 4 (test, kit, Desert_3 Ruins x2); chamfered square base with sunk panels
+  and lapis diamonds, torus plinth, 16-sided fluted shaft in tone-stepped drums, the gold and lapis bands as
+  patterned inlays, Agent A's papyrus bell capital, the top slab with a turquoise / lapis / gold frieze, sand drifts;
+  collision = 7 invisible copies of the kit's parts (867 rays match). New tools/PropsDesertMonuments.luau +
+  PropsDesertMonumentsData.luau.
