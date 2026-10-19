@@ -727,9 +727,228 @@ function Monuments.golden_altar(): Model
 end
 
 ---------------------------------------------------------------------
+-- 04 ANUBIS STATUE (kit MapAssets.Desert.JackalStatue, 34 parts; Desert_3 x2, Desert_4 x6, Desert_4 BossGate x2,
+-- BossArenas.Desert x4)
+---------------------------------------------------------------------
+local function box(sx: number, sy: number, sz: number, x: number, y: number, z: number, rz: number?): any
+	local cf = CFrame.new(x, y, z) * CFrame.Angles(0, 0, rad(rz or 0))
+	return { "Block", sx, sy, sz, { cf:GetComponents() } }
+end
+Monuments.SHAPES.anubis_statue = { -- every part collides today (34 blocks)
+	box(8, 2, 11, 0, 1, 0), box(7, 0.6, 10, 0, 2.3, 0), -- Plinth
+	box(5.2, 4.2, 4.6, 0, 4.7, 2.2), box(5.6, 8, 1.2, 0, 6.6, 4.6), -- Seat, SeatBack
+	box(4.6, 6.2, 2.6, 0, 10.3, 2.1), box(4.2, 1.4, 2.9, 0, 7.9, 2.1), box(1.6, 2.6, 0.4, 0, 7.3, 0.7), -- Torso, Belt, Kilt
+	box(5.2, 1, 3.2, 0, 13.5, 2.1), box(3.6, 0.6, 2.9, 0, 12.8, 2), box(1.6, 1.2, 1.6, 0, 14.6, 2.1), -- Collar x2, Neck
+	box(2.8, 2.8, 3, 0, 16.4, 2.1), box(1.5, 1.3, 2.8, 0, 15.85, -0.4), box(1.6, 0.5, 0.5, 0, 15.45, -1.9), -- Head, Snout, Nose
+	box(3, 0.7, 3.2, 0, 17.75, 2.2), -- Crown
+}
+for _, sx in ipairs({ -1, 1 }) do
+	for _, b in ipairs({
+		box(1.8, 1.7, 4.8, sx * 1.3, 7.65, 0.2), box(1.6, 4.3, 1.6, sx * 1.3, 4.75, -1.6), box(1.8, 0.8, 2.6, sx * 1.3, 3, -2.2), -- Thigh, Shin, Foot
+		box(1.3, 3.8, 1.3, sx * 2.9, 11.1, 1.9), box(1.3, 1.2, 3.6, sx * 2.9, 9, 0.3), -- Arm, Forearm
+		box(1.4, 0.7, 1.4, sx * 2.9, 10.75, 1.9), box(1.5, 0.6, 1.5, sx * 1.3, 3.9, -1.6), -- Armband, Anklet
+		box(0.7, 2.6, 0.7, sx * 0.95, 18.9, 2.2, -sx * 6), box(0.5, 0.4, 0.3, sx * 0.7, 16.8, 0.55), box(0.9, 4.4, 2.2, sx * 1.85, 14.8, 2.4), -- Ear, Eye, Nemes
+	}) do
+		table.insert(Monuments.SHAPES.anubis_statue, b)
+	end
+end
+
+-- a gold ring 0.1 proud round a square limb (w across) at y, h tall, with one lapis stripe
+local function limbRing(U: any, x: number, y: number, z: number, w: number, h: number)
+	table.insert(U.Gold, chamfered(Vector3.new(w + 0.2, h, w + 0.2), CFrame.new(x, y, z), C.Gold, { "vertical" }, 0.06))
+	table.insert(U.Inlay, piece("Part", Vector3.new(w + 0.24, 0.12, w + 0.24), CFrame.new(x, y, z), C.Lapis))
+end
+
+-- The Anubis statue (B13): today's seated pose, sizes and places. A 2-step plinth (chamfered, corner notches, a front
+-- inscription panel recessed with a gold frame and carved signs); the throne (seat with sunk side panels and a gold /
+-- lapis band, the back with a cornice); the body in #8C6844 with tone steps: thighs with knee caps, shins tapering
+-- 1.6 -> 1.3 to the ankle, feet on sandals (sole #966840 0.2, a gold strap over the toes, toe grooves), gold anklets
+-- and arm bands with a lapis stripe, forearms on the thighs with hands (3 finger grooves), a torso with pectorals, the
+-- gold belt with a buckle panel, the lapis pleated kilt (6 fanning pleats, a gold hem); the nemes lappets with 4 gold
+-- stripes; Agent A's `anubis__head` (skull, long snout, gold nose, almond Neon eyes, tall ears with gold inner faces,
+-- the gold crown band) and `anubis__collar` (3 beaded rings) facets. No part is named "Interact" (BossService).
+-- Parts: Stone, Body, Inlay, Gold, Glow, Collision x34.
+function Monuments.anubis_statue(): Model
+	local m = Instance.new("Model")
+	m.Name = "anubis_statue"
+	local rng = Random.new(20261214)
+	H.setBevelSelf(true)
+	local Ht = 20.2
+	local U = { Stone = {}, Body = {}, Inlay = {}, Gold = {}, Glow = {} }
+	local BODY, DARK, SOLE = rgb(140, 104, 68), rgb(83, 62, 40), rgb(150, 104, 64)
+	local function body(y: number): Color3
+		return soft(BODY, y, Ht, TONES[toneIndex(rng, nil)])
+	end
+	local function notch(x: number, y: number, z: number, s: number): BasePart
+		return piece("Part", Vector3.new(s, s * 1.2, s), CFrame.new(x, y, z) * CFrame.Angles(0, rad(45), 0), FOOT)
+	end
+	-- the plinth: 2 chamfered steps with corner notches
+	table.insert(U.Stone, chamfered(Vector3.new(8, 2, 11), CFrame.new(0, 1, 0), soft(FOOT, 1, Ht, 1.0), { "vertical", "topFrontBack", "topSides" }, 0.15, { notch(4, 2, -5.5, 0.6), notch(-4, 2, 5.5, 0.5) }))
+	table.insert(U.Stone, chamfered(Vector3.new(7, 0.6, 10), CFrame.new(0, 2.3, 0), soft(STONE, 2.3, Ht, 0.98), { "vertical", "topFrontBack", "topSides" }, 0.12))
+	-- the front inscription panel (recessed 0.1) with a gold frame 0.15 and carved signs
+	local pf = CFrame.new(0, 1.0, -5.5)
+	table.insert(U.Stone, piece("Part", Vector3.new(5.2, 1.2, 0.04), pf * CFrame.new(0, 0, -0.01), scaled(FOOT, 0.8)))
+	for _, e in ipairs({ { 0, 0.68, 5.6, 0.15 }, { 0, -0.68, 5.6, 0.15 }, { -2.73, 0, 0.15, 1.5 }, { 2.73, 0, 0.15, 1.5 } }) do
+		table.insert(U.Gold, piece("Part", Vector3.new(e[3], e[4], 0.1), pf * CFrame.new(e[1], e[2], -0.04), C.Gold))
+	end
+	for i, sgn in ipairs({ { "bar", 0.12, 0.8 }, { "ring", 0.5, 0.5 }, { "bar", 0.7, 0.12 }, { "ring", 0.5, 0.5 }, { "bar", 0.12, 0.8 }, { "step", 0.6, 0.3 }, { "bar", 0.12, 0.8 } }) do
+		local x = -2.1 + (i - 1) * 0.7
+		if sgn[1] == "ring" then
+			table.insert(U.Stone, piece("Part", Vector3.new(0.05, sgn[2], sgn[3]), pf * CFrame.new(x, 0.05, -0.04) * CFrame.fromOrientation(0, rad(90), 0), scaled(FOOT, 0.62), { shape = Enum.PartType.Cylinder }))
+		else
+			table.insert(U.Stone, piece("Part", Vector3.new(sgn[2], sgn[3], 0.05), pf * CFrame.new(x, 0, -0.04), scaled(FOOT, 0.62)))
+		end
+	end
+	-- the throne: the seat (sunk side panels, a gold / lapis band) and the back (a cornice, a sunk panel)
+	table.insert(U.Stone, chamfered(Vector3.new(5.2, 4.2, 4.6), CFrame.new(0, 4.7, 2.2), soft(STONE, 4.7, Ht, 1.02), { "vertical", "topFrontBack", "topSides" }, 0.12))
+	for _, sx in ipairs({ -1, 1 }) do
+		local sf = CFrame.new(sx * 2.6, 4.5, 2.2) * CFrame.Angles(0, -sx * math.pi / 2, 0)
+		table.insert(U.Stone, piece("Part", Vector3.new(3.4, 2.6, 0.04), sf * CFrame.new(0, -0.2, -0.01), scaled(STONE, 0.84)))
+		table.insert(U.Gold, piece("Part", Vector3.new(4.4, 0.18, 0.06), sf * CFrame.new(0, 1.55, -0.02), C.Gold))
+		table.insert(U.Inlay, piece("Part", Vector3.new(4.4, 0.2, 0.05), sf * CFrame.new(0, 1.35, -0.02), C.Lapis))
+	end
+	table.insert(U.Stone, chamfered(Vector3.new(5.6, 7.6, 1.2), CFrame.new(0, 6.4, 4.6), soft(STONE, 6.4, Ht, 0.97), { "vertical" }, 0.12))
+	table.insert(U.Stone, chamfered(Vector3.new(5.9, 0.4, 1.4), CFrame.new(0, 10.4, 4.6), soft(STONE, 10.4, Ht, 1.06), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.08))
+	table.insert(U.Gold, piece("Part", Vector3.new(5.64, 0.15, 1.24), CFrame.new(0, 10.1, 4.6), C.Gold))
+	table.insert(U.Stone, piece("Part", Vector3.new(4.2, 6.0, 0.04), CFrame.new(0, 6.4, 5.21), scaled(STONE, 0.86)))
+	-- the legs: thighs (knee caps), tapering shins, anklets, feet on sandals
+	for _, sx in ipairs({ -1, 1 }) do
+		local x = sx * 1.3
+		table.insert(U.Body, chamfered(Vector3.new(1.8, 1.7, 4.8), CFrame.new(x, 7.65, 0.2), body(7.6), { "vertical", "topFrontBack", "topSides" }, 0.18))
+		table.insert(U.Body, chamfered(Vector3.new(1.3, 0.9, 0.35), CFrame.new(x, 7.2, -2.3), body(7.2), { "vertical", "topFrontBack" }, 0.1))
+		table.insert(U.Body, squareFrustum(1.3, 1.6, 3.35, 6.9, { body(5), body(5.1), body(5.2), body(5.3) }))
+		U.Body[#U.Body].CFrame = CFrame.new(x, 0, -1.6) * U.Body[#U.Body].CFrame
+		table.insert(U.Body, chamfered(Vector3.new(1.0, 0.8, 0.3), CFrame.new(x, 6.45, -2.47), body(6.4), { "vertical", "topFrontBack", "bottomFrontBack" }, 0.1))
+		limbRing(U, x, 3.85, -1.6, 1.32, 0.5)
+		-- the sandal (sole 0.2 + gold strap) and the foot with 3 toe grooves
+		table.insert(U.Body, chamfered(Vector3.new(1.9, 0.2, 2.7), CFrame.new(x, 2.7, -2.2), SOLE, { "vertical" }, 0.08))
+		table.insert(U.Body, chamfered(Vector3.new(1.7, 0.6, 2.5), CFrame.new(x, 3.1, -2.2), soft(DARK, 3.1, Ht, 1.0), { "vertical", "topFrontBack" }, 0.15))
+		for k = -1, 1 do
+			table.insert(U.Body, piece("Part", Vector3.new(0.05, 0.3, 0.5), CFrame.new(x + k * 0.42, 3.05, -3.22), scaled(DARK, 0.6)))
+		end
+		table.insert(U.Gold, piece("Part", Vector3.new(1.76, 0.15, 0.3), CFrame.new(x, 3.42, -2.9), C.Gold))
+		table.insert(U.Gold, piece("Part", Vector3.new(0.15, 0.62, 1.2), CFrame.new(x, 3.15, -1.9), C.Gold))
+		-- the arms: upper arm, arm band, forearm on the thigh, hand with 3 finger grooves
+		local ax = sx * 2.9
+		table.insert(U.Body, chamfered(Vector3.new(1.3, 3.8, 1.3), CFrame.new(ax, 11.1, 1.9), body(11), { "vertical", "topFrontBack", "topSides" }, 0.18))
+		limbRing(U, ax, 10.75, 1.9, 1.3, 0.5)
+		table.insert(U.Body, chamfered(Vector3.new(1.3, 1.2, 3.6), CFrame.new(ax, 9, 0.3), body(9), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.15))
+		table.insert(U.Body, chamfered(Vector3.new(1.1, 1.0, 1.0), CFrame.new(ax, 8.9, -1.9), body(8.9), { "vertical", "topFrontBack", "topSides" }, 0.12))
+		for k = -1, 1 do
+			table.insert(U.Body, piece("Part", Vector3.new(1.12, 0.05, 0.6), CFrame.new(ax, 8.9 + k * 0.25, -2.1), scaled(BODY, 0.62)))
+		end
+		-- the nemes lappet with 4 gold stripes
+		local nx = sx * 1.85
+		table.insert(U.Inlay, chamfered(Vector3.new(0.9, 4.4, 2.2), CFrame.new(nx, 14.8, 2.4), C.Lapis, { "vertical", "bottomFrontBack", "bottomSides" }, 0.12))
+		for k = 0, 3 do
+			local y = 13.2 + k * 0.9
+			table.insert(U.Gold, piece("Part", Vector3.new(0.94, 0.15, 2.24), CFrame.new(nx, y, 2.4), C.Gold))
+		end
+	end
+	-- the torso: pectorals, a central line, the belt with a buckle panel, the kilt band
+	table.insert(U.Body, chamfered(Vector3.new(4.6, 6.2, 2.6), CFrame.new(0, 10.3, 2.1), body(10.3), { "vertical", "topFrontBack", "topSides" }, 0.3))
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(U.Body, chamfered(Vector3.new(1.8, 1.2, 0.2), CFrame.new(sx * 1.0, 11.8, 0.75), body(11.8), { "vertical", "bottomFrontBack" }, 0.08))
+	end
+	table.insert(U.Body, piece("Part", Vector3.new(0.08, 2.4, 0.06), CFrame.new(0, 10.0, 0.78), scaled(BODY, 0.72)))
+	table.insert(U.Gold, chamfered(Vector3.new(4.4, 0.6, 3.0), CFrame.new(0, 8.3, 2.1), C.Gold, { "vertical" }, 0.1))
+	table.insert(U.Gold, chamfered(Vector3.new(1.0, 0.75, 0.12), CFrame.new(0, 8.3, 0.56), scaled(C.Gold, 1.06), { "vertical" }, 0.05))
+	table.insert(U.Inlay, piece("Part", Vector3.new(0.5, 0.35, 0.06), CFrame.new(0, 8.3, 0.49), C.Turquoise))
+	table.insert(U.Inlay, chamfered(Vector3.new(4.3, 0.8, 2.95), CFrame.new(0, 7.6, 2.1), C.Lapis, { "vertical" }, 0.1))
+	-- the pleated kilt apron (today's 1.6 x 2.6 at z 0.7): 6 pleats fanning, a gold hem
+	for k = 0, 5 do
+		local x = -0.625 + k * 0.25
+		local tone = if k % 2 == 0 then C.Lapis else scaled(C.Lapis, 0.93)
+		table.insert(U.Inlay, piece("Part", Vector3.new(0.25, 2.3, 0.3), CFrame.new(x, 7.25, 0.7) * CFrame.Angles(0, 0, rad(-x * 4)), tone))
+	end
+	table.insert(U.Gold, piece("Part", Vector3.new(1.7, 0.14, 0.34), CFrame.new(0, 6.08, 0.7), C.Gold))
+	-- the neck
+	table.insert(U.Body, chamfered(Vector3.new(1.6, 1.4, 1.6), CFrame.new(0, 14.6, 2.1), body(14.6), { "vertical" }, 0.25))
+	-- Agent A's head and collar
+	facetPiece(U, Data.anubis_head, Vector3.one, CFrame.identity, "Body")
+	facetPiece(U, Data.anubis_collar, Vector3.one, CFrame.identity, "Gold")
+	finish(m, "anubis_statue", U, "Stone", { Glow = GLOW })
+	return m
+end
+
+---------------------------------------------------------------------
+-- 05 GOLDEN GUARDIAN / SPHINX (kit MapAssets.Desert.Sarcophagus_Small, 12 parts; Desert_4 Props x4 at 1.2)
+---------------------------------------------------------------------
+Monuments.SHAPES.golden_guardian = { -- every part collides today
+	box(5, 0.8, 10, 0, 0.4, 0), box(4, 2.2, 9, 0, 1.9, 0), -- Base, Box
+	box(4.3, 0.9, 9.3, 0, 3.45, 0), box(3, 0.6, 6.5, 0, 4.2, 0.8), -- Lid x2
+	box(4.34, 0.92, 0.6, 0, 3.46, -0.5), box(4.34, 0.92, 0.6, 0, 3.46, 1), box(4.34, 0.92, 0.6, 0, 3.46, 2.5), box(4.34, 0.92, 0.6, 0, 3.46, 4), -- Stripes
+	box(2.6, 1.2, 2.2, 0, 4.5, -3.3), box(3.4, 1, 0.8, 0, 4.4, -2.2), -- Head, Nemes
+	box(0.4, 0.3, 0.3, -0.6, 4.75, -4.4), box(0.4, 0.3, 0.3, 0.6, 4.75, -4.4), -- Eyes
+}
+
+-- The golden guardian (B13): a lying sphinx on today's base, head toward -Z. The base carved (0.15 chamfer, a lapis
+-- band 0.3 round it, 4 corner blocks); the body block (today's 4 x 2.2 x 9) with sunk side panels and a gold rule;
+-- the gold lid with today's 4 lapis stripes at the same z (chamfered bands) and gold plates 0.08 proud between them,
+-- on the sides and on the upper lid (the back, with lapis inlay strips at the stripes' z); Agent A's `sphinx__head`
+-- (gold face, Neon turquoise eyes at today's places, a nemes of gold / lapis bands, a gold cobra badge) and
+-- `sphinx__paws` (2 gold paws stretched forward with toe grooves) facets. Parts: Stone, Gold, Inlay, Glow, Collision x12.
+function Monuments.golden_guardian(): Model
+	local m = Instance.new("Model")
+	m.Name = "golden_guardian"
+	H.setBevelSelf(true)
+	local Ht = 5.6
+	local U = { Stone = {}, Gold = {}, Inlay = {}, Glow = {} }
+	local LID2 = rgb(234, 184, 55)
+	-- the base: chamfered, a lapis band 0.3 round it, 4 corner blocks
+	table.insert(U.Stone, chamfered(Vector3.new(5, 0.8, 10), CFrame.new(0, 0.4, 0), soft(FOOT, 0.4, Ht, 1.0), { "vertical", "topFrontBack", "topSides" }, 0.15))
+	table.insert(U.Inlay, piece("Part", Vector3.new(5.06, 0.3, 10.06), CFrame.new(0, 0.4, 0), C.Lapis))
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			table.insert(U.Stone, chamfered(Vector3.new(0.7, 0.95, 0.7), CFrame.new(sx * 2.2, 0.475, sz * 4.7), soft(FOOT, 0.5, Ht, 1.08), { "vertical", "topFrontBack", "topSides" }, 0.08))
+		end
+	end
+	-- the body block with sunk side panels (2 per side), a gold rule under the lid
+	table.insert(U.Stone, chamfered(Vector3.new(4, 2.2, 9), CFrame.new(0, 1.9, 0), soft(STONE, 1.9, Ht, 1.0), { "vertical" }, 0.12))
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, z in ipairs({ -2.1, 2.1 }) do
+			table.insert(U.Stone, piece("Part", Vector3.new(0.04, 1.4, 3.6), CFrame.new(sx * 2.005, 1.8, z), scaled(STONE, 0.84)))
+		end
+		table.insert(U.Gold, piece("Part", Vector3.new(0.06, 0.14, 8.8), CFrame.new(sx * 2.02, 2.85, 0), C.Gold))
+	end
+	for _, sz in ipairs({ -1, 1 }) do
+		table.insert(U.Stone, piece("Part", Vector3.new(3.4, 1.4, 0.04), CFrame.new(0, 1.8, sz * 4.505), scaled(STONE, 0.84)))
+	end
+	-- the gold lid, today's 4 lapis stripes (same z), gold plates 0.08 proud between them on the sides
+	table.insert(U.Gold, chamfered(Vector3.new(4.3, 0.9, 9.3), CFrame.new(0, 3.45, 0), C.Gold, { "vertical", "topFrontBack", "topSides" }, 0.1))
+	local stripes = { -0.5, 1, 2.5, 4 }
+	for _, z in ipairs(stripes) do
+		table.insert(U.Inlay, chamfered(Vector3.new(4.34, 0.92, 0.6), CFrame.new(0, 3.46, z), C.Lapis, { "topSides" }, 0.08))
+	end
+	local gaps = { { -4.6, -0.8 }, { -0.2, 0.7 }, { 1.3, 2.2 }, { 2.8, 3.7 }, { 4.3, 4.6 } }
+	for i, g in ipairs(gaps) do
+		local len = g[2] - g[1] - 0.12
+		if len > 0.1 then
+			for _, sx in ipairs({ -1, 1 }) do
+				table.insert(U.Gold, chamfered(Vector3.new(0.08, 0.6, len), CFrame.new(sx * 2.19, 3.42, (g[1] + g[2]) / 2), scaled(C.Gold, if i % 2 == 0 then 1.05 else 0.95), { "vertical" }, 0.03))
+			end
+		end
+	end
+	-- the upper lid (the back): gold plates 0.08 proud with lapis inlay strips at the stripes' z
+	table.insert(U.Gold, chamfered(Vector3.new(3, 0.6, 6.5), CFrame.new(0, 4.2, 0.8), LID2, { "vertical", "topFrontBack", "topSides" }, 0.12))
+	for i, g in ipairs({ { -1.8, -0.8 }, { -0.2, 0.7 }, { 1.3, 2.2 }, { 2.8, 3.7 } }) do
+		table.insert(U.Gold, chamfered(Vector3.new(2.6, 0.08, g[2] - g[1] - 0.1), CFrame.new(0, 4.54, (g[1] + g[2]) / 2), scaled(C.Gold, if i % 2 == 0 then 1.04 else 0.97), { "vertical" }, 0.04))
+	end
+	for _, z in ipairs({ -0.5, 1, 2.5 }) do
+		table.insert(U.Inlay, piece("Part", Vector3.new(2.7, 0.07, 0.5), CFrame.new(0, 4.535, z), C.Lapis))
+	end
+	-- Agent A's head and paws
+	-- (the head scaled 0.96 in height about its base y 3.95: the top 5.62 -> 5.55, within +10 % of today's 5.1)
+	facetPiece(U, Data.sphinx_head, Vector3.new(1, 0.96, 1), CFrame.new(0, 3.95 * 0.04, 0), "Gold")
+	facetPiece(U, Data.sphinx_paws, Vector3.one, CFrame.identity, "Gold")
+	finish(m, "golden_guardian", U, "Stone", { Glow = GLOW })
+	return m
+end
+
+---------------------------------------------------------------------
 -- registration: the builders go into PropsDesert's fresh PropsBatch2 table; its install() builds them
 ---------------------------------------------------------------------
-Monuments.BUILDERS = { desert_column = true, fallen_columns = true, obelisk = true, hieroglyph_tablet = true, golden_altar = true }
+Monuments.BUILDERS = { desert_column = true, fallen_columns = true, obelisk = true, hieroglyph_tablet = true, golden_altar = true, anubis_statue = true, golden_guardian = true }
 for id in pairs(Monuments.BUILDERS) do
 	B2[id] = (Monuments :: any)[id]
 	B2.BUILDERS[id] = true

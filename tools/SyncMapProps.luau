@@ -24,7 +24,8 @@
 		print(Sync.backup("old_props_2026-10-18_2330", { "crate" }))  -- serialize the current instances to the log,
 		                                            -- then on disk: python tools/collect_backup.py --wait 60
 
-	What run() keeps for each instance: pivot CFrame, scale (Model:GetScale), name, parent, attributes, tags,
+	What run() keeps for each instance: pivot CFrame, scale (Model:GetScale, or for a copy never synced the rule's
+	bakedScale(old) when its parts were resized one by one), name, parent, attributes, tags,
 	ModelStreamingMode, and the custom children (re-parented onto the new model, world position unchanged):
 	children named Interact / NpcSpot / NPC, children with attribute MapPropKeep, children tagged MapProp
 	(nested props), and children holding scripts, prompts, GUIs, sounds, click detectors or humanoids.
@@ -205,10 +206,24 @@ SyncMapProps.RULES = {
 	{ propId = "fallen_columns", names = { "Sandstone_Column_Broken" } },
 	-- 03 the obelisk (test row, kit, Desert_3 Ruins, Desert_4 Props)
 	{ propId = "obelisk", names = { "Obelisk_A" } },
+	-- 04 the Anubis statue (test row, kit, Desert_3, Desert_4 Props and BossGate, BossArenas.Desert) and 05 the golden
+	-- guardian / sphinx (test row, kit, Desert_4)
+	{ propId = "anubis_statue", names = { "JackalStatue" } },
+	{ propId = "golden_guardian", names = { "Sarcophagus_Small" } },
 	-- 06 the hieroglyph tablet (test row, kit, Desert_3, Desert_4, BossArenas.Desert)
 	{ propId = "hieroglyph_tablet", names = { "Hieroglyph_Panel" } },
 	-- 07 the golden pyramid altar (test row, kit, Desert_4, Jungle_4, BossArenas.Desert)
-	{ propId = "golden_altar", names = { "GoldPile_A" } },
+	-- (the Jungle_4 copy at (6014, 0, 953) had its parts resized to 0.8 with Model scale 1: bakedScale reads the real
+	-- scale from today's bottom Heap, 8 wide at scale 1, so run() builds it at 0.8)
+	{ propId = "golden_altar", names = { "GoldPile_A" }, bakedScale = function(m)
+		local w = 0
+		for _, c in ipairs(m:GetChildren()) do
+			if c:IsA("BasePart") and c.Name == "Heap" then
+				w = math.max(w, c.Size.X)
+			end
+		end
+		return if w > 0 then w / 8 else nil
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -586,6 +601,18 @@ local function replace(old: Model, template: Model): (Model?, string?)
 	local variant = old:GetAttribute("Variant")
 	local pivot = old:GetPivot()
 	local scale = old:GetScale()
+	-- a copy never synced before whose parts were resized one by one keeps Model scale 1: a rule's bakedScale(old)
+	-- measures its real scale from today's parts, and the new model gets that size
+	if old:GetAttribute("MapPropVersion") == nil then
+		for _, rule in ipairs(SyncMapProps.RULES) do
+			if rule.propId == template.Name and rule.bakedScale then
+				local s = rule.bakedScale(old)
+				if type(s) == "number" and s > 0 then
+					scale = s
+				end
+			end
+		end
+	end
 	local new = template:Clone()
 	local variants = new:FindFirstChild(VARIANTS)
 	if variants then

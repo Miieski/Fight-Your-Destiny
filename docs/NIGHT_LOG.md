@@ -2527,3 +2527,19 @@ Objects: 01 column, 02 fallen columns, 03 obelisk (keep the glowing yellow mark 
   the 12 symbols = 17 glyph parts exact on all 47 copies); 07 golden_altar 23 / 23 (incl. Jungle_4 x2, BossArenas x11;
   sandstone tiers with gold plates and bands, front risers, gold corner pyramids, Agent A's gem in a 4-prong cup with a
   cyan light, small cut gems, embossed coins, a goblet). Collisions = invisible copies of the kits' parts (rays: 0 off).
+- 06:20 PROMPT 04 COMPLETE (Agent B; main agent looked at the Anubis / BossGate / sphinx shots and Play-checked).
+  04 anubis_statue 16 / 16 (incl. Desert_4 BossGate x2 at scale 1.5 and BossArenas x4): Agent A's jackal head (long
+  snout, tall ears with gold inner faces, Neon turquoise eyes at today's places, gold crown band) + 4-ring beaded usekh
+  collar, lapis nemes lappets with gold stripes, arm bands, anklets, pleated kilt, sandals, a carved stepped plinth;
+  no statue part is named Interact (the BossGate's own Interact / prompt unchanged). 05 golden_guardian 6 / 6: a
+  sphinx with Agent A's head (face, nose, mouth, Neon eyes, a striped gold / lapis nemes, uraeus) and forward paws,
+  gold body plates with lapis strips, a carved base; height trimmed to 5.55 (+8.9 %; the first build was +10.2 %).
+  Sync fix: the Jungle_4 altar had its parts baked at 0.8 with a Model scale of 1.0 -> new optional rule field
+  bakedScale(old) in SyncMapProps (used only for a never-synced copy); a forced run keeps it at 0.800.
+  MAIN AGENT PLAY CHECK (phone emulator): Desert_4 (statues, 24 tablets, altars, obelisks) 144 fps / worst 8.5 ms /
+  render CPU 2.1 ms; the Anubis statues and obelisks block the player; the golden guardian and the altar can be
+  stepped onto (their colliders are exact copies of today's parts - ray checks 0 off - so this is today's
+  behaviour, kept); BossGate prompt "Enter solo / Boss room" on its Interact; no errors. FINAL: 66 templates / 607
+  tagged copies up to date, run 2 = 0; disk == Studio (186 scripts, 0 written); backup after_desert_monuments.
+  Per object: 01 column 4 / 4, 02 fallen columns 5 / 5, 03 obelisk 5 / 5, 04 anubis 16 / 16, 05 guardian 6 / 6,
+  06 tablet 47 / 47 (12 symbols exact), 07 altar 23 / 23 - all OK.
