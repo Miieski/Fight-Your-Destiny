@@ -1983,3 +1983,10 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   blade tip at (2.75, 0.24, -4.6), >= 1.8 from every nearby clam (hub 2.35, was 0.75), oar 7.57 long to stay inside
   today's x range. New preview ids: diamond_shop 95984830780590, weapon_stall 85117045354573, trophy_stall
   127684037913768, fountain 114916914245834, rowboat 102715504916306.
+- 06:45 FIXES 2 re-previewed (Agent B): diamond sign 8.0 x 6.0 at y 14.2-20.2, both anchors land 0.00 from the
+  assumed spots, the post foot sits on the awning, nothing inside the spin / float volume (the float lifts the
+  diamond 0.40 above its cup at the top of the bob, as the brief's "floats" wants); axe head on its handle; awning
+  gaps now equal today's (front 0.39-0.45 vs 0.44, back 0.04-0.07 vs 0.05); roofs standable exactly as today (one
+  continuous slab instead of 7 stripes, 0.15 lower); fountain 12 colliders = today's 12 (but the 4 SpoutLip blocks are
+  rotated 90 deg -> sent back to Agent A); rowboat: hub clam 2.35 clear, hub blade tip 0.15 in the sand, but 0.20
+  above flat ground at the Docks / test area / Abyss -> lower the tip (sent back to Agent A). All put back.
