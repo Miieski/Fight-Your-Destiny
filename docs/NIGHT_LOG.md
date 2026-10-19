@@ -2518,3 +2518,12 @@ Objects: 01 column, 02 fallen columns, 03 obelisk (keep the glowing yellow mark 
   patterned inlays, Agent A's papyrus bell capital, the top slab with a turquoise / lapis / gold frieze, sand drifts;
   collision = 7 invisible copies of the kit's parts (867 rays match). New tools/PropsDesertMonuments.luau +
   PropsDesertMonumentsData.luau.
+- 05:10 02 / 03 / 06 / 07 done (Agent B; main agent looked at the obelisk, tablet + altar Desert_4 and altar shots).
+  02 fallen_columns 5 / 5 (fluted drums with joints, Agent A's broken-end facets, chipped slab base, rubble, sand);
+  03 obelisk 5 / 5 (3-step jointed base, 3 tapering shaft blocks, carved glyph band, cartouche frames, gold collar,
+  pyramidion Neon top 40 % + warm light; the 6 glyphs exact on every copy, the Neon mark at y 14.9 unchanged);
+  06 hieroglyph_tablet 47 / 47 (incl. 20 in BossArenas; slab thickened backwards to 1.0, carved gold frame with
+  rosettes, sunk outlines, a sill + pilasters stand instead of a floor foot because 46 / 47 copies are wall-mounted;
+  the 12 symbols = 17 glyph parts exact on all 47 copies); 07 golden_altar 23 / 23 (incl. Jungle_4 x2, BossArenas x11;
+  sandstone tiers with gold plates and bands, front risers, gold corner pyramids, Agent A's gem in a 4-prong cup with a
+  cyan light, small cut gems, embossed coins, a goblet). Collisions = invisible copies of the kits' parts (rays: 0 off).

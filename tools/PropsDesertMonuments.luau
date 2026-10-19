@@ -102,17 +102,19 @@ end
 
 -- one of Agent A's facet pieces (DevTools.PropsDesertMonumentsData) as wedge pairs, scaled by sc in `frame`: each
 -- colour goes to U.Glow (a Neon colour), U.Gold (gold hues), U.Inlay (lapis / turquoise) or U[key] (the rest); t
--- scales with the smallest axis
+-- scales with the smallest axis. recolor: the colour the piece's first colour becomes (the other U[key] colours keep
+-- their ratio to it)
 local function facetPiece(U: any, data: any, sc: Vector3, frame: CFrame, key: string, recolor: Color3?)
 	local ts = math.min(sc.X, sc.Y, sc.Z)
 	local colors, lists = {}, {}
+	local base = Color3.fromHex((string.match(data.palette[1], "^(#%x+)")) :: string)
 	for i, entry in ipairs(data.palette) do
 		local hex, mat = string.match(entry, "^(#%x+)|?(%a*)$")
 		local c = Color3.fromHex(hex :: string)
 		local r, b = c.R * 255, c.B * 255
 		local dest = if mat == "Neon" then "Glow" elseif b > r then "Inlay" elseif r > 120 and b < 0.45 * r then "Gold" else key
 		if dest == key and recolor then
-			c = recolor
+			c = Color3.new(math.min(c.R * recolor.R / base.R, 1), math.min(c.G * recolor.G / base.G, 1), math.min(c.B * recolor.B / base.B, 1))
 		end
 		colors[i] = c
 		U[dest] = U[dest] or {}
@@ -267,9 +269,467 @@ function Monuments.desert_column(): Model
 end
 
 ---------------------------------------------------------------------
+-- 02 FALLEN COLUMNS (kit MapAssets.Desert.Sandstone_Column_Broken, 6 parts; Desert_2 Village x1, Desert_3 Ruins x2)
+---------------------------------------------------------------------
+Monuments.SHAPES.fallen_columns = { -- every part collides today
+	{ "Block", 5.4, 1.6, 5.4, { 0, 0.8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Base
+	{ "Block", 4.6, 0.8, 4.6, { 0, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Base
+	{ "Cylinder", 7, 3.6, 3.6, { 0, 5.9, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 } }, -- Shaft (standing)
+	{ "Cylinder", 2.2, 3.5, 3.5, { 0.3, 10, 0.2, 0.208, -0.978, 0, 0.978, 0.208, 0, 0, 0, 1 } }, -- Shaft (broken piece)
+	{ "Cylinder", 7, 3.6, 3.6, { 5.5, 1.8, 2.5, 0.819, 0, 0.574, 0, 1, 0, -0.574, 0, 0.819 } }, -- Drum
+	{ "Cylinder", 3, 3.6, 3.6, { -4, 1.75, -3.5, 0.499, -0.035, -0.866, 0.07, 0.998, 0, 0.864, -0.06, 0.5 } }, -- Drum
+}
+
+-- a fluted 16-sided shaft piece along frame's Y axis from y0 to y1 (w across the flats): drums split at `joints`
+-- (0.08 joints with a dark bed ring), tone steps, 16 flutes as sunk lines; tone(yc, factor) gives each drum's colour
+local function flutedShaft(list: { BasePart }, frame: CFrame, w: number, y0: number, y1: number, joints: { number }, color: Color3, rng: Random, tone: any)
+	local cuts = { y0 }
+	for _, j in ipairs(joints) do
+		table.insert(cuts, j)
+	end
+	table.insert(cuts, y1)
+	local prev = nil
+	for i = 1, #cuts - 1 do
+		local a, b = cuts[i], cuts[i + 1]
+		local ga = if i > 1 then 0.04 else 0
+		local gb = if i < #cuts - 1 then 0.04 else 0
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(list, drum16(w, b - a - ga - gb, frame * CFrame.new(0, (a + ga + b - gb) / 2, 0), tone((a + b) / 2, TONES[ti])))
+		if i > 1 then
+			table.insert(list, drum16(w - 0.12, 0.1, frame * CFrame.new(0, a, 0), scaled(color, 0.7)))
+		end
+	end
+	for k = 0, 15 do
+		local cf = frame * CFrame.new(0, (y0 + y1) / 2, 0) * CFrame.Angles(0, -k * math.pi / 8, 0) * CFrame.new(0, 0, -(w / 2 + 0.005))
+		table.insert(list, piece("Part", Vector3.new(0.14, y1 - y0 - 0.16, 0.04), cf, scaled(color, 0.78)))
+	end
+end
+Monuments.flutedShaft = flutedShaft
+
+-- The fallen columns (B13): today's 6 pieces in place. The plinth: the lower base split into 2 slabs with a joint and
+-- chipped corners, the upper base as a chipped slab, a torus roll; the standing shaft (7 tall) and the 2 fallen drums
+-- fluted with drum joints every 3.5; Agent A's broken-end facet on the shaft top, both ends of the tilted broken piece
+-- and one end of each fallen drum (the other end shows a flat drum bed); 5 rubble chips and sand drifts against the
+-- base and the drums. Parts: Stone, Sand, Collision x6.
+function Monuments.fallen_columns(): Model
+	local m = Instance.new("Model")
+	m.Name = "fallen_columns"
+	local rng = Random.new(20261211)
+	H.setBevelSelf(true)
+	local Ht = 11.1
+	local U = { Stone = {}, Sand = {} }
+	local LIGHT, DARK = STONE, rgb(213, 179, 124)
+	local function chip(x: number, y: number, z: number, s: number): BasePart
+		return piece("Part", Vector3.new(s, s * 1.1, s), CFrame.new(x, y, z) * CFrame.Angles(0, rad(45), 0), FOOT)
+	end
+	-- the lower base (today's 5.4 x 1.6 x 5.4): 2 slabs (x -2.7 .. -0.34 and -0.26 .. 2.7), chipped corners
+	table.insert(U.Stone, chamfered(Vector3.new(2.36, 1.6, 5.4), CFrame.new(-1.52, 0.8, 0), soft(FOOT, 0.8, Ht, 0.97), { "vertical", "topFrontBack", "topSides" }, 0.15, { chip(-2.7, 1.6, -2.7, 0.8), chip(-2.7, 0.4, 2.7, 0.5) }))
+	table.insert(U.Stone, chamfered(Vector3.new(2.96, 1.6, 5.4), CFrame.new(1.22, 0.8, 0), soft(FOOT, 0.8, Ht, 1.03), { "vertical", "topFrontBack", "topSides" }, 0.15, { chip(2.7, 1.6, 2.7, 0.7) }))
+	table.insert(U.Stone, piece("Part", Vector3.new(0.1, 1.4, 5.2), CFrame.new(-0.3, 0.75, 0), scaled(FOOT, 0.7)))
+	-- the upper base (today's 4.6 x 0.8 x 4.6 at 1.6 .. 2.4): a chipped slab, a torus roll, a fillet
+	table.insert(U.Stone, chamfered(Vector3.new(4.6, 0.3, 4.6), CFrame.new(0, 1.75, 0), soft(STONE, 1.75, Ht, 0.96), { "vertical", "topFrontBack", "topSides" }, 0.15, { chip(2.3, 1.9, -2.3, 0.6) }))
+	table.insert(U.Stone, drum16(4.2, 0.4, CFrame.new(0, 2.1, 0), soft(STONE, 2.0, Ht, 1.04)))
+	table.insert(U.Stone, drum16(3.8, 0.1, CFrame.new(0, 2.35, 0), soft(STONE, 2.3, Ht, 0.94)))
+	-- a broken end (Agent A's facet) at the end of a drum: frame's Y = the drum axis, y = the end, dir = +1 / -1
+	local endSc = function(w: number): Vector3
+		return Vector3.new(w / 3.6, 1, w / 3.6)
+	end
+	local function brokenEnd(frame: CFrame, y: number, dir: number, w: number, color: Color3)
+		local cf = frame * CFrame.new(0, y, 0) * (if dir < 0 then CFrame.Angles(math.pi, 0, 0) else CFrame.identity)
+		facetPiece(U, Data.drum_broken_end, endSc(w), cf, "Stone", color)
+	end
+	local function flatEnd(frame: CFrame, y: number, dir: number, w: number, color: Color3)
+		table.insert(U.Stone, drum16(w - 0.3, 0.06, frame * CFrame.new(0, y + dir * 0.02, 0), scaled(color, 0.88)))
+	end
+	-- the standing shaft (today's 7 tall, y 2.4 .. 9.4): 2 drums (joint at 5.9), broken top
+	local up = CFrame.identity
+	flutedShaft(U.Stone, up, 3.6, 2.4, 9.15, { 5.9 }, LIGHT, rng, function(y: number, t: number): Color3
+		return soft(LIGHT, y, Ht, t)
+	end)
+	brokenEnd(up, 9.15, 1, 3.6, LIGHT)
+	-- the tilted broken piece (today's 2.2 x 3.5 at (0.3, 10, 0.2), its axis 12 degrees off vertical): broken at both ends
+	local axis = Vector3.new(0.208, 0.978, 0)
+	local c0 = Vector3.new(0.3, 10, 0.2)
+	local f1 = axisFrame(c0 - axis * 1.1, c0 + axis * 1.1)
+	flutedShaft(U.Stone, f1, 3.5, -0.85, 0.85, {}, DARK, rng, function(_: number, t: number): Color3
+		return soft(DARK, 10, Ht, t)
+	end)
+	brokenEnd(f1, 0.85, 1, 3.5, DARK)
+	brokenEnd(f1, -0.85, -1, 3.5, DARK)
+	-- the fallen drums: 7.0 long (joint at the middle; broken toward +axis) and 3.0 long (broken toward +axis)
+	local drums = {
+		{ Vector3.new(5.5, 1.8, 2.5), Vector3.new(0.819, 0, -0.574), 7, LIGHT, { 0 } },
+		{ Vector3.new(-4, 1.75, -3.5), Vector3.new(0.499, 0.07, 0.864), 3, DARK, {} },
+	}
+	for _, d in ipairs(drums) do
+		local half = d[3] / 2
+		local f = axisFrame(d[1] - d[2] * half, d[1] + d[2] * half)
+		local col = d[4]
+		flutedShaft(U.Stone, f, 3.6, -half, half - 0.25, d[5], col, rng, function(_: number, t: number): Color3
+			return soft(col, 1.8, Ht, t)
+		end)
+		brokenEnd(f, half - 0.25, 1, 3.6, col)
+		flatEnd(f, -half, -1, 3.6, col)
+		-- a sand drift tucked under the drum on its -side
+		local side = UP:Cross(d[2]).Unit
+		local mid = Vector3.new(d[1].X, 0, d[1].Z)
+		for _, sgn in ipairs({ -1, 1 }) do
+			local o = mid + side * sgn * 1.25
+			table.insert(U.Sand, piece("WedgePart", Vector3.new(d[3] * 0.7, 0.42, 0.8), CFrame.lookAt(Vector3.new(o.X, 0.21, o.Z), Vector3.new(mid.X, 0.21, mid.Z)) * CFrame.Angles(0, math.pi, 0), SAND))
+		end
+	end
+	-- 5 rubble chips (0.4 .. 1.2) round the base and the drums
+	for _, e in ipairs({ { 3.2, -1.6, 0.9, 20 }, { -3.1, 1.2, 0.6, 50 }, { 1.4, -3.3, 0.5, 10 }, { -1.2, 3.4, 1.1, 70 }, { 2.6, 4.3, 0.45, 35 } }) do
+		local s = e[3]
+		table.insert(U.Stone, chamfered(Vector3.new(s, s * 0.6, s * 0.8), CFrame.new(e[1], s * 0.3, e[2]) * CFrame.Angles(0, rad(e[4]), rad(8)), soft(FOOT, 0.3, Ht, TONES[toneIndex(rng, nil)]), { "vertical", "topSides" }, math.min(0.12, s * 0.15)))
+	end
+	-- sand drifts against the base (front and left)
+	for _, e in ipairs({ { 0, -2.95, 0 }, { -2.95, 0, 90 } }) do
+		table.insert(U.Sand, piece("WedgePart", Vector3.new(4.4, 0.4, 0.5), CFrame.new(e[1], 0.2, e[2]) * CFrame.Angles(0, rad(e[3]), 0), SAND))
+	end
+	finish(m, "fallen_columns", U, "Stone")
+	return m
+end
+
+---------------------------------------------------------------------
+-- 03 OBELISK (kit MapAssets.Desert.Obelisk_A, 15 parts; Desert_3 Ruins x1, Desert_4 Props x2 at 0.8)
+---------------------------------------------------------------------
+local OBELISK_GLYPHS = { -- today's 6 glyphs, kept exactly: { y, sx, sy, z, neon }
+	{ 5.9, 0.7, 1.8, -1.95, false },
+	{ 8.8, 1.6, 0.6, -1.95, false },
+	{ 14.9, 0.7, 1.8, -1.7, true }, -- the glowing yellow mark
+	{ 17.8, 1.6, 0.6, -1.7, false },
+	{ 23.9, 0.7, 1.8, -1.45, false },
+	{ 26.3, 1.6, 0.6, -1.45, false },
+}
+Monuments.SHAPES.obelisk = { -- every part collides today
+	{ "Block", 6.5, 1.5, 6.5, { 0, 0.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Base
+	{ "Block", 5, 1.5, 5, { 0, 2.25, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Base
+	{ "Block", 3.8, 9, 3.8, { 0, 7.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Shaft
+	{ "Block", 3.3, 9, 3.3, { 0, 16.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Shaft
+	{ "Block", 2.8, 8, 2.8, { 0, 25, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Shaft
+	{ "CornerWedgePart", 1.4, 3, 1.4, { -0.7, 30.5, 0.7, 1, 0, 0, 0, 1, 0, 0, 0, 1 } }, -- Tip
+	{ "CornerWedgePart", 1.4, 3, 1.4, { 0.7, 30.5, 0.7, 0, 0, 1, 0, 1, 0, -1, 0, 0 } }, -- Tip
+	{ "CornerWedgePart", 1.4, 3, 1.4, { 0.7, 30.5, -0.7, -1, 0, 0, 0, 1, 0, 0, 0, -1 } }, -- Tip
+	{ "CornerWedgePart", 1.4, 3, 1.4, { -0.7, 30.5, -0.7, 0, 0, -1, 0, 1, 0, 1, 0, 0 } }, -- Tip
+}
+for _, g in ipairs(OBELISK_GLYPHS) do -- the glyphs collide today too
+	table.insert(Monuments.SHAPES.obelisk, { "Block", g[2], g[3], 0.3, { 0, g[1], g[4], 1, 0, 0, 0, 1, 0, 0, 0, 1 } })
+end
+
+-- a square frustum (w0 at y0 to w1 at y1, faces toward +-X / +-Z) and a frame on one of its faces: face k (0 = -Z,
+-- 1 = -X, 2 = +Z, 3 = +X), at height y, `out` studs off the face, local -Z = out of the face, Y = up the face
+local function squareFrustum(w0: number, w1: number, y0: number, y1: number, colors: { Color3 }): BasePart
+	return frustumN(4, w0 / 2, w1 / 2, y0, y1, CFrame.Angles(0, rad(45), 0), colors)
+end
+local function onFace(k: number, w0: number, w1: number, y0: number, y1: number, y: number, out: number): CFrame
+	local tilt = math.atan((w0 - w1) / 2 / (y1 - y0))
+	local w = w0 + (w1 - w0) * (y - y0) / (y1 - y0)
+	return CFrame.Angles(0, k * math.pi / 2, 0) * CFrame.new(0, y, -w / 2) * CFrame.Angles(tilt, 0, 0) * CFrame.new(0, 0, -out)
+end
+
+-- The obelisk (B13): a 3-step base (a new low step 7.1 x 0.6, today's 6.5 and 5 steps) with block joints every 2.5;
+-- today's 3 shaft blocks, each tapering (3.8 -> 3.6, 3.3 -> 3.1, 2.8 -> 2.6) with joint beds between them; a carved
+-- glyph column down the front (a shaded band 1.0 wide between raised lips) holding today's 6 glyphs, kept as separate
+-- "Glyph" parts (same size, place, colour; the Neon gold mark at y 14.9 stays the glowing mark); plain cartouche frames
+-- on the other 3 faces; a 0.3 gold collar and a gold pyramidion whose top 40 % is Neon gold with a warm PointLight.
+-- Parts: Stone, Inlay, Gold, Glow (+ PointLight), Glyph x6, Collision x15.
+function Monuments.obelisk(): Model
+	local m = Instance.new("Model")
+	m.Name = "obelisk"
+	local rng = Random.new(20261212)
+	H.setBevelSelf(true)
+	local Ht = 32
+	local U = { Stone = {}, Gold = {}, Glow = {} }
+	-- the stepped base with block joints every ~2.5
+	local steps = { { 7.1, 0, 0.6, FOOT, 0.92 }, { 6.5, 0.6, 1.5, FOOT, 1.0 }, { 5, 1.5, 3, STONE, 0.97 } }
+	for _, st in ipairs(steps) do
+		local w, y0, y1 = st[1], st[2], st[3]
+		local h = y1 - y0
+		table.insert(U.Stone, chamfered(Vector3.new(w, h, w), CFrame.new(0, (y0 + y1) / 2, 0), soft(st[4], (y0 + y1) / 2, Ht, st[5]), { "vertical", "topFrontBack", "topSides" }, 0.15))
+		local n = math.max(2, math.floor(w / 2.5 + 0.5))
+		for face = 0, 3 do
+			local f = CFrame.Angles(0, face * math.pi / 2, 0) * CFrame.new(0, (y0 + y1) / 2, -w / 2)
+			for i = 1, n - 1 do
+				local x = -w / 2 + i * w / n + (if face % 2 == 0 then 0.2 else -0.2)
+				table.insert(U.Stone, piece("Part", Vector3.new(0.08, h - 0.2, 0.04), f * CFrame.new(x, -0.05, -0.005), scaled(st[4], 0.72)))
+			end
+		end
+	end
+	-- the shaft: 3 tapering blocks with joint beds
+	local blocks = { { 3.8, 3.6, 3, 12, STONE }, { 3.3, 3.1, 12, 21, rgb(233, 196, 136) }, { 2.8, 2.6, 21, 29, STONE } }
+	for i, b in ipairs(blocks) do
+		local w0, w1, y0, y1, col = b[1], b[2], b[3], b[4], b[5]
+		local yc = (y0 + y1) / 2
+		local ti = toneIndex(rng, nil)
+		local c = soft(col, yc, Ht, TONES[ti])
+		table.insert(U.Stone, squareFrustum(w0, w1, y0 + (if i > 1 then 0.04 else 0), y1 - 0.04, { scaled(c, 0.97), c, scaled(c, 1.03), scaled(c, 0.95) }))
+		if i > 1 then
+			table.insert(U.Stone, piece("Part", Vector3.new(w0 - 0.15, 0.1, w0 - 0.15), CFrame.new(0, y0, 0), scaled(col, 0.68)))
+		end
+		-- the glyph column on the front: a shaded band 1.0 wide (its face just in front of the glyphs' backs) between
+		-- 2 raised lips 0.12 wide
+		local glyphBack = OBELISK_GLYPHS[i * 2][4] + 0.15
+		local bandH = y1 - y0 - 0.7
+		table.insert(U.Stone, piece("Part", Vector3.new(1.0, bandH, 0.3), CFrame.new(0, yc, glyphBack - 0.02 + 0.15), scaled(c, 0.86)))
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(U.Stone, piece("Part", Vector3.new(0.12, bandH + 0.2, 0.1), onFace(0, w0, w1, y0, y1, yc, 0.03) * CFrame.new(sx * 0.58, 0, 0), scaled(c, 1.08)))
+		end
+		for _, sy in ipairs({ -1, 1 }) do
+			table.insert(U.Stone, piece("Part", Vector3.new(1.28, 0.12, 0.1), onFace(0, w0, w1, y0, y1, yc + sy * (bandH / 2 + 0.04), 0.03), scaled(c, 1.08)))
+		end
+		-- plain cartouche frames (0.1 proud) on the other faces
+		for k = 1, 3 do
+			local fw, fh = w0 * 0.42, bandH * 0.8
+			for _, sx in ipairs({ -1, 1 }) do
+				table.insert(U.Stone, piece("Part", Vector3.new(0.12, fh, 0.1), onFace(k, w0, w1, y0, y1, yc, 0.03) * CFrame.new(sx * fw / 2, 0, 0), scaled(c, 1.07)))
+			end
+			for _, sy in ipairs({ -1, 1 }) do
+				table.insert(U.Stone, piece("Part", Vector3.new(fw + 0.12, 0.12, 0.1), onFace(k, w0, w1, y0, y1, yc + sy * fh / 2, 0.03), scaled(c, 1.07)))
+			end
+		end
+	end
+	-- the gold collar (0.3) and the pyramidion: gold lower 60 %, Neon gold top 40 %
+	table.insert(U.Gold, squareFrustum(2.76, 2.74, 28.72, 29.02, { C.Gold, scaled(C.Gold, 0.94) }))
+	table.insert(U.Gold, squareFrustum(2.8, 1.12, 29, 30.8, { C.Gold, scaled(C.Gold, 0.95), scaled(C.Gold, 1.04), scaled(C.Gold, 0.9) }))
+	table.insert(U.Glow, squareFrustum(1.12, 0.04, 30.8, 32, { C.Gold }))
+	-- today's 6 glyphs, exact
+	finish(m, "obelisk", U, "Stone", { Glow = GLOW })
+	for _, g in ipairs(OBELISK_GLYPHS) do
+		local p = piece("Part", Vector3.new(g[2], g[3], 0.3), CFrame.new(0, g[1], g[4]), if g[5] then C.Gold else FOOT, if g[5] then { material = Enum.Material.Neon } else nil)
+		p.Name = "Glyph"
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		p.Parent = m
+	end
+	local light = Instance.new("PointLight")
+	light.Color = rgb(255, 214, 120)
+	light.Range = 10
+	light.Brightness = 1
+	light.Shadows = false
+	light.Parent = m:FindFirstChild("Glow")
+	return m
+end
+Monuments.OBELISK_GLYPHS = OBELISK_GLYPHS
+
+---------------------------------------------------------------------
+-- 06 HIEROGLYPH TABLET (kit MapAssets.Desert.Hieroglyph_Panel, 22 parts, none collides; Desert_3 x1, Desert_4 x24,
+-- BossArenas.Desert x20)
+---------------------------------------------------------------------
+local TABLET_GLYPHS = { -- today's 17 glyph parts (the 12 symbols), kept exactly: { shape, sx, sy, x, y, neon, turn }
+	{ "Block", 1.8, 0.5, -3.9, 2.95, false }, -- 1: the bottom-row "PI" (bar + 2 legs)
+	{ "Block", 0.5, 1.4, -4.55, 2, false },
+	{ "Block", 0.5, 1.4, -3.25, 2, false },
+	{ "Cylinder", 1.6, 1.6, -1.3, 2.3, true }, -- 2: gold circle
+	{ "Cylinder", 1.6, 1.6, 1.3, 2.3, false }, -- 3: circle
+	{ "Block", 1.8, 0.5, 3.9, 2.95, false }, -- 4: "PI"
+	{ "Block", 0.5, 1.4, 3.25, 2, false },
+	{ "Block", 0.5, 1.4, 4.55, 2, false },
+	{ "Cylinder", 1.6, 1.6, -3.9, 5.1, false }, -- 5: circle
+	{ "Cylinder", 1.6, 1.6, -1.3, 5.1, false }, -- 6: circle
+	{ "Block", 1.3, 1.3, 1.3, 5.05, true, 45 }, -- 7: gold diamond
+	{ "Block", 0.5, 2, 3.9, 5.1, false }, -- 8: vertical bar
+	{ "Block", 1.8, 0.5, -3.9, 7.35, false }, -- 9: inverted T (bar + stem)
+	{ "Block", 0.5, 1.4, -3.9, 8.3, false },
+	{ "Block", 0.5, 2, -1.3, 7.9, false }, -- 10: vertical bar
+	{ "Block", 0.5, 2, 1.3, 7.9, false }, -- 11: vertical bar
+	{ "Cylinder", 1.6, 1.6, 3.9, 7.9, true }, -- 12: gold circle
+}
+-- a glyph part's CFrame (kit space): circles are Cylinders with their axis along Z (orientation 0, 90, 0)
+local function glyphFrame(g: any, z: number): CFrame
+	local cf = CFrame.new(g[4], g[5], z)
+	if g[1] == "Cylinder" then
+		return cf * CFrame.fromOrientation(0, rad(90), 0)
+	end
+	return cf * CFrame.Angles(0, 0, rad(g[7] or 0))
+end
+local function glyphSize(g: any, grow: number, t: number): Vector3
+	if g[1] == "Cylinder" then
+		return Vector3.new(t, g[2] + grow, g[3] + grow)
+	end
+	return Vector3.new(g[2] + grow, g[3] + grow, t)
+end
+
+-- The hieroglyph tablet (B13): the slab 12 x 10 thickened to 1.0 (backwards: the front stays at z -0.5) with a 0.15
+-- front chamfer; today's 17 glyph parts (the 12 symbols) kept exactly as separate "Glyph" parts,
+-- each now carved: a dark sunk outline 0.06 round it; a carved gold frame in today's border places (0.5 wide, 0.15
+-- proud, chamfered, an inner bevel strip 0.1, gold corner rosettes 0.6 with turquoise studs); a dark sandstone stand:
+-- a sill 13 x 0.6 x 1.2 under the slab and 2 side pilasters 0.5 x 10.6 x 1.15 with capitals. Nothing collides (as
+-- today). Parts: Stone, Carve, Gold, Inlay, Glyph x17.
+function Monuments.hieroglyph_tablet(): Model
+	local m = Instance.new("Model")
+	m.Name = "hieroglyph_tablet"
+	H.setBevelSelf(true)
+	local Ht = 10
+	local U = { Stone = {}, Carve = {}, Gold = {}, Inlay = {} }
+	local PANEL = STONE
+	-- the slab, front chamfered
+	table.insert(U.Stone, chamfered(Vector3.new(12, 10, 1.0), CFrame.new(0, 5, 0), soft(PANEL, 5, Ht, 1.0), { "frontFace" }, 0.15))
+	-- each glyph's carved outline: a dark sunk rim 0.06 round it
+	for _, g in ipairs(TABLET_GLYPHS) do
+		local dark = if g[6] then rgb(138, 106, 30) else scaled(FOOT, 0.62)
+		table.insert(U.Carve, piece("Part", glyphSize(g, 0.12, 0.04), glyphFrame(g, -0.51), dark, if g[1] == "Cylinder" then { shape = Enum.PartType.Cylinder } else nil))
+	end
+	-- the carved gold frame in today's border places (12 x 0.5 at y 0.25 / 9.75, 0.5 x 9 at x +-5.75)
+	local bars = { { 0, 0.25, 12, 0.5, 1 }, { 0, 9.75, 12, 0.5, -1 }, { -5.75, 5, 0.5, 9, 1 }, { 5.75, 5, 0.5, 9, -1 } }
+	for i, b in ipairs(bars) do
+		local horizontal = i <= 2
+		table.insert(U.Gold, chamfered(Vector3.new(b[3], b[4], 0.15), CFrame.new(b[1], b[2], -0.575), if horizontal then C.Gold else scaled(C.Gold, 0.96), { "frontFace" }, 0.05))
+		-- the inner bevel strip (toward the glyph field)
+		local cf = if horizontal then CFrame.new(b[1], b[2] + b[5] * 0.3, -0.54) else CFrame.new(b[1] + b[5] * 0.3, b[2], -0.54)
+		local size = if horizontal then Vector3.new(b[3] - 1.0, 0.1, 0.08) else Vector3.new(0.1, b[4] - 0.2, 0.08)
+		table.insert(U.Gold, piece("Part", size, cf, scaled(C.Gold, 0.8)))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, y in ipairs({ 0.25, 9.75 }) do
+			table.insert(U.Gold, piece("Part", Vector3.new(0.08, 0.6, 0.6), CFrame.new(sx * 5.75, y, -0.69) * CFrame.fromOrientation(0, rad(90), 0), scaled(C.Gold, 1.05), { shape = Enum.PartType.Cylinder }))
+			table.insert(U.Inlay, piece("Part", Vector3.new(0.06, 0.22, 0.22), CFrame.new(sx * 5.75, y, -0.74) * CFrame.fromOrientation(0, rad(90), 0), C.Turquoise, { shape = Enum.PartType.Cylinder }))
+		end
+	end
+	-- the stand: a sill under the slab and 2 side pilasters with capitals (dark sandstone)
+	table.insert(U.Stone, chamfered(Vector3.new(13, 0.6, 1.2), CFrame.new(0, -0.3, -0.1), soft(FOOT, 0.2, Ht, 0.95), { "vertical", "topFrontBack", "topSides" }, 0.12))
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(U.Stone, chamfered(Vector3.new(0.5, 9.7, 1.15), CFrame.new(sx * 6.25, 4.85, -0.075), soft(FOOT, 4.85, Ht, 1.02), { "vertical" }, 0.08))
+		table.insert(U.Stone, chamfered(Vector3.new(0.62, 0.3, 1.25), CFrame.new(sx * 6.25, 9.85, -0.075), soft(FOOT, 9.85, Ht, 1.06), { "vertical", "topFrontBack", "topSides" }, 0.06))
+		for k = 1, 3 do
+			table.insert(U.Stone, piece("Part", Vector3.new(0.52, 0.06, 1.17), CFrame.new(sx * 6.25, k * 2.4, -0.075), scaled(FOOT, 0.72)))
+		end
+	end
+	finish(m, "hieroglyph_tablet", U, "Stone")
+	-- today's glyph parts, exact (not colliding, queryable, as today)
+	for _, g in ipairs(TABLET_GLYPHS) do
+		local p = piece("Part", glyphSize(g, 0, 0.2), glyphFrame(g, -0.6), if g[6] then C.Gold else FOOT, {
+			shape = if g[1] == "Cylinder" then Enum.PartType.Cylinder else nil,
+			material = if g[6] then Enum.Material.Neon else nil,
+		})
+		p.Name = "Glyph"
+		p.CanCollide = false
+		p.CanQuery = true
+		p.CanTouch = false
+		p.Parent = m
+	end
+	return m
+end
+Monuments.TABLET_GLYPHS = TABLET_GLYPHS
+
+---------------------------------------------------------------------
+-- 07 GOLDEN PYRAMID ALTAR (kit MapAssets.Desert.GoldPile_A, 11 parts; Desert_4 x8, Jungle_4 x2, BossArenas.Desert x11)
+---------------------------------------------------------------------
+local COIN = { 0, -1, 0, 1, 0, 0, 0, 0, 1 }
+local function comps(x: number, y: number, z: number, r: { number }): { number }
+	return { x, y, z, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9] }
+end
+Monuments.SHAPES.golden_altar = { -- every part collides today
+	{ "Block", 8, 1, 7.4, { 0, 0.5, 0, 0.978, 0, 0.208, 0, 1, 0, -0.208, 0, 0.978 } }, -- Heap (tier 1, turned 12)
+	{ "Block", 5.6, 1.1, 5.2, { 0.3, 1.45, -0.2, 0.94, 0, -0.342, 0, 1, 0, 0.342, 0, 0.94 } }, -- Heap (tier 2, -20)
+	{ "Block", 3.2, 1.1, 3, { -0.2, 2.45, 0.2, 0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866 } }, -- Heap (tier 3, 30)
+	{ "Cylinder", 0.25, 1.1, 1.1, comps(3.6, 0.145, -2.6, COIN) }, -- Coins
+	{ "Cylinder", 0.25, 1.1, 1.1, comps(-3.4, 0.145, 2.8, COIN) },
+	{ "Cylinder", 0.25, 1.1, 1.1, comps(-3.8, 0.145, -2.2, COIN) },
+	{ "Cylinder", 0.25, 1.1, 1.1, comps(2.6, 1.145, 2.2, COIN) },
+	{ "Cylinder", 0.25, 1.1, 1.1, comps(-1.2, 3.045, 0, COIN) },
+	{ "Block", 1, 1, 1, { 1.4, 2.5, -1.4, 0.866, 0, 0.5, 0.354, 0.707, -0.612, -0.354, 0.707, 0.612 } }, -- Gem
+	{ "Block", 0.8, 0.8, 0.8, { -1.8, 1.6, 1.6, 0.985, 0, 0.174, 0.123, 0.707, -0.696, -0.123, 0.707, 0.696 } }, -- Gem
+	{ "Cylinder", 1.6, 1.4, 1.4, comps(2.2, 1.7, 0.6, COIN) }, -- Goblet
+}
+
+-- The golden pyramid altar (B13): today's 3 tiers (sizes and turns kept) as sandstone steps plated with gold (a gold
+-- top plate 0.2 and a gold edge band 0.3 on chamfered sandstone, sunk panels on the faces), 2 front risers 0.4 up to
+-- the second tier, gold corner pyramids 0.6; on the top tier Agent A's cut cyan gem in a gold cup with 4 prongs and
+-- a cyan PointLight (range 8); today's 2 gems as smaller cut gems at their places (turquoise / cyan); today's 5 coins
+-- (embossed) and the goblet (foot, stem, cup with a lapis band) on the second tier. Parts: Stone, Gold, Inlay, Glow
+-- (+ PointLight), Collision x11.
+function Monuments.golden_altar(): Model
+	local m = Instance.new("Model")
+	m.Name = "golden_altar"
+	H.setBevelSelf(true)
+	local Ht = 3.7
+	local U = { Stone = {}, Gold = {}, Inlay = {}, Glow = {} }
+	local tiers = {
+		{ Vector3.new(0, 0, 0), 12, 8, 1, 7.4, FOOT, rgb(234, 184, 55) },
+		{ Vector3.new(0.3, 0.9, -0.2), -20, 5.6, 1.1, 5.2, STONE, C.Gold },
+		{ Vector3.new(-0.2, 1.9, 0.2), 30, 3.2, 1.1, 3, STONE, rgb(255, 201, 59) },
+	}
+	local frames = {}
+	for i, t in ipairs(tiers) do
+		local f = CFrame.new(t[1]) * CFrame.Angles(0, rad(t[2]), 0)
+		frames[i] = f
+		local w, h, d, stone, gold = t[3], t[4], t[5], t[6], t[7]
+		local core = h - 0.2
+		table.insert(U.Stone, chamfered(Vector3.new(w - 0.06, core, d - 0.06), f * CFrame.new(0, core / 2, 0), soft(stone, t[1].Y + core / 2, Ht, 1.0), { "vertical" }, 0.15))
+		table.insert(U.Gold, chamfered(Vector3.new(w, 0.2, d), f * CFrame.new(0, h - 0.1, 0), gold, { "vertical", "topFrontBack", "topSides" }, 0.08))
+		-- the gold edge band 0.3 under the plate, and sunk panels on the stone faces below it
+		for face = 0, 3 do
+			local along = if face % 2 == 0 then w else d
+			local depth = if face % 2 == 0 then d else w
+			local ff = f * CFrame.Angles(0, face * math.pi / 2, 0) * CFrame.new(0, 0, -depth / 2 + 0.03)
+			table.insert(U.Gold, piece("Part", Vector3.new(along - 0.34, 0.3, 0.06), ff * CFrame.new(0, core - 0.15, -0.02), scaled(gold, 0.9)))
+			local ph = core - 0.55
+			if ph > 0.15 then
+				table.insert(U.Stone, piece("Part", Vector3.new(along - 1.0, ph, 0.03), ff * CFrame.new(0, 0.2 + ph / 2, -0.005), scaled(stone, 0.86)))
+			end
+		end
+	end
+	-- 2 front risers 0.4 up to the second tier (on the first tier, in the second tier's frame), gold nosings
+	local f2 = frames[2]
+	for i, e in ipairs({ { 0.7, 1.0 }, { 0.35, 1.4 } }) do
+		local depth, y = e[1], e[2]
+		local cf = f2 * CFrame.new(0, y + 0.2 - 0.9, -2.6 - depth / 2 + 0.02)
+		table.insert(U.Stone, chamfered(Vector3.new(1.6, 0.4, depth), cf, soft(STONE, y, Ht, 0.95 + 0.05 * i), { "vertical" }, 0.06))
+		table.insert(U.Gold, piece("Part", Vector3.new(1.62, 0.06, 0.1), cf * CFrame.new(0, 0.2, -depth / 2 + 0.04), C.Gold))
+	end
+	-- gold corner pyramids 0.6 on the first tier
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, sz in ipairs({ -1, 1 }) do
+			table.insert(U.Gold, frustumN(4, 0.3, 0.02, 0, 0.6, frames[1] * CFrame.new(sx * 3.6, 1.0, sz * 3.3) * CFrame.Angles(0, rad(45), 0), { C.Gold, scaled(C.Gold, 0.9) }))
+		end
+	end
+	-- the main gem (Agent A's cut gem, x0.75) in a gold cup with 4 prongs, on the top tier
+	local gc = Vector3.new(-0.2, 3.38, 0.2)
+	local gs = 0.75
+	facetPiece(U, Data.altar_gem, Vector3.one * gs, CFrame.new(gc) * CFrame.Angles(0, rad(22.5), 0), "Glow")
+	table.insert(U.Gold, frustumN(8, 0.36, 0.44, 2.98, 3.18, CFrame.new(gc.X, 0, gc.Z) * CFrame.Angles(0, rad(22.5), 0), { C.Gold, scaled(C.Gold, 0.9) }))
+	for k = 0, 3 do
+		local a = rad(22.5 + 45 + k * 90)
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		table.insert(U.Gold, H.bar(gc + dir * 0.4 + Vector3.new(0, -0.3, 0), gc + dir * 0.47 + Vector3.new(0, 0.12, 0), 0.15, scaled(C.Gold, 1.05)))
+	end
+	-- today's 2 gems as smaller cut gems at their places
+	facetPiece(U, Data.altar_gem, Vector3.one * 0.7, CFrame.new(1.4, 2.42, -1.4) * CFrame.Angles(0, rad(40), 0), "Glow", rgb(64, 208, 196))
+	facetPiece(U, Data.altar_gem, Vector3.one * 0.55, CFrame.new(-1.8, 2.24, 1.6) * CFrame.Angles(0, rad(10), 0), "Glow", rgb(95, 212, 255))
+	-- today's 5 coins, embossed
+	for _, p in ipairs({ { 3.6, 0.145, -2.6 }, { -3.4, 0.145, 2.8 }, { -3.8, 0.145, -2.2 }, { 2.6, 1.145, 2.2 }, { -1.2, 3.045, 0 } }) do
+		local cf = CFrame.new(p[1], p[2], p[3])
+		table.insert(U.Gold, drum16(1.1, 0.25, cf, rgb(255, 201, 59)))
+		table.insert(U.Gold, drum16(0.72, 0.04, cf * CFrame.new(0, 0.13, 0), rgb(219, 173, 52)))
+		table.insert(U.Gold, piece("Part", Vector3.new(0.28, 0.05, 0.28), cf * CFrame.new(0, 0.15, 0) * CFrame.Angles(0, rad(45), 0), rgb(255, 214, 90)))
+	end
+	-- the goblet on the second tier (today's at (2.2, 0.6)): foot, stem with a knop, cup with a lapis band, rim
+	local gob = CFrame.new(2.2, 2.0, 0.6)
+	local GOB = rgb(242, 190, 56)
+	table.insert(U.Gold, drum16(0.9, 0.1, gob * CFrame.new(0, 0.05, 0), scaled(GOB, 0.92)))
+	table.insert(U.Gold, drum16(0.24, 0.3, gob * CFrame.new(0, 0.25, 0), GOB))
+	table.insert(U.Gold, drum16(0.42, 0.1, gob * CFrame.new(0, 0.26, 0), scaled(GOB, 1.06)))
+	table.insert(U.Gold, frustumN(12, 0.14, 0.32, 0.4, 0.86, gob, { GOB, scaled(GOB, 0.93) }))
+	table.insert(U.Inlay, frustumN(12, 0.235, 0.27, 0.58, 0.68, gob, { C.Lapis }))
+	table.insert(U.Gold, frustumN(12, 0.33, 0.33, 0.84, 0.9, gob, { scaled(GOB, 1.08) }))
+	table.insert(U.Gold, drum16(0.56, 0.02, gob * CFrame.new(0, 0.9, 0), scaled(GOB, 0.6)))
+	finish(m, "golden_altar", U, "Stone", { Glow = GLOW })
+	local light = Instance.new("PointLight")
+	light.Color = rgb(95, 212, 255)
+	light.Range = 8
+	light.Brightness = 1
+	light.Shadows = false
+	light.Parent = m:FindFirstChild("Glow")
+	return m
+end
+
+---------------------------------------------------------------------
 -- registration: the builders go into PropsDesert's fresh PropsBatch2 table; its install() builds them
 ---------------------------------------------------------------------
-Monuments.BUILDERS = { desert_column = true }
+Monuments.BUILDERS = { desert_column = true, fallen_columns = true, obelisk = true, hieroglyph_tablet = true, golden_altar = true }
 for id in pairs(Monuments.BUILDERS) do
 	B2[id] = (Monuments :: any)[id]
 	B2.BUILDERS[id] = true

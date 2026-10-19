@@ -201,6 +201,14 @@ SyncMapProps.RULES = {
 	end },
 	-- desert monuments (owner PROMPT_04, 2026-10-20): 01 the column (test row, kit, Desert_3 Ruins)
 	{ propId = "desert_column", names = { "Sandstone_Column" } },
+	-- 02 the fallen columns (test row, kit, Desert_2 Village, Desert_3 Ruins)
+	{ propId = "fallen_columns", names = { "Sandstone_Column_Broken" } },
+	-- 03 the obelisk (test row, kit, Desert_3 Ruins, Desert_4 Props)
+	{ propId = "obelisk", names = { "Obelisk_A" } },
+	-- 06 the hieroglyph tablet (test row, kit, Desert_3, Desert_4, BossArenas.Desert)
+	{ propId = "hieroglyph_tablet", names = { "Hieroglyph_Panel" } },
+	-- 07 the golden pyramid altar (test row, kit, Desert_4, Jungle_4, BossArenas.Desert)
+	{ propId = "golden_altar", names = { "GoldPile_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
