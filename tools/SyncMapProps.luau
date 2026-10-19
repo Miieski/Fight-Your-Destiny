@@ -61,7 +61,7 @@ local function rgbOf(part: Instance?): (number, number, number)
 	return -1, -1, -1
 end
 
--- top-level models, matched by name inside the search roots
+-- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule)
 SyncMapProps.RULES = {
 	{ propId = "crate", names = { "Crate_A" }, variant = function(m)
 		local r = rgbOf(m:FindFirstChild("Body"))
@@ -87,6 +87,19 @@ SyncMapProps.RULES = {
 	{ propId = "weapon_stall", names = { "Station_WeaponShop" }, hubNames = { "WeaponShop" } },
 	{ propId = "trophy_stall", names = { "Station_TrophyMerchant" }, hubNames = { "TrophyMerchant" } },
 	{ propId = "diamond_shop", names = { "Station_DiamondShop" }, hubNames = { "DiamondShop" } },
+	-- Plains_1 farm (owner fix of 2026-10-19, StudioProps wheat_patch / hay_bale / cart). Cart_A is a Common kit model
+	-- also placed in the hub harbour, Desert_2 / 3, Plains_4 and Volcano_1: the owner asked for the Plains_1 carts,
+	-- so only the Plains_1 copy, the test-area copy and the kit copy are synced (filter)
+	{ propId = "wheat_patch", names = { "WheatPatch_A" } },
+	{ propId = "hay_bale", names = { "HayBale_A" } },
+	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
+		local zones = workspace:FindFirstChild("Zones")
+		local plains = zones and zones:FindFirstChild("Plains")
+		local plains1 = plains and plains:FindFirstChild("Plains_1")
+		local staging = workspace:FindFirstChild("_Staging")
+		local kit = ServerStorage:FindFirstChild("MapAssets")
+		return (plains1 ~= nil and m:IsDescendantOf(plains1)) or (staging ~= nil and m:IsDescendantOf(staging)) or (kit ~= nil and m:IsDescendantOf(kit))
+	end },
 }
 
 -- Embedded props (loose parts inside a bigger model). tagAll() wraps each group, in place, into a child Model
@@ -763,8 +776,10 @@ function SyncMapProps.find(propId: string, forBackup: boolean?): ({ Instance }, 
 	-- forBackup adds the HOSTS models)
 	local names: { [string]: boolean } = {}
 	local hubNames: { [string]: boolean } = {}
+	local filter: ((Instance) -> boolean)? = nil
 	for _, rule in ipairs(SyncMapProps.RULES) do
 		if rule.propId == propId then
+			filter = rule.filter
 			for _, n in ipairs(rule.names) do
 				names[n] = true
 			end
@@ -789,7 +804,7 @@ function SyncMapProps.find(propId: string, forBackup: boolean?): ({ Instance }, 
 	for _, root in ipairs(searchRoots()) do
 		for _, d in ipairs(root:GetDescendants()) do
 			if d:IsA("Model") then
-				if names[d.Name] or (hubNames[d.Name] and d.Parent == hub) then
+				if (names[d.Name] and (filter == nil or filter(d))) or (hubNames[d.Name] and d.Parent == hub) then
 					table.insert(found, d)
 				elseif (hostNames[d.Name] and (not hostFilter or hostFilter(d))) or (hostTest and hostTest(d)) then
 					table.insert(hosts, d)

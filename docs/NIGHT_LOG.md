@@ -2116,3 +2116,42 @@ top of docs/model_upgrade_brief.txt.
   Reported, not changed (placements, brief rule 4): 5 Plains_2 clam_pearl copies sit 0.20 below the ground and the
   new thin lower shell now looks half-buried (raise them by 0.2 to fix); the hub rowboat's bow passes through the beach
   rock RockBlue_M_A (same in the approved preview); the Plains_4 minecart wheels sink into the rails (as before).
+
+# Plains sub-zone 1 fix - 2026-10-19 (owner, 9 screenshots: "PLAINS, SUB-ZONE 1: FIX TASK ... Change ONLY what is listed below: keep the layout, object names and paths, the spawn/Entrance, the gate price and every script working. Style target: low-poly, a bit more realistic, same family as the rest of the map (no recoloring of the world).")
+
+Items: 1 wheat field (furrows, stalk clusters, sway near the player, off with Low FX); 2 every cart and hay bale of
+Plains_1 (+ test area sync); 3 house windows (beams must stop at the frames, every side, other buildings too); 4 holes
+in the mountains around the "500 Gold" gate; 5 the mountain behind the start moved a little farther so the starting
+arch is visible from the arrival point (ground continuous, Area / Spawns / walls updated); 6 closed mountains with
+collision all around (nobody walks into or sees inside a mountain); 7 smoother ridge tops (no dark slab edges, snow
+caps on the highest peaks); 8 rocks stuck in trees (the owner deleted the big gray-blue boulder of image 8 himself) and
+every rock intersection in sub-zone 1.
+
+## Status (newest first)
+
+- 12:40 Started. Studio checked first: the prop implant of the previous task is saved in the place (the Plains_1
+  scarecrow is the new 13-mesh model, so the owner's field screenshot predates the implant). Plains_1 layout: Decor
+  (Ground 4, Pond 214, Hills 948 wedges, Mountains 496 wedges, MapFix 550 wedges, Farm 289, Trees 99, Rocks 28, Bushes,
+  Flowers, Grass, VFX, Landmark windmill), Bounds (West / East / South / NorthW / NorthE walls), EntryArch (z -72),
+  Entrance (2000, 0, -105), Area (250 x 120 x 250), HubReturn, Spawns (15). Backup before_plains1_fix (the .rbxl stays
+  the owner's Save As).
+- 13:45 ITEMS 1-3 done (Agent B, Edit; main agent looked at the field / cart / house shots and Play-checked).
+  1 WHEAT: new template wheat_patch (kit WheatPatch_A, 8/8 copies: 6 Plains_1 + test + kit): one CSG union of soil
+  per patch (4 raised ridges, darker furrows, ragged clod edge, weeds) + one union per wheat row (WheatRowA-D: clusters
+  of 2-4 thin stalks with seed heads, varied heights, gold / yellow / straw / green); ~4,300 tris and 5 parts per
+  patch; footprint / pivot / no-collision kept; fence, scarecrow and FieldDirt kept; new Farm.FieldBorder (worn
+  planks on stakes + clods, 4 unions, open where the barrels stand). Unions checked to survive serialization. PropFX
+  sway per row around its base (2.2-3 deg, 3.1-4 s). 2 CARTS / BALES: hay_bale 7/7 (layered ends, straw strands,
+  twine, loose straw; ~1,300 tris), cart 3/3 (Plains_1 + test + kit: planked bed, rails on stakes, iron axle,
+  shafts, spoked iron-rimmed wheel unions with invisible colliders of the old wheel size, slight wear; 40 parts).
+  DECISION: Cart_A is a shared kit also placed in the hub harbour, Desert_2, Desert_3, Plains_4 and Volcano_1; the
+  owner asked for Plains_1 only, so the sync rule is filtered to Plains_1 + test + kit (one line to extend).
+  3 WINDOWS: StudioProps.fixWindows: every window gets a frame (jambs, head, deeper sill) + glazing cross, the beams
+  that crossed the glass are cut at the frame; fixed on the kit + every copy: FarmHouse 3/3 (5 windows each), hub
+  Cottage_A 5/5, Cottage_B 4/4. ClayHouse_A/B (Desert) have no beams (one ClayHouse_B window overlaps its door frame
+  by 0.3 - a different issue, left). New props are merged with GeometryService:UnionAsync (FBX import unavailable);
+  each union stores a MergeHash so the template fingerprint changes when a union changes. Sync: 21 templates, 240
+  copies up to date, run 2 = 0. Backups old_props_2026-10-19_pre_plains1/.
+  Main agent Play check: the wheat rows sway near the field (WheatRowB moving; Sway counter 30), Low FX stops them
+  (0, the row still); the hay bale blocks the player at 2.96 (radius 2.55); the cart is solid from all 4 sides (rays
+  hit the wheel colliders / legs / rails at 3.5-5 studs, 34 colliding parts); no errors.

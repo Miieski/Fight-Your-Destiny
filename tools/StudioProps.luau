@@ -234,8 +234,8 @@ function StudioProps.lowPoly(model: Model, propId: string?): (number, number, nu
 	local variantOf: { [string]: string } = {}
 	local bandOf: { [string]: number } = {}
 	for _, d in ipairs(model:GetDescendants()) do
-		if not d:IsA("BasePart") or inNestedProp(d, model) then
-			continue
+		if not d:IsA("BasePart") or d:IsA("PartOperation") or inNestedProp(d, model) then
+			continue -- (a union keeps the colours of its pieces: the builder shades them)
 		end
 		local fyd = string.sub(d.MaterialVariant, 1, 4) == "FYD_"
 		local base = d:GetAttribute("LowPolyColor")
@@ -801,6 +801,620 @@ end
 
 function StudioProps.diamond_shop(): Model
 	return stall("diamond_shop")
+end
+
+---------------------------------------------------------------------
+-- PLAINS_1 FARM (owner fix of 2026-10-19, docs/screenshots/plains1_fix): the wheat field, the cart and the hay
+-- bales of the Plains sub-zone 1 farm, low-poly but a bit more realistic, palette colours (docs/prop_texture_guide.md
+-- section 3), SmoothPlastic. Fine detail is merged with GeometryService:UnionAsync into a few UnionOperations
+-- (each piece keeps its colour: UsePartColor false; RenderFidelity Automatic = distance LOD). The merged pieces never
+-- collide: the old collisions stay on plain parts (or an invisible stand-in of the old part).
+---------------------------------------------------------------------
+local GeometryService = game:GetService("GeometryService")
+
+-- an unparented piece for merge()
+local function piece(className: string, size: Vector3, cf: CFrame, color: Color3, shape: Enum.PartType?): BasePart
+	local p = Instance.new(className) :: BasePart
+	if shape and p:IsA("Part") then
+		p.Shape = shape
+	end
+	p.Size = size
+	p.CFrame = cf
+	p.Color = color
+	p.Material = Enum.Material.SmoothPlastic
+	p.Anchored = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	return p
+end
+
+-- the pieces merged into one UnionOperation `name` in `model`; `pivot` (template space) = its PivotOffset target (the
+-- PropFX Sway Hinge "Pivot" turns it there). opts: collide, shadow
+local function merge(model: Model, name: string, pieces: { BasePart }, pivot: CFrame?, opts: any?): UnionOperation
+	opts = opts or {}
+	-- a short hash of the pieces (class, size, place, turn, colour) for the attribute MergeHash: a union's own
+	-- properties do not show what is inside, and SyncMapProps' template fingerprint reads the attributes, so the
+	-- copies are updated whenever the pieces change
+	local h1, h2 = 5381, 52711
+	for _, p in ipairs(pieces) do
+		local rx, ry, rz = p.CFrame:ToOrientation()
+		local line = string.format("%s|%.3f,%.3f,%.3f|%.3f,%.3f,%.3f|%.4f,%.4f,%.4f|%d,%d,%d;", p.ClassName, p.Size.X, p.Size.Y, p.Size.Z, p.Position.X, p.Position.Y, p.Position.Z, rx, ry, rz, math.round(p.Color.R * 255), math.round(p.Color.G * 255), math.round(p.Color.B * 255))
+		for i = 1, #line do
+			local b = string.byte(line, i)
+			h1 = (h1 * 33 + b) % 4294967296
+			h2 = (h2 * 31 + b * 7) % 4294967291
+		end
+	end
+	local first = table.remove(pieces, 1) :: BasePart
+	local result = GeometryService:UnionAsync(first, pieces, {
+		CollisionFidelity = Enum.CollisionFidelity.Box,
+		RenderFidelity = Enum.RenderFidelity.Automatic,
+		SplitApart = false,
+	})
+	first:Destroy()
+	for _, p in ipairs(pieces) do
+		p:Destroy()
+	end
+	local u = result[1] :: UnionOperation
+	u.Name = name
+	u:SetAttribute("MergeHash", string.format("%08x", bit32.bxor(h1, h2)))
+	u.UsePartColor = false
+	u.Material = Enum.Material.SmoothPlastic
+	u.Anchored = true
+	u.CanCollide = opts.collide == true
+	u.CanQuery = opts.collide == true
+	u.CanTouch = false
+	u.CastShadow = opts.shadow == true
+	if pivot then
+		u.PivotOffset = u.CFrame:ToObjectSpace(pivot)
+	end
+	u.Parent = model
+	return u
+end
+
+-- the props merged pieces in a template (and its triangle count), for the reports
+function StudioProps.mergedStats(model: Instance): (number, number, number)
+	local parts, unions, triangles = 0, 0, 0
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			parts += 1
+			if d:IsA("PartOperation") then
+				unions += 1
+				triangles += (d :: any).TriangleCount
+			elseif d:IsA("Part") and d.Shape == Enum.PartType.Cylinder then
+				triangles += 64 -- (about: a Roblox cylinder)
+			elseif d:IsA("WedgePart") then
+				triangles += 8
+			else
+				triangles += 12
+			end
+		end
+	end
+	return parts, unions, triangles
+end
+
+---------------------------------------------------------------------
+-- WHEAT FIELD (old WheatPatch_A: 9 x 9, a soil slab + 4 flat yellow slabs; the Plains_1 field = 6 patches, + kit +
+-- test area). Furrowed soil: 4 raised ridges (lighter tops), darker furrows, a ragged edge of clods and a few weeds =
+-- one union "Soil" (PrimaryPart); per row one union "WheatRowA".."WheatRowD": clusters of 2-4 thin stalks (wedges)
+-- with seed heads, varied heights, gold / yellow / pale / green tones, shorter at the row ends; its pivot = the row's
+-- base (PropFX sway around X). Same footprint and pivot (bottom centre) as WheatPatch_A; no collision, like before.
+---------------------------------------------------------------------
+local SOIL_TOP, SOIL_SIDE, SOIL_FURROW = rgb(176, 124, 78), rgb(154, 107, 67), rgb(124, 86, 54)
+local WEEDS = { rgb(104, 168, 72), rgb(86, 142, 60), rgb(120, 180, 80) }
+local WHEAT = { -- { head, stalk, weight }: Straw, a warmer yellow, StrawPale, Gold, an unripe green
+	{ rgb(236, 200, 96), rgb(196, 160, 74), 34 },
+	{ rgb(248, 214, 112), rgb(206, 172, 82), 26 },
+	{ rgb(244, 226, 160), rgb(200, 182, 118), 6 },
+	{ rgb(255, 201, 60), rgb(208, 160, 56), 20 },
+	{ rgb(186, 196, 92), rgb(128, 156, 68), 14 },
+}
+StudioProps.WHEAT_ROWS = { -3.3, -1.1, 1.1, 3.3 } -- the old slabs' rows (z)
+StudioProps.WHEAT_ROW_NAMES = { "WheatRowA", "WheatRowB", "WheatRowC", "WheatRowD" }
+local RIDGE_BASE, RIDGE_TOP = 0.22, 0.58 -- furrow floor, ridge crest
+
+local function pickWheat(rng: Random): { any }
+	local total = 0
+	for _, w in ipairs(WHEAT) do
+		total += w[3]
+	end
+	local r = rng:NextNumber(0, total)
+	for _, w in ipairs(WHEAT) do
+		r -= w[3]
+		if r <= 0 then
+			return w
+		end
+	end
+	return WHEAT[1]
+end
+
+-- a weed tuft of 3 leaning blades at (x, z) on height y
+local function weed(list: { BasePart }, rng: Random, x: number, y: number, z: number)
+	local color = WEEDS[rng:NextInteger(1, #WEEDS)]
+	for i = 1, 3 do
+		local h = rng:NextNumber(0.45, 0.8)
+		local yaw = rng:NextNumber(0, math.pi * 2)
+		local cf = CFrame.new(x, y, z) * CFrame.Angles(0, yaw + i * 2.1, 0) * CFrame.Angles(math.rad(rng:NextNumber(12, 30)), 0, 0)
+		table.insert(list, piece("WedgePart", Vector3.new(0.05, h, 0.22), cf * CFrame.new(0, h / 2, 0), color))
+	end
+end
+
+function StudioProps.wheat_patch(): Model
+	local m = Instance.new("Model")
+	m.Name = "wheat_patch"
+	local rng = Random.new(20261019)
+	local soil: { BasePart } = {}
+	-- the furrow floor (a bit inside the 9 x 9: the clods make the ragged edge)
+	table.insert(soil, piece("Part", Vector3.new(8.6, RIDGE_BASE, 8.6), CFrame.new(0, RIDGE_BASE / 2, 0), SOIL_FURROW))
+	for i = 1, 8 do
+		local side = (i - 1) % 4
+		local t = rng:NextNumber(-3.9, 3.9)
+		local x = if side == 0 or side == 2 then t elseif side == 1 then 4.05 else -4.05
+		local z = if side == 1 or side == 3 then t elseif side == 0 then -4.05 else 4.05
+		local s = Vector3.new(rng:NextNumber(0.55, 0.9), rng:NextNumber(0.12, 0.24), rng:NextNumber(0.55, 0.9))
+		local color = if rng:NextNumber() < 0.5 then SOIL_FURROW else SOIL_SIDE
+		table.insert(soil, piece("Part", s, CFrame.new(x, s.Y / 2, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), color))
+	end
+	-- the ridges under the rows: a body and two wedges (a peaked crest), slightly uneven lengths
+	local ridgeEnds = {}
+	for r, z in ipairs(StudioProps.WHEAT_ROWS) do
+		local length = rng:NextNumber(7.7, 8.5)
+		local x0 = rng:NextNumber(-0.25, 0.25)
+		ridgeEnds[r] = { x0 - length / 2, x0 + length / 2 }
+		local bodyH = 0.16
+		table.insert(soil, piece("Part", Vector3.new(length, bodyH, 1.3), CFrame.new(x0, RIDGE_BASE + bodyH / 2, z), SOIL_SIDE))
+		local crestH = RIDGE_TOP - RIDGE_BASE - bodyH
+		local y = RIDGE_BASE + bodyH + crestH / 2
+		table.insert(soil, piece("WedgePart", Vector3.new(length, crestH, 0.65), CFrame.new(x0, y, z - 0.325), SOIL_TOP))
+		table.insert(soil, piece("WedgePart", Vector3.new(length, crestH, 0.65), CFrame.new(x0, y, z + 0.325) * CFrame.Angles(0, math.pi, 0), SOIL_TOP))
+	end
+	-- weeds: at the edges and in two furrows
+	for _, at in ipairs({ { -4.0, -2.2 }, { 3.9, 2.4 }, { -2.3, 4.0 }, { 0.7, 0.0 } }) do
+		weed(soil, rng, at[1] + rng:NextNumber(-0.3, 0.3), RIDGE_BASE, at[2] + rng:NextNumber(-0.15, 0.15))
+	end
+	local soilUnion = merge(m, "Soil", soil, nil, { shadow = false })
+	-- the wheat rows
+	for r, z in ipairs(StudioProps.WHEAT_ROWS) do
+		-- first piece: a small axis-aligned block hidden in the ridge crest (a union takes the frame of its first
+		-- piece: the row's axes stay the template's, so the sway turns it around X)
+		local pieces: { BasePart } = { piece("Part", Vector3.new(0.1, 0.06, 0.1), CFrame.new(0, RIDGE_TOP - 0.12, z), SOIL_SIDE) }
+		local x0, x1 = ridgeEnds[r][1] + rng:NextNumber(0.2, 0.5), ridgeEnds[r][2] - rng:NextNumber(0.2, 0.5)
+		local x = x0
+		local clusters = {}
+		while x <= x1 do
+			table.insert(clusters, x)
+			x += rng:NextNumber(0.75, 0.95)
+		end
+		for c, cx in ipairs(clusters) do
+			local tone = pickWheat(rng)
+			local edge = c == 1 or c == #clusters or r == 1 or r == #StudioProps.WHEAT_ROWS
+			local tall = rng:NextNumber(1.85, 2.45) * (if edge then 0.86 else 1)
+			local roll = rng:NextNumber()
+			local count = if roll < 0.2 then 2 elseif roll < 0.4 then 4 else 3
+			local cz = z + rng:NextNumber(-0.18, 0.18)
+			for _ = 1, count do
+				local ox, oz = rng:NextNumber(-0.16, 0.16), rng:NextNumber(-0.12, 0.12)
+				local h = tall * rng:NextNumber(0.88, 1.08)
+				-- lean outward from the cluster centre, a little at random
+				local lean = CFrame.Angles(math.rad(oz * 40 + rng:NextNumber(-5, 5)), rng:NextNumber(0, math.pi), math.rad(-ox * 40 + rng:NextNumber(-5, 5)))
+				local base = CFrame.new(cx + ox, RIDGE_TOP - 0.12, cz + oz) * lean
+				table.insert(pieces, piece("WedgePart", Vector3.new(0.09, h, 0.09), base * CFrame.new(0, h / 2, 0), tone[2]))
+				local head = rng:NextNumber(0.6, 0.78)
+				-- (the head starts just above the stalk: touching pieces would cut each other into more triangles)
+				local top = base * CFrame.new(0, h + 0.02, 0) * CFrame.Angles(math.rad(rng:NextNumber(-8, 8)), math.rad(45), 0)
+				table.insert(pieces, piece("Part", Vector3.new(0.17, head, 0.17), top * CFrame.new(0, head / 2, 0), tone[1]))
+			end
+		end
+		merge(m, StudioProps.WHEAT_ROW_NAMES[r], pieces, CFrame.new(0, RIDGE_TOP - 0.12, z), { shadow = true })
+	end
+	m.PrimaryPart = soilUnion
+	soilUnion.PivotOffset = soilUnion.CFrame:Inverse() -- pivot at the bottom centre (the origin)
+	m:SetAttribute("MapPropId", "wheat_patch")
+	return m
+end
+
+---------------------------------------------------------------------
+-- THE PLAINS_1 FIELD'S EDGE (unique, not a kit model): buildFieldBorder(dirt) puts a Model "FieldBorder" next to the
+-- field's dirt plate (Farm.FieldDirt, kept): a small worn wooden border of low planks on stakes along the plate's
+-- edge (open where something stands on the line: the barrels, the way in from the farmhouse), a ragged line of dirt
+-- clods and a few weeds just outside it. One union per side, no collision (like the field). An older FieldBorder is
+-- replaced. Returns a short report.
+---------------------------------------------------------------------
+function StudioProps.buildFieldBorder(dirt: BasePart): string
+	local rng = Random.new(7019)
+	local PLANK = { rgb(168, 98, 56), rgb(156, 90, 52), rgb(178, 106, 61) }
+	local STAKE = rgb(112, 62, 38)
+	local CLOD = { rgb(176, 124, 78), rgb(154, 107, 67) }
+	local half = dirt.Size / 2
+	local top = half.Y -- the plate's top, in its own space
+	local old = dirt.Parent and dirt.Parent:FindFirstChild("FieldBorder")
+	if old then
+		old:Destroy()
+	end
+	local model = Instance.new("Model")
+	model.Name = "FieldBorder"
+	-- the four sides: { name, start, direction (plate space), length, outward normal }
+	local sides = {
+		{ "BorderSouth", Vector3.new(-half.X, 0, -half.Z + 0.15), Vector3.xAxis, 2 * half.X, -Vector3.zAxis },
+		{ "BorderNorth", Vector3.new(-half.X, 0, half.Z - 0.15), Vector3.xAxis, 2 * half.X, Vector3.zAxis },
+		{ "BorderWest", Vector3.new(-half.X + 0.15, 0, -half.Z), Vector3.zAxis, 2 * half.Z, -Vector3.xAxis },
+		{ "BorderEast", Vector3.new(half.X - 0.15, 0, -half.Z), Vector3.zAxis, 2 * half.Z, Vector3.xAxis },
+	}
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { dirt }
+	local report = {}
+	for _, side in ipairs(sides) do
+		local name, start, dir, length, out = side[1], side[2], side[3], side[4], side[5]
+		-- what stands on the line (a barrel...): open the border there
+		local gaps = {}
+		local lineCenter = dirt.CFrame * (start + dir * length / 2 + Vector3.new(0, top + 0.6, 0))
+		local lineSize = dir * length + (Vector3.one - dir) * 0.5 + Vector3.new(0, 0.7, 0)
+		for _, hit in ipairs(workspace:GetPartBoundsInBox(CFrame.new(lineCenter), Vector3.new(math.abs(lineSize.X), 0.8, math.abs(lineSize.Z)), params)) do
+			if hit.Transparency < 1 and hit.Size.Magnitude < 40 then
+				local local0 = dirt.CFrame:PointToObjectSpace(hit.Position)
+				local along = (local0 - start):Dot(dir)
+				local reach = math.abs(hit.CFrame.RightVector:Dot(dirt.CFrame:VectorToWorldSpace(dir))) * hit.Size.X / 2
+					+ math.abs(hit.CFrame.UpVector:Dot(dirt.CFrame:VectorToWorldSpace(dir))) * hit.Size.Y / 2
+					+ math.abs(hit.CFrame.LookVector:Dot(dirt.CFrame:VectorToWorldSpace(dir))) * hit.Size.Z / 2
+				table.insert(gaps, { along - reach - 0.5, along + reach + 0.5 })
+			end
+		end
+		local function blocked(a: number, b: number): boolean
+			for _, g in ipairs(gaps) do
+				if b > g[1] and a < g[2] then
+					return true
+				end
+			end
+			return false
+		end
+		local function world(p: Vector3): CFrame
+			return dirt.CFrame * CFrame.new(p)
+		end
+		local yaw = math.atan2(-dir.Z, dir.X) -- turns X onto the side's direction
+		local pieces: { BasePart } = { piece("Part", Vector3.new(0.05, 0.05, 0.05), world(start + Vector3.new(0, top - 0.04, 0)), STAKE) }
+		local t, planks, stakes = 0, 0, 0
+		local staked = {} -- (one stake per joint)
+		while t < length - 0.5 do
+			local len = math.min(rng:NextNumber(3.8, 5.2), length - t)
+			if length - t - len < 1.5 then
+				len = length - t
+			end
+			local a, b = t, t + len
+			if not blocked(a, b) then
+				local h = rng:NextNumber(0.42, 0.55)
+				local mid = start + dir * ((a + b) / 2) + Vector3.new(0, top + h / 2 - 0.04, 0)
+				local tilt = CFrame.Angles(0, yaw + math.rad(rng:NextNumber(-1.5, 1.5)), math.rad(rng:NextNumber(-2, 2)))
+				table.insert(pieces, piece("Part", Vector3.new(len - 0.1, h, 0.18), world(mid) * tilt, PLANK[rng:NextInteger(1, #PLANK)]))
+				planks += 1
+				for _, at in ipairs({ a, b }) do
+					if staked[math.round(at * 10)] then
+						continue
+					end
+					staked[math.round(at * 10)] = true
+					local stake = start + dir * at + out * 0.23 + Vector3.new(0, top + 0.32, 0) -- (just off the plank: fewer triangles)
+					table.insert(pieces, piece("Part", Vector3.new(0.24, 0.85, 0.24), world(stake) * CFrame.Angles(math.rad(rng:NextNumber(-4, 4)), yaw, math.rad(rng:NextNumber(-4, 4))), STAKE))
+					stakes += 1
+				end
+			end
+			t = b
+		end
+		-- the ragged dirt line and a few weeds just outside
+		for _ = 1, math.floor(length / 5) do
+			local along = rng:NextNumber(0.5, length - 0.5)
+			if blocked(along - 0.6, along + 0.6) then
+				continue
+			end
+			local s = Vector3.new(rng:NextNumber(0.5, 1.1), rng:NextNumber(0.12, 0.22), rng:NextNumber(0.4, 0.9))
+			local p = start + dir * along + out * rng:NextNumber(0.4, 0.9) + Vector3.new(0, -half.Y + 0.1 + s.Y / 2 - 0.02, 0)
+			table.insert(pieces, piece("Part", s, world(p) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), CLOD[rng:NextInteger(1, #CLOD)]))
+		end
+		for _ = 1, 2 do
+			local along = rng:NextNumber(1, length - 1)
+			local p = dirt.CFrame * (start + dir * along + out * rng:NextNumber(0.5, 1.0) + Vector3.new(0, -half.Y, 0))
+			weed(pieces, rng, p.X, p.Y, p.Z)
+		end
+		merge(model, name, pieces, nil, { shadow = true })
+		table.insert(report, `{name} {planks} plank(s) {stakes} stake(s){if #gaps > 0 then ` ({#gaps} gap(s))` else ""}`)
+	end
+	model.Parent = dirt.Parent
+	local _, _, triangles = StudioProps.mergedStats(model)
+	return `FieldBorder: ` .. table.concat(report, ", ") .. `; {#model:GetChildren()} unions, {triangles} triangles`
+end
+
+---------------------------------------------------------------------
+-- HAY BALE (old HayBale_A: a 5 x 5 roll lying along X + 2 bands). The roll ("Hay", collides as before), the rolled
+-- layers on both ends (rings of lighter / darker straw), straw strands over the round side, loose straw on the ground
+-- around the base (one union "Straw"), two thin twine bands ("Band"). 5.2 x 5.08 x 5.08, pivot bottom centre.
+---------------------------------------------------------------------
+function StudioProps.hay_bale(): Model
+	local m = Instance.new("Model")
+	m.Name = "hay_bale"
+	local rng = Random.new(1019)
+	local STRAW, DARK, LIGHT, DEEP, TWINE = rgb(236, 200, 96), rgb(212, 176, 80), rgb(248, 220, 130), rgb(190, 152, 66), rgb(196, 160, 104)
+	local R, AXIS = 2.5, CFrame.new(0, 2.5, 0)
+	local hay = part(m, { name = "Hay", shape = Enum.PartType.Cylinder, size = Vector3.new(4.9, 2 * R, 2 * R), cf = AXIS, color = STRAW, material = Enum.Material.SmoothPlastic, collide = true, shadow = true })
+	local straw: { BasePart } = {}
+	-- the rolled layers: discs stepping out a little toward the centre, alternating tones
+	local rings = { { 4.3, DARK }, { 2.9, LIGHT }, { 1.4, DEEP } }
+	for _, s in ipairs({ -1, 1 }) do
+		for i, ring in ipairs(rings) do
+			local t = 0.05
+			local x = s * (2.45 + (i - 0.5) * 0.03)
+			table.insert(straw, piece("Part", Vector3.new(t, ring[1], ring[1]), AXIS * CFrame.new(x, 0, 0), ring[2], Enum.PartType.Cylinder))
+		end
+	end
+	-- straw wrapped around the roll: short strands along the circumference (a slight spiral), the layers of the roll
+	for i = 1, 24 do
+		local length = rng:NextNumber(0.6, 1.1)
+		local x = rng:NextNumber(-2.3, 2.3)
+		local around = rng:NextNumber(-math.pi * 0.8, math.pi * 0.8) -- (not under the roll)
+		local cf = AXIS * CFrame.Angles(around, 0, 0) * CFrame.new(x, R + 0.005, 0) * CFrame.Angles(0, rng:NextNumber(-0.25, 0.25), 0)
+		table.insert(straw, piece("Part", Vector3.new(0.12, 0.05, length), cf, if i % 2 == 0 then LIGHT else DARK))
+	end
+	-- loose straw on the ground along the base
+	for i = 1, 10 do
+		local length = rng:NextNumber(0.5, 1.3)
+		local x = rng:NextNumber(-2.5, 2.5)
+		local z = (if i % 2 == 0 then 1 else -1) * rng:NextNumber(0.9, 1.9)
+		local cf = CFrame.new(x, 0.03, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), math.rad(rng:NextNumber(-6, 6)))
+		table.insert(straw, piece("Part", Vector3.new(length, 0.05, 0.07), cf, ({ STRAW, LIGHT, DARK })[i % 3 + 1]))
+	end
+	merge(m, "Straw", straw, nil, { shadow = false })
+	-- the twine bands
+	for _, x in ipairs({ -1.3, 1.3 }) do
+		part(m, { name = "Band", shape = Enum.PartType.Cylinder, size = Vector3.new(0.16, 2 * R + 0.08, 2 * R + 0.08), cf = AXIS * CFrame.new(x, 0, 0), color = TWINE, material = Enum.Material.SmoothPlastic, collide = true })
+	end
+	m.PrimaryPart = hay
+	hay.PivotOffset = CFrame.new(0, -R, 0)
+	m:SetAttribute("MapPropId", "hay_bale")
+	return m
+end
+
+---------------------------------------------------------------------
+-- CART (old Cart_A: 6.8 x 4.5 x 12.7; bed, 2 side panels + back panel, 2 solid wheels, axle, 2 handles, a leg). A
+-- planked bed on two sills and cross bearers, side and back rails on stakes, a low front board, iron corner
+-- brackets, an iron axle on bolsters, two spoked wheels (wooden felloes, iron rims, 8 spokes, hub, iron cap: one
+-- union each, never colliding; an invisible "WheelCollider" cylinder keeps the old wheel collision), the shafts with
+-- a cross bar, the prop leg. Slight wear: one shorter, lighter floor plank, a back rail a little askew, worn rail
+-- tops. Same pivot (bottom centre), front (-Z = the shafts) and size as Cart_A.
+---------------------------------------------------------------------
+function StudioProps.cart(): Model
+	local m = Instance.new("Model")
+	m.Name = "cart"
+	local MID, LIGHT, DARK, WORN = rgb(168, 98, 56), rgb(214, 150, 92), rgb(112, 62, 38), rgb(226, 166, 108)
+	local IRON, IRONW = rgb(92, 98, 110), rgb(122, 128, 140)
+	local PLANKS = { rgb(168, 98, 56), rgb(178, 106, 61), rgb(160, 93, 53), rgb(176, 104, 60), rgb(190, 124, 74) }
+	local function wood(name: string, size: Vector3, cf: CFrame, color: Color3, collide: boolean?): Part
+		return part(m, { name = name, size = size, cf = cf, color = color, material = Enum.Material.SmoothPlastic, collide = collide ~= false, shadow = true })
+	end
+	-- bed: sills, cross bearers, 5 floor planks (one shorter and lighter: worn)
+	for _, x in ipairs({ -2.2, 2.2 }) do
+		wood("Sill", Vector3.new(0.4, 0.35, 8.2), CFrame.new(x, 2.33, 0), DARK)
+	end
+	for _, z in ipairs({ -3.4, 0.5, 3.6 }) do
+		wood("Bearer", Vector3.new(5.0, 0.28, 0.4), CFrame.new(0, 2.36, z), DARK)
+	end
+	local floor = nil
+	for i = 1, 5 do
+		local x = -2.0 + (i - 1) * 1.0
+		local len = if i == 5 then 7.6 else 8.0
+		local p = wood("Bed", Vector3.new(0.96, 0.22, len), CFrame.new(x, 2.61, (8.0 - len) / 2), PLANKS[i])
+		if i == 3 then
+			floor = p
+		end
+	end
+	-- stakes and rails: sides (x +-2.45), back (z +3.95), a low front board (z -3.95)
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, z in ipairs({ -3.75, -1.25, 1.25, 3.75 }) do
+			wood("Stake", Vector3.new(0.3, 1.95, 0.3), CFrame.new(2.45 * sx, 3.55, z), DARK)
+		end
+		wood("Rail", Vector3.new(0.22, 0.48, 8.1), CFrame.new(2.5 * sx, 3.25, 0), LIGHT)
+		wood("Rail", Vector3.new(0.24, 0.5, 8.1), CFrame.new(2.5 * sx, 4.2, 0), WORN)
+		for _, z in ipairs({ -3.75, 3.75 }) do
+			part(m, { name = "Bracket", size = Vector3.new(0.08, 0.6, 0.5), cf = CFrame.new(2.63 * sx, 4.2, z), color = IRON, material = Enum.Material.SmoothPlastic })
+		end
+	end
+	wood("Rail", Vector3.new(5.1, 0.48, 0.22), CFrame.new(0, 3.25, 3.98), LIGHT)
+	wood("Rail", Vector3.new(5.1, 0.5, 0.24), CFrame.new(0, 4.18, 3.98) * CFrame.Angles(0, 0, math.rad(1.5)), WORN)
+	wood("Rail", Vector3.new(5.1, 0.42, 0.2), CFrame.new(0, 3.0, -3.98), LIGHT)
+	-- axle on two bolsters
+	part(m, { name = "Axle", shape = Enum.PartType.Cylinder, size = Vector3.new(6.3, 0.42, 0.42), cf = CFrame.new(0, 1.9, 0.5), color = IRON, material = Enum.Material.SmoothPlastic, collide = true })
+	for _, x in ipairs({ -2.2, 2.2 }) do
+		wood("Bolster", Vector3.new(0.45, 0.32, 0.7), CFrame.new(x, 2.0, 0.5), DARK)
+	end
+	-- the two spoked wheels (as the old ones: diameter 3.8, at x +-3.0, axle height 1.9, z 0.5)
+	for _, sx in ipairs({ -1, 1 }) do
+		local center = CFrame.new(3.0 * sx, 1.9, 0.5)
+		local pieces: { BasePart } = {}
+		for k = 0, 11 do
+			local around = center * CFrame.Angles(k * math.pi / 6, 0, 0)
+			table.insert(pieces, piece("Part", Vector3.new(0.46, 0.14, 1.04), around * CFrame.new(0, 1.83, 0), IRON))
+			table.insert(pieces, piece("Part", Vector3.new(0.38, 0.34, 0.86), around * CFrame.new(0, 1.59, 0), if k % 2 == 0 then MID else rgb(156, 90, 52)))
+		end
+		for k = 0, 7 do
+			local around = center * CFrame.Angles(k * math.pi / 4 + math.pi / 8, 0, 0)
+			table.insert(pieces, piece("Part", Vector3.new(0.16, 1.12, 0.2), around * CFrame.new(0, 0.95, 0), DARK))
+		end
+		-- hub: an octagonal block pair (low-poly, few triangles) and a square iron cap
+		table.insert(pieces, piece("Part", Vector3.new(0.62, 0.72, 0.72), center, DARK))
+		table.insert(pieces, piece("Part", Vector3.new(0.62, 0.72, 0.72), center * CFrame.Angles(math.pi / 4, 0, 0), DARK))
+		table.insert(pieces, piece("Part", Vector3.new(0.8, 0.4, 0.4), center * CFrame.Angles(math.pi / 8, 0, 0), IRONW))
+		merge(m, "Wheel", pieces, center, { shadow = true })
+		part(m, { name = "WheelCollider", shape = Enum.PartType.Cylinder, size = Vector3.new(0.6, 3.8, 3.8), cf = center, color = DARK, material = Enum.Material.SmoothPlastic, collide = true, transparency = 1 })
+	end
+	-- shafts (as the old handles: x +-2, y 2.2, z -6, 8 degrees down to the front), a cross bar, the prop leg
+	for _, sx in ipairs({ -1, 1 }) do
+		wood("Handle", Vector3.new(0.34, 0.34, 5.0), CFrame.new(2.0 * sx, 2.2, -6.0) * CFrame.Angles(math.rad(-8), 0, 0), DARK)
+	end
+	wood("Crossbar", Vector3.new(4.1, 0.26, 0.28), CFrame.new(0, 2.32, -4.3), MID)
+	wood("Leg", Vector3.new(0.42, 1.9, 0.42), CFrame.new(0, 0.95, -3.4), DARK)
+	m.PrimaryPart = floor
+	if floor then
+		floor.PivotOffset = floor.CFrame:Inverse()
+	end
+	m:SetAttribute("MapPropId", "cart")
+	return m
+end
+
+---------------------------------------------------------------------
+-- HALF-TIMBER WINDOWS (kit FarmHouse / Cottage_A / Cottage_B and every copy): the timber beams crossed the glass.
+-- fixWindows(model): every glass "Window" gets a proper frame (2 jambs, a head, a deeper sill: "WindowFrame" /
+-- "WindowSill"), a thin cross of glazing bars ("WindowBar") just in front of the glass, the glass set just behind the
+-- frame; the old trim ("Part" pieces touching the glass) goes, and every "Timber" beam that crossed the frame is cut
+-- so it stops at the frame (the pieces keep the beam's name, colour and depth). Walls, door and roof are untouched.
+-- Idempotent: a framed window (attribute WindowFramed) is left alone. Returns a short report.
+---------------------------------------------------------------------
+local FRAME_COLOR, SILL_COLOR = rgb(112, 62, 38), rgb(128, 78, 48)
+
+local function boxOverlap(a: CFrame, sa: Vector3, b: CFrame, sb: Vector3): boolean
+	local axesA = { a.RightVector, a.UpVector, a.LookVector }
+	local axesB = { b.RightVector, b.UpVector, b.LookVector }
+	local ha, hb = sa / 2, sb / 2
+	local axes = table.clone(axesA)
+	for _, v in ipairs(axesB) do
+		table.insert(axes, v)
+	end
+	for i = 1, 3 do
+		for j = 1, 3 do
+			local c = axesA[i]:Cross(axesB[j])
+			if c.Magnitude > 1e-4 then
+				table.insert(axes, c.Unit)
+			end
+		end
+	end
+	local d = b.Position - a.Position
+	for _, L in ipairs(axes) do
+		local ra = math.abs(axesA[1]:Dot(L)) * ha.X + math.abs(axesA[2]:Dot(L)) * ha.Y + math.abs(axesA[3]:Dot(L)) * ha.Z
+		local rb = math.abs(axesB[1]:Dot(L)) * hb.X + math.abs(axesB[2]:Dot(L)) * hb.Y + math.abs(axesB[3]:Dot(L)) * hb.Z
+		if math.abs(d:Dot(L)) > ra + rb - 1e-3 then
+			return false
+		end
+	end
+	return true
+end
+
+-- half extent of a part's box along a world direction
+local function extent(p: BasePart, dir: Vector3): number
+	local cf, s = p.CFrame, p.Size
+	return math.abs(cf.RightVector:Dot(dir)) * s.X / 2 + math.abs(cf.UpVector:Dot(dir)) * s.Y / 2 + math.abs(cf.LookVector:Dot(dir)) * s.Z / 2
+end
+
+-- the beam cut to keep only its parts outside [lo, hi] along the world direction `dir` (one of its own axes)
+local function cutBeam(beam: BasePart, dir: Vector3, lo: number, hi: number): number
+	local cf, s = beam.CFrame, beam.Size
+	local axisName, axisVec = "X", cf.RightVector
+	for _, pair in ipairs({ { "Y", cf.UpVector }, { "Z", cf.LookVector } }) do
+		if math.abs(pair[2]:Dot(dir)) > math.abs(axisVec:Dot(dir)) then
+			axisName, axisVec = pair[1], pair[2]
+		end
+	end
+	local sign = if axisVec:Dot(dir) >= 0 then 1 else -1
+	local half = (s :: any)[axisName] / 2
+	local c = cf.Position:Dot(dir)
+	local b0, b1 = c - half, c + half
+	local made = 0
+	for _, seg in ipairs({ { b0, math.min(b1, lo) }, { math.max(b0, hi), b1 } }) do
+		local a, b = seg[1], seg[2]
+		if b - a > 0.05 then
+			local p = beam:Clone()
+			local size = { X = s.X, Y = s.Y, Z = s.Z }
+			size[axisName] = b - a
+			p.Size = Vector3.new(size.X, size.Y, size.Z)
+			p.CFrame = cf + axisVec * sign * ((a + b) / 2 - c)
+			p.Parent = beam.Parent
+			made += 1
+		end
+	end
+	beam:Destroy()
+	return made
+end
+
+function StudioProps.fixWindows(model: Model): string
+	local walls = model:FindFirstChild("Walls")
+	if not (walls and walls:IsA("BasePart")) then
+		return `{model:GetFullName()}: no Walls part, skipped`
+	end
+	local framed, cut, trims, skipped = 0, 0, 0, 0
+	for _, glass in ipairs(model:GetChildren()) do
+		if not (glass:IsA("BasePart") and glass.Name == "Window") then
+			continue
+		end
+		if glass:GetAttribute("WindowFramed") then
+			skipped += 1
+			continue
+		end
+		-- the glass's thin axis = the wall normal, outward (away from the walls' centre)
+		local cf, s = glass.CFrame, glass.Size
+		local normal, width, height = cf.LookVector, s.X, s.Y
+		if s.X < s.Z and s.X < s.Y then
+			normal, width = cf.RightVector, s.Z
+		end
+		if (glass.Position - walls.Position):Dot(normal) < 0 then
+			normal = -normal
+		end
+		normal = Vector3.new(normal.X, 0, normal.Z).Unit
+		local across = Vector3.yAxis:Cross(normal) -- horizontal, in the wall plane
+		local face = walls.Position:Dot(normal) + extent(walls, normal) -- the wall surface
+		local cu, cv = glass.Position:Dot(across), glass.Position.Y
+		-- (across, up, normal) is an orthonormal frame: a point = across * u + up * v + normal * depth
+		local function at(u: number, v: number, depth: number): CFrame
+			return CFrame.fromMatrix(across * u + normal * depth + Vector3.new(0, v, 0), across, Vector3.yAxis)
+		end
+		-- the old trim: dark "Part" pieces touching the glass
+		for _, d in ipairs(model:GetChildren()) do
+			if d:IsA("BasePart") and d.Name == "Part" and math.min(d.Size.X, d.Size.Y, d.Size.Z) <= 0.7 and boxOverlap(cf, s + Vector3.new(1, 1, 1), d.CFrame, d.Size) then
+				d:Destroy()
+				trims += 1
+			end
+		end
+		-- glass just behind the frame (front face 0.06 out of the wall)
+		glass.Size = Vector3.new(width, height, 0.16)
+		glass.CFrame = at(cu, cv, face - 0.02)
+		local J, DEPTH = 0.4, 0.5 -- jamb width, frame depth (front face 0.36 out of the wall)
+		local frameDepth = face + 0.36 - DEPTH / 2
+		local function add(name: string, size: Vector3, c: CFrame, color: Color3)
+			local p = Instance.new("Part")
+			p.Name = name
+			p.Size = size
+			p.CFrame = c
+			p.Color = color
+			p.Material = Enum.Material.SmoothPlastic
+			p.Anchored = true
+			p.CanCollide = false
+			p.CanQuery = false
+			p.CanTouch = false
+			p.CastShadow = true
+			p.TopSurface = Enum.SurfaceType.Smooth
+			p.BottomSurface = Enum.SurfaceType.Smooth
+			p.Parent = model
+		end
+		for _, side in ipairs({ -1, 1 }) do
+			add("WindowFrame", Vector3.new(J, height, DEPTH), at(cu + side * (width / 2 + J / 2), cv, frameDepth), FRAME_COLOR)
+		end
+		add("WindowFrame", Vector3.new(width + 2 * J + 0.3, 0.42, DEPTH + 0.06), at(cu, cv + height / 2 + 0.21, frameDepth + 0.03), FRAME_COLOR)
+		add("WindowSill", Vector3.new(width + 2 * J + 0.5, 0.3, 0.8), at(cu, cv - height / 2 - 0.15, face + 0.46 - 0.4), SILL_COLOR)
+		add("WindowBar", Vector3.new(0.14, height, 0.1), at(cu, cv, face + 0.11), FRAME_COLOR)
+		add("WindowBar", Vector3.new(width, 0.14, 0.1), at(cu, cv, face + 0.11), FRAME_COLOR)
+		-- cut the beams that cross the frame (outer rectangle: jambs, head, sill)
+		local u0, u1 = cu - width / 2 - J - 0.15, cu + width / 2 + J + 0.15
+		local v0, v1 = cv - height / 2 - 0.3, cv + height / 2 + 0.42
+		local zone = at((u0 + u1) / 2, (v0 + v1) / 2, face)
+		local zoneSize = Vector3.new(u1 - u0, v1 - v0, 1.6)
+		for _, beam in ipairs(model:GetChildren()) do
+			if beam:IsA("BasePart") and beam.Name == "Timber" and boxOverlap(zone, zoneSize, beam.CFrame, beam.Size) then
+				local du, dv = extent(beam, across), extent(beam, Vector3.yAxis)
+				if du >= dv then
+					cut += cutBeam(beam, across, u0 + 0.15, u1 - 0.15)
+				else
+					cut += cutBeam(beam, Vector3.yAxis, v0, v1)
+				end
+			end
+		end
+		glass:SetAttribute("WindowFramed", true)
+		framed += 1
+	end
+	return `{model:GetFullName()}: {framed} window(s) framed, {trims} old trim piece(s) removed, {cut} beam piece(s) left after the cuts` .. (if skipped > 0 then `, {skipped} already framed` else "")
 end
 
 ---------------------------------------------------------------------

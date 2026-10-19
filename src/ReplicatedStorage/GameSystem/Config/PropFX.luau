@@ -82,6 +82,18 @@ end
 PropFX.Props = {
 	crate = {}, -- no effect
 	barrel = {}, -- no effect
+	-- Plains_1 farm (owner fix of 2026-10-19): each wheat row turns a little around its base in the wind, the four
+	-- rows of a patch out of step (Low FX: still); the cart and the hay bales have no effect
+	wheat_patch = {
+		Sway = {
+			{ Part = "WheatRowA", Degrees = 2.5, Seconds = 3.6, Axis = "X", Hinge = "Pivot" },
+			{ Part = "WheatRowB", Degrees = 3.0, Seconds = 3.1, Axis = "X", Hinge = "Pivot" },
+			{ Part = "WheatRowC", Degrees = 2.2, Seconds = 4.0, Axis = "X", Hinge = "Pivot" },
+			{ Part = "WheatRowD", Degrees = 2.8, Seconds = 3.4, Axis = "X", Hinge = "Pivot" },
+		},
+	},
+	hay_bale = {}, -- no effect
+	cart = {}, -- no effect
 	-- the warm lantern flame (also the lantern hanging from every lamp post)
 	lantern = {
 		Lights = { { Part = "Flame", Color = rgb(255, 210, 140), Brightness = 1.2, Range = 16 } },

@@ -44,6 +44,16 @@ the 3 rigs rebuilt; checked in Edit and at run time: 7-8 parts, 0 giant parts; s
 and `hub_stalls_final.jpg` retaken after the fix, the `zz_BUG_*` shots show the state before it). Mallet: dropped
 (brief).
 
+### Plains_1 fix (owner, 2026-10-19): new Studio-built templates and the house windows
+
+| model | built by | template | copies synced n/total | parts / triangles (template) | notes |
+|---|---|---|---|---|---|
+| wheat_patch (kit `WheatPatch_A`) | `StudioProps.wheat_patch` | yes | 8/8 (Plains_1 6, test 1, kit 1) | 5 unions / about 4,300 | furrowed soil union + 4 row unions (PropFX sway "WheatRowA..D"); no collision, as before |
+| hay_bale (kit `HayBale_A`) | `StudioProps.hay_bale` | yes | 7/7 (Plains_1 5, test 1, kit 1) | 4 parts (1 union) / about 1,300 | Hay + 2 Bands collide as before |
+| cart (kit `Cart_A`) | `StudioProps.cart` | yes | 3/3 (Plains_1 1, test 1, kit 1; rule filter) | 40 parts (2 wheel unions) / about 2,500 | the other 5 `Cart_A` copies (hub harbour, Desert_2, Desert_3, Plains_4, Volcano_1) keep the old cart (not asked) |
+| FieldBorder (Plains_1 only) | `StudioProps.buildFieldBorder(Farm.FieldDirt)` | n/a (unique) | 1 | 4 unions / about 2,000 | low worn plank border, open at the barrels; no collision |
+| FarmHouse, Cottage_A, Cottage_B windows | `StudioProps.fixWindows(model)` | n/a (kit models, fixed in place) | FarmHouse 3/3, Cottage_A 5/5, Cottage_B 4/4 | per window: 6 new parts (2 jambs, head, sill, 2 glazing bars), the 3 old trim parts removed; crossed beams cut in 2-3 | the beams stop at the new window frames; walls, door, roof unchanged |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).
