@@ -2155,3 +2155,41 @@ every rock intersection in sub-zone 1.
   Main agent Play check: the wheat rows sway near the field (WheatRowB moving; Sway counter 30), Low FX stops them
   (0, the row still); the hay bale blocks the player at 2.96 (radius 2.55); the cart is solid from all 4 sides (rays
   hit the wheel colliders / legs / rails at 3.5-5 studs, 34 colliding parts); no errors.
+- 14:25 ITEMS 4-8 done (Agent C, map builder; main agent looked at the gate, arrival, ridge and aerial shots and ran
+  the Play tests). New dev tool tools/TerrainFix.luau (folder backups, facet read-back / rebuild with a new thickness
+  or a warp, mountain-foot seating, skirts, view scan, walkable flood fill).
+  4 GATE: 4 CorridorRidge wedges of Plains_2 had been deleted (likely by the 10-14 duplicate check), leaving the green
+  slopes beside the gate hollow; the 4 full triangles restored (8 wedges, PlainsFix=gateHole); CorridorRidge, P2
+  Cliffs and P2 closures rebuilt thin (same vertices / colours). 565 viewpoints (corridor + beach, heights 3-45, up /
+  down / zoomed out): 0 rays escape. Gate model / sign / price / prompt untouched.
+  5 BACK MOUNTAIN: confirmed - at the default zoom 18 the arrival camera was cut to 12-17 studs by the south hill.
+  Every terrain vertex at z <= -110 moved 20 studs south (Mountains 248, Hills south band 104, Closures 281 triangles;
+  the east / west ends stretched between z -98 and -131); freed strip = grass at y 0; 26 decor items that rode the
+  hill moved with it and re-grounded. Area -> (2000, 40, -10) 250 x 120 x 270; Bounds.South -> z -147; West / East
+  lengthened to 282 (z -10); Spawns unchanged (scripts reading Area: ZoneService location loop, EnemyService random
+  respawn - both fine). Not done (not listed): the main Path's square end now shows on the grass behind the spawn.
+  6 CLOSED MOUNTAINS: the south mountain's inner edge hung 4-11 studs over the hill (the 32.png spot) - 8 vertices
+  seated on the hill crest, 18 triangles rebuilt, 34 skirt wedges (MapFix.FootSkirts), 20 stray closure triangles
+  removed. Walkable flood fill from the Entrance: 9,047 cells, 0 under terrain, 0 outside the walls; 15,702 outward
+  rays: 0 escape; view scan 2,280 viewpoints x 419 directions: underside hits 0.40 % -> 0.024 % (the 0.3-stud crest
+  hairline); MapAudit floating 0; Plains_1 3,637 parts (budget 6,000).
+  7 RIDGES: the dark band was the far slope's slab underside poking out at the crest (slabs 4 studs thick on
+  Mountains, 3 on CorridorRidge / Cliffs) -> all rebuilt with 0.3-stud slabs (same surfaces / colours); snow caps
+  already on the peaks from y 120 (62 triangles).
+  8 ROCKS: blue round rock out of OakTree_B, Rock_M_B out of OakTree_C, 2 rocks out of the arch pier, 5 rocks out of
+  canopy footprints (all >= 6 studs from every canopy and trunk); 22 rocks re-grounded (base 0.15 under the ground,
+  sink <= 28 % of the height); final 0 intersections of the 28 rocks with trees / bushes / buildings / fences / the
+  arch / each other.
+  MAIN AGENT PLAY TESTS: arrival through the real hub portal (UsePortal "Plains"): root (2000, 2.9, -105), camera 18.4
+  studs behind at 15 deg pitch, all 9 sample points of the arch unobstructed (screenshot arrival_play_after_portal:
+  the whole arch with its "Plains" sign is visible; the very top of the roof touches the screen's top edge at this
+  default pitch - camera angle, not the mountain). Perimeter walk with running + jumping outward for 5 s from 14 points
+  (old overhang, south hill x2, SW / SE corners, west x3, east x2, NW / NE ridges, both ridge ends at the gate): 0
+  ended outside the walls, 0 ever under terrain. Gate prompt "Open (500 Gold) / Beach" present; standing in the new
+  strip at (2000, 4, -140) gives CurrentSubZone = Plains_1. Phone emulator (landscape): arrival 144 fps worst 8.6 ms,
+  next to the wheat 144 fps worst 9 ms (30 swaying rows), Low FX sway 0. No errors in the Output (only Roblox's own
+  warnings). Sync 21 templates / 240 copies, 0 replaced; disk == Studio (179 scripts, 0 written). Backup
+  after_plains1_fix + Agent C's old_terrain / after_terrain folder backups.
+  Left as found (not listed / not around sub-zone 1): Plains_3 CorridorRidge still has 3-stud slabs (same dark crest
+  far from the beach; one TerrainFix.rebuild call fixes it); EntryArch lantern frame/glass and Farm crate z-fighting
+  flagged by MapAudit; Rock_M_A (1918.5, 118.7) and Rock_S_A (2104.8, 25.3) are close to trees but do not touch them.

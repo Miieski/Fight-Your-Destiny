@@ -149,6 +149,15 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-19 (afternoon): PLAINS SUB-ZONE 1 FIX (owner, 9 screenshots).** Wheat field (template wheat_patch: CSG soil
+ridges + stalk-cluster rows that sway near the player), carts and hay bales (templates cart / hay_bale; the cart rule is
+filtered to Plains_1 + test + kit - Cart_A is also placed in the hub, Desert_2/3, Plains_4, Volcano_1), every window
+framed on the farmhouse and the hub cottages (StudioProps.fixWindows), the 500 Gold gate's hollow slopes closed,
+the south mountain moved 20 studs back (Area 250 x 120 x 270 at z -10, Bounds.South z -147), mountain feet seated
+and skirted, all Plains_1 / Plains_2-corridor slabs rebuilt 0.3 thick (no dark crest ledge), rocks out of trees.
+Tool: DevTools.TerrainFix (tools/TerrainFix.luau). Log: NIGHT_LOG "Plains sub-zone 1 fix"; screenshots
+docs/screenshots/plains1_fix/.
+
 **2026-10-19 (morning): OWNER CORRECTION to the prop upgrade - LOW-POLY TEXTURES + IMPLANT EVERYTHING.** Keep the
 new shapes; re-texture them in the flat low-poly look of the 20 reference photos (no PBR / realistic textures;
 palette docs/prop_texture_guide.md, ids Config/PropTextures.luau); import and place every generated model
