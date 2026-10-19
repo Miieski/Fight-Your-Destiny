@@ -39,13 +39,12 @@
    "Family": "StoneBlocks",
    "Role": "Solid",
    "Color": [
-    165,
-    172,
-    185
+    150,
+    156,
+    168
    ],
    "Target": "#969CA8",
-   "Material": "Cobblestone",
-   "Variant": "FYD_StoneBlocks",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -64,19 +63,20 @@
     0.0
    ],
    "Triangles": 350,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": "stone_block_lines",
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Upper": {
    "Family": "StoneBlocks",
    "Role": "Solid",
    "Color": [
-    114,
-    121,
-    136
+    104,
+    110,
+    124
    ],
    "Target": "#686E7C",
-   "Material": "Cobblestone",
-   "Variant": "FYD_StoneBlocks",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -95,7 +95,9 @@
     0.0
    ],
    "Triangles": 362,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": "stone_block_lines",
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Soot": {
    "Family": "Plain",
@@ -107,7 +109,6 @@
    ],
    "Target": "#2A2522",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -126,7 +127,9 @@
     0.0
    ],
    "Triangles": 44,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Coal": {
    "Family": "Plain",
@@ -138,7 +141,6 @@
    ],
    "Target": "#2E2723",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -157,7 +159,9 @@
     0.0
    ],
    "Triangles": 90,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Coals_Glow": {
    "Family": "Glow",
@@ -169,7 +173,6 @@
    ],
    "Target": "#FF8C28",
    "Material": "Neon",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -188,19 +191,20 @@
     0.0
    ],
    "Triangles": 200,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "white"
   },
   "anvil_forge_Stump": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    142,
-    87,
-    53
+    128,
+    78,
+    48
    ],
    "Target": "#804E30",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -219,19 +223,20 @@
     0.0
    ],
    "Triangles": 64,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_StumpTop": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    238,
-    167,
-    102
+    214,
+    150,
+    92
    ],
    "Target": "#D6965C",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -250,19 +255,20 @@
     0.0
    ],
    "Triangles": 176,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Anvil": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -281,19 +287,20 @@
     0.0
    ],
    "Triangles": 382,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_AnvilFace": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    139,
-    145,
-    159
+    122,
+    128,
+    140
    ],
    "Target": "#7A808C",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -312,19 +319,20 @@
     0.0
    ],
    "Triangles": 42,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Wood": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    187,
-    109,
-    62
+    168,
+    98,
+    56
    ],
    "Target": "#A86238",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -343,19 +351,20 @@
     0.0
    ],
    "Triangles": 176,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Leather": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -374,7 +383,9 @@
     0.0
    ],
    "Triangles": 28,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "anvil_forge_Water": {
    "Family": "Water",
@@ -386,8 +397,7 @@
    ],
    "Target": "#34D6EC",
    "Material": "Glass",
-   "Variant": null,
-   "Transparency": 0.35,
+   "Transparency": 0.15,
    "CastShadow": false,
    "Center": [
     2.0,
@@ -405,7 +415,9 @@
     0.0
    ],
    "Triangles": 36,
-   "Overlay": "water_ripple"
+   "Overlay": "water_lines",
+   "Texture": null,
+   "VertexColors": "white"
   }
  },
  "Colliders": [

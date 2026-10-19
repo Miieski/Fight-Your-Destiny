@@ -39,13 +39,12 @@
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    44,
-    138,
-    64
+    40,
+    124,
+    58
    ],
    "Target": "#287C3A",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -87,19 +86,20 @@
      ],
      "At": "(x, 7.75, -6.75)"
     }
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "trophy_stall_AwningCream": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    255,
-    248,
-    229
+    232,
+    226,
+    208
    ],
    "Target": "#E8E2D0",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -120,7 +120,9 @@
    "Triangles": 420,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": "(same awning as trophy_stall_AwningGreen)"
+   "Replaces": "(same awning as trophy_stall_AwningGreen)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "trophy_stall_Gold": {
    "Family": "Gold",
@@ -131,8 +133,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -155,19 +156,20 @@
    "Anchor": null,
    "Replaces": [
     "TrophyCup (3 gold cylinders at (-3.5, 3.9..5.5, -2.9))"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "trophy_stall_Wood": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -188,7 +190,9 @@
    "Triangles": 120,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": "(trophy plinth, ball stand base)"
+   "Replaces": "(trophy plinth, ball stand base)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "trophy_stall_Ball_Glass": {
    "Family": "Glass",
@@ -200,7 +204,6 @@
    ],
    "Target": "#CDEBF5",
    "Material": "Glass",
-   "Variant": null,
    "Transparency": 0.3,
    "CastShadow": false,
    "Center": [
@@ -223,7 +226,9 @@
    "Anchor": null,
    "Replaces": [
     "CounterSkull (ball 1.5 at (2.5, 4.4, -2.9))"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "white"
   },
   "trophy_stall_BallCore_Glow": {
    "Family": "Glow",
@@ -235,7 +240,6 @@
    ],
    "Target": "#B39DFF",
    "Material": "Neon",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -256,7 +260,9 @@
    "Triangles": 80,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": "(inside the crystal ball)"
+   "Replaces": "(inside the crystal ball)",
+   "Texture": null,
+   "VertexColors": "white"
   }
  },
  "Colliders": [

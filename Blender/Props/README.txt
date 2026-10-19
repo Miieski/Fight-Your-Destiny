@@ -4,8 +4,17 @@ Brief: docs/model_upgrade_brief.txt (19 -> 18 hub / world props "a bit more real
 Inventory of the current models (sizes, colours, places): docs/prop_inventory.md (Agent B).
 Every prop of the upgrade follows THIS guide so the 18 models look like one family. Written 2026-10-18 (Agent A).
 
+LOW-POLY CORRECTION (owner, 2026-10-19; top of the brief + docs/prop_texture_guide.md): the shapes stay EXACTLY as
+generated (vertex for vertex, checked by fyd_props_geomcheck.py) but the look is the LOW-POLY one of the 20 photos:
+flat palette Colors + SmoothPlastic (Neon for glow / gems, Glass for water / glass), a lighter-top / darker-bottom
+vertex-colour gradient, only simple stylized details (geometry, plus 3 small overlay textures). The PBR texture
+sets, tints, MaterialVariants and SurfaceAppearances of the first version are RETIRED (sections 2, 4, 6, 7 below
+are updated; textures/ stays on disk for history only).
+
 TOOLS (headless Blender 5.2, or the same code from the Blender MCP; it then works in its own scene "FYD_Props")
-  tools/blender/fyd_props_textures.py   the shared tileable textures (numpy, built-in PNG writer) -> textures/
+  tools/blender/fyd_props_textures.py   the RETIRED PBR texture sets -> textures/ (history; PNG writer reused)
+  tools/blender/fyd_props_lowpoly_textures.py   the 3 low-poly overlays -> textures_lowpoly/ + Config/PropTextures.luau
+                                        (run with Blender's bundled python.exe: it has numpy)
   tools/blender/fyd_props.py            the pipeline: helpers, materials, previews, .blend, FBX, data, manifest
   tools/blender/fyd_props_recipes.py    one recipe (Python function) per prop id (RECIPES = {id: fn})
   tools/blender/fyd_props_run.py        batch runner:
@@ -15,8 +24,16 @@ TOOLS (headless Blender 5.2, or the same code from the Blender MCP; it then work
       ... -- --luau                               regenerate Blender_Exports/Props/PropMeshData.luau only
       ... -- --init-manifest                      add the missing rows of props_manifest.csv
       ... -- --sample                             throwaway end-to-end test prop "zz_sample" (delete its outputs)
+      ... -- --lowpoly well chest | --lowpoly --all   low-poly RE-MATERIAL of exported props from their .blend,
+                                                  geometry untouched (vertex colours, materials, .blend, FBX, PNG,
+                                                  JSON material fields, before/after, manifest)
+      ... -- --photo-lineup LowPoly_lineup_1 well chest ...   lineup + the reference photos in a strip underneath
+  tools/blender/fyd_props_geomcheck.py  -- <snapshot_dir> ids: the current FBX / preview PNG against an earlier
+                                        export (positions, polygons, UVs, normals EXACTLY equal; colours counted)
   tools/blender/fyd_props_check.py      re-imports an exported FBX + reopens its .blend in a clean Blender and
-                                        compares names / triangles / raw size / vertex colours with the JSON
+                                        compares names / triangles / raw size / vertex colours with the JSON, and the
+                                        low-poly contract (material <Material>_<RRGGBB>, no PBR fields, white or
+                                        gradient vertex colours as the data says)
   The .blend files are the SOURCE OF TRUTH; to change a convention, change fyd_props.py and re-run the recipes
   (a prop rebuilds in a few seconds).
   Builds are DETERMINISTIC since 2026-10-19 (same recipe -> same meshes, same preview PNG bytes; only the FBX
@@ -29,7 +46,8 @@ TOOLS (headless Blender 5.2, or the same code from the Blender MCP; it then work
 - Between low-poly and realistic: believable shapes and proportions (planked wood, riveted metal, cut stone,
   woven straw, folded cloth), clean faceted geometry, light bevels. Not photoreal, not noisy, not cartoon-flat.
 - Keep every model's MAIN colours (table below = today's Part colours). Variation is subtle: a per-piece tone,
-  lighter bevelled edges, darker ground contact (vertex colours), plus the texture detail. Never recolour the world.
+  lighter bevelled edges, the lighter-top / darker-bottom gradient and darker undersides (vertex colours). No
+  texture detail except the 3 low-poly overlays (section 4). Never recolour the world.
 - Faceted: flat shading on blocks, stones, planks; smooth shading only on the round sides of posts, axles,
   ropes, buckets (the pipeline does it per primitive).
 - Silhouette and footprint: bounding box within +10 % of the current one (docs/prop_inventory.md), same pivot,
@@ -46,10 +64,9 @@ faces): they show the same colours after the hub's colour grading (about +15 % b
 crate panel 214,150,92 -> #EFAE58 in photo 03, posts 112,62,38 -> #983C13 in photo 02, grass 98,208,64 ->
 #51E12B), so the real Part colours are used. Shades marked * are derived (darker crevices / worn variants).
 
-"Tint" = the value to put in SurfaceAppearance.Color (imported MeshParts) or BasePart.Color (Studio Parts
-with a MaterialVariant): the tint MULTIPLIES the near-white ColorMap, so tint = hex / ColorMap mean, scaled
-uniformly so no channel passes 255 (the hue is kept; Gold, the light cloths and straws render a few % darker).
-PropMeshData.luau already holds the tint of every mesh ("Color") next to its target hex ("Target").
+LOW-POLY: the Color to set IS the hex (MeshPart.Color / BasePart.Color = Hex; PropMeshData "Color" = "Target").
+The "Family (texture)" and "Tint" columns below belong to the retired PBR version (tint = hex / ColorMap mean) and
+are kept for history only. Materials per family: docs/prop_texture_guide.md section 2.
 
   Name          Hex       RGB            Family (texture)      Tint (RGB)       Used for (today's parts)
   -- wood -------------------------------------------------------------------------------------------------
@@ -117,45 +134,27 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
 - Bevel faces get a slightly lighter vertex colour (worn edges).
 
 =================================================================
-4. SHARED TILEABLE TEXTURES (textures/, 512 x 512, seamless, uploaded 2026-10-18)
+4. LOW-POLY OVERLAY TEXTURES (textures_lowpoly/, 256 x 256 RGBA, tileable, uploaded 2026-10-19)
 =================================================================
-- ONE TILE = 4 x 4 STUDS for every set (MaterialVariant.StudsPerTile = 4; on the meshes 1 UV unit = 4 studs).
-- ColorMaps are near-white NEUTRAL GRAYSCALE (mean about 0.9, detail darker than white) so they can be tinted per
-  part. Normal maps: OpenGL tangent space (green = +V, the only format Roblox reads). Roughness / Metalness: gray.
-- textures.json holds the file list, each ColorMap mean (used for the tint), and the asset ids below.
-- Contact sheet: Previews/Props/textures_sheet.png (each set tinted with a family colour, 2 x 2 tiles).
-
-  Set (family)                     ColorMap            NormalMap           RoughnessMap        MetalnessMap        mean
-  wood_grain (Wood)                89740758642776      108234637428586     135239950193027     -                   0.900
-  wood_planks (Planks: 1-stud boards, seams, butt joints, nails)
-                                   116360752066242     75585161149742      78473445851411      -                   0.965
-  metal_iron (Iron; Gold uses its Color/Normal/Metalness + metal_polished_roughness 76471974811432)
-                                   135731262793033     95603986153332      131380756886210     111789210470609     0.880
-  metal_riveted (Riveted: 2-stud plates, rivet rows, rust streaks running down -V)
-                                   136831119633013     73927252058016      106383785359918     129055189097432     0.904
-  stone_rough (Stone, Moss: natural / rough-cut stone surface)
-                                   113595820216745     118192687069902     131523483608455     -                   0.880
-  stone_blocks (StoneBlocks: cut-stone courses of 1 stud, blocks 1.5-2.5 studs, recessed mortar)
-                                   112829619167917     80658067793442      104665814749700     -                   0.909
-  cloth_canvas (Cloth: plain weave)
-                                   112531479292946     135306887519638     107308943025432     -                   0.900
-  straw_woven (Straw, Rope: woven strips 1/8 stud)
-                                   90752857691370      73615548184266      81926772986745      -                   0.880
-  bone_ivory (Bone: pores, hairline cracks)
-                                   129326962762155     123401090557220     116742375558344     -                   0.952
-  water_ripple (overlay)           85261602329011 (v2, 2026-10-19; v1 130488259194169 showed faint square tiling at grazing
-                                   angles) (RGBA: white caustic lines, alpha 0-0.6) - a Texture on the Top face of
-                                   a water part, StudsPerTileU/V = 4, scrolled by PropFX (ripples); not a SurfaceAppearance
-  (all ids are rbxassetid://<id>, uploaded with the Studio MCP upload_image to the owner's account)
-
-- In Studio (Agent B): one MaterialVariant per family for Studio-built Parts, StudsPerTile 4:
-    FYD_Wood (BaseMaterial Wood), FYD_Planks (WoodPlanks), FYD_Iron (Metal), FYD_Gold (Metal), FYD_Riveted (Metal),
-    FYD_Stone (Slate), FYD_StoneBlocks (Cobblestone), FYD_Moss (Grass, stone_rough maps), FYD_Cloth (Fabric),
-    FYD_Straw (Fabric; also used by Rope), FYD_Bone (SmoothPlastic). BasePart.Color = the tint column.
-  and one SurfaceAppearance per family for imported MeshParts (same maps), cloned per MeshPart with
-    SurfaceAppearance.Color = the mesh's tint (PropMeshData "Color"); AlphaMode Overlay (the maps have no alpha).
-- Regenerate: blender -b --factory-startup --python tools/blender/fyd_props_textures.py (deterministic seeds; it
-  keeps the asset ids in textures.json - re-upload and replace an id only when that map really changes).
+- Only where the geometry is a plain surface; everything else is a flat Color. ONE TILE = 4 x 4 STUDS (1 UV unit
+  of the meshes). Transparent background + flat lines, no noise: the part's Color shows through, the lines darken
+  (or, for water, lighten) it.
+    stone_block_lines   133404804665738   running bond, blocks 2 x 1 studs, 4 px black joints at 30 % alpha
+                                          -> family StoneBlocks (fountain_Wall, anvil_forge_Hearth, anvil_forge_Upper)
+    plank_lines         135049600507492   seams every stud along the grain, a butt joint + 2 nail dots per plank,
+                                          black at 35 % alpha -> family Planks (weapon_stall_ShieldFace)
+    water_lines         92684887585956    5 wavy dashed ripple lines, white at 50 % alpha -> the "Ripples" Texture
+                                          of Water / Stream meshes (scrolled by PropFX)
+  (rbxassetid://<id>; ids also in src/ReplicatedStorage/GameSystem/Config/PropTextures.luau and
+  textures_lowpoly/lowpoly_textures.json)
+- On a MeshPart: TextureID = the overlay (the Color shows through the transparent pixels), or a SurfaceAppearance
+  with that ColorMap ONLY (no Normal / Roughness / Metalness), AlphaMode Overlay. On a Part: a Texture per face,
+  StudsPerTileU / V = 4. Water: Texture "Ripples" on the top face (4 side faces for falling water), StudsPerTile 4.
+- Regenerate: "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe"
+  tools/blender/fyd_props_lowpoly_textures.py ; record ids with ... --ids name=id ...
+- RETIRED (PBR version, 2026-10-18): textures/ (wood_grain, wood_planks, metal_iron, metal_riveted, stone_rough,
+  stone_blocks, cloth_canvas, straw_woven, bone_ivory, water_ripple: ColorMap / Normal / Roughness / Metalness,
+  textures.json ids) and the FYD_* MaterialVariants. Not referenced by the data any more.
 
 =================================================================
 5. AXES / SCALE / PIVOT (adapted from Blender/Weapons/README.txt and the creatures)
@@ -181,11 +180,22 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
   posts, staves), cylindrical on round pieces, along the length on ropes/tubes; a random offset per piece.
   Islands overlap modulo 1 on purpose (tiling); there is no unique per-prop map. UVs go outside 0..1
   (ASSUMPTION to confirm on the pilot import: SurfaceAppearance textures wrap/repeat).
-- Vertex colours: attribute "Col" (byte, corner, sRGB), grayscale multipliers 0.7-1.0: per-piece tone, lighter
-  bevels, darker ground contact and down-facing faces. Roblox imports FBX vertex colours (3D Importer, object
-  setting "Ignore Vertex Colors" off by default) and the Roblox Blender guide shows vertex paint combined with a
-  SurfaceAppearance; not yet verified in THIS place, so they carry only subtle variation. Every important colour
-  change (stripes, gold bands, red roof vs dark posts, darker rim) is a SEPARATE MESH with its own tint.
+- Vertex colours (LOW-POLY convention, agreed with Agent B through this README and docs/prop_texture_guide.md
+  section 6): attribute "Col" (byte, corner, sRGB) = a GREY MULTIPLIER of MeshPart.Color, and MeshPart.Color = the
+  palette colour of the mesh (PropMeshData "Color"); no SurfaceAppearance. Per corner of a solid mesh:
+      grey = tone * (0.82 + 0.18 * smoothstep(clamp(y / H, 0, 1))) * (0.88 if the face points down)
+  y = height in prop space, H = the prop's height (StudioSize.y; 11.11 for the 3 stalls), tone = the per-piece tone
+  (0.93-1.0 random, bevel faces +0.06, deliberate darker details: sword fuller 0.5, chest inside 0.6, boat strakes
+  0.83, clam hinge gradient). Neon (Glow), Water, Stream, Glass, Foam and colliders: white (data VertexColors
+  "white"); the solid families: data VertexColors "multiplier".
+  Why this one: it renders right on a MeshPart WITHOUT a SurfaceAppearance (Roblox multiplies vertex colours with
+  MeshPart.Color: the EditableMesh previews of batches 2-4 showed grey vertex colours x Color ClamPink reading pink);
+  if a path drops the vertex colours the part still has its right flat colour; the recolour variants (Abyss_2
+  Sunken rowboats, skull_bones Pale) keep working by changing Color only; the FBX material colour is the same
+  family colour (materials <Material>_<RRGGBB>), so a raw import already looks right. (Full colour in the vertex
+  colours with a white MeshPart.Color was rejected: it breaks the variants and goes white where colours drop.)
+- Every important colour change (stripes, gold bands, red roof vs dark posts, darker rim) is a SEPARATE MESH with
+  its own Color.
 
 =================================================================
 7. NAMING CONTRACT (what tools/ApplyPropMeshes.luau relies on)
@@ -194,9 +204,9 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
 - Render meshes: <propId>_<Part> (Part = PascalCase, unique in the prop), one per material family + tint, e.g.
   well_Stones, well_RimStones, well_Timber, well_Roof. Role suffixes:
     <propId>_<Part>_Glow     emissive: Material Neon, Color = its colour, no SurfaceAppearance, CastShadow false
-    <propId>_<Part>_Water    water: Transparency 0.35 (Glass / SmoothPlastic), no SA, optional water_ripple Texture
-    <propId>_<Part>_Glass    glass panes: Transparency 0.3
-    <propId>_<Part>_Stream   falling water (fountain): Transparency 0.45, Glass / SmoothPlastic, no SA, optional ripple
+    <propId>_<Part>_Water    water: Glass, Transparency 0.15 (today's), no SA, water_lines "Ripples" Texture
+    <propId>_<Part>_Glass    glass panes / crystal ball: Glass, Transparency 0.3
+    <propId>_<Part>_Stream   falling water (fountain): Glass, Transparency 0.3, no SA, water_lines on the side faces
     <propId>_<Part>_Foam     foam rings: ClothWhite, Transparency 0.2, SmoothPlastic, no SA
   (a part already named after its role is not suffixed twice: well_Water)
 - Mesh colliders (convex shapes only): <propId>_Collider or <propId>_Collider_<Name> -> Transparency 1,
@@ -224,18 +234,24 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
   the item moves as a whole. Without an anchor a mesh is placed at stallPivot * CFrame.new(Center).
 - The family / tint / material of each mesh are NOT parsed from names: they are in
   Blender_Exports/Props/PropMeshData.luau (generated; paste it into ServerStorage.DevTools.PropMeshData):
-    Textures[set] = { ColorMap, NormalMap, RoughnessMap, MetalnessMap, ColorMean }
-    Families[family] = { Set, Material, Variant, Role, Metal, Transparency, Overlay, RoughnessMap (Gold) }
+    Version = 2, Style = "lowpoly", StudsPerTile = 4
+    Textures[name] = { ColorMap }                    (the 3 overlays of section 4; no other maps)
+    Families[family] = { Material, Role, Transparency, Set (= Texture, the overlay name or nil), Texture, Overlay,
+                         VertexColors "multiplier" | "white" }
     Props[propId] = { Fbx, Triangles, Budget, PivotY, Bounds {Center, Size, Min, Max}, StudioSize,
-                      Meshes[name] = { Family, Role, Color {r,g,b} (tint), Target "#hex", Material, Variant,
-                                       Transparency, CastShadow, Center, Size, Pivot, Triangles, Overlay },
+                      Meshes[name] = { Family, Role, Color {r,g,b} (= the palette colour to set), Target "#hex",
+                                       Material (Enum.Material name: SmoothPlastic / Neon / Glass), Transparency,
+                                       Texture (overlay name or nil), Overlay (water_lines or nil), VertexColors,
+                                       CastShadow, Center, Size, Pivot, Triangles, Anchor, Replaces },
                       Colliders = { ... }, Attachments[name] = {x, y, z} }
+    (no Variant / Metal / NormalMap / RoughnessMap / MetalnessMap / ColorMean any more)
   All positions: studs, prop space, relative to the origin (ground contact under the pivot).
 - What ApplyPropMeshes must do per mesh (whatever the importer did): find the MeshPart by name; check its Size
   against "Size" (if it is ~28x / 100x / 0.036x off, the import unit was wrong: resize to "Size"); place it at
   template pivot * CFrame.new(Center) (identity rotation); PivotOffset = CFrame.new(Pivot - Center); Anchored,
-  CanCollide false, CanTouch false, CanQuery false, CollisionFidelity Box, CastShadow from the data; replace any
-  imported SurfaceAppearance by the family's shared one with SA.Color = Color; Material = Material. Template =
+  CanCollide false, CanTouch false, CanQuery false, CollisionFidelity Box, CastShadow from the data; remove any
+  imported SurfaceAppearance; Color = Color; Material = Material; Transparency; the Texture overlay when there is
+  one (TextureID, or an SA with that ColorMap only, AlphaMode Overlay); keep the mesh's vertex colours. Template =
   Model <propId> with an invisible Root Part (Bounds) as PrimaryPart and WorldPivot at (0, PivotY, 0); the
   Attachments go under Root.
 
@@ -243,15 +259,16 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
 8. BUDGETS AND FILES PER PROP (brief section 5)
 =================================================================
 - Triangles: small props 300-1,500 | medium 1,500-4,000 | large (fountain, stalls, well, forge) up to 8,000;
-  per-model targets of section 9 (well 3,500, chest 1,500, clam 800, ...) win. <= 4 texture families per model
-  (+ untextured Water / Glow / Glass). Studio-built props: <= 40 parts (stall frames <= 80).
+  per-model targets of section 9 (well 3,500, chest 1,500, clam 800, ...) win. Low-poly: flat Colors, <= 1
+  overlay texture per model. Studio-built props: <= 40 parts (stall frames <= 80).
 - Files of one prop:
     Blender/Props/<propId>.blend               source of truth (scene with the meshes, preview materials, the
-                                               preview rig; textures referenced relatively from textures/)
+                                               preview rig; overlays referenced relatively from textures_lowpoly/)
     Blender_Exports/Props/<propId>.fbx         for the owner's import (Blender_Exports/Props/PROPS_IMPORT.md)
     Blender_Exports/Props/<propId>.json        the prop's data (merged into PropMeshData.luau)
     Previews/Props/<propId>_before_after.png   reference photo | render from the photo's angle | other side
     Previews/Props/<Batch>_lineup.png          the batch side by side at real relative scale
+    Previews/Props/LowPoly_lineup_<n>.png      the low-poly versions side by side, the reference photos underneath
     Blender/Props/props_manifest.csv           propId, photo, tool, triangles/parts, budget, status, instances
                                                updated, notes (the pipeline updates its own columns only)
 - Triangulated (no n-gons), closed or culled-safe meshes: Roblox MeshParts are single-sided, so a face may only be
@@ -269,7 +286,7 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
 10. PER PROP CHECKLIST
 =================================================================
  [ ] recipe sizes from docs/prop_inventory.md      [ ] bbox <= +10 %, same pivot / front / ground contact
- [ ] main colours = palette (tint in the data)      [ ] triangles within budget, <= 4 texture families
+ [ ] main colours = palette (Color in the data)     [ ] triangles within budget, low-poly materials
  [ ] previews looked at (before/after + close-ups)  [ ] fyd_props_check.py: no problems
  [ ] .blend + FBX + JSON + PropMeshData.luau        [ ] manifest row
  [ ] colliders / attachments for PropFX in the data
@@ -279,7 +296,7 @@ PropMeshData.luau already holds the tint of every mesh ("Color") next to its tar
 =================================================================
 Studio cannot read our files, so each Blender prop is also encoded into a PNG, uploaded with upload_image, read
 back by Agent B with EditableImage and rebuilt with EditableMesh as a TEMPORARY preview (never saved). It shows
-scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio before any import.
+scale, UV tiling, the vertex-colour gradient and the low-poly materials in Studio before any import.
 - Written by fyd_props.make() at every build, or from a saved .blend:
       blender -b --factory-startup --python tools/blender/fyd_props_run.py -- --preview-png well chest
   -> Blender_Exports/Props/preview/<propId>_mesh.png (the runner decodes it back and compares: round trip).
@@ -305,19 +322,19 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
     with the same header and complete meshes.
 - Uploaded ids (also in Blender_Exports/Props/preview/preview_ids.json):
     propId          asset id(s)                         size        meshes / vertices / triangles
-    well            rbxassetid://80102529524931         1024 x 163  10 / 7,108 / 3,106
-    chest           rbxassetid://91198421411858         1024 x 45   5 / 2,116 / 1,170
-    rowboat         rbxassetid://76458477611449         1024 x 93   7 / 4,038 / 1,660
-    minecart        rbxassetid://87079386271654         1024 x 78   6 / 3,496 / 1,736
-    skull_bones     rbxassetid://86179103526619         1024 x 80   3 / 3,476 / 1,254
-    clam_pearl      rbxassetid://122490022754803        1024 x 36   5 / 1,580 / 572
-    egg_nest        rbxassetid://85105593530507         1024 x 73   9 / 3,167 / 1,245
-    scarecrow       rbxassetid://119496532966562        1024 x 101  13 / 4,442 / 1,848
-    fountain        rbxassetid://114916914245834        1024 x 253  12 / 11,023 / 5,018
-    anvil_forge     rbxassetid://79286061632425         1024 x 98   12 / 4,434 / 1,950
-    weapon_stall    rbxassetid://85117045354573         1024 x 139  21 / 6,239 / 2,672
-    trophy_stall    rbxassetid://127684037913768        1024 x 126  6 / 5,592 / 2,246
-    diamond_shop    rbxassetid://95984830780590         1024 x 146  10 / 6,512 / 2,776
+    well            rbxassetid://93412331947311         1024 x 163  10 / 7,108 / 3,106
+    chest           rbxassetid://128458990978946        1024 x 45   5 / 2,116 / 1,170
+    rowboat         rbxassetid://74973993065077         1024 x 93   7 / 4,038 / 1,660
+    minecart        rbxassetid://112401630074623        1024 x 78   6 / 3,496 / 1,736
+    skull_bones     rbxassetid://81338471409592         1024 x 80   3 / 3,476 / 1,254
+    clam_pearl      rbxassetid://83271300082034         1024 x 36   5 / 1,580 / 572
+    egg_nest        rbxassetid://139867022840799        1024 x 73   9 / 3,167 / 1,245
+    scarecrow       rbxassetid://76006351620844         1024 x 101  13 / 4,442 / 1,848
+    fountain        rbxassetid://127759490543656        1024 x 253  12 / 11,023 / 5,018
+    anvil_forge     rbxassetid://139874579696803        1024 x 98   12 / 4,434 / 1,950
+    weapon_stall    rbxassetid://114462438807804        1024 x 139  21 / 6,239 / 2,672
+    trophy_stall    rbxassetid://108172001400044        1024 x 126  6 / 5,592 / 2,246
+    diamond_shop    rbxassetid://95469734022638         1024 x 146  10 / 6,512 / 2,776
 
 =================================================================
 12. PROPS DONE
@@ -464,6 +481,21 @@ FIXES 2 AFTER AGENT B'S STUDIO PREVIEW OF BATCH 3/4 (2026-10-19):
   (6.81, 1.56) 7.09, Plains_2 Docks (8.73, -2.92) 6.13 and (-4.33, -10.04) 7.77 (all >= 1.8). Oar collider: Cylinder
   7.631 x 0.34 at (-0.611, 1.698, -3.799), Rotation (64.91, -76.6, -90). Knobs: OAR_TIP / OAR_REST_S / OAR_GRIP in
   fyd_props_recipes.py.
+
+LOW-POLY RE-MATERIAL (owner correction, 2026-10-19; fyd_props_run.py -- --lowpoly --all):
+- All 13 Blender props re-materialed from their .blend, geometry untouched: fyd_props_geomcheck.py against the
+  export snapshot taken just before (FBX positions local + world, polygons, UVs; preview PNG triangles, normals,
+  UVs) = IDENTICAL for well, chest, rowboat, minecart, skull_bones, clam_pearl, egg_nest, scarecrow, fountain,
+  anvil_forge, weapon_stall, trophy_stall, diamond_shop (triangle counts unchanged; only the vertex colours and the
+  materials changed). fyd_props_check.py: no problems (incl. the low-poly contract).
+- Materials: SmoothPlastic for every solid family (gold and iron too: Metal only for glow / gems, which are Neon),
+  Neon for Glow, Glass for Water (T 0.15, today's) / Stream (T 0.3) / Glass (T 0.3), Foam SmoothPlastic T 0.2.
+  Color = the palette hex (no tint compensation). Overlays: StoneBlocks -> stone_block_lines, Planks ->
+  plank_lines, Water / Stream -> water_lines ("Ripples"). Vertex colours: section 6.
+- New preview ids: the table of section 11 (uploaded to the reopened place, Studio id ab74fac5-...).
+- Lineups beside the photos: Previews/Props/LowPoly_lineup_1.png (well, chest, rowboat, minecart, skull_bones,
+  clam_pearl, egg_nest), _2 (scarecrow, fountain, anvil_forge), _3 (weapon_stall, trophy_stall, diamond_shop).
+  Preview rig: exposure 0.2, sky 0.9 (a little brighter, closer to the hub lighting).
 
 =================================================================
 13. NOTES FOR THE STUDIO-BUILT PROPS (Agent B, batch 1) AND PIVOTS

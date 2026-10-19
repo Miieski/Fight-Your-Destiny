@@ -1,0 +1,9 @@
+{
+ "studsPerTile": 4.0,
+ "size": 256,
+ "assetIds": {
+  "stone_block_lines": "133404804665738",
+  "plank_lines": "135049600507492",
+  "water_lines": "92684887585956"
+ }
+}

@@ -44,6 +44,23 @@ def check(pid):
                 out["problems"].append(f"{ob.name}: {len(me.polygons)} tris, JSON {ref['Triangles']}")
             if any(abs(a - b) > 0.02 for a, b in zip(raw_roblox, ref["Size"])):
                 out["problems"].append(f"{ob.name}: raw size {raw_roblox} != studs {ref['Size']}")
+            # low-poly contract (docs/prop_texture_guide.md): FBX material <Material>_<RRGGBB of Color>, no PBR fields,
+            # white vertex colours where the data says so, a lighter-top grey gradient otherwise
+            want = "%s_%02X%02X%02X" % ((ref.get("Material"),) + tuple(ref.get("Color", (0, 0, 0))))
+            if entry["materials"] and entry["materials"][0].split(".")[0] != want:
+                out["problems"].append(f"{ob.name}: material {entry['materials']} != {want}")
+            for key in ("Variant", "NormalMap", "RoughnessMap", "MetalnessMap"):
+                if ref.get(key):
+                    out["problems"].append(f"{ob.name}: PBR field {key} in the JSON")
+            col = me.color_attributes.get("Col") or (me.color_attributes[0] if me.color_attributes else None)
+            if col is not None and ref.get("VertexColors") in ("white", "multiplier"):
+                greys = [d.color_srgb[0] for d in col.data] if hasattr(col.data[0], "color_srgb") else \
+                        [d.color[0] for d in col.data]
+                entry["vc"] = [round(min(greys), 3), round(max(greys), 3)]
+                if ref["VertexColors"] == "white" and min(greys) < 0.99:
+                    out["problems"].append(f"{ob.name}: vertex colours not white ({entry['vc']})")
+                if ref["VertexColors"] == "multiplier" and (min(greys) < 0.3 or max(greys) > 1.0001):
+                    out["problems"].append(f"{ob.name}: vertex colours out of range ({entry['vc']})")
         if ngons:
             out["problems"].append(f"{ob.name}: {ngons} non-triangle faces")
         if not me.color_attributes:

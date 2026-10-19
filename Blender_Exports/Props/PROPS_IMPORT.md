@@ -9,8 +9,11 @@ What is in each file (designed around the weapon import of 2026-10-13):
   suffixes), so the importer cannot merge them into one textured part as long as **Merge Meshes stays OFF**.
 - **Written in studs**: the "Studio Default" preset (Scale Unit = Studs) brings the well in at about 12.3 x 13.2 x
   9.5 studs. Nothing to change (the weapons came in 28x too big because their files were in metres/centimetres).
-- **No textures inside**: the shared textures are already uploaded; the apply command puts them on every mesh
-  with the right colour. No texture upload happens during the import.
+- **Low-poly look (owner correction 2026-10-19), no textures inside**: every mesh carries a plain colour material
+  (`<Material>_<RRGGBB>`, the palette colour) and a soft grey vertex-colour gradient (lighter top, darker bottom).
+  The apply command sets Color / SmoothPlastic / Neon / Glass and the 3 small stylized overlays of
+  `Config/PropTextures.luau` (already uploaded). No texture upload happens during the import. The shapes are the
+  same as in the earlier files, vertex for vertex (`tools/blender/fyd_props_geomcheck.py`).
 
 ## How to import (owner)
 
@@ -25,7 +28,8 @@ What is in each file (designed around the weapon import of 2026-10-13):
    - File Transform: World Forward = **Front**, World Up = **Top** (do not rotate anything: a rotated import is
      refused by the command).
    - File Geometry: **Scale Unit = Studs**, **Merge Meshes = OFF** (important), Invert Negative Faces = OFF.
-   - Objects (if you open one): Use Imported Pivot = ON, **Ignore Vertex Colors = OFF**, Make Double Sided = OFF.
+   - Objects (if you open one): Use Imported Pivot = ON, **Ignore Vertex Colors = OFF** (the gradient lives in
+     them), Make Double Sided = OFF.
    - Size check in the preview: the well is about 12.3 wide, 13.2 high, 9.5 deep (sizes of every file: table below).
 4. Click **Import** (all boxes ticked) and wait until the models are in the Workspace. Each Model is named after its
    file (`well`, ...) and holds one MeshPart per mesh of the table.
@@ -38,7 +42,7 @@ What is in each file (designed around the weapon import of 2026-10-13):
    (`ServerStorage.DevTools.PropMeshData` must hold the latest `Blender_Exports/Props/PropMeshData.luau`; Claude keeps it
    up to date.)
 
-   For every imported prop it builds `ServerStorage.MapProps.<propId>` (shared textures and colours, glow, water,
+   For every imported prop it builds `ServerStorage.MapProps.<propId>` (low-poly colours and materials, glow, water,
    invisible colliders, effect points), then updates the test area and every copy in the map, and prints a report.
    A wrong Scale Unit is corrected automatically. An incomplete, merged, rotated or distorted import is **SKIPPED**
    with a report and nothing changes in the map: import that file again with the Studio Default preset and run the
@@ -69,5 +73,6 @@ The three stall files hold only the Blender pieces (Agent B builds the frames in
 parts are (Blender/Props/README.txt section 7).
 
 Data for the apply command (paste into `ServerStorage.DevTools.PropMeshData`, ModuleScript):
-`Blender_Exports/Props/PropMeshData.luau` (generated: texture ids, families, and per prop every mesh's family, colour,
-position, size, pivot, colliders and effect points).
+`Blender_Exports/Props/PropMeshData.luau` (generated, version 2 "lowpoly": overlay texture ids, low-poly families,
+and per prop every mesh's family, Color, Material, overlay, vertex-colour mode, position, size, pivot, colliders and
+effect points).

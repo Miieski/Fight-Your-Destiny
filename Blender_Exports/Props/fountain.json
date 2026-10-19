@@ -39,13 +39,12 @@
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    118,
-    125,
-    141
+    104,
+    110,
+    124
    ],
    "Target": "#686E7C",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -66,19 +65,20 @@
    "Triangles": 2332,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "fountain_Wall": {
    "Family": "StoneBlocks",
    "Role": "Solid",
    "Color": [
-    165,
-    172,
-    185
+    150,
+    156,
+    168
    ],
    "Target": "#969CA8",
-   "Material": "Cobblestone",
-   "Variant": "FYD_StoneBlocks",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -99,19 +99,20 @@
    "Triangles": 192,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": "stone_block_lines",
+   "VertexColors": "multiplier"
   },
   "fountain_Pedestal": {
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    170,
-    177,
-    191
+    150,
+    156,
+    168
    ],
    "Target": "#969CA8",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -132,19 +133,20 @@
    "Triangles": 536,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "fountain_Column": {
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    185,
-    193,
-    208
+    163,
+    170,
+    183
    ],
    "Target": "#A3AAB7",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -165,19 +167,20 @@
    "Triangles": 276,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "fountain_Wet": {
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    95,
-    100,
-    114
+    84,
+    88,
+    100
    ],
    "Target": "#545864",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -198,19 +201,20 @@
    "Triangles": 214,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "fountain_Moss": {
    "Family": "Moss",
    "Role": "Solid",
    "Color": [
-    118,
-    191,
-    82
+    104,
+    168,
+    72
    ],
    "Target": "#68A848",
-   "Material": "Grass",
-   "Variant": "FYD_Moss",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -231,7 +235,9 @@
    "Triangles": 200,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "fountain_Gold": {
    "Family": "Gold",
@@ -242,8 +248,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -264,7 +269,9 @@
    "Triangles": 236,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "fountain_Crystal_Glow": {
    "Family": "Glow",
@@ -276,7 +283,6 @@
    ],
    "Target": "#5FD4FF",
    "Material": "Neon",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -297,7 +303,9 @@
    "Triangles": 60,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "white"
   },
   "fountain_LowerWater": {
    "Family": "Water",
@@ -309,8 +317,7 @@
    ],
    "Target": "#34D6EC",
    "Material": "Glass",
-   "Variant": null,
-   "Transparency": 0.35,
+   "Transparency": 0.15,
    "CastShadow": false,
    "Center": [
     0.0,
@@ -328,9 +335,11 @@
     0.0
    ],
    "Triangles": 124,
-   "Overlay": "water_ripple",
+   "Overlay": "water_lines",
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "white"
   },
   "fountain_UpperWater": {
    "Family": "Water",
@@ -342,8 +351,7 @@
    ],
    "Target": "#34D6EC",
    "Material": "Glass",
-   "Variant": null,
-   "Transparency": 0.35,
+   "Transparency": 0.15,
    "CastShadow": false,
    "Center": [
     0.0,
@@ -361,9 +369,11 @@
     0.0
    ],
    "Triangles": 92,
-   "Overlay": "water_ripple",
+   "Overlay": "water_lines",
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "white"
   },
   "fountain_Stream": {
    "Family": "Stream",
@@ -375,8 +385,7 @@
    ],
    "Target": "#34D6EC",
    "Material": "Glass",
-   "Variant": null,
-   "Transparency": 0.45,
+   "Transparency": 0.3,
    "CastShadow": false,
    "Center": [
     0.0,
@@ -394,9 +403,11 @@
     0.0
    ],
    "Triangles": 396,
-   "Overlay": "water_ripple",
+   "Overlay": "water_lines",
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "white"
   },
   "fountain_Foam": {
    "Family": "Foam",
@@ -408,7 +419,6 @@
    ],
    "Target": "#F5F6FA",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.2,
    "CastShadow": false,
    "Center": [
@@ -429,7 +439,9 @@
    "Triangles": 360,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "white"
   }
  },
  "Colliders": [

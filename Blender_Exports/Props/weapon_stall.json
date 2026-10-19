@@ -39,13 +39,12 @@
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    236,
-    58,
-    67
+    212,
+    52,
+    60
    ],
    "Target": "#D4343C",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -87,19 +86,20 @@
      ],
      "At": "(x, 7.75, -6.75)"
     }
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_AwningCream": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    255,
-    248,
-    229
+    232,
+    226,
+    208
    ],
    "Target": "#E8E2D0",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -120,19 +120,20 @@
    "Triangles": 560,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": "(same awning as weapon_stall_AwningRed)"
+   "Replaces": "(same awning as weapon_stall_AwningRed)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword1Blade": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -175,7 +176,9 @@
     "SwordBlade",
     "SwordGuard",
     "SwordGrip"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword1Gold": {
    "Family": "Gold",
@@ -186,8 +189,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -226,19 +228,20 @@
      0.2
     ]
    },
-   "Replaces": "(with the blade)"
+   "Replaces": "(with the blade)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword1Grip": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -277,19 +280,20 @@
      0.2
     ]
    },
-   "Replaces": "(with the blade)"
+   "Replaces": "(with the blade)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword2Blade": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -332,7 +336,9 @@
     "SwordBlade",
     "SwordGuard",
     "SwordGrip"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword2Gold": {
    "Family": "Gold",
@@ -343,8 +349,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -383,19 +388,20 @@
      0.2
     ]
    },
-   "Replaces": "(with the blade)"
+   "Replaces": "(with the blade)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword2Grip": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -434,19 +440,20 @@
      0.2
     ]
    },
-   "Replaces": "(with the blade)"
+   "Replaces": "(with the blade)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword3Blade": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -489,7 +496,9 @@
     "SwordBlade",
     "SwordGuard",
     "SwordGrip"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword3Gold": {
    "Family": "Gold",
@@ -500,8 +509,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -540,19 +548,20 @@
      0.2
     ]
    },
-   "Replaces": "(with the blade)"
+   "Replaces": "(with the blade)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_Sword3Grip": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -591,19 +600,20 @@
      0.2
     ]
    },
-   "Replaces": "(with the blade)"
+   "Replaces": "(with the blade)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_ShieldFace": {
    "Family": "Planks",
    "Role": "Solid",
    "Color": [
-    77,
-    112,
-    228
+    74,
+    108,
+    220
    ],
    "Target": "#4A6CDC",
-   "Material": "WoodPlanks",
-   "Variant": "FYD_Planks",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -645,19 +655,20 @@
    "Replaces": [
     "Shield",
     "ShieldBoss"
-   ]
+   ],
+   "Texture": "plank_lines",
+   "VertexColors": "multiplier"
   },
   "weapon_stall_ShieldRim": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -696,7 +707,9 @@
      2.6
     ]
    },
-   "Replaces": "(with the shield)"
+   "Replaces": "(with the shield)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_ShieldBoss": {
    "Family": "Gold",
@@ -707,8 +720,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -747,19 +759,20 @@
      2.6
     ]
    },
-   "Replaces": "(with the shield)"
+   "Replaces": "(with the shield)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_AxeHandle": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -800,19 +813,20 @@
    },
    "Replaces": [
     "AxeHandle"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_AxeHead": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    139,
-    145,
-    159
+    122,
+    128,
+    140
    ],
    "Target": "#7A808C",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -853,19 +867,20 @@
    },
    "Replaces": [
     "AxeHead"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_TrayWood": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -907,19 +922,20 @@
    "Replaces": [
     "DisplaySword (blade 1.6 x 0.3 x 4.6)",
     "DisplaySword guard (0.5 x 0.4 x 1.4)"
-   ]
+   ],
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_TrayVelvet": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    102,
-    109,
-    122
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -958,19 +974,20 @@
      4.6
     ]
    },
-   "Replaces": "(with the tray)"
+   "Replaces": "(with the tray)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_DaggerBlade": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -1009,7 +1026,9 @@
      4.6
     ]
    },
-   "Replaces": "(with the tray)"
+   "Replaces": "(with the tray)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_DaggerGold": {
    "Family": "Gold",
@@ -1020,8 +1039,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -1060,19 +1078,20 @@
      4.6
     ]
    },
-   "Replaces": "(with the tray)"
+   "Replaces": "(with the tray)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "weapon_stall_DaggerGrip": {
    "Family": "Cloth",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Fabric",
-   "Variant": "FYD_Cloth",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -1111,7 +1130,9 @@
      4.6
     ]
    },
-   "Replaces": "(with the tray)"
+   "Replaces": "(with the tray)",
+   "Texture": null,
+   "VertexColors": "multiplier"
   }
  },
  "Colliders": [

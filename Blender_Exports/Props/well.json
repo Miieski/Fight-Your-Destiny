@@ -39,13 +39,12 @@
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    170,
-    177,
-    191
+    150,
+    156,
+    168
    ],
    "Target": "#969CA8",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -64,19 +63,20 @@
     0.0
    ],
    "Triangles": 732,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_RimStones": {
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    118,
-    125,
-    141
+    104,
+    110,
+    124
    ],
    "Target": "#686E7C",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -95,19 +95,20 @@
     0.0
    ],
    "Triangles": 220,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Mortar": {
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    95,
-    100,
-    114
+    84,
+    88,
+    100
    ],
    "Target": "#545864",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -126,19 +127,20 @@
     0.0
    ],
    "Triangles": 130,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Moss": {
    "Family": "Moss",
    "Role": "Solid",
    "Color": [
-    118,
-    191,
-    82
+    104,
+    168,
+    72
    ],
    "Target": "#68A848",
-   "Material": "Grass",
-   "Variant": "FYD_Moss",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -157,7 +159,9 @@
     0.0
    ],
    "Triangles": 180,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Water": {
    "Family": "Water",
@@ -169,8 +173,7 @@
    ],
    "Target": "#34D6EC",
    "Material": "Glass",
-   "Variant": null,
-   "Transparency": 0.35,
+   "Transparency": 0.15,
    "CastShadow": false,
    "Center": [
     0.0,
@@ -188,19 +191,20 @@
     0.0
    ],
    "Triangles": 60,
-   "Overlay": "water_ripple"
+   "Overlay": "water_lines",
+   "Texture": null,
+   "VertexColors": "white"
   },
   "well_Timber": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -219,19 +223,20 @@
     0.0
    ],
    "Triangles": 504,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Roof": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    218,
-    71,
-    64
+    196,
+    64,
+    58
    ],
    "Target": "#C4403A",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -250,19 +255,20 @@
     0.0
    ],
    "Triangles": 768,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Bucket": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    187,
-    109,
-    62
+    168,
+    98,
+    56
    ],
    "Target": "#A86238",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -281,19 +287,20 @@
     0.0
    ],
    "Triangles": 156,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Iron": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -312,19 +319,20 @@
     0.0
    ],
    "Triangles": 248,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "well_Rope": {
    "Family": "Rope",
    "Role": "Solid",
    "Color": [
-    223,
-    182,
-    118
+    196,
+    160,
+    104
    ],
    "Target": "#C4A068",
-   "Material": "Fabric",
-   "Variant": "FYD_Straw",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -343,7 +351,9 @@
     0.0
    ],
    "Triangles": 108,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   }
  },
  "Colliders": [

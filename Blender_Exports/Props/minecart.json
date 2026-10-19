@@ -39,13 +39,12 @@
    "Family": "Riveted",
    "Role": "Solid",
    "Color": [
-    102,
-    108,
-    122
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Riveted",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -64,19 +63,20 @@
     0.0
    ],
    "Triangles": 220,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "minecart_Frame": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    139,
-    145,
-    159
+    122,
+    128,
+    140
    ],
    "Target": "#7A808C",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -95,19 +95,20 @@
     0.0
    ],
    "Triangles": 304,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "minecart_Running": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -126,19 +127,20 @@
     0.0
    ],
    "Triangles": 684,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "minecart_Hubs": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -157,19 +159,20 @@
     0.0
    ],
    "Triangles": 240,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "minecart_Ore": {
    "Family": "Stone",
    "Role": "Solid",
    "Color": [
-    109,
-    105,
-    125
+    96,
+    92,
+    110
    ],
    "Target": "#605C6E",
-   "Material": "Slate",
-   "Variant": "FYD_Stone",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -188,7 +191,9 @@
     0.0
    ],
    "Triangles": 200,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "minecart_Crystals_Glow": {
    "Family": "Glow",
@@ -200,7 +205,6 @@
    ],
    "Target": "#FFC43C",
    "Material": "Neon",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -219,7 +223,9 @@
     0.0
    ],
    "Triangles": 88,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "white"
   }
  },
  "Colliders": [

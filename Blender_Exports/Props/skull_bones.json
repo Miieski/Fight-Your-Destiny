@@ -39,13 +39,12 @@
    "Family": "Bone",
    "Role": "Solid",
    "Color": [
-    252,
-    244,
-    219
+    240,
+    232,
+    208
    ],
    "Target": "#F0E8D0",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -64,19 +63,20 @@
     0.0
    ],
    "Triangles": 760,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "skull_bones_Aged": {
    "Family": "Bone",
    "Role": "Solid",
    "Color": [
-    228,
-    215,
-    176
+    217,
+    205,
+    168
    ],
    "Target": "#D9CDA8",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -95,19 +95,20 @@
     0.0
    ],
    "Triangles": 446,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "skull_bones_Sockets": {
    "Family": "Bone",
    "Role": "Solid",
    "Color": [
-    65,
-    63,
-    82
+    62,
+    60,
+    78
    ],
    "Target": "#3E3C4E",
    "Material": "SmoothPlastic",
-   "Variant": "FYD_Bone",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -126,7 +127,9 @@
     0.0
    ],
    "Triangles": 48,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   }
  },
  "Colliders": [

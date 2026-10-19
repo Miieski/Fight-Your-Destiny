@@ -45,7 +45,6 @@
    ],
    "Target": "#FF5C78",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -66,7 +65,9 @@
    "Triangles": 172,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "clam_pearl_ShellBottomInner": {
    "Family": "Plain",
@@ -78,7 +79,6 @@
    ],
    "Target": "#FF8AA3",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -99,7 +99,9 @@
    "Triangles": 84,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "clam_pearl_ShellTop": {
    "Family": "Plain",
@@ -111,7 +113,6 @@
    ],
    "Target": "#FF5C78",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -132,7 +133,9 @@
    "Triangles": 152,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "clam_pearl_ShellTopInner": {
    "Family": "Plain",
@@ -144,7 +147,6 @@
    ],
    "Target": "#FF8AA3",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -165,7 +167,9 @@
    "Triangles": 84,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "clam_pearl_Pearl": {
    "Family": "Plain",
@@ -177,7 +181,6 @@
    ],
    "Target": "#F5F6FA",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -198,7 +201,9 @@
    "Triangles": 80,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   }
  },
  "Colliders": [],

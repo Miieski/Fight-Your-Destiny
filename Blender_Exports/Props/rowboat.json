@@ -39,13 +39,12 @@
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    187,
-    109,
-    62
+    168,
+    98,
+    56
    ],
    "Target": "#A86238",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -66,19 +65,20 @@
    "Triangles": 584,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "rowboat_Timber": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -99,19 +99,20 @@
    "Triangles": 584,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "rowboat_Thwarts": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    238,
-    167,
-    102
+    214,
+    150,
+    92
    ],
    "Target": "#D6965C",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -132,19 +133,20 @@
    "Triangles": 112,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "rowboat_Iron": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -165,19 +167,20 @@
    "Triangles": 60,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "rowboat_Rope": {
    "Family": "Rope",
    "Role": "Solid",
    "Color": [
-    223,
-    182,
-    118
+    196,
+    160,
+    104
    ],
    "Target": "#C4A068",
-   "Material": "Fabric",
-   "Variant": "FYD_Straw",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -198,19 +201,20 @@
    "Triangles": 116,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "rowboat_Oar": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -231,19 +235,20 @@
    "Triangles": 120,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "rowboat_OarBlade": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    238,
-    167,
-    102
+    214,
+    150,
+    92
    ],
    "Target": "#D6965C",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -264,7 +269,9 @@
    "Triangles": 84,
    "Overlay": null,
    "Anchor": null,
-   "Replaces": null
+   "Replaces": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   }
  },
  "Colliders": [

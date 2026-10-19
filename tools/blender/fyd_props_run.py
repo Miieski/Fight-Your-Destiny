@@ -3,11 +3,16 @@
     blender --background --factory-startup --python tools/blender/fyd_props_run.py -- well chest
     ... -- --all                      every recipe of tools/blender/fyd_props_recipes*.py
     ... -- --lineup Pilot well        lineup picture Previews/Props/Pilot_lineup.png (real relative scale)
+    ... -- --photo-lineup LowPoly_lineup_1 well chest
+                                      the same with the reference photos in a strip underneath (same order)
     ... -- --init-manifest            create the missing rows of Blender/Props/props_manifest.csv
     ... -- --luau                     regenerate Blender_Exports/Props/PropMeshData.luau only
     ... -- --preview-png well chest   (re)write Blender_Exports/Props/preview/<id>_mesh.png from the saved .blend
                                       and decode it back (round-trip check); make() also writes it every build
     ... -- --sample                   throwaway end-to-end test prop "zz_sample" (delete its outputs afterwards)
+    ... -- --lowpoly well chest | --lowpoly --all
+                                      low-poly RE-MATERIAL of exported props, geometry untouched (fyd_props.rematerial:
+                                      vertex colours + materials + .blend / FBX / PNG / JSON / previews / manifest)
 
 Every recipe module (fyd_props_recipes*.py) exposes RECIPES = {propId: function() -> fyd_props.Prop}.
 Results are written to Previews/Props/_tmp/props_last_run.json (git-ignored) and printed as one PROPS_RESULTS line.
@@ -114,21 +119,34 @@ def registry():
 
 def run(args):
     results = []
-    if args and args[0] == "--lineup":
+    if args and args[0] in ("--lineup", "--photo-lineup"):
         recipes = registry()
-        contexts = {}
+        contexts, photos = {}, []
         for pid in args[2:]:
             if pid in recipes:
-                ctx = recipes[pid]().context
-                if ctx:
-                    contexts[pid] = ctx
-        results.append({"lineup": P.lineup(args[1], args[2:], contexts=contexts)})
+                p = recipes[pid]()
+                if p.context:
+                    contexts[pid] = p.context
+                if p.photo and p.photo not in photos:
+                    photos.append(p.photo)
+        results.append({"lineup": P.lineup(args[1], args[2:], contexts=contexts,
+                                           photos=photos if args[0] == "--photo-lineup" else None)})
     elif args == ["--init-manifest"]:
         results.append({"manifest": init_manifest()})
     elif args == ["--luau"]:
         results.append({"luau": P.write_luau()})
     elif args == ["--sample"]:
         results.append(P.make(sample()))
+    elif args and args[0] == "--lowpoly":
+        recipes = registry()
+        ids = args[1:]
+        if ids == ["--all"]:
+            ids = [pid for pid in recipes if os.path.exists(os.path.join(P.EXPORT_DIR, pid + ".json"))]
+        for pid in ids:
+            try:
+                results.append(P.rematerial(recipes[pid]()))
+            except Exception as exc:
+                results.append({"id": pid, "error": f"{exc}", "trace": traceback.format_exc()[-1500:]})
     elif args and args[0] == "--preview-png":
         for pid in args[1:]:
             try:

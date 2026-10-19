@@ -35,6 +35,7 @@ import math
 import os
 import random
 import sys
+import types
 import zlib
 
 import bmesh
@@ -65,6 +66,7 @@ LUAU_DATA = os.path.join(EXPORT_DIR, "PropMeshData.luau")
 SCENE = "FYD_Props"
 SUBJECT = "PropSubject"
 RIG = "PropRig"
+NL = chr(10)       # LF line endings for the generated text files
 
 # Roblox model space (x right, y up, z back) -> Blender (X = -x, Y = z, Z = y): a proper rotation
 R2B = Matrix(((-1, 0, 0), (0, 0, 1), (0, 1, 0)))
@@ -88,29 +90,38 @@ PALETTE = {
     "Flame": "#FFB648", "ClamCream": "#F7B8B8", "ClamInner": "#FF8AA3", "Thread": "#3A2A20", "ButtonDark": "#2E2B33", "Speckle": "#9C8A70",
 }
 
-# material family -> shared texture set (Blender/Props/textures/<set>_*.png), Studio fallbacks
+# material family -> LOW-POLY material (owner correction 2026-10-19, docs/prop_texture_guide.md): a flat Color +
+# SmoothPlastic, Neon for glow, Glass for water / glass; "texture" = an optional stylized OVERLAY of
+# Blender/Props/textures_lowpoly (transparent background + flat lines; Config/PropTextures.luau), "overlay" = the
+# water_lines "Ripples" Textures of water. No PBR maps, no MaterialVariants. "gradient": the vertex colours carry the
+# lighter-top / darker-bottom ramp (grey multiplier of MeshPart.Color); False = white vertex colours.
 FAMILIES = {
-    "Wood": {"set": "wood_grain", "material": "Wood", "variant": "FYD_Wood"},
-    "Planks": {"set": "wood_planks", "material": "WoodPlanks", "variant": "FYD_Planks"},
-    "Iron": {"set": "metal_iron", "material": "Metal", "variant": "FYD_Iron", "metal": True},
-    "Gold": {"set": "metal_iron", "rough": "metal_polished_roughness.png", "material": "Metal", "variant": "FYD_Gold",
-             "metal": True},
-    "Riveted": {"set": "metal_riveted", "material": "Metal", "variant": "FYD_Riveted", "metal": True},
-    "Stone": {"set": "stone_rough", "material": "Slate", "variant": "FYD_Stone"},
-    "StoneBlocks": {"set": "stone_blocks", "material": "Cobblestone", "variant": "FYD_StoneBlocks"},
-    "Moss": {"set": "stone_rough", "material": "Grass", "variant": "FYD_Moss"},
-    "Cloth": {"set": "cloth_canvas", "material": "Fabric", "variant": "FYD_Cloth"},
-    "Straw": {"set": "straw_woven", "material": "Fabric", "variant": "FYD_Straw"},
-    "Rope": {"set": "straw_woven", "material": "Fabric", "variant": "FYD_Straw"},
-    "Bone": {"set": "bone_ivory", "material": "SmoothPlastic", "variant": "FYD_Bone"},
-    "Glow": {"set": None, "material": "Neon", "role": "Glow"},
-    "Water": {"set": None, "material": "Glass", "role": "Water", "transparency": 0.35, "overlay": "water_ripple"},
-    "Glass": {"set": None, "material": "Glass", "role": "Glass", "transparency": 0.3},
-    "Stream": {"set": None, "material": "Glass", "role": "Stream", "transparency": 0.45, "overlay": "water_ripple"},
-    "Foam": {"set": None, "material": "SmoothPlastic", "role": "Foam", "transparency": 0.2},
-    "Plain": {"set": None, "material": "SmoothPlastic"},
-    "Collider": {"set": None, "material": "SmoothPlastic", "role": "Collider", "transparency": 1.0},
+    "Wood": {"material": "SmoothPlastic", "gradient": True},
+    "Planks": {"material": "SmoothPlastic", "texture": "plank_lines", "gradient": True},
+    "Iron": {"material": "SmoothPlastic", "gradient": True},
+    "Gold": {"material": "SmoothPlastic", "gradient": True},
+    "Riveted": {"material": "SmoothPlastic", "gradient": True},
+    "Stone": {"material": "SmoothPlastic", "gradient": True},
+    "StoneBlocks": {"material": "SmoothPlastic", "texture": "stone_block_lines", "gradient": True},
+    "Moss": {"material": "SmoothPlastic", "gradient": True},
+    "Cloth": {"material": "SmoothPlastic", "gradient": True},
+    "Straw": {"material": "SmoothPlastic", "gradient": True},
+    "Rope": {"material": "SmoothPlastic", "gradient": True},
+    "Bone": {"material": "SmoothPlastic", "gradient": True},
+    "Plain": {"material": "SmoothPlastic", "gradient": True},
+    "Glow": {"material": "Neon", "role": "Glow"},
+    "Water": {"material": "Glass", "role": "Water", "transparency": 0.15, "overlay": "water_lines"},
+    "Glass": {"material": "Glass", "role": "Glass", "transparency": 0.3},
+    "Stream": {"material": "Glass", "role": "Stream", "transparency": 0.3, "overlay": "water_lines"},
+    "Foam": {"material": "SmoothPlastic", "role": "Foam", "transparency": 0.2},
+    "Collider": {"material": "SmoothPlastic", "role": "Collider", "transparency": 1.0},
 }
+# the family transparencies of the PBR version (a mesh with exactly these had no explicit value: it takes the new one)
+OLD_FAMILY_TRANSPARENCY = {"Water": 0.35, "Glass": 0.3, "Stream": 0.45, "Foam": 0.2, "Collider": 1.0}
+LOWPOLY_TEX_DIR = os.path.join(PROPS_DIR, "textures_lowpoly")
+VC_BOTTOM = 0.82     # vertex-colour gradient: grey multiplier 0.82 at the ground -> 1.0 at the prop's top (smoothstep)
+VC_DOWN = 0.88       # faces pointing down (normal y < -0.6)
+VC_VERSION = "lowpoly1"   # object property fyd_vc: which vertex-colour formula the "Col" layer holds
 ROLE_SUFFIX = {"Glow": "_Glow", "Water": "_Water", "Glass": "_Glass", "Stream": "_Stream", "Foam": "_Foam"}
 
 MANIFEST_FIELDS = ["propId", "photo", "tool", "triangles/parts", "budget", "status", "instances updated", "notes"]
@@ -136,23 +147,24 @@ def color_hex(c):
 # texture info (textures.json: ColorMap means for the tint compensation, uploaded asset ids)
 # ------------------------------------------------------------------------------------------------
 def texture_info():
-    path = os.path.join(TEX_DIR, "textures.json")
+    """Blender/Props/textures_lowpoly/lowpoly_textures.json: the stylized overlays and their uploaded asset ids."""
+    path = os.path.join(LOWPOLY_TEX_DIR, "lowpoly_textures.json")
     if not os.path.exists(path):
-        return {"sets": {}, "assetIds": {}}
+        return {"assetIds": {}}
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
 def tint_rgb(family, target_hex):
-    """SurfaceAppearance.Color / BasePart.Color for a family + target colour: target / ColorMap mean, scaled
-    uniformly so no channel passes 255 (keeps the hue; very light / saturated colours render a little darker)."""
-    fam = FAMILIES[family]
-    r, g, b = hex_rgb(target_hex)
-    if not fam.get("set"):
-        return (r, g, b)
-    mean = texture_info().get("sets", {}).get(fam["set"], {}).get("colorMean", 0.9)
-    k = min(1.0 / mean, 255.0 / max(1, r, g, b))
-    return tuple(min(255, int(round(c * k))) for c in (r, g, b))
+    """The Color to set (MeshPart.Color / BasePart.Color): the palette colour itself (low-poly: no ColorMap to
+    compensate; the vertex colours only darken it toward the bottom)."""
+    return hex_rgb(target_hex)
+
+
+def vc_gradient(y, height):
+    """Lighter top / darker bottom: grey multiplier from VC_BOTTOM at y 0 to 1.0 at the prop's height (smoothstep)."""
+    t = max(0.0, min(1.0, y / max(height, 1e-6)))
+    return VC_BOTTOM + (1.0 - VC_BOTTOM) * (t * t * (3 - 2 * t))
 
 
 # ------------------------------------------------------------------------------------------------
@@ -823,13 +835,13 @@ def setup_rig(scn):
     _try(lambda: setattr(scn.eevee, "taa_render_samples", 32))
     scn.view_settings.view_transform = "Standard"
     scn.view_settings.look = "None"
-    scn.view_settings.exposure = 0.0
+    scn.view_settings.exposure = 0.2       # low-poly previews: a little brighter, closer to the hub lighting (photos)
     world = bpy.data.worlds.get("PropWorld") or bpy.data.worlds.new("PropWorld")
     _try(lambda: setattr(world, "use_nodes", True))
     bg = world.node_tree.nodes.get("Background")
     if bg:
         bg.inputs["Color"].default_value = (0.62, 0.74, 0.90, 1.0)
-        bg.inputs["Strength"].default_value = 0.7
+        bg.inputs["Strength"].default_value = 0.9
     scn.world = world
 
     def obj(name, data):
@@ -886,73 +898,74 @@ def clear_subject(scn):
                 block.remove(item)
 
 
-def _image(fname, non_color):
-    path = os.path.join(TEX_DIR, fname)
+def _image(fname, non_color, folder=None):
+    path = os.path.join(folder or LOWPOLY_TEX_DIR, fname)
     img = bpy.data.images.load(path, check_existing=True)
     img.colorspace_settings.name = "Non-Color" if non_color else "sRGB"
     return img
 
 
+def _socket(sockets, identifier):
+    return next(x for x in sockets if x.identifier == identifier)
+
+
 def preview_material(mesh):
+    """Low-poly preview: flat colour x the vertex colours (+ the stylized overlay where the family has one), matte
+    like SmoothPlastic; Neon glows; water / glass blend. mesh: anything with .name .family .target .role
+    .transparency."""
     fam = FAMILIES[mesh.family]
     m = bpy.data.materials.new("PV_" + mesh.name)
     _try(lambda: setattr(m, "use_nodes", True))
     nt = m.node_tree
     bsdf = nt.nodes.get("Principled BSDF")
     tint = tuple(srgb_to_linear(c / 255) for c in tint_rgb(mesh.family, mesh.target))
-    vc = nt.nodes.new("ShaderNodeVertexColor")
-    vc.layer_name = "Col"
-    if fam.get("set"):
-        s = fam["set"]
+    bsdf.inputs["Metallic"].default_value = 0.0
+    color_out = None
+    overlay = fam.get("texture") or fam.get("overlay")
+    if overlay and os.path.exists(os.path.join(LOWPOLY_TEX_DIR, overlay + ".png")):
         tex = nt.nodes.new("ShaderNodeTexImage")
-        tex.image = _image(f"{s}_color.png", False)
+        tex.image = _image(overlay + ".png", False)
+        mix = nt.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        nt.links.new(tex.outputs["Alpha"], mix.inputs["Factor"])
+        _socket(mix.inputs, "A_Color").default_value = tint + (1,)
+        nt.links.new(tex.outputs["Color"], _socket(mix.inputs, "B_Color"))
+        color_out = _socket(mix.outputs, "Result_Color")
+    if mesh.role == "Glow":
+        bsdf.inputs["Base Color"].default_value = tint + (1,)
+        bsdf.inputs["Emission Color"].default_value = tint + (1,)
+        bsdf.inputs["Emission Strength"].default_value = 4.0
+    elif mesh.role in ("Water", "Glass", "Stream", "Foam"):
+        if color_out is not None:
+            nt.links.new(color_out, bsdf.inputs["Base Color"])
+        else:
+            bsdf.inputs["Base Color"].default_value = tint + (1,)
+        bsdf.inputs["Alpha"].default_value = 1.0 - mesh.transparency
+        bsdf.inputs["Roughness"].default_value = 0.06
+        _try(lambda: setattr(m, "surface_render_method", "BLENDED"))
+    else:
+        bsdf.inputs["Roughness"].default_value = 0.6   # SmoothPlastic-like (preview only)
+        _try(lambda: setattr(bsdf.inputs["Specular IOR Level"], "default_value", 0.35))
+        vc = nt.nodes.new("ShaderNodeVertexColor")
+        vc.layer_name = "Col"
         mul = nt.nodes.new("ShaderNodeVectorMath")
         mul.operation = "MULTIPLY"
-        mul.inputs[1].default_value = tint
-        nt.links.new(tex.outputs["Color"], mul.inputs[0])
-        mul2 = nt.nodes.new("ShaderNodeVectorMath")
-        mul2.operation = "MULTIPLY"
-        nt.links.new(mul.outputs[0], mul2.inputs[0])
-        nt.links.new(vc.outputs["Color"], mul2.inputs[1])
-        nt.links.new(mul2.outputs[0], bsdf.inputs["Base Color"])
-        nrm = nt.nodes.new("ShaderNodeTexImage")
-        nrm.image = _image(f"{s}_normal.png", True)
-        nmap = nt.nodes.new("ShaderNodeNormalMap")
-        nt.links.new(nrm.outputs["Color"], nmap.inputs["Color"])
-        nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
-        rough = nt.nodes.new("ShaderNodeTexImage")
-        rough.image = _image(fam.get("rough") or f"{s}_roughness.png", True)
-        nt.links.new(rough.outputs["Color"], bsdf.inputs["Roughness"])
-        if fam.get("metal"):
-            met = nt.nodes.new("ShaderNodeTexImage")
-            met.image = _image(f"{s}_metalness.png", True)
-            nt.links.new(met.outputs["Color"], bsdf.inputs["Metallic"])
+        if color_out is not None:
+            nt.links.new(color_out, mul.inputs[0])
         else:
-            bsdf.inputs["Metallic"].default_value = 0.0
-    else:
-        bsdf.inputs["Base Color"].default_value = tint + (1,)
-        if mesh.role == "Glow":
-            bsdf.inputs["Emission Color"].default_value = tint + (1,)
-            bsdf.inputs["Emission Strength"].default_value = 4.0
-        elif mesh.role in ("Water", "Glass", "Stream", "Foam"):
-            bsdf.inputs["Alpha"].default_value = 1.0 - mesh.transparency
-            bsdf.inputs["Roughness"].default_value = 0.06
-            _try(lambda: setattr(m, "surface_render_method", "BLENDED"))
-        else:
-            bsdf.inputs["Roughness"].default_value = 0.7   # matte like SmoothPlastic (preview only)
-            mul = nt.nodes.new("ShaderNodeVectorMath")
-            mul.operation = "MULTIPLY"
             mul.inputs[0].default_value = tint
-            nt.links.new(vc.outputs["Color"], mul.inputs[1])
-            nt.links.new(mul.outputs[0], bsdf.inputs["Base Color"])
+        nt.links.new(vc.outputs["Color"], mul.inputs[1])
+        nt.links.new(mul.outputs[0], bsdf.inputs["Base Color"])
     m.diffuse_color = tint + (1,)
     return m
 
 
 def export_material(mesh):
-    """Plain colour material for the FBX (no textures: the importer must not upload per-prop textures)."""
+    """Plain colour material for the FBX: the family colour (= MeshPart.Color; the vertex colours multiply it), named
+    <Material>_<RRGGBB>; no textures (the overlays are applied in Studio from PropMeshData / PropTextures)."""
     rgb = tint_rgb(mesh.family, mesh.target)
-    name = "%s_%02X%02X%02X" % ((mesh.family,) + tuple(rgb))
+    mat = FAMILIES[mesh.family]["material"]
+    name = "%s_%02X%02X%02X" % ((mat,) + tuple(rgb))
     m = bpy.data.materials.get(name)
     if m is None:
         m = bpy.data.materials.new(name)
@@ -968,8 +981,28 @@ def export_material(mesh):
 
 
 def _ao(y):
+    """The PBR version's ground-contact darkening (kept to undo it when old vertex colours are converted)."""
     t = max(0.0, min(1.0, y / 0.9))
     return 0.82 + 0.18 * (t * t * (3 - 2 * t))
+
+
+def lowpoly_shade(family, piece, y, down, height):
+    """The vertex colour (grey) of one corner: piece tone x height gradient x underside darkening; families without
+    a gradient (Neon, water, glass, foam) stay white."""
+    if not FAMILIES[family].get("gradient"):
+        return 1.0
+    return max(0.0, min(1.0, piece * vc_gradient(y, height) * (VC_DOWN if down else 1.0)))
+
+
+def set_vertex_colors(me, shades):
+    attr = me.color_attributes.get("Col") or me.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
+    rgba = [c for x in shades for c in (x, x, x, 1.0)]
+    try:
+        attr.data.foreach_set("color_srgb", rgba)
+    except Exception:
+        attr.data.foreach_set("color", [srgb_to_linear(c) if i % 4 != 3 else c for i, c in enumerate(rgba)])
+    _try(lambda: setattr(me.color_attributes, "active_color", attr))
+    return attr
 
 
 def build_object(mesh, col):
@@ -988,24 +1021,18 @@ def build_object(mesh, col):
     uv = me.uv_layers.new(name="UVMap")
     flat_uv = [c for t in mesh.loop_uv for c in t]
     uv.data.foreach_set("uv", flat_uv)
-    # vertex colours: piece tone x ground-contact AO x downward faces (subtle)
+    # vertex colours (grey multiplier of MeshPart.Color): piece tone x lighter-top gradient x darker undersides
+    height = mesh.prop.size[1]
     shades = []
     k = 0
     for f in mesh.faces:
         p = [Vector(mesh.verts[i]) for i in f]
         n = (p[1] - p[0]).cross(p[2] - p[0])
-        down = 0.88 if n.length > 1e-9 and n.normalized().y < -0.6 else 1.0
+        down = n.length > 1e-9 and n.normalized().y < -0.6
         for i in f:
-            s = mesh.loop_shade[k] * _ao(mesh.verts[i][1]) * down
-            shades.append(max(0.0, min(1.0, s)))
+            shades.append(lowpoly_shade(mesh.family, mesh.loop_shade[k], mesh.verts[i][1], down, height))
             k += 1
-    attr = me.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
-    rgba = [c for s in shades for c in (s, s, s, 1.0)]
-    try:
-        attr.data.foreach_set("color_srgb", rgba)
-    except Exception:
-        attr.data.foreach_set("color", [srgb_to_linear(c) if i % 4 != 3 else c for i, c in enumerate(rgba)])
-    _try(lambda: setattr(me.color_attributes, "active_color", attr))
+    set_vertex_colors(me, shades)
     me.polygons.foreach_set("use_smooth", mesh.face_smooth)
     me.update()
     me.materials.append(preview_material(mesh))
@@ -1013,6 +1040,7 @@ def build_object(mesh, col):
     col.objects.link(ob)
     ob.location = piv_b
     ob["fyd_family"] = mesh.family
+    ob["fyd_vc"] = VC_VERSION
     if mesh.family == "Collider":
         ob.display_type = "WIRE"
         ob.hide_render = True
@@ -1195,9 +1223,10 @@ def before_after(prop, objs):
     return out
 
 
-def lineup(name, ids, out=None, gap=2.0, az=-20, el=14, contexts=None):
+def lineup(name, ids, out=None, gap=2.0, az=-20, el=14, contexts=None, photos=None):
     """Every prop .blend of `ids` side by side at real relative scale (Roblox -x), one wide render. contexts:
-    {propId: [render-only boxes]} drawn with their prop (e.g. the stall frames around the stall pieces)."""
+    {propId: [render-only boxes]} drawn with their prop (e.g. the stall frames around the stall pieces). photos: the
+    reference photo file names (PHOTO_DIR), shown as a strip under the render in the same order (left to right)."""
     scn = scene()
     setup_rig(scn)
     clear_subject(scn)
@@ -1238,6 +1267,26 @@ def lineup(name, ids, out=None, gap=2.0, az=-20, el=14, contexts=None):
     px = _load_rgba(tmp)
     a = px[..., 3:4]
     img = px[..., :3] * a + _sky(px.shape[0], px.shape[1]) * (1 - a)
+    if photos:
+        cells = []
+        for fn in photos:
+            path = os.path.join(PHOTO_DIR, fn)
+            if os.path.exists(path):
+                cells.append(_resize(_load_rgba(path)[..., :3], 220))
+        if cells:
+            g = 8
+            total = sum(c.shape[1] for c in cells) + g * (len(cells) - 1)
+            k = min(1.0, (img.shape[1] - 2 * g) / total)
+            if k < 1.0:
+                cells = [_resize(c, int(220 * k)) for c in cells]
+                total = sum(c.shape[1] for c in cells) + g * (len(cells) - 1)
+            h = max(c.shape[0] for c in cells)
+            strip = np.ones((h + 2 * g, img.shape[1], 3)) * 0.18
+            x0 = (img.shape[1] - total) // 2
+            for c in cells:
+                strip[g:g + c.shape[0], x0:x0 + c.shape[1]] = c
+                x0 += c.shape[1] + g
+            img = np.concatenate([img, strip], axis=0)
     out = out or os.path.join(PREVIEW_DIR, f"{name}_lineup.png")
     T.write_png(out, T.to_u8(img))
     os.remove(tmp)
@@ -1289,20 +1338,26 @@ def _r3(v):
     return [round(float(c) + 0.0, 3) for c in v]
 
 
+def mesh_material_fields(family, target, transparency):
+    """The low-poly material fields of one mesh in the data (docs/prop_texture_guide.md section 7)."""
+    fam = FAMILIES[family]
+    return {"Color": list(tint_rgb(family, target)), "Target": target, "Material": fam["material"],
+            "Transparency": transparency, "Texture": fam.get("texture"), "Overlay": fam.get("overlay"),
+            "VertexColors": "multiplier" if fam.get("gradient") else "white"}
+
+
 def prop_data(prop):
     center, size, lo, hi = prop.bounds()
     meshes = {}
     for m in prop.meshes.values():
         c, s = m.bounds()
-        fam = FAMILIES[m.family]
         big = max(s) >= 3.0
-        meshes[m.name] = {
-            "Family": m.family, "Role": m.role, "Color": list(tint_rgb(m.family, m.target)), "Target": m.target,
-            "Material": fam["material"], "Variant": fam.get("variant"), "Transparency": m.transparency,
-            "CastShadow": bool(m.shadow if m.shadow is not None else (big and m.role == "Solid")),
-            "Center": _r3(c), "Size": _r3(s), "Pivot": _r3(m.pivot), "Triangles": m.tris(),
-            "Overlay": fam.get("overlay"), "Anchor": m.anchor, "Replaces": m.replaces,
-        }
+        e = {"Family": m.family, "Role": m.role}
+        e.update(mesh_material_fields(m.family, m.target, m.transparency))
+        e.update({"CastShadow": bool(m.shadow if m.shadow is not None else (big and m.role == "Solid")),
+                  "Center": _r3(c), "Size": _r3(s), "Pivot": _r3(m.pivot), "Triangles": m.tris(),
+                  "Anchor": m.anchor, "Replaces": m.replaces})
+        meshes[m.name] = e
     return {
         "Id": prop.id, "Photo": prop.photo, "Fbx": f"Blender_Exports/Props/{prop.id}.fbx",
         "Blend": f"Blender/Props/{prop.id}.blend", "Triangles": prop.tris(), "Budget": prop.budget,
@@ -1345,20 +1400,15 @@ def _lua(v, ind=1):
 
 
 def write_luau():
-    """Blender_Exports/Props/PropMeshData.luau: textures + families + every exported prop (ApplyPropMeshes reads it)."""
-    info = texture_info()
-    ids = info.get("assetIds", {})
-    textures = {}
-    for s, entry in info.get("sets", {}).items():
-        textures[s] = {k: ids.get(fname) for k, fname in entry.get("files", {}).items()}
-        textures[s]["ColorMean"] = entry.get("colorMean")
+    """Blender_Exports/Props/PropMeshData.luau: overlay textures + low-poly families + every exported prop
+    (ApplyPropMeshes reads it)."""
+    ids = texture_info().get("assetIds", {})
+    textures = {name: {"ColorMap": "rbxassetid://" + str(v)} for name, v in sorted(ids.items()) if v}
     families = {}
     for name, f in FAMILIES.items():
-        e = {"Set": f.get("set"), "Material": f["material"], "Variant": f.get("variant"), "Role": f.get("role", "Solid"),
-             "Metal": bool(f.get("metal")), "Transparency": f.get("transparency"), "Overlay": f.get("overlay")}
-        if f.get("rough"):
-            e["RoughnessMap"] = ids.get(f["rough"])
-        families[name] = e
+        families[name] = {"Material": f["material"], "Role": f.get("role", "Solid"), "Transparency": f.get("transparency"),
+                          "Set": f.get("texture"), "Texture": f.get("texture"), "Overlay": f.get("overlay"),
+                          "VertexColors": "multiplier" if f.get("gradient") else "white"}
     props = {}
     if os.path.isdir(EXPORT_DIR):
         for fn in sorted(os.listdir(EXPORT_DIR)):
@@ -1367,14 +1417,19 @@ def write_luau():
                     d = json.load(f)
                 if "Meshes" in d:
                     props[d["Id"]] = d
-    data = {"Version": 1, "StudsPerTile": TILE, "Textures": textures, "Families": families, "Props": props}
-    head = ("--!strict\n-- GENERATED by tools/blender/fyd_props.py (write_luau) from Blender/Props/textures/textures.json\n"
-            "-- and Blender_Exports/Props/<propId>.json. Do not edit by hand: re-run the prop pipeline.\n"
-            "-- Contract: Blender/Props/README.txt. Units: studs, Roblox model space, front -Z, origin = ground contact\n"
-            "-- under the pivot. Color = SurfaceAppearance.Color / BasePart.Color to set (already compensated for the\n"
-            "-- ColorMap mean), Target = the colour the part must look like.\n")
-    with open(LUAU_DATA, "w", encoding="utf-8", newline="\n") as f:
-        f.write(head + "return " + _lua(data) + "\n")
+    data = {"Version": 2, "Style": "lowpoly", "StudsPerTile": TILE, "Textures": textures, "Families": families,
+            "Props": props}
+    head = ('--!strict\n'
+            '-- GENERATED by tools/blender/fyd_props.py (write_luau) from Blender/Props/textures_lowpoly/\n'
+            '-- lowpoly_textures.json and Blender_Exports/Props/<propId>.json. Do not edit by hand: re-run the pipeline.\n'
+            '-- Contract: Blender/Props/README.txt + docs/prop_texture_guide.md. Units: studs, Roblox model space, front -Z,\n'
+            '-- origin = ground contact under the pivot. LOW-POLY (version 2): Color = MeshPart.Color (the palette colour),\n'
+            '-- Material = Enum.Material name, Texture = optional stylized overlay (Textures[name].ColorMap: MeshPart.TextureID,\n'
+            '-- or a SurfaceAppearance with that ColorMap only, AlphaMode Overlay), Overlay = the water "Ripples" Texture;\n'
+            '-- VertexColors "multiplier" = the mesh\'s vertex colours are a grey gradient that multiplies Color.\n'
+            '-- No PBR maps, no MaterialVariants.\n')
+    with open(LUAU_DATA, "w", encoding="utf-8", newline=NL) as f:
+        f.write(head + "return " + _lua(data) + NL)
     return LUAU_DATA
 
 
@@ -1587,9 +1642,90 @@ def make(prop, previews=True, manifest=True):
                                                                      if len(objs) > n_render else "")
                                + (" (pieces only)" if "Blender pieces" in (prop.tool or "") else ""),
             "budget": f"<= {prop.budget:,} tris",
-            "status": f"Blender {status}: .blend + FBX + preview done; waiting for the owner's import",
+            "status": f"Blender {status} (low-poly materials): .blend + FBX + preview done; waiting for the owner's import",
             "notes": (prop.notes + " | " if prop.notes else "") + "bbox %.2f x %.2f x %.2f (x%.2f / x%.2f / x%.2f)"
                      % (size[0], size[1], size[2], growth[0], growth[1], growth[2])})
     return {"id": prop.id, "tris": tris, "budget": prop.budget, "status": status, "meshes": {n: m.tris() for n, m in
             prop.meshes.items()}, "bbox": _r3(size), "growth": growth, "preview": sheet, "blend": blend, "fbx": fbx,
+            "preview_png": pngs}
+
+
+# ------------------------------------------------------------------------------------------------
+# low-poly re-material of an exported prop, geometry untouched (owner correction 2026-10-19)
+# ------------------------------------------------------------------------------------------------
+def rematerial(prop, previews=True):
+    """Re-materials Blender/Props/<id>.blend WITHOUT rebuilding the geometry: every mesh object (render meshes and mesh
+    colliders) is appended from the .blend, its "Col" layer becomes the low-poly vertex colours (the PBR formula,
+    piece tone x ground AO x underside, is undone to recover the piece tone; already converted objects (fyd_vc) are
+    recomputed from their own formula), it gets the low-poly preview material, then the .blend, the FBX, the preview
+    PNG, the JSON (material fields only: geometry, colliders, attachments and anchors stay as exported), the
+    before/after sheet, PropMeshData.luau and the manifest row are written. Positions, faces, UVs and normals are not
+    touched. `prop` = the recipe's Prop, used only for the previews (photo, views, render-only context)."""
+    pid = prop.id
+    scn = scene()
+    setup_rig(scn)
+    clear_subject(scn)
+    col = collection(SUBJECT, scn)
+    data_path = os.path.join(EXPORT_DIR, pid + ".json")
+    with open(data_path, encoding="utf-8") as f:
+        data = json.load(f)
+    with bpy.data.libraries.load(os.path.join(PROPS_DIR, pid + ".blend"), link=False) as (src, dst):
+        dst.objects = [n for n in src.objects if n in data["Meshes"]]
+    objs = {}
+    for o in dst.objects:
+        if o is not None and o.type == "MESH":
+            col.objects.link(o)
+            objs[o.name] = o
+    assert sorted(objs) == sorted(data["Meshes"]), f"{pid}: .blend meshes {sorted(objs)} != JSON"
+    bpy.context.view_layer.update()
+    height = data["StudioSize"][1]
+    stand = {}
+    for name, ob in objs.items():
+        info = data["Meshes"][name]
+        fam = info["Family"]
+        converted = ob.get("fyd_vc") == VC_VERSION
+        tr = info.get("Transparency") or 0.0
+        if not converted and abs(tr - OLD_FAMILY_TRANSPARENCY.get(fam, 0.0)) < 1e-6:
+            tr = FAMILIES[fam].get("transparency", 0.0)
+        mesh = types.SimpleNamespace(name=name, family=fam, target=info["Target"], role=info["Role"], transparency=tr)
+        stand[name] = mesh
+        me = ob.data
+        attr = me.color_attributes.get("Col")
+        mw = ob.matrix_world
+        shades = [1.0] * len(me.loops)
+        for poly in me.polygons:
+            down = poly.normal.z < -0.6                     # Blender Z = Roblox y (objects carry no rotation)
+            for li in poly.loop_indices:
+                y = (mw @ me.vertices[me.loops[li].vertex_index].co).z / STUD
+                old = attr.data[li].color_srgb[0] if attr is not None else 1.0
+                if converted:
+                    base = vc_gradient(y, height) * (VC_DOWN if down else 1.0) if FAMILIES[fam].get("gradient") else 1.0
+                else:
+                    base = _ao(y) * (VC_DOWN if down else 1.0)
+                piece = min(1.0, old / base) if base > 0 else 1.0
+                shades[li] = lowpoly_shade(fam, piece, y, down, height)
+        set_vertex_colors(me, shades)
+        me.materials.clear()
+        me.materials.append(preview_material(mesh))
+        ob["fyd_vc"] = VC_VERSION
+        ob["fyd_family"] = fam
+    sheet = None
+    if previews:
+        ctx = build_context(prop, collection(RIG, scn)) if prop.context else []
+        sheet = before_after(prop, dict(objs, **{o.name: o for o in ctx}))
+        remove_context(ctx)
+    blend = save_blend(prop, scn)
+    fbx = export_fbx(types.SimpleNamespace(id=pid, meshes=stand), objs)
+    pngs = write_preview_png(pid, objs)
+    for name, info in data["Meshes"].items():
+        m = stand[name]
+        info.pop("Variant", None)
+        info.update(mesh_material_fields(m.family, m.target, m.transparency))
+    write_json(data_path, data)
+    write_luau()
+    row = read_manifest().get(pid, {})
+    status = "ok" if data["Triangles"] <= data["Budget"] else "OVER BUDGET"
+    update_manifest(pid, status=f"Blender {status} (low-poly materials, geometry unchanged): .blend + FBX + preview "
+                                f"done; waiting for the owner's import", **({} if row else {"photo": prop.photo}))
+    return {"id": pid, "tris": data["Triangles"], "meshes": len(objs), "preview": sheet, "blend": blend, "fbx": fbx,
             "preview_png": pngs}

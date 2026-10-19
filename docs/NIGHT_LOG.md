@@ -2040,3 +2040,24 @@ top of docs/model_upgrade_brief.txt.
   low-poly re-material of the 13 Blender props with identical geometry, new preview PNGs; B (Studio) = the Studio
   inventory table, the ApplyPropMeshes low-poly path, the Studio-built props to low-poly, the stall NPCs in the same
   command, low-poly previews + screenshots.
+- 09:25 STEP 1 INVENTORY (Agent B, read from the live place; full table at the top of docs/prop_inventory.md):
+  | model | generated | imported | template | test area | main map replaced | low-poly |
+  |---|---|---|---|---|---|---|
+  | crate / barrel / lamp_post / lantern / laundry_rack | Studio-built | n/a | yes | new | 39/39, 33/33, 6/6, 10/10, 1/1 | no (FYD_* realistic variants) |
+  | weapon / trophy / diamond stall frames | Studio-built | n/a | yes (frame only) | new frame | 1/1 each (frame), 0/1 pieces | no |
+  | well | Blender | no | yes, TODAY's 12-part well | old | 0/1 new | no |
+  | fountain, chest, rowboat, minecart, skull_bones, clam_pearl, egg_nest, scarecrow, anvil_forge | Blender | no | no | old | 0/1, 0/5, 0/6, 0/2, 0/16, 0/29, 0/5, 0/1, 0/1 | no |
+  | stall items / gems / awnings / diamond sign (3 stall FBX) | Blender | no | no | old items | 0/3 | no |
+  | npc_blacksmith / npc_trophy_merchant / npc_gem_merchant | Blender (Part F, palette) | no (ServerStorage.NPCs empty) | n/a | stand-ins | 0/1 each (placeholders at run time) | palette = flat |
+  Totals: 13 Blender FBX generated, 0 imported; 8 Studio-built templates synced (92 main-map copies); 0 low-poly yet.
+- 10:05 LOW-POLY RE-MATERIAL of the 13 Blender props done (Agent A; main agent looked at LowPoly_lineup_1-3 beside
+  the photos: approved). docs/prop_texture_guide.md = the real Part colours (Kit.Palette / inventory; the photos are
+  the same parts after the hub's ~+15 % grading), SmoothPlastic for every solid surface (gold and iron too), Neon only
+  for glow parts and gems, Glass for water (T 0.15) / streams / glass (T 0.3); no Metal, no MaterialVariants, no PBR.
+  Gradient: Blender meshes = grey vertex-colour multiplier 0.82 (bottom) -> 1.0 (top), x0.88 on down faces, with
+  MeshPart.Color = the family colour; Studio parts = 3 bands by height (x0.90 / x0.96 / x1.0). Only 3 stylized
+  overlays (256 px, transparent, 4 studs per tile): stone_block_lines 133404804665738, plank_lines 135049600507492,
+  water_lines 92684887585956 -> src/ReplicatedStorage/GameSystem/Config/PropTextures.luau. GEOMETRY IDENTICAL for all
+  13 (new --lowpoly mode re-materials the existing .blend; fyd_props_geomcheck.py: FBX positions / polygons / UVs and
+  the preview PNG triangles / normals / UVs exactly equal). PropMeshData version 2 ("lowpoly"); new preview ids in
+  Blender/Props/README.txt section 12. The old PBR sets and FYD_* MaterialVariants are retired.

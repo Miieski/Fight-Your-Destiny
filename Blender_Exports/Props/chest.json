@@ -39,13 +39,12 @@
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    187,
-    109,
-    62
+    168,
+    98,
+    56
    ],
    "Target": "#A86238",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -64,19 +63,20 @@
     0.0
    ],
    "Triangles": 346,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "chest_Lid": {
    "Family": "Wood",
    "Role": "Solid",
    "Color": [
-    124,
-    69,
-    42
+    112,
+    62,
+    38
    ],
    "Target": "#703E26",
-   "Material": "Wood",
-   "Variant": "FYD_Wood",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
@@ -95,7 +95,9 @@
     0.0
    ],
    "Triangles": 360,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "chest_Bands": {
    "Family": "Gold",
@@ -106,8 +108,7 @@
     60
    ],
    "Target": "#FFC93C",
-   "Material": "Metal",
-   "Variant": "FYD_Gold",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -126,19 +127,20 @@
     0.0
    ],
    "Triangles": 280,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "chest_Iron": {
    "Family": "Iron",
    "Role": "Solid",
    "Color": [
-    105,
-    111,
-    125
+    92,
+    98,
+    110
    ],
    "Target": "#5C626E",
-   "Material": "Metal",
-   "Variant": "FYD_Iron",
+   "Material": "SmoothPlastic",
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -157,7 +159,9 @@
     0.0
    ],
    "Triangles": 164,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   },
   "chest_Keyhole": {
    "Family": "Plain",
@@ -169,7 +173,6 @@
    ],
    "Target": "#1E1714",
    "Material": "SmoothPlastic",
-   "Variant": null,
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
@@ -188,7 +191,9 @@
     0.0
    ],
    "Triangles": 20,
-   "Overlay": null
+   "Overlay": null,
+   "Texture": null,
+   "VertexColors": "multiplier"
   }
  },
  "Colliders": [
