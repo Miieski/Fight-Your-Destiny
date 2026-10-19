@@ -2281,3 +2281,27 @@ every rock intersection in sub-zone 1.
   MAIN AGENT PLAY CHECK: with 10M gold (admin addGold), each gate prompt ("Open (500 Gold)", "Open (1.25K Gold)",
   "Open (3.12K Gold)") opened its gate: Barrier collision off, every new door piece hidden (LocalTransparencyModifier
   1: 3 / 4 / 5 pieces), the player walked through all three; no errors.
+- 23:10 BATCH C done (Agent B; main agent looked at the 4 hub shots and Play-checked):
+  16 rebirth altar (rebirth_altar): replaced 3 / 3 (test, kit, Hub.RebirthAltar): 3 tiers of bevelled cut blocks,
+  6 low front risers (was 3 tall steps), 4 columns (carved base, fluted shaft with band, carved capital, gold bowl
+  with a static stylized pink flame - the old ones did not flicker), a carved octagonal pedestal with an engraved
+  16-sided gold ring, 6 pink rune circles, light moss; Agent A's 4 faceted crystals (the main one now stands on the
+  ring); PointLight and EffectPoint (0, 21, 0) kept; 34 -> 10 parts; 35.8 x 29.3 x 38.3 (was 36 x 29 x 38.4).
+  10 egg station (egg_station): replaced 3 / 3: cut-block plinth, woven nest of staves with rope bands, straw rim,
+  straw bed with strands and twigs, a thick wooden arch with iron shoes / plates / rope lashings, lantern hook, egg
+  signboard; the hub's 3 real zone eggs (DisplayEgg_*, MapPropKeep set before the first sync) untouched.
+  DECISION (Agent B): the test / kit placeholder ball eggs replaced by copies of the hub's real eggs so the test zone
+  matches the game. 33 -> 26 parts.
+  10 moon gazebo (moon_gazebo): replaced 3 / 3: hexagonal plank deck, rug and gold ring kept, 6 posts with carved
+  bases / gold bands / carved caps, braces, gold fascia with ornaments, individual purple shingles with darker hip
+  caps and a gold finial, gold crescent crest with stars, drapes with rods and tassels, candles, the crystal ball on a
+  gold claw stand (light kept); NPC stand-in / NpcSpot / Interact kept; hub 57 -> 32 parts.
+  11 fruit stall (fruit_stall): replaced 4 / 4 (test, kit, 2 hub): built like the sibling stalls (same wood colours and
+  counter), yellow / white striped awning with a scalloped edge, 3 slatted crates of faceted fruit (green apples,
+  oranges, red apples with stems / leaves) + loose fruit, the barrel prop, both NPC stand-ins kept, no sign; hub 66
+  -> 35 / 36 parts.
+  Sync run 2 = 0 for all; hub parts 5,266 -> 5,150. Shared code: round pieces are one 16-sided solid and chamfer
+  cutters a hair larger (no stray sheets); a failed cut retries one cutter at a time (0 warnings).
+  MAIN AGENT PLAY CHECK: RebirthAltar "Rebirth / Priest" -> RebirthWindow; EggStation "Hatch eggs / Egg Keeper" ->
+  PetsWindow; RebirthShop "Open / Rebirth Shop" -> RebirthWindow (unchanged behaviour); exactly one prompt each, on
+  Interact; walking onto the altar without jumping reaches the top platform (+7.8 studs); no game errors.

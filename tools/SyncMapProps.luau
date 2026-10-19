@@ -121,6 +121,12 @@ SyncMapProps.RULES = {
 	{ propId = "gate_mine", names = { "Gate_Plains_4" }, match = function(m)
 		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Plains_4"
 	end },
+	-- batch C: 16 rebirth altar, 10 egg station + moon gazebo (the Rebirth Shop), 11 fruit stall (test zone, kit, hub);
+	-- their Interact / NpcSpot / NPC / nested props and the egg station's DisplayEgg_* (MapPropKeep) are kept
+	{ propId = "rebirth_altar", names = { "Station_RebirthAltar" }, hubNames = { "RebirthAltar" } },
+	{ propId = "egg_station", names = { "Station_EggStation" }, hubNames = { "EggStation" } },
+	{ propId = "moon_gazebo", names = { "Station_RebirthShop" }, hubNames = { "RebirthShop" } },
+	{ propId = "fruit_stall", names = { "Market_Awning_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

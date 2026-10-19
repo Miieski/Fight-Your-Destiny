@@ -102,7 +102,9 @@ local function negWedge(blockCF: CFrame, size: Vector3, axis: string, a: number,
 		offset, len = Vector3.new(a * (L / 2 - c / 2), b * (H / 2 - c / 2), 0), D
 	end
 	local w = Instance.new("WedgePart")
-	w.Size = Vector3.new(len + 0.2, c, c)
+	-- 0.02 larger on both legs, same centre: the same cut (its slope does not move) but no face coplanar with the
+	-- block's faces (coplanar faces left zero-thickness sheets in turned unions, e.g. a 16-sided disc's 2nd octagon)
+	w.Size = Vector3.new(len + 0.2, c + 0.04, c + 0.04)
 	w.Anchored = true
 	w.CFrame = blockCF * CFrame.new(offset) * PRE[axis] * CFrame.Angles(math.rad(ANG[axis][a .. "," .. b]), 0, 0)
 	return w
@@ -125,8 +127,9 @@ PropsBatch2.EDGES = EDGES
 -- that also suits wood and iron.
 local BEVEL_SELF = false
 
--- a block (L x H x D at cf) with the listed edge sets chamfered by c (CSG subtract); extra = more negative parts
-local function chamfered(size: Vector3, cf: CFrame, color: Color3, sets: { string }, c: number, extra: { BasePart }?): BasePart
+-- a block (L x H x D at cf) with the listed edge sets chamfered by c (CSG subtract); extra = more negative parts;
+-- keep = negative parts whose own colour stays on the faces they cut (carving, engraving), even with BEVEL_SELF
+local function chamfered(size: Vector3, cf: CFrame, color: Color3, sets: { string }, c: number, extra: { BasePart }?, keep: { BasePart }?): BasePart
 	local block = piece("Part", size, cf, color)
 	local negs = {}
 	for _, name in ipairs(sets) do
@@ -142,6 +145,9 @@ local function chamfered(size: Vector3, cf: CFrame, color: Color3, sets: { strin
 		for _, n in ipairs(negs) do
 			n.Color = bevel
 		end
+	end
+	for _, x in ipairs(keep or {}) do
+		table.insert(negs, x)
 	end
 	if #negs == 0 then
 		return block
@@ -170,6 +176,27 @@ local function chamfered(size: Vector3, cf: CFrame, color: Color3, sets: { strin
 			table.insert(reversed, negs[k])
 		end
 		r, err = attempt(reversed)
+	end
+	if not r then
+		-- last resort: one negative part at a time, skipping any cut that would leave a degenerate result
+		local current: BasePart = block
+		for _, neg in ipairs(negs) do
+			local ok, result = pcall(function()
+				return GeometryService:SubtractAsync(current, { neg }, { CollisionFidelity = Enum.CollisionFidelity.Box, RenderFidelity = Enum.RenderFidelity.Automatic })
+			end)
+			local next = ok and result and result[1]
+			if next and next.Size.X >= size.X * 0.3 and next.Size.Y >= size.Y * 0.3 and next.Size.Z >= size.Z * 0.3 then
+				if current ~= block then
+					current:Destroy()
+				end
+				current = next
+			elseif next then
+				next:Destroy()
+			end
+		end
+		if current ~= block then
+			r = current
+		end
 	end
 	for _, n in ipairs(negs) do
 		n:Destroy()
@@ -1786,6 +1813,995 @@ function PropsBatch2.gate_mine(): Model
 end
 
 ---------------------------------------------------------------------
+-- shared (batch C): convex solids from planes (facet crystals, flames, roofs), rings of cut blocks, faceted fruit
+---------------------------------------------------------------------
+local NEON_PINK = rgb(150, 110, 255) -- today's crystal / rune colour (as Neon it renders pink)
+
+-- the box (size at cf) minus negative parts whose own colours stay on the faces they cut (engraving, carving, facets)
+local function subtractKeep(size: Vector3, cf: CFrame, color: Color3, negs: { BasePart }, material: Enum.Material?): BasePart
+	local block = piece("Part", size, cf, color, { material = material })
+	if #negs == 0 then
+		return block
+	end
+	local function attempt(list: { BasePart }): BasePart?
+		local ok, result = pcall(function()
+			return GeometryService:SubtractAsync(block, list, { CollisionFidelity = Enum.CollisionFidelity.Box, RenderFidelity = Enum.RenderFidelity.Automatic })
+		end)
+		if not ok or not result or not result[1] then
+			return nil
+		end
+		local r = result[1] :: BasePart
+		if r.Size.X < size.X * 0.1 or r.Size.Y < size.Y * 0.1 or r.Size.Z < size.Z * 0.1 then
+			r:Destroy()
+			return nil
+		end
+		return r
+	end
+	local r = attempt(negs)
+	if not r then
+		local reversed = {}
+		for k = #negs, 1, -1 do
+			table.insert(reversed, negs[k])
+		end
+		r = attempt(reversed)
+	end
+	for _, n in ipairs(negs) do
+		n:Destroy()
+	end
+	if not r then
+		warn("PropsBatch2: subtract failed, plain block kept")
+		return block
+	end
+	block:Destroy()
+	r.Anchored = true
+	if material then
+		r.Material = material
+	end
+	return r
+end
+
+-- a convex solid: its bounding box (bmin .. bmax in the solid's frame cf) cut by half-spaces { nx, ny, nz, d, colour? }
+-- (outward normal n, n . p <= d inside; colour = "#RRGGBB" or a Color3 for the face it makes)
+local function convexSolid(bmin: Vector3, bmax: Vector3, cf: CFrame, color: Color3, planes: { any }, material: Enum.Material?, extra: { BasePart }?): BasePart
+	local negs = {}
+	for _, x in ipairs(extra or {}) do
+		table.insert(negs, x)
+	end
+	for _, pl in ipairs(planes) do
+		local n = Vector3.new(pl[1], pl[2], pl[3]).Unit
+		local helper = if math.abs(n.Y) < 0.9 then Vector3.yAxis else Vector3.xAxis
+		local x = helper:Cross(n).Unit
+		local y = n:Cross(x).Unit
+		local c = if type(pl[5]) == "string" then Color3.fromHex(pl[5]) elseif typeof(pl[5]) == "Color3" then pl[5] else color
+		table.insert(negs, piece("Part", Vector3.new(80, 80, 80), cf * CFrame.fromMatrix(n * (pl[4] + 40), x, y), c, { material = material }))
+	end
+	local pad = Vector3.new(0.02, 0.02, 0.02)
+	return subtractKeep(bmax - bmin + pad, cf * CFrame.new((bmin + bmax) / 2), color, negs, material)
+end
+
+-- the planes of a pyramid from the apex down to a closed ring of points (all in one frame), normals pointing away from
+-- `inside` (a point inside the solid); colours cycle through `colors`
+local function pyramidPlanes(apex: Vector3, ring: { Vector3 }, inside: Vector3, colors: { Color3 }, out: { any })
+	for k = 1, #ring do
+		local a, b = ring[k], ring[k % #ring + 1]
+		local n = (a - apex):Cross(b - apex).Unit
+		if n:Dot(apex - inside) < 0 then
+			n = -n
+		end
+		table.insert(out, { n.X, n.Y, n.Z, n:Dot(apex), colors[(k - 1) % #colors + 1] })
+	end
+end
+
+-- a stylized flame (Neon): a 6-sided bipyramid from its foot (y 0) out to radius r at height hw and up to a leaning tip
+-- at height h, facets in 3 tones of `color`, at cf
+local function flame(cf: CFrame, r: number, hw: number, h: number, color: Color3, lean: Vector3?): BasePart
+	local ring = {}
+	for k = 0, 5 do
+		local a = math.rad(k * 60 + 15)
+		table.insert(ring, Vector3.new(math.cos(a) * r, hw, math.sin(a) * r))
+	end
+	local tones = { color, scaled(color, 1.12), scaled(color, 0.9) }
+	local planes = {}
+	local inside = Vector3.new(0, hw, 0)
+	pyramidPlanes(Vector3.zero, ring, inside, tones, planes)
+	pyramidPlanes(Vector3.new(0, h, 0) + (lean or Vector3.zero), ring, inside, tones, planes)
+	local l = lean or Vector3.zero
+	return convexSolid(Vector3.new(-r - 0.1 + math.min(l.X, 0), 0, -r - 0.1 + math.min(l.Z, 0)), Vector3.new(r + 0.1 + math.max(l.X, 0), h, r + 0.1 + math.max(l.Z, 0)), cf, color, planes, Enum.Material.Neon)
+end
+
+-- a 16-sided prism (w across the flats, h tall) as ONE convex part at cf (axis = the frame's Y); extra = more negative
+-- parts (engraving) whose own colours stay on the faces they cut
+local function prism16(w: number, h: number, cf: CFrame, color: Color3, extra: { BasePart }?): BasePart
+	local planes = { { 0, 1, 0, h / 2 }, { 0, -1, 0, h / 2 } }
+	for k = 0, 15 do
+		local a = k * math.pi / 8
+		table.insert(planes, { math.cos(a), 0, math.sin(a), w / 2 })
+	end
+	local r = w / 2 / math.cos(math.pi / 16) + 0.02
+	return convexSolid(Vector3.new(-r, -h / 2, -r), Vector3.new(r, h / 2, r), cf, color, planes, nil, extra)
+end
+
+-- a ring of n cut stone blocks around the model's Y axis: outer faces flat on the polygon of vertex radius o.ro (block 0
+-- centred on angle o.a0 + half a block), inner ends at o.ri, from o.y0 to o.y0 + o.h (0.05 bed joint), 0.1 radial joints
+-- (cut planes) with V-grooved outer corners, the top outer edge chamfered (o.c), face jitter, tones, gradient; a dark
+-- 16-sided mortar core behind the joints
+local function ringBlocks(list: { BasePart }, rng: Random, o: any)
+	local n = o.n
+	local step = 2 * math.pi / n
+	local bh = o.h - 0.05
+	local yc = o.y0 + 0.025 + bh / 2
+	local axis = Vector3.new(0, yc, 0)
+	local A = o.ro * math.cos(step / 2)
+	local prev = nil
+	for i = 0, n - 1 do
+		local a1 = (o.a0 or 0) - step / 2 + i * step
+		local a2 = a1 + step
+		local am = (a1 + a2) / 2
+		local dir = Vector3.new(math.cos(am), 0, math.sin(am))
+		local tan = Vector3.new(-math.sin(am), 0, math.cos(am))
+		local outer = A + (if o.noJitter then 0 else jit(rng))
+		local depth = outer - o.ri
+		local mid = axis + dir * (o.ri + depth / 2)
+		local width = 2 * outer * math.tan(step / 2) + 0.6
+		local cf = CFrame.fromMatrix(mid, tan, Vector3.yAxis) -- local Z = -dir: the outer face is local -Z
+		local size = Vector3.new(width, bh, depth)
+		local negs = {}
+		local rm = (o.ri + outer) / 2
+		for _, bound in ipairs({ { a1, -1 }, { a2, 1 } }) do
+			local ang = bound[1] - bound[2] * (0.05 / rm)
+			local t = Vector3.new(-math.sin(ang), 0, math.cos(ang)) * bound[2] -- out of the block
+			local x = Vector3.yAxis:Cross(t).Unit
+			local y = t:Cross(x).Unit
+			table.insert(negs, piece("Part", Vector3.new(80, 80, 80), CFrame.fromMatrix(axis + t * 40, x, y), o.color))
+			local edge = axis + dir * outer + tan * (outer * math.tan(ang - am))
+			table.insert(negs, piece("Part", Vector3.new(0.2, bh + 1, 0.2), CFrame.fromMatrix(edge, (dir + tan).Unit, Vector3.yAxis), o.color))
+		end
+		table.insert(negs, negWedge(cf, size, "X", 1, -1, o.c or 0.2))
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(list, chamfered(size, cf, graded(o.color, yc, o.H, TONES[ti]), {}, 0, negs))
+	end
+	if not o.noCore then
+		table.insert(list, prism16(2 * (A - 0.6), bh, CFrame.new(0, yc, 0), P.Mortar))
+	end
+end
+
+-- a 16-sided disc / prism (w across the flats, h tall) at cf (axis = the frame's Y), into a piece list
+local function disc16(list: { BasePart }, w: number, h: number, cf: CFrame, color: Color3)
+	table.insert(list, prism16(w, h, cf, color))
+end
+
+-- a faceted fruit (a cube of side s with its 12 edges cut, about a rhombicuboctahedron) at cf
+local function fruitPiece(s: number, cf: CFrame, color: Color3): BasePart
+	return chamfered(Vector3.new(s, s * 0.94, s), cf, color, { "vertical", "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, s * 0.29)
+end
+
+---------------------------------------------------------------------
+-- 16 REBIRTH ALTAR (kit Hub.Station_RebirthAltar, 36 x 29 x 38.4; Hub.RebirthAltar: the Priest's marker, its Interact
+-- prompt opens the Rebirth window). A round platform of 3 tiers of cut blocks (radii 18 / 14 / 10, 2 tall each, the
+-- top one with an inner ring of flags), wide layered steps in front (6 risers of 1.0 over the old 3 steps' run), 4
+-- columns on the middle tier (carved base, fluted drums with a band, carved capital, a gold bowl holding a stylized
+-- pink flame), a carved octagonal pedestal with an engraved gold ring, Agent A's faceted crystals standing on it
+-- (Blender_Exports/Props/facets/rebirth_altar__*.json: the main one now stands on the ring), 6 pink rune circles in
+-- the floor, light moss. The Interact part (prompt + NameTag) is kept on every copy by SyncMapProps; the main crystal
+-- carries today's PointLight and the EffectPoint attachment at the same place. Colours: today's stone (165,172,185 /
+-- 150,156,168 / 104,110,124), gold 255,201,60, Neon 150,110,255.
+-- Parts: Platform, Columns, Pedestal, Gold, CrystalMain, Crystals, Flames, Runes, Moss (9; the old one had 34).
+---------------------------------------------------------------------
+-- facet planes of Agent A's 4 crystals (generated from the JSON faces: outward normal, offset, face colour; the base's
+-- 2 quads are one plane), in each crystal's own frame (origin = the centre of its flat base)
+PropsBatch2.ALTAR_CRYSTALS = {
+	crystal_main = { min = { -3.2, 0.0, -2.771 }, max = { 3.2, 19.5, 2.771 }, planes = {
+		{ 0.8392, -0.2466, 0.4846, 2.2831, "#8763E6" },
+		{ 0.8660, 0.0000, 0.5000, 2.7712, "#966EFF" },
+		{ 0.7781, 0.4392, 0.4491, 8.4621, "#A988FF" },
+		{ 0.7684, 0.4613, 0.4435, 8.8143, "#B69AFF" },
+		{ 0.0000, -0.2464, 0.9692, 2.2833, "#8E6EE6" },
+		{ 0.0000, 0.0000, 1.0000, 2.7710, "#9E7AFF" },
+		{ 0.0000, 0.3989, 0.9170, 7.9660, "#9E7AFF" },
+		{ 0.0000, 0.4001, 0.9165, 7.9850, "#B69AFF" },
+		{ -0.8392, -0.2468, 0.4846, 2.2826, "#8763E6" },
+		{ -0.8660, 0.0000, 0.5000, 2.7712, "#966EFF" },
+		{ -0.8019, 0.3779, 0.4628, 7.7053, "#A988FF" },
+		{ -0.8057, 0.3669, 0.4650, 7.5300, "#B69AFF" },
+		{ -0.8392, -0.2466, -0.4846, 2.2831, "#8E6EE6" },
+		{ -0.8660, 0.0000, -0.5000, 2.7712, "#9E7AFF" },
+		{ -0.7943, 0.3986, -0.4585, 7.9626, "#9E7AFF" },
+		{ -0.7940, 0.3995, -0.4583, 7.9768, "#B69AFF" },
+		{ 0.0000, -0.2464, -0.9692, 2.2833, "#8763E6" },
+		{ 0.0000, 0.0000, -1.0000, 2.7710, "#966EFF" },
+		{ 0.0000, 0.4388, -0.8986, 8.4577, "#A988FF" },
+		{ 0.0000, 0.4609, -0.8875, 8.8095, "#B69AFF" },
+		{ 0.8392, -0.2468, -0.4846, 2.2826, "#8E6EE6" },
+		{ 0.8660, 0.0000, -0.5000, 2.7712, "#9E7AFF" },
+		{ 0.7698, 0.4583, -0.4443, 8.6963, "#9E7AFF" },
+		{ 0.7553, 0.4894, -0.4359, 9.1923, "#B69AFF" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#7858CC" },
+	} },
+	crystal_small_1 = { min = { -1.256, 0.0, -1.256 }, max = { 1.256, 8.2, 1.256 }, planes = {
+		{ 0.6858, -0.2439, 0.6858, 0.9278, "#8763E6" },
+		{ 0.7071, 0.0000, 0.7071, 1.1257, "#966EFF" },
+		{ 0.6579, 0.3665, 0.6579, 3.1000, "#AD8EFF" },
+		{ 0.6436, 0.4141, 0.6436, 3.4212, "#BA9FFF" },
+		{ -0.2515, -0.2440, 0.9366, 0.9279, "#9372E6" },
+		{ -0.2593, 0.0000, 0.9658, 1.1259, "#A37FFF" },
+		{ -0.2372, 0.3969, 0.8867, 3.2554, "#A37FFF" },
+		{ -0.2290, 0.4638, 0.8558, 3.7073, "#BA9FFF" },
+		{ -0.9364, -0.2447, 0.2515, 0.9273, "#8763E6" },
+		{ -0.9658, 0.0000, 0.2593, 1.1259, "#966EFF" },
+		{ -0.8838, 0.4038, 0.2364, 3.2917, "#AD8EFF" },
+		{ -0.8508, 0.4736, 0.2276, 3.7629, "#BA9FFF" },
+		{ -0.6858, -0.2439, -0.6858, 0.9278, "#9372E6" },
+		{ -0.7071, 0.0000, -0.7071, 1.1257, "#A37FFF" },
+		{ -0.6542, 0.3794, -0.6542, 3.1664, "#A37FFF" },
+		{ -0.6367, 0.4351, -0.6367, 3.5421, "#BA9FFF" },
+		{ 0.2515, -0.2440, -0.9366, 0.9279, "#8763E6" },
+		{ 0.2593, 0.0000, -0.9658, 1.1259, "#966EFF" },
+		{ 0.2423, 0.3474, -0.9059, 3.0008, "#AD8EFF" },
+		{ 0.2387, 0.3835, -0.8922, 3.2446, "#BA9FFF" },
+		{ 0.9364, -0.2447, -0.2515, 0.9273, "#9372E6" },
+		{ 0.9658, 0.0000, -0.2593, 1.1259, "#A37FFF" },
+		{ 0.9080, 0.3415, -0.2429, 2.9710, "#A37FFF" },
+		{ 0.8966, 0.3723, -0.2399, 3.1792, "#BA9FFF" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#7858CC" },
+	} },
+	crystal_small_2 = { min = { -1.159, 0.0, -1.159 }, max = { 1.159, 7.4, 1.159 }, planes = {
+		{ -0.2498, -0.2527, 0.9347, 0.8541, "#8763E6" },
+		{ -0.2582, 0.0000, 0.9661, 1.0394, "#966EFF" },
+		{ -0.2386, 0.3982, 0.8857, 2.9455, "#AD8EFF" },
+		{ -0.2297, 0.4694, 0.8526, 3.3779, "#BA9FFF" },
+		{ -0.9350, -0.2516, 0.2499, 0.8550, "#9372E6" },
+		{ -0.9661, 0.0000, 0.2582, 1.0394, "#A37FFF" },
+		{ -0.8835, 0.4034, 0.2380, 2.9670, "#A37FFF" },
+		{ -0.8471, 0.4799, 0.2282, 3.4314, "#BA9FFF" },
+		{ -0.6843, -0.2520, -0.6843, 0.8547, "#8763E6" },
+		{ -0.7071, 0.0000, -0.7071, 1.0394, "#966EFF" },
+		{ -0.6546, 0.3782, -0.6546, 2.8530, "#AD8EFF" },
+		{ -0.6355, 0.4385, -0.6355, 3.2194, "#BA9FFF" },
+		{ 0.2498, -0.2527, -0.9347, 0.8541, "#9372E6" },
+		{ 0.2582, 0.0000, -0.9661, 1.0394, "#A37FFF" },
+		{ 0.2442, 0.3448, -0.9064, 2.7009, "#A37FFF" },
+		{ 0.2404, 0.3820, -0.8924, 2.9267, "#BA9FFF" },
+		{ 0.9350, -0.2516, -0.2499, 0.8550, "#8763E6" },
+		{ 0.9661, 0.0000, -0.2582, 1.0394, "#966EFF" },
+		{ 0.9094, 0.3360, -0.2450, 2.6580, "#AD8EFF" },
+		{ 0.8972, 0.3697, -0.2417, 2.8629, "#BA9FFF" },
+		{ 0.6843, -0.2520, 0.6843, 0.8547, "#9372E6" },
+		{ 0.7071, 0.0000, 0.7071, 1.0394, "#A37FFF" },
+		{ 0.6585, 0.3642, 0.6585, 2.7892, "#A37FFF" },
+		{ 0.6431, 0.4157, 0.6431, 3.1018, "#BA9FFF" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#7858CC" },
+	} },
+	crystal_small_3 = { min = { -0.893, 0.0, -0.936 }, max = { 0.893, 5.5, 0.936 }, planes = {
+		{ 0.3287, -0.2758, 0.9033, 0.6721, "#8763E6" },
+		{ 0.3420, 0.0000, 0.9397, 0.8231, "#966EFF" },
+		{ 0.3160, 0.3909, 0.8645, 2.1642, "#AD8EFF" },
+		{ 0.3095, 0.4326, 0.8468, 2.3484, "#BA9FFF" },
+		{ -0.6180, -0.2752, 0.7364, 0.6723, "#9372E6" },
+		{ -0.6429, 0.0000, 0.7660, 0.8230, "#A37FFF" },
+		{ -0.5829, 0.4237, 0.6933, 2.2712, "#A37FFF" },
+		{ -0.5641, 0.4812, 0.6710, 2.5254, "#BA9FFF" },
+		{ -0.9470, -0.2745, -0.1669, 0.6728, "#8763E6" },
+		{ -0.9848, 0.0000, -0.1736, 0.8230, "#966EFF" },
+		{ -0.8971, 0.4128, -0.1575, 2.2353, "#AD8EFF" },
+		{ -0.8715, 0.4659, -0.1530, 2.4701, "#BA9FFF" },
+		{ -0.3287, -0.2758, -0.9033, 0.6721, "#9372E6" },
+		{ -0.3420, 0.0000, -0.9397, 0.8231, "#A37FFF" },
+		{ -0.3190, 0.3694, -0.8728, 2.0941, "#A37FFF" },
+		{ -0.3148, 0.3985, -0.8614, 2.2229, "#BA9FFF" },
+		{ 0.6180, -0.2752, -0.7364, 0.6723, "#8763E6" },
+		{ 0.6429, 0.0000, -0.7660, 0.8230, "#966EFF" },
+		{ 0.6060, 0.3362, -0.7209, 1.9859, "#AD8EFF" },
+		{ 0.6046, 0.3423, -0.7192, 2.0130, "#BA9FFF" },
+		{ 0.9470, -0.2745, 0.1669, 0.6728, "#9372E6" },
+		{ 0.9848, 0.0000, 0.1736, 0.8230, "#A37FFF" },
+		{ 0.9238, 0.3468, 0.1622, 2.0200, "#A37FFF" },
+		{ 0.9184, 0.3612, 0.1613, 2.0841, "#BA9FFF" },
+		{ -0.0000, -1.0000, 0.0000, 0.0000, "#7858CC" },
+	} },
+}
+-- the JSON "place" fields: position and orientation (degrees, Roblox order) relative to the altar pivot
+PropsBatch2.ALTAR_CRYSTAL_PLACE = {
+	crystal_main = { 0, 9.7, 0, 0, 20, 0 },
+	crystal_small_1 = { -3.3, 9.6, 1.1, 14, 0, 22 },
+	crystal_small_2 = { 3.2, 9.6, -1.2, -6, 40, -20 },
+	crystal_small_3 = { 0.9, 9.6, 3.1, -24, 0, -8 },
+}
+
+local function crystalPiece(name: string): BasePart
+	local data = PropsBatch2.ALTAR_CRYSTALS[name]
+	local p = PropsBatch2.ALTAR_CRYSTAL_PLACE[name]
+	local cf = CFrame.new(p[1], p[2], p[3]) * CFrame.fromOrientation(math.rad(p[4]), math.rad(p[5]), math.rad(p[6]))
+	return convexSolid(Vector3.new(table.unpack(data.min)), Vector3.new(table.unpack(data.max)), cf, NEON_PINK, data.planes, Enum.Material.Neon)
+end
+
+function PropsBatch2.rebirth_altar(): Model
+	local m = Instance.new("Model")
+	m.Name = "rebirth_altar"
+	local rng = Random.new(20261016)
+	BEVEL_SELF = true
+	local H = 29
+	local STONE_TOP, STONE, STONE_DARK = rgb(165, 172, 185), P.Stone, P.StoneDark
+	local platform, columns, pedestal, gold, runes, flames, mossList = {}, {}, {}, {}, {}, {}, {}
+	local front = math.rad(270) -- -Z
+
+	-- 1. platform: 3 tiers of cut blocks (a block centred on the front), the top one with an inner ring of flags
+	ringBlocks(platform, rng, { n = 20, ro = 18, ri = 13.4, y0 = 0, h = 2, color = STONE_DARK, H = H, c = 0.25, a0 = front })
+	ringBlocks(platform, rng, { n = 16, ro = 14, ri = 9.4, y0 = 2, h = 2, color = STONE, H = H, c = 0.25, a0 = front + math.rad(11.25) })
+	ringBlocks(platform, rng, { n = 14, ro = 10, ri = 6.4, y0 = 4, h = 2, color = STONE_TOP, H = H, c = 0.22, a0 = front })
+	ringBlocks(platform, rng, { n = 10, ro = 6.6, ri = 3.0, y0 = 4, h = 2, color = scaled(STONE_TOP, 0.97), H = H, c = 0.12, a0 = front + math.rad(18), noJitter = true })
+	-- the stairs: 6 risers of 1.0 (the old 3 steps of 2.05 cut in two), each 3 slabs with joints, wider at the bottom
+	local stairs = {
+		{ -20.4, -15.5, 12.0 }, { -18.3, -15.5, 11.6 }, { -16.2, -11.0, 11.2 },
+		{ -14.1, -11.0, 10.8 }, { -12.0, -7.0, 10.4 }, { -9.9, -7.0, 10.0 },
+	}
+	for k, s in ipairs(stairs) do
+		local z0, z1, w = s[1], s[2], s[3]
+		local y0 = k - 1
+		local lens, total = {}, 0
+		for i = 1, 3 do
+			lens[i] = rng:NextNumber(0.8, 1.2)
+			total += lens[i]
+		end
+		local x = -w / 2
+		local prev = nil
+		for i = 1, 3 do
+			local len = lens[i] / total * (w - 0.2)
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			local sets = { "topFrontBack" }
+			if i == 1 or i == 3 then
+				table.insert(sets, "topSides")
+			end
+			table.insert(platform, chamfered(Vector3.new(len, 0.98, z1 - z0), CFrame.new(x + len / 2, y0 + 0.49, (z0 + z1) / 2), graded(if k % 2 == 1 then STONE else STONE_DARK, y0 + 0.5, H, TONES[ti]), sets, 0.16))
+			x += len + 0.1
+		end
+		table.insert(platform, piece("Part", Vector3.new(w - 0.4, 0.95, z1 - z0 - 0.3), CFrame.new(0, y0 + 0.47, (z0 + z1) / 2 + 0.15), P.Mortar))
+	end
+	merge(m, "Platform", platform, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. the 4 columns on the middle tier (radius 12, at 45 / 135 / 225 / 315 degrees)
+	for k = 0, 3 do
+		local a = math.rad(45 + 90 * k)
+		local x, z = 12 * math.cos(a), 12 * math.sin(a)
+		local face = CFrame.new(x, 0, z) * CFrame.Angles(0, -a, 0) -- local +X = outward: a square side toward the centre
+		table.insert(columns, chamfered(Vector3.new(3.6, 0.8, 3.6), face * CFrame.new(0, 4.4, 0), graded(STONE_DARK, 4.4, H, 0.93), { "topFrontBack", "topSides", "vertical" }, 0.18))
+		table.insert(columns, octagon(3.0, 0.4, face * CFrame.new(0, 5.0, 0), graded(STONE, 5, H, 1)))
+		table.insert(columns, octagon(2.7, 0.2, face * CFrame.new(0, 5.3, 0), graded(STONE_DARK, 5.3, H, 1)))
+		table.insert(columns, piece("Part", Vector3.new(1.5, 12.6, 1.5), face * CFrame.new(0, 11.7, 0), P.Mortar))
+		local prev = nil
+		for _, span in ipairs({ { 5.4, 11.45 }, { 11.95, 18.0 } }) do
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			local h = span[2] - span[1] - 0.05
+			table.insert(columns, octagon(2.5, h, face * CFrame.new(0, span[1] + 0.025 + h / 2, 0), graded(STONE, (span[1] + span[2]) / 2, H, TONES[ti]), true))
+		end
+		table.insert(columns, octagon(2.8, 0.5, face * CFrame.new(0, 11.7, 0), graded(STONE_DARK, 11.7, H, 1)))
+		table.insert(columns, octagon(2.7, 0.25, face * CFrame.new(0, 18.125, 0), graded(STONE_DARK, 18.1, H, 1)))
+		-- capital: echinus (deep bevel underneath) and abacus
+		local eCF = face * CFrame.new(0, 18.65, 0)
+		local vert = {}
+		for _, e in ipairs(EDGES.vertical) do
+			table.insert(vert, negWedge(eCF, Vector3.new(3.2, 0.8, 3.2), e[1], e[2], e[3], 0.15))
+		end
+		table.insert(columns, chamfered(Vector3.new(3.2, 0.8, 3.2), eCF, graded(STONE, 18.6, H, 1), { "bottomFrontBack", "bottomSides" }, 0.4, vert))
+		table.insert(columns, chamfered(Vector3.new(3.7, 0.6, 3.7), face * CFrame.new(0, 19.35, 0), graded(STONE_DARK, 19.3, H, 1), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.16))
+		-- the gold bowl and its pink flame (static, as today's)
+		table.insert(gold, octagon(1.9, 0.3, face * CFrame.new(0, 19.8, 0), P.Gold))
+		table.insert(gold, octagon(2.2, 0.12, face * CFrame.new(0, 20.0, 0), scaled(P.Gold, 0.94)))
+		table.insert(flames, flame(CFrame.new(x, 19.9, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), 0.75, 1.0, 3.0, NEON_PINK, Vector3.new(0.12, 0, 0.06)))
+		-- light moss at the column's foot
+		moss(mossList, rng, (face * CFrame.new(-(1.8 + 0.18 - 0.05), 3.98, rng:NextNumber(-0.8, 0.8))).Position, -a - math.pi / 2, 1.0)
+	end
+	merge(m, "Columns", columns, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 3. pedestal: plinth, a body with a carved panel on each of its 8 faces, a top moulding (dark stone)
+	table.insert(pedestal, octagon(7.8, 0.5, CFrame.new(0, 6.25, 0), graded(STONE_DARK, 6.2, H, 0.93)))
+	local bodyCF = CFrame.new(0, 7.45, 0)
+	local panels = {}
+	for k = 0, 7 do
+		local a = k * math.pi / 4
+		local dir = Vector3.new(math.sin(a), 0, math.cos(a))
+		table.insert(panels, piece("Part", Vector3.new(1.55, 1.1, 0.4), CFrame.lookAt(bodyCF.Position + dir * (3.4 - 0.1 + 0.2), bodyCF.Position + dir * 10), scaled(STONE_DARK, 0.78)))
+	end
+	local c8 = 6.8 / (2 + math.sqrt(2))
+	local vert8 = {}
+	for _, e in ipairs(EDGES.vertical) do
+		table.insert(vert8, negWedge(bodyCF, Vector3.new(6.8, 1.9, 6.8), e[1], e[2], e[3], c8))
+	end
+	table.insert(pedestal, chamfered(Vector3.new(6.8, 1.9, 6.8), bodyCF, graded(STONE_DARK, 7.4, H, 1), {}, 0, vert8, panels))
+	table.insert(pedestal, octagon(7.4, 0.5, CFrame.new(0, 8.65, 0), graded(STONE_DARK, 8.6, H, 0.93)))
+	merge(m, "Pedestal", pedestal, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 4. the engraved gold ring (16-sided, 8.4 across, y 8.9 .. 9.7): a groove line and a diamond notch on each face
+	local marks = {}
+	for f = 0, 15 do
+		local a = f * math.pi / 8
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		local at = Vector3.new(0, 9.3, 0) + dir * 4.2
+		local look = CFrame.lookAt(at, at + dir)
+		table.insert(marks, piece("Part", Vector3.new(1.2, 0.07, 0.12), look * CFrame.new(0, 0.18, 0), P.Brass))
+		table.insert(marks, piece("Part", Vector3.new(0.24, 0.24, 0.12), look * CFrame.new(0, -0.12, 0) * CFrame.Angles(0, 0, math.rad(45)), P.Brass))
+	end
+	table.insert(gold, prism16(8.4, 0.8, CFrame.new(0, 9.3, 0), P.Gold, marks))
+	merge(m, "Gold", gold, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 5. the crystals (no collision, as today): the main one with today's light and effect point
+	local main = merge(m, "CrystalMain", { crystalPiece("crystal_main") }, { material = Enum.Material.Neon, shadow = false })
+	local light = Instance.new("PointLight")
+	light.Range, light.Brightness, light.Color = 30, 1, NEON_PINK
+	light.Parent = main
+	local effect = Instance.new("Attachment")
+	effect.Name = "EffectPoint"
+	effect.CFrame = main.CFrame:Inverse() * CFrame.new(0, 21, 0) -- today's crystal centre
+	effect.Parent = main
+	merge(m, "Crystals", { crystalPiece("crystal_small_1"), crystalPiece("crystal_small_2"), crystalPiece("crystal_small_3") }, { material = Enum.Material.Neon, shadow = false })
+	merge(m, "Flames", flames, { material = Enum.Material.Neon, shadow = false })
+
+	-- 6. the 6 rune circles in the floor (where today's runes are: radius 8.4, every 60 degrees from 30): a thin
+	-- octagonal ring around a glyph (a diamond between two bars), Neon, 0.06 proud
+	for k = 0, 5 do
+		local a = math.rad(30 + 60 * k)
+		local c = CFrame.new(8.4 * math.cos(a), 6.0, 8.4 * math.sin(a)) * CFrame.Angles(0, -a, 0)
+		for f = 0, 7 do
+			local fa = f * math.pi / 4
+			table.insert(runes, piece("Part", Vector3.new(0.54, 0.06, 0.09), c * CFrame.Angles(0, fa, 0) * CFrame.new(0, 0, 0.65), NEON_PINK, { material = Enum.Material.Neon }))
+		end
+		table.insert(runes, piece("Part", Vector3.new(0.36, 0.06, 0.36), c * CFrame.Angles(0, math.rad(45), 0), NEON_PINK, { material = Enum.Material.Neon }))
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(runes, piece("Part", Vector3.new(0.09, 0.06, 0.7), c * CFrame.new(sx * 0.38, 0, 0), NEON_PINK, { material = Enum.Material.Neon }))
+		end
+	end
+	merge(m, "Runes", runes, { single = NEON_PINK, material = Enum.Material.Neon, shadow = false })
+
+	-- 7. light moss on the ground against the bottom tier (not in front of the stairs) and on the first tier
+	for k = 0, 7 do
+		local a = math.rad(22.5 + 45 * k + rng:NextNumber(-8, 8))
+		if math.abs(math.cos(a)) < 0.42 and math.sin(a) < 0 then
+			continue -- the stairs
+		end
+		local len = rng:NextNumber(1.6, 2.2)
+		local r = 18 * math.cos(math.pi / 20) + len * 0.18 - 0.1
+		moss(mossList, rng, Vector3.new(r * math.cos(a), 0, r * math.sin(a)), -a - math.pi / 2, len)
+	end
+	for _, a in ipairs({ math.rad(200), math.rad(-20), math.rad(110) }) do
+		local r = 14 * math.cos(math.pi / 16) + 0.25
+		moss(mossList, rng, Vector3.new(r * math.cos(a), 1.98, r * math.sin(a)), -a - math.pi / 2, 1.2)
+	end
+	merge(m, "Moss", mossList, { shadow = false })
+
+	local root = m:FindFirstChild("Platform") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "rebirth_altar")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 10a EGG STATION (kit Hub.Station_EggStation, 18.9 x 13.45 x 22; Hub.EggStation: PetService's station, its Interact
+-- prompt opens Pets > Eggs; the Egg Keeper's marker). A round plinth of cut blocks on a darker rim step, a woven nest: a
+-- basket of wooden staves leaning out with 2 rope bands, a rim of straw bundles, a straw bed with loose strands and
+-- twigs (its top at 3.38 under the eggs' feet at 3.35), the thick wooden arch (chamfered timbers on iron shoes, iron
+-- plates and bolts at the joints, rope lashings), an iron hook and chain links for the lantern (the nested `lantern`
+-- prop is kept on each copy), the signboard on its post with a painted egg. The real zone eggs DisplayEgg_* (the owner's
+-- choice of 2026-10-18) are custom children with MapPropKeep: kept as they are on every copy.
+-- Parts: Base, Nest, Arch, Iron, Sign (5; the old one had 12 + the placeholder eggs).
+---------------------------------------------------------------------
+function PropsBatch2.egg_station(): Model
+	local m = Instance.new("Model")
+	m.Name = "egg_station"
+	local rng = Random.new(20261010)
+	BEVEL_SELF = true
+	local H = 13.45
+	local STRAW = { rgb(236, 200, 96), rgb(222, 186, 88), rgb(206, 172, 82) }
+	local BED = rgb(196, 160, 104)
+	local stone, nest, arch, iron, sign = {}, {}, {}, {}, {}
+
+	-- 1. base: the dark rim step (18 slabs, 0.6) and the plinth (14 blocks, 1.4), as today's BaseRim / Base
+	ringBlocks(stone, rng, { n = 18, ro = 8.5, ri = 7.0, y0 = 0, h = 0.6, color = P.StoneDark, H = H, c = 0.12 })
+	ringBlocks(stone, rng, { n = 14, ro = 8.0, ri = 4.6, y0 = 0, h = 1.4, color = P.Stone, H = H, c = 0.18, a0 = math.rad(13) })
+	merge(m, "Base", stone, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. the nest (today's Nest: 11 across, y 1.4 .. 3.6)
+	local prev = nil
+	for i = 0, 17 do
+		local a = i * math.pi / 9
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		local tan = Vector3.new(-math.sin(a), 0, math.cos(a))
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		local cf = CFrame.fromMatrix(Vector3.new(0, 2.4, 0) + dir * 5.25, tan, Vector3.yAxis) * CFrame.Angles(math.rad(-6), 0, 0)
+		table.insert(nest, chamfered(Vector3.new(1.78, 2.0, 0.35), cf, graded(if i % 2 == 0 then P.WoodMid else scaled(P.WoodMid, 1.08), 2.4, H, TONES[ti]), { "vertical", "topFrontBack" }, 0.07))
+	end
+	for _, band in ipairs({ { 1.9, 5.47 }, { 3.0, 5.59 } }) do
+		for i = 0, 17 do
+			local a = (i + 0.5) * math.pi / 9
+			local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+			local tan = Vector3.new(-math.sin(a), 0, math.cos(a))
+			table.insert(nest, piece("Part", Vector3.new(1.98, 0.24, 0.24), CFrame.fromMatrix(Vector3.new(0, band[1], 0) + dir * band[2], tan, Vector3.yAxis) * CFrame.Angles(math.rad(45), 0, 0), scaled(ROPE, if i % 2 == 0 then 1 else 0.92)))
+		end
+	end
+	-- the straw bed (16 sides, top 3.38) inside the basket
+	disc16(nest, 10.2, 1.98, CFrame.new(0, 2.39, 0), BED)
+	-- a rim of straw bundles over the staves, loose strands on the bed, twigs poking out
+	for i = 0, 21 do
+		local a = i * 2 * math.pi / 22 + rng:NextNumber(-0.06, 0.06)
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		local tan = Vector3.new(-math.sin(a), 0, math.cos(a))
+		local cf = CFrame.fromMatrix(Vector3.new(0, 3.42 + rng:NextNumber(-0.05, 0.08), 0) + dir * (5.15 + rng:NextNumber(-0.1, 0.12)), tan, Vector3.yAxis)
+			* CFrame.Angles(rng:NextNumber(-0.18, 0.18), rng:NextNumber(-0.25, 0.25), rng:NextNumber(-0.15, 0.15))
+		table.insert(nest, chamfered(Vector3.new(1.75, 0.5, 0.78), cf, scaled(STRAW[rng:NextInteger(1, 3)], rng:NextNumber(0.94, 1.04)), { "topFrontBack", "topSides", "bottomFrontBack" }, 0.14))
+	end
+	for _ = 1, 26 do
+		local r = math.sqrt(rng:NextNumber(0.05, 1)) * 4.4
+		local a = rng:NextNumber(0, 2 * math.pi)
+		table.insert(nest, piece("Part", Vector3.new(1.1, 0.06, 0.1), CFrame.new(r * math.cos(a), 3.4, r * math.sin(a)) * CFrame.Angles(0, rng:NextNumber(0, math.pi), rng:NextNumber(-0.08, 0.08)), STRAW[rng:NextInteger(1, 3)]))
+	end
+	for i = 0, 7 do
+		local a = i * math.pi / 4 + rng:NextNumber(-0.2, 0.2)
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		local tip = Vector3.new(0, 3.55 + rng:NextNumber(0, 0.25), 0) + dir * 6.15
+		local root = Vector3.new(0, 3.3, 0) + dir * 4.9 + Vector3.new(-dir.Z, 0, dir.X) * rng:NextNumber(-0.5, 0.5)
+		table.insert(nest, piece("Part", Vector3.new(0.12, 0.12, (tip - root).Magnitude), CFrame.lookAt((tip + root) / 2, tip), scaled(P.WoodDark, rng:NextNumber(0.9, 1.1))))
+	end
+	merge(m, "Nest", nest, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 3. the arch (today's posts / rafters / top beam, thicker), iron shoes, plates and bolts, rope lashings
+	local z = 2.5
+	for _, sx in ipairs({ -1, 1 }) do
+		local postCF = CFrame.new(sx * 6.6, 5.6, z) * CFrame.Angles(0, 0, math.rad(8 * sx)) -- the top leans in
+		table.insert(arch, timber(Vector3.new(1.1, 9.0, 1.1), postCF, graded(P.WoodDark, 5.6, H, 1), 0.2))
+		local rafterCF = CFrame.new(sx * 3.9, 11.4, z) * CFrame.Angles(0, 0, math.rad(52 * sx))
+		table.insert(arch, timber(Vector3.new(1.0, 5.4, 1.0), rafterCF, graded(P.WoodDark, 11.4, H, 0.93), 0.18))
+		for _, y in ipairs({ 3.1, 3.55 }) do
+			table.insert(arch, octagon(1.42, 0.24, postCF * CFrame.new(0, y, 0), scaled(ROPE, if y > 3.3 then 0.92 else 1)))
+		end
+		-- iron shoe at the foot (on the plinth, y 1.4)
+		table.insert(iron, chamfered(Vector3.new(1.45, 0.9, 1.45), CFrame.new(sx * 7.12, 1.85, z), P.Iron, { "topFrontBack", "topSides" }, 0.1))
+		for _, fz in ipairs({ -1, 1 }) do
+			-- the elbow plate (post / rafter) and the top plate (rafter / beam), front and back, with bolts
+			local elbow = CFrame.new(sx * 5.95, 9.95, z + fz * 0.6) * CFrame.Angles(0, 0, math.rad(30 * sx))
+			table.insert(iron, piece("Part", Vector3.new(1.3, 1.5, 0.08), elbow, P.Iron))
+			local top = CFrame.new(sx * 2.0, 12.85, z + fz * 0.64)
+			table.insert(iron, piece("Part", Vector3.new(1.4, 1.0, 0.08), top, P.Iron))
+			for _, o in ipairs({ Vector3.new(-0.4, -0.45, 0), Vector3.new(0.4, 0.45, 0), Vector3.new(0.4, -0.45, 0), Vector3.new(-0.4, 0.45, 0) }) do
+				rivet(iron, (elbow * CFrame.new(o + Vector3.new(0, 0, fz * 0.05))).Position, 0.17)
+			end
+			for _, ox in ipairs({ -0.45, 0.45 }) do
+				rivet(iron, (top * CFrame.new(ox, 0, fz * 0.05)).Position, 0.17)
+			end
+		end
+	end
+	table.insert(arch, timber(Vector3.new(4.8, 1.0, 1.2), CFrame.new(0, 13.0, z), graded(P.WoodDark, 13, H, 1), 0.2))
+	merge(m, "Arch", arch, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	-- the lantern hook and chain (the lantern's top is at 12.14, the beam's bottom at 12.5)
+	table.insert(iron, piece("Part", Vector3.new(0.6, 0.12, 0.6), CFrame.new(0, 12.46, z), P.Iron))
+	for k = 0, 1 do
+		local y = 12.36 - k * 0.2
+		table.insert(iron, piece("Part", if k % 2 == 0 then Vector3.new(0.08, 0.28, 0.22) else Vector3.new(0.22, 0.28, 0.08), CFrame.new(0, y, z), P.IronWorn))
+	end
+	merge(m, "Iron", iron, {})
+
+	-- 4. the signboard (today's post and board): a framed board of 2 planks with a painted egg, on a chamfered post
+	table.insert(sign, timber(Vector3.new(0.7, 4.0, 0.7), CFrame.new(8.6, 2.0, -4.0), graded(P.WoodDark, 2, H, 1), 0.12))
+	for i, y in ipairs({ 3.7, 4.72 }) do
+		table.insert(sign, timber(Vector3.new(3.4, 0.98, 0.3), CFrame.new(8.6, y, -4.42), graded(P.WoodLight, y, H, TONES[i]), 0.06))
+	end
+	for _, sy in ipairs({ -1, 1 }) do
+		table.insert(sign, timber(Vector3.new(3.8, 0.22, 0.42), CFrame.new(8.6, 4.21 + sy * 1.1, -4.42), P.WoodDark, 0.05))
+	end
+	for _, sxx in ipairs({ -1, 1 }) do
+		table.insert(sign, timber(Vector3.new(0.22, 2.4, 0.42), CFrame.new(8.6 + sxx * 1.79, 4.21, -4.42), P.WoodDark, 0.05))
+	end
+	-- the egg: a faceted white egg with 3 spots (painted, 0.06 proud)
+	local eggCF = CFrame.new(8.6, 4.2, -4.6)
+	table.insert(sign, chamfered(Vector3.new(0.9, 1.15, 0.06), eggCF, rgb(245, 246, 250), {}, 0, { negWedge(eggCF, Vector3.new(0.9, 1.15, 0.06), "Z", 1, 1, 0.34), negWedge(eggCF, Vector3.new(0.9, 1.15, 0.06), "Z", -1, 1, 0.34), negWedge(eggCF, Vector3.new(0.9, 1.15, 0.06), "Z", 1, -1, 0.2), negWedge(eggCF, Vector3.new(0.9, 1.15, 0.06), "Z", -1, -1, 0.2) }))
+	for _, spot in ipairs({ { -0.18, 0.15, rgb(212, 52, 60) }, { 0.2, -0.12, rgb(64, 120, 212) }, { 0.05, 0.38, rgb(255, 201, 60) } }) do
+		table.insert(sign, piece("Part", Vector3.new(0.17, 0.17, 0.05), eggCF * CFrame.new(spot[1], spot[2], -0.03) * CFrame.Angles(0, 0, math.rad(45)), spot[3]))
+	end
+	merge(m, "Sign", sign, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "egg_station")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 10b MOON GAZEBO (kit Hub.Station_RebirthShop, 19.6 x 15.5 x 21.2; Hub.RebirthShop: the Rebirth Shop board, its
+-- Interact prompt opens Rebirth > Rebirth Shop; NpcSpot + the NPC stand-in are kept on every copy). A hexagonal deck of
+-- planks with a dark rim and today's blue rug with its gold ring, 6 posts on carved bases with gold bands and carved
+-- caps, a ring beam with knee braces, hip rafters, a gold fascia with hanging gold ornaments, a hexagonal roof of
+-- individual purple shingles (today's purple) with darker hip caps and a gold finial, the moon crest (purple medallion,
+-- gold rim, a real gold crescent, stars) standing on the front eave, 3 folded drapes at the back with gold valance rods
+-- and tassels, the octagonal table with its gold top, a gold claw stand holding the glowing crystal ball (today's light),
+-- 2 candles with wax drips and stylized flames.
+-- Parts: Deck, Rug, Frame, Gold, Roof, Crest, Drapes, Table, Candles, Flames, CrystalBall, CrystalCore (12).
+---------------------------------------------------------------------
+function PropsBatch2.moon_gazebo(): Model
+	local m = Instance.new("Model")
+	m.Name = "moon_gazebo"
+	local rng = Random.new(20261012)
+	BEVEL_SELF = true
+	local H = 15.5
+	local PURPLE, PURPLE_DARK, CLOTH, BLUE = rgb(150, 110, 255), rgb(106, 68, 168), rgb(112, 82, 191), rgb(74, 108, 220)
+	local deck, rug, frame, gold, roof, crest, drapes, tableP, candles, flames = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+	local function dirOf(a: number): Vector3
+		return Vector3.new(math.cos(a), 0, math.sin(a))
+	end
+	local function tanOf(a: number): Vector3
+		return Vector3.new(-math.sin(a), 0, math.cos(a))
+	end
+
+	-- 1. deck: 13 planks along X clipped to a hexagon (vertex radius 7.5 on +-X), a dark rim around
+	local R = 7.5
+	local ap = R * math.cos(math.pi / 6)
+	local prev = nil
+	for i = -6, 6 do
+		local negs = {}
+		for k = 0, 5 do
+			local n = dirOf(math.rad(30 + 60 * k))
+			local x = Vector3.yAxis:Cross(n).Unit
+			local y = n:Cross(x).Unit
+			table.insert(negs, piece("Part", Vector3.new(40, 40, 40), CFrame.fromMatrix(n * (ap - 0.25 + 20), x, y), P.WoodMid))
+		end
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		local col = graded(if i % 2 == 0 then P.WoodMid else scaled(P.WoodLight, 0.86), 0.2, H, TONES[ti])
+		table.insert(deck, chamfered(Vector3.new(2 * R, 0.4, 0.94), CFrame.new(0, 0.2, i * 1.0), col, {}, 0, negs))
+	end
+	for k = 0, 5 do
+		local e = math.rad(30 + 60 * k)
+		table.insert(deck, timber(Vector3.new(7.8, 0.5, 0.35), CFrame.fromMatrix(Vector3.new(0, 0.25, 0) + dirOf(e) * (ap - 0.1), tanOf(e), Vector3.yAxis), graded(P.WoodDark, 0.25, H, 1), 0.07))
+	end
+	merge(m, "Deck", deck, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+	-- today's rug (blue, 10 across) on its gold ring (11 across)
+	disc16(rug, 11, 0.04, CFrame.new(0, 0.42, 0), P.Gold)
+	disc16(rug, 10, 0.06, CFrame.new(0, 0.43, 0), BLUE)
+	merge(m, "Rug", rug, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+
+	-- 2. frame: posts on carved bases, gold bands, carved caps, the ring beam, knee braces, hip rafters
+	local posts = {}
+	for k = 0, 5 do
+		local a = math.rad(60 * k)
+		local pos = dirOf(a) * 6.6
+		posts[k] = pos
+		local f = CFrame.fromMatrix(pos, tanOf(a), Vector3.yAxis)
+		table.insert(frame, chamfered(Vector3.new(1.15, 0.35, 1.15), f * CFrame.new(0, 0.575, 0), graded(P.WoodDark, 0.6, H, 0.93), { "topFrontBack", "topSides" }, 0.1))
+		table.insert(frame, timber(Vector3.new(0.8, 6.5, 0.8), f * CFrame.new(0, 4.0, 0), graded(P.WoodDark, 4, H, 1), 0.14))
+		table.insert(frame, chamfered(Vector3.new(0.98, 0.25, 0.98), f * CFrame.new(0, 7.375, 0), graded(P.WoodDark, 7.4, H, 0.93), { "bottomFrontBack", "bottomSides" }, 0.08))
+		table.insert(frame, chamfered(Vector3.new(1.18, 0.25, 1.18), f * CFrame.new(0, 7.625, 0), graded(P.WoodDark, 7.6, H, 1), { "bottomFrontBack", "bottomSides" }, 0.08))
+		table.insert(gold, octagon(0.92, 0.14, f * CFrame.new(0, 6.9, 0), P.Gold))
+		table.insert(gold, octagon(0.92, 0.1, f * CFrame.new(0, 1.0, 0), P.Gold))
+		-- hip rafter from the post top out to the eave corner, under the roof
+		table.insert(frame, timber(Vector3.new(0.3, 0.3, 2.6), CFrame.fromMatrix(Vector3.new(0, 8.25, 0) + dirOf(a) * 7.55, tanOf(a), Vector3.yAxis), graded(P.WoodDark, 8.2, H, 0.93), 0.06))
+	end
+	for k = 0, 5 do
+		local e = math.rad(30 + 60 * k)
+		table.insert(frame, timber(Vector3.new(7.2, 0.6, 0.55), CFrame.fromMatrix(Vector3.new(0, 8.05, 0) + dirOf(e) * (6.6 * math.cos(math.pi / 6)), tanOf(e), Vector3.yAxis), graded(P.WoodDark, 8, H, 1), 0.1))
+		-- knee braces from both posts of this edge up into the beam
+		local p0, p1 = posts[k], posts[(k + 1) % 6]
+		local u = (p1 - p0).Unit
+		for _, side in ipairs({ { p0, u }, { p1, -u } }) do
+			local a0 = side[1] + side[2] * 0.42 + Vector3.new(0, 6.35, 0)
+			local a1 = side[1] + side[2] * 1.55 + Vector3.new(0, 7.78, 0)
+			table.insert(frame, piece("Part", Vector3.new(0.22, 0.22, (a1 - a0).Magnitude + 0.1), CFrame.lookAt((a0 + a1) / 2, a1), graded(P.WoodDark, 7, H, 0.86)))
+		end
+	end
+	merge(m, "Frame", frame, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 3. the roof: eave line y 8.55 at apothem 7.534 (vertex radius 8.7), apex (0, 14.3, 0)
+	local yE, yA, ae = 8.55, 14.3, 8.7 * math.cos(math.pi / 6)
+	local dy = yA - yE
+	local Ls = math.sqrt(ae * ae + dy * dy)
+	local normals = {}
+	local planes = { { 0, -1, 0, -8.4, PURPLE_DARK } }
+	for k = 0, 5 do
+		local e = math.rad(30 + 60 * k)
+		local n = Vector3.new(math.cos(e) * dy, ae, math.sin(e) * dy).Unit
+		normals[k] = n
+		table.insert(planes, { n.X, n.Y, n.Z, n.Y * yA, PURPLE_DARK })
+	end
+	table.insert(roof, convexSolid(Vector3.new(-8.8, 8.4, -8.8), Vector3.new(8.8, 14.35, 8.8), CFrame.identity, PURPLE_DARK, planes))
+	local sprev = nil
+	for k = 0, 5 do
+		local e = math.rad(30 + 60 * k)
+		local d, t, n = dirOf(e), tanOf(e), normals[k]
+		local E = d * ae + Vector3.new(0, yE, 0)
+		local s = (-d * ae + Vector3.new(0, dy, 0)) / Ls
+		local row = 0
+		while true do
+			local t0 = row * 1.35 - 0.12
+			local len = math.min(1.6, Ls - t0 - 0.25)
+			if len < 0.45 then
+				break
+			end
+			local hw = 4.35 * (1 - (t0 + len) / Ls) - 0.05
+			local x = -hw - (if row % 2 == 1 then 0.78 else 0)
+			while x < hw - 0.05 do
+				local a, b = math.max(x, -hw), math.min(x + 1.5, hw)
+				if b - a > 0.3 then
+					local ti = toneIndex(rng, sprev)
+					sprev = ti
+					local pos = E + s * (t0 + len / 2) + t * ((a + b) / 2) + n * 0.12
+					local cf = CFrame.fromMatrix(pos, t, n)
+					local tilt = math.atan2(0.1, len) * (if cf.ZVector:Dot(s) > 0 then 1 else -1)
+					table.insert(roof, piece("Part", Vector3.new(b - a, 0.1, len), cf * CFrame.Angles(tilt, 0, 0), scaled(PURPLE, ({ 1, 0.94, 0.88 })[ti])))
+				end
+				x += 1.56
+			end
+			row += 1
+		end
+	end
+	for j = 0, 5 do
+		local b = math.rad(60 * j)
+		local V = dirOf(b) * 8.7 + Vector3.new(0, yE, 0)
+		local A = Vector3.new(0, yA, 0)
+		local z = (A - V).Unit
+		local nn = (normals[(j + 5) % 6] + normals[j]).Unit
+		local up = (nn - z * nn:Dot(z)).Unit
+		local mid = (V + A) / 2 + up * 0.14
+		table.insert(roof, piece("Part", Vector3.new(0.5, 0.14, (A - V).Magnitude - 0.2), CFrame.lookAt(mid, mid + z, up), PURPLE_DARK))
+	end
+	merge(m, "Roof", roof, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+
+	-- 4. gold: the eave fascia with hanging ornaments, the finial, the drapes' valance rods and tassels (below), the
+	-- table top, the crystal ball's claw stand, the candle holders
+	for k = 0, 5 do
+		local e = math.rad(30 + 60 * k)
+		local d, t = dirOf(e), tanOf(e)
+		table.insert(gold, timber(Vector3.new(8.85, 0.5, 0.15), CFrame.fromMatrix(Vector3.new(0, 8.3, 0) + d * (ae + 0.08), t, Vector3.yAxis), P.Gold, 0.05))
+		for _, o in ipairs({ -2.2, 2.2 }) do
+			local base = Vector3.new(0, 8.0, 0) + d * (ae + 0.1) + t * o
+			table.insert(gold, piece("Part", Vector3.new(0.05, 0.3, 0.05), CFrame.new(base - Vector3.new(0, 0.1, 0)), P.Brass))
+			table.insert(gold, piece("Part", Vector3.new(0.26, 0.26, 0.26), CFrame.new(base - Vector3.new(0, 0.42, 0)) * CFrame.Angles(math.rad(45), 0, math.rad(45)), P.Gold))
+		end
+	end
+	table.insert(gold, octagon(1.1, 0.4, CFrame.new(0, 14.35, 0), P.Gold))
+	table.insert(gold, fruitPiece(0.95, CFrame.new(0, 15.0, 0) * CFrame.Angles(0, math.pi / 4, 0), P.Gold))
+	table.insert(gold, piece("Part", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, 15.6, 0) * CFrame.Angles(math.rad(45), 0, math.rad(45)), P.Gold))
+
+	-- 5. the moon crest on the front eave (today's emblem: 3 across at (0, 9.8, -7.6), facing -Z)
+	local face = CFrame.new(0, 9.8, -7.62) * CFrame.Angles(math.rad(90), 0, 0)
+	disc16(crest, 3.0, 0.3, face, CLOTH)
+	disc16(crest, 3.4, 0.16, CFrame.new(0, 9.8, -7.42) * CFrame.Angles(math.rad(90), 0, 0), P.Gold)
+	local moonA = prism16(2.0, 0.2, CFrame.new(0.15, 9.85, -7.85) * CFrame.Angles(math.rad(90), 0, 0), P.Gold)
+	local moonB = prism16(1.7, 0.5, CFrame.new(0.7, 10.1, -7.85) * CFrame.Angles(math.rad(90), 0, 0), P.Gold)
+	local ok, cut = pcall(function()
+		return GeometryService:SubtractAsync(moonA, { moonB }, { CollisionFidelity = Enum.CollisionFidelity.Box, RenderFidelity = Enum.RenderFidelity.Automatic })
+	end)
+	moonB:Destroy()
+	if ok and cut and cut[1] then
+		moonA:Destroy()
+		cut[1].Anchored = true
+		table.insert(crest, cut[1])
+	else
+		table.insert(crest, moonA)
+	end
+	for _, st in ipairs({ { -0.75, 10.4 }, { -0.5, 9.1 }, { 0.75, 9.2 } }) do
+		table.insert(crest, piece("Part", Vector3.new(0.24, 0.24, 0.06), CFrame.new(st[1], st[2], -7.8) * CFrame.Angles(0, 0, math.rad(45)), P.Gold))
+	end
+	table.insert(crest, timber(Vector3.new(0.4, 1.6, 0.3), CFrame.new(0, 8.95, -7.3), P.WoodDark, 0.06))
+	merge(m, "Crest", crest, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 6. the 3 drapes at the back (today's), each 4 folded panels with a gold hem, a gold valance rod and 3 tassels
+	for _, spec in ipairs({ { 30, PURPLE }, { 90, CLOTH }, { 150, PURPLE } }) do
+		local e = math.rad(spec[1])
+		local d, t = dirOf(e), tanOf(e)
+		local apo = 6.6 * math.cos(math.pi / 6)
+		for i = 0, 3 do
+			local o = -2.175 + i * 1.45
+			local fold = if i % 2 == 0 then 1 else -1
+			local cf = CFrame.fromMatrix(Vector3.new(0, 4.125, 0) + d * (apo + fold * 0.06) + t * o, t, Vector3.yAxis) * CFrame.Angles(0, math.rad(9 * fold), 0)
+			table.insert(drapes, piece("Part", Vector3.new(1.48, 7.25, 0.12), cf, scaled(spec[2], if i % 2 == 0 then 1 else 0.92)))
+			table.insert(gold, piece("Part", Vector3.new(1.48, 0.14, 0.16), cf * CFrame.new(0, -3.55, 0), P.Gold))
+		end
+		table.insert(gold, timber(Vector3.new(5.9, 0.16, 0.16), CFrame.fromMatrix(Vector3.new(0, 7.68, 0) + d * (apo - 0.2), t, Vector3.yAxis), P.Gold, 0.04))
+		for _, o in ipairs({ -1.45, 0, 1.45 }) do
+			local base = Vector3.new(0, 7.6, 0) + d * (apo - 0.22) + t * o
+			table.insert(gold, piece("Part", Vector3.new(0.05, 0.4, 0.05), CFrame.new(base - Vector3.new(0, 0.2, 0)), P.Brass))
+			table.insert(gold, chamfered(Vector3.new(0.2, 0.36, 0.2), CFrame.new(base - Vector3.new(0, 0.55, 0)), P.Gold, { "vertical", "bottomFrontBack", "bottomSides" }, 0.06))
+		end
+	end
+	merge(m, "Drapes", drapes, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 7. the table (today's: 4.4 across at (0, -, -1)), its gold top, the claw stand, the candles
+	local tc = Vector3.new(0, 0, -1)
+	table.insert(tableP, octagon(4.2, 2.5, CFrame.new(tc + Vector3.new(0, 1.7, 0)), graded(CLOTH, 1.7, H, 1)))
+	table.insert(tableP, octagon(4.0, 0.04, CFrame.new(tc + Vector3.new(0, 3.27, 0)), scaled(CLOTH, 1.12)))
+	merge(m, "Table", tableP, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+	table.insert(gold, octagon(4.32, 0.22, CFrame.new(tc + Vector3.new(0, 0.75, 0)), P.Gold))
+	table.insert(gold, octagon(4.8, 0.3, CFrame.new(tc + Vector3.new(0, 3.1, 0)), P.Gold))
+	table.insert(gold, octagon(1.5, 0.15, CFrame.new(tc + Vector3.new(0, 3.365, 0)), P.Gold))
+	table.insert(gold, octagon(1.25, 0.18, CFrame.new(tc + Vector3.new(0, 3.53, 0)), scaled(P.Gold, 0.94)))
+	for k = 0, 3 do
+		local a = math.rad(45 + 90 * k)
+		local p0 = tc + Vector3.new(0, 3.55, 0) + dirOf(a) * 0.55
+		local p1 = tc + Vector3.new(0, 4.25, 0) + dirOf(a) * 1.02
+		table.insert(gold, piece("Part", Vector3.new(0.1, 0.1, (p1 - p0).Magnitude + 0.05), CFrame.lookAt((p0 + p1) / 2, p1), P.Gold))
+		table.insert(gold, piece("Part", Vector3.new(0.15, 0.15, 0.15), CFrame.new(p1) * CFrame.Angles(math.rad(45), 0, math.rad(45)), P.Gold))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		local c = Vector3.new(sx * 1.6, 0, -0.2)
+		table.insert(gold, octagon(0.75, 0.1, CFrame.new(c + Vector3.new(0, 3.34, 0)), P.Gold))
+		table.insert(candles, octagon(0.48, 1.05, CFrame.new(c + Vector3.new(0, 3.915, 0)), rgb(232, 226, 208)))
+		for _, da in ipairs({ 0.6, 2.4 }) do
+			local d = dirOf(da)
+			table.insert(candles, piece("Part", Vector3.new(0.09, 0.32, 0.06), CFrame.lookAt(c + Vector3.new(0, 4.25, 0) + d * 0.24, c + Vector3.new(0, 4.25, 0) + d * 2), rgb(240, 236, 222)))
+		end
+		table.insert(candles, piece("Part", Vector3.new(0.05, 0.14, 0.05), CFrame.new(c + Vector3.new(0, 4.5, 0)), rgb(40, 34, 30)))
+		table.insert(flames, flame(CFrame.new(c + Vector3.new(0, 4.48, 0)), 0.16, 0.22, 0.7, rgb(255, 140, 40), Vector3.new(0.03, 0, 0)))
+	end
+	merge(m, "Candles", candles, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+	merge(m, "Flames", flames, { material = Enum.Material.Neon, shadow = false })
+	merge(m, "Gold", gold, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 8. the glowing crystal ball (today's ball and light) with a brighter core
+	local ball = plain(m, "CrystalBall", Vector3.new(2.2, 2.2, 2.2), CFrame.new(tc + Vector3.new(0, 4.6, 0)), rgb(95, 212, 255), { shape = Enum.PartType.Ball, material = Enum.Material.Neon, collide = true })
+	ball.Transparency = 0.15
+	local light = Instance.new("PointLight")
+	light.Range, light.Brightness, light.Color = 12, 0.6, rgb(95, 212, 255)
+	light.Parent = ball
+	local core = plain(m, "CrystalCore", Vector3.new(1.0, 1.0, 1.0), CFrame.new(tc + Vector3.new(0, 4.6, 0)), rgb(210, 245, 255), { shape = Enum.PartType.Ball, material = Enum.Material.Neon, shadow = false })
+	core.Transparency = 0.35
+
+	local root = m:FindFirstChild("Deck") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "moon_gazebo")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 11 FRUIT STALL (kit Hub.Market_Awning_A, 16.2 x 11.1 x 10.4 with its barrel; the hub's 2 Market_Awning_A). Built
+-- like its siblings (StudioProps.stallFrame: the weapon / trophy / diamond stall frames, same wood colours), at its
+-- own size: posts on stone feet, knee braces, a front beam and a back plate on the posts, planked side panels with top
+-- rails, the counter (dark core, 3 rows of front planks, kick board, stiles, 2 top boards, lip), the low back wall of
+-- vertical boards, rafters under a yellow / white striped awning (today's colours and slope) with a scalloped valance,
+-- 3 slatted crates of faceted fruit (red apples with stems and leaves, oranges, green apples; a few stacked) and loose
+-- fruit at the counter ends. The nested `barrel` prop, the NpcSpot and the hub's NPC stand-ins are kept on each copy.
+-- Parts: Frame, Awning, Crates, Fruit (4; the old one had 35 + the barrel).
+---------------------------------------------------------------------
+function PropsBatch2.fruit_stall(): Model
+	local m = Instance.new("Model")
+	m.Name = "fruit_stall"
+	local rng = Random.new(20261111)
+	BEVEL_SELF = true
+	-- the stall frame colours of the siblings (MapProps.weapon_stall / trophy_stall / diamond_shop today)
+	local POST, BEAM, CORE, FOOT = rgb(107, 59, 36), rgb(97, 54, 32), rgb(81, 45, 26), rgb(93, 99, 111)
+	local BOARD = { rgb(161, 94, 53), rgb(152, 88, 49), rgb(168, 99, 57) }
+	local PLANK = { rgb(158, 93, 54), rgb(137, 79, 45), rgb(152, 89, 51) }
+	local TOP = { rgb(205, 144, 88), rgb(197, 136, 82) }
+	local CRATE = { rgb(214, 150, 92), rgb(199, 139, 85), rgb(184, 128, 79) }
+	local YELLOW, WHITE = rgb(255, 201, 60), rgb(245, 246, 250)
+	local frame, awning, crates, fruit = {}, {}, {}, {}
+
+	-- 1. posts (today's boxes) on stone feet, knee braces, the front beam and the back plate on the post tops
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(frame, timber(Vector3.new(0.9, 8.4, 0.9), CFrame.new(5.55 * sx, 4.2, -3.05), POST, 0.16))
+		table.insert(frame, timber(Vector3.new(0.9, 10.4, 0.9), CFrame.new(5.55 * sx, 5.2, 3.05), POST, 0.16))
+		for _, z in ipairs({ -3.05, 3.05 }) do
+			table.insert(frame, chamfered(Vector3.new(1.2, 0.3, 1.2), CFrame.new(5.55 * sx, 0.15, z), FOOT, { "topFrontBack", "topSides" }, 0.08))
+		end
+		table.insert(frame, timber(Vector3.new(0.3, 1.7, 0.3), CFrame.new(4.62 * sx, 7.72, -3.05) * CFrame.Angles(0, 0, math.rad(45 * sx)), BEAM, 0.06))
+		-- side panel: dark core, 3 planks on the outer face, a top rail
+		table.insert(frame, piece("Part", Vector3.new(0.4, 3.2, 5.2), CFrame.new(5.55 * sx, 1.6, 0), CORE))
+		for i, y in ipairs({ 0.55, 1.6, 2.65 }) do
+			table.insert(frame, timber(Vector3.new(0.2, 0.98, 5.3), CFrame.new(sx * 5.8, y, 0), BOARD[i], 0.05))
+		end
+		table.insert(frame, timber(Vector3.new(0.76, 0.18, 5.6), CFrame.new(sx * 5.55, 3.29, 0), BEAM, 0.04))
+	end
+	table.insert(frame, timber(Vector3.new(12.0, 0.5, 0.5), CFrame.new(0, 8.65, -3.05), BEAM, 0.09))
+	table.insert(frame, timber(Vector3.new(12.0, 0.6, 0.6), CFrame.new(0, 9.3, 3.05), BEAM, 0.1))
+	table.insert(frame, timber(Vector3.new(12.0, 0.5, 0.5), CFrame.new(0, 10.15, 3.05), BEAM, 0.09))
+	-- 2. the counter (today's 10.4 x 3.2 box and its 12.4 x 2.6 top)
+	table.insert(frame, piece("Part", Vector3.new(10.4, 3.2, 1.4), CFrame.new(0, 1.6, -2.3), CORE))
+	for i, y in ipairs({ 0.75, 1.74, 2.73 }) do
+		table.insert(frame, timber(Vector3.new(10.2, 0.9, 0.2), CFrame.new(0, y, -3.1), PLANK[i], 0.05))
+	end
+	table.insert(frame, timber(Vector3.new(10.4, 0.3, 0.24), CFrame.new(0, 0.15, -3.08), BEAM, 0.04))
+	for _, x in ipairs({ -4.95, 0, 4.95 }) do
+		table.insert(frame, timber(Vector3.new(0.32, 2.9, 0.12), CFrame.new(x, 1.75, -3.24), BEAM, 0.03))
+	end
+	for i, z in ipairs({ -3.065, -1.735 }) do
+		table.insert(frame, timber(Vector3.new(12.4, 0.5, 1.27), CFrame.new(0, 3.45, z), TOP[i], 0.08))
+	end
+	table.insert(frame, timber(Vector3.new(12.4, 0.14, 0.1), CFrame.new(0, 3.13, -3.75), BEAM, 0.03))
+	-- 3. the low back wall: core, 6 vertical boards, a top rail
+	table.insert(frame, piece("Part", Vector3.new(11.0, 3.2, 0.3), CFrame.new(0, 1.6, 3.1), CORE))
+	local prev = nil
+	for i = 0, 5 do
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(frame, timber(Vector3.new(1.74, 3.05, 0.22), CFrame.new(-4.45 + i * 1.78, 1.55, 2.85), BOARD[ti], 0.05))
+	end
+	table.insert(frame, timber(Vector3.new(11.2, 0.2, 0.5), CFrame.new(0, 3.25, 3.0), BEAM, 0.04))
+
+	-- 4. the awning: today's slope (14 degrees, centre (y 9.6, z -1.2), 10.6 long), 6 stripes on 3 rafters, a front rod,
+	-- a scalloped valance (a band and 2 scallops per stripe, each the stripe's colour)
+	local tiltCF = CFrame.new(0, 9.6, -1.2) * CFrame.Angles(math.rad(-14), 0, 0)
+	for i = 0, 5 do
+		local x = -5.67 + i * 2.268
+		local col = if i % 2 == 0 then YELLOW else WHITE
+		table.insert(awning, timber(Vector3.new(2.25, 0.22, 10.6), tiltCF * CFrame.new(x, 0, 0), col, 0.04))
+		local front = tiltCF * CFrame.new(x, 0, -5.3)
+		local bandCF = CFrame.new(front.Position + Vector3.new(0, -0.28, -0.04))
+		table.insert(awning, piece("Part", Vector3.new(2.25, 0.5, 0.1), bandCF, col))
+		for _, o in ipairs({ -0.565, 0.565 }) do
+			table.insert(awning, octagon(1.06, 0.1, bandCF * CFrame.new(o, -0.28, 0) * CFrame.Angles(math.rad(90), 0, 0), scaled(col, 0.97)))
+		end
+	end
+	for _, x in ipairs({ -4.2, 0, 4.2 }) do
+		table.insert(frame, timber(Vector3.new(0.26, 0.28, 10.2), tiltCF * CFrame.new(x, -0.25, 0.1), BEAM, 0.05))
+	end
+	table.insert(frame, timber(Vector3.new(13.7, 0.16, 0.16), (tiltCF * CFrame.new(0, -0.05, -5.35)) * CFrame.Angles(math.rad(14), 0, 0), BEAM, 0.04))
+	merge(m, "Frame", frame, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Awning", awning, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 5. three slatted crates on the counter (today's 3 x 1.4 x 2 at x -3.4 / 0 / 3.4) and their fruit
+	local kinds = {
+		{ -3.4, rgb(212, 52, 60), 0.8, true }, -- red apples
+		{ 0, rgb(255, 140, 40), 0.8, false }, -- oranges
+		{ 3.4, rgb(110, 186, 60), 0.84, true }, -- green apples
+	}
+	for _, kind in ipairs(kinds) do
+		local cx = kind[1]
+		local c0 = Vector3.new(cx, 3.7, -2.4)
+		for _, sx in ipairs({ -1, 1 }) do
+			for _, sz in ipairs({ -1, 1 }) do
+				table.insert(crates, timber(Vector3.new(0.22, 1.4, 0.22), CFrame.new(c0 + Vector3.new(sx * 1.39, 0.7, sz * 0.89)), scaled(CRATE[3], 0.85), 0.04))
+			end
+		end
+		for _, y in ipairs({ 0.33, 1.05 }) do
+			for _, sz in ipairs({ -1, 1 }) do
+				table.insert(crates, timber(Vector3.new(2.6, 0.6, 0.1), CFrame.new(c0 + Vector3.new(0, y, sz * 0.93)), CRATE[rng:NextInteger(1, 3)], 0.03))
+			end
+			for _, sx in ipairs({ -1, 1 }) do
+				table.insert(crates, timber(Vector3.new(0.1, 0.6, 1.6), CFrame.new(c0 + Vector3.new(sx * 1.43, y, 0)), CRATE[rng:NextInteger(1, 3)], 0.03))
+			end
+		end
+		table.insert(crates, piece("Part", Vector3.new(2.7, 0.75, 1.7), CFrame.new(c0 + Vector3.new(0, 0.42, 0)), CORE))
+		-- fruit: 6 in the crate (3 x 2), 2 on them, 1 on top
+		local s = kind[3]
+		local spots = {}
+		for _, fx in ipairs({ -0.9, 0, 0.9 }) do
+			for _, fz in ipairs({ -0.43, 0.43 }) do
+				table.insert(spots, Vector3.new(fx, 0.8 + s / 2, fz))
+			end
+		end
+		table.insert(spots, Vector3.new(-0.45, 0.8 + s * 1.3, 0.05))
+		table.insert(spots, Vector3.new(0.45, 0.8 + s * 1.3, -0.05))
+		table.insert(spots, Vector3.new(0, 0.8 + s * 2.05, 0))
+		for _, sp in ipairs(spots) do
+			local cf = CFrame.new(c0 + sp + Vector3.new(rng:NextNumber(-0.05, 0.05), 0, rng:NextNumber(-0.05, 0.05))) * CFrame.Angles(rng:NextNumber(-0.3, 0.3), rng:NextNumber(0, math.pi), rng:NextNumber(-0.3, 0.3))
+			table.insert(fruit, fruitPiece(s * rng:NextNumber(0.94, 1.04), cf, scaled(kind[2], rng:NextNumber(0.9, 1.05))))
+			if kind[4] then
+				table.insert(fruit, piece("Part", Vector3.new(0.07, 0.24, 0.07), cf * CFrame.new(0, s * 0.5, 0), P.WoodDark))
+				table.insert(fruit, piece("Part", Vector3.new(0.24, 0.04, 0.13), cf * CFrame.new(0.12, s * 0.55, 0) * CFrame.Angles(0, 0, math.rad(20)), P.MossDark))
+			end
+		end
+	end
+	-- loose fruit at the counter ends
+	for _, lf in ipairs({ { -5.45, rgb(212, 52, 60), 0.8 }, { -5.1, rgb(212, 52, 60), 0.76 }, { 5.35, rgb(255, 140, 40), 0.8 } }) do
+		local cf = CFrame.new(lf[1], 3.7 + lf[3] * 0.47, -2.45 + rng:NextNumber(-0.4, 0.4)) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0)
+		table.insert(fruit, fruitPiece(lf[3], cf, lf[2]))
+	end
+	merge(m, "Crates", crates, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+	merge(m, "Fruit", fruit, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	local root = m:FindFirstChild("Frame") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "fruit_stall")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
 -- install: build, replace ServerStorage.MapProps.<propId> (the old template goes to MapProps._Previous)
 ---------------------------------------------------------------------
 function PropsBatch2.stats(model: Instance): (number, number, number)
@@ -1837,6 +2853,7 @@ end
 PropsBatch2.BUILDERS = {
 	portal_frame = true, hub_wall = true, stone_arch = true, stone_pillar = true,
 	entry_arch = true, gate_palisade = true, gate_barricade = true, gate_mine = true,
+	rebirth_altar = true, egg_station = true, moon_gazebo = true, fruit_stall = true,
 }
 
 return PropsBatch2
