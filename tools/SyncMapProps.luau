@@ -4,7 +4,8 @@
 
 	Templates  ServerStorage.MapProps.<propId>   Model with a PrimaryPart and attribute MapPropId. Optional child
 	           Folder "_Variants" with one Configuration per variant; its attributes recolour the clone by part name:
-	           Color_<PartName> (Color3), Material_<PartName> (string), MaterialVariant_<PartName> (string).
+	           Color_<PartName> (Color3), Material_<PartName> (string), MaterialVariant_<PartName> (string),
+	           Transparency_<PartName> (number).
 	Instances  every Model tagged "MapProp" with attribute MapPropId, in the test area
 	           (workspace._Staging.AssetPreview.ModelsA.Lineup), the main map (workspace.Hub, workspace.Zones), the
 	           kit copies (ServerStorage.MapAssets) and the boss-arena templates (ServerStorage.BossArenas).
@@ -138,6 +139,25 @@ SyncMapProps.RULES = {
 	{ propId = "team_board", names = { "Station_TeamBoard" }, hubNames = { "TeamBoard" } },
 	{ propId = "park_bench", names = { "Bench_A" } },
 	{ propId = "street_lamp", names = { "LampPost_A" } },
+	-- batch E: 06 the golem statue (test zone, kit, the Plains boss arena's Decor.Golem_Statue)
+	{ propId = "golem_statue", names = { "Golem_Statue" } },
+	-- 07 the windmill (test zone, kit, Plains_1.Decor.Landmark: its NoClimb folder of invisible walls carries MapPropKeep)
+	{ propId = "windmill", names = { "Windmill" }, match = function(m)
+		return m.Name == "Landmark" and m:GetAttribute("LandmarkName") == "Windmill"
+	end },
+	-- 15 the pirate ship (test zone, kit, Plains_2.Decor.Landmark; Tundra_2's Landmark.Ship = Variant Frozen, Abyss_2's
+	-- Landmark.Hull = Variant Sunken, its scale 1.12 kept): the 3 game copies are the same shape, the variants recolour it
+	{ propId = "pirate_ship", names = { "PirateShip_Wreck" }, match = function(m)
+		local parent = m.Parent
+		local landmark = if parent ~= nil and parent.Name == "Landmark" then parent:GetAttribute("LandmarkName") else nil
+		return (m.Name == "Landmark" and m:GetAttribute("LandmarkName") == "PirateShip")
+			or (m.Name == "Ship" and landmark == "FrozenShip")
+			or (m.Name == "Hull" and landmark == "SunkenGalleon")
+	end, variant = function(m)
+		local parent = m.Parent
+		local landmark = if parent ~= nil and parent.Name == "Landmark" then parent:GetAttribute("LandmarkName") else nil
+		return if landmark == "FrozenShip" then "Frozen" elseif landmark == "SunkenGalleon" then "Sunken" else nil
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -444,6 +464,10 @@ local function applyVariant(model: Model, template: Model, variant: string?): st
 			local mv = attributes["MaterialVariant_" .. d.Name]
 			if type(mv) == "string" then
 				d.MaterialVariant = mv
+			end
+			local transparency = attributes["Transparency_" .. d.Name]
+			if type(transparency) == "number" then
+				d.Transparency = transparency
 			end
 		end
 	end

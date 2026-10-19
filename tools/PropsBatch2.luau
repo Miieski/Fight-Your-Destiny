@@ -3,6 +3,8 @@
 	zone rebuilt to fountain / well quality (docs/prop_texture_guide.md section A, Agent A's recipe) from Parts merged
 	with GeometryService into a few unions per colour / material group (each union = one part of the hub budget).
 	Source of truth: tools/PropsBatch2.luau. Inventory: docs/prop_inventory.md "Props batch 2".
+	Over 200,000 characters since batch E: in Studio, edit it with multi_edit or ScriptEditorService:UpdateSourceAsync
+	(assigning the Source property refuses strings that long).
 
 	Usage (execute_luau, Edit):
 		local B2 = require(game.ServerStorage.DevTools.PropsBatch2:Clone())
@@ -1867,13 +1869,16 @@ local function convexSolid(bmin: Vector3, bmax: Vector3, cf: CFrame, color: Colo
 	for _, x in ipairs(extra or {}) do
 		table.insert(negs, x)
 	end
+	-- each cut is an 80-stud cube whose near face lies on the plane, centred (along the plane) on the solid's box: a
+	-- solid far from its frame's origin (a roof 45 studs up) is still cut whole
+	local c0 = (bmin + bmax) / 2
 	for _, pl in ipairs(planes) do
 		local n = Vector3.new(pl[1], pl[2], pl[3]).Unit
 		local helper = if math.abs(n.Y) < 0.9 then Vector3.yAxis else Vector3.xAxis
 		local x = helper:Cross(n).Unit
 		local y = n:Cross(x).Unit
 		local c = if type(pl[5]) == "string" then Color3.fromHex(pl[5]) elseif typeof(pl[5]) == "Color3" then pl[5] else color
-		table.insert(negs, piece("Part", Vector3.new(80, 80, 80), cf * CFrame.fromMatrix(n * (pl[4] + 40), x, y), c, { material = material }))
+		table.insert(negs, piece("Part", Vector3.new(80, 80, 80), cf * CFrame.fromMatrix(n * (pl[4] + 40) + (c0 - n * c0:Dot(n)), x, y), c, { material = material }))
 	end
 	local pad = Vector3.new(0.02, 0.02, 0.02)
 	return subtractKeep(bmax - bmin + pad, cf * CFrame.new((bmin + bmax) / 2), color, negs, material)
@@ -3504,6 +3509,1707 @@ function PropsBatch2.street_lamp(): Model
 end
 
 ---------------------------------------------------------------------
+-- 06 GOLEM (kit Plains.Golem_Statue, 43.8 x 39.1 x 36; ServerStorage.BossArenas.Plains.Decor.Golem_Statue, boss-arena
+-- decor: nothing reads it by name). The same pose and size, rebuilt in layered stone plates: torso, belly, arms and
+-- legs of stacked bands (all edges chamfered, alternately lapping over each other, over a dark core in the joints), a
+-- pelvis belt of blocks with a loin plate, knee caps with bosses, fists of 4 knuckle blocks and a thumb, feet with 3
+-- toes, a head with a brow over deep eye sockets (glowing eyes) and a grooved jaw; the chest plate with today's cyan
+-- runes inlaid in dark grooves around Agent A's faceted core crystal (Neon, Blender_Exports/Props/facets/golem__*.json),
+-- which carries today's PointLight; Agent A's faceted shoulder boulders and 3 rubble boulders (CaveRock); engraved
+-- zig-zag cracks (today's 6 places and 2 more); moss on the shoulders, the head, a foot, an elbow, the rubble and the
+-- base; a carved round base of cut blocks (2 rings around a centre disc, 8 glowing rune tiles). Everything collides
+-- as before (moss and the flush inlays excepted).
+-- Parts: Plinth, Body, Core, Glow, Moss (5; the old one had 44).
+---------------------------------------------------------------------
+-- facet planes of Agent A's golem pieces (generated from the JSON faces: outward normal, offset, face colour; coplanar
+-- faces merged), in each piece's own frame; place = the JSON "place" (position, orientation in degrees) relative to
+-- the Plinth centre (y 0.75 in the model)
+PropsBatch2.GOLEM_FACETS = {
+	core_crystal = { min = { -1.500, -2.000, -1.300 }, max = { 1.500, 2.000, 0.000 }, place = { 0, 24.12, -7.89, 6.9, 0, 0 }, planes = {
+		{ 0.5914, 0.8064, 0.0000, 1.6128, "#56BFE6" },
+		{ 0.4603, 0.6277, -0.6277, 1.4438, "#7FDDFF" },
+		{ 1.0000, 0.0000, 0.0000, 1.5000, "#56BFE6" },
+		{ 0.8000, 0.0000, -0.6000, 1.3800, "#6FD8FF" },
+		{ 0.5914, -0.8064, 0.0000, 1.6128, "#56BFE6" },
+		{ 0.4603, -0.6277, -0.6277, 1.4438, "#7FDDFF" },
+		{ -0.5914, -0.8064, 0.0000, 1.6128, "#56BFE6" },
+		{ -0.4603, -0.6277, -0.6277, 1.4438, "#6FD8FF" },
+		{ -1.0000, 0.0000, 0.0000, 1.5000, "#56BFE6" },
+		{ -0.8000, 0.0000, -0.6000, 1.3800, "#7FDDFF" },
+		{ -0.5914, 0.8064, 0.0000, 1.6128, "#56BFE6" },
+		{ -0.4603, 0.6277, -0.6277, 1.4438, "#6FD8FF" },
+		{ 0.0000, 0.0000, -1.0000, 1.3000, "#97E3FF" },
+		{ 0.0000, 0.0000, 1.0000, 0.0000, "#4CAACC" },
+	} },
+	rubble_1 = { min = { -2.555, 0.000, -2.406 }, max = { 2.801, 2.956, 2.222 }, place = { -10.0, 0.45, -9.0, 0, 80, 0 }, planes = {
+		{ -0.5520, 0.3373, -0.7626, 2.7450, "#575464" },
+		{ -0.2873, 0.7581, -0.5854, 2.8452, "#5C596A" },
+		{ 0.2765, 0.4222, -0.8633, 2.5983, "#4F4C5A" },
+		{ 0.2981, 0.3115, -0.9023, 2.4953, "#575464" },
+		{ 0.1189, -0.1318, -0.9841, 2.0739, "#474451" },
+		{ -0.2559, -0.2410, -0.9362, 2.0175, "#4C4957" },
+		{ -0.8190, -0.5713, -0.0522, 1.5413, "#4F4C5A" },
+		{ -0.8880, -0.4594, -0.0191, 1.7089, "#45424F" },
+		{ -0.9906, -0.1035, -0.0890, 2.2828, "#565262" },
+		{ -0.3328, -0.6669, -0.6667, 1.4551, "#494654" },
+		{ -0.6529, 0.7069, 0.2719, 2.8799, "#4F4C5A" },
+		{ -0.1902, 0.9698, -0.1525, 2.6827, "#595566" },
+		{ -0.1784, 0.9647, -0.1938, 2.6790, "#585565" },
+		{ 0.3356, 0.8529, -0.3999, 2.8476, "#585465" },
+		{ 0.9477, -0.1310, -0.2910, 2.1472, "#4F4C5B" },
+		{ 0.8737, -0.1973, -0.4446, 2.0926, "#524E5D" },
+		{ 0.5290, -0.0212, -0.8484, 2.2834, "#4D4A58" },
+		{ 0.6672, 0.7425, -0.0595, 2.8421, "#5C586A" },
+		{ 0.2142, -0.2391, -0.9471, 1.9838, "#4F4C5B" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#4F4B5A" },
+		{ -0.5688, -0.5346, 0.6251, 1.7357, "#4A4755" },
+		{ -0.4126, -0.0887, 0.9066, 2.2596, "#534F5F" },
+		{ -0.5016, 0.6406, 0.5814, 2.8631, "#4E4B59" },
+		{ 0.0213, 0.7575, 0.6525, 2.7179, "#575364" },
+		{ 0.0903, 0.9213, 0.3782, 2.8102, "#605C6D" },
+		{ 0.5722, 0.8006, 0.1776, 2.9214, "#504D5C" },
+		{ 0.9465, -0.1877, -0.2624, 2.0964, "#45424F" },
+		{ 0.3434, 0.2244, 0.9120, 2.2912, "#585464" },
+		{ 0.4297, -0.0834, 0.8991, 2.0875, "#514E5D" },
+		{ 0.8134, -0.5399, 0.2165, 1.7636, "#4A4755" },
+		{ 0.8589, -0.3695, -0.3546, 1.9124, "#4F4C5A" },
+		{ 0.2821, -0.2665, 0.9216, 1.8586, "#4F4C5B" },
+		{ 0.1342, 0.0183, 0.9908, 2.1038, "#524F5E" },
+		{ 0.2486, 0.2667, 0.9312, 2.2839, "#524F5E" },
+	} },
+	rubble_2 = { min = { -2.167, 0.000, -1.946 }, max = { 1.764, 4.400, 1.922 }, place = { 11.0, 0.45, 8.0, 0, 20, 0 }, planes = {
+		{ -0.5096, 0.2787, 0.8140, 2.3014, "#545060" },
+		{ -0.7790, 0.4253, 0.4606, 2.7788, "#5B5769" },
+		{ -0.9553, -0.0104, -0.2953, 1.7760, "#484552" },
+		{ -0.9432, -0.3253, 0.0672, 1.6049, "#4A4755" },
+		{ -0.5957, -0.3889, 0.7028, 1.3524, "#4A4755" },
+		{ -0.4178, -0.0736, 0.9056, 1.6447, "#524F5E" },
+		{ -0.2533, 0.4042, 0.8789, 2.6711, "#565363" },
+		{ 0.1799, -0.1070, 0.9779, 1.5993, "#4C4957" },
+		{ 0.1895, -0.1000, 0.9768, 1.6116, "#514E5D" },
+		{ -0.3837, 0.8580, -0.3414, 3.4740, "#524F5E" },
+		{ -0.4676, 0.8089, -0.3565, 3.3260, "#585464" },
+		{ 0.1345, 0.8052, 0.5776, 3.7139, "#5F5B6D" },
+		{ -0.5740, 0.6177, -0.5376, 2.9452, "#555161" },
+		{ -0.8895, 0.0623, -0.4527, 1.8667, "#565263" },
+		{ -0.6108, -0.4069, -0.6792, 1.3386, "#44414E" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#494654" },
+		{ 0.2316, -0.1578, 0.9599, 1.5545, "#44414E" },
+		{ 0.8640, 0.4420, 0.2410, 2.5479, "#514D5D" },
+		{ 0.3416, -0.1038, 0.9341, 1.6469, "#534F5F" },
+		{ 0.5775, -0.0609, 0.8141, 1.7582, "#545161" },
+		{ 0.4993, 0.6604, -0.5609, 3.1541, "#514E5D" },
+		{ 0.4672, 0.2756, -0.8401, 2.2599, "#595566" },
+		{ 0.1394, 0.1993, -0.9700, 2.1902, "#4C4957" },
+		{ -0.0215, -0.1023, -0.9945, 1.7321, "#4C4957" },
+		{ -0.5857, -0.2596, -0.7678, 1.4858, "#4B4856" },
+		{ 0.2760, -0.2984, -0.9137, 1.5141, "#4A4754" },
+		{ 0.8987, -0.2170, 0.3812, 1.5482, "#4A4755" },
+		{ 0.9993, 0.0101, 0.0350, 1.7594, "#4E4A59" },
+		{ 0.8543, -0.1282, -0.5037, 1.5559, "#514D5C" },
+		{ 0.7414, -0.0660, -0.6678, 1.6609, "#534F5F" },
+	} },
+	rubble_3 = { min = { -1.583, 0.000, -1.214 }, max = { 1.426, 2.170, 1.393 }, place = { 7.5, 0.45, -10.5, 0, -35, 0 }, planes = {
+		{ -0.7499, -0.0807, -0.6566, 1.1088, "#4E4A59" },
+		{ -0.5466, 0.4226, -0.7230, 1.4997, "#535060" },
+		{ 0.2157, 0.1300, -0.9678, 1.1728, "#4C4958" },
+		{ 0.2239, 0.0962, -0.9698, 1.1434, "#474451" },
+		{ -0.5960, -0.2886, -0.7493, 0.9734, "#4F4C5B" },
+		{ -0.9534, -0.2887, -0.0880, 1.1072, "#4B4856" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#494654" },
+		{ -0.8621, 0.1213, 0.4920, 1.5090, "#565262" },
+		{ -0.6430, 0.5844, 0.4950, 1.8146, "#5C5869" },
+		{ -0.3236, 0.9013, -0.2879, 1.7978, "#575364" },
+		{ -0.9680, -0.2401, 0.0723, 1.1902, "#524F5E" },
+		{ 0.3477, 0.7028, -0.6207, 1.7256, "#5E5A6B" },
+		{ 0.9703, -0.0038, -0.2420, 1.2762, "#524F5E" },
+		{ 0.8497, -0.2005, -0.4877, 1.1035, "#504D5C" },
+		{ 0.4182, -0.1291, -0.8992, 1.0355, "#4B4856" },
+		{ 0.8685, 0.4956, 0.0115, 1.5547, "#4E4A59" },
+		{ -0.5236, -0.5665, 0.6363, 0.8875, "#4F4C5A" },
+		{ -0.5188, -0.4221, 0.7434, 1.0194, "#4B4856" },
+		{ 0.1621, -0.0483, 0.9856, 1.1917, "#4F4C5A" },
+		{ -0.1093, 0.6866, 0.7188, 1.7997, "#4F4C5B" },
+		{ 0.0512, 0.8857, 0.4615, 1.9437, "#524E5E" },
+		{ 0.8584, 0.5077, 0.0729, 1.5746, "#4F4B5A" },
+		{ 0.6527, -0.1489, 0.7428, 1.1597, "#4D4A59" },
+		{ 0.7550, -0.4233, 0.5009, 1.0281, "#4F4C5B" },
+		{ 0.3477, -0.1731, 0.9215, 1.0773, "#464350" },
+	} },
+	shoulder_L = { min = { -6.016, 0.000, -4.694 }, max = { 5.960, 8.170, 4.902 }, place = { -13.0, 24.2, 0.5, 0, -40, 8 }, planes = {
+		{ -0.7146, 0.6552, -0.2450, 6.9038, "#595566" },
+		{ -0.6947, 0.0677, -0.7161, 4.5154, "#585565" },
+		{ -0.6107, 0.0252, -0.7915, 4.4620, "#555161" },
+		{ -0.2430, -0.0615, -0.9681, 4.2832, "#4F4B5A" },
+		{ 0.0565, -0.0202, -0.9982, 4.4771, "#575363" },
+		{ 0.5539, 0.5891, -0.5884, 6.8569, "#5D596A" },
+		{ 0.4085, 0.8717, -0.2706, 7.7006, "#5F5C6D" },
+		{ 0.0227, 0.9971, -0.0731, 8.0989, "#605C6E" },
+		{ -0.7674, 0.6232, -0.1506, 6.7539, "#5F5B6D" },
+		{ -0.0848, 0.9582, 0.2733, 8.0046, "#524F5E" },
+		{ -0.8427, 0.0159, -0.5381, 4.4718, "#545060" },
+		{ -0.8099, 0.5703, -0.1369, 6.6055, "#5B5768" },
+		{ -0.8888, -0.1588, -0.4300, 4.2978, "#4A4755" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#44414E" },
+		{ -0.3631, -0.2296, -0.9030, 3.9685, "#44414E" },
+		{ 0.4847, -0.4234, -0.7654, 3.5198, "#4A4755" },
+		{ 0.9008, -0.0705, -0.4284, 4.9403, "#4F4C5A" },
+		{ 0.9609, -0.2362, 0.1447, 4.3003, "#464350" },
+		{ 0.5902, 0.1328, 0.7962, 4.3258, "#464350" },
+		{ 0.5660, 0.1634, 0.8081, 4.3664, "#4A4654" },
+		{ 0.5010, 0.3524, 0.7905, 5.1207, "#5E5A6B" },
+		{ 0.2047, 0.5479, 0.8111, 6.0588, "#5E5A6C" },
+		{ -0.6770, -0.1216, 0.7258, 4.5465, "#494654" },
+		{ -0.1192, 0.0813, 0.9895, 4.7654, "#4A4755" },
+		{ -0.2345, 0.0015, 0.9721, 4.5974, "#474451" },
+		{ -0.7556, -0.5653, 0.3308, 3.0642, "#4A4755" },
+	} },
+	shoulder_R = { min = { -5.960, 0.000, -4.694 }, max = { 6.016, 8.170, 4.902 }, place = { 13.0, 24.2, 0.5, 0, 40, -8 }, planes = {
+		{ 0.7146, 0.6552, -0.2450, 6.9038, "#595566" },
+		{ 0.6947, 0.0677, -0.7161, 4.5154, "#585565" },
+		{ 0.6107, 0.0252, -0.7915, 4.4620, "#555161" },
+		{ 0.2430, -0.0615, -0.9681, 4.2832, "#4F4B5A" },
+		{ -0.0565, -0.0202, -0.9982, 4.4771, "#575363" },
+		{ -0.5539, 0.5891, -0.5884, 6.8569, "#5D596A" },
+		{ -0.4085, 0.8717, -0.2706, 7.7006, "#5F5C6D" },
+		{ -0.0227, 0.9971, -0.0731, 8.0989, "#605C6E" },
+		{ 0.7674, 0.6232, -0.1506, 6.7539, "#5F5B6D" },
+		{ 0.0848, 0.9582, 0.2733, 8.0046, "#524F5E" },
+		{ 0.8427, 0.0159, -0.5381, 4.4718, "#545060" },
+		{ 0.8099, 0.5703, -0.1369, 6.6055, "#5B5768" },
+		{ 0.8888, -0.1588, -0.4300, 4.2978, "#4A4755" },
+		{ 0.0000, -1.0000, 0.0000, 0.0000, "#44414E" },
+		{ 0.3631, -0.2296, -0.9030, 3.9685, "#44414E" },
+		{ -0.4847, -0.4234, -0.7654, 3.5198, "#4A4755" },
+		{ -0.9008, -0.0705, -0.4284, 4.9403, "#4F4C5A" },
+		{ -0.9609, -0.2362, 0.1447, 4.3003, "#464350" },
+		{ -0.5902, 0.1328, 0.7962, 4.3258, "#464350" },
+		{ -0.5660, 0.1634, 0.8081, 4.3664, "#4A4654" },
+		{ -0.5010, 0.3524, 0.7905, 5.1207, "#5E5A6B" },
+		{ -0.2047, 0.5479, 0.8111, 6.0588, "#5E5A6C" },
+		{ 0.6770, -0.1216, 0.7258, 4.5465, "#494654" },
+		{ 0.1192, 0.0813, 0.9895, 4.7654, "#4A4755" },
+		{ 0.2345, 0.0015, 0.9721, 4.5974, "#474451" },
+		{ 0.7556, -0.5653, 0.3308, 3.0642, "#4A4755" },
+	} },
+}
+
+local GOLEM_H = 39.1
+local GOLEM_JOINT = rgb(70, 74, 88)
+local GOLEM_CRACK = rgb(62, 60, 78)
+local GOLEM_GLOW = rgb(90, 230, 255) -- today's runes and light
+local CAVE_ROCK = rgb(96, 92, 110)
+local ALL_EDGES = { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }
+
+-- a zig-zag crack (3 tapering segments) of length len along the local Y of cf (local Z = out of the face), as
+-- negative-part specs { size, cf }
+local function crackSpecs(cf: CFrame, len: number, rng: Random): { any }
+	local pts = {}
+	for k = 0, 3 do
+		local x = if k == 0 or k == 3 then 0 else rng:NextNumber(-0.35, 0.35)
+		table.insert(pts, Vector3.new(x, -len / 2 + len * k / 3, 0))
+	end
+	local specs = {}
+	for k = 1, 3 do
+		local a, b = pts[k], pts[k + 1]
+		local d = b - a
+		table.insert(specs, { Vector3.new(0.23 - 0.03 * k, d.Magnitude + 0.12, 1.4), cf * CFrame.new((a + b) / 2) * CFrame.Angles(0, 0, math.atan2(-d.X, d.Y)) })
+	end
+	return specs
+end
+
+-- fresh crack negative parts (dark: their colour stays on the faces they cut) for the specs that reach the box (size at cf)
+local function cracksIn(specs: { any }?, size: Vector3, cf: CFrame): { BasePart }
+	local list = {}
+	for _, s in ipairs(specs or {}) do
+		local p = cf:PointToObjectSpace(s[2].Position)
+		local reach = s[1].Y / 2
+		if math.abs(p.X) <= size.X / 2 + reach and math.abs(p.Y) <= size.Y / 2 + reach and math.abs(p.Z) <= size.Z / 2 + 0.8 then
+			table.insert(list, piece("Part", s[1], s[2], GOLEM_CRACK))
+		end
+	end
+	return list
+end
+
+-- a body segment of layered stone plates: the box (size at cf) cut along its own Y into o.n bands (0.14 joints) over
+-- a dark core; the bands alternately 0.24 wider (each layer laps over the next), all edges chamfered (o.c), tones
+-- never the neighbour's, the A9 gradient; o.cracks (crack specs) engrave the bands they reach
+local function stonePlates(list: { BasePart }, rng: Random, size: Vector3, cf: CFrame, color: Color3, o: any)
+	local n = o.n or 3
+	local gap = 0.14
+	local hb = (size.Y - gap * (n - 1)) / n
+	table.insert(list, piece("Part", Vector3.new(size.X - 0.6, size.Y - 0.1, size.Z - 0.6), cf, GOLEM_JOINT))
+	local prev = nil
+	for k = 1, n do
+		local y = -size.Y / 2 + hb / 2 + (k - 1) * (hb + gap)
+		local grow = if (k + (if o.flip then 1 else 0)) % 2 == 1 then 0.24 else 0
+		local s = Vector3.new(size.X + grow, hb, size.Z + grow)
+		local bcf = cf * CFrame.new(rng:NextNumber(-0.05, 0.05), y, rng:NextNumber(-0.05, 0.05))
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		table.insert(list, chamfered(s, bcf, graded(color, bcf.Position.Y, GOLEM_H, TONES[ti]), ALL_EDGES, o.c or 0.35, nil, cracksIn(o.cracks, s, bcf)))
+	end
+end
+
+-- the frame of one of Agent A's golem pieces in the model
+local function golemFacetCF(name: string): CFrame
+	local p = PropsBatch2.GOLEM_FACETS[name].place
+	return CFrame.new(p[1], p[2] + 0.75, p[3]) * CFrame.fromOrientation(math.rad(p[4]), math.rad(p[5]), math.rad(p[6]))
+end
+
+local function golemFacet(name: string, color: Color3, material: Enum.Material?): BasePart
+	local f = PropsBatch2.GOLEM_FACETS[name]
+	return convexSolid(Vector3.new(table.unpack(f.min)), Vector3.new(table.unpack(f.max)), golemFacetCF(name), color, f.planes, material)
+end
+
+-- a moss pad (thick t, default 0.3) with a smaller cushion on it, lying in the frame cf (its Y = up), sunk into what
+-- carries it
+local function mossPad(list: { BasePart }, rng: Random, cf: CFrame, len: number, t: number?)
+	local th = t or 0.3
+	local col = if rng:NextNumber() < 0.5 then P.Moss else P.MossDark
+	local tone = rng:NextNumber(0.78, 0.92)
+	table.insert(list, chamfered(Vector3.new(len, th, len * 0.6), cf * CFrame.new(0, th / 2 - 0.08, 0), scaled(col, tone), { "topFrontBack", "topSides" }, th * 0.4))
+	table.insert(list, chamfered(Vector3.new(len * 0.6, th * 0.6, len * 0.34), cf * CFrame.new(rng:NextNumber(-0.15, 0.15) * len, th - 0.02, rng:NextNumber(-0.06, 0.06) * len), scaled(col, tone * 1.06), { "topFrontBack", "topSides" }, th * 0.25))
+end
+
+-- a moss cap on one of Agent A's facet pieces: the piece's own facets pushed out by `grow` (moss tones per facet), cut
+-- about `drop` below its top by a slightly tilted plane: a faceted cushion that hugs the rock
+local function mossCap(name: string, drop: number, grow: number, rng: Random): BasePart
+	local f = PropsBatch2.GOLEM_FACETS[name]
+	local top = f.max[2]
+	local planes = {}
+	for i, pl in ipairs(f.planes) do
+		table.insert(planes, { pl[1], pl[2], pl[3], pl[4] + grow, scaled(if i % 2 == 0 then P.Moss else P.MossDark, rng:NextNumber(0.8, 0.95)) })
+	end
+	local n = Vector3.new(rng:NextNumber(-0.15, 0.15), -1, rng:NextNumber(-0.15, 0.15)).Unit
+	table.insert(planes, { n.X, n.Y, n.Z, n:Dot(Vector3.new(0, top - drop, 0)), scaled(P.MossDark, 0.78) })
+	local pad = grow + 0.1
+	return convexSolid(Vector3.new(f.min[1] - pad, top - drop - 1.2, f.min[3] - pad), Vector3.new(f.max[1] + pad, top + pad, f.max[3] + pad), golemFacetCF(name), P.Moss, planes)
+end
+
+function PropsBatch2.golem_statue(): Model
+	local m = Instance.new("Model")
+	m.Name = "golem_statue"
+	local rng = Random.new(20261006)
+	BEVEL_SELF = true
+	local H = GOLEM_H
+	local STONE, STONE_D = P.Stone, P.StoneDark -- today's 969CA8 / 686E7C
+	local plinth, body, glow, mossList = {}, {}, {}, {}
+	local rad = math.rad
+	local function ori(x: number, y: number, z: number, rx: number, ry: number, rz: number): CFrame
+		return CFrame.new(x, y, z) * CFrame.fromOrientation(rad(rx), rad(ry), rad(rz))
+	end
+
+	-- cracks: today's 6 places and 2 more (each a CFrame on the face it is cut into, and a length)
+	local cracks = {}
+	for _, c in ipairs({
+		{ ori(4.6, 7.1, -4.1, 0, 0, -24), 3.4 }, { ori(-5.5, 9.5, -4.1, 0, 0, 18), 4.0 },
+		{ ori(7.6, 23.1, -7.2, 7, 0, -30), 3.0 }, { ori(-7.4, 22.0, -7.0, 7, 0, -20), 4.5 },
+		{ ori(16.4, 12.5, -5.9, -4, 0, 14), 4.6 }, { ori(6.5, 26.5, -7.6, 7, 0, 25), 5.0 },
+		{ ori(-14.4, 24.2, -3.1, 6, 0, 7), 3.2 }, { ori(-3.6, 15.0, -4.8, 0, 0, 32), 2.6 },
+	}) do
+		for _, s in ipairs(crackSpecs(c[1], c[2], rng)) do
+			table.insert(cracks, s)
+		end
+	end
+
+	-- 1. the carved base: an outer ring of 24 cut blocks, an inner ring of 14, a centre disc, 8 glowing rune tiles
+	local front = rad(270)
+	ringBlocks(plinth, rng, { n = 24, ro = 18, ri = 12.7, y0 = 0, h = 1.5, color = STONE_D, H = H, c = 0.3, a0 = front })
+	ringBlocks(plinth, rng, { n = 14, ro = 12.75, ri = 6.4, y0 = 0, h = 1.5, color = scaled(STONE, 0.9), H = H, c = 0.18, a0 = front + rad(12.86), noJitter = true, noCore = true })
+	table.insert(plinth, prism16(12.6, 1.45, CFrame.new(0, 0.75, 0), scaled(STONE_D, 1.06)))
+	for k = 0, 7 do
+		local a = rad(22.5 + 45 * k)
+		local pos = Vector3.new(math.cos(a) * 9.6, 1.475, math.sin(a) * 9.6)
+		local turn = CFrame.new(pos) * CFrame.Angles(0, -a + rad(45), 0)
+		table.insert(plinth, chamfered(Vector3.new(1.5, 0.1, 1.5), turn * CFrame.new(0, 0.05, 0), GOLEM_CRACK, { "topFrontBack", "topSides" }, 0.04))
+		table.insert(glow, piece("Part", Vector3.new(0.95, 0.12, 0.95), turn * CFrame.new(0, 0.1, 0), GOLEM_GLOW, { material = Enum.Material.Neon }))
+	end
+	-- Agent A's rubble boulders, sunk 0.3 into the base top
+	for _, name in ipairs({ "rubble_1", "rubble_2", "rubble_3" }) do
+		table.insert(plinth, golemFacet(name, CAVE_ROCK))
+	end
+	merge(m, "Plinth", plinth, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. legs, knees, feet
+	for _, sx in ipairs({ -1, 1 }) do
+		stonePlates(body, rng, Vector3.new(7, 10, 8), ori(sx * 5.5, 9, 0, 0, 0, -sx * 3), STONE, { n = 3, c = 0.3, cracks = cracks, flip = sx > 0 })
+		local kneeCF = ori(sx * 5.6, 9.5, 0, 0, 0, -sx * 3)
+		table.insert(body, chamfered(Vector3.new(7.6, 2.4, 8.6), kneeCF, graded(STONE_D, 9.5, H, 1), ALL_EDGES, 0.4, nil, cracksIn(cracks, Vector3.new(7.6, 2.4, 8.6), kneeCF)))
+		table.insert(body, chamfered(Vector3.new(3.4, 2.0, 0.9), kneeCF * CFrame.new(0, 0, -4.55), graded(STONE_D, 9.5, H, 0.93), ALL_EDGES, 0.3))
+		-- the foot: a heel block and 3 toes
+		table.insert(body, chamfered(Vector3.new(8.5, 3, 7.4), CFrame.new(sx * 5.5, 3, 0.8), graded(STONE_D, 3, H, 1), ALL_EDGES, 0.4))
+		table.insert(body, piece("Part", Vector3.new(8.1, 2.2, 3.4), CFrame.new(sx * 5.5, 2.7, -3.6), GOLEM_JOINT))
+		local prev = nil
+		for t = -1, 1 do
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			table.insert(body, chamfered(Vector3.new(2.65, 2.4, 3.7), CFrame.new(sx * 5.5 + t * 2.86, 2.7, -4.75), graded(STONE_D, 2.7, H, TONES[ti]), ALL_EDGES, 0.45))
+		end
+	end
+
+	-- 3. pelvis: a belt of 4 blocks over a dark core, a loin plate in front
+	table.insert(body, piece("Part", Vector3.new(16.4, 4.9, 8.9), CFrame.new(0, 15.5, 0), GOLEM_JOINT))
+	do
+		local x, prev = -8.5, nil
+		local widths = { 4.0, 4.4, 4.3 }
+		for k = 1, 4 do
+			local w = if k < 4 then widths[k] else 8.5 - x
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			local cf = CFrame.new(x + w / 2, 15.5, rng:NextNumber(-0.05, 0.05))
+			local size = Vector3.new(w, 5, 9.5)
+			table.insert(body, chamfered(size, cf, graded(STONE_D, 15.5, H, TONES[ti]), ALL_EDGES, 0.35, nil, cracksIn(cracks, size, cf)))
+			x += w + 0.12
+		end
+	end
+	table.insert(body, chamfered(Vector3.new(5.4, 3.8, 0.7), ori(0, 13.4, -5.0, -6, 0, 0), graded(STONE, 13.4, H, 0.93), ALL_EDGES, 0.25))
+
+	-- 4. belly (2 bands) and torso (3 bands, leaning 7 degrees as today)
+	stonePlates(body, rng, Vector3.new(12, 3.4, 9), CFrame.new(0, 18.9, -0.4), STONE_D, { n = 2, c = 0.3 })
+	local torsoCF = ori(0, 24, -0.6, 7, 0, 0)
+	stonePlates(body, rng, Vector3.new(21, 12, 12.5), torsoCF, STONE, { n = 3, c = 0.45, cracks = cracks, flip = true })
+
+	-- 5. the chest plate: today's runes inlaid in dark grooves (the glowing stroke 0.05 proud), the core crystal on it
+	local chestCF = ori(0, 24.8, -7.3, 7, 0, 0)
+	local runes = {
+		{ -5, 0, 0.7, 2.0, 0 }, { 5, 0, 0.7, 2.0, 0 },
+		{ -1.6, 2.6, 3.0, 0.7, 28 }, { 1.6, 2.6, 3.0, 0.7, -28 },
+		{ -1.6, -2.6, 3.0, 0.7, -28 }, { 1.6, -2.6, 3.0, 0.7, 28 },
+	}
+	local grooves = {}
+	for _, r in ipairs(runes) do
+		local cf = chestCF * CFrame.new(r[1], r[2], 0) * CFrame.Angles(0, 0, rad(r[5]))
+		table.insert(grooves, piece("Part", Vector3.new(r[3] + 0.24, r[4] + 0.24, 0.6), cf * CFrame.new(0, 0, -0.6), GOLEM_CRACK))
+		table.insert(glow, piece("Part", Vector3.new(r[3], r[4], 0.4), cf * CFrame.new(0, 0, -0.45), GOLEM_GLOW, { material = Enum.Material.Neon }))
+	end
+	for _, c in ipairs(cracksIn(cracks, Vector3.new(15, 8.5, 1.2), chestCF)) do
+		table.insert(grooves, c)
+	end
+	table.insert(body, chamfered(Vector3.new(15, 8.5, 1.2), chestCF, graded(STONE_D, 24.8, H, 1), ALL_EDGES, 0.3, nil, grooves))
+	-- the plate's rim: 4 proud border strips (top / bottom / sides), the layered look of a carved breastplate
+	for _, b in ipairs({ { 0, 4.0, 15.2, 0.5 }, { 0, -4.0, 15.2, 0.5 }, { -7.25, 0, 0.7, 7.4 }, { 7.25, 0, 0.7, 7.4 } }) do
+		table.insert(body, chamfered(Vector3.new(b[3], b[4], 0.5), chestCF * CFrame.new(b[1], b[2], -0.65), graded(STONE, 24.8, H, 0.93), ALL_EDGES, 0.15))
+	end
+
+	-- 6. arms: upper arms and forearms of bands, fists of 4 knuckles and a thumb; Agent A's shoulder boulders
+	for _, sx in ipairs({ -1, 1 }) do
+		stonePlates(body, rng, Vector3.new(6.5, 10, 7), ori(sx * 14.8, 23, 0.5, 6, 0, sx * 8), STONE, { n = 3, c = 0.3, cracks = cracks })
+		stonePlates(body, rng, Vector3.new(8.5, 12, 9), ori(sx * 16.2, 12, -1.2, -4, 0, sx * 3), STONE_D, { n = 3, c = 0.4, cracks = cracks, flip = true })
+		local fistCF = ori(sx * 16.4, 5.7, -1.6, -4, 0, sx * 3)
+		table.insert(body, chamfered(Vector3.new(9.4, 5, 7), fistCF * CFrame.new(0, 0, 1.5), graded(STONE, 5.7, H, 1), ALL_EDGES, 0.45))
+		table.insert(body, piece("Part", Vector3.new(9.0, 4.0, 3.0), fistCF * CFrame.new(0, -0.2, -2.6), GOLEM_JOINT))
+		local prev = nil
+		for f = 0, 3 do
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			table.insert(body, chamfered(Vector3.new(2.15, 4.4, 3.2), fistCF * CFrame.new(-3.48 + f * 2.32, -0.2, -3.4), graded(STONE, 5.5, H, TONES[ti]), ALL_EDGES, 0.5))
+		end
+		table.insert(body, chamfered(Vector3.new(2.0, 2.4, 4.2), fistCF * CFrame.new(-sx * 5.4, 1.0, -1.4), graded(STONE, 6.7, H, 0.93), ALL_EDGES, 0.4))
+		table.insert(body, golemFacet(if sx < 0 then "shoulder_L" else "shoulder_R", CAVE_ROCK))
+	end
+
+	-- 7. the head: brow over deep eye sockets (glowing eyes), a grooved jaw, a crown plate
+	local headCF = ori(0, 32.9, -3, 20, 0, 0)
+	local sockets = {}
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(sockets, piece("Part", Vector3.new(1.9, 1.3, 1.0), headCF * CFrame.new(sx * 1.8, -0.2, -3.75), GOLEM_CRACK))
+		table.insert(glow, piece("Part", Vector3.new(1.5, 0.9, 0.4), headCF * CFrame.new(sx * 1.8, -0.2, -3.48), GOLEM_GLOW, { material = Enum.Material.Neon }))
+	end
+	table.insert(body, chamfered(Vector3.new(7.5, 7, 7.5), headCF, graded(STONE, 32.9, H, 1), ALL_EDGES, 0.6, nil, sockets))
+	table.insert(body, chamfered(Vector3.new(8.2, 1.8, 2), headCF * CFrame.new(0, 1.2, -3.4), graded(STONE_D, 35.2, H, 1), ALL_EDGES, 0.35))
+	local teeth = {}
+	for t = -1, 1 do
+		table.insert(teeth, piece("Part", Vector3.new(0.16, 1.4, 0.5), headCF * CFrame.new(t * 1.2, -3.2, -4.0), GOLEM_CRACK))
+	end
+	table.insert(body, chamfered(Vector3.new(5, 2.2, 1.6), headCF * CFrame.new(0, -2.99, -3.2), graded(STONE_D, 31.2, H, 0.93), ALL_EDGES, 0.3, nil, teeth))
+	table.insert(body, chamfered(Vector3.new(6.2, 0.6, 6.2), headCF * CFrame.new(0, 3.6, 0.1), graded(STONE_D, 36.4, H, 1), ALL_EDGES, 0.2))
+	merge(m, "Body", body, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 8. the core crystal (Agent A's facets, Neon) with today's light; the flush glowing inlays
+	local core = merge(m, "Core", { golemFacet("core_crystal", rgb(95, 212, 255), Enum.Material.Neon) }, { collide = true, material = Enum.Material.Neon, shadow = false })
+	local light = Instance.new("PointLight")
+	light.Range, light.Brightness, light.Color, light.Shadows = 12, 0.6, GOLEM_GLOW, false
+	light.Parent = core
+	merge(m, "Glow", glow, { material = Enum.Material.Neon, shadow = false })
+
+	-- 9. moss: the shoulders, the head, a foot, the left elbow, the biggest rubble, the base
+	for _, name in ipairs({ "shoulder_L", "shoulder_R" }) do
+		table.insert(mossList, mossCap(name, 1.7, 0.22, rng))
+	end
+	table.insert(mossList, mossCap("rubble_1", 0.9, 0.16, rng))
+	table.insert(mossList, mossCap("rubble_2", 1.1, 0.16, rng))
+	mossPad(mossList, rng, headCF * CFrame.new(0.5, 3.9, 0.4) * CFrame.Angles(0, 0.5, 0), 4.2, 0.5)
+	mossPad(mossList, rng, CFrame.new(5.2, 3.9, -4.4) * CFrame.Angles(0, 0.2, 0), 3.4, 0.45)
+	mossPad(mossList, rng, CFrame.new(-16.7, 18.0, -4.5) * CFrame.Angles(rad(-4), 0.3, rad(-3)), 3.4, 0.45)
+	for _, p in ipairs({ { 9.0, -5.5, 0.6 }, { -9.6, 4.0, 2.2 }, { 2.5, 10.5, -0.3 }, { -3.5, -11.8, 1.4 }, { 13.2, -2.0, 1.9 }, { -12.6, -6.0, 0.9 } }) do
+		mossPad(mossList, rng, CFrame.new(p[1], 1.5, p[2]) * CFrame.Angles(0, p[3], 0), rng:NextNumber(3.0, 4.2), 0.4)
+	end
+	for _, a in ipairs({ 200, 335, 60, 120, 255 }) do
+		local t = rad(a)
+		mossPad(mossList, rng, CFrame.new(math.cos(t) * 18.0, 0, math.sin(t) * 18.0) * CFrame.Angles(0, -t + math.pi / 2, 0), rng:NextNumber(3.4, 4.6), 0.55)
+	end
+	merge(m, "Moss", mossList, {})
+
+	local root = m:FindFirstChild("Plinth") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "golem_statue")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 07 WINDMILL (kit Plains.Windmill, 53.2 x 62.6 x 27; Zones.Plains.Plains_1.Decor.Landmark, attr LandmarkName, with
+-- its NoClimb folder of 17 invisible walls kept by SyncMapProps: MapPropKeep). Same tower, roof and sails as today:
+-- a tapered round base of 3 courses of cut blocks under an overhanging cap ring, a stone landing with 2 slabs at the
+-- door; the white plastered octagonal tower (3 storeys, today's taper) in a dark timber frame (8 corner posts, girts
+-- at the sill, the 2 floors and the top plate, diagonal braces), corbels under the eave; a planked door with strap
+-- hinges, a ring pull and a timber door frame; the 3 windows framed (sill, cross bars), the front one with an open
+-- planked shutter on iron hinges; an octagonal roof of individual red shingles (today's red, hips capped) with a valance
+-- and a gold finial; the static sails (no script, as today): a hub with iron bands and a gold cap, a toothed brake wheel
+-- behind it, the axle in a bearing frame, 4 stocks with lattice frames (rail, 8 bars) and cream cloth panels; moss at
+-- the foot and on the cap ring. Collisions as the game copy: everything collides except the sails and the moss.
+-- Parts: Base, Tower, Timber, Roof, Glass, Iron, Sails, Moss (8; the old one had 94).
+---------------------------------------------------------------------
+local WM_SLOPE = 0.0925 -- today's taper: the face apothem shrinks 0.0925 per stud of height
+local function wmApothem(y: number): number
+	return 9.24 - WM_SLOPE * (y - 20)
+end
+
+-- the frame of face k (0..7, centred on 45k degrees) at height y: X along the face (increasing angle), Y up the face
+-- (along the taper), local -Z = outward, origin on the face's centre line
+local function wmFace(k: number, y: number): CFrame
+	local a = math.rad(45 * k)
+	local d = Vector3.new(math.cos(a), 0, math.sin(a))
+	local t = Vector3.new(-math.sin(a), 0, math.cos(a))
+	local u = (Vector3.yAxis - d * WM_SLOPE).Unit
+	return CFrame.fromMatrix(d * wmApothem(y) + Vector3.new(0, y, 0), t, u)
+end
+
+-- a timber between two points (its long axis = Y), turned so its local -Z faces `out`
+local function beamBetween(a: Vector3, b: Vector3, w: number, d: number, out: Vector3, color: Color3): BasePart
+	local up = (b - a).Unit
+	local x = out:Cross(up).Unit
+	return timber(Vector3.new(w, (b - a).Magnitude, d), CFrame.fromMatrix((a + b) / 2, x, up), color)
+end
+
+function PropsBatch2.windmill(): Model
+	local m = Instance.new("Model")
+	m.Name = "windmill"
+	local rng = Random.new(20261007)
+	BEVEL_SELF = true
+	local H = 63
+	local rad = math.rad
+	local tan8 = math.tan(math.pi / 8)
+	local STONE, STONE_D = P.Stone, P.StoneDark
+	local WOOD, WOOD_MID = P.WoodDark, P.WoodMid
+	local IRON = rgb(52, 56, 66)
+	local PLASTER = rgb(247, 236, 210)
+	local RED = rgb(197, 64, 58) -- today's roof
+	local GLASS = rgb(95, 212, 255)
+	local CLOTH = rgb(232, 226, 208)
+	local base, tower, wood, roof, glass, iron, sails, mossList = {}, {}, {}, {}, {}, {}, {}, {}
+
+	-- 1. the base: 3 tapered courses of cut blocks, an overhanging cap ring, the landing at the door
+	ringBlocks(base, rng, { n = 24, ro = 12.6, ri = 9.4, y0 = 0, h = 1.7, color = STONE, H = H, c = 0.2, a0 = rad(270) })
+	ringBlocks(base, rng, { n = 22, ro = 12.35, ri = 9.4, y0 = 1.7, h = 1.6, color = STONE, H = H, c = 0.2, a0 = rad(278) })
+	ringBlocks(base, rng, { n = 20, ro = 12.1, ri = 9.4, y0 = 3.3, h = 1.5, color = STONE, H = H, c = 0.2, a0 = rad(270) })
+	ringBlocks(base, rng, { n = 26, ro = 13.0, ri = 10.2, y0 = 4.8, h = 1.2, color = STONE_D, H = H, c = 0.22, a0 = rad(275), noCore = true })
+	do
+		-- the landing pier (2 courses of 2 blocks over a core) and today's step slab split in two
+		table.insert(base, piece("Part", Vector3.new(8.6, 4.75, 3.6), CFrame.new(0, 2.4, -12.5), P.Mortar))
+		local prev = nil
+		for c, y0 in ipairs({ 0, 2.4 }) do
+			local split = if c == 1 then -0.6 else 0.7
+			for _, s in ipairs({ { -4.5, split }, { split, 4.5 } }) do
+				local w = s[2] - s[1] - GAP
+				local ti = toneIndex(rng, prev)
+				prev = ti
+				table.insert(base, chamfered(Vector3.new(w, 2.35, 4.0), CFrame.new((s[1] + s[2]) / 2, y0 + 1.2, -12.5 + jit(rng) * -0.5), graded(STONE, y0 + 1.2, H, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.16))
+			end
+		end
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(base, chamfered(Vector3.new(4.45, 1.2, 4.2), CFrame.new(sx * 2.275, 5.4, -12.5), graded(STONE_D, 5.4, H, if sx < 0 then 1 else 0.93), { "vertical", "topFrontBack", "topSides" }, 0.18))
+		end
+	end
+	merge(m, "Base", base, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	-- 2. the plastered tower: 3 storeys (convex frusta with today's 8 faces and taper), one tone per face
+	local FACE_TONES = { 1, 0.975, 0.985, 0.96, 0.95, 0.99, 0.97, 0.98 }
+	local storeys = { { 4.9, 16.5, 0.93 }, { 16.5, 31.0, 0.965 }, { 31.0, 44.9, 1.0 } }
+	for _, st in ipairs(storeys) do
+		local planes = { { 0, -1, 0, -st[1] }, { 0, 1, 0, st[2] } }
+		for k = 0, 7 do
+			local a = rad(45 * k)
+			local d = Vector3.new(math.cos(a), 0, math.sin(a))
+			local n = (d + Vector3.yAxis * WM_SLOPE).Unit
+			table.insert(planes, { n.X, n.Y, n.Z, n:Dot(d * wmApothem(20) + Vector3.new(0, 20, 0)), scaled(PLASTER, st[3] * FACE_TONES[k + 1]) })
+		end
+		local r = wmApothem(st[1]) / math.cos(math.pi / 8) + 0.05
+		table.insert(tower, convexSolid(Vector3.new(-r, st[1], -r), Vector3.new(r, st[2], r), CFrame.identity, PLASTER, planes))
+	end
+	merge(m, "Tower", tower, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+
+	-- 3. the timber frame: corner posts, girts (sill / 2 floors / top plate), braces, corbels
+	for k = 0, 7 do
+		local c = rad(22.5 + 45 * k)
+		local dir = Vector3.new(math.cos(c), 0, math.sin(c))
+		local function corner(y: number): Vector3
+			return dir * (wmApothem(y) / math.cos(math.pi / 8) + 0.12) + Vector3.new(0, y, 0)
+		end
+		table.insert(wood, beamBetween(corner(5.9), corner(44.9), 0.8, 0.8, dir, graded(WOOD, 25, H, 1)))
+		-- corbel under the eave
+		table.insert(wood, beamBetween(corner(42.4), dir * 10.0 + Vector3.new(0, 44.75, 0), 0.5, 0.5, dir, WOOD))
+	end
+	local girts = { { 6.45, 0.9 }, { 16.5, 0.9 }, { 31.0, 0.9 }, { 44.4, 1.0 } }
+	for gi, g in ipairs(girts) do
+		for k = 0, 7 do
+			local w = 2 * wmApothem(g[1]) * tan8 + 0.3
+			local f = wmFace(k, g[1])
+			local col = graded(WOOD, g[1], H, TONES[(k + gi) % 3 + 1])
+			if k == 6 and gi == 1 then
+				-- the sill stops at the door frame
+				local seg = w / 2 - 3.9
+				for _, sx in ipairs({ -1, 1 }) do
+					table.insert(wood, timber(Vector3.new(seg, g[2], 0.5), f * CFrame.new(sx * (3.9 + seg / 2), 0, -0.25), col))
+				end
+			else
+				table.insert(wood, timber(Vector3.new(w, g[2], 0.5), f * CFrame.new(0, 0, -0.25), col))
+			end
+		end
+	end
+	-- braces between the girts (face, lower girt, upper girt, direction)
+	local braces = {
+		{ 1, 1, 2, 1 }, { 3, 1, 2, -1 }, { 5, 1, 2, 1 }, { 7, 1, 2, -1 },
+		{ 1, 2, 3, -1 }, { 2, 2, 3, 1 }, { 3, 2, 3, 1 }, { 5, 2, 3, -1 }, { 7, 2, 3, 1 },
+		{ 0, 3, 4, 1 }, { 2, 3, 4, -1 }, { 4, 3, 4, 1 },
+	}
+	for _, b in ipairs(braces) do
+		local ya, yb = girts[b[2]][1] + girts[b[2]][2] / 2, girts[b[3]][1] - girts[b[3]][2] / 2
+		local wa, wb = wmApothem(ya) * tan8 - 0.55, wmApothem(yb) * tan8 - 0.55
+		local pa = wmFace(b[1], ya) * Vector3.new(-b[4] * wa, 0, -0.2)
+		local pb = wmFace(b[1], yb) * Vector3.new(b[4] * wb, 0, -0.2)
+		local out = -wmFace(b[1], (ya + yb) / 2).ZVector
+		table.insert(wood, beamBetween(pa, pb, 0.65, 0.42, out, graded(WOOD, (ya + yb) / 2, H, 0.93)))
+	end
+
+	-- 4. the door (front face): planks over a dark backing, a timber frame, strap hinges, a ring pull
+	do
+		local f = wmFace(6, 10.05)
+		table.insert(wood, piece("Part", Vector3.new(6.0, 8.1, 0.24), f * CFrame.new(0, 0, -0.1), rgb(60, 34, 22)))
+		local prev = nil
+		for i = -2, 2 do
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			table.insert(wood, chamfered(Vector3.new(1.12, 8.1, 0.36), f * CFrame.new(i * 1.2, 0, -0.3), scaled(WOOD_MID, TONES[ti]), { "vertical" }, 0.08))
+		end
+		for _, sx in ipairs({ -1, 1 }) do
+			table.insert(wood, timber(Vector3.new(0.9, 9.0, 0.8), f * CFrame.new(sx * 3.45, 0.45, -0.4), WOOD))
+		end
+		table.insert(wood, timber(Vector3.new(7.8, 0.9, 0.85), f * CFrame.new(0, 4.5, -0.42), WOOD))
+		for _, y in ipairs({ -2.6, 2.6 }) do
+			table.insert(iron, piece("Part", Vector3.new(4.4, 0.36, 0.1), f * CFrame.new(-0.8, y, -0.52), IRON))
+			table.insert(iron, piece("Part", Vector3.new(0.34, 0.9, 0.34), f * CFrame.new(-3.0, y, -0.52), IRON))
+			for _, x in ipairs({ -2.4, -0.9, 0.6 }) do
+				rivet(iron, (f * CFrame.new(x, y, -0.58)).Position, 0.16)
+			end
+		end
+		table.insert(iron, piece("Part", Vector3.new(0.5, 0.5, 0.08), f * CFrame.new(2.2, 0, -0.52), IRON))
+		for q = 0, 3 do
+			local a = rad(45 + 90 * q)
+			table.insert(iron, piece("Part", Vector3.new(0.62, 0.1, 0.1), f * CFrame.new(2.2 + math.cos(a) * 0.32, -0.1 + math.sin(a) * 0.32, -0.6) * CFrame.Angles(0, 0, a + rad(90)), IRON))
+		end
+	end
+
+	-- 5. the 3 windows: glass, frame, cross bars, sill; the front one with an open shutter
+	local function window(k: number, y: number, shutter: boolean)
+		local f = wmFace(k, y)
+		table.insert(glass, piece("Part", Vector3.new(2.7, 3.3, 0.2), f * CFrame.new(0, 0, -0.04), GLASS))
+		for _, sy in ipairs({ -1, 1 }) do
+			table.insert(wood, timber(Vector3.new(3.6, 0.45, 0.5), f * CFrame.new(0, sy * 1.85, -0.25), WOOD))
+			table.insert(wood, timber(Vector3.new(0.45, 3.25, 0.5), f * CFrame.new(sy * 1.575, 0, -0.25), WOOD))
+		end
+		table.insert(wood, piece("Part", Vector3.new(0.16, 3.3, 0.24), f * CFrame.new(0, 0, -0.17), WOOD))
+		table.insert(wood, piece("Part", Vector3.new(2.7, 0.16, 0.24), f * CFrame.new(0, 0.1, -0.17), WOOD))
+		table.insert(wood, chamfered(Vector3.new(4.1, 0.32, 0.85), f * CFrame.new(0, -2.22, -0.42), WOOD_MID, { "topFrontBack", "topSides" }, 0.1))
+		if shutter then
+			-- hinged on the left of the frame, swung 110 degrees open: 3 planks, 2 battens, a brace, 2 hinges
+			local hinge = f * CFrame.new(-1.85, 0, -0.55) * CFrame.Angles(0, rad(-70), 0)
+			local prev = nil
+			for i = 0, 2 do
+				local ti = toneIndex(rng, prev)
+				prev = ti
+				table.insert(wood, chamfered(Vector3.new(0.98, 3.6, 0.2), hinge * CFrame.new(-0.52 - i * 1.0, 0, 0), scaled(WOOD_MID, TONES[ti]), { "vertical" }, 0.05))
+			end
+			for _, sy in ipairs({ -1.2, 1.2 }) do
+				table.insert(wood, timber(Vector3.new(2.9, 0.34, 0.14), hinge * CFrame.new(-1.52, sy, -0.16), WOOD))
+				table.insert(iron, piece("Part", Vector3.new(1.4, 0.2, 0.06), hinge * CFrame.new(-0.62, sy, -0.26), IRON))
+				table.insert(iron, piece("Part", Vector3.new(0.22, 0.5, 0.22), hinge * CFrame.new(0, sy, -0.05), IRON))
+			end
+			local a, b = hinge * Vector3.new(-0.35, -1.0, -0.16), hinge * Vector3.new(-2.7, 1.0, -0.16)
+			table.insert(wood, beamBetween(a, b, 0.3, 0.12, -hinge.ZVector, WOOD))
+		end
+	end
+	window(6, 26, true)
+	window(0, 20, false)
+	window(4, 20, false)
+
+	-- 6. the roof: an octagonal pyramid (eave apothem 9.88 at y 44.9, apex y 61.3), rows of individual shingles on the
+	-- 8 faces (cut at the hips), hip caps, a valance under the eave, the finial
+	local YB, YA, RB = 44.9, 61.3, 9.88
+	do
+		local planes = { { 0, -1, 0, -YB, scaled(WOOD, 0.8) } }
+		for k = 0, 7 do
+			local a = rad(45 * k)
+			local d = Vector3.new(math.cos(a), 0, math.sin(a))
+			local n = (d * (YA - YB) / RB + Vector3.yAxis).Unit
+			table.insert(planes, { n.X, n.Y, n.Z, n:Dot(Vector3.new(0, YA, 0)), scaled(RED, 0.72) })
+		end
+		local r = RB / math.cos(math.pi / 8) + 0.05
+		table.insert(roof, convexSolid(Vector3.new(-r, YB, -r), Vector3.new(r, YA, r), CFrame.identity, scaled(RED, 0.72), planes))
+	end
+	local slant = math.sqrt((YA - YB) ^ 2 + RB ^ 2)
+	local prev = nil
+	for k = 0, 7 do
+		local a = rad(45 * k)
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		local t = Vector3.new(-math.sin(a), 0, math.cos(a))
+		local eave = d * RB + Vector3.new(0, YB, 0)
+		local up = (Vector3.new(0, YA, 0) - eave).Unit
+		local n = up:Cross(t).Unit -- outward
+		local frame = CFrame.fromMatrix(Vector3.zero, t, n)
+		local tilt = CFrame.Angles(math.atan2(0.08, 1.6), 0, 0)
+		local rows = math.ceil(slant / 1.3)
+		for row = 0, rows - 1 do
+			local v0 = row * 1.3 - 0.15
+			local len = math.min(1.6, slant - 0.4 - v0)
+			if len < 0.35 then
+				continue
+			end
+			local hw = RB * tan8 * (1 - (v0 + len * 0.5) / slant) + 0.05
+			local x = -hw - (if row % 2 == 1 then 0.75 else 0)
+			while x < hw - 0.05 do
+				local x0, x1 = math.max(x, -hw), math.min(x + 1.5, hw)
+				if x1 - x0 > 0.3 then
+					local ti = toneIndex(rng, prev)
+					prev = ti
+					local pos = eave + t * ((x0 + x1) / 2) + up * (v0 + len / 2) + n * 0.1
+					table.insert(roof, piece("Part", Vector3.new(x1 - x0, 0.1, len), CFrame.new(pos) * frame * tilt, scaled(RED, ({ 1, 0.93, 0.86 })[ti] * (0.9 + 0.1 * smoothstep(row / rows)))))
+				end
+				x += 1.56
+			end
+		end
+		-- the hip cap over the corner (between face k and face k+1) and the valance board under the eave
+		local c = rad(22.5 + 45 * k)
+		local cd = Vector3.new(math.cos(c), 0, math.sin(c))
+		local foot = cd * (RB / math.cos(math.pi / 8)) + Vector3.new(0, YB + 0.05, 0)
+		local top = Vector3.new(0, YA - 0.3, 0)
+		local hipUp = (top - foot).Unit
+		local hipOut = (cd - hipUp * cd:Dot(hipUp)).Unit
+		table.insert(roof, piece("Part", Vector3.new(0.62, (top - foot).Magnitude, 0.3), CFrame.fromMatrix((foot + top) / 2 + hipOut * 0.2, hipOut:Cross(hipUp), hipUp), scaled(RED, 0.62)))
+		local vf = CFrame.fromMatrix(d * (RB - 0.2) + Vector3.new(0, YB - 0.3, 0), t, Vector3.yAxis)
+		table.insert(wood, timber(Vector3.new(2 * (RB - 0.2) * tan8 + 0.32, 0.62, 0.3), vf, WOOD))
+	end
+	-- the finial: an iron collar, a gold ball and a spike
+	table.insert(roof, octagon(1.3, 0.5, CFrame.new(0, YA - 0.45, 0), IRON))
+	table.insert(roof, chamfered(Vector3.new(1.35, 1.35, 1.35), CFrame.new(0, YA + 0.55, 0), P.Gold, { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.4))
+	table.insert(roof, octagon(0.22, 1.1, CFrame.new(0, YA + 1.6, 0), P.Gold))
+	merge(m, "Roof", roof, { collide = true, fidelity = Enum.CollisionFidelity.Hull })
+
+	-- 7. the sails (static): bearing frame on the tower, the axle, a toothed brake wheel, the hub, 4 stocks with
+	-- lattice frames and cloth panels
+	local HUB = Vector3.new(0, 42, 0)
+	do
+		local f = wmFace(6, 42)
+		for _, s in ipairs({ { 0, 1.45, 3.4, 0.5 }, { 0, -1.45, 3.4, 0.5 }, { 1.45, 0, 0.5, 2.4 }, { -1.45, 0, 0.5, 2.4 } }) do
+			table.insert(wood, timber(Vector3.new(s[3], s[4], 0.6), f * CFrame.new(s[1], s[2], -0.3), WOOD))
+		end
+	end
+	local alongZ = CFrame.Angles(rad(90), 0, 0)
+	table.insert(sails, octagon(2.2, 4.4, CFrame.new(0, 42, -8.3) * alongZ, WOOD))
+	for _, z in ipairs({ -7.6, -9.8 }) do
+		table.insert(sails, octagon(2.45, 0.3, CFrame.new(0, 42, z) * alongZ, IRON))
+	end
+	-- brake wheel: a 16-sided wooden wheel, an iron tyre, 16 cogs
+	table.insert(sails, prism16(4.3, 0.5, CFrame.new(0, 42, -9.0) * alongZ, WOOD_MID))
+	table.insert(sails, prism16(4.55, 0.34, CFrame.new(0, 42, -9.0) * alongZ, IRON))
+	for q = 0, 15 do
+		local a = q * math.pi / 8
+		local dir = Vector3.new(math.cos(a), math.sin(a), 0)
+		table.insert(sails, piece("Part", Vector3.new(0.42, 0.42, 0.5), CFrame.new(HUB + dir * 2.45 + Vector3.new(0, 0, -9.0)) * CFrame.Angles(0, 0, a), WOOD))
+	end
+	-- the hub: a 16-sided drum with 2 iron bands, today's gold cap and a bolt
+	table.insert(sails, prism16(3.4, 1.6, CFrame.new(0, 42, -10.9) * alongZ, WOOD))
+	for _, z in ipairs({ -10.35, -11.45 }) do
+		table.insert(sails, prism16(3.6, 0.22, CFrame.new(0, 42, z) * alongZ, IRON))
+	end
+	table.insert(sails, prism16(1.6, 0.9, CFrame.new(0, 42, -12.0) * alongZ, P.Gold))
+	table.insert(sails, octagon(0.6, 0.4, CFrame.new(0, 42, -12.6) * alongZ, P.Gold))
+	-- 4 stocks (today's angles), each with its sail on the trailing side: a rail, 8 bars, 7 cloth panels
+	for q = 0, 3 do
+		local arm = CFrame.new(0, 42, -10.9) * CFrame.Angles(0, 0, rad(20 + 90 * q))
+		table.insert(sails, timber(Vector3.new(1.0, 26.6, 0.8), arm * CFrame.new(0, 13.5, 0), graded(WOOD, 42, H, TONES[q % 3 + 1]), 0.12))
+		table.insert(sails, timber(Vector3.new(0.5, 19.2, 0.5), arm * CFrame.new(6.0, 16.5, 0.1), WOOD, 0.08))
+		for b = 0, 7 do
+			table.insert(sails, timber(Vector3.new(6.3, 0.36, 0.42), arm * CFrame.new(3.1, 7.2 + b * 2.66, 0.1), WOOD_MID, 0.06))
+		end
+		for b = 0, 6 do
+			local tone = if b % 2 == 0 then 1 else 0.95
+			table.insert(sails, piece("Part", Vector3.new(5.6, 2.3, 0.12), arm * CFrame.new(3.15, 8.53 + b * 2.66, 0.32 + (b % 2) * 0.04), scaled(CLOTH, tone)))
+		end
+	end
+	merge(m, "Sails", sails, { query = true })
+
+	-- 8. moss at the foot of the base and on the cap ring
+	for i, a in ipairs({ 200, 245, 310, 20, 75, 130 }) do
+		local t = rad(a + rng:NextNumber(-8, 8))
+		local r = 12.55 - 0.1 * (i % 2)
+		mossPad(mossList, rng, CFrame.new(math.cos(t) * r, 0, math.sin(t) * r) * CFrame.Angles(0, -t + math.pi / 2, 0), rng:NextNumber(3.0, 4.4), 0.5)
+	end
+	for _, a in ipairs({ 215, 330, 40, 160 }) do
+		local t = rad(a + rng:NextNumber(-6, 6))
+		mossPad(mossList, rng, CFrame.new(math.cos(t) * 11.6, 6.0, math.sin(t) * 11.6) * CFrame.Angles(0, -t + math.pi / 2, 0), rng:NextNumber(2.2, 3.2), 0.38)
+	end
+	mossPad(mossList, rng, CFrame.new(-3.4, 6.0, -13.9) * CFrame.Angles(0, 0.15, 0), 2.2, 0.32)
+	merge(m, "Moss", mossList, {})
+
+	-- glass and iron
+	merge(m, "Glass", glass, { collide = true, fidelity = Enum.CollisionFidelity.Hull, material = Enum.Material.SmoothPlastic })
+	merge(m, "Iron", iron, {})
+	merge(m, "Timber", wood, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition })
+
+	local root = m:FindFirstChild("Base") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "windmill")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
+-- 15 SHIP (kit Plains.PirateShip_Wreck; Zones.Plains.Plains_2.Decor.Landmark, Tundra_2.Decor.Landmark.Ship (Variant
+-- Frozen) and Abyss_2.Decor.Landmark.Hull (Variant Sunken, scale 1.12): the 3 game copies are the same shape, the
+-- _Variants recolour them). Same size, place, heel and decks as today, rebuilt like the rowboat: a clinker hull of 11
+-- strakes a side (planks 9-15 long, butt joints, each strake's lower edge 0.15 proud) between Agent A's curved bow and
+-- stern (Blender_Exports/Props/facets/ship__bow_hull / ship__stern_hull.json, same rows so the joints line up), the
+-- 2 holes on the port side opened in the planks (the dark hold behind, broken planks), 4 gun ports a side with lids,
+-- a keel, bottom planks; the main deck, the fore deck and the stern deck of 1.5-wide planks (tones, butt joints; the
+-- main deck top 0.4 lower than today's, level with Agent A's bow deck), bulwark stanchions, the red rail cap; the
+-- forecastle (board wall, a small door, 3 steps up to its deck, railings), the stern cabin (board walls, corner posts,
+-- 5 gold-framed windows with cross bars, a planked door with strap hinges, a lantern on an iron bracket, the stern
+-- deck with railings), the rudder; the foremast (topmast, iron bands, crow's nest of staves, 2 yards) with Agent A's
+-- torn main sail and remnant, shrouds with ratlines, lifts, the forestay to the bowsprit, the flag with its emblem;
+-- the broken mainmast (splinters, collar, hanging ropes), the fallen mast and yard over the port side with Agent A's
+-- fallen sail on the rail; the anchor (shank, ring, stock, crown, flukes) hanging on the port bow with its rope;
+-- 3 barrels, the crate, 2 rope coils. The decks stay walkable; everything collides except ropes, sails and flag.
+-- Every union is one colour (UsePartColor true; 3 tone unions per wood colour) so the _Variants recolour it by name.
+-- Parts: Dark1-3, Mid1-3, Red1-3, Deck1-3, Cargo, Darker, Gold, Glass, Iron, Rope, Flag, Emblem, Sail1-3,
+-- LanternGlass (24; the old one had 74).
+---------------------------------------------------------------------
+-- Agent A's facets (generated from the JSON faces: each rectangle a box of its thickness extruded inward, as
+-- { centre, X axis, Y axis, size, union }; each triangle 3 corners already moved half its thickness inward)
+PropsBatch2.SHIP_HULL = {
+	{ 41.191, -2.931, 8.016, 0.9927, 0.0000, -0.1209, 0.0475, 0.9196, 0.3899, 4.556, 2.175, 0.35, "Dark1" },
+	{ 45.022, -2.935, 7.052, 0.9227, 0.0000, -0.3856, 0.1432, 0.9285, 0.3427, 4.217, 2.154, 0.35, "Dark1" },
+	{ 48.234, -2.941, 5.311, 0.8077, 0.0000, -0.5896, 0.1992, 0.9412, 0.2729, 3.874, 2.124, 0.35, "Dark3" },
+	{ 50.611, -2.946, 3.333, 0.6946, 0.0000, -0.7194, 0.2225, 0.9509, 0.2149, 2.987, 2.103, 0.35, "Dark3" },
+	{ 52.125, -2.949, 1.612, 0.5954, 0.0000, -0.8034, 0.2359, 0.9559, 0.1748, 2.212, 2.092, 0.35, "Dark1" },
+	{ 52.940, -2.949, 0.381, 0.4704, 0.0000, -0.8824, 0.2587, 0.9561, 0.1379, 1.369, 2.092, 0.35, "Dark1" },
+	{ 41.293, -1.041, 8.892, 0.9919, 0.0000, -0.1270, 0.0430, 0.9410, 0.3357, 4.766, 2.338, 0.35, "Dark1" },
+	{ 45.312, -1.044, 7.826, 0.9157, 0.0000, -0.4019, 0.1285, 0.9475, 0.2928, 4.434, 2.322, 0.35, "Dark1" },
+	{ 48.679, -1.049, 5.900, 0.7938, 0.0000, -0.6081, 0.1773, 0.9566, 0.2314, 4.109, 2.300, 0.35, "Dark1" },
+	{ 51.168, -1.053, 3.714, 0.6770, 0.0000, -0.7360, 0.1988, 0.9628, 0.1829, 3.190, 2.285, 0.35, "Dark3" },
+	{ 52.751, -1.054, 1.812, 0.5764, 0.0000, -0.8172, 0.2133, 0.9653, 0.1504, 2.372, 2.279, 0.35, "Dark1" },
+	{ 53.603, -1.053, 0.443, 0.4526, 0.0000, -0.8917, 0.2396, 0.9632, 0.1216, 1.478, 2.284, 0.35, "Dark3" },
+	{ 41.391, 0.959, 9.741, 0.9912, 0.0000, -0.1324, 0.0449, 0.9409, 0.3357, 4.976, 2.338, 0.35, "Dark2" },
+	{ 45.594, 0.956, 8.576, 0.9093, 0.0000, -0.4162, 0.1331, 0.9475, 0.2907, 4.651, 2.322, 0.35, "Dark1" },
+	{ 49.113, 0.951, 6.471, 0.7812, 0.0000, -0.6243, 0.1825, 0.9563, 0.2283, 4.347, 2.300, 0.35, "Dark1" },
+	{ 51.714, 0.948, 4.082, 0.6612, 0.0000, -0.7502, 0.2041, 0.9623, 0.1799, 3.394, 2.286, 0.35, "Dark2" },
+	{ 53.369, 0.946, 2.005, 0.5603, 0.0000, -0.8283, 0.2182, 0.9647, 0.1476, 2.531, 2.281, 0.35, "Dark2" },
+	{ 54.264, 0.947, 0.504, 0.4376, 0.0000, -0.8992, 0.2437, 0.9626, 0.1186, 1.586, 2.286, 0.35, "Dark3" },
+	{ 41.491, 2.959, 10.589, 0.9905, 0.0000, -0.1373, 0.0465, 0.9410, 0.3353, 5.185, 2.338, 0.35, "Dark2" },
+	{ 45.876, 2.956, 9.326, 0.9031, 0.0000, -0.4295, 0.1374, 0.9474, 0.2890, 4.869, 2.322, 0.35, "Dark2" },
+	{ 49.547, 2.951, 7.041, 0.7696, 0.0000, -0.6385, 0.1870, 0.9562, 0.2254, 4.586, 2.301, 0.35, "Dark2" },
+	{ 52.261, 2.948, 4.450, 0.6474, 0.0000, -0.7622, 0.2085, 0.9618, 0.1771, 3.599, 2.287, 0.35, "Dark2" },
+	{ 53.988, 2.947, 2.196, 0.5458, 0.0000, -0.8379, 0.2228, 0.9640, 0.1451, 2.691, 2.282, 0.35, "Dark2" },
+	{ 54.926, 2.948, 0.564, 0.4242, 0.0000, -0.9056, 0.2479, 0.9618, 0.1161, 1.697, 2.287, 0.35, "Dark1" },
+	{ 41.650, 4.896, 10.996, 0.9912, 0.0000, -0.1320, -0.0030, 0.9997, -0.0222, 5.386, 2.201, 0.35, "Mid1" },
+	{ 46.310, 4.905, 9.623, 0.9095, 0.0000, -0.4156, 0.0120, 0.9996, 0.0263, 5.023, 2.201, 0.35, "Mid2" },
+	{ 50.131, 4.918, 7.203, 0.7818, 0.0000, -0.6235, 0.0648, 0.9946, 0.0813, 4.691, 2.212, 0.35, "Mid2" },
+	{ 52.910, 4.930, 4.521, 0.6620, 0.0000, -0.7495, 0.1282, 0.9853, 0.1132, 3.657, 2.233, 0.35, "Mid1" },
+	{ 54.663, 4.938, 2.219, 0.5612, 0.0000, -0.8277, 0.1818, 0.9756, 0.1233, 2.721, 2.255, 0.35, "Mid2" },
+	{ 55.608, 4.946, 0.563, 0.4381, 0.0000, -0.8989, 0.2351, 0.9652, 0.1146, 1.708, 2.279, 0.35, "Mid3" },
+	{ 41.758, 6.889, 11.038, 0.9919, 0.0000, -0.1270, -0.0078, 0.9981, -0.0608, 5.589, 2.204, 0.35, "Mid3" },
+	{ 46.617, 6.899, 9.655, 0.9154, 0.0000, -0.4026, -0.0016, 1.0000, -0.0037, 5.178, 2.200, 0.35, "Mid2" },
+	{ 50.593, 6.914, 7.221, 0.7933, 0.0000, -0.6089, 0.0490, 0.9968, 0.0638, 4.799, 2.207, 0.35, "Mid1" },
+	{ 53.482, 6.927, 4.527, 0.6762, 0.0000, -0.7367, 0.1154, 0.9877, 0.1059, 3.716, 2.227, 0.35, "Mid3" },
+	{ 55.301, 6.937, 2.218, 0.5759, 0.0000, -0.8175, 0.1728, 0.9774, 0.1217, 2.752, 2.251, 0.35, "Mid2" },
+	{ 56.281, 6.945, 0.558, 0.4519, 0.0000, -0.8921, 0.2297, 0.9663, 0.1164, 1.720, 2.277, 0.35, "Mid2" },
+	{ 41.861, 8.889, 11.039, 0.9925, 0.0000, -0.1226, -0.0075, 0.9981, -0.0608, 5.792, 2.204, 0.35, "Mid2" },
+	{ 46.909, 8.899, 9.656, 0.9208, 0.0000, -0.3901, -0.0025, 1.0000, -0.0060, 5.335, 2.200, 0.35, "Mid1" },
+	{ 51.042, 8.913, 7.221, 0.8040, 0.0000, -0.5947, 0.0454, 0.9971, 0.0614, 4.907, 2.206, 0.35, "Mid2" },
+	{ 54.044, 8.927, 4.525, 0.6897, 0.0000, -0.7241, 0.1100, 0.9884, 0.1048, 3.776, 2.226, 0.35, "Mid3" },
+	{ 55.935, 8.936, 2.215, 0.5902, 0.0000, -0.8072, 0.1677, 0.9782, 0.1226, 2.784, 2.249, 0.35, "Mid2" },
+	{ 56.954, 8.945, 0.553, 0.4651, 0.0000, -0.8852, 0.2256, 0.9670, 0.1185, 1.733, 2.275, 0.35, "Mid2" },
+	{ 41.923, 10.482, 11.042, 0.9928, 0.0000, -0.1199, -0.0120, 0.9950, -0.0995, 5.913, 1.407, 0.35, "Red3" },
+	{ 47.092, 10.492, 9.678, 0.9237, 0.0000, -0.3832, -0.0166, 0.9991, -0.0399, 5.428, 1.401, 0.35, "Red2" },
+	{ 51.341, 10.507, 7.263, 0.8100, 0.0000, -0.5864, 0.0251, 0.9991, 0.0347, 4.973, 1.401, 0.35, "Red3" },
+	{ 54.438, 10.521, 4.580, 0.6975, 0.0000, -0.7166, 0.0880, 0.9924, 0.0857, 3.814, 1.411, 0.35, "Red3" },
+	{ 56.395, 10.532, 2.273, 0.5985, 0.0000, -0.8011, 0.1467, 0.9831, 0.1096, 2.804, 1.424, 0.35, "Red2" },
+	{ 57.459, 10.541, 0.606, 0.4730, 0.0000, -0.8811, 0.2082, 0.9717, 0.1118, 1.740, 1.441, 0.35, "Red2" },
+	{ 41.985, 11.683, 11.042, 0.9931, 0.0000, -0.1176, -0.0117, 0.9950, -0.0988, 6.035, 1.407, 0.35, "Mid1" },
+	{ 47.267, 11.692, 9.678, 0.9265, 0.0000, -0.3763, -0.0168, 0.9990, -0.0412, 5.523, 1.401, 0.35, "Mid2" },
+	{ 51.609, 11.707, 7.263, 0.8159, 0.0000, -0.5782, 0.0231, 0.9992, 0.0326, 5.040, 1.401, 0.35, "Mid1" },
+	{ 54.774, 11.721, 4.579, 0.7049, 0.0000, -0.7093, 0.0854, 0.9927, 0.0848, 3.850, 1.410, 0.35, "Mid1" },
+	{ 56.774, 11.732, 2.272, 0.6066, 0.0000, -0.7950, 0.1439, 0.9835, 0.1098, 2.822, 1.424, 0.35, "Mid1" },
+	{ 57.862, 11.741, 0.604, 0.4810, 0.0000, -0.8767, 0.2049, 0.9723, 0.1124, 1.749, 1.440, 0.35, "Mid3" },
+	{ 42.061, 13.036, 11.041, 0.9934, 0.0000, -0.1146, -0.0093, 0.9967, -0.0809, 6.187, 1.706, 0.35, "Mid1" },
+	{ 47.483, 13.045, 9.671, 0.9299, 0.0000, -0.3678, -0.0107, 0.9996, -0.0270, 5.641, 1.701, 0.35, "Mid3" },
+	{ 51.933, 13.059, 7.248, 0.8228, 0.0000, -0.5683, 0.0300, 0.9986, 0.0434, 5.124, 1.702, 0.35, "Mid3" },
+	{ 55.174, 13.073, 4.558, 0.7140, 0.0000, -0.7001, 0.0910, 0.9915, 0.0928, 3.898, 1.715, 0.35, "Mid3" },
+	{ 57.219, 13.083, 2.248, 0.6164, 0.0000, -0.7874, 0.1484, 0.9821, 0.1162, 2.847, 1.731, 0.35, "Mid1" },
+	{ 58.327, 13.092, 0.580, 0.4904, 0.0000, -0.8715, 0.2094, 0.9707, 0.1178, 1.758, 1.751, 0.35, "Mid2" },
+	{ 42.138, 14.536, 11.041, 0.9937, 0.0000, -0.1117, -0.0092, 0.9966, -0.0815, 6.339, 1.706, 0.35, "Mid3" },
+	{ 47.701, 14.545, 9.672, 0.9329, 0.0000, -0.3601, -0.0109, 0.9995, -0.0281, 5.759, 1.701, 0.35, "Mid2" },
+	{ 52.269, 14.559, 7.249, 0.8294, 0.0000, -0.5586, 0.0281, 0.9987, 0.0418, 5.207, 1.702, 0.35, "Mid1" },
+	{ 55.594, 14.572, 4.558, 0.7228, 0.0000, -0.6911, 0.0876, 0.9919, 0.0916, 3.946, 1.714, 0.35, "Mid1" },
+	{ 57.693, 14.582, 2.246, 0.6260, 0.0000, -0.7798, 0.1446, 0.9827, 0.1161, 2.874, 1.730, 0.35, "Mid1" },
+	{ 58.831, 14.592, 0.576, 0.5000, 0.0000, -0.8660, 0.2057, 0.9714, 0.1188, 1.768, 1.750, 0.35, "Mid2" },
+	{ 48.608, 12.000, 0.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 19.217, 1.500, 0.80, "Deck1" },
+	{ 48.108, 12.000, 2.250, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 18.217, 1.500, 0.80, "Deck1" },
+	{ 47.498, 12.000, 3.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 16.995, 1.500, 0.80, "Deck2" },
+	{ 46.776, 12.000, 5.250, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 15.551, 1.500, 0.80, "Deck3" },
+	{ 45.917, 12.000, 6.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 13.834, 1.500, 0.80, "Deck3" },
+	{ 44.861, 12.000, 8.250, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 11.721, 1.500, 0.80, "Deck2" },
+	{ 43.451, 12.000, 9.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 8.901, 1.500, 0.80, "Deck2" },
+	{ 41.530, 12.000, 11.000, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 5.060, 1.000, 0.80, "Deck3" },
+	{ 45.784, -3.825, 0.800, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 13.568, 1.600, 0.35, "Dark1" },
+	{ 45.169, -3.825, 2.400, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 12.339, 1.600, 0.35, "Dark1" },
+	{ 44.367, -3.825, 4.000, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 10.735, 1.600, 0.35, "Dark3" },
+	{ 43.302, -3.825, 5.600, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 8.605, 1.600, 0.35, "Dark3" },
+	{ 41.636, -3.825, 7.200, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 5.271, 1.600, 0.35, "Dark2" },
+	{ 42.289, 15.750, 11.130, 0.9937, 0.0000, -0.1118, -0.1118, 0.0000, -0.9937, 6.618, 1.499, 0.70, "Red1" },
+	{ 47.755, 15.750, 9.811, 0.9330, 0.0000, -0.3600, -0.3600, 0.0000, -0.9330, 6.320, 1.500, 0.70, "Red1" },
+	{ 52.390, 15.750, 7.430, 0.8293, 0.0000, -0.5587, -0.5587, 0.0000, -0.8293, 5.768, 1.500, 0.70, "Red1" },
+	{ 55.789, 15.750, 4.761, 0.7228, 0.0000, -0.6911, -0.6911, 0.0000, -0.7228, 4.505, 1.499, 0.70, "Red1" },
+	{ 57.952, 15.750, 2.454, 0.6258, 0.0000, -0.7800, -0.7800, 0.0000, -0.6258, 3.432, 1.500, 0.70, "Red1" },
+	{ 59.163, 15.750, 0.757, 0.4999, 0.0000, -0.8661, -0.8661, 0.0000, -0.4999, 2.348, 1.501, 0.70, "Red1" },
+	{ 41.191, -2.931, -8.016, 0.9927, 0.0000, 0.1209, -0.0475, -0.9196, 0.3899, 4.556, 2.175, 0.35, "Dark1" },
+	{ 45.022, -2.935, -7.052, 0.9226, 0.0000, 0.3857, -0.1433, -0.9285, 0.3427, 4.218, 2.154, 0.35, "Dark1" },
+	{ 48.234, -2.941, -5.311, 0.8079, 0.0000, 0.5893, -0.1991, -0.9412, 0.2729, 3.874, 2.124, 0.35, "Dark3" },
+	{ 50.611, -2.946, -3.333, 0.6946, 0.0000, 0.7194, -0.2225, -0.9509, 0.2149, 2.987, 2.103, 0.35, "Dark3" },
+	{ 52.125, -2.949, -1.612, 0.5955, 0.0000, 0.8033, -0.2358, -0.9559, 0.1748, 2.213, 2.092, 0.35, "Dark1" },
+	{ 52.940, -2.949, -0.381, 0.4699, 0.0000, 0.8827, -0.2588, -0.9561, 0.1378, 1.368, 2.092, 0.35, "Dark1" },
+	{ 41.293, -1.041, -8.892, 0.9919, 0.0000, 0.1270, -0.0430, -0.9410, 0.3357, 4.766, 2.338, 0.35, "Dark1" },
+	{ 45.312, -1.044, -7.826, 0.9157, 0.0000, 0.4019, -0.1285, -0.9475, 0.2928, 4.434, 2.322, 0.35, "Dark1" },
+	{ 48.679, -1.049, -5.900, 0.7939, 0.0000, 0.6080, -0.1772, -0.9566, 0.2314, 4.110, 2.300, 0.35, "Dark1" },
+	{ 51.168, -1.053, -3.714, 0.6770, 0.0000, 0.7360, -0.1988, -0.9628, 0.1829, 3.190, 2.285, 0.35, "Dark3" },
+	{ 52.751, -1.054, -1.812, 0.5769, 0.0000, 0.8168, -0.2132, -0.9653, 0.1506, 2.371, 2.279, 0.35, "Dark1" },
+	{ 53.603, -1.053, -0.443, 0.4529, 0.0000, 0.8916, -0.2395, -0.9632, 0.1217, 1.477, 2.284, 0.35, "Dark3" },
+	{ 41.391, 0.959, -9.741, 0.9912, 0.0000, 0.1323, -0.0448, -0.9409, 0.3357, 4.975, 2.338, 0.35, "Dark2" },
+	{ 45.594, 0.956, -8.576, 0.9092, 0.0000, 0.4164, -0.1331, -0.9475, 0.2907, 4.651, 2.322, 0.35, "Dark1" },
+	{ 49.113, 0.951, -6.471, 0.7812, 0.0000, 0.6243, -0.1825, -0.9563, 0.2283, 4.347, 2.300, 0.35, "Dark1" },
+	{ 51.714, 0.948, -4.082, 0.6612, 0.0000, 0.7502, -0.2041, -0.9623, 0.1799, 3.394, 2.286, 0.35, "Dark2" },
+	{ 53.369, 0.946, -2.005, 0.5602, 0.0000, 0.8284, -0.2182, -0.9647, 0.1476, 2.531, 2.281, 0.35, "Dark2" },
+	{ 54.264, 0.947, -0.504, 0.4374, 0.0000, 0.8993, -0.2437, -0.9626, 0.1185, 1.587, 2.286, 0.35, "Dark3" },
+	{ 41.491, 2.959, -10.589, 0.9905, 0.0000, 0.1373, -0.0465, -0.9410, 0.3353, 5.184, 2.338, 0.35, "Dark2" },
+	{ 45.876, 2.956, -9.326, 0.9032, 0.0000, 0.4293, -0.1374, -0.9474, 0.2890, 4.868, 2.322, 0.35, "Dark2" },
+	{ 49.547, 2.951, -7.041, 0.7695, 0.0000, 0.6387, -0.1870, -0.9562, 0.2254, 4.586, 2.301, 0.35, "Dark2" },
+	{ 52.261, 2.948, -4.450, 0.6472, 0.0000, 0.7623, -0.2085, -0.9618, 0.1771, 3.598, 2.287, 0.35, "Dark2" },
+	{ 53.988, 2.947, -2.196, 0.5456, 0.0000, 0.8381, -0.2229, -0.9640, 0.1451, 2.691, 2.282, 0.35, "Dark2" },
+	{ 54.926, 2.948, -0.564, 0.4244, 0.0000, 0.9055, -0.2479, -0.9618, 0.1162, 1.696, 2.287, 0.35, "Dark1" },
+	{ 41.650, 4.896, -10.996, 0.9913, 0.0000, 0.1320, 0.0030, -0.9997, -0.0222, 5.387, 2.201, 0.35, "Mid1" },
+	{ 46.310, 4.905, -9.623, 0.9095, 0.0000, 0.4156, -0.0120, -0.9996, 0.0263, 5.023, 2.201, 0.35, "Mid2" },
+	{ 50.131, 4.918, -7.203, 0.7818, 0.0000, 0.6235, -0.0648, -0.9946, 0.0813, 4.691, 2.212, 0.35, "Mid2" },
+	{ 52.910, 4.930, -4.521, 0.6620, 0.0000, 0.7495, -0.1282, -0.9853, 0.1132, 3.657, 2.233, 0.35, "Mid1" },
+	{ 54.663, 4.938, -2.219, 0.5612, 0.0000, 0.8277, -0.1818, -0.9756, 0.1233, 2.721, 2.255, 0.35, "Mid2" },
+	{ 55.608, 4.946, -0.563, 0.4385, 0.0000, 0.8987, -0.2351, -0.9652, 0.1147, 1.708, 2.279, 0.35, "Mid3" },
+	{ 41.758, 6.889, -11.038, 0.9919, 0.0000, 0.1272, 0.0078, -0.9981, -0.0608, 5.589, 2.204, 0.35, "Mid3" },
+	{ 46.617, 6.899, -9.655, 0.9154, 0.0000, 0.4025, 0.0016, -1.0000, -0.0037, 5.178, 2.200, 0.35, "Mid2" },
+	{ 50.593, 6.914, -7.221, 0.7934, 0.0000, 0.6087, -0.0490, -0.9968, 0.0638, 4.798, 2.207, 0.35, "Mid1" },
+	{ 53.482, 6.927, -4.527, 0.6763, 0.0000, 0.7366, -0.1154, -0.9877, 0.1059, 3.716, 2.227, 0.35, "Mid3" },
+	{ 55.301, 6.937, -2.218, 0.5759, 0.0000, 0.8175, -0.1728, -0.9774, 0.1217, 2.752, 2.251, 0.35, "Mid2" },
+	{ 56.281, 6.945, -0.558, 0.4516, 0.0000, 0.8922, -0.2298, -0.9663, 0.1163, 1.720, 2.277, 0.35, "Mid2" },
+	{ 41.861, 8.889, -11.039, 0.9925, 0.0000, 0.1226, 0.0075, -0.9981, -0.0608, 5.792, 2.204, 0.35, "Mid2" },
+	{ 46.909, 8.899, -9.656, 0.9207, 0.0000, 0.3903, 0.0025, -1.0000, -0.0060, 5.335, 2.200, 0.35, "Mid1" },
+	{ 51.042, 8.913, -7.221, 0.8040, 0.0000, 0.5946, -0.0454, -0.9971, 0.0614, 4.908, 2.206, 0.35, "Mid2" },
+	{ 54.044, 8.927, -4.525, 0.6897, 0.0000, 0.7241, -0.1100, -0.9884, 0.1048, 3.777, 2.226, 0.35, "Mid3" },
+	{ 55.935, 8.936, -2.216, 0.5900, 0.0000, 0.8074, -0.1677, -0.9782, 0.1226, 2.783, 2.249, 0.35, "Mid2" },
+	{ 56.954, 8.945, -0.553, 0.4651, 0.0000, 0.8852, -0.2256, -0.9670, 0.1185, 1.733, 2.275, 0.35, "Mid2" },
+	{ 41.923, 10.482, -11.042, 0.9928, 0.0000, 0.1201, 0.0120, -0.9950, -0.0995, 5.913, 1.407, 0.35, "Red3" },
+	{ 47.092, 10.492, -9.678, 0.9237, 0.0000, 0.3831, 0.0166, -0.9991, -0.0399, 5.429, 1.401, 0.35, "Red2" },
+	{ 51.341, 10.507, -7.263, 0.8101, 0.0000, 0.5863, -0.0251, -0.9991, 0.0347, 4.974, 1.401, 0.35, "Red3" },
+	{ 54.438, 10.521, -4.580, 0.6973, 0.0000, 0.7167, -0.0880, -0.9924, 0.0856, 3.813, 1.411, 0.35, "Red3" },
+	{ 56.395, 10.532, -2.273, 0.5983, 0.0000, 0.8013, -0.1467, -0.9831, 0.1096, 2.803, 1.424, 0.35, "Red2" },
+	{ 57.459, 10.541, -0.605, 0.4734, 0.0000, 0.8808, -0.2081, -0.9717, 0.1119, 1.740, 1.441, 0.35, "Red2" },
+	{ 41.985, 11.683, -11.042, 0.9931, 0.0000, 0.1175, 0.0117, -0.9950, -0.0988, 6.035, 1.407, 0.35, "Mid1" },
+	{ 47.267, 11.692, -9.678, 0.9265, 0.0000, 0.3763, 0.0168, -0.9990, -0.0412, 5.523, 1.401, 0.35, "Mid2" },
+	{ 51.609, 11.707, -7.263, 0.8158, 0.0000, 0.5783, -0.0231, -0.9992, 0.0326, 5.039, 1.401, 0.35, "Mid1" },
+	{ 54.774, 11.721, -4.579, 0.7049, 0.0000, 0.7093, -0.0854, -0.9927, 0.0848, 3.850, 1.410, 0.35, "Mid1" },
+	{ 56.774, 11.732, -2.272, 0.6066, 0.0000, 0.7950, -0.1439, -0.9835, 0.1098, 2.822, 1.424, 0.35, "Mid1" },
+	{ 57.862, 11.741, -0.604, 0.4810, 0.0000, 0.8767, -0.2049, -0.9723, 0.1124, 1.749, 1.440, 0.35, "Mid3" },
+	{ 42.061, 13.036, -11.041, 0.9934, 0.0000, 0.1146, 0.0093, -0.9967, -0.0809, 6.187, 1.706, 0.35, "Mid1" },
+	{ 47.483, 13.045, -9.671, 0.9298, 0.0000, 0.3680, 0.0107, -0.9996, -0.0270, 5.642, 1.701, 0.35, "Mid3" },
+	{ 51.933, 13.059, -7.248, 0.8227, 0.0000, 0.5684, -0.0300, -0.9986, 0.0434, 5.123, 1.702, 0.35, "Mid3" },
+	{ 55.174, 13.073, -4.558, 0.7140, 0.0000, 0.7001, -0.0910, -0.9915, 0.0928, 3.898, 1.715, 0.35, "Mid3" },
+	{ 57.219, 13.083, -2.248, 0.6162, 0.0000, 0.7876, -0.1484, -0.9821, 0.1161, 2.848, 1.731, 0.35, "Mid1" },
+	{ 58.327, 13.092, -0.580, 0.4908, 0.0000, 0.8713, -0.2094, -0.9707, 0.1179, 1.758, 1.751, 0.35, "Mid2" },
+	{ 42.138, 14.536, -11.041, 0.9937, 0.0000, 0.1119, 0.0092, -0.9966, -0.0815, 6.339, 1.706, 0.35, "Mid3" },
+	{ 47.701, 14.545, -9.672, 0.9329, 0.0000, 0.3600, 0.0109, -0.9995, -0.0281, 5.760, 1.701, 0.35, "Mid2" },
+	{ 52.269, 14.559, -7.249, 0.8295, 0.0000, 0.5585, -0.0281, -0.9987, 0.0418, 5.208, 1.702, 0.35, "Mid1" },
+	{ 55.594, 14.572, -4.558, 0.7228, 0.0000, 0.6911, -0.0876, -0.9919, 0.0916, 3.946, 1.714, 0.35, "Mid1" },
+	{ 57.693, 14.582, -2.246, 0.6258, 0.0000, 0.7800, -0.1446, -0.9827, 0.1160, 2.873, 1.730, 0.35, "Mid1" },
+	{ 58.831, 14.592, -0.576, 0.5000, 0.0000, 0.8660, -0.2057, -0.9714, 0.1188, 1.768, 1.750, 0.35, "Mid2" },
+	{ 48.608, 12.000, -0.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 19.217, 1.500, 0.80, "Deck1" },
+	{ 48.108, 12.000, -2.250, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 18.217, 1.500, 0.80, "Deck1" },
+	{ 47.498, 12.000, -3.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 16.995, 1.500, 0.80, "Deck2" },
+	{ 46.776, 12.000, -5.250, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 15.551, 1.500, 0.80, "Deck3" },
+	{ 45.917, 12.000, -6.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 13.834, 1.500, 0.80, "Deck3" },
+	{ 44.861, 12.000, -8.250, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 11.721, 1.500, 0.80, "Deck2" },
+	{ 43.451, 12.000, -9.750, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 8.901, 1.500, 0.80, "Deck2" },
+	{ 41.530, 12.000, -11.000, 1.0000, 0.0000, 0.0000, 0.0000, 0.0000, -1.0000, 5.060, 1.000, 0.80, "Deck3" },
+	{ 45.784, -3.825, -0.800, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 13.568, 1.600, 0.35, "Dark1" },
+	{ 45.169, -3.825, -2.400, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 12.339, 1.600, 0.35, "Dark1" },
+	{ 44.367, -3.825, -4.000, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 10.735, 1.600, 0.35, "Dark3" },
+	{ 43.302, -3.825, -5.600, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 8.605, 1.600, 0.35, "Dark3" },
+	{ 41.636, -3.825, -7.200, 1.0000, 0.0000, 0.0000, -0.0000, 0.0000, 1.0000, 5.271, 1.600, 0.35, "Dark2" },
+	{ 42.289, 15.750, -11.130, 0.9937, 0.0000, 0.1118, 0.1118, 0.0000, -0.9937, 6.619, 1.499, 0.70, "Red1" },
+	{ 47.755, 15.750, -9.811, 0.9329, 0.0000, 0.3601, 0.3601, 0.0000, -0.9329, 6.320, 1.500, 0.70, "Red1" },
+	{ 52.390, 15.750, -7.430, 0.8293, 0.0000, 0.5587, 0.5587, 0.0000, -0.8293, 5.768, 1.500, 0.70, "Red1" },
+	{ 55.789, 15.750, -4.761, 0.7228, 0.0000, 0.6911, 0.6911, 0.0000, -0.7228, 4.505, 1.499, 0.70, "Red1" },
+	{ 57.952, 15.750, -2.454, 0.6257, 0.0000, 0.7801, 0.7801, 0.0000, -0.6257, 3.433, 1.500, 0.70, "Red1" },
+	{ 59.163, 15.750, -0.757, 0.4999, 0.0000, 0.8661, 0.8661, 0.0000, -0.4999, 2.348, 1.501, 0.70, "Red1" },
+	{ 56.133, 6.247, 0.000, 0.3289, 0.9444, 0.0000, -0.0000, 0.0000, 1.0000, 21.284, 1.000, 1.20, "Dark1" },
+	{ -39.113, -2.936, 8.187, -0.8862, 0.0000, -0.4634, 0.1700, -0.9303, -0.3250, 0.837, 2.150, 0.35, "Dark1" },
+	{ -39.568, -2.951, 7.797, -0.5371, 0.0000, -0.8435, 0.2341, -0.9607, -0.1491, 1.423, 2.082, 0.35, "Dark1" },
+	{ -39.198, -1.044, 9.057, -0.9002, 0.0000, -0.4355, 0.1396, -0.9473, -0.2885, 0.960, 2.322, 0.35, "Dark2" },
+	{ -39.759, -1.056, 8.577, -0.5676, 0.0000, -0.8233, 0.2075, -0.9677, -0.1431, 1.572, 2.273, 0.35, "Dark2" },
+	{ -39.269, 0.956, 9.909, -0.9103, 0.0000, -0.4140, 0.1336, -0.9465, -0.2937, 1.082, 2.324, 0.35, "Dark1" },
+	{ -39.941, 0.945, 9.356, -0.5911, 0.0000, -0.8066, 0.2076, -0.9663, -0.1522, 1.722, 2.277, 0.35, "Dark3" },
+	{ -39.337, 2.957, 10.762, -0.9176, 0.0000, -0.3974, 0.1290, -0.9458, -0.2979, 1.205, 2.326, 0.35, "Dark2" },
+	{ -40.123, 2.946, 10.137, -0.6099, 0.0000, -0.7925, 0.2077, -0.9650, -0.1598, 1.873, 2.280, 0.35, "Dark2" },
+	{ -39.557, 4.897, 11.116, -0.9327, 0.0000, -0.3608, -0.0060, -0.9999, 0.0154, 1.317, 2.200, 0.35, "Mid2" },
+	{ -40.502, 4.908, 10.274, -0.6528, 0.0000, -0.7575, 0.0356, -0.9989, -0.0307, 1.948, 2.202, 0.35, "Mid2" },
+	{ -39.637, 6.890, 11.156, -0.9441, 0.0000, -0.3296, -0.0179, -0.9985, 0.0514, 1.429, 2.203, 0.35, "Mid2" },
+	{ -40.713, 6.903, 10.287, -0.6907, 0.0000, -0.7232, 0.0130, -0.9998, -0.0124, 2.030, 2.200, 0.35, "Mid1" },
+	{ -39.701, 8.890, 11.158, -0.9529, 0.0000, -0.3034, -0.0171, -0.9984, 0.0536, 1.543, 2.203, 0.35, "Mid2" },
+	{ -40.903, 8.902, 10.285, -0.7235, 0.0000, -0.6904, 0.0089, -0.9999, -0.0093, 2.115, 2.200, 0.35, "Mid2" },
+	{ -39.740, 10.484, 11.163, -0.9573, 0.0000, -0.2891, -0.0271, -0.9956, 0.0896, 1.612, 1.406, 0.35, "Red1" },
+	{ -41.034, 10.497, 10.302, -0.7411, 0.0000, -0.6714, -0.0129, -0.9998, 0.0142, 2.167, 1.400, 0.35, "Red1" },
+	{ -39.778, 11.684, 11.164, -0.9611, 0.0000, -0.2761, -0.0260, -0.9956, 0.0904, 1.680, 1.406, 0.35, "Mid3" },
+	{ -41.146, 11.696, 10.301, -0.7574, 0.0000, -0.6529, -0.0142, -0.9998, 0.0165, 2.221, 1.400, 0.35, "Mid2" },
+	{ -39.516, -3.825, 0.800, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark2" },
+	{ -39.516, -3.825, 2.400, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark2" },
+	{ -39.516, -3.825, 4.000, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark1" },
+	{ -39.516, -3.825, 5.600, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark2" },
+	{ -39.516, -3.825, 6.675, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 0.550, 0.35, "Dark3" },
+	{ -39.113, -2.936, -8.187, -0.8864, 0.0000, 0.4629, -0.1698, 0.9303, -0.3251, 0.838, 2.150, 0.35, "Dark1" },
+	{ -39.568, -2.951, -7.797, -0.5372, 0.0000, 0.8434, -0.2341, 0.9607, -0.1491, 1.424, 2.082, 0.35, "Dark1" },
+	{ -39.198, -1.044, -9.057, -0.9002, 0.0000, 0.4355, -0.1396, 0.9473, -0.2885, 0.960, 2.322, 0.35, "Dark2" },
+	{ -39.759, -1.056, -8.577, -0.5676, 0.0000, 0.8233, -0.2075, 0.9677, -0.1431, 1.572, 2.273, 0.35, "Dark2" },
+	{ -39.269, 0.956, -9.909, -0.9104, 0.0000, 0.4137, -0.1335, 0.9465, -0.2938, 1.083, 2.324, 0.35, "Dark1" },
+	{ -39.941, 0.945, -9.356, -0.5911, 0.0000, 0.8066, -0.2076, 0.9663, -0.1522, 1.722, 2.277, 0.35, "Dark3" },
+	{ -39.337, 2.957, -10.762, -0.9176, 0.0000, 0.3974, -0.1290, 0.9458, -0.2979, 1.205, 2.326, 0.35, "Dark2" },
+	{ -40.123, 2.946, -10.136, -0.6102, 0.0000, 0.7922, -0.2076, 0.9650, -0.1599, 1.873, 2.280, 0.35, "Dark2" },
+	{ -39.557, 4.897, -11.116, -0.9327, 0.0000, 0.3608, 0.0060, 0.9999, 0.0154, 1.317, 2.200, 0.35, "Mid2" },
+	{ -40.502, 4.908, -10.274, -0.6531, 0.0000, 0.7573, -0.0356, 0.9989, -0.0307, 1.949, 2.202, 0.35, "Mid2" },
+	{ -39.637, 6.890, -11.156, -0.9442, 0.0000, 0.3294, 0.0179, 0.9985, 0.0514, 1.430, 2.203, 0.35, "Mid2" },
+	{ -40.713, 6.903, -10.287, -0.6907, 0.0000, 0.7232, -0.0130, 0.9998, -0.0124, 2.029, 2.200, 0.35, "Mid1" },
+	{ -39.701, 8.890, -11.158, -0.9531, 0.0000, 0.3026, 0.0170, 0.9984, 0.0536, 1.543, 2.203, 0.35, "Mid2" },
+	{ -40.903, 8.902, -10.285, -0.7235, 0.0000, 0.6904, -0.0089, 0.9999, -0.0093, 2.113, 2.200, 0.35, "Mid2" },
+	{ -39.740, 10.484, -11.163, -0.9573, 0.0000, 0.2891, 0.0271, 0.9956, 0.0896, 1.612, 1.406, 0.35, "Red1" },
+	{ -41.034, 10.497, -10.302, -0.7411, 0.0000, 0.6714, 0.0129, 0.9998, 0.0142, 2.167, 1.400, 0.35, "Red1" },
+	{ -39.778, 11.684, -11.164, -0.9611, 0.0000, 0.2761, 0.0260, 0.9956, 0.0904, 1.680, 1.406, 0.35, "Mid3" },
+	{ -41.146, 11.696, -10.301, -0.7570, 0.0000, 0.6534, 0.0142, 0.9998, 0.0165, 2.221, 1.400, 0.35, "Mid2" },
+	{ -39.516, -3.825, -0.800, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark2" },
+	{ -39.516, -3.825, -2.400, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark2" },
+	{ -39.516, -3.825, -4.000, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark1" },
+	{ -39.516, -3.825, -5.600, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 1.600, 0.35, "Dark2" },
+	{ -39.516, -3.825, -6.675, -1.0000, 0.0000, 0.0000, -0.0000, 0.0000, -1.0000, 1.032, 0.550, 0.35, "Dark3" },
+	{ -40.035, -2.986, 0.000, 0.0000, 0.0000, 1.0000, -0.0822, 0.9966, 0.0000, 15.488, 2.007, 0.35, "Dark1" },
+	{ -40.263, -1.085, 0.000, 0.0000, 0.0000, 1.0000, -0.0856, 0.9963, 0.0000, 16.976, 2.208, 0.35, "Dark2" },
+	{ -40.503, 0.915, 0.000, 0.0000, 0.0000, 1.0000, -0.0856, 0.9963, 0.0000, 18.462, 2.208, 0.35, "Dark1" },
+	{ -40.743, 2.915, 0.000, 0.0000, 0.0000, 1.0000, -0.0856, 0.9963, 0.0000, 19.950, 2.208, 0.35, "Dark1" },
+	{ -40.983, 4.915, 0.000, 0.0000, 0.0000, 1.0000, -0.0856, 0.9963, 0.0000, 19.950, 2.208, 0.35, "Mid2" },
+	{ -41.223, 6.915, 0.000, 0.0000, 0.0000, 1.0000, -0.0856, 0.9963, 0.0000, 19.950, 2.208, 0.35, "Mid1" },
+	{ -41.463, 8.915, 0.000, 0.0000, 0.0000, 1.0000, -0.0856, 0.9963, 0.0000, 19.950, 2.208, 0.35, "Mid2" },
+	{ -41.655, 10.512, 0.000, 0.0000, 0.0000, 1.0000, -0.0663, 0.9978, 0.0000, 19.950, 1.403, 0.35, "Red1" },
+	{ -41.799, 11.712, 0.000, 0.0000, 0.0000, 1.0000, -0.0663, 0.9978, 0.0000, 19.950, 1.403, 0.35, "Mid2" },
+}
+PropsBatch2.SHIP_SAILS = {
+	main = { rects = {
+		{ -11.904, -3.400, -0.038, 0.9920, 0.0000, -0.1259, 0.0000, -1.0000, -0.0000, 2.184, 6.800, 0.20, "Sail1" },
+		{ -9.740, -4.000, -0.288, 0.9946, 0.0000, -0.1033, 0.0000, -1.0000, -0.0000, 2.178, 8.000, 0.20, "Sail2" },
+		{ -7.575, -3.600, -0.488, 0.9968, 0.0000, -0.0805, 0.0000, -1.0000, -0.0000, 2.174, 7.200, 0.20, "Sail1" },
+		{ -5.411, -1.300, -0.638, 0.9983, 0.0000, -0.0576, 0.0000, -1.0000, -0.0000, 2.171, 2.600, 0.20, "Sail2" },
+		{ -5.411, -6.200, -0.638, 0.9983, 0.0000, -0.0576, 0.0000, -1.0000, -0.0000, 2.171, 4.400, 0.20, "Sail2" },
+		{ -3.247, -3.300, -0.738, 0.9994, 0.0000, -0.0346, 0.0000, -1.0000, -0.0000, 2.167, 6.600, 0.20, "Sail1" },
+		{ -1.082, -3.900, -0.788, 0.9999, 0.0000, -0.0115, 0.0000, -1.0000, -0.0000, 2.167, 7.800, 0.20, "Sail2" },
+		{ 1.082, -4.300, -0.788, 0.9999, 0.0000, 0.0115, 0.0000, -1.0000, 0.0000, 2.167, 8.600, 0.20, "Sail1" },
+		{ 3.247, -3.500, -0.738, 0.9994, 0.0000, 0.0346, 0.0000, -1.0000, 0.0000, 2.167, 7.000, 0.20, "Sail2" },
+		{ 5.411, -1.800, -0.638, 0.9983, 0.0000, 0.0576, 0.0000, -1.0000, 0.0000, 2.171, 3.600, 0.20, "Sail1" },
+		{ 5.411, -6.200, -0.638, 0.9983, 0.0000, 0.0576, 0.0000, -1.0000, 0.0000, 2.171, 2.800, 0.20, "Sail1" },
+		{ 7.575, -4.100, -0.488, 0.9968, 0.0000, 0.0805, 0.0000, -1.0000, 0.0000, 2.174, 8.200, 0.20, "Sail2" },
+		{ 9.740, -3.200, -0.288, 0.9946, 0.0000, 0.1033, 0.0000, -1.0000, 0.0000, 2.178, 6.400, 0.20, "Sail1" },
+		{ 11.904, -3.700, -0.038, 0.9920, 0.0000, 0.1259, 0.0000, -1.0000, 0.0000, 2.184, 7.400, 0.20, "Sail2" },
+	}, tris = {
+		{ -12.987, -6.800, 0.099, -10.820, -6.800, -0.176, -12.120, -8.400, -0.017, 0.20, "Sail1" },
+		{ -10.823, -8.000, -0.176, -8.657, -8.000, -0.401, -9.523, -9.800, -0.317, 0.20, "Sail2" },
+		{ -8.659, -7.200, -0.400, -6.492, -7.200, -0.575, -8.009, -8.400, -0.458, 0.20, "Sail1" },
+		{ -6.494, -8.400, -0.575, -4.327, -8.400, -0.700, -5.302, -9.800, -0.650, 0.20, "Sail2" },
+		{ -4.330, -6.601, -0.700, -2.164, -6.601, -0.775, -2.814, -7.601, -0.758, 0.20, "Sail1" },
+		{ -2.166, -7.800, -0.775, 0.001, -7.800, -0.800, -1.407, -9.700, -0.789, 0.20, "Sail2" },
+		{ -0.001, -8.601, -0.800, 2.166, -8.601, -0.775, 1.082, -9.801, -0.794, 0.20, "Sail1" },
+		{ 2.164, -7.000, -0.775, 4.330, -7.000, -0.700, 3.572, -8.300, -0.732, 0.20, "Sail2" },
+		{ 4.327, -7.600, -0.700, 6.494, -7.600, -0.575, 5.194, -9.600, -0.656, 0.20, "Sail1" },
+		{ 6.492, -8.200, -0.575, 8.659, -8.200, -0.400, 7.792, -9.800, -0.476, 0.20, "Sail2" },
+		{ 8.657, -6.401, -0.401, 10.823, -6.401, -0.176, 9.632, -7.501, -0.306, 0.20, "Sail1" },
+		{ 10.820, -7.400, -0.176, 12.987, -7.400, 0.099, 11.904, -9.200, -0.045, 0.20, "Sail2" },
+	} },
+	remnant = { rects = {
+		{ -1.985, -1.600, -0.057, 0.9881, 0.0000, -0.1537, 0.0000, -1.0000, -0.0000, 2.024, 3.200, 0.20, "Sail1" },
+		{ -1.985, -5.950, -0.057, 0.9881, 0.0000, -0.1537, 0.0000, -1.0000, -0.0000, 2.024, 3.100, 0.20, "Sail1" },
+		{ 0.000, -2.350, -0.211, 1.0000, 0.0000, 0.0000, 0.0000, -1.0000, 0.0000, 2.000, 4.700, 0.20, "Sail3" },
+		{ 1.985, -3.200, -0.057, 0.9881, 0.0000, 0.1537, 0.0000, -1.0000, 0.0000, 2.024, 6.400, 0.20, "Sail1" },
+	}, tris = {
+		{ -2.985, -7.503, 0.099, -0.985, -7.503, -0.212, -1.985, -8.803, -0.095, 0.20, "Sail1" },
+		{ -1.000, -4.704, -0.211, 1.000, -4.704, -0.211, -0.400, -5.504, -0.244, 0.20, "Sail3" },
+		{ 0.985, -6.402, -0.212, 2.985, -6.402, 0.099, 2.185, -8.002, -0.063, 0.20, "Sail1" },
+	} },
+	fallen = { rects = {
+		{ -5.200, -2.301, -0.513, 1.0000, 0.0000, 0.0000, 0.0000, -0.9659, -0.2589, 2.600, 4.712, 0.20, "Sail1" },
+		{ -2.600, -2.425, -0.546, 1.0000, 0.0000, 0.0000, 0.0000, -0.9659, -0.2589, 2.600, 4.967, 0.20, "Sail2" },
+		{ 0.000, -2.386, -0.536, 1.0000, 0.0000, 0.0000, 0.0000, -0.9659, -0.2588, 2.600, 4.888, 0.20, "Sail1" },
+		{ 2.600, -2.435, -0.549, 1.0000, 0.0000, 0.0000, 0.0000, -0.9659, -0.2588, 2.600, 4.989, 0.20, "Sail2" },
+		{ 5.200, -2.317, -0.517, 1.0000, 0.0000, 0.0000, 0.0000, -0.9659, -0.2589, 2.600, 4.744, 0.20, "Sail1" },
+		{ -5.200, -0.791, 1.883, 1.0000, 0.0000, 0.0000, 0.0000, 0.3419, -0.9397, 2.600, 4.080, 0.20, "Sail1" },
+		{ -2.600, -0.672, 1.554, 1.0000, 0.0000, 0.0000, 0.0000, 0.3420, -0.9397, 2.600, 3.380, 0.20, "Sail2" },
+		{ 0.000, -0.711, 1.663, 1.0000, 0.0000, 0.0000, 0.0000, 0.3419, -0.9397, 2.600, 3.612, 0.20, "Sail1" },
+		{ 2.600, -0.819, 1.959, 1.0000, 0.0000, 0.0000, 0.0000, 0.3421, -0.9397, 2.600, 4.242, 0.20, "Sail2" },
+		{ 5.200, -0.746, 1.757, 1.0000, 0.0000, 0.0000, 0.0000, 0.3420, -0.9397, 2.600, 3.813, 0.20, "Sail1" },
+	}, tris = {
+		{ -6.500, -4.577, -1.123, -3.900, -4.577, -1.123, -5.641, -5.429, -1.351, 0.20, "Sail1" },
+		{ -1.300, -4.747, -1.168, 1.300, -4.747, -1.168, 0.069, -5.827, -1.457, 0.20, "Sail1" },
+		{ 3.900, -4.608, -1.131, 6.500, -4.608, -1.131, 5.602, -5.834, -1.459, 0.20, "Sail1" },
+		{ -5.391, -1.886, 4.891, -3.900, -1.489, 3.800, -6.500, -1.489, 3.800, 0.20, "Sail1" },
+		{ 0.349, -1.761, 4.546, 1.300, -1.329, 3.360, -1.300, -1.329, 3.360, 0.20, "Sail1" },
+		{ 5.270, -1.795, 4.638, 6.500, -1.398, 3.549, 3.900, -1.398, 3.549, 0.20, "Sail1" },
+	} },
+}
+
+local SHIP_TONES = {
+	Dark = { rgb(112, 62, 38), rgb(106, 59, 36), rgb(101, 56, 34) },
+	Mid = { rgb(168, 98, 56), rgb(160, 93, 53), rgb(151, 88, 50) },
+	Red = { rgb(212, 52, 60), rgb(201, 49, 57), rgb(191, 47, 54) },
+	Deck = { rgb(214, 150, 92), rgb(203, 142, 87), rgb(193, 135, 83) },
+	Sail = { rgb(232, 226, 208), rgb(245, 246, 250), rgb(220, 212, 190) },
+}
+local SHIP_SINGLE = {
+	Cargo = rgb(214, 150, 92), Darker = rgb(96, 53, 32), Gold = rgb(255, 201, 60), Glass = rgb(95, 212, 255),
+	Iron = rgb(92, 98, 110), Rope = rgb(196, 160, 104), Flag = rgb(92, 98, 110), Emblem = rgb(245, 246, 250),
+	LanternGlass = rgb(255, 200, 115),
+}
+-- the game's 2 recoloured copies (today's colours of the Tundra_2 frozen ship and the Abyss_2 sunken galleon)
+PropsBatch2.SHIP_VARIANTS = {
+	Frozen = {
+		Dark = { "5c4236", "564033", "503b2f" }, Mid = { "865c42", "7e573e", "77523b" }, Red = { "baaaec", "b0a0e2", "a698d8" },
+		Deck = { "f4f8ff", "e6eefa", "d8e4f4" }, Sail = { "d6ecff", "e2f2ff", "c8e0f6" },
+		Cargo = "997660", Darker = "49342b", Glass = "96d6fa", Rope = "c8c4bc",
+	},
+	Sunken = {
+		Dark = { "5c473b", "574338", "523f35" }, Mid = { "654e41", "5f493d", "594539" }, Red = { "564238", "503e34", "4e3c32" },
+		Deck = { "624b3f", "5b463b", "533f35" }, Sail = { "b5bbb5", "aab0aa", "a0a6a0" },
+		Cargo = "4e3c32", Darker = "473935", Gold = "5e483d", Glass = "544136", Iron = "685043", Rope = "5a4a3c",
+		Flag = "574338", Emblem = "b5bbb5", LanternGlass = "544136",
+		transparency = { Emblem = 0.12, Sail1 = 0.12, Sail2 = 0.12, Sail3 = 0.12 }, material = { LanternGlass = "SmoothPlastic" },
+	},
+}
+
+-- the two wedges of a triangle (corners a, b, c) of thickness t
+local function triangleParts(list: { BasePart }, a: Vector3, b: Vector3, c: Vector3, t: number, frame: CFrame, color: Color3)
+	local ab, ac, bc = b - a, c - a, c - b
+	local abd, acd, bcd = ab:Dot(ab), ac:Dot(ac), bc:Dot(bc)
+	if abd > acd and abd > bcd then
+		c, a = a, c
+	elseif acd > bcd and acd > abd then
+		a, b = b, a
+	end
+	ab, ac, bc = b - a, c - a, c - b
+	local right = ac:Cross(ab).Unit
+	local up = bc:Cross(right).Unit
+	local back = bc.Unit
+	local height = math.abs(ab:Dot(up))
+	local w1 = piece("WedgePart", Vector3.new(t, height, math.abs(ab:Dot(back))), frame * CFrame.fromMatrix((a + b) / 2, right, up, back), color)
+	local w2 = piece("WedgePart", Vector3.new(t, height, math.abs(ac:Dot(back))), frame * CFrame.fromMatrix((a + c) / 2, -right, up, -back), color)
+	table.insert(list, w1)
+	table.insert(list, w2)
+end
+
+-- [a, b] minus the gaps { {x0, x1} }, keeping pieces longer than 0.3
+local function cutSegments(a: number, b: number, gaps: { any }): { any }
+	local segs = { { a, b } }
+	for _, g in ipairs(gaps) do
+		local next = {}
+		for _, s in ipairs(segs) do
+			if g[2] <= s[1] or g[1] >= s[2] then
+				table.insert(next, s)
+			else
+				if g[1] - s[1] > 0.3 then
+					table.insert(next, { s[1], g[1] })
+				end
+				if s[2] - g[2] > 0.3 then
+					table.insert(next, { g[2], s[2] })
+				end
+			end
+		end
+		segs = next
+	end
+	return segs
+end
+
+function PropsBatch2.pirate_ship(): Model
+	local m = Instance.new("Model")
+	m.Name = "pirate_ship"
+	local rng = Random.new(20261015)
+	BEVEL_SELF = true
+	local rad = math.rad
+	-- every piece is placed in HullLower's frame (x toward the bow, y up, z across; -Z = the port side with the holes);
+	-- today's HullLower sits at REL in the model (the wreck's heel and sink are kept)
+	local REL = CFrame.new(-6.385, 10.598, -0.811) * CFrame.fromOrientation(rad(-14), 0, rad(6))
+	local U: { [string]: { BasePart } } = {}
+	local function add(name: string, p: BasePart)
+		local list = U[name]
+		if not list then
+			list = {}
+			U[name] = list
+		end
+		table.insert(list, p)
+	end
+	local function put(name: string, className: string, size: Vector3, cf: CFrame)
+		local role, ti = string.match(name, "^(%a+)(%d)$")
+		local color = if role and SHIP_TONES[role] then SHIP_TONES[role][tonumber(ti) :: number] else SHIP_SINGLE[name]
+		add(name, piece(className, size, REL * cf, color))
+	end
+	local function tone(role: string, prev: number?): (string, number)
+		local ti = toneIndex(rng, prev)
+		return role .. ti, ti
+	end
+	local alongZ = CFrame.Angles(rad(90), 0, 0)
+	local alongX = CFrame.Angles(0, 0, -math.pi / 2)
+	local function rope(a: Vector3, b: Vector3, t: number?)
+		add("Rope", bar(REL * a, REL * b, t or 0.18, SHIP_SINGLE.Rope))
+	end
+
+	-- 1. Agent A's bow and stern (each rectangle a plank of its thickness). The bow's deck planks are rectangles whose
+	-- outer corners came out through the curved side: each one now stops under the waterway, a board along the inside
+	-- of the curved side (BOW_LINE = the side's outer line at deck level, from Agent A's strakes)
+	local BOW_LINE = { { 39.0, 11.5 }, { 44.9, 10.82 }, { 49.8, 8.83 }, { 53.7, 6.05 }, { 56.2, 3.5 }, { 57.8, 1.43 }, { 58.6, 0.0 } }
+	local function bowLimit(zo: number): number
+		-- the x where the side's outer line comes within 0.35 of a plank edge at |z| = zo
+		for i = 1, #BOW_LINE - 1 do
+			local a, b = BOW_LINE[i], BOW_LINE[i + 1]
+			local za, zb = a[2] - 0.35, b[2] - 0.35
+			if za <= zo then
+				return a[1]
+			elseif zb <= zo then
+				return a[1] + (b[1] - a[1]) * (za - zo) / (za - zb)
+			end
+		end
+		return BOW_LINE[#BOW_LINE][1]
+	end
+	for _, f in ipairs(PropsBatch2.SHIP_HULL) do
+		local pos = Vector3.new(f[1], f[2], f[3])
+		local x, y = Vector3.new(f[4], f[5], f[6]), Vector3.new(f[7], f[8], f[9])
+		local size = Vector3.new(f[10], f[11], f[12])
+		if string.sub(f[13], 1, 4) == "Deck" then
+			local x0 = pos.X - f[10] / 2
+			local x1 = math.min(pos.X + f[10] / 2, bowLimit(math.abs(pos.Z) + f[11] / 2))
+			if x1 - x0 < 0.5 then
+				continue
+			end
+			size = Vector3.new(x1 - x0, f[11], f[12])
+			pos = Vector3.new((x0 + x1) / 2, pos.Y, pos.Z)
+		end
+		put(f[13], "Part", size, CFrame.fromMatrix(pos, x, y))
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		for i = 1, #BOW_LINE - 1 do
+			local a = Vector3.new(BOW_LINE[i][1], 12.3, side * math.max(BOW_LINE[i][2] - 1.1, 0))
+			local b = Vector3.new(BOW_LINE[i + 1][1], 12.3, side * math.max(BOW_LINE[i + 1][2] - 1.1, 0))
+			put("Mid3", "Part", Vector3.new(1.6, 0.5, (b - a).Magnitude + 0.4), CFrame.lookAt((a + b) / 2, b))
+		end
+	end
+
+	-- 2. the mid hull (x -39..39): 11 clinker strakes a side, the same rows as the bow (bottom edge y, z / top edge y,
+	-- z at the joint), the bulwark rows (10, 11) from the cabin forward; the holes on the port side
+	local ROWS = {
+		{ -4.0, 8.027, -2.0, 8.875, "Dark" }, { -2.2, 8.965, 0.0, 9.75, "Dark" }, { -0.2, 9.841, 2.0, 10.625, "Dark" },
+		{ 1.8, 10.716, 4.0, 11.5, "Dark" }, { 3.8, 11.549, 6.0, 11.5, "Mid" }, { 5.8, 11.633, 8.0, 11.5, "Mid" },
+		{ 7.8, 11.634, 10.0, 11.5, "Mid" }, { 9.8, 11.639, 11.2, 11.5, "Red" }, { 11.0, 11.64, 12.4, 11.5, "Mid" },
+		{ 12.2, 11.638, 13.9, 11.5, "Mid" }, { 13.7, 11.638, 15.4, 11.5, "Mid" },
+	}
+	local HOLES = { { 14, 2.4, 5.4, 2.9 }, { -22, 1.2, 3.6, 2.0 } } -- today's 2 holes (port side): centre x, y, radii
+	for ri, row in ipairs(ROWS) do
+		local x0 = if ri >= 10 then -18.0 else -39.0
+		for _, side in ipairs({ -1, 1 }) do
+			local yb, zb, yt, zt = row[1], row[2] * side, row[3], row[4] * side
+			local up = Vector3.new(0, yt - yb, zt - zb)
+			local h = up.Magnitude
+			up = up.Unit
+			local out = Vector3.xAxis:Cross(up)
+			if out.Z * side < 0 then
+				out = -out
+			end
+			local mid = Vector3.new(0, (yb + yt) / 2, (zb + zt) / 2) - out * 0.175
+			local gaps = {}
+			if side < 0 then
+				for _, hole in ipairs(HOLES) do
+					local dy = ((yb + yt) / 2 - hole[2]) / hole[4]
+					if math.abs(dy) < 1 then
+						local hx = hole[3] * math.sqrt(1 - dy * dy)
+						table.insert(gaps, { hole[1] - hx - rng:NextNumber(0, 0.7), hole[1] + hx + rng:NextNumber(0, 0.7) })
+					end
+				end
+			end
+			local x, prev, first = x0, nil, true
+			while x < 38.99 do
+				local xe = math.min(x + (if first then rng:NextNumber(3, 12) else rng:NextNumber(9, 15)), 39.0)
+				first = false
+				if 39.0 - xe < 2.5 then
+					xe = 39.0
+				end
+				local name, ti = tone(row[5], prev)
+				prev = ti
+				for _, s in ipairs(cutSegments(x, xe, gaps)) do
+					put(name, "Part", Vector3.new(s[2] - s[1] - 0.06, h, 0.35), CFrame.fromMatrix(mid + Vector3.new((s[1] + s[2]) / 2, 0, 0), Vector3.xAxis, up))
+				end
+				x = xe
+			end
+		end
+	end
+	-- bottom planks, keel, the dark hold inside (seen through the holes and the joints)
+	for k = -5, 4 do
+		local name = tone("Dark", nil)
+		put(name, "Part", Vector3.new(78, 0.35, 1.52), CFrame.new(0, -3.825, 0.8 + k * 1.6))
+	end
+	put("Dark1", "Part", Vector3.new(79.4, 0.8, 1.0), CFrame.new(0, -4.4, 0))
+	for _, b in ipairs({ { -2.0, 3.2, 15.8 }, { 1.6, 4.0, 19.0 }, { 7.6, 8.0, 22.0 } }) do
+		put("Darker", "Part", Vector3.new(78.4, b[2], b[3]), CFrame.new(0, b[1], 0))
+	end
+	-- broken planks at the holes (today's 3)
+	for _, b in ipairs({ { 5, -24, 3.4, -12.0, 20, -30 }, { 6, 18, -0.8, -12.0, -20, -10 }, { 7, 10, 5.4, -12.2, 25, 18 } }) do
+		add("Cargo", chamfered(Vector3.new(b[1], 1.0, 0.45), REL * CFrame.new(b[2], b[3], b[4]) * CFrame.fromOrientation(0, rad(b[5]), rad(b[6])), SHIP_SINGLE.Cargo, { "vertical" }, 0.12))
+	end
+
+	-- 3. gun ports (both sides): a dark opening in a frame, the lid hinged at the top (open on the port side)
+	for _, side in ipairs({ -1, 1 }) do
+		for _, px in ipairs({ -6, 4, 14, 24 }) do
+			local f = CFrame.fromMatrix(Vector3.new(px, 7.5, side * 11.66), Vector3.xAxis * -side, Vector3.yAxis)
+			put("Darker", "Part", Vector3.new(2.3, 2.3, 0.14), f)
+			for _, e in ipairs({ { 0, 1.32, 2.9, 0.34 }, { 0, -1.32, 2.9, 0.34 }, { 1.32, 0, 0.34, 2.3 }, { -1.32, 0, 0.34, 2.3 } }) do
+				put("Dark1", "Part", Vector3.new(e[3], e[4], 0.3), f * CFrame.new(e[1], e[2], -0.12))
+			end
+			local lid = f * CFrame.new(0, 1.45, -0.28) * CFrame.Angles(if side < 0 then rad(55) else 0, 0, 0) * CFrame.new(0, -1.2, 0)
+			put(if side < 0 then "Mid2" else "Mid3", "Part", Vector3.new(2.6, 2.4, 0.22), lid)
+			put("Iron", "Part", Vector3.new(0.2, 1.6, 0.08), lid * CFrame.new(-0.7, 0.3, -0.14))
+			put("Iron", "Part", Vector3.new(0.2, 1.6, 0.08), lid * CFrame.new(0.7, 0.3, -0.14))
+		end
+	end
+
+	-- 4. decks: 1.5-wide planks with butt joints over the hold (main deck top 12.4, fore deck 17.25, stern deck 22.3)
+	local function deckPlanks(x0: number, x1: number, z0: number, n: number, w: number, yTop: number, t: number)
+		for k = 0, n - 1 do
+			local zc = z0 + w / 2 + k * w
+			local x, prev, first = x0, nil, true
+			while x < x1 - 0.01 do
+				local xe = math.min(x + (if first then rng:NextNumber(2, 10) else rng:NextNumber(8, 14)), x1)
+				first = false
+				if x1 - xe < 2 then
+					xe = x1
+				end
+				local name, ti = tone("Deck", prev)
+				prev = ti
+				put(name, "Part", Vector3.new(xe - x - 0.05, t, w - 0.06), CFrame.new((x + xe) / 2, yTop - t / 2, zc))
+				x = xe
+			end
+		end
+	end
+	deckPlanks(-18.2, 27.2, -11.5, 16, 1.5, 12.4, 0.8)
+	deckPlanks(26.8, 39.8, -11.7, 16, 23.4 / 16, 17.25, 0.7)
+	deckPlanks(-42.6, -17.4, -13.0, 18, 26 / 18, 22.3, 0.8)
+	-- the red rail cap (cabin to bow) and the bulwark stanchions
+	for _, side in ipairs({ -1, 1 }) do
+		local x, prev = -18.0, nil
+		while x < 38.99 do
+			local xe = math.min(x + rng:NextNumber(10, 16), 39.0)
+			if 39.0 - xe < 3 then
+				xe = 39.0
+			end
+			local name, ti = tone("Red", prev)
+			prev = ti
+			put(name, "Part", Vector3.new(xe - x - 0.05, 0.7, 1.49), CFrame.new((x + xe) / 2, 15.75, side * 11.5))
+			x = xe
+		end
+		for k = 0, 9 do
+			put("Dark3", "Part", Vector3.new(0.5, 3.0, 0.45), CFrame.new(-16 + k * 4.5, 13.9, side * 10.9))
+		end
+	end
+
+	-- 5. the forecastle: hold, aft board wall with a small door, 3 steps, railings on its deck
+	put("Darker", "Part", Vector3.new(12.3, 4.1, 22.2), CFrame.new(33.45, 14.45, 0))
+	local function boardWall(frame: CFrame, a: number, b: number, rows: number, rh: number, role: string, gaps: { any })
+		for r = 0, rows - 1 do
+			local y0, y1 = r * rh, (r + 1) * rh
+			local cuts = {}
+			for _, g in ipairs(gaps) do
+				if g[3] < y1 - 0.05 and g[4] > y0 + 0.05 then
+					table.insert(cuts, { g[1], g[2] })
+				end
+			end
+			local x, prev = a - rng:NextNumber(0, 4), nil
+			while x < b - 0.01 do
+				local xe = math.min(x + rng:NextNumber(5, 9), b)
+				if b - xe < 1.5 then
+					xe = b
+				end
+				local name, ti = tone(role, prev)
+				prev = ti
+				for _, s in ipairs(cutSegments(math.max(x, a), xe, cuts)) do
+					put(name, "Part", Vector3.new(s[2] - s[1] - 0.05, rh - 0.07, 0.3), frame * CFrame.new((s[1] + s[2]) / 2, (y0 + y1) / 2, 0))
+				end
+				x = xe
+			end
+		end
+	end
+	boardWall(CFrame.fromMatrix(Vector3.new(27.0, 12.4, 0), Vector3.zAxis, Vector3.yAxis), -11.5, 11.5, 4, 4.15 / 4, "Mid", { { 3.8, 6.2, 0, 3.1 } })
+	do
+		local f = CFrame.fromMatrix(Vector3.new(26.95, 12.4, 5.0), -Vector3.zAxis, Vector3.yAxis)
+		for i = -1, 1 do
+			put("Dark" .. (i + 2), "Part", Vector3.new(0.76, 3.1, 0.24), f * CFrame.new(i * 0.8, 1.55, 0))
+		end
+		put("Dark1", "Part", Vector3.new(0.34, 3.4, 0.4), f * CFrame.new(-1.37, 1.7, -0.08))
+		put("Dark1", "Part", Vector3.new(0.34, 3.4, 0.4), f * CFrame.new(1.37, 1.7, -0.08))
+		put("Dark1", "Part", Vector3.new(3.08, 0.34, 0.4), f * CFrame.new(0, 3.27, -0.08))
+		put("Iron", "Part", Vector3.new(0.18, 0.18, 0.18), f * CFrame.new(0.75, 1.5, -0.2))
+	end
+	for k = 1, 3 do
+		local top = 12.4 + 1.21 * k
+		add("Deck" .. k, chamfered(Vector3.new(1.0, top - 12.4, 4.0), REL * CFrame.new(23.3 + k, (12.4 + top) / 2, -7.4), SHIP_TONES.Deck[k], { "topFrontBack", "topSides" }, 0.08))
+	end
+	local function railing(a: Vector3, b: Vector3, yBase: number, h: number, skip: { any }?)
+		-- posts every ~2.4 (skipping the gaps along the run), a mid rail and a top rail
+		local len = (b - a).Magnitude
+		local n = math.max(1, math.floor(len / 2.4 + 0.5))
+		local dir = (b - a).Unit
+		for i = 0, n do
+			local p = a + dir * (len * i / n)
+			local skipIt = false
+			for _, s in ipairs(skip or {}) do
+				local d = (p - a):Dot(dir)
+				if d > s[1] - 0.2 and d < s[2] + 0.2 then
+					skipIt = true
+				end
+			end
+			if not skipIt then
+				put(if i % 2 == 0 then "Dark1" else "Dark2", "Part", Vector3.new(0.4, h, 0.4), CFrame.new(p.X, yBase + h / 2, p.Z))
+			end
+		end
+		local segs = cutSegments(0, len, skip or {})
+		for _, s in ipairs(segs) do
+			local pa, pb = a + dir * s[1], a + dir * s[2]
+			local c = (pa + pb) / 2
+			local f = CFrame.lookAt(Vector3.new(c.X, 0, c.Z), Vector3.new(c.X, 0, c.Z) + dir)
+			put("Dark1", "Part", Vector3.new(0.45, 0.34, s[2] - s[1] + 0.4), f + Vector3.new(0, yBase + h + 0.12, 0))
+			put("Dark2", "Part", Vector3.new(0.24, 0.22, s[2] - s[1]), f + Vector3.new(0, yBase + h * 0.5, 0))
+		end
+	end
+	railing(Vector3.new(26.95, 0, -11.55), Vector3.new(26.95, 0, 11.55), 17.25, 2.1, { { 1.9, 6.3 } })
+	railing(Vector3.new(27.2, 0, -11.55), Vector3.new(39.6, 0, -11.55), 17.25, 2.1)
+	railing(Vector3.new(27.2, 0, 11.55), Vector3.new(39.6, 0, 11.55), 17.25, 2.1)
+
+	-- 6. the stern cabin: hold, board walls with 5 gold-framed windows and the door, corner posts, top beams, the
+	-- stern deck's railings, the lantern
+	put("Darker", "Part", Vector3.new(23.4, 9.1, 24.0), CFrame.new(-30.0, 16.95, 0))
+	local WIN = { 3.0, 6.0 } -- window rows (local y)
+	for _, side in ipairs({ -1, 1 }) do
+		boardWall(CFrame.fromMatrix(Vector3.new(0, 12.4, side * 12.15), Vector3.xAxis, Vector3.yAxis), -41.85, -18.15, 9, 9.1 / 9, "Mid", { { -26.6, -23.4, WIN[1], WIN[2] }, { -35.6, -32.4, WIN[1], WIN[2] } })
+	end
+	boardWall(CFrame.fromMatrix(Vector3.new(-41.85, 12.4, 0), Vector3.zAxis, Vector3.yAxis), -12.3, 12.3, 9, 9.1 / 9, "Mid", { { -8.6, -5.4, WIN[1], WIN[2] }, { -1.6, 1.6, WIN[1], WIN[2] }, { 5.4, 8.6, WIN[1], WIN[2] } })
+	boardWall(CFrame.fromMatrix(Vector3.new(-18.15, 12.4, 0), Vector3.zAxis, Vector3.yAxis), -12.3, 12.3, 9, 9.1 / 9, "Mid", { { -3.0, 3.0, 0, 7.4 } })
+	for _, x in ipairs({ -41.95, -18.05 }) do
+		for _, z in ipairs({ -12.25, 12.25 }) do
+			add("Dark1", timber(Vector3.new(0.8, 9.1, 0.8), REL * CFrame.new(x, 16.95, z), SHIP_TONES.Dark[1], 0.12))
+		end
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		put("Dark2", "Part", Vector3.new(24.6, 0.5, 0.5), CFrame.new(-30.0, 21.25, side * 12.45))
+	end
+	put("Dark2", "Part", Vector3.new(0.5, 0.5, 25.4), CFrame.new(-42.15, 21.25, 0))
+	put("Dark2", "Part", Vector3.new(0.5, 0.5, 25.4), CFrame.new(-17.85, 21.25, 0))
+	-- the 5 windows: glass, a gold frame, a dark cross
+	local function cabinWindow(f: CFrame)
+		put("Glass", "Part", Vector3.new(3.0, 2.9, 0.2), f)
+		for _, e in ipairs({ { 0, 1.65, 3.8, 0.4 }, { 0, -1.65, 3.8, 0.4 }, { 1.7, 0, 0.4, 2.9 }, { -1.7, 0, 0.4, 2.9 } }) do
+			put("Gold", "Part", Vector3.new(e[3], e[4], 0.4), f * CFrame.new(e[1], e[2], -0.18))
+		end
+		put("Dark1", "Part", Vector3.new(0.18, 2.9, 0.2), f * CFrame.new(0, 0, -0.1))
+		put("Dark1", "Part", Vector3.new(3.0, 0.18, 0.2), f * CFrame.new(0, 0.1, -0.1))
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		for _, x in ipairs({ -25, -34 }) do
+			cabinWindow(CFrame.fromMatrix(Vector3.new(x, 16.9, side * 12.15), Vector3.xAxis * -side, Vector3.yAxis))
+		end
+	end
+	for _, z in ipairs({ -7, 0, 7 }) do
+		cabinWindow(CFrame.fromMatrix(Vector3.new(-41.85, 16.9, z), -Vector3.zAxis, Vector3.yAxis))
+	end
+	-- the cabin door (facing the main deck): planks, frame, strap hinges, a ring
+	do
+		local f = CFrame.fromMatrix(Vector3.new(-18.1, 12.4, 0), Vector3.zAxis, Vector3.yAxis)
+		local prev = nil
+		for i = -2, 2 do
+			local name, ti = tone("Dark", prev)
+			prev = ti
+			put(name, "Part", Vector3.new(1.16, 7.4, 0.3), f * CFrame.new(i * 1.2, 3.7, 0))
+		end
+		for _, sx in ipairs({ -1, 1 }) do
+			put("Mid1", "Part", Vector3.new(0.5, 7.7, 0.5), f * CFrame.new(sx * 3.25, 3.85, -0.12))
+		end
+		put("Mid1", "Part", Vector3.new(7.0, 0.5, 0.5), f * CFrame.new(0, 7.65, -0.12))
+		for _, y in ipairs({ 1.6, 5.8 }) do
+			put("Iron", "Part", Vector3.new(4.2, 0.34, 0.1), f * CFrame.new(-0.9, y, -0.2))
+			for _, x in ipairs({ -2.4, -1.0, 0.4 }) do
+				add("Iron", piece("Part", Vector3.new(0.15, 0.15, 0.15), REL * f * CFrame.new(x, y, -0.27) * CFrame.Angles(rad(45), rad(45), 0), SHIP_SINGLE.Iron))
+			end
+		end
+		put("Iron", "Part", Vector3.new(0.5, 0.5, 0.08), f * CFrame.new(2.1, 3.7, -0.2))
+		for q = 0, 3 do
+			local a = rad(45 + 90 * q)
+			put("Iron", "Part", Vector3.new(0.6, 0.1, 0.1), f * CFrame.new(2.1 + math.cos(a) * 0.3, 3.6 + math.sin(a) * 0.3, -0.28) * CFrame.Angles(0, 0, a + rad(90)))
+		end
+		-- the lantern on an iron bracket, left of the door
+		local lf = CFrame.new(-16.9, 18.7, -5.4)
+		put("Iron", "Part", Vector3.new(1.3, 0.16, 0.16), CFrame.new(-17.4, 20.3, -5.4))
+		put("Iron", "Part", Vector3.new(0.12, 0.7, 0.12), CFrame.new(-16.8, 19.95, -5.4))
+		put("Iron", "Part", Vector3.new(0.95, 0.14, 0.95), lf * CFrame.new(0, 0.7, 0))
+		put("Iron", "Part", Vector3.new(0.6, 0.18, 0.6), lf * CFrame.new(0, 0.85, 0))
+		put("Iron", "Part", Vector3.new(0.95, 0.14, 0.95), lf * CFrame.new(0, -0.7, 0))
+		for _, sx in ipairs({ -1, 1 }) do
+			for _, sz in ipairs({ -1, 1 }) do
+				put("Iron", "Part", Vector3.new(0.1, 1.3, 0.1), lf * CFrame.new(sx * 0.42, 0, sz * 0.42))
+			end
+		end
+		put("LanternGlass", "Part", Vector3.new(0.72, 1.26, 0.72), lf)
+	end
+	-- the stern deck's railings (back, sides, front)
+	railing(Vector3.new(-42.3, 0, -12.7), Vector3.new(-42.3, 0, 12.7), 22.3, 2.0)
+	railing(Vector3.new(-42.3, 0, -12.7), Vector3.new(-17.7, 0, -12.7), 22.3, 2.0)
+	railing(Vector3.new(-42.3, 0, 12.7), Vector3.new(-17.7, 0, 12.7), 22.3, 2.0)
+	railing(Vector3.new(-17.7, 0, -12.7), Vector3.new(-17.7, 0, 12.7), 22.3, 2.0)
+	-- the rudder on the transom: post, 2 planks, iron straps
+	put("Darker", "Part", Vector3.new(0.9, 14.0, 0.9), CFrame.new(-42.0, 2.6, 0))
+	put("Darker", "Part", Vector3.new(1.2, 11.0, 0.8), CFrame.new(-43.0, 1.0, 0))
+	put("Darker", "Part", Vector3.new(1.0, 9.0, 0.8), CFrame.new(-44.1, 0.0, 0))
+	for _, y in ipairs({ -2.0, 2.0, 5.5 }) do
+		put("Iron", "Part", Vector3.new(2.9, 0.3, 0.95), CFrame.new(-43.1, y, 0))
+	end
+
+	-- 7. the foremast (x 26): mast, topmast, iron bands, crow's nest, 2 yards, the flag
+	add("Dark1", octagon(2.8, 30.6, REL * CFrame.new(26, 27.7, 0), SHIP_TONES.Dark[1]))
+	add("Dark2", octagon(2.0, 9.8, REL * CFrame.new(26, 47.8, 0), SHIP_TONES.Dark[2]))
+	add("Darker", prism16(3.8, 0.9, REL * CFrame.new(26, 12.85, 0), SHIP_SINGLE.Darker))
+	for _, y in ipairs({ 18, 26, 34, 40 }) do
+		add("Iron", octagon(3.1, 0.4, REL * CFrame.new(26, y, 0), SHIP_SINGLE.Iron))
+	end
+	add("Deck1", prism16(6.0, 0.3, REL * CFrame.new(26, 42.6, 0), SHIP_TONES.Deck[1]))
+	for k = 0, 15 do
+		local a = k * math.pi / 8
+		local f = CFrame.new(26 + math.cos(a) * 2.85, 43.55, math.sin(a) * 2.85) * CFrame.Angles(0, -a + math.pi / 2, 0)
+		put("Mid" .. (k % 3 + 1), "Part", Vector3.new(1.12, 1.6, 0.25), f)
+		put("Dark1", "Part", Vector3.new(1.2, 0.3, 0.42), f * CFrame.new(0, 0.95, 0))
+	end
+	add("Dark2", octagon(1.5, 30.0, REL * CFrame.new(28.15, 37.05, 0) * alongZ, SHIP_TONES.Dark[2]))
+	add("Dark3", octagon(1.2, 22.0, REL * CFrame.new(24.0, 28.85, 0) * alongZ, SHIP_TONES.Dark[3]))
+	for _, p in ipairs({ { 28.15, 37.05 }, { 24.0, 28.85 } }) do
+		add("Iron", octagon(1.75, 0.8, REL * CFrame.new(p[1], p[2], 0) * alongZ, SHIP_SINGLE.Iron))
+	end
+	-- the flag at the masthead: 3 waving strips, the emblem (skull and crossbones) on both faces
+	for i = 0, 2 do
+		local f = CFrame.new(28.0 + i * 1.98, 49.6, (i % 2) * 0.22) * CFrame.Angles(0, rad(if i % 2 == 0 then 8 else -8), 0)
+		put("Flag", "Part", Vector3.new(2.0, 4.0 - i * 0.25, 0.16), f)
+	end
+	for _, s in ipairs({ -1, 1 }) do
+		local f = CFrame.new(29.98, 50.0, 0.22 + s * 0.13)
+		add("Emblem", chamfered(Vector3.new(1.1, 0.95, 0.08), REL * f, SHIP_SINGLE.Emblem, { "topSides" }, 0.25))
+		put("Emblem", "Part", Vector3.new(0.5, 0.4, 0.08), f * CFrame.new(0, -0.55, 0))
+		put("Emblem", "Part", Vector3.new(1.9, 0.26, 0.08), f * CFrame.new(0, -1.15, 0) * CFrame.Angles(0, 0, rad(32)))
+		put("Emblem", "Part", Vector3.new(1.9, 0.26, 0.08), f * CFrame.new(0, -1.15, 0) * CFrame.Angles(0, 0, rad(-32)))
+	end
+
+	-- 8. the broken mainmast (x 2): stump, collar, bands, splinters, hanging ropes; the fallen mast and yard
+	add("Dark1", octagon(3.2, 19.0, REL * CFrame.new(2, 21.9, 0), SHIP_TONES.Dark[1]))
+	add("Darker", prism16(4.4, 1.2, REL * CFrame.new(2, 13.0, 0), SHIP_SINGLE.Darker))
+	for _, y in ipairs({ 17, 24 }) do
+		add("Iron", octagon(3.5, 0.4, REL * CFrame.new(2, y, 0), SHIP_SINGLE.Iron))
+	end
+	for k = 0, 4 do
+		local a = rad(72 * k + 10)
+		local h = rng:NextNumber(1.6, 3.6)
+		put("Dark" .. (k % 3 + 1), "WedgePart", Vector3.new(0.9, h, 1.2), CFrame.new(2 + math.cos(a) * 0.85, 31.4 + h / 2 - 0.1, math.sin(a) * 0.85) * CFrame.Angles(0, -a, 0))
+	end
+	rope(Vector3.new(2.3, 30.6, 1.6), Vector3.new(6.5, 12.5, 6.8))
+	rope(Vector3.new(1.7, 30.6, -1.6), Vector3.new(-2.8, 12.5, -6.2))
+	local fallen = CFrame.new(16, 21.25, -16.5) * CFrame.fromOrientation(0, rad(48), rad(-23))
+	add("Dark2", octagon(2.8, 39.3, REL * fallen * alongX, SHIP_TONES.Dark[2]))
+	for _, d in ipairs({ -12, 4, 14 }) do
+		add("Iron", octagon(3.1, 0.4, REL * fallen * CFrame.new(d, 0, 0) * alongX, SHIP_SINGLE.Iron))
+	end
+	add("Dark3", octagon(1.4, 23.35, REL * CFrame.new(17, 23.5, -15) * CFrame.fromOrientation(0, rad(-38), rad(12)) * alongX, SHIP_TONES.Dark[3]))
+	rope((fallen * CFrame.new(-4, 0, 0)).Position, Vector3.new(12.5, 16.1, -11.9))
+	rope((fallen * CFrame.new(8, 0, 0)).Position, Vector3.new(21.0, 16.1, -11.9))
+
+	-- 9. rigging: shrouds with ratlines, the yards' lifts, the forestay to the bowsprit
+	for _, side in ipairs({ -1, 1 }) do
+		local tops, feet = {}, {}
+		for k = 0, 2 do
+			tops[k + 1] = Vector3.new(26, 42.2, side * 1.3)
+			feet[k + 1] = Vector3.new(21.5 + 2 * k, 16.1, side * 11.9)
+			rope(tops[k + 1], feet[k + 1], 0.2)
+			put("Iron", "Part", Vector3.new(0.3, 1.2, 0.25), CFrame.new(feet[k + 1].X, 14.9, side * 11.85))
+		end
+		for y = 18.5, 40.5, 2 do
+			local pts = {}
+			for k = 1, 3 do
+				local t = (y - feet[k].Y) / (tops[k].Y - feet[k].Y)
+				pts[k] = feet[k]:Lerp(tops[k], t)
+			end
+			rope(pts[1], pts[2], 0.1)
+			rope(pts[2], pts[3], 0.1)
+		end
+		rope(Vector3.new(28.15, 37.05, side * 14.6), Vector3.new(26.4, 50.5, side * 0.45), 0.14)
+		rope(Vector3.new(24.0, 28.85, side * 10.8), Vector3.new(25.2, 41.6, side * 0.9), 0.14)
+	end
+	add("Dark1", octagon(1.6, 19.0, REL * CFrame.new(65, 16.5, 0) * CFrame.Angles(0, 0, rad(18)) * alongX, SHIP_TONES.Dark[1]))
+	add("Iron", octagon(1.9, 0.5, REL * CFrame.new(65, 16.5, 0) * CFrame.Angles(0, 0, rad(18)) * CFrame.new(-6.5, 0, 0) * alongX, SHIP_SINGLE.Iron))
+	rope(Vector3.new(26.9, 42.3, 0), Vector3.new(73.6, 19.4, 0), 0.2)
+
+	-- 10. the sails (Agent A's facets): the main sail on the fore side of the mast under the upper yard, the remnant on
+	-- the aft side under the lower yard (moved off the main sail, which it overlapped), the fallen sail on the port rail
+	local SAIL_PLACE = {
+		main = CFrame.new(28.15, 36.6, 0) * CFrame.fromOrientation(0, rad(-90), 0),
+		remnant = CFrame.new(24.0, 28.4, -7.5) * CFrame.fromOrientation(0, rad(90), 0),
+		fallen = CFrame.new(17, 16.1, -11.5),
+	}
+	for key, data in pairs(PropsBatch2.SHIP_SAILS) do
+		local place = REL * SAIL_PLACE[key]
+		for _, f in ipairs(data.rects) do
+			local pos = Vector3.new(f[1], f[2], f[3])
+			add(f[13], piece("Part", Vector3.new(f[10], f[11], f[12]), place * CFrame.fromMatrix(pos, Vector3.new(f[4], f[5], f[6]), Vector3.new(f[7], f[8], f[9])), SHIP_TONES.Sail[tonumber(string.sub(f[13], -1)) :: number]))
+		end
+		for _, f in ipairs(data.tris) do
+			local list = U[f[11]] or {}
+			U[f[11]] = list
+			triangleParts(list, Vector3.new(f[1], f[2], f[3]), Vector3.new(f[4], f[5], f[6]), Vector3.new(f[7], f[8], f[9]), f[10], place, SHIP_TONES.Sail[tonumber(string.sub(f[11], -1)) :: number])
+		end
+	end
+
+	-- 11. the anchor on the port bow (outside the planks) and its rope to the rail
+	do
+		local a = CFrame.new(46, 0, -10.75)
+		add("Iron", octagon(0.7, 7.0, REL * a * CFrame.new(0, 5.0, 0), SHIP_SINGLE.Iron))
+		add("Iron", octagon(0.6, 3.6, REL * a * CFrame.new(0, 7.6, 0) * alongX, SHIP_SINGLE.Iron))
+		for q = 0, 3 do
+			local ang = rad(45 + 90 * q)
+			put("Iron", "Part", Vector3.new(0.75, 0.18, 0.18), a * CFrame.new(math.cos(ang) * 0.38, 9.05 + math.sin(ang) * 0.38, 0) * CFrame.Angles(0, 0, ang + rad(90)))
+		end
+		put("Iron", "Part", Vector3.new(1.6, 0.7, 0.7), a * CFrame.new(0, 1.65, 0))
+		for _, sx in ipairs({ -1, 1 }) do
+			local arm = a * CFrame.new(sx * 1.35, 2.2, 0) * CFrame.Angles(0, 0, rad(sx * 40))
+			put("Iron", "Part", Vector3.new(1.9, 0.6, 0.6), arm)
+			put("Iron", "WedgePart", Vector3.new(0.35, 1.3, 1.1), a * CFrame.new(sx * 2.15, 3.0, 0) * CFrame.Angles(0, rad(if sx < 0 then 90 else -90), 0))
+		end
+		rope(Vector3.new(46, 9.4, -10.75), Vector3.new(45.0, 15.9, -10.9), 0.22)
+	end
+
+	-- 12. cargo: the crate, 3 barrels (iron hoops), 2 rope coils
+	U.Cargo = U.Cargo or {}
+	slatCrate(U.Cargo, rng, REL * CFrame.new(-6, 12.4, -6) * CFrame.Angles(0, rad(20), 0), 4, 4, 4, { SHIP_SINGLE.Cargo, SHIP_SINGLE.Cargo, SHIP_SINGLE.Cargo }, SHIP_SINGLE.Cargo)
+	local function barrel(cf: CFrame, k: number)
+		add("Mid" .. k, prism16(2.9, 4.0, REL * cf, SHIP_TONES.Mid[k]))
+		add("Mid" .. k, prism16(3.15, 1.5, REL * cf, SHIP_TONES.Mid[k]))
+		for _, y in ipairs({ -1.5, -0.62, 0.62, 1.5 }) do
+			add("Iron", prism16(if math.abs(y) > 1 then 3.05 else 3.25, 0.22, REL * cf * CFrame.new(0, y, 0), SHIP_SINGLE.Iron))
+		end
+		add("Deck2", prism16(2.55, 0.1, REL * cf * CFrame.new(0, 2.02, 0), SHIP_TONES.Deck[2]))
+	end
+	barrel(CFrame.new(12, 14.4, 6), 1)
+	barrel(CFrame.new(15.0, 14.4, 7.9), 2)
+	barrel(CFrame.new(-10.5, 13.85, -8.8) * CFrame.Angles(rad(90), rad(30), 0), 3)
+	for _, c in ipairs({ { 20.5, 8.0 }, { -14.0, 9.2 } }) do
+		add("Rope", prism16(2.6, 0.32, REL * CFrame.new(c[1], 12.56, c[2]), SHIP_SINGLE.Rope))
+		add("Rope", prism16(1.95, 0.3, REL * CFrame.new(c[1], 12.86, c[2]), SHIP_SINGLE.Rope))
+		add("Rope", prism16(1.25, 0.26, REL * CFrame.new(c[1], 13.12, c[2]), SHIP_SINGLE.Rope))
+	end
+
+	-- unions: one colour each (UsePartColor true: the _Variants recolour them by name); the hull, decks, cabin and
+	-- cargo collide (precise, so the decks are walkable); ropes, sails, flag, emblem and the lantern glass do not
+	local NOCOLLIDE = { Rope = true, Flag = true, Emblem = true, Sail1 = true, Sail2 = true, Sail3 = true, LanternGlass = true }
+	local names = {}
+	for name in pairs(U) do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _, name in ipairs(names) do
+		local role, ti = string.match(name, "^(%a+)(%d)$")
+		local color = if role and SHIP_TONES[role] then SHIP_TONES[role][tonumber(ti) :: number] else SHIP_SINGLE[name]
+		local opts: any = { single = color, collide = not NOCOLLIDE[name], fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition }
+		if name == "LanternGlass" then
+			opts.material = Enum.Material.Neon
+			opts.shadow = false
+		end
+		if NOCOLLIDE[name] then
+			opts.fidelity = nil
+			opts.shadow = name ~= "Rope"
+		end
+		merge(m, name, U[name], opts)
+		task.wait()
+	end
+
+	-- the variants of the Tundra_2 and Abyss_2 copies
+	local folder = Instance.new("Folder")
+	folder.Name = "_Variants"
+	for vname, v in pairs(PropsBatch2.SHIP_VARIANTS) do
+		local config = Instance.new("Configuration")
+		config.Name = vname
+		for key, value in pairs(v) do
+			if type(value) == "table" and SHIP_TONES[key] then
+				for i, hex in ipairs(value) do
+					config:SetAttribute("Color_" .. key .. i, Color3.fromHex(hex))
+				end
+			elseif type(value) == "string" then
+				config:SetAttribute("Color_" .. key, Color3.fromHex(value))
+			end
+		end
+		for key, t in pairs(v.transparency or {}) do
+			config:SetAttribute("Transparency_" .. key, t)
+		end
+		for key, mat in pairs(v.material or {}) do
+			config:SetAttribute("Material_" .. key, mat)
+		end
+		config.Parent = folder
+	end
+	folder.Parent = m
+
+	local root = m:FindFirstChild("Darker") :: BasePart
+	m.PrimaryPart = root
+	root.PivotOffset = root.CFrame:Inverse()
+	m:SetAttribute("MapPropId", "pirate_ship")
+	BEVEL_SELF = false
+	return m
+end
+
+---------------------------------------------------------------------
 -- install: build, replace ServerStorage.MapProps.<propId> (the old template goes to MapProps._Previous)
 ---------------------------------------------------------------------
 function PropsBatch2.stats(model: Instance): (number, number, number)
@@ -3557,6 +5263,7 @@ PropsBatch2.BUILDERS = {
 	entry_arch = true, gate_palisade = true, gate_barricade = true, gate_mine = true,
 	rebirth_altar = true, egg_station = true, moon_gazebo = true, fruit_stall = true,
 	training_area = true, leaderboard = true, codes_board = true, team_board = true, park_bench = true, street_lamp = true,
+	golem_statue = true, windmill = true, pirate_ship = true,
 }
 
 return PropsBatch2

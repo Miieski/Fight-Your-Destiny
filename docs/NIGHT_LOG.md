@@ -2322,3 +2322,33 @@ every rock intersection in sub-zone 1.
   Sync run 2 = 0; hub parts 5,150 -> 5,051.
   MAIN AGENT PLAY CHECK: Trainer "Train" -> StatsWindow; CodesBoard "Redeem codes" -> QuestsWindow; TeamBoard "Teams"
   -> TeamWindow; a hub bench SitPrompt seats the player; 8 / 8 street lamps lit; no game errors.
+- 03:15 BATCH E done = PROPS BATCH 2 COMPLETE (Agent B; main agent looked at the golem, windmill and ship shots and
+  Play-checked).
+  06 golem (golem_statue): replaced 3 / 3 (test, kit, BossArenas.Plains.Decor): layered chamfered stone plates,
+  pelvis belt, knee caps, fists and toes, a brow over glowing cyan eyes, grooved jaw, today's 6 runes inlaid around
+  Agent A's Neon core crystal (today's PointLight kept), Agent A's shoulder boulders + rubble, 8 engraved cracks,
+  moss, a carved round base with 8 glowing rune tiles; 44 -> 5 parts (~9k tris); 42.4 x 37.6 x 37.0; Plinth / Body /
+  Core collide as before.
+  07 windmill (windmill): replaced 3 / 3 (test, kit, Plains_1.Decor.Landmark): tapered block base with cap ring and a
+  door landing, white plastered octagonal tower in a timber frame (posts, girts, 12 braces, corbels), planked door
+  with strap hinges, 3 framed windows (an open shutter on the front one), individual red shingles with hip caps and a
+  gold finial, static sails (hub with a toothed brake wheel, lattice frames, cloth panels); the 17 no-climb walls kept
+  (MapPropKeep); game copy 111 -> 25 parts (~27k tris); 53.3 x 68.7 x 28.5.
+  15 ship (pirate_ship): replaced 5 / 5 (test, kit, Plains_2, Tundra_2 Frozen, Abyss_2 Sunken x1.12): 11-strake
+  clinker hull on Agent A's bow / stern rows, the 2 holes opened with broken planks, 4 gun ports a side, plank decks,
+  forecastle with 3 steps and railings, a stern cabin (5 gold-framed windows, hinged door, lantern), foremast with
+  crow's nest / yards / shrouds / ratlines / forestay, skull flag, broken mainmast + fallen mast, Agent A's 3 torn sails
+  (2 moved in front of / behind the mast so they no longer cut through it), anchor with rope, barrels, crate, rope
+  coils; one colour per union so the Frozen / Sunken copies recolour by variant (new Transparency_<Part> support in
+  applyVariant); 74 -> 24 parts (~24.6k tris); main deck 0.4 lower in the hull frame to meet the bow deck.
+  Not changed: the stern deck still has no stairs (it was unreachable before too). Note: tools/PropsBatch2.luau is
+  over Studio's 200,000-character .Source limit (multi_edit / UpdateSourceAsync still work; noted in its header).
+  FINAL: SyncMapProps.check() 42 templates / 343 tagged copies all up to date, two full runs replaced 0; batch 2 = 100
+  / 100 copies; hub 5,350 -> 5,051 parts; disk == Studio (180 scripts, 0 written); no errors in the Output.
+  MAIN AGENT PLAY CHECKS: ship deck walk on Plains_2 - landed on the deck and walked it both ways, on the ship in 78 /
+  78 samples; hull rays reaching the ship hit colliding strakes (the others hit the zone wall / a rock first, as
+  before); windmill - jumping at it from 4 sides never got higher than 3.8 studs above the base (no-climb walls hold);
+  golem - all 3 copies identical, Plinth / Body / Core collide, core light present (the arena is a ServerStorage
+  template cloned for boss fights). Phone emulator (landscape) at the plaza / portal row / stalls: 36 fps everywhere,
+  the same as an empty sky far from the map = Studio's unfocused-window frame cap; real render CPU 3.7 ms per frame at
+  the plaza -> smooth. Backup after_props_batch2.

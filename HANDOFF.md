@@ -149,6 +149,18 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-19/20: PROPS BATCH 2 (owner: 16 test-zone objects to the FOUNTAIN / WELL quality, mirrored in the game).**
+All 16 done and synced (100 / 100 copies): portal frames x12, hub wall, stone arch, stone pillar (boss arena),
+entrance arch, palisade gate, barricade, mine door, rebirth altar, egg station, moon gazebo, fruit stall, training
+area, leaderboards / codes / team boards, park bench, street lamps, golem, windmill, pirate ship (x3 + variants).
+Built in Studio from parts to the recipe in docs/prop_texture_guide.md section A (fountain / well recipe) and merged
+into one-colour CSG unions (no FBX import needed); small organic accents (crystals, ship bow / stern / sails, golem
+boulders + core) from Agent A's facet data (Blender_Exports/Props/facets/, tools/blender/fyd_facets.py). Builders:
+DevTools.PropsBatch2 (tools/PropsBatch2.luau - over the 200k .Source limit: edit through multi_edit /
+ScriptEditorService:UpdateSourceAsync). OWNER'S PERMANENT RULE: every test-zone change is mirrored to every game
+instance through MapProps / SyncMapProps (42 templates, 343 tagged copies), "replaced n / total" per object.
+Log: NIGHT_LOG "Props batch 2"; screenshots docs/screenshots/props_batch2/; inventory docs/prop_inventory.md.
+
 **2026-10-19 (afternoon): PLAINS SUB-ZONE 1 FIX (owner, 9 screenshots).** Wheat field (template wheat_patch: CSG soil
 ridges + stalk-cluster rows that sway near the player), carts and hay bales (templates cart / hay_bale; the cart rule is
 filtered to Plains_1 + test + kit - Cart_A is also placed in the hub, Desert_2/3, Plains_4, Volcano_1), every window
