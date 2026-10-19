@@ -1974,3 +1974,12 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   shimmer, trophy and shield glints; Spin / Scroll added to the controller (Low FX stops them). Max 6 props emit at
   once (plaza worst case about 40 particles).
   MISSING SOUNDS (not added): fire crackle loop, fountain water loop, wind chime; there is no Ambient SoundGroup.
+- 06:05 FIXES 2 (Agent A): diamond sign at today's size 8.0 x 6.0 x 1.5 (y 14.2-20.2, pivot at its centre (0, 17.2,
+  3.5), new post foot / sleeve / cup), anchors re-assumed at z 3.5; weapon-stall AxeHead anchored with its handle;
+  the shared awning cloth lowered 0.15 on all three stalls (back post gap 0.04-0.07 like today's 0.05, front 0.39-0.45
+  like today's 0.44) and its collider slab follows it (centre y 9.6 -> 9.45, same size / angle; DECISION: kept, so a
+  player on the roof does not float 0.15 above the cloth); fountain + 4 SpoutLip Block colliders (12 in total, = today)
+  and the moss pads lie on the step (none on the outer face or the plaza; box 30.06 x 22.33 x 30.10); rowboat oar
+  blade tip at (2.75, 0.24, -4.6), >= 1.8 from every nearby clam (hub 2.35, was 0.75), oar 7.57 long to stay inside
+  today's x range. New preview ids: diamond_shop 95984830780590, weapon_stall 85117045354573, trophy_stall
+  127684037913768, fountain 114916914245834, rowboat 102715504916306.

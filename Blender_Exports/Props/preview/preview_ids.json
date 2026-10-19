@@ -36,15 +36,15 @@
     "rowboat_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://105090937255120"
+    "rbxassetid://102715504916306"
    ],
    "size": [
     1024,
-    94
+    92
    ],
    "meshes": 7,
-   "verts": 4080,
-   "tris": 1676
+   "verts": 4022,
+   "tris": 1652
   },
   "minecart": {
    "files": [
@@ -126,14 +126,14 @@
     "fountain_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://115702162046935"
+    "rbxassetid://114916914245834"
    ],
    "size": [
     1024,
     253
    ],
    "meshes": 12,
-   "verts": 11016,
+   "verts": 11023,
    "tris": 5018
   },
   "anvil_forge": {
@@ -156,7 +156,7 @@
     "weapon_stall_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://138468857077719"
+    "rbxassetid://85117045354573"
    ],
    "size": [
     1024,
@@ -171,7 +171,7 @@
     "trophy_stall_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://130620008564858"
+    "rbxassetid://127684037913768"
    ],
    "size": [
     1024,
@@ -186,15 +186,15 @@
     "diamond_shop_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://101265120883414"
+    "rbxassetid://95984830780590"
    ],
    "size": [
     1024,
-    140
+    146
    ],
    "meshes": 10,
-   "verts": 6240,
-   "tris": 2656
+   "verts": 6512,
+   "tris": 2776
   }
  }
 }

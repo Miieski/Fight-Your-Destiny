@@ -37,13 +37,15 @@ AWNING_REPLACES = [
 
 
 def _awning(p, n, color_a, color_b, name_a, name_b, seed=0):
-    """Cloth awning over today's slab: back edge (z 4.55, y 10.9) -> front edge (z -6.75, y 8.3), 15.6 wide; sags
+    """Cloth awning over today's slab: back edge (z 4.55, y 10.75) -> front edge (z -6.75, y 8.15), 15.6 wide; sags
     between the back beam (z 3.55) and the front post line (z -3.55), droops on the overhang, folds across, dips
-    between the posts along the front edge; a scalloped valance panel under each stripe."""
+    between the posts along the front edge; a scalloped valance panel under each stripe. 0.15 lower than the first
+    build (Studio check): the cloth now clears the back post tops (10.4) by ~0.05 and the front post tops (8.4) by
+    ~0.43, like today's stripes (0.05 / 0.44)."""
     rng = random.Random(seed)
     a = p.mesh(name_a, "Cloth", color_a, replaces=AWNING_REPLACES)
     b = p.mesh(name_b, "Cloth", color_b, replaces="(same awning as " + p.id + "_" + name_a + ")")
-    W, ZB, ZF, YB, YF = 15.6, 4.55, -6.75, 10.9, 8.3
+    W, ZB, ZF, YB, YF = 15.6, 4.55, -6.75, 10.75, 8.15
     sb, sf = (ZB - 3.55) / (ZB - ZF), (ZB + 3.55) / (ZB - ZF)
     sw = W / n
 
@@ -72,7 +74,7 @@ def _awning(p, n, color_a, color_b, name_a, name_b, seed=0):
         xc = x0 + sw / 2
         top = point(xc, 1.0)
         m.prism(scallop, 0.06, c=(xc, top[1] + 0.02, ZF - 0.04), bevel=0, tone=rng.uniform(0.9, 1.0))
-    p.collider("Block", (0, 9.6, -1.1), (15.6, 0.45, 11.6), (-13, 0, 0), name=f"{p.id}_Collider_Awning")
+    p.collider("Block", (0, 9.45, -1.1), (15.6, 0.45, 11.6), (-13, 0, 0), name=f"{p.id}_Collider_Awning")  # follows the cloth
     return a, b
 
 
@@ -173,9 +175,10 @@ def weapon_stall():
     head_c = hc + R @ Vector((0, 2.0, 0))
     handle = p.mesh("AxeHandle", "Wood", "WoodDark", shadow=False, anchor=_anchor("AxeHandle", tuple(hc), (0, 0, rz), (0.4, 5, 0.4)),
                     replaces=["AxeHandle"])
-    head = p.mesh("AxeHead", "Iron", "IronWorn", shadow=False, anchor=_anchor("AxeHead", tuple(head_c), (0, 0, rz), (2, 1.8, 0.3)),
+    # the head shares the handle's anchor (Studio check: an own AxeHead anchor landed it 0.5 off the handle top)
+    head = p.mesh("AxeHead", "Iron", "IronWorn", shadow=False, anchor=_anchor("AxeHandle", tuple(hc), (0, 0, rz), (0.4, 5, 0.4)),
                   replaces=["AxeHead"])
-    pts = [tuple(hc + R @ Vector((0, y, 0))) for y in (-2.5, -1.2, 0.0, 1.3, 2.45)]
+    pts = [tuple(hc + R @ Vector((0, y, 0))) for y in (-2.5, -1.2, 0.0, 1.3, 2.36)]  # top 0.04 proud of the head
     handle.tube(pts, [0.16, 0.17, 0.17, 0.16, 0.15], segs=6, smooth=False)
     bit = [(0.0, -0.32), (0.55, -0.4), (0.95, -0.85), (1.0, 0.0), (0.95, 0.85), (0.55, 0.4), (0.0, 0.32),
            (-0.55, 0.4), (-0.95, 0.85), (-1.0, 0.0), (-0.95, -0.85), (-0.55, -0.4)]
@@ -260,24 +263,35 @@ def diamond_shop():
     p.placement = _placement("Hub.DiamondShop (and the kit / test copies of Station_DiamondShop)")
     _frame_context(p)
     _awning(p, 7, "ClothBlue", "ClothWhite", "AwningBlue", "AwningWhite", seed=20)
-    SZ = 1.0                                      # assumed z of the sign (not in the inventory)
-    G = Vector((0, 18.3, SZ))                     # assumed girdle centre (diamond spans y 16.35 .. 19.25 like today)
-    centre = (0, 17.8, SZ)                        # pivot: the middle of the diamond (PropFX floats / rotates it)
-    anc = _anchor("DiamondGirdle", tuple(G), (0, 0, 0), (4.9, 0.3, 1.5))
+    # Studio check (Agent B): the real SignBar / DiamondGirdle sit at z 3.5, and today's diamond is 8.0 x 6.0 x 1.5
+    # (x -4..4, y 14.2..20.2, its lower tip on the post top). The girdle part itself is at y ~18.4 (the first build,
+    # assumed at 18.3, landed 0.10 higher), so the anchor assumes (0, 18.4, 3.5) and the mesh is modelled at its
+    # final place: culet 14.2, girdle 18.22, table 20.2, rim radius 4.0, depth 1.5.
+    SZ = 3.5                                      # z of the sign (real parts, Studio check)
+    TIP, H, RD, RR = 14.2, 6.0, 3.88, 4.0         # culet y, total height, girdle / rim radius
+    SQ = 0.75 / RR                                # depth squash: rim 1.5 deep like today
+    G = Vector((0, TIP + H * 0.67, SZ))           # girdle centre (crown 0.33 of the height)
+    centre = (0, TIP + H / 2, SZ)                 # pivot: the middle of the diamond (PropFX floats / rotates it)
+    anc = _anchor("DiamondGirdle", (0, 18.4, SZ), (0, 0, 0), (4.9, 0.3, 1.5))
     dia = p.mesh("Diamond", "Glow", "Diamond", pivot=centre, shadow=False, anchor=anc,
                  replaces=["Diamond (block + 4 wedges)", "DiamondGirdle"])
     rim = p.mesh("DiamondRim", "Glow", "ClothWhite", pivot=centre, shadow=False, anchor=anc, replaces="(the bright rim)")
-    _brilliant(dia, tuple(G), 2.45, 2.9, squash=0.31, segs=16)
-    rim.lathe([(2.4, -0.12), (2.54, -0.12), (2.54, 0.12), (2.4, 0.12), (2.4, -0.12)], c=tuple(G), segs=16, smooth=False,
-              scale=(1, 1, 0.31), caps=(False, False))
-    # gold sign bar with finials and a moulded post up to the diamond
+    _brilliant(dia, tuple(G), RD, H, squash=SQ, segs=16)
+    rim.lathe([(RD - 0.08, -0.2), (RR, -0.2), (RR, 0.2), (RD - 0.08, 0.2), (RD - 0.08, -0.2)], c=tuple(G), segs=16,
+              smooth=False, scale=(1, 1, SQ), caps=(False, False))
+    # gold sign bar with finials, and a moulded post from the awning through a sleeve on the bar up to a small cup
+    # under the culet (the diamond floats 0.5 up from there and back)
     sign = p.mesh("SignGold", "Gold", "Gold", shadow=False, anchor=_anchor("SignBar", (0, 12.2, SZ), (0, 0, 0), (9, 0.6, 0.6)),
                   replaces=["SignBar", "SignPost"])
     sign.beam((-4.4, 12.2, SZ), (4.4, 12.2, SZ), 0.45, 0.45)
     for s in (-1, 1):
         sign.ico((s * 4.6, 12.2, SZ), 0.32, sub=1, jit=0.0)
-    sign.lathe([(0.42, 12.4), (0.42, 12.6), (0.3, 12.75), (0.26, 15.8), (0.36, 16.0), (0.5, 16.25), (0.3, 16.4)],
+    start = len(sign.verts)
+    sign.lathe([(0.46, 10.42), (0.46, 10.68), (0.34, 10.8), (0.28, 10.98), (0.27, 11.8), (0.36, 11.9), (0.36, 12.5),
+                (0.27, 12.6), (0.26, 13.55), (0.34, 13.7), (0.3, 13.85), (0.44, 14.15), (0.38, 14.3)],
                c=(0, 0, SZ), segs=10, smooth=False)
+    # the foot follows the awning's pitch (the cloth rises ~0.27 per stud toward the back here): no stub under it
+    sign.deform(lambda v: Vector((v.x, v.y + 0.27 * (v.z - SZ) * min(1.0, max(0.0, (10.95 - v.y) / 0.27)), v.z)), start)
     # three cushions with gold tassels, gems nested in them (cyan, gold, cyan)
     cush = p.mesh("Cushions", "Cloth", "ClothBlueAlt", shadow=False, replaces=["Cushion x3 (2.2 x 0.5 x 1.6 at x -4 / 0 / 4)"])
     tas = p.mesh("Tassels", "Gold", "Gold", shadow=False, replaces="(cushion tassels)")
@@ -303,7 +317,7 @@ def diamond_shop():
                     smooth=False, caps=(False, False))
         p.attach(f"GemGlint{int(x / 4) + 2}", (x + 0.15, top + 1.0, cz - 0.2))
     p.attach("DiamondCenter", centre)
-    p.attach("SignGlint", (0.8, 18.9, SZ - 0.3))
+    p.attach("SignGlint", (1.3, 19.6, SZ - 0.5))
     return p
 
 

@@ -105,24 +105,45 @@ def fountain():
         foam.torus(tuple(land), 0.55, 0.13, segs=8, rsegs=3, scale=(1, 0.45, 1))
     foam.torus((0, WU + 0.03, 0), 1.75, 0.12, segs=12, rsegs=3, scale=(1, 0.45, 1))
 
-    # --- moss on the step and at the foot of the wall --------------------------------------------------------------
+    # --- moss lying on the step top (Studio check: no pads on the step's outer face / the plaza) ------------------------
+    # Each pad is a flattened lump bent along the ring (tangential half TH, radial half RH, ~0.1 proud of the stone).
+    # Even k: in the corner against the wall (inner edge just inside the wall, creeping 0.25 up it); odd k: smaller,
+    # nearer the step edge. Radially everything stays within r 12.9 .. 14.8 (step edge r 14.95..15.08: no overhang).
+    def wrap(az, rc, y0, th, rh, vh, creep):
+        a0 = math.radians(az)
+
+        def fn(v):
+            u, h = v.z * rh, v.y * vh
+            if creep:
+                h += 0.25 * max(0.0, (-v.z - 0.3) / 0.7)
+            ang = a0 + v.x * th / rc
+            return Vector((math.cos(ang) * (rc + u), y0 + h, math.sin(ang) * (rc + u)))
+        return fn
+
     for k in range(10):
         az = k * 36 + rng.uniform(-10, 10)
-        d = _dir(az, 0)
-        if k % 2 == 0:   # on the step top, against the wall
-            hit = _surface_hit(dark, tuple(d * 13.95 + Vector((0, 6.0, 0))), (0, -1, 0))
-        else:            # at the foot of the step
-            hit = _surface_hit(dark, tuple(d * 20.0 + Vector((0, 0.35, 0))), tuple(-d))
+        th = rng.uniform(1.5, 1.9) if k % 2 == 0 else rng.uniform(0.9, 1.3)
+        rh = rng.uniform(0.6, 0.75) if k % 2 == 0 else 0.5
+        rc = 12.9 + rh if k % 2 == 0 else 14.25
+        for off in (0.0, 1.5, -1.5, 3.0):   # a ray into a slab joint misses: nudge it
+            hit = _surface_hit(dark, tuple(_dir(az + off, 0) * rc + Vector((0, 2.5, 0))), (0, -1, 0))  # under the coping
+            if hit:
+                break
         if hit:
-            e = Vector((0, 1, 0)).rotation_difference(hit[1]).to_euler("ZYX")
-            moss.ico(tuple(hit[0] + hit[1] * 0.03), rng.uniform(0.8, 1.1), scale=(1.8, 0.22, 0.9), sub=1, jit=0.2,
-                     rot=(math.degrees(e.x), math.degrees(e.y), math.degrees(e.z)), tone=rng.uniform(0.72, 0.86))
+            moss.ico((0, 0, 0), 1.0, sub=1, jit=0.08, deform=wrap(az, rc, hit[0].y - 0.05, th, rh, 0.16, k % 2 == 0),
+                     tone=rng.uniform(0.72, 0.86))
 
     # --- colliders: today's solids, exactly (full cylinders: nobody climbs in more than today) ----------------------
     for name, y, h, dia in (("Step", 0.5, 1.0, 30.0), ("Basin", 2.5, 3.0, 26.0), ("Rim", 4.2, 0.8, 27.0),
                             ("Pedestal", 5.5, 5.0, 7.0), ("PedestalTop", 9.5, 4.0, 5.0), ("UpperBowl", 11.6, 1.6, 13.0),
                             ("Spout", 14.4, 4.4, 3.0), ("SpoutRing", 16.8, 0.8, 4.0)):
         p.collider("Cylinder", (0, y, 0), (h, dia, dia), (0, 0, 90), name=f"fountain_Collider_{name}")
+    # today's 4 SpoutLip blocks (2 x 1.2 x 1.6, radial x 2, centre radius 6.4, y 11.2..12.4, at the diagonals): same
+    # collision as today (they reach ~0.9 past the upper-bowl cylinder)
+    for i, th in enumerate((45, 135, 225, 315)):
+        d = _dir(th, 0)
+        yaw = -th if th <= 180 else 360 - th
+        p.collider("Block", (d.x * 6.4, 11.8, d.z * 6.4), (2.0, 1.2, 1.6), (0, yaw, 0), name=f"fountain_Collider_SpoutLip{i + 1}")
     # --- PropFX points ------------------------------------------------------------------------------------------
     p.attach("WaterLower", (0, WL, 0))
     p.attach("WaterUpper", (0, WU, 0))

@@ -9,24 +9,24 @@
  "PivotY": 0.0,
  "Bounds": {
   "Center": [
-   0.216,
-   11.12,
-   -0.037
+   0.03,
+   11.135,
+   0.023
   ],
   "Size": [
-   30.699,
-   22.36,
-   30.208
+   30.061,
+   22.329,
+   30.102
   ],
   "Min": [
-   -15.134,
-   -0.06,
-   -15.141
+   -15.001,
+   -0.029,
+   -15.029
   ],
   "Max": [
-   15.565,
+   15.061,
    22.3,
-   15.067
+   15.074
   ]
  },
  "StudioSize": [
@@ -49,14 +49,14 @@
    "Transparency": 0.0,
    "CastShadow": true,
    "Center": [
-    0.022,
+    0.03,
     6.295,
-    0.022
+    0.023
    ],
    "Size": [
-    30.053,
-    12.649,
-    30.09
+    30.061,
+    12.648,
+    30.102
    ],
    "Pivot": [
     0.0,
@@ -64,7 +64,9 @@
     0.0
    ],
    "Triangles": 2332,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Wall": {
    "Family": "StoneBlocks",
@@ -95,7 +97,9 @@
     0.0
    ],
    "Triangles": 192,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Pedestal": {
    "Family": "Stone",
@@ -126,7 +130,9 @@
     0.0
    ],
    "Triangles": 536,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Column": {
    "Family": "Stone",
@@ -157,7 +163,9 @@
     0.0
    ],
    "Triangles": 276,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Wet": {
    "Family": "Stone",
@@ -188,7 +196,9 @@
     0.0
    ],
    "Triangles": 214,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Moss": {
    "Family": "Moss",
@@ -204,14 +214,14 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    0.216,
-    0.923,
-    -0.106
+    -0.335,
+    0.98,
+    -0.148
    ],
    "Size": [
-    30.699,
-    1.966,
-    30.07
+    28.797,
+    0.437,
+    28.453
    ],
    "Pivot": [
     0.0,
@@ -219,7 +229,9 @@
     0.0
    ],
    "Triangles": 200,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Gold": {
    "Family": "Gold",
@@ -250,7 +262,9 @@
     0.0
    ],
    "Triangles": 236,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Crystal_Glow": {
    "Family": "Glow",
@@ -281,7 +295,9 @@
     0.0
    ],
    "Triangles": 60,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_LowerWater": {
    "Family": "Water",
@@ -312,7 +328,9 @@
     0.0
    ],
    "Triangles": 124,
-   "Overlay": "water_ripple"
+   "Overlay": "water_ripple",
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_UpperWater": {
    "Family": "Water",
@@ -343,7 +361,9 @@
     0.0
    ],
    "Triangles": 92,
-   "Overlay": "water_ripple"
+   "Overlay": "water_ripple",
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Stream": {
    "Family": "Stream",
@@ -374,7 +394,9 @@
     0.0
    ],
    "Triangles": 396,
-   "Overlay": "water_ripple"
+   "Overlay": "water_ripple",
+   "Anchor": null,
+   "Replaces": null
   },
   "fountain_Foam": {
    "Family": "Foam",
@@ -405,7 +427,9 @@
     0.0
    ],
    "Triangles": 360,
-   "Overlay": null
+   "Overlay": null,
+   "Anchor": null,
+   "Replaces": null
   }
  },
  "Colliders": [
@@ -413,9 +437,9 @@
    "Name": "fountain_Collider_Step",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     0.5,
-    0
+    0.0
    ],
    "Size": [
     1.0,
@@ -423,18 +447,18 @@
     30.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_Basin",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     2.5,
-    0
+    0.0
    ],
    "Size": [
     3.0,
@@ -442,18 +466,18 @@
     26.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_Rim",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     4.2,
-    0
+    0.0
    ],
    "Size": [
     0.8,
@@ -461,18 +485,18 @@
     27.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_Pedestal",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     5.5,
-    0
+    0.0
    ],
    "Size": [
     5.0,
@@ -480,18 +504,18 @@
     7.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_PedestalTop",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     9.5,
-    0
+    0.0
    ],
    "Size": [
     4.0,
@@ -499,18 +523,18 @@
     5.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_UpperBowl",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     11.6,
-    0
+    0.0
    ],
    "Size": [
     1.6,
@@ -518,18 +542,18 @@
     13.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_Spout",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     14.4,
-    0
+    0.0
    ],
    "Size": [
     4.4,
@@ -537,18 +561,18 @@
     3.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
    ]
   },
   {
    "Name": "fountain_Collider_SpoutRing",
    "Shape": "Cylinder",
    "Center": [
-    0,
+    0.0,
     16.8,
-    0
+    0.0
    ],
    "Size": [
     0.8,
@@ -556,9 +580,85 @@
     4.0
    ],
    "Rotation": [
-    0,
-    0,
-    90
+    0.0,
+    0.0,
+    90.0
+   ]
+  },
+  {
+   "Name": "fountain_Collider_SpoutLip1",
+   "Shape": "Block",
+   "Center": [
+    4.525,
+    11.8,
+    4.525
+   ],
+   "Size": [
+    2.0,
+    1.2,
+    1.6
+   ],
+   "Rotation": [
+    0.0,
+    -45.0,
+    0.0
+   ]
+  },
+  {
+   "Name": "fountain_Collider_SpoutLip2",
+   "Shape": "Block",
+   "Center": [
+    -4.525,
+    11.8,
+    4.525
+   ],
+   "Size": [
+    2.0,
+    1.2,
+    1.6
+   ],
+   "Rotation": [
+    0.0,
+    -135.0,
+    0.0
+   ]
+  },
+  {
+   "Name": "fountain_Collider_SpoutLip3",
+   "Shape": "Block",
+   "Center": [
+    -4.525,
+    11.8,
+    -4.525
+   ],
+   "Size": [
+    2.0,
+    1.2,
+    1.6
+   ],
+   "Rotation": [
+    0.0,
+    135.0,
+    0.0
+   ]
+  },
+  {
+   "Name": "fountain_Collider_SpoutLip4",
+   "Shape": "Block",
+   "Center": [
+    4.525,
+    11.8,
+    -4.525
+   ],
+   "Size": [
+    2.0,
+    1.2,
+    1.6
+   ],
+   "Rotation": [
+    0.0,
+    45.0,
+    0.0
    ]
   }
  ],
@@ -623,5 +723,6 @@
    12.35,
    -3.5
   ]
- }
+ },
+ "Placement": null
 }

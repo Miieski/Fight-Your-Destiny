@@ -10,12 +10,12 @@
  "Bounds": {
   "Center": [
    0.003,
-   6.873,
+   6.798,
    -1.128
   ],
   "Size": [
    15.614,
-   8.077,
+   7.927,
    11.384
   ],
   "Min": [
@@ -25,7 +25,7 @@
   ],
   "Max": [
    7.81,
-   10.911,
+   10.761,
    4.564
   ]
  },
@@ -50,7 +50,7 @@
    "CastShadow": true,
    "Center": [
     -0.972,
-    8.903,
+    8.753,
     -1.128
    ],
    "Size": [
@@ -104,7 +104,7 @@
    "CastShadow": true,
    "Center": [
     0.979,
-    8.903,
+    8.753,
     -1.128
    ],
    "Size": [
@@ -763,13 +763,13 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    2.387,
-    5.875,
+    2.372,
+    5.833,
     3.15
    ],
    "Size": [
-    1.945,
-    4.743,
+    1.914,
+    4.659,
     0.34
    ],
    "Pivot": [
@@ -833,11 +833,11 @@
    "Triangles": 108,
    "Overlay": null,
    "Anchor": {
-    "Part": "AxeHead",
+    "Part": "AxeHandle",
     "Pick": "nearest",
     "AssumedPosition": [
-     3.084,
-     7.779,
+     2.4,
+     5.9,
      3.15
     ],
     "AssumedRotation": [
@@ -846,9 +846,9 @@
      -20.0
     ],
     "PartSize": [
-     2,
-     1.8,
-     0.3
+     0.4,
+     5,
+     0.4
     ]
    },
    "Replaces": [
@@ -1119,8 +1119,8 @@
    "Name": "weapon_stall_Collider_Awning",
    "Shape": "Block",
    "Center": [
-    0,
-    9.6,
+    0.0,
+    9.45,
     -1.1
    ],
    "Size": [
@@ -1129,9 +1129,9 @@
     11.6
    ],
    "Rotation": [
-    -13,
-    0,
-    0
+    -13.0,
+    0.0,
+    0.0
    ]
   }
  ],

@@ -249,6 +249,12 @@ def chest():
 # its broken side is the near, low one).
 # ------------------------------------------------------------------------------------------------
 HULL_L = 13.7   # 2026-10-19: as long as today's hull (x -5.62 .. 8.48 with the stem and transom)
+# The oar (Studio check 2026-10-19): the blade must keep >= 1.8 (plan) from the clams placed round the boat (boat pivot
+# space: hub (4.87, 0.44, -5.64) and (6.81, 0.66, 1.56), Plains_2 Docks (8.73, -0.05, -2.92) and (-4.33, -0.05, -10.04));
+# the old tip at x 5.1 passed 0.75 from the first. Tip now at x 2.75 (2.35 from it), lowest blade point y 0.2 (the
+# hub's sloping sand buried the old tip 0.48), oar x -4.02 .. 2.76 inside today's oar extent (x -4.03 .. 5.26).
+OAR_REST_S, OAR_GRIP = 0.18, 1.05      # where the oar lies on the near gunwale (hull station), grip overhang past it
+OAR_TIP = (2.75, 0.24, -4.6)           # blade tip (boat pivot space)
 
 
 def _hull(s):
@@ -352,14 +358,14 @@ def rowboat():
     # loose plank on the ground behind the boat (+Z side)
     light.box((-2.6, 0.1, 4.6), (3.6, 0.2, 0.9), rot=(0, -14, 2), grain="x", bevel="long", tone=0.9)
     # the oar (a second object): LEANS on the low (-Z) gunwale, blade tip just above the ground, inside today's oar
-    # extent (x -4.03 .. 5.26): only the tip comes near sloped ground, nothing lies flat to sink
+    # extent (x -4.03 .. 5.26), clear of the clams (see OAR_TIP): only the tip comes near sloped ground
     oar = p.mesh("Oar", "Wood", "WoodDark", shadow=False)
     blade = p.mesh("OarBlade", "Wood", "WoodLight", shadow=False)
-    rest = M @ Vector(_hull_point(0.2, 1.0, -1, 0.12, 0.04))          # top of the near gunwale, by the stern
+    rest = M @ Vector(_hull_point(OAR_REST_S, 1.0, -1, 0.12, 0.04))   # top of the near gunwale, by the stern
     a = rest + Vector((0.0, 0.25, -0.12))                             # the shaft lies on it (gunwale + radii)
-    tip = Vector((5.1, 0.08, -4.55))
+    tip = Vector(OAR_TIP)
     d = (tip - a).normalized()
-    a = a - d * 0.85                                                  # the grip end sticks out past the gunwale
+    a = a - d * OAR_GRIP                                              # the grip end sticks out past the gunwale
     length = (tip - a).length
     b2 = a + d * (length - 2.05)                                      # blade root
     oar.cyl(tuple(a + d * 0.75), tuple(b2), 0.17, segs=6)

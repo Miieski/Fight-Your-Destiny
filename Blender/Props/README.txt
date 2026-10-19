@@ -307,17 +307,17 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
     propId          asset id(s)                         size        meshes / vertices / triangles
     well            rbxassetid://80102529524931         1024 x 163  10 / 7,108 / 3,106
     chest           rbxassetid://91198421411858         1024 x 45   5 / 2,116 / 1,170
-    rowboat         rbxassetid://105090937255120        1024 x 94   7 / 4,080 / 1,676
+    rowboat         rbxassetid://102715504916306        1024 x 92   7 / 4,022 / 1,652
     minecart        rbxassetid://87079386271654         1024 x 78   6 / 3,496 / 1,736
     skull_bones     rbxassetid://86179103526619         1024 x 80   3 / 3,476 / 1,254
     clam_pearl      rbxassetid://122490022754803        1024 x 36   5 / 1,580 / 572
     egg_nest        rbxassetid://85105593530507         1024 x 73   9 / 3,167 / 1,245
     scarecrow       rbxassetid://119496532966562        1024 x 101  13 / 4,442 / 1,848
-    fountain        rbxassetid://115702162046935        1024 x 253  12 / 11,016 / 5,018
+    fountain        rbxassetid://114916914245834        1024 x 253  12 / 11,023 / 5,018
     anvil_forge     rbxassetid://79286061632425         1024 x 98   12 / 4,434 / 1,950
-    weapon_stall    rbxassetid://138468857077719        1024 x 139  21 / 6,239 / 2,672
-    trophy_stall    rbxassetid://130620008564858        1024 x 126  6 / 5,592 / 2,246
-    diamond_shop    rbxassetid://101265120883414        1024 x 140  10 / 6,240 / 2,656
+    weapon_stall    rbxassetid://85117045354573         1024 x 139  21 / 6,239 / 2,672
+    trophy_stall    rbxassetid://127684037913768        1024 x 126  6 / 5,592 / 2,246
+    diamond_shop    rbxassetid://95984830780590         1024 x 146  10 / 6,512 / 2,776
 
 =================================================================
 12. PROPS DONE
@@ -379,6 +379,7 @@ FIXES AFTER AGENT B'S STUDIO PREVIEW (2026-10-19):
   tones (read from +Z too); the OAR now LEANS against the hull: grip end on the low (-Z) gunwale (y about 3.2), blade
   tip on the ground at (5.1, 0.08, -4.55), so only the tip comes near sloped ground; oar x -3.59 .. 5.11 inside today's
   -4.03 .. 5.26. Oar collider = a Cylinder along the shaft (Rotation is a Roblox Orientation: 70.97, -80.49, -90).
+  (Oar moved again in FIXES 2: tip (2.75, 0.24, -4.6).)
 - clam_pearl (572 tris): shells now Plain (SmoothPlastic like today) ClamPink #FF5C78 outside, ClamInner #FF8AA3
   (warm light pink) inside, vertex-colour gradient darker at the hinge; rest pose 34 deg (today 42).
 - egg_nest (1,245 tris + 100-tri collider): rock centre raised to y 4.91 with a flat ledge stone (r 2.95, top 9.05) set
@@ -394,9 +395,10 @@ BATCH 3 (2026-10-19; lineup Previews/Props/Batch3_lineup.png):
   wet band at the waterline, carved pedestal (3 bands), pale column flaring into an irregular-rimmed upper bowl with
   6 carved lips, spout column, gold collar, hexagonal crystal with 2 small ones (replaces TopCrystal: move its
   WaterPoint attachment + PointLight to the Crystal_Glow mesh / the WaterPoint point). Water 0.35 below the rims.
-  Colliders = today's 8 full cylinders (Step, Basin, Rim, Pedestal, PedestalTop, UpperBowl, Spout, SpoutRing): nobody
-  climbs in more than today. Attachments WaterLower (0, 4.25, 0), WaterUpper (0, 12.3, 0), WaterPoint (0, 19.6, 0),
-  Mist1-6 (stream landings), Glint1-3. Keep Hub.Decor.VFX.Water_Ripple (separate part).
+  Colliders = today's 8 full cylinders (Step, Basin, Rim, Pedestal, PedestalTop, UpperBowl, Spout, SpoutRing) + the
+  4 SpoutLip blocks (FIXES 2): nobody climbs in more than today. Attachments WaterLower (0, 4.25, 0), WaterUpper
+  (0, 12.3, 0), WaterPoint (0, 19.6, 0), Mist1-6 (stream landings), Glint1-3. Keep Hub.Decor.VFX.Water_Ripple
+  (separate part).
 - anvil_forge: 1,950 tris / 12 meshes (Hearth StoneBlocks/Stone, Upper StoneBlocks/StoneDark: voussoirs, fire-bed
   frame, chimney + cap; Soot + Coal Plain dark; Coals_Glow Fire; Stump WoodTrunk; StumpTop WoodLight rings; Anvil
   Iron (+ tongs, hoops, nozzle); AnvilFace IronWorn; Wood WoodMid (bucket staves, bellows boards); Leather Cloth/
@@ -411,11 +413,11 @@ BATCH 4, Blender half (2026-10-19; lineup Previews/Props/Batch4_lineup.png, fram
 - weapon_stall: 2,672 tris / 21 meshes. Awning (8 stripes per the brief: AwningRed ClothRed + AwningCream
   ClothCream; cloth sagging between the back beam and the front posts, drooping overhang, folds, dip along the front
   edge between the posts, scalloped valance) replacing today's 7 stripes + 7 fringe blocks; collider Awning (Block
-  15.6 x 0.45 x 11.6 at (0, 9.6, -1.1), rotation (-13, 0, 0) = today's slab). Anchored items: 3 swords (SwordNBlade
-  Iron with a dark fuller, SwordNGold guard + ball quillons + pommel, SwordNGrip leather wrap; anchor SwordBlade,
+  15.6 x 0.45 x 11.6 at (0, 9.6, -1.1), rotation (-13, 0, 0) = today's slab; y 9.45 since FIXES 2). Anchored items:
+  3 swords (SwordNBlade Iron with a dark fuller, SwordNGold guard + ball quillons + pommel, SwordNGrip leather wrap; anchor SwordBlade,
   assumed x -0.6 / -2.2 / -3.8, y 6.4, z 3.2, tips up), ShieldFace (Planks, ClothBlueAlt) + ShieldRim (Iron, rim +
   8 rivets) + ShieldBoss (Gold, both sides) anchored to Shield (assumed (3.6, 6.3, 3.15), rotation (0, 90, 0)),
-  AxeHandle (anchor AxeHandle) + AxeHead (double-bit, anchor AxeHead) leaning -20 deg, TrayWood + TrayVelvet (Cloth,
+  AxeHandle + AxeHead (double-bit) both anchored to AxeHandle (FIXES 2) leaning -20 deg, TrayWood + TrayVelvet (Cloth,
   Iron tint = today's grey-blue) + a dagger (DaggerBlade / Gold / Grip) anchored to DisplaySword (the 1.6 x 0.3 x 4.6
   "blue tray", assumed (-3.6, 3.85, -2.9), rotation (0, 90, 0)). Attachment ShieldGlint.
 - trophy_stall: 2,246 tris / 6 meshes, no anchors (positions from the inventory). Awning (7 stripes, AwningGreen
@@ -423,7 +425,8 @@ BATCH 4, Blender half (2026-10-19; lineup Previews/Props/Batch4_lineup.png, fram
   stand base) replacing the TrophyCup's 3 gold cylinders at (-3.5, 3.7, -2.9); Ball_Glass (#CDEBF5, T 0.3) +
   BallCore_Glow (#B39DFF) at (2.5, 4.85, -2.9) replacing CounterSkull (the brief's crystal ball wins). Attachments
   BallShimmer, TrophyGlint.
-- diamond_shop: 2,656 tris / 10 meshes. Awning (7 stripes, AwningBlue ClothBlue + AwningWhite ClothWhite).
+- diamond_shop: 2,656 tris / 10 meshes (sign rebuilt in FIXES 2: 2,776 tris). Awning (7 stripes, AwningBlue
+  ClothBlue + AwningWhite ClothWhite).
   Diamond_Glow (brilliant cut: crown, table, pavilion, culet; depth squashed to 1.5 like today) + DiamondRim_Glow
   (white girdle) with Pivot = the diamond's centre (0, 17.8, 1.0 assumed) for the float / spin, anchored to
   DiamondGirdle (assumed (0, 18.3, 1.0)), replacing Diamond (block + 4 wedges) + DiamondGirdle; SignGold (bar with
@@ -431,6 +434,33 @@ BATCH 4, Blender half (2026-10-19; lineup Previews/Props/Batch4_lineup.png, fram
   (pillows, ClothBlueAlt) + Tassels (Gold) + GemsCyan_Glow (x -4 / 4) + GemGold_Glow (x 0) + GemRims_Glow (white
   girdles) at today's x -4 / 0 / 4 on the counter (no anchor). Attachments DiamondCenter, SignGlint, GemGlint1-3.
   The "Diamond Shop" BillboardGui stays a Studio child.
+FIXES 2 AFTER AGENT B'S STUDIO PREVIEW OF BATCH 3/4 (2026-10-19):
+- diamond_shop (2,776 tris, 15.60 x 16.62 x 11.38): the sign is today's size. Diamond_Glow 7.76 x 6.0 x 1.46 + DiamondRim
+  _Glow 8.0 x 0.4 x 1.5 = 8.0 x 6.0 x 1.5 overall, y 14.2 .. 20.2 (culet 14.2, girdle 18.22, table 20.2), Pivot = the
+  centre (0, 17.2, 3.5) for the spin / float. The real SignBar and DiamondGirdle sit at z 3.5 (Studio check) and the
+  girdle part at y ~18.4 (the first build, assumed 18.3, landed 0.10 higher), so the anchors assume DiamondGirdle
+  (0, 18.4, 3.5) and SignBar (0, 12.2, 3.5); the meshes are modelled at their final place. SignGold: bar 8.8 + ball
+  finials (9.77 overall, today's bar 9.0) at y 12.2, and a post from a foot on the awning (y 10.3, sheared to the
+  cloth's pitch) through a sleeve on the bar up to a small cup at 14.3 holding the culet (the diamond floats 0.5 up
+  from there and back).
+- weapon_stall (2,672 tris): AxeHead anchored to AxeHandle like the handle (the head sits on the handle's top end);
+  handle top end 0.04 proud of the head.
+- awnings of weapon_stall / trophy_stall / diamond_shop (same cloth): lowered 0.15 (back edge y 10.75, front edge
+  8.15). Cloth underside over the post tops (centre of the post / min .. max over the 0.9 square top): back posts
+  (top 10.4) +0.04 .. +0.07 (-0.10 .. +0.18 across the top: the cloth is pitched), front posts (top 8.4) +0.39 ..
+  +0.45; today's stripes: 0.05 / 0.44. The trophy and diamond awnings hovered the same 0.2 at the back, so they were
+  lowered too. Awning collider follows the cloth: centre (0, 9.45, -1.1) (was 9.6), size / rotation unchanged.
+- fountain (5,018 tris, 30.06 x 22.33 x 30.10): + 4 Block colliders fountain_Collider_SpoutLip1-4 = today's SpoutLip
+  blocks (2 x 1.2 x 1.6, x radial, centres at radius 6.4 on the diagonals 45 / 135 / 225 / 315 deg, y 11.8, Rotation
+  (0, -45 / -135 / 135 / 45, 0)). Moss: 10 pads lying on the step top, bent along the ring (5 in the corner against
+  the wall, creeping 0.25 up it, 5 smaller nearer the edge), r 12.89 .. 14.78 (step edge 14.95 .. 15.08), y 0.76 ..
+  1.20, about 0.1 proud of the stone; none on the step's outer face or the plaza.
+- rowboat (1,652 tris, 14.09 x 4.95 x 10.43): oar re-laid (still leaning on the near gunwale, grip at hull station
+  0.18 + 1.05 overhang): blade tip (2.75, 0.24, -4.6), lowest blade point y 0.20 (was 0.04: less sinking on the hub's
+  sloping sand, ~0.2 above flat ground), oar 7.57 long, x -4.02 .. 2.76 (today's oar -4.03 .. 5.26), z -4.96 .. -2.89.
+  Blade distance (plan) to the clams round the boat: hub (4.87, -5.64) 2.35, hub (6.81, 1.56) 7.09, Plains_2 Docks
+  (8.73, -2.92) 6.13 and (-4.33, -10.04) 7.72 (all >= 1.8). Oar collider: Cylinder 7.565 x 0.34 at (-0.616, 1.767,
+  -3.798), Rotation (66.19, -76.6, -90). Knobs: OAR_TIP / OAR_REST_S / OAR_GRIP in fyd_props_recipes.py.
 
 =================================================================
 13. NOTES FOR THE STUDIO-BUILT PROPS (Agent B, batch 1) AND PIVOTS

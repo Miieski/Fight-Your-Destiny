@@ -1584,7 +1584,8 @@ def make(prop, previews=True, manifest=True):
     if manifest:
         update_manifest(prop.id, photo=prop.photo, tool=prop.tool, **{
             "triangles/parts": f"{tris} tris / {n_render} meshes" + (f" (+{len(objs) - n_render} collider)"
-                                                                     if len(objs) > n_render else ""),
+                                                                     if len(objs) > n_render else "")
+                               + (" (pieces only)" if "Blender pieces" in (prop.tool or "") else ""),
             "budget": f"<= {prop.budget:,} tris",
             "status": f"Blender {status}: .blend + FBX + preview done; waiting for the owner's import",
             "notes": (prop.notes + " | " if prop.notes else "") + "bbox %.2f x %.2f x %.2f (x%.2f / x%.2f / x%.2f)"
