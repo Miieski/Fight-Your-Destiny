@@ -1990,3 +1990,7 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   continuous slab instead of 7 stripes, 0.15 lower); fountain 12 colliders = today's 12 (but the 4 SpoutLip blocks are
   rotated 90 deg -> sent back to Agent A); rowboat: hub clam 2.35 clear, hub blade tip 0.15 in the sand, but 0.20
   above flat ground at the Docks / test area / Abyss -> lower the tip (sent back to Agent A). All put back.
+- 07:10 LAST FIXES (Agent A): fountain SpoutLip colliders = today's exactly (2 x 1.2 x 1.6, 2.0 side tangential,
+  rotations -135 / 135 / 45 / -45; meshes unchanged, preview id kept); rowboat oar tip lowered to y 0.044 (rests on
+  flat ground; about 0.3 into the hub's sloped sand, accepted as natural), clams >= 2.35 clear, 1,660 tris, new preview
+  id 76458477611449.

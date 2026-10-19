@@ -3,7 +3,7 @@
  "Photo": "05_rowboat.png",
  "Fbx": "Blender_Exports/Props/rowboat.fbx",
  "Blend": "Blender/Props/rowboat.blend",
- "Triangles": 1652,
+ "Triangles": 1660,
  "Budget": 2500,
  "Units": "studs, Roblox model space (x right, y up, z back), front -Z, origin = ground contact under the pivot",
  "PivotY": 0.0,
@@ -11,17 +11,17 @@
   "Center": [
    1.43,
    2.413,
-   0.259
+   0.258
   ],
   "Size": [
    14.088,
    4.946,
-   10.427
+   10.428
   ],
   "Min": [
    -5.614,
    -0.06,
-   -4.955
+   -4.956
   ],
   "Max": [
    8.474,
@@ -214,21 +214,21 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    -1.521,
-    2.17,
-    -3.599
+    -1.507,
+    2.115,
+    -3.603
    ],
    "Size": [
-    4.99,
-    2.443,
-    1.408
+    5.002,
+    2.566,
+    1.411
    ],
    "Pivot": [
     0.0,
     0.0,
     0.0
    ],
-   "Triangles": 112,
+   "Triangles": 120,
    "Overlay": null,
    "Anchor": null,
    "Replaces": null
@@ -247,14 +247,14 @@
    "Transparency": 0.0,
    "CastShadow": false,
    "Center": [
-    1.825,
-    0.654,
-    -4.431
+    1.834,
+    0.515,
+    -4.433
    ],
    "Size": [
-    1.873,
-    0.903,
-    1.047
+    1.856,
+    0.942,
+    1.045
    ],
    "Pivot": [
     0.0,
@@ -291,17 +291,17 @@
    "Name": "rowboat_Collider_Oar",
    "Shape": "Cylinder",
    "Center": [
-    -0.616,
-    1.767,
-    -3.798
+    -0.611,
+    1.698,
+    -3.799
    ],
    "Size": [
-    7.565,
+    7.631,
     0.34,
     0.34
    ],
    "Rotation": [
-    66.19,
+    64.91,
     -76.6,
     -90.0
    ]

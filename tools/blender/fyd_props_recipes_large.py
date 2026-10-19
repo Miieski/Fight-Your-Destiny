@@ -138,11 +138,10 @@ def fountain():
                             ("Pedestal", 5.5, 5.0, 7.0), ("PedestalTop", 9.5, 4.0, 5.0), ("UpperBowl", 11.6, 1.6, 13.0),
                             ("Spout", 14.4, 4.4, 3.0), ("SpoutRing", 16.8, 0.8, 4.0)):
         p.collider("Cylinder", (0, y, 0), (h, dia, dia), (0, 0, 90), name=f"fountain_Collider_{name}")
-    # today's 4 SpoutLip blocks (2 x 1.2 x 1.6, radial x 2, centre radius 6.4, y 11.2..12.4, at the diagonals): same
-    # collision as today (they reach ~0.9 past the upper-bowl cylinder)
-    for i, th in enumerate((45, 135, 225, 315)):
+    # today's 4 SpoutLip blocks exactly (2 x 1.2 x 1.6 at radius 6.4 on the diagonals, y 11.2..12.4, today's rotations:
+    # the 2.0 side is TANGENTIAL, like the lip mesh): same collision as today
+    for i, (th, yaw) in enumerate(((45, -135), (135, 135), (225, 45), (315, -45))):
         d = _dir(th, 0)
-        yaw = -th if th <= 180 else 360 - th
         p.collider("Block", (d.x * 6.4, 11.8, d.z * 6.4), (2.0, 1.2, 1.6), (0, yaw, 0), name=f"fountain_Collider_SpoutLip{i + 1}")
     # --- PropFX points ------------------------------------------------------------------------------------------
     p.attach("WaterLower", (0, WL, 0))

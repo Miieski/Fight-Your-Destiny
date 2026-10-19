@@ -36,15 +36,15 @@
     "rowboat_mesh.png"
    ],
    "assetIds": [
-    "rbxassetid://102715504916306"
+    "rbxassetid://76458477611449"
    ],
    "size": [
     1024,
-    92
+    93
    ],
    "meshes": 7,
-   "verts": 4022,
-   "tris": 1652
+   "verts": 4038,
+   "tris": 1660
   },
   "minecart": {
    "files": [

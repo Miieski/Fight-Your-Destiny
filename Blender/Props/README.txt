@@ -307,7 +307,7 @@ scale, UV tiling, vertex colours and the shared SurfaceAppearances in Studio bef
     propId          asset id(s)                         size        meshes / vertices / triangles
     well            rbxassetid://80102529524931         1024 x 163  10 / 7,108 / 3,106
     chest           rbxassetid://91198421411858         1024 x 45   5 / 2,116 / 1,170
-    rowboat         rbxassetid://102715504916306        1024 x 92   7 / 4,022 / 1,652
+    rowboat         rbxassetid://76458477611449         1024 x 93   7 / 4,038 / 1,660
     minecart        rbxassetid://87079386271654         1024 x 78   6 / 3,496 / 1,736
     skull_bones     rbxassetid://86179103526619         1024 x 80   3 / 3,476 / 1,254
     clam_pearl      rbxassetid://122490022754803        1024 x 36   5 / 1,580 / 572
@@ -379,7 +379,7 @@ FIXES AFTER AGENT B'S STUDIO PREVIEW (2026-10-19):
   tones (read from +Z too); the OAR now LEANS against the hull: grip end on the low (-Z) gunwale (y about 3.2), blade
   tip on the ground at (5.1, 0.08, -4.55), so only the tip comes near sloped ground; oar x -3.59 .. 5.11 inside today's
   -4.03 .. 5.26. Oar collider = a Cylinder along the shaft (Rotation is a Roblox Orientation: 70.97, -80.49, -90).
-  (Oar moved again in FIXES 2: tip (2.75, 0.24, -4.6).)
+  (Oar moved again in FIXES 2: tip (2.75, 0.08, -4.6).)
 - clam_pearl (572 tris): shells now Plain (SmoothPlastic like today) ClamPink #FF5C78 outside, ClamInner #FF8AA3
   (warm light pink) inside, vertex-colour gradient darker at the hinge; rest pose 34 deg (today 42).
 - egg_nest (1,245 tris + 100-tri collider): rock centre raised to y 4.91 with a flat ledge stone (r 2.95, top 9.05) set
@@ -414,8 +414,9 @@ BATCH 4, Blender half (2026-10-19; lineup Previews/Props/Batch4_lineup.png, fram
   ClothCream; cloth sagging between the back beam and the front posts, drooping overhang, folds, dip along the front
   edge between the posts, scalloped valance) replacing today's 7 stripes + 7 fringe blocks; collider Awning (Block
   15.6 x 0.45 x 11.6 at (0, 9.6, -1.1), rotation (-13, 0, 0) = today's slab; y 9.45 since FIXES 2). Anchored items:
-  3 swords (SwordNBlade Iron with a dark fuller, SwordNGold guard + ball quillons + pommel, SwordNGrip leather wrap; anchor SwordBlade,
-  assumed x -0.6 / -2.2 / -3.8, y 6.4, z 3.2, tips up), ShieldFace (Planks, ClothBlueAlt) + ShieldRim (Iron, rim +
+  3 swords (SwordNBlade Iron with a dark fuller, SwordNGold guard + ball quillons + pommel, SwordNGrip leather wrap;
+  anchor SwordBlade, assumed x -0.6 / -2.2 / -3.8, y 6.4, z 3.2, tips up),
+  ShieldFace (Planks, ClothBlueAlt) + ShieldRim (Iron, rim +
   8 rivets) + ShieldBoss (Gold, both sides) anchored to Shield (assumed (3.6, 6.3, 3.15), rotation (0, 90, 0)),
   AxeHandle + AxeHead (double-bit) both anchored to AxeHandle (FIXES 2) leaning -20 deg, TrayWood + TrayVelvet (Cloth,
   Iron tint = today's grey-blue) + a dagger (DaggerBlade / Gold / Grip) anchored to DisplaySword (the 1.6 x 0.3 x 4.6
@@ -451,16 +452,18 @@ FIXES 2 AFTER AGENT B'S STUDIO PREVIEW OF BATCH 3/4 (2026-10-19):
   +0.45; today's stripes: 0.05 / 0.44. The trophy and diamond awnings hovered the same 0.2 at the back, so they were
   lowered too. Awning collider follows the cloth: centre (0, 9.45, -1.1) (was 9.6), size / rotation unchanged.
 - fountain (5,018 tris, 30.06 x 22.33 x 30.10): + 4 Block colliders fountain_Collider_SpoutLip1-4 = today's SpoutLip
-  blocks (2 x 1.2 x 1.6, x radial, centres at radius 6.4 on the diagonals 45 / 135 / 225 / 315 deg, y 11.8, Rotation
-  (0, -45 / -135 / 135 / 45, 0)). Moss: 10 pads lying on the step top, bent along the ring (5 in the corner against
+  blocks exactly (2 x 1.2 x 1.6 with the 2.0 side TANGENTIAL like the lip mesh, centres (4.525, 11.8, 4.525) /
+  (-4.525, 11.8, 4.525) / (-4.525, 11.8, -4.525) / (4.525, 11.8, -4.525), Rotation (0, -135 / 135 / 45 / -45, 0) =
+  today's). Moss: 10 pads lying on the step top, bent along the ring (5 in the corner against
   the wall, creeping 0.25 up it, 5 smaller nearer the edge), r 12.89 .. 14.78 (step edge 14.95 .. 15.08), y 0.76 ..
   1.20, about 0.1 proud of the stone; none on the step's outer face or the plaza.
-- rowboat (1,652 tris, 14.09 x 4.95 x 10.43): oar re-laid (still leaning on the near gunwale, grip at hull station
-  0.18 + 1.05 overhang): blade tip (2.75, 0.24, -4.6), lowest blade point y 0.20 (was 0.04: less sinking on the hub's
-  sloping sand, ~0.2 above flat ground), oar 7.57 long, x -4.02 .. 2.76 (today's oar -4.03 .. 5.26), z -4.96 .. -2.89.
-  Blade distance (plan) to the clams round the boat: hub (4.87, -5.64) 2.35, hub (6.81, 1.56) 7.09, Plains_2 Docks
-  (8.73, -2.92) 6.13 and (-4.33, -10.04) 7.72 (all >= 1.8). Oar collider: Cylinder 7.565 x 0.34 at (-0.616, 1.767,
-  -3.798), Rotation (66.19, -76.6, -90). Knobs: OAR_TIP / OAR_REST_S / OAR_GRIP in fyd_props_recipes.py.
+- rowboat (1,660 tris, 14.09 x 4.95 x 10.43): oar re-laid (still leaning on the near gunwale, grip at hull station
+  0.18 + 1.05 overhang): blade tip (2.75, 0.08, -4.6), lowest blade point y 0.04 (rests on flat ground: Plains_2,
+  test area, Abyss_2; sinks ~0.3 into the hub's sloping sand, accepted), oar 7.63 long, x -4.01 .. 2.76 (today's oar
+  -4.03 .. 5.26), z -4.96 .. -2.90. Blade distance (plan) to the clams round the boat: hub (4.87, -5.64) 2.35, hub
+  (6.81, 1.56) 7.09, Plains_2 Docks (8.73, -2.92) 6.13 and (-4.33, -10.04) 7.77 (all >= 1.8). Oar collider: Cylinder
+  7.631 x 0.34 at (-0.611, 1.698, -3.799), Rotation (64.91, -76.6, -90). Knobs: OAR_TIP / OAR_REST_S / OAR_GRIP in
+  fyd_props_recipes.py.
 
 =================================================================
 13. NOTES FOR THE STUDIO-BUILT PROPS (Agent B, batch 1) AND PIVOTS

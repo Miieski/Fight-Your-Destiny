@@ -251,10 +251,11 @@ def chest():
 HULL_L = 13.7   # 2026-10-19: as long as today's hull (x -5.62 .. 8.48 with the stem and transom)
 # The oar (Studio check 2026-10-19): the blade must keep >= 1.8 (plan) from the clams placed round the boat (boat pivot
 # space: hub (4.87, 0.44, -5.64) and (6.81, 0.66, 1.56), Plains_2 Docks (8.73, -0.05, -2.92) and (-4.33, -0.05, -10.04));
-# the old tip at x 5.1 passed 0.75 from the first. Tip now at x 2.75 (2.35 from it), lowest blade point y 0.2 (the
-# hub's sloping sand buried the old tip 0.48), oar x -4.02 .. 2.76 inside today's oar extent (x -4.03 .. 5.26).
+# the old tip at x 5.1 passed 0.75 from the first. Tip now at x 2.75 (2.35 from it), lowest blade point y 0.04: it
+# rests on flat ground (Plains_2, test area, Abyss_2) and sinks ~0.3 into the hub's sloping sand (accepted: a blade tip
+# in sand reads natural); oar x -4.01 .. 2.76 inside today's oar extent (x -4.03 .. 5.26).
 OAR_REST_S, OAR_GRIP = 0.18, 1.05      # where the oar lies on the near gunwale (hull station), grip overhang past it
-OAR_TIP = (2.75, 0.24, -4.6)           # blade tip (boat pivot space)
+OAR_TIP = (2.75, 0.08, -4.6)           # blade tip (boat pivot space)
 
 
 def _hull(s):
