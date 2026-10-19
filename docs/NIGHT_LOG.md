@@ -2422,3 +2422,28 @@ every rock intersection in sub-zone 1.
   brass bowl lamps on iron brackets (Neon flame "Ember" keeps today's PointLight + FirePoint); ZoneId and the "Desert"
   sign texts kept; 33 -> 12 parts; passage 24 x 18 unchanged; collision = invisible union of today's parts.
   Main agent Play check: 4 / 4 lights lit, "Desert" on both sides, walked through the arch; no errors.
+- 13:40 02 + 03 done = DESERT GATES COMPLETE (Agent B; main agent looked at both game shots and Play-checked).
+  02 pylon temple gate (pylon_temple_gate, Gate_Desert_4): replaced 3 / 3 (test, kit, Desert_4.Gate); towers in block
+  courses with banded torus rolls, lapis lotus / gold chequer inlays and cavetto cornices; the 2 relief figures now
+  in sunk relief (raised face cut 0.2 deep around the unchanged figures, bevelled walls, darker floor, stone frame);
+  a niche with a cedar flag pole and red banner on each tower; coursed lintel with soffit and cornice; stone jambs;
+  a dark-wood door frame (front and back) with gold studs every 1.5 and 2 gold ring handles, all under Barrier; the
+  winged sun disk with a gold ring, 2 uraei and 3 feather rows per wing; gold sign frame; sand drifts. HIEROGLYPHS:
+  47 / 47 glyph parts identical (37 door + 10 tower figure; with the 4 borders, the seam and the sun disc 53 / 53),
+  checked part by part (name, parent, class, exact colour, material, transparency, size / position 0.001 stud,
+  rotation 0.1 deg) against the pre-sync game copy and Agent A's B12 record; the kit / test copies now have the game
+  copy's 0.4 belt bars. SubZoneId, Barrier + attribute, PriceSign ("31.25K Gold") kept. 81 -> 68 parts, ~50.6k tris.
+  03 canyon barricade (canyon_barricade, Gate_Desert_3): replaced 3 / 3; Agent A's 4 layered canyon rock facet pieces
+  (strata dark red -> orange, recessed soft layers, cracks; the opening stays 26 wide), under Barrier: chipped planks
+  with battens, nailed crosses, riveted iron straps with hasp plates (in place of the chains, same places), a riveted
+  lock plate with padlock and an escutcheon; outside it: the iron-banded beam, rope lashings, a 3-plank sign board
+  behind the exact PriceSign ("12.5K Gold"), a hanging warning plank, eye bolts, rubble, small rocks, sand drifts.
+  Collisions: invisible union (pylon) / 32 invisible parts (canyon: a single union's hull bridged the rock notches);
+  rays vs today's boxes: 0 off, 0 blocked through the open passage, the Barrier blocks 384 / 384. Gate_Desert_2 not
+  in the owner's list, untouched.
+  MAIN AGENT PLAY CHECK (fresh lock with admin lockAll, then the Desert gates opened in order with 100M gold):
+  Desert_2 / 3 / 4 gates CLOSED = Barrier collides, every door piece shown, the player cannot pass; after each prompt
+  ("Open (5K / 12.5K / 31.25K Gold)") = Barrier off, every door piece hidden (the temple's 44th piece once a moment
+  later - it streamed in after the open, then hidden), the player walks through. Phone emulator at the temple gate:
+  144 fps, worst 8.5 ms, render CPU 2.6 ms. No errors. FINAL: 51 templates / 382 tagged copies up to date, run 2 = 0;
+  disk == Studio (182 scripts, 0 written); backup after_desert_gates.

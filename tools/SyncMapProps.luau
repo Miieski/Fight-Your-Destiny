@@ -174,6 +174,15 @@ SyncMapProps.RULES = {
 	{ propId = "egyptian_arch", names = { "EntryArch_Desert" }, match = function(m)
 		return m.Name == "EntryArch" and m.Parent ~= nil and m.Parent.Name == "Desert_1"
 	end },
+	-- 02 the pylon temple gate and 03 the canyon barricade (desert test row, kit Gates.Gate_Desert_4 / _3,
+	-- Zones.Desert.Desert_4.Gate / Desert_3.Gate: SubZoneId kept, the template's Barrier is the PrimaryPart, the PriceSign
+	-- texts move onto the new PriceSign)
+	{ propId = "pylon_temple_gate", names = { "Gate_Desert_4" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Desert_4"
+	end },
+	{ propId = "canyon_barricade", names = { "Gate_Desert_3" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Desert_3"
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

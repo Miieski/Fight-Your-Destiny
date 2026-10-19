@@ -1540,5 +1540,8 @@ for id in pairs(PropsDesert.BUILDERS) do
 end
 PropsDesert.install = B2.install
 PropsDesert.stats = B2.stats
+-- for the builder modules that follow this one (DevTools.PropsDesertGates): the fresh PropsBatch2 table and the shared helpers
+PropsDesert.B2 = B2
+PropsDesert.lib = { soft = soft, lists = lists, envelope = envelope, finishVisual = finishVisual, inlayBand = inlayBand, frustum8 = frustum8 }
 
 return PropsDesert
