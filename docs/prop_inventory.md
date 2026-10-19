@@ -54,6 +54,38 @@ and `hub_stalls_final.jpg` retaken after the fix, the `zz_BUG_*` shots show the 
 | FieldBorder (Plains_1 only) | `StudioProps.buildFieldBorder(Farm.FieldDirt)` | n/a (unique) | 1 | 4 unions / about 2,000 | low worn plank border, open at the barrels; no collision |
 | FarmHouse, Cottage_A, Cottage_B windows | `StudioProps.fixWindows(model)` | n/a (kit models, fixed in place) | FarmHouse 3/3, Cottage_A 5/5, Cottage_B 4/4 | per window: 6 new parts (2 jambs, head, sill, 2 glazing bars), the 3 old trim parts removed; crossed beams cut in 2-3 | the beams stop at the new window frames; walls, door, roof unchanged |
 
+### Props batch 2 (owner, 2026-10-19): inventory before the remake (read from Studio)
+
+Test zone = `workspace._Staging.AssetPreview.ModelsA.Lineup.<Folder>.<Kit name>`; kit = `ServerStorage.MapAssets.<Folder>.<Kit name>`.
+Game copies were found by name AND by part-name similarity (renamed hub markers / zone gates / landmarks). No MapProps
+rule exists yet for any of them. Backups: `BackUP_Files/old_props_2026-10-19_pre_batch2/<nn>_<id>.rbxm` (test + kit +
+every game copy). "Parts" = BaseParts of one copy (test / game).
+
+| # | object | test zone (kit) | game copies | parts test / game | functional content to keep | notes |
+|---|---|---|---|---|---|---|
+| 01 | wall | Hub.Hub_Wall_Section (MapAssets.Hub) | Hub.Decor.Village.Hub_Wall_Section x4 | 8 / 8 | none | |
+| 02 | portal_pink | Hub.PortalFrame (Hub) | Hub.Decor.PortalFrames.PortalFrame_<Zone> x12 | 17 / 16 | frame: NamePlate SurfaceGui "NameGui"/NameLabel; the glowing field is NOT in the frame in the game: Hub.Portals.Portal_<Zone> (Part, attrs ZoneId / ZoneColor, BillboardGui NameTag; ZoneService teleports) | the test frame has its own "Surface" (pink field). PortalController finds the frame by name and recolours EVERY BasePart of it (black filter on locked zones): a union with UsePartColor false ignores Color, so the controller must toggle UsePartColor (code change) |
+| 03a | entrance arch | Gates.EntryArch_Plains (Gates) | Zones.Plains.Plains_1.EntryArch | 58 / 58 | attr ZoneId=Plains; NameSign SurfaceGuis NameGuiFront/Back; 2 nested `lantern` MapProps (PointLight in Flame) | other zones have their own EntryArch_<Zone> kits (out of scope) |
+| 03b | palisade + wooden door | Gates.Gate_Plains_2 (Gates) | Zones.Plains.Plains_2.Gate | 51 / 51 | Gate: PrimaryPart "Barrier" (CanCollide wall) whose CHILDREN are the door decor (GateController hides them + no collision when open, attr BarrierDecorIsChildOfBarrier); attr SubZoneId; PriceSign SurfaceGuis (PriceLabel set by GateController); Ember FirePoint attachments | Gate_Tundra_2 is a separate kit (0.85 similar), not in scope |
+| 04 | barricade | Gates.Gate_Plains_3 (Gates) | Zones.Plains.Plains_3.Gate | 36 / 36 | same Gate contract; Barrier invisible (T1) with Plank x4 / Post x2 / Rope x8 under it (vanish when opened) | Toolbox rock attrs SourceAssetId/SourceCreator (Cliff meshes) |
+| 05 | mine door | Gates.Gate_Plains_4 (Gates) | Zones.Plains.Plains_4.Gate | 32 / 32 | same Gate contract; Barrier visible with Panel / Emblem / Rune / Moss / Seam under it | Toolbox attrs as 04 |
+| 06 | golem | Plains.Golem_Statue (Plains) | ServerStorage.BossArenas.Plains.Decor.Golem_Statue | 44 / 44 | PointLight in "Rune"; no NPC, no script | decor of the Golem boss arena (runtime clones) |
+| 07 | windmill | Plains.Windmill (Plains) | Zones.Plains.Plains_1.Decor.Landmark (LandmarkName=Windmill) | 94 / 111 | game copy: + NoClimb folder (WindmillWall x16 + WindmillRoof, attr NoClimb: invisible-wall fixes) | the sails do NOT rotate today (no script anywhere) |
+| 08 | stone arch | Common.Stone_Arch_A (Common) | none | 11 / - | none | test zone + kit only |
+| 09 | pillar | Common.Stone_Pillar_A (Common) | BossArenas.Plains.Decor.Stone_Pillar_A x12 | 6 / 6 | none | |
+| 10a | egg station | Hub.Station_EggStation (Hub) | Hub.EggStation | 39 / 33 | Interact (ProximityPrompt + BillboardGui NameTag; PetService + NPCService egg keeper marker); DisplayEgg_desert / _plains / _jungle (Models, attrs PetV2 / Height: the real egg models, must be kept); nested `lantern` MapProp | kit has EggSpot x6 + Egg x6 placeholders where the hub has the 3 DisplayEgg models |
+| 10b | moon gazebo | Hub.Station_RebirthShop (Hub) | Hub.RebirthShop | 39 / 57 | Interact (prompt + NameTag); NpcSpot; NPC stand-in (18); TentRoof sub-model; PointLight in CrystalBall | |
+| 11 | fruit stall | Hub.Market_Awning_A (Hub) | Hub.Decor.Village.Market_Awning_A x2 | 48 / 66 | NPC stand-in villager (14) in each hub copy; nested `barrel` MapProp | owner: no NPC / no sign on the new one: the hub NPC stand-ins are kept as they are (custom children) unless the owner says otherwise |
+| 12 | training area | Hub.Station_Trainer (Hub) | Hub.Trainer | 48 / 65 | Interact (prompt + NameTag); NpcSpot; NPC stand-in (17) | |
+| 13 | boards | Hub.Leaderboard_Board, Station_CodesBoard, Station_TeamBoard (Hub) | Hub.Leaderboard_Rebirths / _Zone / _Bosses / _Gold / _Damage; Hub.CodesBoard; Hub.TeamBoard | 12 / 20 / 15 | leaderboards: SurfaceGui "BoardGui" on "Screen" (no code writes it today); CodesBoard / TeamBoard: Interact (prompt + NameTag), TeamBoard = quartermaster NPC marker | |
+| 14a | bench | Hub.Bench_A (Hub; rustic) | none of Bench_A in the game; the hub has 11 "Bench" (the nice one: 61 parts, 2 Seats, attr BenchVersion=2; AFKCorner x3, PlazaFurniture x8) | 8 / - | BenchService: every Model in workspace.Hub holding Seat parts gets a Sit prompt | plan: test + kit Bench_A become exact copies of the hub Bench |
+| 14b | street lamp | Hub.LampPost_A (Hub) | Hub.Decor.Props.Lamps.LampPost_A x8 | 7 / 7 | PointLight in "Lamp" (always on; no on / off script) | |
+| 15 | ship | Plains.PirateShip_Wreck (Plains) | Zones.Plains.Plains_2.Decor.Landmark (PirateShip); Tundra_2.Decor.Landmark.Ship (FrozenShip recolour, + 10 ice parts with MapFixCollide); Abyss_2.Decor.Landmark.Hull (SunkenGalleon recolour, scale 1.12) | 74 / 74 | attr SinkDepth=10; walkable deck | the Tundra / Abyss copies are recoloured variants (frozen / sunken): sync as variants |
+| 16 | rebirth altar | Hub.Station_RebirthAltar (Hub) | Hub.RebirthAltar | 34 / 34 | Interact (prompt + NameTag; NPCService priest marker "RebirthAltar" opens the Rebirth window); Crystal: Attachment EffectPoint + PointLight; Hub.Decor.VFX.Altar_Aura / Plaza.AltarDais / Props.AltarBackdrop are separate map parts | |
+
+Hub part budget: 5,350 BaseParts today (0 unions) for a 6,000 budget. The batch 2 objects use 696 of them in the hub
+(wall 32, portal frames 192, egg station 33, gazebo 57, fruit stalls 132, trainer 65, boards 95, lamps 56, altar 34).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

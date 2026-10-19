@@ -2193,3 +2193,38 @@ every rock intersection in sub-zone 1.
   Left as found (not listed / not around sub-zone 1): Plains_3 CorridorRidge still has 3-stud slabs (same dark crest
   far from the beach; one TerrainFix.rebuild call fixes it); EntryArch lantern frame/glass and Farm crate z-fighting
   flagged by MapAudit; Rock_M_A (1918.5, 118.7) and Rock_S_A (2104.8, 25.3) are close to trees but do not touch them.
+
+# Props batch 2 - 2026-10-19 (owner: "NEW BATCH: improve 16 objects of the prop test zone, and mirror every change in the game." Quality target = the FOUNTAIN and the WELL: "low-mid poly, beveled stone blocks with visible joints, capped edges, a bit of moss at the base, individual roof tiles/shingles, thick wooden beams with joints and metal bands, small readable details, soft gradients, clean saturated colors". PERMANENT SYNC RULE: every test-zone change mirrored to every game instance through MapProps, "replaced n / total" per object.)
+
+## Status (newest first)
+
+- 16:40 Started. Backup before_props_batch2 (6 .rbxm). The owner's text says the 16 reference images are in
+  docs/Props_Batch2_Images/, but that folder did not exist and 15 images came with the message: stored there as
+  01_wall ... 16_pink_crystal_shrine; 10_egg_station_and_gazebo is missing (the "before" is taken in Studio instead).
+  The permanent sync rule + the fountain/well quality bar are saved in Claude's memory for later sessions.
+  Route: FBX import cannot be automated (CreateAssetAsync "not available yet", AssetImportService unreachable,
+  computer control of Studio declined), so objects are built in Studio from parts merged with CSG unions (saved in
+  the place, one part each for the hub budget). Being tested: Blender meshes -> thin wedge facets -> unions (no
+  import), for the organic pieces. Agent A (Blender) writes the fountain/well recipe into docs/prop_texture_guide.md;
+  Agent B (Studio) inventories the 16 objects + backs them up + runs the mesh-to-union test. Pilot: 02 portal.
+- 17:20 Recipe + inventory done. Agent A: docs/prop_texture_guide.md section "A. Fountain / well recipe" (A1-A11,
+  measured on the fountain / well recipes, written to be built from parts: courses 1.0-1.05, blocks 1.8-2.8x, joints
+  0.08-0.10 / 0.05 with a dark mortar core, chamfer ~0.2, caps 0.7-0.8 with 0.3-0.5 overhang, moss at the base only,
+  shingles 1.5 x 1.6 x 0.1 every 1.35, posts h/10-12, beams span/12-15, metal bands + rivets every 0.5-0.7, gradient
+  0.82 -> 1.0, palette). Agent B: inventory table "Props batch 2" in docs/prop_inventory.md (kits: Hub_Wall_Section,
+  PortalFrame x12 + test, EntryArch_Plains, Gate_Plains_2 / _3 / _4, Golem_Statue (boss arena), Windmill,
+  Stone_Arch_A (test + kit only), Stone_Pillar_A x12 (boss arena), Station_EggStation, Station_RebirthShop,
+  Market_Awning_A x2, Station_Trainer, Leaderboard / Codes / Team boards, Bench_A (test + kit only), LampPost_A x8,
+  PirateShip_Wreck (Plains_2 + Tundra_2 frozen + Abyss_2 sunken recolours), Station_RebirthAltar); backups
+  old_props_2026-10-19_pre_batch2/ (19 .rbxm); the missing image 10 taken in Studio
+  (docs/Props_Batch2_Images/10_egg_station_and_gazebo.jpg). Hub parts 5,350 / 6,000 (696 in batch 2 objects).
+  MESH TEST: the well's 3,106 triangles as 6,164 thin wedges + one union per mesh: 7.8 s, no failure, looks right
+  (flat-shaded), but ~116,000 triangles (x37; 3 unions hit the 20k cap) -> DECISION: everything is built from parts
+  (recipe), merged into a few unions per colour group (one part each for the hub budget); the facet route only for
+  small organic accents (altar crystals, portal gem cut, ship bow / stern / torn sails, golem boulders + core), <= 300
+  faces per piece, delivered by Agent A as facet JSON (Blender_Exports/Props/facets/).
+  DECISIONS (main agent): the fruit stalls' existing NPC stand-ins are kept ("no NPC asked" = add none, remove none);
+  the windmill sails do not rotate today -> kept static; PortalController gets a small change so locked frames still
+  darken when the frame is a union; gates: new door / planks / panels under Barrier (GateController hides Barrier's
+  children on unlock); EggStation's DisplayEgg_* marked MapPropKeep. Pilot: 02 portal. Then batches A (01, 08, 09),
+  B (03, 04, 05), C (16, 10, 11), D (12, 13, 14), E (06, 07, 15), with a push after each.
