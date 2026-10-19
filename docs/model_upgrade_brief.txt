@@ -1,4 +1,25 @@
 =====================================================================
+OWNER CORRECTION (2026-10-19, final instruction for the 20 reference photos; it replaces an earlier
+"TEXTURE-ONLY OVERRIDE" message that never reached the working session):
+ 1) KEEP the shapes already generated from this brief (the new Blender / Studio models). Do not remodel them and do
+    not go back to the old shapes.
+ 2) Change only their TEXTURES / MATERIALS so they look like BEFORE, in LOW-POLY style: the look of the 20 reference
+    photos (original colours, clean flat-shaded look; saturated solid colours with soft gradients, lighter top /
+    darker bottom; only simple stylized details: plank lines, stone-block lines, metal bands, rivet dots, cloth
+    stripes). Remove every realistic / PBR texture (photo-like colour maps, normal / roughness / metalness maps,
+    noise, heavy grain); use Color + SmoothPlastic / Plastic (Neon or Metal only for glowing parts and gems) and, where
+    useful, small tileable stylized textures (128-256 px). Palette: docs/prop_texture_guide.md; texture ids:
+    Config/PropTextures.luau. The .blend materials may change and the FBX may be re-exported, geometry identical.
+ 3) IMPLANT everything generated: every model as a template in ServerStorage.MapProps, in the test models area and at
+    every main-map placement (hub and zones), including the stall NPCs, stall items and gems, with the same prompts and
+    interactions. Claude does the importing itself by any route that works (owner's choice: Claude drives Studio's
+    importer); only a step that truly cannot be automated goes to ONE short owner list.
+ Everything else of this brief still applies (instances, two-way sync, names / positions / interactions /
+ collisions kept, backups, max 2 sub-agents, GitHub pushes). Inventory columns: generated? | imported into Studio? |
+ template in MapProps? | in the test area? | main-map instances replaced n/total | low-poly textured?
+=====================================================================
+
+=====================================================================
  FIGHT YOUR DESTINY - PROP, STALL & SCENERY MODEL UPGRADE
  20 reference photos -> 19 upgraded models, synced everywhere
 =====================================================================

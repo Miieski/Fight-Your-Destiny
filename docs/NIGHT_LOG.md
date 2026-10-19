@@ -2021,3 +2021,22 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   ImportedProps). HANDOFF section 5 + manual items and DESIGN section 8 updated.
 - 08:10 DONE for this session: everything committed and pushed; backup after_prop_upgrade. Waiting for the owner:
   the 13 prop FBX imports + the apply command (and the creature import for the 3 stall shopkeepers).
+
+# Low-poly retexture + implant - 2026-10-19 (owner correction, pasted: "KEEP THE SHAPES YOU ALREADY GENERATED ... Change only their TEXTURE/MATERIALS so they look like BEFORE, in LOW-POLY style ... IMPLANT them in the game ... Put ALL of them in.")
+
+The correction refers to an earlier "TEXTURE-ONLY OVERRIDE" message that never reached this session; the owner
+confirmed (asked) to carry the correction out, and chose: Claude drives Studio's importer itself. Full text at the
+top of docs/model_upgrade_brief.txt.
+
+## Status (newest first)
+
+- 08:40 Started. The place was reopened (new Studio id ab74fac5-...); the session's work is in it (9 MapProps
+  templates, tools, 11 FYD MaterialVariants, 223 tagged copies). Backup before_lowpoly_implant.
+- 09:00 Import route settled (pilot on the well): AssetService:CreateAssetAsync -> "CreateAssetAsync and
+  CreateAssetVersionAsync are not available yet"; AssetImportService is not reachable from the MCP; computer control of
+  Roblox Studio (to drive File > Import 3D) was declined by the owner's permission dialog. So the FBX import is the
+  ONE manual owner step (one folder, one preset), followed by ONE command; everything else is automated.
+  Sub-agents: A (Blender) = docs/prop_texture_guide.md, stylized textures if useful (Config/PropTextures.luau),
+  low-poly re-material of the 13 Blender props with identical geometry, new preview PNGs; B (Studio) = the Studio
+  inventory table, the ApplyPropMeshes low-poly path, the Studio-built props to low-poly, the stall NPCs in the same
+  command, low-poly previews + screenshots.

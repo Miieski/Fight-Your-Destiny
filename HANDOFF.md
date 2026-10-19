@@ -149,6 +149,12 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-19 (morning): OWNER CORRECTION to the prop upgrade - LOW-POLY TEXTURES + IMPLANT EVERYTHING.** Keep the
+new shapes; re-texture them in the flat low-poly look of the 20 reference photos (no PBR / realistic textures;
+palette docs/prop_texture_guide.md, ids Config/PropTextures.luau); import and place every generated model
+(13 Blender props + the 3 stall NPCs) in MapProps, the test area and every main-map placement. Full text at the
+top of docs/model_upgrade_brief.txt; log NIGHT_LOG "Low-poly retexture + implant".
+
 **2026-10-19: PROP MODEL UPGRADE (brief docs/model_upgrade_brief.txt; 18 props - the "mallet" of photo 03 is a bench
 armrest, benches are out of scope).** Inventory `docs/prop_inventory.md` (test area =
 `workspace._Staging.AssetPreview.ModelsA.Lineup`, X about -3000). STATE: Studio-built props done and live everywhere
