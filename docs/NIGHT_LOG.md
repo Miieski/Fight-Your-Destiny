@@ -2228,3 +2228,12 @@ every rock intersection in sub-zone 1.
   darken when the frame is a union; gates: new door / planks / panels under Barrier (GateController hides Barrier's
   children on unlock); EggStation's DisplayEgg_* marked MapPropKeep. Pilot: 02 portal. Then batches A (01, 08, 09),
   B (03, 04, 05), C (16, 10, 11), D (12, 13, 14), E (06, 07, 15), with a push after each.
+- 17:55 FACET DATA done (Agent A; main agent looked at the altar and ship previews): 16 pieces in
+  Blender_Exports/Props/facets/ (each <= 300 faces, planar quads, outward winding checked): altar crystal_main (26
+  faces, 6.4 x 19.5 x 5.5, now standing on the pedestal - today's floated at y 13) + 3 small crystals; portal_gem (22
+  faces, 1.0 across, Neon #FFC93C); ship bow_hull (171 rect quads: 11 clinker strakes per side, raked stem) +
+  stern_hull (55) + sail_main / sail_remnant / sail_fallen (torn edges, holes, belly); golem rubble_1-3 + shoulder_L/R
+  + core_crystal (Neon #5FD4FF). Today's sizes read from the batch-2 .rbxm backups with a small binary reader.
+  Guide corrections from the real part colours: the "pink" Neon is #966EFF (Neon renders it pink); the shrine stone
+  is the normal stone palette (its lavender look in the photo is the crystal's light). Generator
+  tools/blender/fyd_facets.py; previews Previews/Props/batch2_*_facets.png.

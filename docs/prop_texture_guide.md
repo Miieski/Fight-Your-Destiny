@@ -47,7 +47,7 @@ The well uses tones 0.86-1.0 on stones, 0.88-1.0 on shingles and 0.85-1.0 on sta
 | | dark | #686E7C | 104,110,124 | caps / coping, steps, plinths, rims (always one step darker than the wall they cap) |
 | | mortar | #545864 | 84,88,100 | the core seen through the joints, wet bands |
 | | blue stone | #7080CC | 112,128,204 | blue rocks (Plains RockBlue) |
-| | lavender (shrine) | #B4B8E6 / dark #8C90C8 | 180,184,230 / 140,144,200 | approximate: read the shrine's current part colours and keep them |
+| | shrine stone | #A5ACB9 / #969CA8 / #686E7C | 165,172,185 / 150,156,168 / 104,110,124 | the altar's real Tier / Step / Pillar colours (backup .rbxm). The lavender look in photo 16 comes from the pink Neon light. |
 | Wood | light | #D6965C | 214,150,92 | planks, counter tops, boards, sail frames |
 | | mid | #A86238 | 168,98,56 | boards, staves, doors, bodies |
 | | dark (beams) | #703E26 | 112,62,38 | posts, beams, rafters, bargeboards, handles |
@@ -66,7 +66,7 @@ The well uses tones 0.86-1.0 on stones, 0.88-1.0 on shingles and 0.85-1.0 on sta
 | Cloth | red / cream / white / green / blue / blue alt | #D4343C / #E8E2D0 / #F5F6FA / #287C3A / #4078D4 / #4A6CDC | | stripes, awnings, banners, sails |
 | Glass | glass | #CDEBF5 | 205,235,245 | Glass T 0.3: lantern panes, crystal ball |
 | Emissive (Neon) | cyan | #5FD4FF | 95,212,255 | crystals, diamond, cyan gems |
-| | pink | #FF8CF0 | 255,140,240 | portal field, shrine crystal (approximate: keep the current part colour if it exists) |
+| | "pink" | #966EFF | 150,110,255 | the portal field and the altar crystals: Hub Portal. Read from the parts; as Neon it renders pink-lavender. |
 | | warm lantern | #FFD678 | 255,214,120 | lantern glass |
 | | flame | #FFB648 | 255,182,72 | flames |
 | | fire | #FF8C28 | 255,140,40 | embers, coals |

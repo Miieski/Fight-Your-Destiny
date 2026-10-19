@@ -1,0 +1,221 @@
+{
+ "object": "ship",
+ "piece": "sail_remnant",
+ "units": "studs",
+ "origin": "the centre of the remnant's TOP edge (tied under a yard)",
+ "axes": "sail space: x along the yard (width), y up, the sail's belly / front toward -Z",
+ "size": [
+  6.0,
+  8.8,
+  0.344
+ ],
+ "bounds": {
+  "min": [
+   -3.0,
+   -8.8,
+   -0.344
+  ],
+  "max": [
+   3.0,
+   0.0,
+   -0.0
+  ]
+ },
+ "faceCount": 7,
+ "rectCount": 4,
+ "notes": "6 wide x 9.5 tall remnant, 3 cream panels, very ragged (lower edge 2 .. 5 shorter), a hole and 3 tatters. t 0.2.",
+ "faces": [
+  {
+   "v": [
+    [
+     -3.0,
+     0.0,
+     0.0
+    ],
+    [
+     -1.0,
+     0.0,
+     -0.311
+    ],
+    [
+     -1.0,
+     -3.2,
+     -0.311
+    ],
+    [
+     -3.0,
+     -3.2,
+     0.0
+    ]
+   ],
+   "c": "#E8E2D0",
+   "m": "SmoothPlastic",
+   "t": 0.2,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -3.0,
+     -4.4,
+     0.0
+    ],
+    [
+     -1.0,
+     -4.4,
+     -0.311
+    ],
+    [
+     -1.0,
+     -7.5,
+     -0.311
+    ],
+    [
+     -3.0,
+     -7.5,
+     0.0
+    ]
+   ],
+   "c": "#E8E2D0",
+   "m": "SmoothPlastic",
+   "t": 0.2,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -3.0,
+     -7.5,
+     0.0
+    ],
+    [
+     -1.0,
+     -7.5,
+     -0.311
+    ],
+    [
+     -2.0,
+     -8.8,
+     -0.194
+    ]
+   ],
+   "c": "#E8E2D0",
+   "m": "SmoothPlastic",
+   "t": 0.2
+  },
+  {
+   "v": [
+    [
+     -1.0,
+     0.0,
+     -0.311
+    ],
+    [
+     1.0,
+     0.0,
+     -0.311
+    ],
+    [
+     1.0,
+     -4.7,
+     -0.311
+    ],
+    [
+     -1.0,
+     -4.7,
+     -0.311
+    ]
+   ],
+   "c": "#DCD4BE",
+   "m": "SmoothPlastic",
+   "t": 0.2,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -1.0,
+     -4.7,
+     -0.311
+    ],
+    [
+     1.0,
+     -4.7,
+     -0.311
+    ],
+    [
+     -0.4,
+     -5.5,
+     -0.344
+    ]
+   ],
+   "c": "#DCD4BE",
+   "m": "SmoothPlastic",
+   "t": 0.2
+  },
+  {
+   "v": [
+    [
+     1.0,
+     0.0,
+     -0.311
+    ],
+    [
+     3.0,
+     0.0,
+     0.0
+    ],
+    [
+     3.0,
+     -6.4,
+     0.0
+    ],
+    [
+     1.0,
+     -6.4,
+     -0.311
+    ]
+   ],
+   "c": "#E8E2D0",
+   "m": "SmoothPlastic",
+   "t": 0.2,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     1.0,
+     -6.4,
+     -0.311
+    ],
+    [
+     3.0,
+     -6.4,
+     0.0
+    ],
+    [
+     2.2,
+     -8.0,
+     -0.162
+    ]
+   ],
+   "c": "#E8E2D0",
+   "m": "SmoothPlastic",
+   "t": 0.2
+  }
+ ],
+ "place": {
+  "relativeTo": "HullLower",
+  "position": [
+   25.2,
+   28.4,
+   -7.5
+  ],
+  "orientation": [
+   0,
+   -90,
+   0
+  ],
+  "replaces": "2-3 of the small TornSail pieces (5 x 11, 6 x 9, 6 x 7)"
+ }
+}
