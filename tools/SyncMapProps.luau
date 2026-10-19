@@ -163,6 +163,12 @@ SyncMapProps.RULES = {
 	-- kit, Desert_2.Decor.Village)
 	{ propId = "adobe_house_a", names = { "ClayHouse_A" } },
 	{ propId = "adobe_house_b", names = { "ClayHouse_B" } },
+	-- 02-05: the market stall (Desert_2 x4), the canopy pavilion (Desert_1), the tent (Desert_1 x2, Desert_3; the
+	-- same-shaped Common.Tent_A / Volcano.Miner_Tent are other kits: not synced), the ruined wall (Desert_2, Desert_3 x2)
+	{ propId = "market_stall", names = { "MarketStall_A" } },
+	{ propId = "canopy_pavilion", names = { "NomadTent_B" } },
+	{ propId = "desert_tent", names = { "NomadTent_A" } },
+	{ propId = "ruined_wall", names = { "Sandstone_Wall_Ruin" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

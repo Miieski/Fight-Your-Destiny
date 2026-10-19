@@ -649,10 +649,585 @@ function PropsDesert.adobe_house_b(): Model
 end
 
 ---------------------------------------------------------------------
+-- shared (02-05): today's collision envelopes. Every visible union of these props is non-colliding; one invisible
+-- union "Collision" (precise) rebuilds today's colliding parts, so each prop is exactly as walkable / climbable as
+-- today (the pilot's rule). Data = today's colliding parts of the kits (shape, size, CFrame components relative to
+-- the pivot), read from ServerStorage.MapAssets.Desert on 2026-10-19.
+---------------------------------------------------------------------
+PropsDesert.ENVELOPES = {
+	market_stall = { -- MarketStall_A: posts, counter, top, awning strips, back, shelf (its goods were steps: dropped)
+		{ "Block", 0.7, 7.4, 0.7, { -5.6, 3.7, -3.4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.7, 9.4, 0.7, { -5.6, 4.7, 3.4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.7, 7.4, 0.7, { 5.6, 3.7, -3.4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.7, 9.4, 0.7, { 5.6, 4.7, 3.4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 11.6, 3.2, 2.2, { 0, 1.6, -2.8, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 12.2, 0.4, 2.9, { 0, 3.4, -2.8, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 12.3, 0.3, 8.6, { 0, 8.4, 0, 1, 0, 0, 0, 0.9744, 0.225, 0, -0.225, 0.9744 } },
+		{ "Block", 11.6, 5, 0.4, { 0, 2.5, 3.4, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 11, 0.4, 1.6, { 0, 4.6, 2.6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	},
+	canopy_pavilion = { -- NomadTent_B
+		{ "Block", 0.7, 7, 0.7, { -6, 3.5, -6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.7, 7, 0.7, { -6, 3.5, 6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.7, 7, 0.7, { 6, 3.5, -6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.7, 7, 0.7, { 6, 3.5, 6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.8, 12.4, 0.8, { 0, 6.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "CornerWedgePart", 7, 5.2, 7, { -3.5, 9.6, 3.5, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "CornerWedgePart", 7, 5.2, 7, { 3.5, 9.6, 3.5, 0, 0, 1, 0, 1, 0, -1, 0, 0 } },
+		{ "CornerWedgePart", 7, 5.2, 7, { 3.5, 9.6, -3.5, -1, 0, 0, 0, 1, 0, 0, 0, -1 } },
+		{ "CornerWedgePart", 7, 5.2, 7, { -3.5, 9.6, -3.5, 0, 0, -1, 0, 1, 0, 1, 0, 0 } },
+		{ "Block", 14.2, 1, 0.3, { 0, 6.6, -7, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 14.2, 1, 0.3, { 0, 6.6, 7, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.3, 1, 14.2, { -7, 6.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.3, 1, 14.2, { 7, 6.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 12.6, 6.2, 0.3, { 0, 3.1, 6.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.3, 6.2, 7, { -6.2, 3.1, 2.8, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.3, 6.2, 7, { 6.2, 3.1, 2.8, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.9, 0.9, 0.9, { 0, 12.65, 0, 0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071 } },
+	},
+	desert_tent = { -- NomadTent_A (the entrance is closed today: kept)
+		{ "WedgePart", 12, 8, 5.5, { -2.75, 4, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 } },
+		{ "WedgePart", 12, 8, 5.5, { 2.75, 4, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0 } },
+		{ "WedgePart", 0.2, 6, 3, { -1.5, 3, -6.05, 0, 0, 1, 0, 1, 0, -1, 0, 0 } },
+		{ "WedgePart", 0.2, 6, 3, { 1.5, 3, -6.05, 0, 0, -1, 0, 1, 0, 1, 0, 0 } },
+		{ "WedgePart", 0.8, 8.15, 5.6, { -2.77, 4.06, -5.7, 0, 0, 1, 0, 1, 0, -1, 0, 0 } },
+		{ "WedgePart", 0.8, 8.15, 5.6, { 2.77, 4.06, -5.7, 0, 0, -1, 0, 1, 0, 1, 0, 0 } },
+		{ "Block", 0.5, 0.5, 14, { 0, 8.1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.5, 8.6, 0.5, { 0, 4.3, -6.6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 0.5, 8.6, 0.5, { 0, 4.3, 6.6, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	},
+	ruined_wall = { -- Sandstone_Wall_Ruin (as climbable as today)
+		{ "Block", 7, 12, 3, { -6.5, 6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 6, 8.5, 3, { 0, 4.25, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 7, 5, 3, { 6.5, 2.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 20.4, 1.4, 3.6, { 0, 0.7, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 7.4, 1, 3.6, { -6.5, 12.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 3, 2, 3, { -1.5, 9.5, 0, 0.9781, 0, 0.2079, 0, 1, 0, -0.2079, 0, 0.9781 } },
+		{ "Block", 4, 2.4, 3, { 5, 1.2, -4, 0.9063, 0, 0.4226, 0, 1, 0, -0.4226, 0, 0.9063 } },
+		{ "Block", 3, 2, 0.3, { -6.5, 7, -1.55, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+		{ "Block", 1, 3, 0.3, { -6.5, 4, -1.55, 1, 0, 0, 0, 1, 0, 0, 0, 1 } },
+	},
+}
+
+local function envelope(m: Model, id: string)
+	local list = {}
+	for _, e in ipairs(PropsDesert.ENVELOPES[id]) do
+		local cf = CFrame.new(table.unpack(e[5]))
+		local size = Vector3.new(e[2], e[3], e[4])
+		if e[1] == "WedgePart" or e[1] == "CornerWedgePart" then
+			table.insert(list, piece(e[1], size, cf, C.Clay))
+		else
+			table.insert(list, piece("Part", size, cf, C.Clay, { shape = (Enum.PartType :: any)[e[1]] }))
+		end
+	end
+	merge(m, "Collision", list, { collide = true, fidelity = Enum.CollisionFidelity.PreciseConvexDecomposition, transparency = 1, shadow = false })
+end
+
+local function finishVisual(m: Model, propId: string, U: any, root: string, queryNames: { [string]: boolean })
+	local names = {}
+	for name in pairs(U) do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _, name in ipairs(names) do
+		local opts: any = { query = queryNames[name] == true }
+		if name == "Glass" then
+			opts.material = Enum.Material.Neon
+			opts.shadow = false
+		end
+		merge(m, name, U[name], opts)
+		task.wait()
+	end
+	local r = m:FindFirstChild(root) :: BasePart
+	m.PrimaryPart = r
+	r.PivotOffset = r.CFrame:Inverse()
+	m:SetAttribute("MapPropId", propId)
+end
+
+local SAND, SAND_DARK = rgb(244, 208, 124), rgb(214, 168, 96)
+local COUNTER, COUNTER_TOP, RUG = rgb(168, 98, 56), rgb(214, 150, 92), rgb(188, 65, 54)
+local RED_ALT = rgb(193, 66, 56)
+
+---------------------------------------------------------------------
+-- 02 MARKET STALL (kit Desert.MarketStall_A, 12.3 x 9.5 x 8.5; Desert_2.Decor.Village x4; no prompt / NPC / shop).
+-- Today's colours and layout, like its sibling stalls: posts on sandstone footing blocks, front and back beams and 3
+-- rafters, the 6 red / linen strips of the awning as cloth with a sag at the middle, a front valance of tabs with gold
+-- tassels between them and a dark binding; a counter of vertical planks over a dark core with a kick board, a top rail
+-- and end stiles, a top of 3 planks; a back wall of planks with 2 battens, a plank shelf on brackets; the goods: today's
+-- 3 jars as clay pots with painted bands on the shelf, a tray of faceted fruit (green / gold / red), the blue and gold
+-- cloths as folded stacks with a blue cloth draped over the counter front.
+-- Parts: Wood, Cloth, Goods, Collision (4; the old one had 23).
+---------------------------------------------------------------------
+function PropsDesert.market_stall(): Model
+	local m = Instance.new("Model")
+	m.Name = "market_stall"
+	local rng = Random.new(20261103)
+	H.setBevelSelf(true)
+	local Ht = 9.5
+	local U, add = lists()
+	-- posts on footing blocks
+	for _, p in ipairs({ { -5.6, -3.4, 7.4 }, { 5.6, -3.4, 7.4 }, { -5.6, 3.4, 9.4 }, { 5.6, 3.4, 9.4 } }) do
+		add("Wood", chamfered(Vector3.new(1.0, 0.4, 1.0), CFrame.new(p[1], 0.2, p[2]), C.Sandstone, { "vertical", "topFrontBack", "topSides" }, 0.1))
+		local h = p[3] - 0.4
+		add("Wood", timber(Vector3.new(0.8, h, 0.8), CFrame.new(p[1], 0.4 + h / 2, p[2]), soft(C.Trunk, p[3] / 2, Ht, TONES[rng:NextInteger(1, 3)]), 0.12))
+	end
+	-- beams and rafters under the cloth
+	add("Wood", timber(Vector3.new(12.2, 0.4, 0.45), CFrame.new(0, 7.2, -3.4), C.Trunk, 0.08))
+	add("Wood", timber(Vector3.new(12.2, 0.4, 0.45), CFrame.new(0, 9.2, 3.4), C.Trunk, 0.08))
+	for _, x in ipairs({ -5.6, 0, 5.6 }) do
+		add("Wood", bar(Vector3.new(x, 9.3, 3.9), Vector3.new(x, 7.36, -3.9), 0.3, scaled(C.Trunk, 0.92)))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		add("Goods", piece("Part", Vector3.new(0.45, 0.45, 0.45), CFrame.new(sx * 6.35, 7.2, -3.4), C.Gold, { shape = Enum.PartType.Ball }))
+	end
+	-- the awning: 6 strips (today's colours), each 2 halves with a sag
+	local stripes = { { -5.12, C.Red }, { -3.07, C.Linen }, { -1.02, C.Red }, { 1.03, C.Linen }, { 3.08, C.Red }, { 5.13, C.Linen } }
+	for i, s in ipairs(stripes) do
+		local x = s[1]
+		local B, F = Vector3.new(x, 9.42, 4.25), Vector3.new(x, 7.5, -4.25)
+		local M = (B + F) / 2 - Vector3.new(0, 0.22, 0)
+		for _, seg in ipairs({ { B, M }, { M, F } }) do
+			local a, b = seg[1], seg[2]
+			add("Cloth", piece("Part", Vector3.new(2.03, 0.15, (b - a).Magnitude + 0.06), CFrame.lookAt((a + b) / 2, b), scaled(s[2], if i % 2 == 0 then 1 else 0.98)))
+		end
+		add("Cloth", chamfered(Vector3.new(2.0, 0.75, 0.12), CFrame.new(x, 7.05, -4.27), s[2], { "bottomSides" }, 0.34))
+	end
+	add("Cloth", piece("Part", Vector3.new(12.4, 0.16, 0.2), CFrame.new(0, 7.47, -4.28), scaled(C.Red, 0.78)))
+	for k = 0, 6 do
+		local x = -6.15 + k * 2.05
+		add("Goods", piece("Part", Vector3.new(0.1, 0.45, 0.1), CFrame.new(x, 7.2, -4.35), C.Gold))
+		add("Goods", chamfered(Vector3.new(0.26, 0.42, 0.26), CFrame.new(x, 6.8, -4.35), C.Gold, { "bottomFrontBack", "bottomSides" }, 0.08))
+	end
+	-- the counter
+	add("Wood", piece("Part", Vector3.new(11.3, 2.9, 1.9), CFrame.new(0, 1.6, -2.8), scaled(COUNTER, 0.6)))
+	local prev = nil
+	for i = 0, 8 do
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		add("Wood", chamfered(Vector3.new(1.22, 2.6, 0.25), CFrame.new(-4.94 + i * 1.235, 1.75, -3.78), soft(COUNTER, 1.7, Ht, TONES[ti]), { "vertical" }, 0.05))
+	end
+	add("Wood", timber(Vector3.new(11.7, 0.45, 0.32), CFrame.new(0, 0.225, -3.83), scaled(COUNTER, 0.78), 0.06))
+	add("Wood", timber(Vector3.new(11.7, 0.3, 0.3), CFrame.new(0, 3.05, -3.84), scaled(COUNTER, 0.9), 0.06))
+	for _, sx in ipairs({ -1, 1 }) do
+		add("Wood", chamfered(Vector3.new(0.45, 3.2, 2.25), CFrame.new(sx * 5.75, 1.6, -2.8), scaled(COUNTER, 0.86), { "vertical" }, 0.08))
+	end
+	for k = -1, 1 do
+		add("Wood", chamfered(Vector3.new(12.2, 0.4, 0.93), CFrame.new(0, 3.4, -2.8 + k * 0.97), scaled(COUNTER_TOP, TONES[(k + 3) % 3 + 1]), { "topFrontBack", "topSides" }, 0.08))
+	end
+	-- the back wall of planks with battens, the shelf on brackets
+	prev = nil
+	for i = 0, 7 do
+		local ti = toneIndex(rng, prev)
+		prev = ti
+		add("Wood", chamfered(Vector3.new(1.42, 5.0, 0.35), CFrame.new(-5.075 + i * 1.45, 2.5, 3.42), soft(C.DarkWood, 2.5, Ht, TONES[ti]), { "vertical" }, 0.04))
+	end
+	for _, y in ipairs({ 1.1, 3.9 }) do
+		add("Wood", timber(Vector3.new(11.4, 0.35, 0.15), CFrame.new(0, y, 3.17), scaled(C.DarkWood, 0.85), 0.04))
+	end
+	add("Wood", chamfered(Vector3.new(11.0, 0.3, 1.6), CFrame.new(0, 4.6, 2.6), scaled(COUNTER, 1.04), { "topFrontBack", "topSides" }, 0.06))
+	for _, x in ipairs({ -4.6, 0, 4.6 }) do
+		add("Wood", bar(Vector3.new(x, 3.6, 3.15), Vector3.new(x, 4.42, 2.0), 0.22, C.DarkWood))
+	end
+	-- goods: today's jars as pots on the shelf
+	pot(U.Goods, CFrame.new(-3.8, 4.75, 2.6), 1.4, 1.1, C.Terracotta, C.Lapis)
+	pot(U.Goods, CFrame.new(-1.8, 4.75, 2.6) * CFrame.Angles(0, 0.5, 0), 1.2, 1.2, C.Clay, C.Turquoise)
+	pot(U.Goods, CFrame.new(3.5, 4.75, 2.6), 1.5, 1.05, C.Turquoise, C.Gold)
+	-- the tray of fruit (today's Tray place)
+	add("Wood", chamfered(Vector3.new(2.4, 0.45, 1.8), CFrame.new(-3.6, 3.83, -2.8), C.DarkWood, { "topFrontBack", "topSides" }, 0.06, nil, { piece("Part", Vector3.new(2.1, 0.4, 1.5), CFrame.new(-3.6, 4.05, -2.8), scaled(C.DarkWood, 0.7)) }))
+	local fruitCols = { rgb(76, 164, 84), C.Gold, C.Red }
+	for k = 0, 6 do
+		local fx = -4.35 + (k % 4) * 0.5 + (if k >= 4 then 0.25 else 0)
+		local fz = -2.8 + (if k % 2 == 0 then -0.3 else 0.3)
+		local fy = if k >= 4 then 4.55 else 4.2
+		add("Goods", H.fruitPiece(0.55, CFrame.new(fx, fy, fz) * CFrame.Angles(0, k * 0.7, 0), fruitCols[k % 3 + 1]))
+	end
+	-- the cloths: folded stacks (blue, gold) and a blue cloth draped over the counter front
+	for k = 0, 2 do
+		add("Cloth", chamfered(Vector3.new(3.0 - k * 0.15, 0.16, 2.0 - k * 0.1), CFrame.new(2.5, 3.68 + k * 0.17, -2.8), scaled(C.Blue, ({ 1, 0.92, 1.05 })[k + 1]), { "topFrontBack", "bottomFrontBack" }, 0.07))
+	end
+	for k = 0, 2 do
+		add("Cloth", chamfered(Vector3.new(1.6 - k * 0.1, 0.15, 1.4 - k * 0.08), CFrame.new(2.6, 4.2 + k * 0.16, -2.8), scaled(C.Gold, ({ 1, 0.93, 1 })[k + 1]), { "topFrontBack", "bottomFrontBack" }, 0.06))
+	end
+	add("Cloth", piece("Part", Vector3.new(1.3, 1.5, 0.08), CFrame.new(1.2, 2.85, -4.02), C.Blue))
+	add("Cloth", piece("Part", Vector3.new(1.3, 0.12, 0.6), CFrame.new(1.2, 3.62, -3.75), C.Blue))
+	add("Cloth", piece("Part", Vector3.new(1.3, 0.14, 0.09), CFrame.new(1.2, 2.17, -4.03), C.Gold))
+
+	envelope(m, "market_stall")
+	finishVisual(m, "market_stall", U, "Wood", { Wood = true })
+	H.setBevelSelf(false)
+	return m
+end
+
+---------------------------------------------------------------------
+-- 03 CANOPY PAVILION (kit Desert.NomadTent_B, 14.3 x 13.1 x 14.3; Desert_1.Decor.Camps). Today's colours, size and
+-- walk-under height: a canopy of 8 gores (today's red / blue quarters) with gold piping on the hips and linen piping on
+-- the middle seams, a linen valance with a gold trim and scalloped tabs, gold tassels at the corners; 4 corner posts
+-- (base blocks, octagonal shafts, dark bands, rope wraps, carved caps), the centre pole with bands, a gold collar, ball
+-- and spike finial; the back (red) and side (blue) walls as pleated curtains, the sides gathered at their front edge
+-- with a rope tie; the red rug with a gold border band, today's gold diamond with a red heart, fringes; 4 cushions with
+-- buttons; a small lantern hanging from the centre pole (warm glass, a soft light).
+-- Parts: Canopy, Trim, Curtains, Wood, Rug, Glass, Collision (7; the old one had 19).
+---------------------------------------------------------------------
+function PropsDesert.canopy_pavilion(): Model
+	local m = Instance.new("Model")
+	m.Name = "canopy_pavilion"
+	local rng = Random.new(20261104)
+	H.setBevelSelf(true)
+	local Ht = 13.1
+	local U = lists()
+	U.Canopy, U.Trim = {}, {}
+	-- the canopy: 8 gores from the apex to the eave square (today's surface)
+	local A = Vector3.new(0, 12.2, 0)
+	local corners = { Vector3.new(-7, 7, -7), Vector3.new(7, 7, -7), Vector3.new(7, 7, 7), Vector3.new(-7, 7, 7) }
+	local function quadColor(c: Vector3): Color3
+		return if (c.X < 0) == (c.Z < 0) then C.Red else C.Blue
+	end
+	for i = 1, 4 do
+		local c1, c2 = corners[i], corners[i % 4 + 1]
+		local mid = (c1 + c2) / 2
+		local tone = if i % 2 == 0 then 0.94 else 1
+		H.triangleParts(U.Canopy, A, c1, mid, 0.18, CFrame.identity, scaled(quadColor(c1), tone))
+		H.triangleParts(U.Canopy, A, mid, c2, 0.18, CFrame.identity, scaled(quadColor(c2), tone * 0.97))
+		table.insert(U.Trim, bar(A + Vector3.new(0, 0.12, 0), c1 + Vector3.new(0, 0.12, 0), 0.16, C.Gold))
+		table.insert(U.Trim, bar(A + Vector3.new(0, 0.12, 0), mid + Vector3.new(0, 0.12, 0), 0.14, C.Linen))
+	end
+	-- valance: band, gold trim, scalloped tabs, corner tassels
+	for _, side in ipairs({ { 0, -7.06, 0 }, { 0, 7.06, 0 }, { -7.06, 0, 1 }, { 7.06, 0, 1 } }) do
+		local turn = if side[3] == 1 then CFrame.Angles(0, math.pi / 2, 0) else CFrame.identity
+		local base = CFrame.new(side[1], 0, side[2]) * turn
+		table.insert(U.Trim, piece("Part", Vector3.new(14.3, 0.7, 0.12), base * CFrame.new(0, 6.75, 0), C.Linen))
+		table.insert(U.Trim, piece("Part", Vector3.new(14.4, 0.12, 0.18), base * CFrame.new(0, 7.06, 0), C.Gold))
+		table.insert(U.Trim, piece("Part", Vector3.new(14.4, 0.1, 0.16), base * CFrame.new(0, 6.42, 0), C.Gold))
+		for k = 0, 9 do
+			table.insert(U.Trim, chamfered(Vector3.new(1.32, 0.55, 0.12), base * CFrame.new(-6.3 + k * 1.4, 6.12, 0), scaled(C.Linen, 0.95), { "bottomSides" }, 0.27))
+		end
+	end
+	for _, c in ipairs(corners) do
+		local p = Vector3.new(c.X * 1.012, 0, c.Z * 1.012)
+		table.insert(U.Trim, piece("Part", Vector3.new(0.1, 0.7, 0.1), CFrame.new(p + Vector3.new(0, 6.35, 0)), C.Gold))
+		table.insert(U.Trim, piece("Part", Vector3.new(0.34, 0.34, 0.34), CFrame.new(p + Vector3.new(0, 5.95, 0)), C.Gold, { shape = Enum.PartType.Ball }))
+		table.insert(U.Trim, chamfered(Vector3.new(0.3, 0.4, 0.3), CFrame.new(p + Vector3.new(0, 5.62, 0)), C.Gold, { "bottomFrontBack", "bottomSides" }, 0.09))
+	end
+	-- posts
+	U.Wood = {}
+	for _, c in ipairs(corners) do
+		local x, z = c.X * 6 / 7, c.Z * 6 / 7
+		table.insert(U.Wood, chamfered(Vector3.new(1.15, 0.5, 1.15), CFrame.new(x, 0.25, z), C.Footing, { "vertical", "topFrontBack", "topSides" }, 0.12))
+		table.insert(U.Wood, octagon(0.75, 6.0, CFrame.new(x, 3.5, z), soft(C.Trunk, 3.5, Ht, TONES[rng:NextInteger(1, 3)])))
+		for _, y in ipairs({ 1.0, 5.3 }) do
+			table.insert(U.Wood, octagon(0.92, 0.22, CFrame.new(x, y, z), C.DarkWood))
+		end
+		table.insert(U.Wood, octagon(0.88, 0.3, CFrame.new(x, 6.15, z), C.Rope))
+		table.insert(U.Wood, chamfered(Vector3.new(1.0, 0.45, 1.0), CFrame.new(x, 6.75, z), scaled(C.Trunk, 0.9), { "vertical", "bottomFrontBack", "bottomSides" }, 0.12))
+	end
+	table.insert(U.Wood, octagon(0.8, 12.15, CFrame.new(0, 6.225, 0), C.Trunk))
+	for _, y in ipairs({ 1.2, 4.6, 8.0 }) do
+		table.insert(U.Wood, octagon(0.98, 0.22, CFrame.new(0, y, 0), C.DarkWood))
+	end
+	table.insert(U.Trim, octagon(0.62, 0.35, CFrame.new(0, 12.35, 0), C.Gold))
+	table.insert(U.Trim, piece("Part", Vector3.new(0.75, 0.75, 0.75), CFrame.new(0, 12.85, 0), C.Gold, { shape = Enum.PartType.Ball }))
+	do
+		local planes = {}
+		H.pyramidPlanes(Vector3.new(0, 0.85, 0), { Vector3.new(0.17, 0, 0.17), Vector3.new(-0.17, 0, 0.17), Vector3.new(-0.17, 0, -0.17), Vector3.new(0.17, 0, -0.17) }, Vector3.new(0, 0.2, 0), { C.Gold, scaled(C.Gold, 0.9) }, planes)
+		table.insert(planes, { 0, -1, 0, 0 })
+		table.insert(U.Trim, convexSolid(Vector3.new(-0.19, 0, -0.19), Vector3.new(0.19, 0.85, 0.19), CFrame.new(0, 13.15, 0), C.Gold, planes))
+	end
+	-- curtains: back (red) and sides (blue), pleated; the sides gathered at their front with a rope tie
+	U.Curtains = {}
+	for k = 0, 11 do
+		local x = -5.775 + k * 1.05
+		table.insert(U.Curtains, piece("Part", Vector3.new(1.08, 6.0, 0.15), CFrame.new(x, 3.1, 6.2 + (if k % 2 == 0 then 0.08 else -0.08)), scaled(C.Red, if k % 2 == 0 then 1 else 0.9)))
+	end
+	for _, sx in ipairs({ -1, 1 }) do
+		for k = 0, 5 do
+			local z = 5.7 - k * 1.1
+			table.insert(U.Curtains, piece("Part", Vector3.new(0.15, 6.0, 1.13), CFrame.new(sx * (6.2 + (if k % 2 == 0 then 0.08 else -0.08)), 3.1, z), scaled(C.Blue, if k % 2 == 0 then 1 else 0.9)))
+		end
+		for j = 0, 2 do
+			table.insert(U.Curtains, octagon(0.55 - j * 0.08, 5.9, CFrame.new(sx * (6.2 + (j - 1) * 0.12), 3.1, -0.45 - j * 0.12), scaled(C.Blue, 0.95 - j * 0.04)))
+		end
+		table.insert(U.Wood, octagon(0.85, 0.16, CFrame.new(sx * 6.2, 3.3, -0.57), C.Rope))
+		table.insert(U.Wood, bar(Vector3.new(sx * 6.2, 3.25, -0.95), Vector3.new(sx * 6.25, 2.5, -1.05), 0.1, C.Rope))
+	end
+	-- the rug: red, gold border band, today's gold diamond with a red heart, fringes; cushions
+	U.Rug = {}
+	table.insert(U.Rug, piece("Part", Vector3.new(9, 0.15, 9), CFrame.new(0, 0.075, 0), RUG))
+	for _, b in ipairs({ { 0, -3.8, 7.6, 0.6 }, { 0, 3.8, 7.6, 0.6 }, { -3.8, 0, 0.6, 7.0 }, { 3.8, 0, 0.6, 7.0 } }) do
+		table.insert(U.Rug, piece("Part", Vector3.new(b[3], 0.04, b[4]), CFrame.new(b[1], 0.165, b[2]), C.Gold))
+	end
+	table.insert(U.Rug, piece("Part", Vector3.new(4.2, 0.04, 4.2), CFrame.new(0, 0.17, 0) * CFrame.Angles(0, rad(45), 0), C.Gold))
+	table.insert(U.Rug, piece("Part", Vector3.new(2.2, 0.04, 2.2), CFrame.new(0, 0.19, 0) * CFrame.Angles(0, rad(45), 0), scaled(RUG, 0.9)))
+	for _, sz in ipairs({ -1, 1 }) do
+		for k = 0, 13 do
+			table.insert(U.Rug, piece("Part", Vector3.new(0.14, 0.05, 0.45), CFrame.new(-4.2 + k * 0.646, 0.03, sz * 4.7), C.Linen))
+		end
+	end
+	local cushion = { { -2.3, -2.6, C.Blue, 0.3 }, { 2.4, -2.4, C.Gold, -0.4 }, { 2.6, 2.3, C.Red, 0.6 }, { -2.5, 2.4, C.Linen, -0.2 } }
+	for _, c in ipairs(cushion) do
+		local cf = CFrame.new(c[1], 0.43, c[2]) * CFrame.Angles(0, c[4], 0)
+		table.insert(U.Rug, chamfered(Vector3.new(1.7, 0.56, 1.7), cf, c[3], { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.2))
+		table.insert(U.Rug, piece("Part", Vector3.new(0.2, 0.08, 0.2), cf * CFrame.new(0, 0.3, 0), C.Gold))
+	end
+	-- the lantern on a bracket from the centre pole
+	table.insert(U.Wood, bar(Vector3.new(0.3, 7.6, 0), Vector3.new(1.35, 7.6, 0), 0.12, C.Iron))
+	table.insert(U.Wood, piece("Part", Vector3.new(0.06, 0.5, 0.06), CFrame.new(1.3, 7.3, 0), C.Iron))
+	local lf = CFrame.new(1.3, 6.6, 0)
+	table.insert(U.Wood, octagon(0.7, 0.12, lf * CFrame.new(0, 0.48, 0), C.Gold))
+	table.insert(U.Wood, octagon(0.4, 0.14, lf * CFrame.new(0, 0.6, 0), C.Gold))
+	table.insert(U.Wood, octagon(0.7, 0.12, lf * CFrame.new(0, -0.48, 0), C.Gold))
+	for q = 0, 3 do
+		local a = rad(45 + 90 * q)
+		table.insert(U.Wood, piece("Part", Vector3.new(0.07, 0.9, 0.07), lf * CFrame.new(math.cos(a) * 0.3, 0, math.sin(a) * 0.3), C.Gold))
+	end
+	U.Glass = { piece("Part", Vector3.new(0.45, 0.8, 0.45), lf, rgb(255, 200, 115)) }
+
+	envelope(m, "canopy_pavilion")
+	finishVisual(m, "canopy_pavilion", U, "Wood", { Wood = true })
+	local light = Instance.new("PointLight")
+	light.Range, light.Brightness, light.Color, light.Shadows = 10, 0.5, rgb(255, 200, 120), false
+	light.Parent = m:FindFirstChild("Glass")
+	H.setBevelSelf(false)
+	return m
+end
+
+---------------------------------------------------------------------
+-- 04 TENT (kit Desert.NomadTent_A, 11.1 x 8.6 x 14; Desert_1.Decor.Camps x2, Desert_3.Decor.Camp). Today's shape,
+-- colours and entrance: each side 4 canvas panels from the ridge to the ground (today's red / darker red, tone steps),
+-- raised seams, a darker hem and a ridge fold; the back gable in canvas with a seam; the front gable: the 2 flaps
+-- folded back showing today's gold lining, red bindings, rolled flap edges tied with ropes around the dark doorway;
+-- the dark wood poles with gold ball caps and today's ridge pole; guy ropes to wooden stakes front, back and on both
+-- sides; a small striped rug at the doorway; a low sand drift along one side.
+-- Parts: Canvas, Lining, Wood, Ground, Collision (5; the old one had 9).
+---------------------------------------------------------------------
+function PropsDesert.desert_tent(): Model
+	local m = Instance.new("Model")
+	m.Name = "desert_tent"
+	H.setBevelSelf(true)
+	local U, add = lists()
+	U.Canvas, U.Lining = {}, {}
+	local slopeLen = math.sqrt(5.5 ^ 2 + 8 ^ 2)
+	for _, side in ipairs({ { -1, C.Red }, { 1, RED_ALT } }) do
+		local sx = side[1]
+		local u = Vector3.new(-sx * 5.5, 8, 0).Unit -- base -> ridge
+		local n = Vector3.new(sx * 8, 5.5, 0).Unit -- outward
+		local mid = Vector3.new(sx * 2.75, 4, 0)
+		for k = 0, 3 do
+			local z = -4.5 + k * 3
+			local c = mid + Vector3.new(0, 0, z) + n * 0.08
+			add("Canvas", piece("Part", Vector3.new(3.0, slopeLen + 0.1, 0.15), CFrame.fromMatrix(c, Vector3.zAxis, u), scaled(side[2], if k % 2 == 0 then 1 else 0.93)))
+		end
+		for _, z in ipairs({ -3, 0, 3 }) do
+			add("Canvas", piece("Part", Vector3.new(0.12, slopeLen, 0.06), CFrame.fromMatrix(mid + Vector3.new(0, 0, z) + n * 0.18, Vector3.zAxis, u), scaled(side[2], 0.8)))
+		end
+		local base = Vector3.new(sx * 5.5, 0, 0)
+		add("Canvas", piece("Part", Vector3.new(12.0, 0.3, 0.07), CFrame.fromMatrix(base + u * 0.2 + n * 0.19, Vector3.zAxis, u), scaled(side[2], 0.82)))
+		add("Canvas", piece("Part", Vector3.new(12.1, 0.45, 0.08), CFrame.fromMatrix(Vector3.new(0, 8, 0) - u * 0.25 + n * 0.2, Vector3.zAxis, u), scaled(side[2], 0.86)))
+	end
+	-- back gable with a seam
+	H.triangleParts(U.Canvas, Vector3.new(-5.5, 0, 6.05), Vector3.new(5.5, 0, 6.05), Vector3.new(0, 8, 6.05), 0.15, CFrame.identity, scaled(RED_ALT, 0.95))
+	add("Canvas", piece("Part", Vector3.new(0.12, 7.9, 0.06), CFrame.new(0, 3.95, 6.14), scaled(RED_ALT, 0.8)))
+	-- front gable: gold lining (the flaps folded back) left and right of the doorway, bindings, rolled edges, ties
+	for _, sx in ipairs({ -1, 1 }) do
+		H.triangleParts(U.Lining, Vector3.new(sx * 5.5, 0, -6.05), Vector3.new(sx * 3.0, 0, -6.05), Vector3.new(0, 8, -6.05), 0.15, CFrame.identity, C.Gold)
+		H.triangleParts(U.Lining, Vector3.new(sx * 3.0, 0, -6.05), Vector3.new(0, 6, -6.05), Vector3.new(0, 8, -6.05), 0.15, CFrame.identity, scaled(C.Gold, 0.93))
+		add("Canvas", bar(Vector3.new(sx * 5.5, 0.05, -6.12), Vector3.new(0, 8.0, -6.12), 0.24, scaled(if sx < 0 then C.Red else RED_ALT, 0.85)))
+		local a, b = Vector3.new(sx * 3.15, 0.2, -6.25), Vector3.new(sx * 0.15, 5.85, -6.25)
+		local dir = (b - a).Unit
+		add("Canvas", octagon(0.5, (b - a).Magnitude, CFrame.fromMatrix((a + b) / 2, Vector3.zAxis:Cross(dir).Unit, dir), if sx < 0 then C.Red else RED_ALT))
+		for _, f in ipairs({ 0.35, 0.7 }) do
+			local p = a:Lerp(b, f)
+			add("Wood", octagon(0.62, 0.14, CFrame.fromMatrix(p, Vector3.zAxis:Cross(dir).Unit, dir), C.Rope))
+		end
+	end
+	-- the dark doorway
+	H.triangleParts(U.Lining, Vector3.new(-3, 0, -5.6), Vector3.new(3, 0, -5.6), Vector3.new(0, 6, -5.6), 0.12, CFrame.identity, scaled(C.DarkWood, 0.55))
+	-- poles, ridge, gold caps, guy ropes and stakes
+	for _, z in ipairs({ -6.6, 6.6 }) do
+		add("Wood", timber(Vector3.new(0.5, 8.6, 0.5), CFrame.new(0, 4.3, z), C.DarkWood, 0.08))
+		add("Lining", piece("Part", Vector3.new(0.6, 0.6, 0.6), CFrame.new(0, 8.75, z), C.Gold, { shape = Enum.PartType.Ball }))
+		for _, sx in ipairs({ -1, 1 }) do
+			local stake = Vector3.new(sx * 2.2, 0.35, z + (if z < 0 then -0.55 else 0.55))
+			add("Wood", bar(Vector3.new(0, 8.3, z), stake + Vector3.new(0, 0.3, 0), 0.12, C.Rope))
+			add("Wood", piece("Part", Vector3.new(0.25, 0.8, 0.25), CFrame.new(stake) * CFrame.Angles(if z < 0 then rad(-25) else rad(25), 0, 0), C.Trunk))
+		end
+	end
+	add("Wood", timber(Vector3.new(0.5, 0.5, 14), CFrame.new(0, 8.1, 0), scaled(C.DarkWood, 1.06), 0.08))
+	for _, sx in ipairs({ -1, 1 }) do
+		for _, z in ipairs({ -3, 3 }) do
+			local onSlope = Vector3.new(sx * 3.35, 3.1, z)
+			local stake = Vector3.new(sx * 5.7, 0.35, z)
+			add("Wood", bar(onSlope, stake + Vector3.new(0, 0.3, 0), 0.12, C.Rope))
+			add("Wood", piece("Part", Vector3.new(0.25, 0.8, 0.25), CFrame.new(stake) * CFrame.Angles(0, 0, sx * rad(25)), C.Trunk))
+		end
+	end
+	-- the rug at the doorway, a sand drift along the right side
+	U.Ground = {}
+	table.insert(U.Ground, piece("Part", Vector3.new(3.4, 0.12, 2.2), CFrame.new(0, 0.06, -6.2), RUG))
+	for _, x in ipairs({ -1.2, 1.2 }) do
+		table.insert(U.Ground, piece("Part", Vector3.new(0.3, 0.03, 2.2), CFrame.new(x, 0.13, -6.2), C.Gold))
+	end
+	table.insert(U.Ground, piece("Part", Vector3.new(0.5, 0.03, 0.5), CFrame.new(0, 0.13, -6.2) * CFrame.Angles(0, rad(45), 0), C.Blue))
+	local drift = piece("WedgePart", Vector3.new(9.0, 0.7, 1.1), CFrame.new(5.45, 0.35, 0.5) * CFrame.Angles(0, rad(-90), 0), SAND)
+	table.insert(U.Ground, drift)
+	table.insert(U.Ground, piece("WedgePart", Vector3.new(8.0, 0.35, 0.6), CFrame.new(5.8, 0.17, 0.5) * CFrame.Angles(0, rad(-90), 0), SAND_DARK))
+
+	envelope(m, "desert_tent")
+	finishVisual(m, "desert_tent", U, "Wood", { Canvas = true })
+	H.setBevelSelf(false)
+	return m
+end
+
+---------------------------------------------------------------------
+-- 05 RUINED WALL (kit Desert.Sandstone_Wall_Ruin, 20.4 x 13 x 8; Desert_2.Decor.Village, Desert_3.Decor.Ruins x2).
+-- Today's footprint, steps and colours, in real blocks: a footing of slabs, the 3 wall pieces (12 / 8.5 / 5 high) in
+-- courses of cut sandstone blocks (running bond, 0.09 joints over a dark core, chamfers, tone steps, gradient), a broken
+-- top (missing blocks, the last blocks turned and slid out, a cracked block per piece), today's cap on the tall piece
+-- broken off at one end, today's 2 loose blocks (one on the middle piece, one fallen in front, cracked), 5 rubble
+-- blocks half in the sand; today's 2 plaques as carved glyph plaques (frame, recessed panel, raised glyphs: an eye, wavy
+-- water, a bird, an ankh; a lapis and a gold inlay); sand drifts along the foot. Collisions = today's (as climbable).
+-- Parts: Walls, Glyphs, Sand, Collision (4; the old one had 9).
+---------------------------------------------------------------------
+function PropsDesert.ruined_wall(): Model
+	local m = Instance.new("Model")
+	m.Name = "ruined_wall"
+	local rng = Random.new(20261106)
+	H.setBevelSelf(true)
+	local Ht = 13
+	local U, add = lists()
+	local CORE = scaled(C.Footing, 0.8)
+	local MID = rgb(215, 181, 126)
+	local BLOCK = rgb(210, 177, 123)
+	-- footing slabs
+	add("Walls", piece("Part", Vector3.new(20.0, 1.36, 3.2), CFrame.new(0, 0.68, 0), CORE))
+	do
+		local x, prev = -10.2, nil
+		while x < 10.19 do
+			local xe = math.min(x + rng:NextNumber(2.8, 4.0), 10.2)
+			if 10.2 - xe < 1.5 then
+				xe = 10.2
+			end
+			local ti = toneIndex(rng, prev)
+			prev = ti
+			add("Walls", chamfered(Vector3.new(xe - x - 0.09, 1.4, 3.6), CFrame.new((x + xe) / 2, 0.7, 0), soft(C.Footing, 0.7, Ht, TONES[ti]), { "topFrontBack", "topSides", "vertical" }, 0.15))
+			x = xe
+		end
+	end
+	-- the 3 pieces in courses; the top course broken (a gap, a turned / slid last block); one cracked block each
+	-- the middle piece loses the right end of its top course (a step down to the low piece; its loose block stays
+	-- supported), the low piece a block in the middle of its top course and its last block is turned and slid out
+	local pieces = { { -10, -3, 12, C.Sandstone, 8 }, { -3, 3, 8.5, MID, 5 }, { 3, 10, 5, C.Sandstone, 3 } }
+	for pi, s in ipairs(pieces) do
+		local x0, x1, top, color, n = s[1], s[2], s[3], s[4], s[5]
+		local ch = (top - 1.4) / n
+		-- the core stops under the top course of the broken pieces (their missing blocks are real notches)
+		local coreTop = top - (if pi > 1 then ch else 0)
+		add("Walls", piece("Part", Vector3.new(x1 - x0 - 0.3, coreTop - 1.4, 2.6), CFrame.new((x0 + x1) / 2, (1.4 + coreTop) / 2, 0), CORE))
+		local prev = nil
+		local offset = rng:NextNumber(0.6, 1.2)
+		for k = 0, n - 1 do
+			local y0 = 1.4 + k * ch
+			local bh = ch - 0.05
+			local yc = y0 + 0.025 + bh / 2
+			local x = x0 - (if k % 2 == 1 then offset else 0)
+			local isTop = k == n - 1
+			local idx = 0
+			while x < x1 - 0.05 do
+				local xe = math.min(x + rng:NextNumber(2.0, 3.4), x1)
+				if x1 - xe < 1.0 then
+					xe = x1
+				end
+				local a = math.max(x, x0)
+				idx += 1
+				local len = xe - a - 0.09
+				local skip = isTop and ((pi == 2 and xe >= x1) or (pi == 3 and idx == 2))
+				if len > 0.4 and not skip then
+					local ti = toneIndex(rng, prev)
+					prev = ti
+					local cf = CFrame.new((a + xe) / 2 - 0.045, yc, rng:NextNumber(-0.04, 0.04))
+					local last = isTop and xe >= x1 and pi == 3
+					if last then
+						cf = cf * CFrame.new(0.12, 0, -0.15) * CFrame.Angles(0, rad(4), rad(-5))
+					end
+					add("Walls", chamfered(Vector3.new(len, bh, 3.0), cf, soft(color, yc, Ht, TONES[ti]), { "vertical", "topFrontBack", "topSides" }, 0.18))
+					if k == math.floor(n / 2) and idx == 2 then
+						-- a crack across the block's front face
+						add("Walls", piece("Part", Vector3.new(0.09, bh * 0.85, 0.06), cf * CFrame.new(0, 0, -1.49) * CFrame.Angles(0, 0, rad(18)), CORE))
+					end
+				end
+				x = xe
+			end
+		end
+	end
+	-- today's cap on the tall piece, broken off at its right end
+	add("Walls", chamfered(Vector3.new(5.7, 0.95, 3.6), CFrame.new(-7.35, 12.475, 0), soft(C.Footing, 12.5, Ht, 1), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.15))
+	add("Walls", chamfered(Vector3.new(1.45, 0.9, 3.5), CFrame.new(-3.75, 12.4, -0.05) * CFrame.Angles(rad(2), rad(-4), rad(-7)), soft(C.Footing, 12.4, Ht, 0.93), { "vertical", "topFrontBack", "topSides" }, 0.15))
+	-- today's loose blocks: on the middle piece, and fallen in front (cracked)
+	add("Walls", chamfered(Vector3.new(3, 2, 3), CFrame.new(-1.5, 9.5, 0) * CFrame.Angles(0, rad(12), 0), soft(C.Sandstone, 9.5, Ht, 0.93), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.22))
+	add("Walls", chamfered(Vector3.new(4, 2.4, 3), CFrame.new(5, 1.05, -4) * CFrame.Angles(0, rad(25), rad(3)), BLOCK, { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.25, nil, { piece("Part", Vector3.new(0.09, 3.0, 3.4), CFrame.new(5, 1.05, -4) * CFrame.Angles(0, rad(25), rad(-20)), CORE) }))
+	-- rubble half in the sand
+	for _, r in ipairs({ { -8.6, -2.7, 1.2, 20 }, { -2.4, -2.5, 0.9, -15 }, { 8.6, -2.6, 1.4, 30 }, { 1.5, 2.15, 0.9, 12 }, { -6.0, 2.2, 0.8, -25 } }) do
+		local s = r[3]
+		add("Walls", chamfered(Vector3.new(s * 1.3, s, s), CFrame.new(r[1], s * 0.5 - 0.3, r[2]) * CFrame.Angles(rad(r[4] * 0.5), rad(r[4] * 2), rad(r[4])), scaled(BLOCK, TONES[rng:NextInteger(1, 3)]), { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, s * 0.18))
+	end
+	-- the 2 glyph plaques (today's places on the tall piece's front face)
+	U.Glyphs = {}
+	local GLYPH = scaled(C.Footing, 0.78)
+	local function plaque(cx: number, cy: number, w: number, h: number): CFrame
+		local face = -1.5
+		table.insert(U.Glyphs, piece("Part", Vector3.new(w, h, 0.14), CFrame.new(cx, cy, face - 0.02), scaled(C.Footing, 0.92)))
+		for _, e in ipairs({ { 0, h / 2 - 0.125, w, 0.25 }, { 0, -h / 2 + 0.125, w, 0.25 }, { -w / 2 + 0.125, 0, 0.25, h - 0.5 }, { w / 2 - 0.125, 0, 0.25, h - 0.5 } }) do
+			table.insert(U.Glyphs, chamfered(Vector3.new(e[3], e[4], 0.2), CFrame.new(cx + e[1], cy + e[2], face - 0.1), C.Footing, { "frontFace" }, 0.05))
+		end
+		return CFrame.new(cx, cy, face - 0.12)
+	end
+	local p1 = plaque(-6.5, 7, 3, 2)
+	-- the eye (almond, lapis pupil), wavy water, a bird
+	table.insert(U.Glyphs, chamfered(Vector3.new(0.9, 0.38, 0.08), p1 * CFrame.new(-0.7, 0.3, 0), GLYPH, { "vertical" }, 0.14))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.2, 0.2, 0.08), p1 * CFrame.new(-0.7, 0.3, -0.03), C.Lapis))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.5, 0.08, 0.08), p1 * CFrame.new(-0.85, 0.02, 0) * CFrame.Angles(0, 0, rad(-25)), GLYPH))
+	for row = 0, 1 do
+		for k = 0, 3 do
+			table.insert(U.Glyphs, piece("Part", Vector3.new(0.3, 0.08, 0.08), p1 * CFrame.new(-1.05 + k * 0.28, -0.45 - row * 0.25, 0) * CFrame.Angles(0, 0, rad(if k % 2 == 0 then 30 else -30)), GLYPH))
+		end
+	end
+	table.insert(U.Glyphs, chamfered(Vector3.new(0.5, 0.3, 0.08), p1 * CFrame.new(0.65, 0.05, 0), GLYPH, { "vertical" }, 0.1))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.18, 0.18, 0.08), p1 * CFrame.new(0.95, 0.3, 0), GLYPH))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.18, 0.06, 0.08), p1 * CFrame.new(1.1, 0.3, 0), C.Gold))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.35, 0.1, 0.08), p1 * CFrame.new(0.4, 0.05, 0) * CFrame.Angles(0, 0, rad(20)), GLYPH))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.06, 0.3, 0.08), p1 * CFrame.new(0.6, -0.25, 0), GLYPH))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.06, 0.3, 0.08), p1 * CFrame.new(0.75, -0.25, 0), GLYPH))
+	local p2 = plaque(-6.5, 4, 1, 3)
+	-- the ankh and a gold sun
+	for _, e in ipairs({ { 0, 0.75, 0.36, 0.08 }, { 0, 0.35, 0.36, 0.08 }, { -0.17, 0.55, 0.08, 0.4 }, { 0.17, 0.55, 0.08, 0.4 } }) do
+		table.insert(U.Glyphs, piece("Part", Vector3.new(e[3], e[4], 0.08), p2 * CFrame.new(e[1], e[2], 0), GLYPH))
+	end
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.4, 0.08, 0.08), p2 * CFrame.new(0, 0.2, 0), GLYPH))
+	table.insert(U.Glyphs, piece("Part", Vector3.new(0.08, 0.95, 0.08), p2 * CFrame.new(0, -0.3, 0), GLYPH))
+	table.insert(U.Glyphs, octagon(0.32, 0.08, p2 * CFrame.new(0, -0.95, 0) * CFrame.Angles(rad(90), 0, 0), C.Gold))
+	-- sand drifts along the foot (front and back), a crest on each
+	U.Sand = {}
+	for _, d in ipairs({ { -7.0, -1, 5.5, 0.9, 1.3 }, { 2.2, -1, 4.5, 0.7, 1.1 }, { -2.5, 1, 6.0, 0.7, 0.5 }, { 6.8, 1, 4.0, 0.55, 0.5 } }) do
+		local x, side, len, h, depth = d[1], d[2], d[3], d[4], d[5]
+		local z = side * (1.8 + depth / 2)
+		local turn = if side < 0 then CFrame.identity else CFrame.Angles(0, math.pi, 0)
+		table.insert(U.Sand, piece("WedgePart", Vector3.new(len, h, depth), CFrame.new(x, h / 2 + 0.02, z) * turn, SAND))
+		table.insert(U.Sand, piece("Part", Vector3.new(len * 0.9, h * 0.8, h * 0.8), CFrame.new(x, h * 0.45, side * (1.8 + h * 0.3)), SAND, { shape = Enum.PartType.Cylinder }))
+		table.insert(U.Sand, piece("WedgePart", Vector3.new(len * 0.8, h * 0.4, depth * 0.5), CFrame.new(x, h * 0.2, z + side * depth * 0.3) * turn, SAND_DARK))
+	end
+	-- a drift around the fallen block
+	table.insert(U.Sand, piece("WedgePart", Vector3.new(3.0, 0.6, 1.0), CFrame.new(5.0, 0.3, -4.9) * CFrame.Angles(0, rad(25 + 180), 0), SAND))
+
+	envelope(m, "ruined_wall")
+	finishVisual(m, "ruined_wall", U, "Walls", { Walls = true })
+	H.setBevelSelf(false)
+	return m
+end
+
+---------------------------------------------------------------------
 -- registration: the builders go into the fresh PropsBatch2 table; its install() builds them
 ---------------------------------------------------------------------
 PropsDesert.BUILDERS = {
-	adobe_house_a = true, adobe_house_b = true,
+	adobe_house_a = true, adobe_house_b = true, market_stall = true, canopy_pavilion = true, desert_tent = true, ruined_wall = true,
 }
 for id in pairs(PropsDesert.BUILDERS) do
 	B2[id] = (PropsDesert :: any)[id]

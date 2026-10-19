@@ -2378,3 +2378,23 @@ every rock intersection in sub-zone 1.
   wall tops at 11.0 (today's height) are reachable only from the dune (4.9 high) and the village jars standing against
   them - the same as with the old house, so accepted. Out of scope (logged): Common.Tent_A and Volcano.Miner_Tent share
   NomadTent_A's shape in other colours - different kits, not synced.
+- 11:30 02-05 done = DESERT BUILDINGS COMPLETE (Agent B; main agent looked at the 4 game shots and Play-checked).
+  02 market stall (market_stall, MarketStall_A): replaced 6 / 6 (test, kit, 4 Desert_2): posts on stone footings,
+  beams / rafters, the 6 red / linen strips as sagging cloth with a tabbed valance and gold tassels, planked counter
+  with trim, plank back wall, shelf on brackets, painted clay pots, a fruit tray, folded / draped cloths; 23 -> 4 parts.
+  03 canopy pavilion (canopy_pavilion, NomadTent_B): 3 / 3 (test, kit, Desert_1): 8-panel red / blue canopy with gold
+  piping, scalloped linen valance, tassels, gold finial, carved posts with rope wraps, pleated curtains tied back,
+  rug with gold border, 4 cushions, a small lantern; 19 -> 7.
+  04 tent (desert_tent, NomadTent_A): 5 / 5 (test, kit, 2 Desert_1, Desert_3): panelled canvas with seams and hems,
+  gold-lined flaps folded back with rope ties, gold pole caps, 8 guy ropes to stakes, a rug, a sand drift; 9 -> 5.
+  05 ruined wall (ruined_wall, Sandstone_Wall_Ruin): 5 / 5 (test, kit, Desert_2, 2 Desert_3): cut-block courses with a
+  broken stepped top, loose / cracked blocks, 5 rubble blocks, the 2 plaques as carved glyph plaques (eye, water
+  lines, bird, ankh, lapis / gold inlays), sand drifts; 9 -> 4.
+  Collisions: visible pieces non-colliding + one invisible "Collision" union per object rebuilding today's colliding
+  parts (ray comparison vs today's parts: no height difference over 0.25); the stall's loose goods no longer collide.
+  MAIN AGENT PLAY CHECK (phone emulator, landscape): arrived in Desert via the portal; walked under the pavilion
+  canopy (6.9 from its centre pole); the stalls' roofs (and 1 of 3 tents) can be reached by jumping - with collision
+  identical to today's, i.e. the same as before (not changed; the owner may want stall roofs blocked later);
+  Desert_1 camp 144 fps / worst 8.5 ms / render CPU 2.5 ms; Desert_2 village 36 fps = Studio's unfocused cap, render
+  CPU 2.9 ms; no errors. FINAL: 48 templates / 373 tagged copies up to date, run 2 = 0; disk == Studio (181 scripts,
+  0 written); backup after_desert_buildings.
