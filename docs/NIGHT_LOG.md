@@ -2261,3 +2261,23 @@ every rock intersection in sub-zone 1.
   plinth, carved base, fluted octagonal shaft of 4 drums with a band and rings, carved capital, light moss; 4 unions,
   ~1,550 tris; same size; collisions as before; no script reads the pillars (BossService uses only the arena's
   PrimaryPart and Door). Sync run 2 = 0 for each. Hub parts 5,278 -> 5,266.
+- 21:30 BATCH B done (Agent B; main agent looked at the 4 Plains shots and Play-checked the gates):
+  03a entrance arch (entry_arch): replaced 3 / 3 (test, kit, Plains_1.EntryArch); stone piers with slab caps, logs
+  with iron collars and riveted bands, timber beams with iron bands and pegs, the name board in a timber frame, a
+  roof of individual red shingles on 4 trusses with ridge cap and edge boards; lanterns = the synced lantern prop
+  with new iron brackets; 58 -> 36 parts, ~15,100 tris (each union < 20k). Passage (24 x 15) clear.
+  03b palisade gate (gate_palisade): replaced 3 / 3 (test, kit, Plains_2.Gate); log towers on stone bases, riveted
+  bands, the price board under a small shingle roof, 2 wall torches (Embers / FirePoints kept), a plank door with
+  V-joints, Z-braces, strap hinges and gold ring handles; 51 -> 13 parts.
+  04 barricade (gate_barricade): replaced 3 / 3 (test, kit, Plains_3.Gate); a rebuilt 9-voussoir stone arch with a
+  keystone, the price board hung on ropes, pointed posts, layered nailed planks, rope lines tied to iron rings; the
+  6 Toolbox cliff / grass meshes kept; 36 -> 16 parts.
+  05 mine door (gate_mine): replaced 3 / 3 (test, kit, Plains_4.Gate); a dark stone frame with the cyan rune strips in
+  dark plates, a 5-block lintel, a studded price plaque, a door of big stone blocks with studded iron straps, glowing
+  rune diamonds in iron rims, ring pulls; the 8 Toolbox rock / moss meshes kept; 32 -> 21 parts.
+  All new door / plank / panel pieces sit under Barrier (GateController); SubZoneId, PriceSign texts (500 / 1.25K /
+  3.12K Gold) and attributes kept. Sync run 2 = 0. Hub unchanged (5,266). From batch B on, chamfer cuts take the
+  block's own colour slightly lighter (the earlier builds keep their approved grey edges).
+  MAIN AGENT PLAY CHECK: with 10M gold (admin addGold), each gate prompt ("Open (500 Gold)", "Open (1.25K Gold)",
+  "Open (3.12K Gold)") opened its gate: Barrier collision off, every new door piece hidden (LocalTransparencyModifier
+  1: 3 / 4 / 5 pieces), the player walked through all three; no errors.

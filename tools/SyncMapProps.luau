@@ -106,6 +106,21 @@ SyncMapProps.RULES = {
 	{ propId = "hub_wall", names = { "Hub_Wall_Section" } },
 	{ propId = "stone_arch", names = { "Stone_Arch_A" } },
 	{ propId = "stone_pillar", names = { "Stone_Pillar_A" } },
+	-- batch B: 03 entry arch (test zone, kit, Plains_1.EntryArch), the Plains gates 03 palisade / 04 barricade / 05 mine
+	-- door (test zone, kit, Zones.Plains.Plains_<n>.Gate: SubZoneId and the other attributes are kept, the template's
+	-- Barrier is the PrimaryPart, the PriceSign texts move onto the new PriceSign)
+	{ propId = "entry_arch", names = { "EntryArch_Plains" }, match = function(m)
+		return m.Name == "EntryArch" and m.Parent ~= nil and m.Parent.Name == "Plains_1"
+	end },
+	{ propId = "gate_palisade", names = { "Gate_Plains_2" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Plains_2"
+	end },
+	{ propId = "gate_barricade", names = { "Gate_Plains_3" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Plains_3"
+	end },
+	{ propId = "gate_mine", names = { "Gate_Plains_4" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Plains_4"
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
