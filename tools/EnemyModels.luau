@@ -13,8 +13,8 @@
 --   pets: ReplicatedStorage.Assets.Pets.<id>          NPCs: ServerStorage.NPCs.<id>
 -- EnemyService uses ServerStorage.Enemies / Bosses automatically (placeholders otherwise).
 -- Import unit: the files are written in metres, but any Scale Unit works: the Root box's imported size is compared
--- with the size written in its name (studs) and the whole model is scaled back uniformly (attribute ImportScaleFixed
--- = the factor found); a distorted Root (axes off by different factors) is refused.
+-- with the size written in its name (studs; the height decides) and the whole model is scaled back uniformly
+-- (attribute ImportScaleFixed = the factor found); a Root narrower than its name, or far wider, is refused.
 --   require(...).buildOne(importedModel) -> ok, id or reason, note: one import -> its destination (used by
 --   DevTools.ApplyPropMeshes.run() for the npc_* imports, so the props and the NPCs share one command)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -87,18 +87,29 @@ function EnemyModels.build(imported: Instance, id: string?): (Model?, string?)
 	if not (rootSource and center and size) then
 		return nil, "no Root__ part (was it exported by tools/blender/fyd_creatures.py?)"
 	end
-	-- import unit: k = imported Root size / the size in its name; every piece is scaled back by 1/k around the feet
+	-- import unit: k = imported Root height / the height in its name; every piece is scaled back by 1/k around the feet.
+	-- The 3D Importer can bring the Root mesh in wider than its name (seen 2026-10-19 on the hub NPCs: 4.03 x 6 x 3.93
+	-- for a 3.05 x 6 x 2.77 box, a x28 import), never narrower: the height decides, the width only has to be plausible
 	local rs = rootSource.Size
 	local kx, ky, kz = rs.X / size.X, rs.Y / size.Y, rs.Z / size.Z
-	local lo, hi = math.min(kx, ky, kz), math.max(kx, ky, kz)
-	if lo <= 0 or hi / lo - 1 > 0.03 then
+	if ky <= 0 or kx < ky * 0.97 or kz < ky * 0.97 or kx > ky * 1.6 or kz > ky * 1.6 then
 		return nil, string.format("the Root box (%.3f, %.3f, %.3f) is not its named size (%.3f, %.3f, %.3f) scaled evenly: distorted or turned import", rs.X, rs.Y, rs.Z, size.X, size.Y, size.Z)
 	end
-	local k = (kx + ky + kz) / 3
+	local k = ky
 	if math.abs(k - 1) <= 0.01 then
 		k = 1
 	end
-	local origin = rootSource.Position - center * k -- feet center (the importer keeps the relative positions)
+	-- feet center: the imported Model's pivot when the importer put it at the scene origin (Set Pivot to Scene Origin:
+	-- on the model's bottom face, inside its footprint); otherwise from the Root box
+	local origin = rootSource.Position - center * k
+	if imported:IsA("Model") then
+		local pivot = imported:GetPivot().Position
+		local boxCF, boxSize = imported:GetBoundingBox()
+		local rel = boxCF:PointToObjectSpace(pivot)
+		if math.abs(rel.Y + boxSize.Y / 2) <= 0.02 * boxSize.Y and math.abs(rel.X) <= boxSize.X / 2 and math.abs(rel.Z) <= boxSize.Z / 2 then
+			origin = pivot
+		end
+	end
 	local model = Instance.new("Model")
 	model.Name = rid
 	local root = Instance.new("Part")

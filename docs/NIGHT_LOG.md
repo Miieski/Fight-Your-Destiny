@@ -2079,3 +2079,24 @@ top of docs/model_upgrade_brief.txt.
   (PROPS_IMPORT.md "THE ONE STEP").
   Reported, not changed (existing placements): 5 Plains_2 clam_pearl copies sit 0.2 below the local ground, 1 sits 1.05
   below a Stone part.
+- 12:05 OWNER IMPORTED the 16 FBX (File > Import 3D, Studio Default, Merge Meshes OFF). Found by the main agent
+  in Studio, all at the Workspace top: Workspace.well (10 MeshParts), chest (5), rowboat (7), minecart (6),
+  skull_bones (3), clam_pearl (5), egg_nest (10 incl. the hull collider), scarecrow (13), fountain (12), anvil_forge
+  (12), weapon_stall (21), trophy_stall (6), diamond_shop (10), npc_blacksmith (7), npc_trophy_merchant (7),
+  npc_gem_merchant (8). Missing / unfinished: none (the 18 props of the brief = these 13 + the 5 Studio-built ones;
+  the mallet is dropped). Backup before_implant_imports (6 .rbxm; the .rbxl stays the owner's Save As).
+  ApplyPropMeshes dry run: all 13 props "would apply", 0 skipped, anchors land on the real parts. Real run: 13
+  templates installed, SyncMapProps replaced 108 copies (0 skipped; the 3 stalls kept their custom children), the
+  imports moved to ServerStorage.ImportedProps. The 3 NPCs were SKIPPED: the importer brought the Root hitbox mesh in
+  wider than its name (4.03 x 6 x 3.93 for 3.05 x 6 x 2.77 at x28) and 0.3 studs off-centre. FIX (main agent,
+  tools/EnemyModels.luau, disk + Studio): the height decides the import unit, the width only has to be 0.97-1.6x,
+  and the feet centre is the imported Model's pivot (Set Pivot to Scene Origin) when it sits on the model's bottom.
+  Second run: ServerStorage.NPCs.npc_blacksmith / npc_gem_merchant / npc_trophy_merchant built (x28 scaled back to 6
+  studs), 3 stand-ins replaced; the props "unchanged". SyncMapProps.check(): all 18 props up to date (222 tagged
+  copies: hub, zones, test area, kit storage); second run 0 replaced; nothing left at the Workspace top; 0
+  EditableMesh-backed parts.
+  PLAY CHECK (main agent): WeaponShop prompt "Shop / Blacksmith" -> ShopWindow; TrophyMerchant "Sell trophies /
+  Trophy Merchant" -> InventoryWindow; DiamondShop "Shop / Gem Merchant" -> ShopWindow; the 3 imported NPCs stand at
+  their stalls at run time (6-7 MeshParts each, Imported = true); walking into the well stops at 5.25 from its
+  centre (ring 4.8), into the weapon stall at the counter, into the fountain only onto its low step (as before); no
+  errors or warnings in the Output.
