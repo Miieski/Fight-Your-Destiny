@@ -1994,3 +1994,30 @@ Brief: docs/model_upgrade_brief.txt. Photos: Model_References/Model_References/0
   rotations -135 / 135 / 45 / -45; meshes unchanged, preview id kept); rowboat oar tip lowered to y 0.044 (rests on
   flat ground; about 0.3 into the hub's sloped sand, accepted as natural), clams >= 2.35 clear, 1,660 tris, new preview
   id 76458477611449.
+- 07:40 REVIEW (separate QC sub-agent, read-only, after A and B finished): place state clean - SyncMapProps.check()
+  all 9 templates up to date, 214 tagged copies = inventory, 0 leftovers (no _Previous / _Base / _PreviewHold /
+  PiecesRoot, 0 EditableMesh parts), stall prompts / Interact / NpcSpot / NPC / labels intact, the 13 FBX node names
+  = the data names, disk == Studio (177 scripts, 0 written). 13 findings for the owner's future import, sent to
+  Agent B: refuse partial imports (SKIPPED, keep today's models); size-check collider meshes; uniform-only resize +
+  a layout / rotation check; PropFX duplicates of the hub's always-on VFX (forge fire, diamond sparkle, fountain
+  glints) removed from PropFX (the map VFX parts are kept: improve-only rule); total emitter cap 6 (brief) instead of
+  6 props; StreamingEnabled: rebuild stale sway / spin references and rescan active props; preview / run guards;
+  fingerprint check before install (keeps the rollback); nested props synced in later passes; stall() refuses a
+  pieces template; applied imports moved to ServerStorage.ImportedProps; minecart drops its Toolbox provenance
+  attributes like egg_nest.
+- 08:05 REVIEW FIXES done (Agent B): all 13 findings fixed and tested without Play on fake imports (partial / merged
+  -> SKIPPED; x28 and x0.0357 -> resized; a -90 deg mesh, a distorted mesh, a whole import turned 90 or 180 deg ->
+  SKIPPED; all 13 correct -> would apply; second preview refused; identical second run -> "unchanged", rollback kept;
+  nested lantern re-synced after a lamp_post-only run; stall frame rebuild guarded; applied imports move to
+  ServerStorage.ImportedProps; minecart drops its Toolbox provenance attributes). Two more bugs found and fixed by
+  Agent B: ServerStorage.ImportedProps was never searched (ipairs over {nil, folder}); CollisionFidelity was
+  silently ignored outside the Workspace (new settleFidelity: the template visits a far stage until Hull / Box
+  apply, 0.11 s). Final: Sync.run 9 templates / 126 found / 0 replaced / 0 skipped; ApplyPropMeshes.run = every
+  prop "not imported yet"; 0 EditableMesh parts; disk == Studio (177 scripts, 0 written).
+  Main agent Play check: the laundry rack streamed out (cloths gone from the client) and back in -> Sway 9 again and
+  the cloth moves (the stale-reference fix works); no errors. Phone emulator (iPhone landscape, hub plaza): 144 fps,
+  worst frame 9-11 ms with effects on and with Low FX (most new effects only exist after the import).
+  PROPS_IMPORT.md steps 3 / 5 / 6 / 7 updated (rotated import refused, where the command looks, SKIPPED rule,
+  ImportedProps). HANDOFF section 5 + manual items and DESIGN section 8 updated.
+- 08:10 DONE for this session: everything committed and pushed; backup after_prop_upgrade. Waiting for the owner:
+  the 13 prop FBX imports + the apply command (and the creature import for the 3 stall shopkeepers).

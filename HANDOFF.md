@@ -149,30 +149,59 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
-**2026-10-19: PROP MODEL UPGRADE IN PROGRESS (brief docs/model_upgrade_brief.txt; 18 props, "mallet" dropped - it is a
-bench armrest).** Inventory `docs/prop_inventory.md` (test area = `workspace._Staging.AssetPreview.ModelsA.Lineup`,
-X about -3000). Single source of truth: `ServerStorage.MapProps.<propId>` templates; every placed copy (214) carries
-the CollectionService tag `MapProp` + attribute `MapPropId` (Abyss recolours = attribute variants `Sunken` / `Pale`;
-props embedded in bigger kits - HunterCamp crate / barrel / laundry rack, Market_Awning barrel, WeaponShop anvil
-forge, TutorialGuide / EggStation / EntryArch lanterns - were wrapped in child Models in place, nothing moved).
-* `DevTools.SyncMapProps`: `run()` replaces every tagged `MapProp` instance with a clone of
-  `ServerStorage.MapProps.<propId>`, keeping pivot, scale, name, parent, attributes, tags and the functional children
-  (`Interact` / `NpcSpot` / `NPC`, prompts, GUIs, scripts, nested props); idempotent through `MapPropVersion` (a second
-  run replaces 0). `capture(propId, instance)` makes an instance (e.g. a hand-improved copy in the test area or the
-  map) the new template and syncs it everywhere = the reverse direction; `undoCapture(propId)` reverses it;
-  `check()` reports the status. Studio-built props: `DevTools.StudioProps`.
-* Blender props: pipeline `tools/blender/fyd_props*.py` (Prop Style Guide + naming contract in
-  `Blender/Props/README.txt`, shared 512 px texture sets uploaded, near-white and tinted, 1 tile = 4 studs), FBX in
-  `Blender_Exports/Props/` written in studs. The owner imports them (`Blender_Exports/Props/PROPS_IMPORT.md`: File >
-  Import 3D, Studio Default, Merge Meshes OFF), then runs
-  `print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())` (needs the latest
-  `PropMeshData.luau` pasted in `ServerStorage.DevTools.PropMeshData`): it builds `MapProps.<propId>` (shared
-  SurfaceAppearances, glow / water / glass roles, invisible data colliders, PropFX attachments) and syncs.
-  `ApplyPropMeshes.preview(propId, imageIds)` rebuilds a prop from its uploaded preview PNG (mesh data in the
-  pixels: "FYDM" + Adler-32 + JSON) with EditableMesh for a temporary look in Studio; `endPreview(propId)` MUST be run
-  after (EditableMesh parts cannot be saved).
-* Effects: `Config/PropFX` + client `Controllers/PropFX` (on within 80 studs, off beyond 100, 4 Hz check, Low FX).
-* Per-model backups of the old props: `BackUP_Files/old_props_2026-10-18_2328/` (+ MANIFEST.txt).
+**2026-10-19: PROP MODEL UPGRADE (brief docs/model_upgrade_brief.txt; 18 props - the "mallet" of photo 03 is a bench
+armrest, benches are out of scope).** Inventory `docs/prop_inventory.md` (test area =
+`workspace._Staging.AssetPreview.ModelsA.Lineup`, X about -3000). STATE: Studio-built props done and live everywhere
+(crate, barrel, lamp_post, lantern, laundry_rack, the 3 stall frames); the 13 Blender props (well, chest, rowboat,
+minecart, skull_bones, clam_pearl, egg_nest, scarecrow, fountain, anvil_forge, and the awnings / items / signs of
+weapon_stall, trophy_stall, diamond_shop) are built, previewed in Studio and WAITING FOR THE OWNER'S FBX IMPORT
+(`Blender_Exports/Props/PROPS_IMPORT.md`); until then today's models stay. The 3 stall shopkeepers reuse the Part F
+NPC models (`Blender/NPC/Hub/npc_blacksmith | npc_trophy_merchant | npc_gem_merchant`), which arrive with the creature
+import (`Blender_Exports/CREATURES_IMPORT.md`).
+* Single source of truth: `ServerStorage.MapProps.<propId>`; every placed copy (214) is a Model tagged `MapProp` with
+  attribute `MapPropId` (test area, Hub, Zones, MapAssets kit, BossArenas). Props embedded in bigger kits (HunterCamp
+  crate / barrel / laundry rack, Market_Awning barrel, WeaponShop anvil forge, TutorialGuide / EggStation / EntryArch
+  lanterns) were wrapped in child Models in place. Recolours = variants (crate / rowboat `Sunken`, skull_bones `Pale`).
+* `DevTools.SyncMapProps` (`tools/SyncMapProps.luau`): `run()` replaces out-of-date copies with a template clone,
+  keeping pivot, scale, name, parent, attributes, tags, variants and the functional children (Interact, NpcSpot, NPC,
+  prompts, GUIs, scripts, sounds, nested props, anything with attribute MapPropKeep); idempotent through
+  `MapPropVersion` (second run = 0 replaced); nested copies (lamp_post > lantern, weapon_stall > anvil_forge) are
+  synced in later passes. `capture(propId, instance)` = the reverse direction (a hand-improved copy becomes the
+  template and is synced everywhere); `undoCapture(propId)`; `check()` = status. Always `require(module:Clone())`.
+* Studio-built props: `DevTools.StudioProps` (builders; `StudioProps.stall` = the shared stall frame). Shared look:
+  11 MaterialVariants `FYD_*` in MaterialService (the Prop Style Guide textures, 4 studs per tile).
+* Blender props: pipeline `tools/blender/fyd_props*.py`, Prop Style Guide + naming contract `Blender/Props/README.txt`,
+  manifest `Blender/Props/props_manifest.csv`, FBX in `Blender_Exports/Props/` (written in studs, no textures),
+  data `Blender_Exports/Props/PropMeshData.luau` (pasted as `DevTools.PropMeshData`; `tools/PropMeshData.luau` must
+  stay identical). After the owner's import: `print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())`
+  (`run({ only = { "well" } })`, `run({ dryRun = true })`). It validates each import against the data first and
+  SKIPS a prop (template and today's models untouched) when a mesh is missing / unknown / duplicated (Merge Meshes
+  ON?), rotated, distorted, laid out differently (turned or mirrored import), or its preview is installed; one common
+  wrong unit (x28, x100, x0.036) is corrected; `allowMissing = true` overrides. Then it builds the template (shared
+  SurfaceAppearances tinted per mesh, roles Glow / Water / Glass / Stream / Foam, invisible data colliders + Hull
+  collider meshes, a Root part with the PropFX attachments, lights and emitters), installs it (old one in
+  `MapProps._Previous`, skipped when identical), syncs, and moves the applied import to `ServerStorage.ImportedProps`.
+  PIECES mode (the 3 stalls): the FBX holds only the Blender pieces; they are added to a copy of the Studio frame
+  (saved once as `MapProps._Base.<id>`); anchored items are re-based on the real parts they replace; replaced solid
+  parts stay as invisible colliders. Rebuilding a frame after the import: `StudioProps.install(<stall>)` (rebuilds
+  `_Base`), then `run({ only = { "<stall>" } })`.
+* Preview without an import: `preview(propId, { "rbxassetid://<id>" })` rebuilds the prop from its uploaded preview
+  PNG (mesh data in the pixels: "FYDM" + Adler-32 + JSON; ids in `Blender_Exports/Props/preview/preview_ids.json`)
+  with EditableMesh, installs and syncs it temporarily; `endPreview(propId)` MUST be run before saving (it puts the
+  exact originals back; nested: end the host first). A second preview of the same prop is refused.
+* Adding a prop: Agent-A side = Blender recipe, FBX, regenerate PropMeshData, upload a preview PNG; Agent-B side = a
+  rule in `SyncMapProps.RULES` / `EMBEDDED`, `tagAll({ only = { id } })`, `backup(...)`, paste PropMeshData,
+  VARIANTS / DROP_ATTRIBUTES / PIECES entries if needed, `Config/PropFX` entries, preview + screenshots + endPreview.
+* Effects: client `Controllers/PropFX` driven by `Config/PropFX`: on within 80 studs, off beyond 100 (4 Hz check), at
+  most 6 particle emitters in total (`MAX_EMITTERS`, nearest props first), active props re-check their parts every 2 s
+  (StreamingEnabled), Low FX stops particles / sway / spin / scroll / flicker and keeps the static lights. The hub's
+  always-on VFX parts (`Hub.Decor.VFX.Fire_Torch`, `Diamond_Sparkle`, `Water_Ripple`) were kept and PropFX does not
+  duplicate them. Debug attributes on the client camera `PropFX_*`; test switch LocalPlayer attribute
+  `PropFX_TestLowFx`.
+* Backups of the old props: `BackUP_Files/old_props_2026-10-18_2328/` (18 .rbxm + MANIFEST.txt).
+* Open for the owner: the FBX import + the command; optional: raise the two Plains_4 Mine minecarts by 0.80 (their
+  wheels sink into the rails, today's carts too); optional ambient sounds (fire crackle, fountain water, wind chime -
+  no Ambient SoundGroup exists).
 Log: NIGHT_LOG "Prop model upgrade"; screenshots docs/screenshots/prop_upgrade/; previews Previews/Props/.
 
 **2026-10-18 (late night): EGG LIGHT V2 (owner: "During the haching, remove the cercle below the egg. It spoil the
@@ -704,6 +733,8 @@ Not done yet (suggested order):
   them: `require(game.ServerStorage.DevTools.PetModels).buildAll()` in the command bar (Edit mode).
 * Test teams with 2+ players (Studio Test > Clients and Servers): invite, accept, kick, leader leaving; also a boss
   room with 2-5 players ("Enter with team", HP scaling, spectators, the 5% reward rule).
+* Import the 13 prop FBX files: `Blender_Exports/Props/PROPS_IMPORT.md` (File > Import 3D, Studio Default,
+  Merge Meshes OFF), then `print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())`, then save.
 * Import the 88 creature FBX files: `Blender_Exports/CREATURES_IMPORT.md` (Bulk Import in meters, then
   `require(game.ServerStorage.DevTools.EnemyModels).fromImport(folder)`), then save the place.
 * Codes live in `Config/Codes.luau` (WELCOME, DESTINY, BOSSKEY); add or remove codes there.

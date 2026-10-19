@@ -10,24 +10,39 @@
 		print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())
 		print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run({ only = { "well" } }))  -- some props
 		print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run({ dryRun = true }))      -- report only
-	For every prop of PropMeshData.Props whose import is found it builds the template ServerStorage.MapProps.<propId>:
+	For every prop of PropMeshData.Props whose import is found it first CHECKS the import against the data and SKIPS
+	the prop (today's template and models stay untouched, the report says why) when:
+	  - a mesh of the data is missing (render or collider mesh), or the import holds a mesh the data does not know
+	    (Merge Meshes was ON?), or two meshes share a name (only run({ allowMissing = true }) accepts missing / extra
+	    meshes);
+	  - a mesh is rotated (more than 2 degrees off the import's identity: World Forward / Up changed?);
+	  - a mesh's size is not its data size times ONE factor on all axes (distorted), or the meshes disagree on that
+	    factor; one common factor (a wrong import Scale Unit: 28x, 100x, 0.036x ...) is fine: every mesh is resized;
+	  - the meshes' positions relative to each other are not the data's (a turned / mirrored / moved import);
+	  - a preview of the prop is installed (endPreview first).
+	Then it builds the template ServerStorage.MapProps.<propId>:
 	  - the meshes are looked up by their data name (<propId>_<Part>) BEFORE they are renamed <Part>;
-	  - size check: a mesh about 28x / 100x / 0.036x off (wrong import unit), or more than 2 % off, is resized to the
-	    data Size; CFrame = pivot * CFrame.new(Center) (no rotation), PivotOffset = CFrame.new(Pivot - Center);
-	  - Anchored, CanCollide false, CanTouch false, CanQuery false, CollisionFidelity Box, CastShadow from the data;
+	  - Size = the data Size; CFrame = pivot * CFrame.new(Center) (no rotation), PivotOffset = CFrame.new(Pivot - Center);
+	  - Anchored, CanCollide false, CanTouch false, CanQuery false, CollisionFidelity Box (collider meshes Hull: set on a
+	    short visit of the new template to a stage in the Workspace far from the map, the only place where Studio
+	    applies it), CastShadow from the data;
 	  - role from the data (Role, or the _Glow / _Water / _Glass / _Stream / _Foam suffix): Glow = Neon + Color;
 	    Water = Glass + Transparency + the water_ripple Texture ("Ripples") on the top face; Stream (falling water) =
 	    Glass + Transparency 0.45 + "Ripples" on the four side faces; Foam = SmoothPlastic + Transparency 0.2; Glass =
 	    Transparency; none of them has a SurfaceAppearance. Otherwise Material from the data and a SurfaceAppearance
 	    of the family's shared texture set with SurfaceAppearance.Color = the data tint (imported SAs are replaced);
 	  - invisible collider Parts from the data (Block / Cylinder / Wedge / Ball, Roblox orientation in degrees), and
-	    collider meshes (Role "Collider" / <propId>_Collider*) as invisible Hull colliders; render meshes never collide;
+	    collider meshes (data Role "Collider") as invisible Hull colliders of their data Size; render meshes never
+	    collide;
 	  - an invisible "Root" Part (Bounds) as PrimaryPart, pivot (0, PivotY, 0), the data Attachments under Root,
 	    the static lights of Config/PropFX (Lights, on the part "<Part>" / "<Part>_Glow" or on an Attachment) and
 	    its particle emitters (Particles, off), the recolour variants of VARIANTS (or the old template's _Variants),
 	    DROP_ATTRIBUTES;
 	the old template goes to ServerStorage.MapProps._Previous, then SyncMapProps.run updates the test area and the map.
-	The imports are not deleted (the owner deletes them after checking).
+	A new template identical to the current one (a second run) is not installed again ("unchanged"), so _Previous keeps
+	the real previous template. After a successful (or unchanged) apply the imported Model moves to
+	ServerStorage.ImportedProps (not visible, kept as the source of later runs; an older import of the same name goes
+	to ServerStorage.ImportedProps._Replaced).
 
 	"Pieces only" props (PIECES below: the 3 stalls; data Placement "pieces only"): the FBX holds only the Blender
 	pieces (awning, display items, sign, gems); the frame is the Studio-built template. The new template = a copy of
@@ -51,6 +66,8 @@
 	Preview MeshParts are EditableMesh-backed: they do not survive a save, so endPreview must run before any save.
 	preview() keeps the untouched originals in MapProps._PreviewHold.<propId>; endPreview() puts them back exactly
 	(same instances) and restores the previous template; a collider mesh (never in the PNG) gets a stand-in box.
+	A second preview of the same prop is refused until endPreview (it would lose the real previous template), and run()
+	skips a prop while its preview is installed.
 	A nested prop and its host (anvil_forge in weapon_stall): end the previews in the reverse order (the host first).
 ]]
 local AssetService = game:GetService("AssetService")
@@ -61,9 +78,12 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local ApplyPropMeshes = {}
 
-local SIZE_TOLERANCE = 0.02 -- relative: a mesh further off its data Size is resized
+local SIZE_TOLERANCE = 0.02 -- relative: axis ratios (import size / data size) must agree within this
+local ROTATION_TOLERANCE = 2 -- degrees: an imported mesh turned further than this is refused
+local LAYOUT_TOLERANCE = 0.05 -- studs (or 0.4 % of the prop's size): relative position error allowed per mesh
 local PREVIEW_ATTRIBUTE = "MapPropPreview" -- set on a template built from preview images
 local HOLD = "_PreviewHold" -- MapProps._PreviewHold.<propId>: the untouched originals during a preview
+local IMPORTED = "ImportedProps" -- ServerStorage.ImportedProps: the applied imports (sources of later runs)
 
 local rgb3 = Color3.fromRGB
 -- recoloured placements (attribute Variant on the instance): SurfaceAppearance.Color per mesh (README section 12),
@@ -80,8 +100,10 @@ ApplyPropMeshes.VARIANTS = {
 	},
 }
 -- attributes the new model must not inherit from the instance it replaces (SyncMapProps MapPropDropAttributes)
+-- (only the provenance attributes of a Toolbox mesh the Blender model fully replaces; every other attribute stays)
 ApplyPropMeshes.DROP_ATTRIBUTES = {
 	egg_nest = "SourceAssetId,SourceCreator", -- the Toolbox rock is gone: the new rock is ours
+	minecart = "SourceAssetId,SourceCreator", -- the Toolbox cart meshes are gone too
 }
 -- "pieces only" props: the frame template's parts the Blender pieces replace (= the data Replaces: awning stripes
 -- "Awning" x7 + fringe blocks "AwningFringe" x7, then the display items), and the ones a data collider takes over
@@ -138,11 +160,15 @@ end
 -- the imported Model of a prop: top of the Workspace, Workspace.ImportedProps or ServerStorage.ImportedProps
 -- (the map folders are never searched)
 local function findImport(propId: string): Model?
+	-- (the Workspace first: a new import wins over the stored one)
 	local places: { Instance } = { workspace }
-	for _, folder in ipairs({ workspace:FindFirstChild("ImportedProps"), ServerStorage:FindFirstChild("ImportedProps") }) do
-		if folder then
-			table.insert(places, folder)
-		end
+	local inWorkspace = workspace:FindFirstChild(IMPORTED)
+	if inWorkspace then
+		table.insert(places, inWorkspace)
+	end
+	local stored = ServerStorage:FindFirstChild(IMPORTED)
+	if stored then
+		table.insert(places, stored)
 	end
 	for _, place in ipairs(places) do
 		for _, item in ipairs(place:GetChildren()) do
@@ -241,23 +267,147 @@ local function ripples(mp: BasePart, data: any, overlayName: string?, faces: { E
 	end
 end
 
--- one render MeshPart (a clone of the import / preview mesh) -> its template look; placed by the caller
-local function dress(mp: MeshPart, propId: string, meshName: string, info: any, data: any, resized: { string })
+-- the axes a size check can trust (thin axes are left out: a flat plane's thickness is not meaningful)
+local function checkedAxes(want: Vector3): { string }
+	local axes = {}
+	for _, axis in ipairs({ "X", "Y", "Z" }) do
+		if (want :: any)[axis] >= 0.2 then
+			table.insert(axes, axis)
+		end
+	end
+	if #axes == 0 then
+		for _, axis in ipairs({ "X", "Y", "Z" }) do
+			if (want :: any)[axis] > 0.01 then
+				table.insert(axes, axis)
+			end
+		end
+	end
+	return axes
+end
+
+local function fmtV(v: Vector3): string
+	return string.format("%.3f x %.3f x %.3f", v.X, v.Y, v.Z)
+end
+
+-- the import's meshes against the data (see the header). Returns ok, the problems (why it is skipped) and notes.
+-- opts.standIn: collider meshes may be missing (the preview PNGs never hold them); opts.allowMissing: missing and
+-- unknown meshes are only reported
+local function validate(propId: string, prop: any, source: Instance, opts: any): (boolean, { string }, { string })
+	local problems, notes = {}, {}
+	local byName: { [string]: MeshPart } = {}
+	local dupes = {}
+	for _, d in ipairs(source:GetDescendants()) do
+		if d:IsA("MeshPart") then
+			if byName[d.Name] then
+				table.insert(dupes, d.Name)
+			else
+				byName[d.Name] = d
+			end
+		end
+	end
+	local missing, extra = {}, {}
+	for meshName, info in pairs(prop.Meshes) do
+		if not byName[meshName] and not (opts.standIn and roleOf(meshName, info) == "Collider") then
+			table.insert(missing, meshName)
+		end
+	end
+	for name in pairs(byName) do
+		if not prop.Meshes[name] then
+			table.insert(extra, name)
+		end
+	end
+	table.sort(missing)
+	table.sort(extra)
+	if #dupes > 0 then
+		table.sort(dupes)
+		table.insert(problems, "two meshes share a name: " .. table.concat(dupes, ", "))
+	end
+	local partial = {}
+	if #missing > 0 then
+		table.insert(partial, "missing meshes: " .. table.concat(missing, ", "))
+	end
+	if #extra > 0 then
+		table.insert(partial, "meshes the data does not know (Merge Meshes ON? another file?): " .. table.concat(extra, ", "))
+	end
+	for _, text in ipairs(partial) do
+		table.insert(if opts.allowMissing then notes else problems, text)
+	end
+	-- rotation and size: one common factor for every mesh
+	local found = {}
+	for meshName, info in pairs(prop.Meshes) do
+		local src = byName[meshName]
+		if not src then
+			continue
+		end
+		local _, angle = src.CFrame.Rotation:ToAxisAngle()
+		if math.deg(math.abs(angle)) > ROTATION_TOLERANCE then
+			local rx, ry, rz = src.CFrame:ToOrientation()
+			table.insert(problems, string.format("%s is rotated (%.0f, %.0f, %.0f deg): re-import with World Forward = Front, World Up = Top", meshName, math.deg(rx), math.deg(ry), math.deg(rz)))
+			continue
+		end
+		local want = v3(info.Size)
+		local lo, hi = math.huge, -math.huge
+		for _, axis in ipairs(checkedAxes(want)) do
+			local r = (src.Size :: any)[axis] / (want :: any)[axis]
+			lo, hi = math.min(lo, r), math.max(hi, r)
+		end
+		if lo <= 0 or hi / lo - 1 > SIZE_TOLERANCE then
+			table.insert(problems, `{meshName}: size {fmtV(src.Size)} is not its data size {fmtV(want)} scaled evenly (distorted or turned)`)
+			continue
+		end
+		table.insert(found, { name = meshName, src = src, factor = (lo + hi) / 2, center = v3(info.Center) })
+	end
+	if #found == 0 then
+		if #problems == 0 then
+			table.insert(problems, "no mesh of the data found")
+		end
+		return false, problems, notes
+	end
+	local factors = {}
+	for _, f in ipairs(found) do
+		table.insert(factors, f.factor)
+	end
+	table.sort(factors)
+	local k = factors[(#factors + 1) // 2]
+	for _, f in ipairs(found) do
+		if math.abs(f.factor / k - 1) > SIZE_TOLERANCE then
+			table.insert(problems, string.format("%s is scaled x%.3f, the other meshes x%.3f", f.name, f.factor, k))
+		end
+	end
+	if math.abs(k - 1) > SIZE_TOLERANCE then
+		table.insert(notes, string.format("import unit off by x%.3f (Scale Unit not Studs?): every mesh resized to its data size", k))
+	end
+	-- layout: the positions relative to each other (expected: k * Center + one common offset)
+	if #found >= 2 then
+		local offset = Vector3.zero
+		for _, f in ipairs(found) do
+			offset += f.src.Position - f.center * k
+		end
+		offset /= #found
+		local b = prop.Bounds and v3(prop.Bounds.Size) or Vector3.one
+		local tol = k * math.max(LAYOUT_TOLERANCE, 0.004 * b.Magnitude)
+		local worst, worstName = 0, ""
+		for _, f in ipairs(found) do
+			local err = (f.src.Position - f.center * k - offset).Magnitude
+			if err > worst then
+				worst, worstName = err, f.name
+			end
+		end
+		if worst > tol then
+			table.insert(problems, string.format("layout: %s is %.2f studs off its place relative to the other meshes (allowed %.2f): a turned, mirrored or edited import", worstName, worst, tol))
+		end
+	end
+	return #problems == 0, problems, notes
+end
+ApplyPropMeshes.validate = validate
+
+-- one render MeshPart (a clone of the import / preview mesh, already validated) -> its template look; placed by the
+-- caller
+local function dress(mp: MeshPart, propId: string, meshName: string, info: any, data: any)
 	for _, child in ipairs(mp:GetChildren()) do
 		child:Destroy() -- imported SurfaceAppearance / welds: replaced below
 	end
-	local want = v3(info.Size)
-	local off = 0
-	for _, axis in ipairs({ "X", "Y", "Z" }) do
-		local a, b = (mp.Size :: any)[axis], (want :: any)[axis]
-		if b > 0.05 then
-			off = math.max(off, math.abs(a / b - 1))
-		end
-	end
-	if off > SIZE_TOLERANCE then
-		table.insert(resized, string.format("%s x%.3f", meshName, want.Magnitude / math.max(mp.Size.Magnitude, 1e-6)))
-		mp.Size = want
-	end
+	mp.Size = v3(info.Size) -- (validated: equal, or off by the common import factor)
 	mp.Anchored = true
 	mp.CanCollide = false
 	mp.CanTouch = false
@@ -303,6 +453,7 @@ local function colliderMesh(propId: string, meshName: string, info: any, src: Me
 		for _, child in ipairs(cm:GetChildren()) do
 			child:Destroy()
 		end
+		cm.Size = v3(info.Size) -- (validated like the render meshes)
 		invisibleCollider(cm)
 		pcall(function()
 			cm.CollisionFidelity = Enum.CollisionFidelity.Hull
@@ -457,23 +608,33 @@ local function partNear(model: Instance, name: string, at: Vector3, size: Vector
 	return best, bestD
 end
 
--- builds the template Model from a source Model holding MeshParts named like the data meshes.
--- opts.standIn: a collider MESH (Role "Collider") missing from the source (the preview PNGs never hold them) becomes
--- an invisible box of its data Size (attribute PreviewStandIn)
-local function build(propId: string, source: Instance, data: any, propFx: any, opts: any?): (Model?, { string })
-	opts = opts or {}
-	local prop = data.Props[propId]
-	local notes = {}
-	if not prop then
-		return nil, { `no PropMeshData entry for {propId}` }
-	end
-	-- 1. look the meshes up by their data names first
+-- the source's MeshParts by name (the first of a name; validate() refuses duplicates)
+local function meshesByName(source: Instance): { [string]: MeshPart }
 	local byName: { [string]: MeshPart } = {}
 	for _, d in ipairs(source:GetDescendants()) do
 		if d:IsA("MeshPart") and not byName[d.Name] then
 			byName[d.Name] = d
 		end
 	end
+	return byName
+end
+
+-- builds the template Model from a source Model holding MeshParts named like the data meshes. Returns nil and the
+-- reasons when validate() refuses the source.
+-- opts.standIn: a collider MESH (Role "Collider") missing from the source (the preview PNGs never hold them) becomes
+-- an invisible box of its data Size (attribute PreviewStandIn); opts.allowMissing: see validate()
+local function build(propId: string, source: Instance, data: any, propFx: any, opts: any?): (Model?, { string })
+	opts = opts or {}
+	local prop = data.Props[propId]
+	if not prop then
+		return nil, { `no PropMeshData entry for {propId}` }
+	end
+	local ok, problems, notes = validate(propId, prop, source, opts)
+	if not ok then
+		return nil, problems
+	end
+	-- 1. the meshes by their data names (before they are renamed <Part>)
+	local byName = meshesByName(source)
 	local model = Instance.new("Model")
 	model.Name = propId
 	local bounds = prop.Bounds
@@ -489,8 +650,6 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 	root.CastShadow = false
 	root.Parent = model
 	local pivot = CFrame.new(0, prop.PivotY or 0, 0)
-	local missing, resized = {}, {}
-	local renderTotal = 0
 	for meshName, info in pairs(prop.Meshes) do
 		local src = byName[meshName]
 		if roleOf(meshName, info) == "Collider" then
@@ -498,35 +657,13 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 			colliderMesh(propId, meshName, info, src, pivot * CFrame.new(v3(info.Center)), model, opts, notes)
 			continue
 		end
-		renderTotal += 1
 		if not src then
-			table.insert(missing, meshName)
-			continue
+			continue -- (only with opts.allowMissing; reported by validate)
 		end
 		local mp = src:Clone()
-		dress(mp, propId, meshName, info, data, resized)
+		dress(mp, propId, meshName, info, data)
 		mp.CFrame = pivot * CFrame.new(v3(info.Center))
 		mp.Parent = model
-	end
-	-- convex mesh colliders exported as meshes
-	for name, src in pairs(byName) do
-		if string.find(name, "^" .. propId .. "_Collider") and not prop.Meshes[name] then
-			local mp = src:Clone()
-			for _, child in ipairs(mp:GetChildren()) do
-				child:Destroy()
-			end
-			mp.Transparency = 1
-			mp.Anchored = true
-			mp.CanCollide = true
-			mp.CanQuery = true
-			mp.CanTouch = false
-			mp.CastShadow = false
-			pcall(function()
-				mp.CollisionFidelity = Enum.CollisionFidelity.Hull
-			end)
-			mp.Name = stripped(propId, name)
-			mp.Parent = model
-		end
 	end
 	addColliders(model, propId, prop, pivot)
 	-- effect points, static lights, particle emitters (off: Controllers/PropFX turns them on near the player)
@@ -550,17 +687,6 @@ local function build(propId: string, source: Instance, data: any, propFx: any, o
 			config.Parent = folder
 		end
 		folder.Parent = model
-	end
-	if #missing > 0 then
-		table.sort(missing)
-		table.insert(notes, "MISSING meshes: " .. table.concat(missing, ", "))
-	end
-	if #resized > 0 then
-		table.insert(notes, "resized: " .. table.concat(resized, ", "))
-	end
-	if #missing == renderTotal then
-		model:Destroy()
-		return nil, notes
 	end
 	return model, notes
 end
@@ -603,16 +729,14 @@ local function buildPieces(propId: string, source: Instance, data: any, propFx: 
 	opts = opts or {}
 	local prop = data.Props[propId]
 	local spec = ApplyPropMeshes.PIECES[propId]
-	local notes = {}
 	if not prop then
 		return nil, { `no PropMeshData entry for {propId}` }
 	end
-	local byName: { [string]: MeshPart } = {}
-	for _, d in ipairs(source:GetDescendants()) do
-		if d:IsA("MeshPart") and not byName[d.Name] then
-			byName[d.Name] = d
-		end
+	local ok, problems, notes = validate(propId, prop, source, opts)
+	if not ok then
+		return nil, problems
 	end
+	local byName = meshesByName(source)
 	local model = base:Clone()
 	model.Name = propId
 	for _, key in ipairs({ "MapPropVersion", PREVIEW_ATTRIBUTE, "MapPropPieces" }) do
@@ -681,8 +805,6 @@ local function buildPieces(propId: string, source: Instance, data: any, propFx: 
 	end
 	table.insert(notes, `replaced frame parts: {table.concat(counts, ", ")} ({gone} removed, {solid} kept as invisible colliders)`)
 	-- 3. the meshes
-	local missing, resized = {}, {}
-	local renderTotal = 0
 	for meshName, info in pairs(prop.Meshes) do
 		local src = byName[meshName]
 		local at = (moves[meshName] or CFrame.identity) * pivot * CFrame.new(v3(info.Center))
@@ -690,13 +812,11 @@ local function buildPieces(propId: string, source: Instance, data: any, propFx: 
 			colliderMesh(propId, meshName, info, src, at, model, opts, notes)
 			continue
 		end
-		renderTotal += 1
 		if not src then
-			table.insert(missing, meshName)
-			continue
+			continue -- (only with opts.allowMissing; reported by validate)
 		end
 		local mp = src:Clone()
-		dress(mp, propId, meshName, info, data, resized)
+		dress(mp, propId, meshName, info, data)
 		mp.CFrame = at
 		mp.Parent = model
 	end
@@ -725,17 +845,6 @@ local function buildPieces(propId: string, source: Instance, data: any, propFx: 
 	addEffects(model, fxRoot, prop, pivot, propFx and propFx.Props[propId], notes, moveOf)
 	model:SetAttribute("MapPropId", propId)
 	model:SetAttribute("MapPropPieces", true)
-	if #missing > 0 then
-		table.sort(missing)
-		table.insert(notes, "MISSING meshes: " .. table.concat(missing, ", "))
-	end
-	if #resized > 0 then
-		table.insert(notes, "resized: " .. table.concat(resized, ", "))
-	end
-	if #missing == renderTotal then
-		model:Destroy()
-		return nil, notes
-	end
 	return model, notes
 end
 ApplyPropMeshes.buildPieces = buildPieces
@@ -766,15 +875,97 @@ local function placementCheck(propId: string, prop: any): string?
 	return `nested in the host at OriginInHost ({want.X}, {want.Y}, {want.Z}): {ok} ok` .. (if #bad > 0 then "; OFF: " .. table.concat(bad, "; ") else "")
 end
 
+-- a template keeps the recolour variants of the one it replaces when it has none of its own
+local function inheritVariants(model: Model, old: Instance?)
+	local variants = old and old:FindFirstChild("_Variants")
+	if variants and not model:FindFirstChild("_Variants") then
+		variants:Clone().Parent = model
+	end
+end
+
+-- is a preview of propId installed (its template, or its held originals)?
+local function previewBusy(propId: string): boolean
+	local folder = templateFolder()
+	local current = folder:FindFirstChild(propId)
+	local hold = folder:FindFirstChild(HOLD)
+	return (current ~= nil and current:GetAttribute(PREVIEW_ATTRIBUTE) ~= nil) or (hold ~= nil and hold:FindFirstChild(propId) ~= nil)
+end
+
+-- the applied import goes to ServerStorage.ImportedProps (an older import of the same name to _Replaced)
+local function stashImport(import: Instance): string
+	local store = ServerStorage:FindFirstChild(IMPORTED)
+	if not store then
+		store = Instance.new("Folder")
+		store.Name = IMPORTED
+		store.Parent = ServerStorage
+	end
+	if import.Parent == store then
+		return import:GetFullName()
+	end
+	local older = store:FindFirstChild(import.Name)
+	if older then
+		local replaced = store:FindFirstChild("_Replaced") or Instance.new("Folder")
+		replaced.Name = "_Replaced"
+		replaced.Parent = store
+		older.Parent = replaced
+	end
+	import.Parent = store
+	return import:GetFullName()
+end
+
+-- CollisionFidelity only takes effect on a part in the Workspace (asynchronously): the new template visits a stage
+-- far from the map until its meshes have it (colliding collider meshes Hull, render meshes Box), then comes back to
+-- the origin. Returns a note when some part did not take it within 10 s.
+local function settleFidelity(model: Model): string?
+	local want: { [MeshPart]: Enum.CollisionFidelity } = {}
+	local count = 0
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("MeshPart") then
+			want[d] = if d.CanCollide then Enum.CollisionFidelity.Hull else Enum.CollisionFidelity.Box
+			count += 1
+		end
+	end
+	if count == 0 then
+		return nil
+	end
+	local home = model:GetPivot()
+	local stage = Instance.new("Folder")
+	stage.Name = "_ApplyPropMeshesStage"
+	model:PivotTo(CFrame.new(0, 1000, 60000))
+	model.Parent = stage
+	stage.Parent = workspace
+	for part, fidelity in pairs(want) do
+		pcall(function()
+			part.CollisionFidelity = fidelity
+		end)
+	end
+	local deadline = os.clock() + 10
+	local late = {}
+	repeat
+		task.wait(0.1)
+		table.clear(late)
+		for part, fidelity in pairs(want) do
+			if part.CollisionFidelity ~= fidelity then
+				table.insert(late, part.Name)
+			end
+		end
+	until #late == 0 or os.clock() > deadline
+	model.Parent = nil
+	model:PivotTo(home)
+	stage:Destroy()
+	if #late > 0 then
+		table.sort(late)
+		return "CollisionFidelity not applied on " .. table.concat(late, ", ")
+	end
+	return nil
+end
+
 -- puts a template in ServerStorage.MapProps (the old one, with its _Variants copied over, goes to _Previous)
 local function install(propId: string, model: Model)
 	local folder = templateFolder()
 	local old = folder:FindFirstChild(propId)
 	if old then
-		local variants = old:FindFirstChild("_Variants")
-		if variants and not model:FindFirstChild("_Variants") then
-			variants:Clone().Parent = model
-		end
+		inheritVariants(model, old)
 		local previous = folder:FindFirstChild("_Previous") or Instance.new("Folder")
 		previous.Name = "_Previous"
 		previous.Parent = folder
@@ -787,9 +978,11 @@ local function install(propId: string, model: Model)
 	model.Parent = folder
 end
 
+-- opts: only = { propId }, dryRun (report only), allowMissing (accept missing / unknown meshes), data (tests: a
+-- PropMeshData table instead of DevTools.PropMeshData)
 function ApplyPropMeshes.run(opts: any?): string
 	opts = opts or {}
-	local data = fresh(devTool("PropMeshData"))
+	local data = opts.data or fresh(devTool("PropMeshData"))
 	local Sync = fresh(devTool("SyncMapProps"))
 	local propFx = fresh(ReplicatedStorage.GameSystem.Config.PropFX)
 	local ids = opts.only
@@ -800,11 +993,16 @@ function ApplyPropMeshes.run(opts: any?): string
 		end
 		table.sort(ids)
 	end
-	local lines, applied = { "ApplyPropMeshes" }, {}
+	local lines, applied = { if opts.dryRun then "ApplyPropMeshes (DRY RUN, nothing changed)" else "ApplyPropMeshes" }, {}
+	local buildOpts = { allowMissing = opts.allowMissing == true }
 	for _, propId in ipairs(ids) do
 		local import = findImport(propId)
 		if not import then
 			table.insert(lines, `{propId}: not imported yet (Blender_Exports/Props/{propId}.fbx)`)
+			continue
+		end
+		if previewBusy(propId) then
+			table.insert(lines, `{propId}: SKIPPED - a preview is installed: run endPreview("{propId}") first`)
 			continue
 		end
 		local model, notes, base
@@ -815,22 +1013,37 @@ function ApplyPropMeshes.run(opts: any?): string
 				table.insert(lines, `{propId}: SKIPPED - {why}`)
 				continue
 			end
-			model, notes = buildPieces(propId, import, data, propFx, base)
+			model, notes = buildPieces(propId, import, data, propFx, base, buildOpts)
 		else
-			model, notes = build(propId, import, data, propFx)
+			model, notes = build(propId, import, data, propFx, buildOpts)
+		end
+		if not model then
+			-- today's template and models stay as they are
+			table.insert(lines, `{propId}: SKIPPED, nothing changed ({import:GetFullName()}): ` .. table.concat(notes, "; "))
+			continue
 		end
 		local check = placementCheck(propId, data.Props[propId])
 		if check then
 			table.insert(notes, check)
 		end
-		local detail = if #notes > 0 then " - " .. table.concat(notes, "; ") else ""
-		if not model then
-			table.insert(lines, `{propId}: SKIPPED{detail}`)
-			continue
+		local fidelity = settleFidelity(model)
+		if fidelity then
+			table.insert(notes, fidelity)
 		end
+		local detail = if #notes > 0 then " - " .. table.concat(notes, "; ") else ""
+		local folder = templateFolder()
+		local current = folder:FindFirstChild(propId)
+		inheritVariants(model, current)
+		local same = current ~= nil and current:IsA("Model") and Sync.fingerprint(current :: Model) == Sync.fingerprint(model)
 		if opts.dryRun then
 			model:Destroy()
-			table.insert(lines, `{propId}: would apply {import:GetFullName()}{detail}`)
+			table.insert(lines, `{propId}: would {if same then "keep (unchanged)" else "apply"} {import:GetFullName()}{detail}`)
+			continue
+		end
+		if same then
+			-- a second run with the same import: the template stays (and _Previous keeps the real previous one)
+			model:Destroy()
+			table.insert(lines, `{propId}: unchanged (MapProps.{propId} already holds this import); import kept in {stashImport(import)}`)
 			continue
 		end
 		if base then
@@ -838,7 +1051,8 @@ function ApplyPropMeshes.run(opts: any?): string
 		end
 		install(propId, model)
 		table.insert(applied, propId)
-		table.insert(lines, `{propId}: applied from {import:GetFullName()}{detail}`)
+		local from = import:GetFullName()
+		table.insert(lines, `{propId}: applied from {from}{detail}; import moved to {stashImport(import)}`)
 		task.wait()
 	end
 	if #applied > 0 then
@@ -955,6 +1169,11 @@ function ApplyPropMeshes.preview(propId: string, imageIds: { string }): string
 	local Sync = fresh(devTool("SyncMapProps"))
 	local propFx = fresh(ReplicatedStorage.GameSystem.Config.PropFX)
 	local lines = { `ApplyPropMeshes.preview({propId}) - TEMPORARY, run endPreview("{propId}") before any save` }
+	if previewBusy(propId) then
+		-- a second preview would push the first one into _Previous and lose the real previous template
+		table.insert(lines, `  REFUSED: a preview of {propId} is already installed: run endPreview("{propId}") first`)
+		return table.concat(lines, "\n")
+	end
 	local source = Instance.new("Model")
 	source.Name = propId
 	local made = 0
@@ -1005,7 +1224,7 @@ function ApplyPropMeshes.preview(propId: string, imageIds: { string }): string
 		table.insert(lines, "  " .. note)
 	end
 	if not model then
-		table.insert(lines, "  SKIPPED: no template built")
+		table.insert(lines, "  SKIPPED: no template built, nothing changed")
 		return table.concat(lines, "\n")
 	end
 	model:SetAttribute(PREVIEW_ATTRIBUTE, true)
@@ -1076,6 +1295,12 @@ function ApplyPropMeshes.endPreview(propId: string): string
 			hold:Destroy()
 		end
 		table.insert(lines, `  originals put back: {restored}` .. (if lost > 0 then `, {lost} without a parent (left in MapProps)` else ""))
+	end
+	if old and old:GetAttribute(PREVIEW_ATTRIBUTE) then
+		-- never put a preview back as the template (EditableMesh parts cannot be saved)
+		old:Destroy()
+		old = nil
+		table.insert(lines, "  MapProps._Previous." .. propId .. " was itself a preview: removed, not restored")
 	end
 	if current and current:GetAttribute(PREVIEW_ATTRIBUTE) then
 		current:Destroy()

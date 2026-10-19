@@ -10,6 +10,9 @@
 		print(Props.install("crate"))      -- (re)builds ServerStorage.MapProps.crate (the old template goes to _Previous)
 		local Sync = require(game.ServerStorage.DevTools.SyncMapProps:Clone())
 		print(Sync.run({ only = { "crate" } }))
+	Stalls after the Blender import (MapProps.<stall> has MapPropPieces): install() rebuilds the bare frame from and into
+	MapProps._Base.<stall> and leaves the pieces template alone; then ApplyPropMeshes.run({ only = { "<stall>" } })
+	puts the pieces on the new frame.
 	Materials: the shared tileable textures of the Prop Style Guide (Blender/Props/README.txt section 4, Agent A) as
 	MaterialVariants MaterialService.FYD_<Family> (StudsPerTile 4): print(Props.materials()) creates / updates them.
 	A part using one has Material = the variant's BaseMaterial, MaterialVariant = "FYD_<Family>", and Color = the
@@ -452,9 +455,22 @@ local function stallFrame(m: Model): Part
 	return core
 end
 
+-- MapProps.<propId> holds the Blender pieces (ApplyPropMeshes PIECES mode): the frame must be rebuilt from the bare
+-- frame kept in MapProps._Base.<propId>, never from the pieces template
+local function piecesApplied(propId: string): boolean
+	local maps = ServerStorage:FindFirstChild("MapProps")
+	local current = maps and maps:FindFirstChild(propId)
+	return current ~= nil and current:GetAttribute("MapPropPieces") ~= nil
+end
+
 local function stall(propId: string): Model
 	local maps = ServerStorage:FindFirstChild("MapProps")
 	local base = maps and maps:FindFirstChild(propId)
+	if piecesApplied(propId) then
+		local saved = maps:FindFirstChild("_Base") and maps._Base:FindFirstChild(propId)
+		assert(saved and saved:IsA("Model"), `{propId}: refused - MapProps.{propId} holds the Blender pieces (MapPropPieces) and MapProps._Base.{propId} (the bare frame) is missing`)
+		base = saved
+	end
 	local hub = workspace:FindFirstChild("Hub")
 	base = base or (hub and hub:FindFirstChild(STALL_MARKERS[propId]))
 	assert(base and base:IsA("Model"), `{propId}: no template and no workspace.Hub.{STALL_MARKERS[propId]}`)
@@ -514,6 +530,24 @@ function StudioProps.install(propId: string): string
 		if d:IsA("BasePart") then
 			parts += 1
 		end
+	end
+	if STALL_MARKERS[propId] and piecesApplied(propId) then
+		-- the frame goes to MapProps._Base (the pieces template stays in place until ApplyPropMeshes rebuilds it)
+		local store = folder:FindFirstChild("_Base") :: Instance
+		local oldBase = store:FindFirstChild(propId)
+		if oldBase then
+			local previous = folder:FindFirstChild("_Previous") or Instance.new("Folder")
+			previous.Name = "_Previous"
+			previous.Parent = folder
+			local stale = previous:FindFirstChild(propId .. "_base")
+			if stale then
+				stale:Destroy()
+			end
+			oldBase.Name = propId .. "_base"
+			oldBase.Parent = previous
+		end
+		model.Parent = store
+		return string.format("rebuilt the bare frame into ServerStorage.MapProps._Base.%s (%d parts); MapProps.%s (the Blender pieces) is unchanged: run ApplyPropMeshes.run({ only = { \"%s\" } }) to put the pieces on the new frame", propId, parts, propId, propId)
 	end
 	local old = folder:FindFirstChild(propId)
 	if old then

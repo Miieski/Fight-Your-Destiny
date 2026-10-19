@@ -30,9 +30,12 @@
 --   Scroll    = { { Part, U?, V? } }                      the Textures under Part (the "Ripples" water overlay) slide
 --                                                        by U / V studs per second (falling streams: V)
 -- Low FX also stops Spin and Scroll (static, like Sway).
+-- At most MAX_EMITTERS particle emitters run at once in total (brief section 7: <= 6 emitters in view), given to the
+-- nearest props first. The hub's own always-on VFX parts (Hub.Decor.VFX: Fire_Torch at the forge, Diamond_Sparkle at
+-- the diamond sign, Water_Ripple in the fountain) are map parts, not PropFX: no entry here duplicates them.
 -- A prop nested in another prop (for example the lantern of a lamp post) is its own MapProp: its effects come from
 -- its own entry. Debug (client): workspace.CurrentCamera attributes PropFX_Tracked / _Active / _Flicker / _Sway /
--- _Emitting / _LowFx count what the controller drives right now.
+-- _Scroll / _Emitting (emitters on) / _LowFx count what the controller drives right now.
 local rgb = Color3.fromRGB
 
 export type Light = { Part: string?, Attachment: string?, Color: Color3, Brightness: number, Range: number }
@@ -55,18 +58,18 @@ local PropFX = {}
 PropFX.NEAR = 80 -- studs: effects switch on within this distance of the local character
 PropFX.FAR = 100 -- studs: and off beyond this one (the gap avoids on/off flapping)
 PropFX.CHECK_HZ = 4 -- distance checks per second
-PropFX.MAX_EMITTER_PROPS = 6 -- at most this many props with particles run at once (the nearest ones)
+PropFX.MAX_EMITTERS = 6 -- at most this many particle emitters run at once in total (nearest props first)
+PropFX.VALIDATE_EVERY = 8 -- checks (2 s): an active prop re-checks its parts (streaming can replace them)
 
 -- Roblox built-in particle textures (no upload)
 local SMOKE = "rbxasset://textures/particles/smoke_main.dds"
-local FIRE = "rbxasset://textures/particles/fire_main.dds"
 
 -- a small still twinkle (the default sparkle texture)
 local function glint(attachment: string, color: Color3, rate: number, size: number?): Particle
 	return { Attachment = attachment, Color = color, Rate = rate, Lifetime = { 0.4, 0.8 }, Size = size or 0.45, Speed = 0 }
 end
 
--- the fountain: soft mist where the 6 streams land, glints on the water
+-- the fountain: soft mist where the 6 streams land (the water glints are the hub's Water_Ripple part)
 local fountainParticles: { Particle } = {}
 for i = 1, 6 do
 	table.insert(fountainParticles, {
@@ -74,9 +77,6 @@ for i = 1, 6 do
 		Transparency = { 0.65, 1 }, Speed = { 0.8, 1.6 }, Spread = 35, Acceleration = { 0, 0.4, 0 }, Texture = SMOKE,
 		LightEmission = 0.2, RotSpeed = 20,
 	})
-end
-for i = 1, 3 do
-	table.insert(fountainParticles, glint("Glint" .. i, rgb(230, 255, 255), 0.4, 0.5))
 end
 
 PropFX.Props = {
@@ -143,14 +143,12 @@ PropFX.Props = {
 			{ Part = "Stream", V = -3 },
 		},
 	},
-	-- the forge (a sub-model of each weapon stall): today's Embers light (moved to ForgeLight) with a soft pulse, fire
-	-- on the coals, sparks off the anvil face, a thin smoke from the chimney
+	-- the forge (a sub-model of each weapon stall): today's Embers light (moved to ForgeLight) with a soft pulse, sparks
+	-- off the anvil face, a thin smoke from the chimney (the flames are the hub's Fire_Torch part)
 	anvil_forge = {
 		Lights = { { Attachment = "ForgeLight", Color = rgb(255, 140, 40), Brightness = 0.7, Range = 14 } },
 		Flicker = { { Attachment = "ForgeLight", Amount = 0.18, Hz = 1.3 } },
 		Particles = {
-			{ Attachment = "Fire", Color = rgb(255, 150, 55), Rate = 7, Lifetime = { 0.4, 0.8 }, Size = 0.9, SizeEnd = 0.2,
-				Transparency = { 0.25, 1 }, Speed = { 1.2, 2.2 }, Spread = 18, Acceleration = { 0, 1.5, 0 }, Texture = FIRE, LightEmission = 1 },
 			{ Attachment = "Sparks", Color = rgb(255, 200, 90), Rate = 2.5, Lifetime = { 0.3, 0.6 }, Size = 0.14, SizeEnd = 0.05,
 				Speed = { 4, 7 }, Spread = 55, Acceleration = { 0, -18, 0 }, LightEmission = 1 },
 			{ Attachment = "Smoke", Color = rgb(95, 92, 96), Rate = 1.2, Lifetime = { 2.2, 3.2 }, Size = 0.7, SizeEnd = 2.4,
@@ -172,15 +170,13 @@ PropFX.Props = {
 		},
 		Emitters = { "PiecesRoot" },
 	},
-	-- the diamond sign floats and turns slowly with a sparkle; the three gems glint
+	-- the diamond sign floats and turns slowly (its sparkle is the hub's Diamond_Sparkle part); the three gems glint
 	diamond_shop = {
 		Spin = {
 			{ Part = "Diamond_Glow", Seconds = 14, Bob = 0.5, BobSeconds = 3.6 },
 			{ Part = "DiamondRim_Glow", Seconds = 14, Bob = 0.5, BobSeconds = 3.6 },
 		},
 		Particles = {
-			{ Attachment = "DiamondCenter", Color = rgb(170, 238, 255), Rate = 1, Lifetime = { 0.5, 1.0 }, Size = 0.5, Speed = 0.8, LightEmission = 1 },
-			glint("SignGlint", rgb(255, 255, 255), 0.3, 0.6),
 			glint("GemGlint1", rgb(95, 212, 255), 0.3),
 			glint("GemGlint2", rgb(255, 196, 60), 0.3),
 			glint("GemGlint3", rgb(95, 212, 255), 0.3),

@@ -456,6 +456,11 @@ The hub is the central safe area (no combat). Players spawn here on join.
   unlocked portal teleports the player **directly to sub-zone 1** of that zone (no sub-zone
   choice; the Zones menu in the HUD is where a sub-zone is chosen).
 * **AFK Zone**, **Team Board**, **Leaderboards**, **Codes** board and the **Tutorial guide** NPC.
+* **Props (2026-10-19 upgrade):** the hub and world props share one look (Prop Style Guide, `Blender/Props/README.txt`:
+  "between low-poly and realistic", the map's colours kept, shared tinted textures) and one source per prop
+  (`ServerStorage.MapProps`, synced to every copy by `SyncMapProps`). Small client-only effects near the player
+  (lantern flicker, cloth / scarecrow sway, clam open / close, fountain mist and moving water, forge sparks and smoke,
+  the diamond sign floating and turning, glints), off with Low FX.
 * **No player bases / plots in this game.**
 
 ### Tutorial

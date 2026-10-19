@@ -27,6 +27,9 @@
 	children named Interact / NpcSpot / NPC, children with attribute MapPropKeep, children tagged MapProp
 	(nested props), and children holding scripts, prompts, GUIs, sounds, click detectors or humanoids.
 	A child is not kept when the template has a direct child with the same name and class (the template wins).
+	Nested props a template carries (the lamp post's lantern) are synced too: a later pass updates the nested copies a
+	replaced host brought, for every id that has a template (also outside opts.only). capture() keeps the nested
+	tagged props in the new template.
 	Idempotent: each instance stores MapPropVersion = <template fingerprint>|<variant>; up-to-date instances are
 	left alone, so a second run changes nothing.
 ]]
@@ -515,16 +518,51 @@ function SyncMapProps.run(opts: any?): string
 		table.insert(order, propId)
 	end
 	table.sort(order)
+	-- a replaced host brings the nested props of its template (a lamp post's lantern): passes 2+ also sync those
+	-- nested copies for every id that has a template, even outside opts.only
+	local nestedIds = {}
+	if opts.only then
+		for propId, template in pairs(templates(nil)) do
+			if not list[propId] and template.PrimaryPart then
+				template:SetAttribute("MapPropVersion", fingerprint(template))
+				list[propId] = template
+				stats[propId] = { found = 0, replaced = 0, current = 0, skipped = {}, notes = {}, nested = true }
+				table.insert(nestedIds, propId)
+			end
+		end
+		table.sort(nestedIds)
+	end
+	local fresh: { [Instance]: boolean } = {} -- the instances replaced in this run
+	local function insideFresh(inst: Instance): boolean
+		local p = inst.Parent
+		while p and p ~= game do
+			if fresh[p] then
+				return true
+			end
+			p = p.Parent
+		end
+		return false
+	end
 	local done = 0
 	for pass = 1, 3 do -- a host prop may bring a nested prop instance: a later pass syncs it
 		local changed = 0
-		for _, propId in ipairs(order) do
+		local ids = order
+		if pass > 1 and #nestedIds > 0 then
+			ids = table.clone(order)
+			for _, id in ipairs(nestedIds) do
+				table.insert(ids, id)
+			end
+		end
+		for _, propId in ipairs(ids) do
 			local template = list[propId]
 			local s = stats[propId]
 			if not template.PrimaryPart then
 				continue
 			end
 			for _, inst in ipairs(instancesOf(propId)) do
+				if s.nested and not insideFresh(inst) then
+					continue -- (outside opts.only: only the nested copies a replaced host brought)
+				end
 				if pass == 1 then
 					s.found += 1
 				end
@@ -545,6 +583,7 @@ function SyncMapProps.run(opts: any?): string
 				local path = shortPath(inst)
 				local new, note = replace(inst, template)
 				if new then
+					fresh[new] = true
 					s.replaced += 1
 					changed += 1
 					if pass > 1 then
@@ -595,6 +634,18 @@ function SyncMapProps.run(opts: any?): string
 			table.insert(lines, `  {#s.notes} instance(s) kept custom children`)
 		end
 	end
+	for _, propId in ipairs(nestedIds) do
+		local s = stats[propId]
+		if s.replaced > 0 or #s.skipped > 0 then
+			totalFound += s.found
+			totalReplaced += s.replaced
+			totalSkipped += #s.skipped
+			table.insert(lines, `{propId} (version {list[propId]:GetAttribute("MapPropVersion") or "?"}): {s.replaced} nested cop(y/ies) brought by a replaced host synced`)
+			for _, why in ipairs(s.skipped) do
+				table.insert(lines, "  SKIPPED " .. why)
+			end
+		end
+	end
 	local waitList = {}
 	for id, n in pairs(waiting) do
 		table.insert(waitList, `{id} {n}`)
@@ -620,8 +671,11 @@ function SyncMapProps.capture(propId: string, instance: Instance, opts: any?): s
 		table.insert(warnings, `warning: the captured instance has Variant "{instance:GetAttribute("Variant")}"; its variant colours are now the template's default`)
 	end
 	local copy = instance:Clone()
+	local nested = 0
 	for _, child in ipairs(copy:GetChildren()) do
-		if isCustom(child, nil) then
+		if child:HasTag(TAG) then
+			nested += 1 -- a nested prop (a lamp post's lantern) stays part of the template; later runs keep it synced
+		elseif isCustom(child, nil) then
 			child:Destroy() -- functional children belong to the instances, not to the template
 		end
 	end
@@ -668,7 +722,8 @@ function SyncMapProps.capture(propId: string, instance: Instance, opts: any?): s
 	copy.Parent = folder
 	local source = shortPath(instance) -- (before the run: the run replaces the captured instance too)
 	local report = SyncMapProps.run({ only = { propId } })
-	return (if #warnings > 0 then table.concat(warnings, "\n") .. "\n" else "") .. `captured {source} as ServerStorage.{FOLDER}.{propId}\n` .. report
+	return (if #warnings > 0 then table.concat(warnings, "\n") .. "\n" else "") .. `captured {source} as ServerStorage.{FOLDER}.{propId}`
+		.. (if nested > 0 then ` (with {nested} nested prop(s))` else "") .. "\n" .. report
 end
 
 function SyncMapProps.undoCapture(propId: string): string

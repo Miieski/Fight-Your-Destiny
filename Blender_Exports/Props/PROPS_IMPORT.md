@@ -22,14 +22,15 @@ What is in each file (designed around the weapon import of 2026-10-13):
    Check that these are as follows (they are the defaults):
    - File General: **Import Only As Model = ON**, Add Model To Inventory = ON, **Insert In Workspace = ON**,
      Insert Using Scene Position = OFF, Set Pivot to Scene Origin = ON. (Anchored = ON is welcome but optional.)
-   - File Transform: World Forward = **Front**, World Up = **Top** (do not rotate anything).
+   - File Transform: World Forward = **Front**, World Up = **Top** (do not rotate anything: a rotated import is
+     refused by the command).
    - File Geometry: **Scale Unit = Studs**, **Merge Meshes = OFF** (important), Invert Negative Faces = OFF.
    - Objects (if you open one): Use Imported Pivot = ON, **Ignore Vertex Colors = OFF**, Make Double Sided = OFF.
    - Size check in the preview: the well is about 12.3 wide, 13.2 high, 9.5 deep (sizes of every file: table below).
 4. Click **Import** (all boxes ticked) and wait until the models are in the Workspace. Each Model is named after its
    file (`well`, ...) and holds one MeshPart per mesh of the table.
-5. Optional: put them in a folder `workspace.ImportedProps` (the command also finds them anywhere in the Workspace by
-   name).
+5. Leave the imported Models at the top of the Workspace (where the importer puts them), or put them in a folder
+   `workspace.ImportedProps`. The command looks only there (and in `ServerStorage.ImportedProps`, see step 7).
 6. Tell Claude, or run in the command bar the single command:
 
    `print(require(game.ServerStorage.DevTools.ApplyPropMeshes:Clone()).run())`
@@ -39,9 +40,11 @@ What is in each file (designed around the weapon import of 2026-10-13):
 
    For every imported prop it builds `ServerStorage.MapProps.<propId>` (shared textures and colours, glow, water,
    invisible colliders, effect points), then updates the test area and every copy in the map, and prints a report.
-   If a scale setting was changed by mistake, nothing is lost: each mesh is resized to its size in the data.
-7. Look at the test area and the hub, delete the imported models from the Workspace (the templates keep their own
-   copies), and save the place (File > Save to File As).
+   A wrong Scale Unit is corrected automatically. An incomplete, merged, rotated or distorted import is **SKIPPED**
+   with a report and nothing changes in the map: import that file again with the Studio Default preset and run the
+   command again. `run({ only = { "well" } })` applies only some props; `run({ dryRun = true })` only reports.
+7. The applied imports are moved to `ServerStorage.ImportedProps` automatically: keep them, they are the source if
+   the command is run again. Look at the test area and the hub, then save the place (File > Save to File As).
 
 ## Files
 

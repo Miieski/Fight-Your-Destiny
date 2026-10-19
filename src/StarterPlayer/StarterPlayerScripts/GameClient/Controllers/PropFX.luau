@@ -2,10 +2,14 @@
 -- Client-side effects of the upgraded map props (docs/model_upgrade_brief.txt section 7, Config/PropFX).
 -- Tracks the models tagged "MapProp" whose MapPropId has Flicker / Emitters / Sway / Spin / Scroll in Config/PropFX.
 -- CHECK_HZ times a second it switches a prop on when the local character is within NEAR studs and off beyond FAR.
--- On: its parts sway / spin (looping tweens, created once), its lights flicker, its water textures scroll, its
--- emitters run (only the MAX_EMITTER_PROPS nearest props). Low FX: no particles, sway, spin, scroll or flicker; the
--- static lights stay. Far props cost nothing; the per-frame loop only writes light brightness and texture offset
--- numbers and runs only while a flickering / scrolling prop is on (no per-frame allocation).
+-- On: its parts sway / spin (looping tweens, created once), its lights flicker, its water textures scroll, and its
+-- emitters run: at most MAX_EMITTERS emitters in total, given to the nearest props first. Low FX: no particles, sway,
+-- spin, scroll or flicker; the static lights stay. Far props cost nothing; the per-frame loop only writes light
+-- brightness and texture offset numbers and runs only while a flickering / scrolling prop is on (no per-frame
+-- allocation).
+-- StreamingEnabled: parts of a prop can stream out and come back as NEW instances (or arrive after the prop turned
+-- on). Every VALIDATE_EVERY checks an active prop checks its references and the count of its effect parts, and
+-- rebuilds what changed (old tweens cancelled).
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -34,7 +38,9 @@ type Prop = {
 	scrolls: { Scroller },
 	emitters: { Instance },
 	movers: { Mover },
-	emitting: boolean,
+	enabled: number, -- emitters switched on (the first `enabled` of `emitters`)
+	expected: number, -- effect instances found by the last scan (flicker lights + textures + emitters + movers)
+	tick: number, -- checks since the last validation
 }
 
 local props: { [Model]: Prop } = {}
@@ -46,6 +52,7 @@ local homeOf: { [BasePart]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
 local low = false
 local heartbeat: RBXScriptConnection? = nil
 local rng = Random.new()
+local enabledTotal = 0
 
 local function isEmitter(inst: Instance): boolean
 	for _, className in ipairs(EMITTER_CLASSES) do
@@ -82,13 +89,17 @@ local function hostsOf(model: Model, spec: Config.Flicker): { Instance }
 	return partsNamed(model, spec.Part or "") :: any
 end
 
-local function setEmitters(prop: Prop, on: boolean)
-	if prop.emitting == on then
+-- switches on the first n emitters of the prop and off the others (writes only what changes)
+local function setEmitters(prop: Prop, n: number)
+	if prop.enabled == n then
 		return
 	end
-	prop.emitting = on
-	for _, emitter in ipairs(prop.emitters) do
-		(emitter :: any).Enabled = on
+	prop.enabled = n
+	for i, emitter in ipairs(prop.emitters) do
+		local on = i <= n
+		if (emitter :: any).Enabled ~= on then
+			(emitter :: any).Enabled = on
+		end
 	end
 end
 
@@ -96,7 +107,47 @@ local function addMover(prop: Prop, part: BasePart, from: CFrame, tweens: { Twee
 	table.insert(prop.movers, { part = part, home = homeOf[part], from = from, tweens = tweens })
 end
 
--- (re)reads the prop's lights, textures, emitters and moving parts (on activation only: streamed parts may arrive late)
+-- the number of effect instances the prop's config finds in the model right now (same matching as scan)
+local function countTargets(prop: Prop): number
+	local config, model = prop.config, prop.model
+	local n = 0
+	for _, spec in ipairs(config.Flicker or {}) do
+		for _, host in ipairs(hostsOf(model, spec)) do
+			for _, child in ipairs(host:GetChildren()) do
+				if child:IsA("Light") then
+					n += 1
+				end
+			end
+		end
+	end
+	for _, spec in ipairs(config.Scroll or {}) do
+		for _, part in ipairs(partsNamed(model, spec.Part)) do
+			for _, tex in ipairs(part:GetChildren()) do
+				if tex:IsA("Texture") then
+					n += 1
+				end
+			end
+		end
+	end
+	for _, name in ipairs(config.Emitters or {}) do
+		for _, part in ipairs(partsNamed(model, name)) do
+			for _, d in ipairs(part:GetDescendants()) do
+				if isEmitter(d) then
+					n += 1
+				end
+			end
+		end
+	end
+	for _, spec in ipairs(config.Sway or {}) do
+		n += #partsNamed(model, spec.Part)
+	end
+	for _, spec in ipairs(config.Spin or {}) do
+		n += #partsNamed(model, spec.Part)
+	end
+	return n
+end
+
+-- (re)reads the prop's lights, textures, emitters and moving parts (movers only when it has none)
 local function scan(prop: Prop)
 	local config = prop.config
 	table.clear(prop.flicker)
@@ -129,13 +180,13 @@ local function scan(prop: Prop)
 		for _, part in ipairs(partsNamed(prop.model, name)) do
 			for _, d in ipairs(part:GetDescendants()) do
 				if isEmitter(d) then
+					(d :: any).Enabled = false
 					table.insert(prop.emitters, d)
 				end
 			end
 		end
 	end
-	prop.emitting = true
-	setEmitters(prop, false)
+	prop.enabled = 0
 	if #prop.movers == 0 then
 		for _, spec in ipairs(config.Sway or {}) do
 			for _, part in ipairs(partsNamed(prop.model, spec.Part)) do
@@ -177,6 +228,34 @@ local function scan(prop: Prop)
 			end
 		end
 	end
+	prop.expected = #prop.flicker + #prop.scrolls + #prop.emitters + #prop.movers
+end
+
+-- are the prop's references still its parts, and is nothing new there? (allocates: called every VALIDATE_EVERY
+-- checks per active prop, never per frame)
+local function stillValid(prop: Prop): boolean
+	local model = prop.model
+	for _, f in ipairs(prop.flicker) do
+		if not f.light:IsDescendantOf(model) then
+			return false
+		end
+	end
+	for _, s in ipairs(prop.scrolls) do
+		if not s.tex:IsDescendantOf(model) then
+			return false
+		end
+	end
+	for _, e in ipairs(prop.emitters) do
+		if not e:IsDescendantOf(model) then
+			return false
+		end
+	end
+	for _, m in ipairs(prop.movers) do
+		if not m.part:IsDescendantOf(model) then
+			return false
+		end
+	end
+	return countTargets(prop) == prop.expected
 end
 
 local function onHeartbeat()
@@ -191,8 +270,8 @@ local function onHeartbeat()
 	end
 end
 
--- the per-frame lists = the lights / textures of the active props (rebuilt when a prop turns on or off, or Low FX
--- changes)
+-- the per-frame lists = the lights / textures of the active props (rebuilt when a prop turns on or off, is
+-- rescanned, or Low FX changes)
 local function rebuildLoop()
 	for _, f in ipairs(flickering) do
 		f.light.Brightness = f.base
@@ -236,15 +315,42 @@ local function setMovers(prop: Prop, on: boolean)
 	end
 end
 
+-- drops the movers (tweens cancelled and destroyed, the parts still there put home)
+local function dropMovers(prop: Prop)
+	for _, m in ipairs(prop.movers) do
+		for _, tween in ipairs(m.tweens) do
+			tween:Cancel()
+			tween:Destroy()
+		end
+		if m.part:IsDescendantOf(prop.model) then
+			m.part.CFrame = m.home
+		end
+	end
+	table.clear(prop.movers)
+end
+
+-- rebuilds everything of an active prop from its current parts
+local function rescan(prop: Prop)
+	dropMovers(prop)
+	scan(prop)
+	setMovers(prop, prop.active and not low)
+end
+
 local function setActive(prop: Prop, on: boolean)
 	if prop.active == on then
 		return
 	end
 	prop.active = on
+	prop.tick = 0
 	if on then
 		scan(prop)
+		if not stillValid(prop) then
+			-- movers kept from an earlier activation point at parts that streamed out (or new ones arrived)
+			dropMovers(prop)
+			scan(prop)
+		end
 	else
-		setEmitters(prop, false)
+		setEmitters(prop, 0)
 	end
 	setMovers(prop, on and not low)
 end
@@ -260,7 +366,7 @@ local function add(inst: Instance)
 	end
 	local prop: Prop = {
 		model = inst, config = config, position = inst:GetPivot().Position, distance = math.huge, active = false,
-		flicker = {}, scrolls = {}, emitters = {}, movers = {}, emitting = false,
+		flicker = {}, scrolls = {}, emitters = {}, movers = {}, enabled = 0, expected = 0, tick = 0,
 	}
 	props[inst] = prop
 	table.insert(list, prop)
@@ -307,12 +413,22 @@ local function check()
 		if want ~= prop.active then
 			setActive(prop, want)
 			changed = true
+		elseif prop.active then
+			-- streaming: references that left the model, or effect parts that arrived late
+			prop.tick += 1
+			if prop.tick >= Config.VALIDATE_EVERY then
+				prop.tick = 0
+				if not stillValid(prop) then
+					rescan(prop)
+					changed = true
+				end
+			end
 		end
 	end
 	if changed then
 		rebuildLoop()
 	end
-	-- particles: only the nearest active props
+	-- particles: at most MAX_EMITTERS emitters in total, the nearest active props first
 	table.clear(withEmitters)
 	for _, prop in ipairs(list) do
 		if prop.active and #prop.emitters > 0 then
@@ -320,21 +436,23 @@ local function check()
 		end
 	end
 	table.sort(withEmitters, byDistance)
-	for i, prop in ipairs(withEmitters) do
-		setEmitters(prop, not low and i <= Config.MAX_EMITTER_PROPS)
+	local budget = if low then 0 else Config.MAX_EMITTERS
+	enabledTotal = 0
+	for _, prop in ipairs(withEmitters) do
+		local n = math.min(#prop.emitters, budget)
+		setEmitters(prop, n)
+		budget -= n
+		enabledTotal += n
 	end
 	-- debug counters for a Play check (client): workspace.CurrentCamera:GetAttributes()
 	local camera = workspace.CurrentCamera
 	if camera then
-		local active, movers, emitting = 0, 0, 0
+		local active, movers = 0, 0
 		for _, prop in ipairs(list) do
 			if prop.active then
 				active += 1
 				if not low then
 					movers += #prop.movers
-				end
-				if prop.emitting then
-					emitting += 1
 				end
 			end
 		end
@@ -343,7 +461,7 @@ local function check()
 		camera:SetAttribute("PropFX_Flicker", #flickering)
 		camera:SetAttribute("PropFX_Sway", movers)
 		camera:SetAttribute("PropFX_Scroll", #scrolling)
-		camera:SetAttribute("PropFX_Emitting", emitting)
+		camera:SetAttribute("PropFX_Emitting", enabledTotal)
 		camera:SetAttribute("PropFX_LowFx", low)
 	end
 end
@@ -357,7 +475,7 @@ local function setLow(value: boolean)
 		if prop.active then
 			setMovers(prop, not low)
 			if low then
-				setEmitters(prop, false)
+				setEmitters(prop, 0)
 			end
 		end
 	end
