@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -1990,13 +1990,464 @@ def preview_props(pieces):
     return render_sheet("props", [(g1, [(-20, 14)]), (g2, [(-30, 12)]), (g2[-3:-2], [(-40, 15)]), (g3, [(-25, 20)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# JUNGLE BUILDINGS AND TEMPLES (guide section C): carved faces, soft moss drapes, hanging vines, thatch roof.
+# ------------------------------------------------------------------------------------------------
+JSTONE, JSTONE_M, JSTONE_D, JREC = "#848A7C", "#7B8174", "#5C645C", "#292D29"
+JMOSS, JMOSS_L, JMOSS_LL, JVINE = "#589642", "#60C448", "#78D246", "#46AA3C"
+THATCH, THATCH_L, JWOOD_D = "#C4A068", "#D8C080", "#703E26"
+
+
+def sweep_faces(pc, sections, colfn, t, caps=True):
+    """Sweep of a convex section through stations: sections[i] = list of points (same count, ordered around the
+    section, a planar convex ring); colfn(strip k, interval i) -> colour. Open between the last and first point
+    (that side is buried in the wall). caps: closes both ends."""
+    cents = [sum(s, Vector()) / len(s) for s in sections]
+    for i in range(len(sections) - 1):
+        a, b = sections[i], sections[i + 1]
+        for k in range(len(a) - 1):
+            q = [a[k], b[k], b[k + 1], a[k + 1]]
+            out = (a[k] + a[k + 1] + b[k] + b[k + 1]) / 4 - (cents[i] + cents[i + 1]) / 2
+            pc.quad_or_tris(q, colfn(k, i), "SmoothPlastic", t, out)
+    if caps:
+        polygon_fill(pc, sections[0], colfn(0, 0), "SmoothPlastic", t, cents[0] - cents[1])
+        polygon_fill(pc, sections[-1], colfn(0, len(sections) - 2), "SmoothPlastic", t, cents[-1] - cents[-2])
+
+
+def brow_sections(stations, H, D, zb, xform=None):
+    """stations: [(x, y centre, scale)]; section from top-back round over the front to the under-back. A heavy
+    ridge: rounded top bevel, overhanging front, underside sloping back into the face."""
+    prof = [(0.5, 0.0), (0.5, 0.45), (0.3, 0.88), (-0.1, 1.0), (-0.5, 0.72), (-0.5, 0.0)]
+    secs = []
+    for x, yc, s in stations:
+        ring = [Vector((x, yc + fy * H * s, zb - fz * D * s)) for fy, fz in prof]
+        if xform:
+            ring = [xform(p) for p in ring]
+        secs.append(ring)
+    return secs
+
+
+def brow_col(k, i):
+    return tone(JSTONE_D, (1.0, 0.97, 0.93, 0.86, 0.72)[k])
+
+
+def nose_into(pc, X, Y0, Y1, ZB, ZF, nostril):
+    """Carved nose: bridge, round tip, flared wings, flat-ish underside with 2 dark nostrils. Hull of points given
+    in fractions of the half width X, the height Y0..Y1 and the depth ZB (back, in the face) .. ZF (front)."""
+    fr = [(0.32, 1.0, 0.0), (0.36, 0.97, 0.12), (0.42, 0.62, 0.55), (0.3, 0.24, 1.0), (0.36, 0.1, 0.9),
+          (1.0, 0.2, 0.4), (0.95, 0.05, 0.3), (0.8, 0.34, 0.55), (0.5, 0.0, 0.6), (0.9, 0.0, 0.08), (1.0, 0.0, 0.0),
+          (0.95, 0.35, 0.0), (0.0, 0.18, 1.0), (0.0, 1.0, 0.0)]
+    pts = []
+    for u, v, w in fr:
+        for sgn in ((1, -1) if u > 0 else (1,)):
+            pts.append(Vector((sgn * u * X, Y0 + v * (Y1 - Y0), ZB + w * (ZF - ZB))))
+
+    def colfn(cc, n):
+        if n.y < -0.45:
+            return tone(JSTONE_D, 0.74)
+        if n.y > 0.35:
+            return JSTONE_D
+        return tone(JSTONE_D, 0.93 if abs(n.x) > 0.5 else 0.97)
+
+    tree = hull_into(pc, pts, colfn, 0.25 * X / 1.05, skip=lambda ring: all(abs(p.z - ZB) < 1e-4 for p in ring))
+    a, b, lift = nostril
+    for sgn in (-1, 1):
+        surface_quad(pc, tree, (sgn * 0.42 * X, Y0 - 1.0, ZB + 0.45 * (ZF - ZB)), (0, 1, 0),
+                     [(-a, -b), (a, -b * 0.6), (a * 0.7, b), (-a * 0.8, b * 0.8)], JREC, "SmoothPlastic", 0.1 * lift / 0.03,
+                     lift)
+    return tree
+
+
+def carved_face():
+    origin = "the Carved_Face_Block kit pivot (base centre, y 0 = the ground, front -Z)"
+    place = {"relativeTo": "the Carved_Face_Block model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+             "scale": "the copy's own scale (the kit is placed at several scales: scale the union with the model)"}
+    brow = Piece("face", "brow", origin, place=dict(place, replaces="the part Brow (9 x 1.4 x 1 at (0, 8.9, -2.3)); keep its "
+                                                     "CanCollide on a hidden box or the union"),
+                 notes="carved heavy brow ridge in one piece over both eyes: arched over each eye (peak above x = +-2.3), "
+                       "dipping at the nose bridge, tapering at the temples; rounded top bevel, front 0.95 proud of the "
+                       "head (overhangs the sockets and the Neon eyes), underside sloping back. #5C645C, darker underside. "
+                       "Same family as temple__brow (Gate_Jungle_4), but sized to this kit: not a scaled copy.")
+    st = []
+    for x in (-4.6, -3.8, -2.9, -2.0, -1.0, 0.0, 1.0, 2.0, 2.9, 3.8, 4.6):
+        ax = abs(x)
+        arch = 0.16 * math.cos((ax - 2.3) / 2.3 * math.pi / 2) if ax <= 4.6 else 0.0
+        dip = -0.14 * max(0.0, 1 - ax / 1.0)
+        end = -0.22 * max(0.0, (ax - 3.6) / 1.0)
+        s = 1.0 - 0.42 * max(0.0, (ax - 3.6) / 1.0) - 0.1 * max(0.0, 1 - ax / 1.0)
+        st.append((x, 8.9 + arch + dip + end, s))
+    sweep_faces(brow, brow_sections(st, 1.4, 1.05, -1.9), brow_col, 0.25)
+
+    nl = Piece("face", "nose_lips", origin, place=dict(place, replaces="the Nose wedge (1.9 x 3.4 x 1.7 at (0, 5.5, -2.8)); keep "
+                                                         "Mouth (dark), the 4 Teeth and the Neon eyes as parts"),
+               notes="carved nose (bridge from between the eyes, round tip, flared wings 2.1 wide, 2 dark nostrils "
+                     "underneath) + 2 lip rolls framing today's dark Mouth (5.6 x 1.4 at y 1.8..3.2): upper lip with a "
+                     "cupid's-bow dip, fuller lower lip, both 0.55-0.6 proud, 0.76 tall, tapering into the corners. The teeth stay "
+                     "parts (0.5 proud, in front of the dark mouth). Replace the flat Moss slab over the mouth by a "
+                     "moss__drape patch on the cheek.")
+    nose_into(nl, 1.05, 3.8, 7.4, -1.95, -3.65, (0.17, 0.11, 0.03))
+
+    def lip(yc, H, D, fuller, bow):
+        st = []
+        for x in (-3.15, -2.6, -1.8, -0.9, 0.0, 0.9, 1.8, 2.6, 3.15):
+            ax = abs(x)
+            s = max(0.25, 1.0 - max(0.0, (ax - 1.8) / 1.35) * 0.75)
+            dy = bow * (-0.08 if ax < 0.3 else (0.05 if ax < 1.2 else 0.0)) - fuller * 0.05 * max(0.0, (ax - 1.8))
+            st.append((x, yc + dy, s))
+        prof = [(0.5, 0.0), (0.42, 0.55), (0.1, 1.0), (-0.32, 0.8), (-0.5, 0.0)]
+        secs = [[Vector((x, yc2 + fy * H * s, -1.95 - fz * D * s)) for fy, fz in prof] for x, yc2, s in st]
+
+        def col(k, i):
+            return tone(JSTONE_D, (1.0, 0.95, 0.88, 0.76)[k])
+        sweep_faces(nl, secs, col, 0.15)
+    lip(3.45, 0.76, 0.55, 0.0, 1.0)
+    lip(1.55, 0.78, 0.6, 1.0, 0.0)
+    return [brow, nl]
+
+
+def temple_face():
+    origin = "the Gate_Jungle_4 kit pivot (centre of the mouth opening at ground level, front -Z)"
+    place = {"relativeTo": "the Gate_Jungle_4 model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+             "note": "NOT under the Barrier: these replace non-Barrier parts only"}
+    br = Piece("temple", "brow", origin, place=dict(place, replaces="the 2 Brow parts (13.5 x 2.6 x 3.4 at (+-13, 35.8, -5), "
+                                                      "tilted +-9 deg); keep CanCollide on 2 hidden boxes"),
+               notes="2 heavy carved brow ridges, each 13.5 long, arched (0.35 up in the middle), tapering at both ends, "
+                     "rounded top bevel, 3.1 proud of the Face (front at z -6.7 like today), underside sloping back; the "
+                     "inner ends lower (today's +-9 deg frown). #5C645C, dark underside. The sockets, Neon GlyphEyes and "
+                     "Pupils stay parts.")
+    for sgn in (-1, 1):
+        th = math.radians(9.0) * sgn
+        ca, sa = math.cos(th), math.sin(th)
+        cx = 13.0 * sgn
+
+        def xf(p, ca=ca, sa=sa, cx=cx):
+            return Vector((cx + p.x * ca - p.y * sa, 35.8 + p.x * sa + p.y * ca, p.z))
+        st = []
+        for x in (-6.75, -5.7, -4.0, -2.0, 0.0, 2.0, 4.0, 5.7, 6.75):
+            f = abs(x) / 6.75
+            st.append((x, 0.35 * (1 - f * f), 1.0 - 0.4 * max(0.0, (f - 0.75) / 0.25)))
+        sweep_faces(br, brow_sections(st, 2.8, 3.1, -3.6, xf), brow_col, 0.6)
+    ns = Piece("temple", "nose", origin, place=dict(place, replaces="the Nose wedge (8 x 10 x 5 at (0, 26.5, -6.5)); keep its "
+                                                      "CanCollide on a hidden wedge"),
+               notes="carved temple nose, the same design as face__nose_lips' nose at temple proportions (8.8 wide "
+                     "wings, y 21.5..32.5, 5 proud): bridge, round tip, flared wings, 2 dark nostrils underneath.")
+    nose_into(ns, 4.4, 21.5, 32.5, -4.0, -9.0, (0.75, 0.5, 0.08))
+    return [br, ns]
+
+
+def _clip_s(poly, top):
+    out = []
+    n = len(poly)
+    for i in range(n):
+        a, b = poly[i], poly[(i + 1) % n]
+        ina = a.y >= -1e-9 if top else a.y <= 1e-9
+        inb = b.y >= -1e-9 if top else b.y <= 1e-9
+        if ina:
+            out.append(a)
+        if ina != inb:
+            k = a.y / (a.y - b.y)
+            p = a + (b - a) * k
+            p.y = 0.0
+            out.append(p)
+    clean = []
+    for p in out:
+        if not clean or (p - clean[-1]).length > 1e-6:
+            clean.append(p)
+    if len(clean) > 1 and (clean[0] - clean[-1]).length < 1e-6:
+        clean.pop()
+    return clean if len(clean) >= 3 else []
+
+
+def _convex(pts2):
+    sgn = 0
+    n = len(pts2)
+    for i in range(n):
+        a, b, c = pts2[i], pts2[(i + 1) % n], pts2[(i + 2) % n]
+        cr = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0])
+        if abs(cr) < 1e-9:
+            continue
+        s = 1 if cr > 0 else -1
+        if sgn and s != sgn:
+            return False
+        sgn = s
+    return True
+
+
+def moss_drape(name, seed, layers, notes):
+    """A soft layered moss patch draped over a 90 deg edge. Built flat in (u along the edge, s across it: s > 0 on
+    the TOP going back +Z, s < 0 down the FRONT face, h = height above the stone), then folded over the edge; each
+    layer: an irregular rounded outline at h = base, 1-2 inner rings (homothetic about a point shifted down the
+    front = a fuller drip lip at the bottom), a flat cap. Faces crossing the edge are split, and a chamfer strip
+    joins the top and front halves."""
+    rng = random.Random(seed)
+    pc = Piece("moss", name, "the patch's own anchor: (0, 0, 0) = a point on the stone's TOP-FRONT EDGE at the patch "
+               "centre; the top face is y = 0 going back (+Z), the front face is z = 0 going down (-Y)",
+               place={"relativeTo": "any 90 deg stone edge (cap, cornice, brow, crown, parapet)",
+                      "position": "the anchor on the edge line", "orientation": "yaw so the piece's -Z = the face's outward "
+                      "normal", "scale": "uniform 0.7..1.6; 1 patch per 4-6 studs of edge; mirror X for variety"},
+               notes=notes)
+    LIFT = 0.02
+
+    def emit(poly, col):
+        for top in (True, False):
+            part = _clip_s(poly, top)
+            if not part:
+                continue
+            if top:
+                m = [Vector((p.x, p.z + LIFT, p.y)) for p in part]
+                nrm = Vector((0, 1, 0))
+            else:
+                m = [Vector((p.x, p.y, -(p.z + LIFT))) for p in part]
+                nrm = Vector((0, 0, -1))
+            if len(m) <= 4:
+                pc.face(m, col, "SmoothPlastic", 0.1, nrm)
+            else:
+                polygon_fill(pc, m, col, "SmoothPlastic", 0.1, nrm)
+            if top:
+                for i in range(len(part)):
+                    a, b = part[i], part[(i + 1) % len(part)]
+                    if abs(a.y) < 1e-9 and abs(b.y) < 1e-9 and max(a.z, b.z) > 0.05:
+                        ta, tb = Vector((a.x, a.z + LIFT, 0)), Vector((b.x, b.z + LIFT, 0))
+                        fa, fb = Vector((a.x, 0, -(a.z + LIFT))), Vector((b.x, 0, -(b.z + LIFT)))
+                        if a.z < 0.03:
+                            pc.face([ta, tb, fb], col, "SmoothPlastic", 0.1, Vector((0, 1, -1)))
+                        elif b.z < 0.03:
+                            pc.face([ta, tb, fa], col, "SmoothPlastic", 0.1, Vector((0, 1, -1)))
+                        else:
+                            pc.quad_or_tris([ta, tb, fb, fa], col, "SmoothPlastic", 0.1, Vector((0, 1, -1)))
+
+    for L in layers:
+        cu, cs = L["c"]
+        n = L["n"]
+        for _ in range(50):
+            a0 = rng.uniform(0, 2 * math.pi / n)
+            ring = []
+            for k in range(n):
+                a = a0 + 2 * math.pi * k / n + rng.uniform(-0.18, 0.18)
+                r = rng.uniform(0.86, 1.08)
+                ring.append((cu + L["rx"] * r * math.cos(a), cs + L["ry"] * r * math.sin(a)))
+            if _convex(ring):
+                break
+        hc = (cu + L.get("lip_u", 0.0), cs - L["ry"] * L.get("lip", 0.35))
+        rings = [(1.0, 0.0)] + L["rings"]          # (homothety factor, height fraction)
+        lev = []
+        for f, hf in rings:
+            lev.append([Vector((hc[0] + f * (u - hc[0]), hc[1] + f * (s - hc[1]), L["base"] + hf * L["H"])) for u, s in ring])
+        cols = L["cols"]
+        for li in range(len(lev) - 1):
+            lo, hi = lev[li], lev[li + 1]
+            for k in range(n):
+                j = (k + 1) % n
+                emit([lo[k], lo[j], hi[j], hi[k]], cols[li])
+        cap = lev[-1]
+        k = 1
+        while k < n - 1:
+            if k + 2 < n:
+                emit([cap[0], cap[k], cap[k + 1], cap[k + 2]], cols[-1])
+                k += 2
+            else:
+                emit([cap[0], cap[k], cap[k + 1]], cols[-1])
+                k += 1
+    return pc
+
+
+def moss_pieces():
+    g = (JMOSS, tone(JMOSS, 0.86), tone(JMOSS, 0.93))
+    l2 = (tone(JMOSS_L, 0.9), JMOSS_L)
+    l3 = (tone(JMOSS_LL, 0.92), JMOSS_LL)
+    A = moss_drape("drape_A", 1101, [
+        dict(c=(0.0, -0.2), rx=1.0, ry=0.9, n=10, H=0.17, base=0.0, lip=0.15, rings=[(0.8, 0.65), (0.55, 1.0)],
+             cols=(g[1], g[2], g[0])),
+        dict(c=(0.1, -0.25), rx=0.68, ry=0.6, n=8, H=0.11, base=0.15, lip=0.15, rings=[(0.6, 1.0)], cols=l2),
+        dict(c=(-0.2, -0.78), rx=0.4, ry=0.3, n=7, H=0.09, base=0.11, lip=0.3, rings=[(0.55, 1.0)], cols=l3)],
+        "soft layered moss patch, 2.0 wide, reaching 0.7 back over the top and 1.1 down the front: 3 stacked rounded "
+        "layers (#589642 -> #60C448 -> #78D246), each smaller and lighter, thinning to nothing at the outline, the "
+        "plateau over the edge, the light top layer a drip lobe hanging at the bottom.")
+    B = moss_drape("drape_B", 1202, [
+        dict(c=(0.0, -0.12), rx=0.75, ry=0.68, n=9, H=0.14, base=0.0, lip=0.2, rings=[(0.78, 0.65), (0.52, 1.0)],
+             cols=(g[1], g[2], g[0])),
+        dict(c=(-0.1, -0.25), rx=0.48, ry=0.42, n=7, H=0.09, base=0.12, lip=0.3, rings=[(0.58, 1.0)], cols=l2)],
+        "small soft moss patch, 1.5 wide, 0.55 over the top and 0.8 down the front: 2 stacked rounded layers "
+        "(#589642 -> #60C448), the plateau slightly down the front (drip lip).")
+    C = moss_drape("drape_C", 1303, [
+        dict(c=(0.0, -0.55), rx=1.2, ry=1.3, n=10, H=0.18, base=0.0, lip=0.2, rings=[(0.8, 0.65), (0.55, 1.0)],
+             cols=(g[1], g[2], g[0])),
+        dict(c=(0.2, -0.6), rx=0.8, ry=0.8, n=8, H=0.12, base=0.16, lip=0.2, rings=[(0.6, 1.0)], cols=l2),
+        dict(c=(-0.3, -1.45), rx=0.45, ry=0.42, n=7, H=0.1, base=0.12, lip=0.3, rings=[(0.55, 1.0)], cols=l3)],
+        "long moss drape, 2.4 wide, 0.75 over the top and 1.9 down the front (cornices, brows, the temple forehead): "
+        "3 stacked rounded layers (#589642 -> #60C448 -> #78D246), the top layer a hanging drip lobe at the bottom.")
+    return [A, B, C]
+
+
+def vine_strand():
+    rng = random.Random(1404)
+    pc = Piece("vine", "strand", "the strand's own anchor: (0, 0, 0) = the TOP ATTACH POINT; it hangs down -Y, 6.0 long, "
+               "leaves toward -Z (front) and the sides",
+               place={"relativeTo": "under a cornice / brow / eave edge", "position": "the anchor just under the edge, "
+                      "0.1-0.3 in front of the face", "orientation": "any yaw (leaves face the camera side best at 0)",
+                      "scale": "uniform 0.6..1.2 (3.6..7.2 long); longer vines = 2 strands chained (the second's anchor "
+                      "at the first's tip (0, -6, 0) x scale), groups of 2-3 of different lengths. Gate_Jungle_4: the 4 "
+                      "Vine sticks become 2 + 1 chained strands each (13 and 8 long)."},
+               notes="tapering hanging vine: a 3-sided stem 0.18 -> 0.06 thick in 5 swaying segments (#46AA3C), 9 small "
+                     "leaves (0.55 x 0.32, folded on the midrib, alternating sides, #78D246 / #60C448), a 2-leaf tip.")
+    ys = [0.0, -1.2, -2.4, -3.6, -4.8, -6.0]
+    pts = [Vector((0.12 * math.sin(i * 1.3), y, -0.06 * math.sin(i * 0.9 + 0.5))) for i, y in enumerate(ys)]
+    radii = [0.09, 0.08, 0.065, 0.05, 0.04, 0.03]
+
+    def col(s, k):
+        return tone(JVINE, (1.0, 0.93, 0.86)[k % 3])
+    tube_faces(pc, pts, radii, 3, col, 0.04)
+
+    def leaf(p, side, down, L, W, c1, c2):
+        d = Vector((side * 0.8, -down, -0.35)).normalized()
+        b = p + Vector((side * 0.04, 0, -0.03))
+        tip = b + d * L
+        perp = d.cross(Vector((0, 0, -1)))
+        if perp.length < 1e-6:
+            perp = Vector((1, 0, 0))
+        perp.normalize()
+        mid = b + d * (L * 0.42)
+        fold = Vector((0, 0, -1)) * 0.05 + Vector((0, 0.03, 0))
+        m1 = mid + perp * (W / 2) - fold
+        m2 = mid - perp * (W / 2) - fold
+        rib_n = d.cross(perp)
+        if rib_n.z > 0:
+            rib_n = -rib_n
+        pc.face([b, m1, tip], c1, "SmoothPlastic", 0.05, rib_n)
+        pc.face([b, tip, m2], c2, "SmoothPlastic", 0.05, rib_n)
+
+    for i in range(9):
+        y = -0.45 - i * 0.62
+        seg = min(int(-y / 1.2), 4)
+        f = (-y - 1.2 * seg) / 1.2
+        p = pts[seg].lerp(pts[seg + 1], f)
+        side = 1 if i % 2 == 0 else -1
+        sc = 1.0 - 0.25 * (i / 8)
+        leaf(p, side, rng.uniform(0.35, 0.6), 0.55 * sc, 0.32 * sc, JMOSS_LL if i % 2 else JMOSS_L, tone(JMOSS_L, 0.88))
+    for side in (-1, 1):
+        leaf(pts[-1], side * 0.6, 0.9, 0.42, 0.26, JMOSS_LL, tone(JMOSS_L, 0.88))
+    return [pc]
+
+
+def thatch_roof():
+    rng = random.Random(1505)
+    pc = Piece("hut", "thatch_roof", "the TribalHut_A kit pivot (base centre, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the TribalHut_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "keeps": "the 2 Roof wedges (the core, under the thatch) and the Ridge beam"},
+               notes="layered thatch over today's roof wedges (eaves y 12.4 at z +-7.75, ridge y 19.4 at z 0): on each "
+                     "slope 4 overlapping rows of straw bundles (8 bundles per row, alternating tones, each row tucked "
+                     "under the one above and standing 0.4 off the slope at its bottom), a jagged fringe of straw tips "
+                     "under every row (the last one hangs 0.35 past the eave), sawtooth row ends on the gables, and a "
+                     "straw ridge cap beside the ridge beam with its own fringe. #C4A068 (+ #D8C080 cap).")
+    L = math.hypot(7.75, 7.0)
+    X0, X1 = -8.0, 8.0
+    for zs in (1, -1):
+        nrm = Vector((0, 7.75, 7.0 * zs)).normalized()
+        dwn = Vector((0, -7.0, 7.75 * zs)).normalized()
+        ridge = Vector((0, 19.4, 0))
+
+        def P_(x, s, h):
+            return Vector((x, 0, 0)) + ridge + dwn * s + nrm * h
+        rows = 4
+        b_prev = None
+        for r in range(rows):
+            b = L * (r + 1) / rows + (0.35 if r == rows - 1 else 0.0)
+            a = 1.6 if r == 0 else b_prev - 0.75
+            ncol = 8
+            w = (X1 - X0) / ncol
+            rowk = 1.0 - 0.035 * r
+            for c in range(ncol):
+                xa, xb = X0 + c * w, X0 + (c + 1) * w
+                col = tone(THATCH, rowk * STEPS[(c + r) % 2 if rng.random() < 0.8 else 2])
+                pc.face([P_(xa, a, 0.05), P_(xb, a, 0.05), P_(xb, b, 0.42), P_(xa, b, 0.42)], col, "SmoothPlastic", 0.12, nrm)
+            nt = 16
+            tw = (X1 - X0) / nt
+            for k in range(nt):
+                xa, xb = X0 + k * tw, X0 + (k + 1) * tw
+                xm = (xa + xb) / 2 + rng.uniform(-0.15, 0.15)
+                drop = rng.uniform(0.25, 0.45) + (0.15 if r == rows - 1 else 0.0)
+                tip = P_(xm, b + drop, 0.08)
+                pc.face([P_(xa, b, 0.42), P_(xb, b, 0.42), tip], tone(THATCH, rowk * 0.84), "SmoothPlastic", 0.08,
+                        dwn + nrm * 0.5)
+            for x, sx in ((X0, -1), (X1, 1)):
+                pc.face([P_(x, a, 0.05), P_(x, b, 0.42), P_(x, b, 0.0)], tone(THATCH, 0.8), "SmoothPlastic", 0.1,
+                        Vector((sx, 0, 0)))
+            b_prev = b
+        # ridge cap: 4 bundles from the beam's side down to the first row, with a fringe
+        for c in range(4):
+            xa, xb = -8.0 + c * 4.0, -8.0 + (c + 1) * 4.0
+            top = [Vector((xa, 19.85, 0.6 * zs)), Vector((xb, 19.85, 0.6 * zs))]
+            bot = [P_(xb, 2.2, 0.55), P_(xa, 2.2, 0.55)]
+            pc.quad_or_tris([top[0], top[1], bot[0], bot[1]], tone(THATCH_L, STEPS[c % 2]), "SmoothPlastic", 0.12, nrm)
+            for k in range(2):
+                ta, tb = xa + k * 2.0, xa + (k + 1) * 2.0
+                tip = P_((ta + tb) / 2 + rng.uniform(-0.2, 0.2), 2.2 + rng.uniform(0.35, 0.55), 0.3)
+                pc.face([P_(ta, 2.2, 0.55), P_(tb, 2.2, 0.55), tip], tone(THATCH_L, 0.85), "SmoothPlastic", 0.08, dwn + nrm * 0.5)
+    return [pc]
+
+
+def jungle_buildings():
+    return carved_face() + temple_face() + moss_pieces() + vine_strand() + thatch_roof()
+
+
+def preview_jungle(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    cf = [((0, 6, 0.5), (10, 12, 5), JSTONE, (0, 0, 0)), ((0, 12.9, 0.5), (11, 2, 5.6), JSTONE_D, (0, 0, 0)),
+          ((0, 14.7, 0.5), (4.4, 1.8, 5), JSTONE, (0, 0, 0)), ((0, 12.9, -2.45), (1.3, 1.3, 0.5), GOLD, (0, 0, 45)),
+          ((-2.3, 7.3, -2.05), (2.8, 2, 0.5), JREC, (0, 0, 0)), ((2.3, 7.3, -2.05), (2.8, 2, 0.5), JREC, (0, 0, 0)),
+          ((-2.3, 7.3, -2.25), (1.8, 1.1, 0.4), "#78FFBE", (0, 0, 0)), ((2.3, 7.3, -2.25), (1.8, 1.1, 0.4), "#78FFBE", (0, 0, 0)),
+          ((0, 2.5, -2.05), (5.6, 1.4, 0.5), JREC, (0, 0, 0)), ((-5.6, 7, 0.5), (1.4, 4, 3), JSTONE_D, (0, 0, 0)),
+          ((5.6, 7, 0.5), (1.4, 4, 3), JSTONE_D, (0, 0, 0)), ((-5.6, 4.4, 0.2), (1.2, 1.2, 1.2), GOLD, (0, 0, 0)),
+          ((5.6, 4.4, 0.2), (1.2, 1.2, 1.2), GOLD, (0, 0, 0))]
+    cf += [((x, 2.8, -2.3), (0.8, 0.8, 0.4), "#E8E2D0", (0, 0, 0)) for x in (-1.8, -0.6, 0.6, 1.8)]
+    g1 = context_boxes(cf, col) + [piece_object(by["face__brow"], col), piece_object(by["face__nose_lips"], col)]
+    g1.append(piece_object(by["moss__drape_A"], col, Vector((-2.8, 13.9, -2.3))))
+    g1.append(piece_object(by["moss__drape_B"], col, Vector((3.4, 13.9, -2.3))))
+    for x, s in ((-4.4, 0.75), (-3.7, 0.55), (4.6, 0.65)):
+        g1.append(piece_object(by["vine__strand"], col, Vector((x, 11.85, -2.15)), None, s))
+    ox = 40.0
+    gf = [((0, 29, 1.5), (56, 22, 11), JSTONE, (0, 0, 0)), ((0, 41.6, 1.5), (58, 3.4, 12.6), JSTONE_D, (0, 0, 0)),
+          ((0, 46, 2), (30, 5.4, 10), JSTONE, (0, 0, 0)), ((0, 50.7, 2), (14, 4, 9), JSTONE_D, (0, 0, 0)),
+          ((-22.5, 45, 2), (9, 6, 10), JSTONE, (0, 0, 0)), ((22.5, 45, 2), (9, 6, 10), JSTONE, (0, 0, 0)),
+          ((0, 45.2, -3.2), (5, 5, 1), GOLD, (0, 0, 45)), ((0, 18.5, 0.5), (28, 5, 13), JSTONE_D, (0, 0, 0)),
+          ((-30.4, 27, 2), (5, 15, 8), JSTONE_D, (0, 0, 0)), ((30.4, 27, 2), (5, 15, 8), JSTONE_D, (0, 0, 0))]
+    for sx in (-1, 1):
+        gf += [((13 * sx, 31, -4.3), (10, 6, 1), JREC, (0, 0, 0)), ((13 * sx, 31, -4.8), (7.4, 3.4, 0.6), "#78FFBE", (0, 0, 0)),
+               ((13 * sx, 31, -4.9), (1.8, 3.4, 0.7), JREC, (0, 0, 0))]
+    gf = [((p[0] + ox, p[1] - 15, p[2]), s, c, r) for p, s, c, r in gf]
+    off = Vector((ox, -15, 0))
+    g2 = context_boxes(gf, col) + [piece_object(by["temple__brow"], col, off), piece_object(by["temple__nose"], col, off)]
+    for x, nm, sc in ((-20, "drape_C", 2.2), (-8, "drape_A", 2.0), (12, "drape_B", 2.4), (24, "drape_C", 1.8)):
+        g2.append(piece_object(by["moss__" + nm], col, off + Vector((x, 43.3, -4.8)), None, sc))
+    for x, sc in ((-26.5, 1.9), (-24.8, 1.3), (26.5, 1.6), (5.5, 1.3), (-5.5, 1.1)):
+        g2.append(piece_object(by["vine__strand"], col, off + Vector((x, 39.8, -4.4)), None, sc))
+    hx = 80.0
+    hb = [((5.6 * a, 2.5, 5.6 * b), (1.1, 5, 1.1), JWOOD_D, (0, 0, 0)) for a in (-1, 1) for b in (-1, 1)]
+    hb += [((0, 5, 0), (14, 0.8, 14), "#A86238", (0, 0, 0)), ((0, 8.9, 0), (11, 7, 11), "#D6965C", (0, 0, 0)),
+           ((0, 6.0, 0), (11.4, 0.6, 11.4), JWOOD_D, (0, 0, 0)), ((0, 12.1, 0), (11.4, 0.6, 11.4), JWOOD_D, (0, 0, 0)),
+           ((0, 8.2, -5.6), (4, 5.6, 0.4), "#4A3022", (0, 0, 0)), ((0, 11.2, -5.7), (1.1, 1.1, 0.3), "#C44632", (0, 0, 45)),
+           ((0, 19.5, 0), (16, 0.8, 1.2), JWOOD_D, (0, 0, 0))]
+    hb = [((p[0] + hx, p[1], p[2]), s, c, r) for p, s, c, r in hb]
+    g3 = context_boxes(hb, col) + [piece_object(by["hut__thatch_roof"], col, Vector((hx, 0, 0)))]
+    mx = 120.0
+    g4 = context_boxes([((mx, 1.5, 1.5), (9, 3, 3), JSTONE, (0, 0, 0))], col)
+    for x, nm in ((-3, "drape_A"), (0, "drape_B"), (3, "drape_C")):
+        g4.append(piece_object(by["moss__" + nm], col, Vector((mx + x, 3.0, 0.0))))
+    out = os.path.join(P.PREVIEW_DIR, "jungle_buildings_facets.png")
+    return render_sheet("jungle", [(g1, [(-28, 8)]), (g1[-7:-5], [(-60, 5)]), (g2, [(-22, 10)]), (g3, [(-35, 14)]),
+                                   (g4, [(-35, 30)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
     for obj, fn, prev in (("rebirth_altar", rebirth_altar, preview_altar), ("ship", ship, preview_ship),
                           ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon),
                           ("red_rock", red_rock, preview_red_rock_all), ("monuments", monuments, preview_monuments),
-                          ("props", desert_props, preview_props)):
+                          ("props", desert_props, preview_props),
+                          ("jungle", jungle_buildings, preview_jungle)):
         if only and obj not in only:
             continue
         pieces = fn()

@@ -232,6 +232,16 @@ SyncMapProps.RULES = {
 	{ propId = "golden_stand", names = { "Brazier_A" } },
 	{ propId = "pharaoh_throne", names = { "Throne_Gold" } },
 	{ propId = "golden_lamp", names = { "Lamp_Djinn" } },
+	-- jungle buildings and temples (owner JUNGLE PROMPT_01, 2026-10-20): 01 the stone face temple = the Jungle_4 gate
+	-- (test Gate_Jungle_4, kit MapAssets.Gates), 02 the stone head (Carved_Face_Block), 03 the ruined stone building
+	-- (Ruin_Wall_A), 04 the six-slot wall (ArrowTrap_Wall), 05 the stilt hut (TribalHut_A)
+	{ propId = "face_temple_gate", names = { "Gate_Jungle_4" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Jungle_4"
+	end },
+	{ propId = "stone_head", names = { "Carved_Face_Block" } },
+	{ propId = "jungle_ruin_building", names = { "Ruin_Wall_A" } },
+	{ propId = "six_slot_wall", names = { "ArrowTrap_Wall" } },
+	{ propId = "stilt_hut", names = { "TribalHut_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -390,6 +400,7 @@ local function searchRoots(): { Instance }
 	local preview = staging and staging:FindFirstChild("AssetPreview")
 	add(preview and preview:FindFirstChild("ModelsA"))
 	add(preview and preview:FindFirstChild("Desert")) -- the desert test row (desert buildings, 2026-10-19)
+	add(preview and preview:FindFirstChild("Jungle")) -- the jungle test row (jungle buildings, 2026-10-20)
 	add(ServerStorage:FindFirstChild("MapAssets"))
 	add(ServerStorage:FindFirstChild("BossArenas"))
 	return list

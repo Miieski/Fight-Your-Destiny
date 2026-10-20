@@ -2577,3 +2577,43 @@ and any pickup / interaction).
   templates / 710 tagged copies up to date, run 2 = 0; disk == Studio (188 scripts, 0 written); backup
   after_desert_props_treasures. Per object: 01 jar 41 / 41, 02 amphora 19 / 19, 03 rug 13 / 13, 04 stand 24 / 24, 05
   throne 3 / 3, 06 lamp 3 / 3 - all OK.
+
+# Jungle buildings and temples (PROMPT 01) - 2026-10-20 (owner: "First, complete this prompt: PROMPT_01_Buildings_and_Temples.txt. Follow the prompt exactly as written. Once and ONLY once you've FINISHED, run the second prompt named PROMPT_02_Gates_and_Entrances.txt.")
+
+Objects: 01 stone face temple (the mouth is an entrance if it is one now: keep opening, collisions, scripts, prompts),
+02 stone head (same family as 01), 03 ruined stone building, 04 stone wall with six slots (KEEP the six slots, the two
+tools and the lamp, same positions; keep scripts / tags / prompts), 05 stilt hut (keep size, door, collisions).
+
+## Status (newest first)
+
+- 08:48 Started. Prompt files and images in REMAKE OBJECT/Jungle_Images_By_Category/...; the images were copied to
+  docs/Jungle_Images/ (the path the prompts name). Backup before_jungle_buildings (6 files). Same route as the desert:
+  Agent A (Blender) writes guide section C (jungle) + facet data, Agent B (Studio) inventories, builds with parts +
+  unions, syncs; the main agent reviews the shots, Play-checks, commits and pushes.
+- 09:20 Guide C + facets + PILOT 03 RUINED BUILDING done. Agent A: section C (C0 kits: 01 = Gates.Gate_Jungle_4, the
+  Jungle_4 sub-zone GATE whose mouth is the Barrier; 02 = Carved_Face_Block; 03 = Ruin_Wall_A; 04 = ArrowTrap_Wall; 05
+  = TribalHut_A; no script / prompt / tag in any kit; C1 palette = the real kit colours, the Neon glyph #78FFBE kept;
+  C2 rules: layered moss drapes, tapering vines, carved face, slot frames, stilt hut) + facets face__brow / nose_lips,
+  temple__brow / nose, moss__drape_A/B/C, vine__strand, hut__thatch_roof (preview approved). Agent B: inventory
+  ("Jungle buildings" in prop_inventory), 5 sync rules, the jungle test row added as a search root; pilot
+  jungle_ruin_building 6 / 6 (cut blocks in running bond with dark joints, 2-step base, jointed capstones with chipped
+  corners, framed window slots, glyph plaque, cracks, vines). Main agent: the cap moss read as upright flat cut-outs ->
+  redone as low mounds + Agent A's drapes. Pilot shot sent to the owner.
+- 09:55 PROMPT 01 COMPLETE (Agent B; main agent looked at every after shot and Play-checked).
+  03 jungle_ruin_building 6 / 6 (~20k tris); 04 six_slot_wall 10 / 10 (the 6 holes, 2 arrows + tip and the Neon lamp
+  glyph exact on all 9 placed copies; recessed panel, bevelled slot frames, carved frame, lamp in a stone bracket +
+  PointLight #78FFBE); 01 face_temple_gate 3 / 3 (test, kit, Jungle_4.Gate; jointed block face, Agent A's frowning
+  brows and nose, deep sockets, lip rolls, chamfered teeth, cheek plates, crown with the gold gem, soft moss at today's
+  green patch places (main agent asked for more after the first version), vines; Barrier unchanged + its 15 mouth
+  pieces, SubZoneId, PriceSign GUIs "312.5K Gold"; 18 colliders invisible; the Moss union is at Roblox's 20k-tri cap);
+  02 stone_head 17 / 17 (incl. Jungle_4 BossGate x2 and BossArenas x4; Mouth, 4 Teeth, Sockets, Neon eyes exact parts;
+  BossGate.Interact untouched); 05 stilt_hut 6 / 6 (Agent A's thatch over today's roof wedges, log stilts with braces
+  and rope ties, plank deck + railing, plank walls, ladder, gourds, lantern + warm light; Door / DoorMask exact).
+  Collisions: invisible copies of today's colliding parts, rays 0 off on every object.
+  MAIN AGENT PLAY CHECK (phone emulator, fresh lockAll + unlockZone Jungle): Jungle_2 / 3 / 4 gates block while closed,
+  open with their prompts (50K / 125K / 312.5K), every Barrier decor piece hidden (temple mouth 15 / 15), the player
+  walks through; Jungle_2 144 fps / render CPU 2.6 ms, Jungle_3 144 / 2.5 ms, Jungle_4 144 / 2.4 ms. Output: no
+  game errors (CoreGui UIBlox warnings and one "rbxassetid://203785492 asset type" message that no game instance
+  references). FINAL: every template up to date (check), disk == Studio (190 scripts, 0 written); backup
+  after_jungle_buildings (two identical sets, 095810 and 100019). Per object: 01 temple 3 / 3, 02 head 17 / 17, 03
+  ruin 6 / 6, 04 six-slot wall 10 / 10, 05 stilt hut 6 / 6 - all OK.

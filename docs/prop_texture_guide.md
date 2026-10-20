@@ -817,6 +817,132 @@ The organic pieces (jar, lid, amphora, handles, lion armrest, paw foot, lamp bod
 `Blender_Exports/Props/facets/` (made by `tools/blender/fyd_facets.py -- props`). Each is in its kit's space: place it at
 the kit pivot with no offset, at the copy's own scale.
 
+## C. Jungle: buildings and temples (owner task 2026-10-20)
+
+Images: `docs/Jungle_Images/01_Buildings_and_Temples/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_084830_before_jungle_buildings_{ServerStorage,Workspace}.rbxm`.
+The same quality target as sections A and B (fountain / well): stone blocks with joints, capped edges, small
+readable details, soft gradients, clean saturated colours, no PBR.
+
+### C0. Today's kits
+
+| # | Object | Kit | Parts | Copies | Today's shape |
+|---|---|---|---|---|---|
+| 01 | stone face temple | `MapAssets.Gates.Gate_Jungle_4` (a GATE) | 52 | test `_Staging.AssetPreview.Jungle.Gate_Jungle_4`; game `Zones.Jungle.Jungle_4.Gate` | 65.8 x 52.7 x 16.9; see notes below |
+| 02 | stone head | `MapAssets.Jungle.Carved_Face_Block` | 21 | test; Jungle_3 Ruins x5, Jungle_4 Props x4, Jungle_4 BossGate x2, BossArenas.Jungle x4 | 12.6 x 15.6 x 7.1; see notes below |
+| 03 | ruined stone building | `MapAssets.Jungle.Ruin_Wall_A` | 10 | test; Jungle_3 Ruins x4 | 20.8 x 13.2 x 4.4; see notes below |
+| 04 | stone wall, six slots | `MapAssets.Jungle.ArrowTrap_Wall` | 15 | test; Jungle_3 Ruins x4, Jungle_4 Props x4 | 12.6 x 10.95 x 6.7; see notes below |
+| 05 | stilt hut | `MapAssets.Jungle.TribalHut_A` | 14 | test; Jungle_2 Props x3, BossArenas.Jungle x1 | 16 x 19.9 x 18.3; see notes below |
+
+**01 stone face temple** (Gate_Jungle_4):
+- **Face:** Face 56 x 22 x 11 (y 18..40), Forehead 58 x 3.4, Crown 30 x 5.4 + CrownTop 14 x 4 + 2 CrownSides, a gold Gem 5 x 5 turned 45° at (0, 45.2, -3.2).
+- **Brows and eyes:** Brows 13.5 x 2.6 x 3.4 tilted ±9°; eye Sockets 10 x 6 dark, with Neon GlyphEyes 7.4 x 3.4 #78FFBE and dark Pupils at (±13, 31).
+- **Nose and upper lip:** Nose a Wedge 8 x 10 x 5 at (0, 26.5, -6.5); UpperLip 28 x 5 x 13.
+- **Sides:** Cheeks 16 x 18 x 12 + CheekBases; Ears 5 x 15 x 8 + gold Earrings 3.6 at x ±30.4; 2 Fangs 2.2 x 5 x 2.2 at (±13.2, 13.2, -5.4).
+- **Moss and vines:** 4 Moss slabs, 4 Vine sticks.
+- **THE MOUTH IS THE GATE:** a `Barrier` 24 x 16 x 3 at (0, 8, 0), attribute `BarrierDecorIsChildOfBarrier = true`. Its CHILDREN vanish when the gate opens: the 11 Teeth 3.2 x 5.2 x 0.9 (2 rows at y 3.1 and 12.9), MouthDark 24 x 5, 2 Lips 24 x 0.8, and the Neon Glyph.
+- **Game copy only:** the model has attribute `SubZoneId = "Jungle_4"`, and the PriceSign holds SurfaceGuis PriceGuiFront / PriceGuiBack, each with a PriceLabel set by GateController.
+- **Keep** the opening 24 x 16, the Barrier and its children, the attributes, the PriceSign and the collisions exactly.
+
+**02 stone head** (Carved_Face_Block):
+- Head 10 x 12 x 5 (y 0..12); Headdress 11 x 2 x 5.6; Crest 4.4 x 1.8; gold Gem 1.3 turned 45° at (0, 12.9, -2.45).
+- Brow 9 x 1.4 x 1.0 at y 8.9; Sockets 2.8 x 2 with Neon GlyphEyes 1.8 x 1.1 #78FFBE at (±2.3, 7.3).
+- Nose a Wedge 1.9 x 3.4 x 1.7; Mouth 5.6 x 1.4 dark; 4 Teeth 0.8; Ears 1.4 x 4 x 3; gold Earrings 1.2; 2 Moss slabs.
+- No script, attribute or prompt.
+
+**03 ruined stone building** (Ruin_Wall_A): Wall 20 x 10 x 3.6, Base 20.8 x 1.6 x 4.4, Cap 20.6 x 1.4 x 4.2, 2 Merlons 4 x 1.8, 3 front Blocks (2 dark slots #555C55 / #555D55 and one #7B8174), 2 Moss slabs. Nothing functional.
+
+**04 stone wall, six slots** (ArrowTrap_Wall):
+- Wall 12 x 10 x 2.6 between 2 Frames 12.6 x 1.2 x 3.2; a dark Panel 9.4 x 6.2 x 0.4.
+- **6 Holes** 1.2 x 1.2 x 0.3 #292D29 at x -3 / 0 / 3, y 3.8 and 6.6, z -1.45.
+- **2 Arrows** 0.25 thick #D6965C (#5C626E tip): one in the hole at (-3, 3.8), 3.2 long, with an ArrowTip; one in the hole at (3, 6.6), 2.6 long.
+- The "lamp" = a Neon Glyph 1.6 x 0.6 #78FFBE at (0, 8.9, -1.25). Moss slab on top.
+- **No script, tag or prompt today; keep the 6 holes, the 2 arrows and the lamp at exactly these places.**
+
+**05 stilt hut** (TribalHut_A):
+- 4 Stilts 1.1 x 5 #703E26 at (±5.6, ±5.6); Platform 14 x 0.8 x 14 #A86238 (y 4.6..5.4); Body 11 x 7 x 11 #D6965C (y 5.4..12.4) with 2 Bands #703E26.
+- Door 4 x 5.6 #4A3022 (a dark slab, no prompt), DoorMask red diamond #C44632 1.6 at (0, 11.2, -5.7); Ladder 3 x 7.4 tilted 28° at the front.
+- Roof 2 Wedges 15.5 x 7 x 7.75 #C4A068 (eaves y 12.4, ridge y 19.4) + Ridge 16 x 0.8 x 1.2 #703E26.
+- Nothing functional.
+
+All parts are SmoothPlastic; the glyph eyes and lamps are Neon. No kit has a script, a ProximityPrompt or a tag. The
+only functional content is 01's gate contract.
+
+### C1. Jungle palette (owner's examples next to the real colours; use the REAL ones, tone steps x1 / x0.93 / x0.86)
+
+| Role | Owner's example | Real colour (keep) | Used by |
+|---|---|---|---|
+| mossy stone light | #9DB1AB | #848A7C | faces, walls, cheeks, crown |
+| mossy stone mid | #7F9690 | #7B8174 | blocks |
+| mossy stone dark | #4E6764 | #5C645C | bases, caps, brows, frames, nose, headdress |
+| stone darkest | | #555C55 | slots |
+| recess / sockets / holes / mouth | | #292D29 | |
+| moss green | #3FA84A | #589642 (moss), #46AA3C (vines) | |
+| bright leaf | #7ED957 | #60C448 / #78D246 | light moss, vines, leaves |
+| vine green | #2FA84F | #46AA3C / #289642 | |
+| dark wood | #4A2A1A | #4A3022 (door), #703E26 (stilts, bands, ridge) | |
+| wood | | #A86238 (platform, ladder) | |
+| hut walls | | #D6965C | |
+| thatch | #D8C080 | #C4A068 (roof) | |
+| gold | #F2C230 | #FFC93C | gems, earrings |
+| glow (eyes, lamp) | turquoise #2BD3C8 | Neon #78FFBE (mint-cyan: keep it, it is the jungle glyph colour) | |
+| teeth / fangs | | #E8E2D0 | |
+| totem red | #C8392B | #C44632 (door mask) | |
+| totem blue | #1FA6C9 | #3CAABE (totems, gates 2 / entry arch) | |
+| flower pink | #E84A9C | #FF508C (Gate_Jungle_3 flowers) | |
+| bamboo | #9ED05A | | |
+
+### C2. Part rules (studs; joints, chamfers, caps and the gradient exactly as section A)
+
+**Mossy stone blocks:**
+- Courses 1.0-1.5 tall; blocks 2-4 long in running bond; joints 0.08-0.1 over a dark #5C645C core.
+- Chamfer 0.15-0.25.
+- 3 tone steps of #848A7C per block. A few blocks are greener: mix 15 % #589642.
+- **Cracks:** 2-4 per face, dark #292D29 strips 0.08 wide, zig-zagging over 1-2 blocks.
+- **Chipped corners:** notches 0.3-0.6.
+- **Wider base:** 0.4 each side, 1.2-1.6 tall, with a darker cap.
+
+**Moss as SOFT LAYERED PATCHES** (owner: "not flat green rectangles"; facet pieces `moss__drape_A/B/C`):
+- **Layers:** 2-3 stacked rounded layers, each one smaller (70 %) and lighter: #589642 -> #60C448 -> #78D246.
+- **Shape:** each layer has an irregular rounded outline, 0.1-0.2 thick, and thins to nothing at its edge (no hard slab sides).
+- **Placement:** the patch sits on a top edge and DRAPES over it, down the face by 0.8-1.6, with a fuller drip lip at the bottom.
+- **Where:** on cornice / cap / parapet edges, in the corner at the foot of walls, on brows and crowns.
+- **How many:** 1 patch per 4-6 studs of edge, never a full strip. Replace today's flat Moss slabs by 2-4 drape patches each.
+
+**Hanging vines** (facet piece `vine__strand`):
+- Tapering segmented strands: 0.18 -> 0.06 thick, 4-6 segments with a slight sway.
+- Small leaves every 0.8-1.2 (0.5 x 0.3, alternating sides, #78D246 / #60C448), stem #46AA3C.
+- Hang them from cornices and brows in groups of 2-3 of different lengths (3-13: scale the piece in Y). Replace today's straight Vine sticks.
+
+**Carved temple face** (01 and 02 the same family; 01 is about 5 x the size of 02):
+- **Brows:** heavy ridges, a curved bar with a rounded top bevel overhanging the sockets by 0.6 (02) / 3 (01); facet pieces `face__brow` and `temple__brow`.
+- **Eye sockets:** deep, recessed 0.3 (02) / 1.5 (01), with a bevelled rim.
+- **Eyes:** keep today's Neon #78FFBE glyph eyes at their places, with the dark pupils on 01.
+- **Nose:** carved with a bridge, wings and 2 nostrils (02: `face__nose_lips` with the lips round today's mouth; 01: `temple__nose`).
+- **Lips and teeth:**
+  - lips as rounded rolls 0.4 (02) / 1.2 (01) proud;
+  - teeth as individual blocks with depth (0.4-0.9 proud of the dark mouth), slightly different heights, chamfered tips;
+  - fangs on 01 as tapered points.
+  - **On 01 the lips, teeth, MouthDark and Glyph stay children of the Barrier**: build them as parts, not as one facet union with non-Barrier parts.
+- **Cheek plates:** 2-3 stepped plates on each cheek with joints.
+- **Crown:** a stone-block crown with joints and capped blocks; the gold gem keeps its size and turn, in a 0.3 gold rim setting.
+- **Ears:** a carved spiral (a 0.2-proud ring) with today's gold earrings.
+
+**Recessed panel and slot frames** (04):
+- **Panel:** recessed 0.3 into the wall with a carved stone frame 0.6 wide, 0.2 proud.
+- **Slots:** the 6 slots keep their size and place. Each gets a bevelled frame (4 strips 0.25 wide, 0.1 proud, 45° corners) and a dark #292D29 back 0.4 deep.
+- **The 2 arrows (tools):** shaft #D6965C 0.25, a fletching of 2 small linen / red quads, the iron tip. Same positions and angles.
+- **Lamp:** today's Neon glyph becomes a lamp in a stone bracket. A bracket 2.2 x 0.8 x 1.0 with a chamfered underside holds a Neon #78FFBE glow box 1.6 x 0.6 (keep today's size and place, y 8.9) behind 2 stone bars; add a PointLight #78FFBE, range 10, brightness 0.8.
+
+**Stilt hut** (05):
+- **Stilts:** 1.1 square (keep) with a 0.15 chamfer. X-shaped cross beams 0.4 between the stilts under the platform, with rope ties (#C4A068 rings 0.15) at the joints.
+- **Platform:** planks 0.8-1.0 wide with 0.06 gaps along X; a railing 1.2 high of posts every 2.5 and a top rail 0.3 around the front and sides, open at the ladder.
+- **Walls:** framed planks: vertical planks 0.9 wide, a frame 0.4 at the corners and under the roof (today's Bands).
+- **Door:** today's opening, a hanging cloth (#C44632 with a #E8E2D0 stripe) in 2-3 folds; keep the red diamond mask above it.
+- **Roof:** layered thatch: 4 rows of straw bundles per side, overlapping, with a jagged fringe (facet piece `hut__thatch_roof`); a ridge beam (keep) with a straw cap.
+- **Hanging details:** 2 gourds (balls 0.6-0.8 #C4A068 / #A86238 on a 0.1 cord) and a small lantern (#4A3022 frame, Neon warm #FFD678 core 0.4) under the eaves.
+- **Ladder:** today's angle, as 2 rails 0.3 plus rungs every 0.9.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

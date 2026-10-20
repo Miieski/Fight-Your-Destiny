@@ -149,6 +149,14 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-20: JUNGLE ZONE PROPS (owner prompts: 01 buildings and temples, 02 gates and entrances).** Same route as the
+desert: Studio parts + one-colour unions, organic pieces (carved faces, soft moss drapes, vine strands, thatch) from
+Agent A's facets, synced through MapProps. Guide section C in docs/prop_texture_guide.md (jungle palette = the real kit
+colours, moss as layered drapes, never flat green slabs). The 01 "stone face temple" is the Jungle_4 GATE
+(Gates.Gate_Jungle_4): its mouth (MouthDark, Glyph, Lips, 11 Teeth) stays under Barrier, the same gate contract as
+the desert gates. Builders: tools/PropsJungleBuildings*.luau. The jungle test row (_Staging.AssetPreview.Jungle) is
+now a SyncMapProps search root. Log: NIGHT_LOG jungle sections; screenshots docs/screenshots/jungle_*.
+
 **2026-10-20: DESERT ZONE PROPS (owner prompts: buildings, gates, rocks / ruins / nature, monuments (PROMPT 04), props /
 treasures (PROMPT 05)).** Every object remade to the fountain / well quality in Studio (parts + one-colour unions; organic
 accents from Agent A's facet JSON) and synced through MapProps (72 templates, 710 tagged copies). Guide sections B-B14 in

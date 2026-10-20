@@ -351,6 +351,50 @@ are used for the throne (lion armrests, paw feet) and the lamp (body, gem), 1 ga
 | 05 | throne | `pharaoh_throne` (names `Throne_Gold`) | 3 / 3 (test 1, kit 1, BA 1 at 1.5); 2nd run 0 | 21 -> 26 (Stone, Gold, Inlay, Cloth, Glow + 21 invisible Collision); about 10,800 triangles; 13 x 20.9 x 11 | dais with chamfers, a lapis band and gold diamonds; the seat on 4 carved legs with Agent A's lion paw feet, a carved apron with lapis / turquoise inlays; today's red cushion with gold piping and 4 tassels; Agent A's lion armrests with today's Neon cyan arm gems at (+-4.2, 7.35, -1.8); the high back with today's lapis panel in a gold frame (0.15 proud) and 3 gold star inlays, side rolls; today's Neon sun disc with a gold ring and 2 uraei; today's 2 spikes as gold pyramids. Decoration only (no Seat; the boss spawns 74 studs in front of it). Collision (test copy): 3,249 rays, 0 off. Its only game copy is in the BossArenas template (ServerStorage), so the game shot is the test copy |
 | 06 | golden lamp | `golden_lamp` (names `Lamp_Djinn`) | 3 / 3 (test 1, kit 1, BA 1 at 1.5); 2nd run 0 | 12 -> 15 (Gold, Glow, SpoutTip + 12 invisible Collision); about 19,500 triangles; 13.07 x 6.65 x 4.3 | today's foot (turned 45) and stem with gold / lapis mouldings; Agent A's genie lamp body (lathe stretched along X, today's lapis band, engraved rings, curved spout to today's tip, loop handle, domed lid, 4-prong setting) and cut turquoise Neon gem at today's knob place; an invisible `SpoutTip` part at today's place and turn keeps `SmokePoint` (checked: (-7.1, 4.9, 0) in the test copy and the BA copy). Collision (test copy): 3,249 rays, 0 off. Only game copy in the BossArenas template |
 
+
+### Jungle buildings: buildings and temples (owner, jungle PROMPT_01, 2026-10-20): inventory before the remake
+
+Prompt: `REMAKE OBJECT/Jungle_Images_By_Category/.../01_Buildings_and_Temples/PROMPT_01_Buildings_and_Temples.txt`.
+Images: `docs/Jungle_Images/01_Buildings_and_Temples/`. Recipe: docs/prop_texture_guide.md section C. Test =
+`workspace._Staging.AssetPreview.Jungle.<Kit>` (added to SyncMapProps' search roots for this task); BA =
+`ServerStorage.BossArenas.Jungle.Decor.Props`. Every copy found by name (the gate by its zone: `Jungle_4.Gate`); every
+copy's parts match its kit at its Model scale. Checked in Studio: no copy has a script, ProximityPrompt, ClickDetector,
+light, tag or attribute, except the gate (below); no script in src names these kits. BossService finds the Jungle_4
+boss gate's own `BossGate.Interact` (the 2 stone heads in BossGate must never hold a part named `Interact`). Sync rules
+(added before the remake): `face_temple_gate` (names `Gate_Jungle_4`, match `Gate` in `Jungle_4`), `stone_head`
+(`Carved_Face_Block`), `jungle_ruin_building` (`Ruin_Wall_A`), `six_slot_wall` (`ArrowTrap_Wall`), `stilt_hut`
+(`TribalHut_A`). Backups (kit + test + every copy, manifest in the log):
+`BackUP_Files/old_props_2026-10-20_pre_jungle_buildings/<propId>.rbxm` (5 files); the main agent's full backup
+`FightYourDestiny_2026-10-20_084830_before_jungle_buildings`.
+
+| # | object | kit (parts, size) | copies (total incl. kit + test) | collision | functional / notes |
+|---|---|---|---|---|---|
+| 01 | stone face temple | `MapAssets.Gates.Gate_Jungle_4`: 52 parts (face, forehead, crown, brows, sockets + Neon glyph eyes + pupils, nose, upper lip, cheeks, ears + gold earrings, fangs, gold gem, 4 moss, 4 vines, PriceSign, the Barrier with its children); 65.8 x 52.7 x 16.9 | 3: test, kit, `Zones.Jungle.Jungle_4.Gate` | as today (face parts and Barrier collide) | THE JUNGLE_4 GATE: the mouth is the `Barrier` 24 x 16 x 3 at (0, 8, 0) (attribute `BarrierDecorIsChildOfBarrier`), its children (11 teeth, MouthDark, 2 lips, Neon glyph) vanish when the gate opens; the game copy has `SubZoneId = "Jungle_4"` and the PriceSign's PriceGuiFront / PriceGuiBack -> PriceLabel (GateController) |
+| 02 | stone head | `MapAssets.Jungle.Carved_Face_Block`: 21 parts; 12.6 x 15.6 x 7.1 | 17: Jungle_3 Ruins 5, Jungle_4 Props 4, Jungle_4 BossGate 2 (children of the boss gate model), BA 4 (scale 1.6) | Head, Brow, Ears, Headdress, Crest collide | - |
+| 03 | ruined stone building | `MapAssets.Jungle.Ruin_Wall_A`: 10 parts; 20.8 x 13.2 x 4.4 | 6: Jungle_3 Ruins 4 | Wall, Base, Cap, 2 Merlons collide | - |
+| 04 | stone wall, six slots | `MapAssets.Jungle.ArrowTrap_Wall`: 15 parts (6 Holes, 2 Arrows + 1 ArrowTip, Neon Glyph lamp); 12.6 x 10.95 x 6.7 | 10: Jungle_3 Ruins 4, Jungle_4 Props 4 | Wall and 2 Frames collide | no script: the 6 holes, 2 arrows and the lamp are decoration, kept exactly in place |
+| 05 | stilt hut | `MapAssets.Jungle.TribalHut_A`: 14 parts; 16 x 19.9 x 18.3 | 6: Jungle_2 Props 3, BA 1 | stilts, platform, body, bands, roof, ridge, ladder collide; the door is a non-colliding dark slab (no opening) | - |
+
+### Jungle buildings remake status (Agent B, 2026-10-20)
+
+Builders: `tools/PropsJungleBuildings.luau` (`DevTools.PropsJungleBuildings`; it uses the desert monuments helpers);
+Agent A's jungle facet pieces converted into `tools/PropsJungleBuildingsData.luau` (`DevTools.PropsJungleBuildingsData`:
+face brow, face nose + lips, temple brow, temple nose, moss drapes A / B / C, vine strand, hut thatch). Recipe:
+docs/prop_texture_guide.md section C. Collision: invisible `Collision` parts = the kit's colliding parts (the gate's
+Barrier and PriceSign stay themselves); checked with downward rays over every placed copy at its scale against today's
+parts. Moss (coordinator's rule): low mounds of 2-3 stacked rounded layers lying on caps and ledges, running together,
+and Agent A's drapes hanging off the edges, where today's flat green slabs were, at about their size; no upright plates.
+Screenshots: `docs/screenshots/jungle_buildings/`. Sync: `Sync.run` twice per object, the second run 0; `Sync.check()`
+all up to date.
+
+| # | object | MapProps id | replaced | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 03 | ruined stone building (pilot) | `jungle_ruin_building` | 6 / 6 (test, kit, Jungle_3 Ruins 4) | 10 -> 8 (Stone, Trim, Moss + 5 Collision); about 20,400 triangles; 21.2 x 13.64 x 4.79 | stone faces of cut blocks in running bond with joints, cracks and greener blocks; 2 framed dark slots, a glyph plaque; footing with plinth slabs; 5 chipped capstones with a drip course, 2 merlons; moss mounds on the cap and a merlon, 4 of Agent A's drapes, 2 vine groups. Collision: 28,125 rays, 0 off |
+| 04 | stone wall, six slots | `six_slot_wall` | 10 / 10 (test, kit, Jungle_3 Ruins 4, Jungle_4 Props 4) | 15 -> 16 (Stone, Trim, Moss, 6 Hole, 2 Arrow, ArrowTip, Glyph + 3 Collision); about 14,000 triangles; 12.6 x 11.12 x 6.8 | today's 6 holes, 2 arrows + tip and the Neon lamp glyph kept exactly (names, sizes, places, turns, colours; checked on all 9 placed copies) in bevelled stone frames; the arrows get fletchings; the lamp sits in a stone bracket with a PointLight #78FFBE range 10; capstones, plinth, carved panel frame; moss mounds, 3 drapes, vines. Collision: 27,225 rays, 0 off |
+| 01 | stone face temple (the Jungle_4 gate) | `face_temple_gate` | 3 / 3 (test, kit `Gates.Gate_Jungle_4`, `Zones.Jungle.Jungle_4.Gate`) | 52 -> 45 (Stone, Carving, Gold, Moss, Glow, Socket x2, GlyphEye x2, Pupil x2, PriceSign, Barrier (+ MouthDark, Glyph, 2 Lip, 11 Tooth) + 18 Collision); about 36,000 triangles (the Moss union is at Roblox's 20,000 cap); 66.3 x 53.66 x 16.8 | face and cheeks of large cut blocks (joints, cracks), forehead cornice of 6 stones with a drip moulding, stone-block crown with today's gold gem in a gold rim; Agent A's temple brows and nose; bevelled socket rims round today's sockets, Neon glyph eyes and pupils (kept exactly); upper lip with rolls; jointed cheek plinths; spiral rings on today's ears, chamfered gold earrings; tapered fangs; moss mounds on the forehead ledge, a CrownSide, the crown, the CrownTop, both brows and both cheek ledges, 8 large drapes (scale 2-3) over the forehead, crown and cheek / jaw corners; 10 vine strands at today's 4 vine places. THE GATE kept: `Barrier` 24 x 16 x 3 at (0, 8, 0), PrimaryPart, colliding, attribute `BarrierDecorIsChildOfBarrier`, its only children MouthDark, Neon Glyph, 2 Lips (rolls), 11 Teeth (chamfered); the game copy keeps `SubZoneId = "Jungle_4"`, PriceGuiFront / PriceGuiBack -> PriceLabel moved onto today's exact PriceSign (shows "312.5K Gold"). Collision: 9,248 rays, 0 off. Play check (gate closed / open) left to the main agent |
+| 02 | stone head | `stone_head` | 17 / 17 (test, kit, Jungle_3 Ruins 5, Jungle_4 Props 4, Jungle_4 BossGate 2, BA 4 at 1.6) | 21 -> 15 (Stone, Carving, Gold, Moss, Socket x2, GlyphEye x2, Mouth, Tooth x4 + 6 Collision); about 20,400 triangles; 12.8 x 15.6 x 6.95 | cut stone blocks on all 4 sides; Agent A's brow and nose with lips; bevelled socket rims; today's sockets, Neon glyph eyes, mouth and 4 teeth kept exactly; ears with spiral rings, chamfered gold earrings; headdress with a carved row of diamonds, stepped crest, today's gold gem in a gold rim; moss mounds on the headdress and the brow, drapes over the headdress front and on the cheek (today's patch places), 2 vines. No part named `Interact` (BossGate.Interact still resolves to the boss gate's own part). Collision: 9,408 rays, 0 off |
+| 05 | stilt hut | `stilt_hut` | 6 / 6 (test, kit, Jungle_2 Props 3, BA 1) | 14 -> 20 (Walls, Wood, Deck, Roof, Glow, Door, DoorMask + 12 Collision); about 14,900 triangles; 16 x 20.66 x 19.06 | 8-sided log stilts with rope ties and 4 cross braces; plank deck on rim beams with a low railing (open at the door); plank walls with corner posts; today's 2 bands as lashed beams; today's door and red mask kept exactly (not colliding, touchable as today) in a wooden frame with a rolled hide; Agent A's thatch over today's 2 roof wedges (kept as the core), lashed ridge; ladder with 2 rails and 6 rungs; 2 gourds, a hanging lantern (Neon + PointLight #FFB84A range 8), vines. Collision: 6,724 rays, 0 off |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).
