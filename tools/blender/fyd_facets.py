@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -2440,6 +2440,386 @@ def preview_jungle(pieces):
                                    (g4, [(-35, 30)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# JUNGLE GATES AND ENTRANCES (guide section C3): root arch, rock cave, totem wings, animal skulls.
+# ------------------------------------------------------------------------------------------------
+ROOT_D, ROOT_M, ROOT_L, ROOT_DD = "#4D3223", "#634029", "#68442C", "#422B1E"
+BONE, TEAL, TRED, JLEAF_D = "#E8E2D0", "#3CAABE", "#C44632", "#289642"
+
+
+def helix_path(path, radii, turns, phase, lift=0.95, start=0.0, end=1.0, n=8):
+    """Points of a thin root twisting round a thick one: path / radii of the thick root (polyline), the thin one
+    runs from fraction start to end of it, `turns` times round, at lift x the thick radius from its axis."""
+    path = [Vector(p) for p in path]
+    seg_len = [(path[i + 1] - path[i]).length for i in range(len(path) - 1)]
+    total = sum(seg_len)
+    out = []
+    for k in range(n):
+        f = start + (end - start) * k / (n - 1)
+        d = f * total
+        i = 0
+        while i < len(seg_len) - 1 and d > seg_len[i]:
+            d -= seg_len[i]
+            i += 1
+        g = min(d / seg_len[i], 1.0)
+        c = path[i].lerp(path[i + 1], g)
+        r = radii[i] + (radii[i + 1] - radii[i]) * g
+        t = (path[i + 1] - path[i]).normalized()
+        u = t.cross(Vector((0, 0, 1)))
+        if u.length < 1e-6:
+            u = Vector((1, 0, 0))
+        u.normalize()
+        v = t.cross(u).normalized()
+        a = phase + 2 * math.pi * turns * (k / (n - 1))
+        out.append(c + (u * math.cos(a) + v * math.sin(a)) * r * lift)
+    return out
+
+
+def bark_col(base, rng):
+    def col(s, k):
+        return tone(base, (0.8 if k % 3 == 1 else STEPS[(s + k) % 2]) * (0.9 + 0.1 * min(s, 4) / 4))
+    return col
+
+
+def knot(pc, c, r, rng, color):
+    pts = [Vector(c) + Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-1, 1))).normalized() * r * rng.uniform(0.7, 1.0)
+           for _ in range(8)]
+    hull_into(pc, pts, lambda cc, n: tone(color, 0.75 if n.y < 0 else 0.88), 0.25)
+
+
+def root_arch_side(sgn, seed):
+    rng = random.Random(seed)
+    side = "L" if sgn < 0 else "R"
+    pc = Piece("root_arch", f"side_{side}", "the Root_Arch_A kit pivot (centre of the passage at ground level, front -Z)",
+               place={"relativeTo": "the Root_Arch_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": f"the 4 Root blocks, the RootSmall brace and the RootFoot wedge of the {'left (x < 0)' if sgn < 0 else 'right (x > 0)'} side; "
+                                  "keep CanCollide with 2-3 hidden boxes along the root"},
+               notes="twisted tapering root pillar: a main root (6-sided, radius 3.2 at the flared foot -> 2.1 where it "
+                     "enters the crown) climbing in a curve from the soil to the crown, 2 thinner roots twisting round it, "
+                     "2 small roots splaying into the soil, 2 knots; bark lines = darker face columns. #634029 / #4D3223. "
+                     "The passage is kept: inner face >= |x| 12.75 below y 11, everything under the crown above y 18.")
+    path = [(-19.5, -1.4, 0.4), (-17.0, 2.5, 0.0), (-16.1, 7.0, -0.3), (-15.9, 11.0, 0.2), (-14.6, 14.8, 0.0),
+            (-12.0, 18.0, -0.2), (-9.0, 20.6, 0.1), (-5.5, 22.2, 0.0)]
+    path = [Vector((sgn * -x, y, z)) for x, y, z in path]
+    radii = [3.2, 2.9, 2.7, 2.6, 2.5, 2.4, 2.3, 2.1]
+    tube_faces(pc, path, radii, 6, bark_col(ROOT_M if sgn < 0 else ROOT_D, rng), 0.5)
+    for ph, turns, st, en, r0, r1, colr in ((rng.uniform(0, 6.3), 1.3, 0.02, 0.85, 0.95, 0.35, ROOT_L),
+                                           (rng.uniform(0, 6.3), -1.0, 0.0, 0.62, 0.8, 0.3, ROOT_DD)):
+        hp = helix_path(path, radii, turns, ph, 0.98, st, en, 8)
+        rr = [r0 + (r1 - r0) * k / 7 for k in range(8)]
+        tube_faces(pc, hp, rr, 4, lambda s, k, colr=colr: tone(colr, STEPS[k % 3]), 0.25, cap_end=True)
+    for dz in (-1, 1):
+        foot = [Vector((sgn * 17.6, 1.4, 1.6 * dz)), Vector((sgn * 20.6, 0.2, 2.8 * dz)), Vector((sgn * 23.2, -0.9, 3.6 * dz))]
+        tube_faces(pc, foot, [1.2, 0.8, 0.35], 4, lambda s, k: tone(ROOT_DD, STEPS[k % 3]), 0.25)
+    knot(pc, (sgn * 17.7, 5.0, -2.2), 0.7, rng, ROOT_M)
+    knot(pc, (sgn * 16.6, 12.5, -2.0), 0.55, rng, ROOT_M)
+    return pc
+
+
+def leaf_cluster(pc, c, size, rng, n=9):
+    pts = []
+    for _ in range(n):
+        a = rng.uniform(0, 2 * math.pi)
+        e = rng.uniform(-0.5, 1.0)
+        pts.append(Vector(c) + Vector((math.cos(a) * size[0] * math.cos(e), math.sin(e) * size[1], math.sin(a) * size[2] * math.cos(e))))
+
+    def col(cc, nrm):
+        if nrm.y > 0.55:
+            return JMOSS_LL if rng.random() < 0.6 else JMOSS_L
+        if nrm.y < -0.3:
+            return JLEAF_D
+        return JMOSS if rng.random() < 0.5 else tone(JMOSS_L, 0.9)
+    hull_into(pc, pts, col, 0.3)
+
+
+def root_arch_crown():
+    rng = random.Random(2202)
+    pc = Piece("root_arch", "crown", "the Root_Arch_A kit pivot (centre of the passage at ground level, front -Z)",
+               place={"relativeTo": "the Root_Arch_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the crown Root (12.2 x 4.4 at (0, 21.5)) and the 3 flat Moss slabs; add moss__drape_A/C on its "
+                                  "front edge (anchor ~(x, 24.0, -2.0), scale 1.2) and 3-5 vine__strand under it (anchor y ~19.6, "
+                                  "z -1.5, scale 0.6-1.1)"},
+               notes="crown of the root arch: a thick root (radius 2.6, underside >= y 19.4 = today's passage height 19.3) "
+                     "sagging slightly, a thinner root wrapped 1.5 times round it, 4 low-poly leaf clusters on top "
+                     "(#78D246 / #60C448 tops, #289642 undersides).")
+    path = [Vector((-8.2, 22.8, 0.1)), Vector((-4.0, 22.4, -0.1)), Vector((0.0, 22.35, 0.0)), Vector((4.0, 22.4, 0.15)),
+            Vector((8.2, 22.8, 0.0))]
+    radii = [2.3, 2.5, 2.6, 2.5, 2.3]
+    rings = tube_faces(pc, path, radii, 6, bark_col(ROOT_DD, rng), 0.5, cap_end=True)
+    polygon_fill(pc, rings[0], tone(ROOT_DD, 0.86), "SmoothPlastic", 0.5, path[0] - path[1])
+    hp = helix_path(path, radii, 1.5, 0.6, 0.98, 0.05, 0.95, 9)
+    tube_faces(pc, hp, [0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4], 4, lambda s, k: tone(ROOT_L, STEPS[k % 3]), 0.25,
+               cap_end=True)
+    for c, s in (((-5.4, 24.8, 0.3), (2.6, 1.1, 2.1)), ((-1.0, 25.1, -0.2), (2.8, 1.2, 2.3)), ((3.6, 24.9, 0.4), (2.5, 1.1, 2.0)),
+                 ((6.9, 24.5, -0.1), (1.9, 1.0, 1.7))):
+        leaf_cluster(pc, c, s, rng)
+    return pc
+
+
+def layered_rock(pc, layers, rng, base, inner_x=None, inner_top=11.0, n=10, cracks=(), bottom=False, peak=True):
+    """Natural stacked rock: layers [(y0, y1, cx, cz, hx, hz)]: each a squashed jittered ring hull, a little
+    offset; 3 tone steps, darker low. inner_x: clamps the points so the opening edge stays (|x| >= inner_x below
+    inner_top). cracks: [(x, y, length, angle)] dark strips laid on the front (ray along +Z)."""
+    trees = []
+    H = max(l[1] for l in layers)
+    for li, (y0, y1, cx, cz, hx, hz) in enumerate(layers):
+        pts = []
+        top_k = 0.8 if li == len(layers) - 1 else 0.93
+        for yy, k in ((y0, 1.0), (y1, top_k)):
+            a0 = rng.uniform(0, 2 * math.pi / n)
+            for i in range(n):
+                a = a0 + 2 * math.pi * i / n + rng.uniform(-0.12, 0.12)
+                c, s = math.cos(a), math.sin(a)
+                r = (abs(c) ** 3 + abs(s) ** 3) ** (-1 / 3) * rng.uniform(0.86, 1.04) * k
+                x = cx + hx * r * c
+                z = cz + hz * r * s
+                y = yy + (rng.uniform(-0.25, 0.25) if 0 < yy < H else 0.0)
+                if inner_x is not None and y <= inner_top + 0.5:
+                    x = min(x, -inner_x) if inner_x > 0 and cx < 0 else (max(x, inner_x) if cx > 0 else x)
+                pts.append(Vector((x, y, z)))
+        if peak and li == len(layers) - 1:
+            pts.append(Vector((cx + rng.uniform(-0.2, 0.2) * hx, y1 + 0.5, cz)))
+        g = 0.82 + 0.18 * ((y0 + y1) / 2 / H)
+
+        def col(cc, nrm, g=g):
+            if nrm.y > 0.6:
+                return tone(base, min(1.05, g + 0.08))
+            return tone(base, g * rng.choice(STEPS))
+        skip = (lambda ring: all(p.y < 0.05 for p in ring)) if not bottom else None
+        trees.append(hull_into(pc, pts, col, 0.6, skip=skip))
+    for x, y, L, ang in cracks:
+        for tree in trees:
+            ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+            pts2 = [(-0.08, -L / 2), (0.08, -L / 2), (0.14 + 0.25, 0.0), (0.02 + 0.25, 0.0)]
+            pts2b = [(0.02 + 0.25, 0.0), (0.14 + 0.25, 0.0), (0.12, L / 2), (-0.02, L / 2)]
+            ok = surface_quad(pc, tree, (x, y, -30), (0, 0, 1), [(u * ca - v * sa, u * sa + v * ca) for u, v in pts2], JREC,
+                              "SmoothPlastic", 0.1, 0.03)
+            if ok:
+                surface_quad(pc, tree, (x, y, -30), (0, 0, 1), [(u * ca - v * sa, u * sa + v * ca) for u, v in pts2b], JREC,
+                             "SmoothPlastic", 0.1, 0.03)
+                break
+    return trees
+
+
+CAVE_ORIGIN = "the Jaguar_Den_Rocks kit pivot (centre of the cave opening at ground level, front -Z)"
+
+
+def cave_pieces():
+    rng = random.Random(2303)
+    out = []
+    for sgn, base, H, name in ((-1, JSTONE, 13.6, "rock_L"), (1, "#7D8376", 13.0, "rock_R")):
+        pc = Piece("cave", name, CAVE_ORIGIN,
+                   place={"relativeTo": "the Jaguar_Den_Rocks model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                          "replaces": f"the {'left' if sgn < 0 else 'right'} Rock MeshPart; keep its CanCollide (the union or a hidden box)"},
+                   notes="faceted layered boulder: 4 stacked natural layers (squashed jittered hulls, each offset a little, "
+                         "the top one rounded), darker at the bottom, 3 tone steps, 3 dark cracks on the front. Its inner "
+                         "face is clamped at |x| = 7.0 up to y 11.5 = today's opening (14 x 11) is kept.")
+        cx = sgn * 15.0
+        L = [(0.0, 3.6, cx, 3.0, 8.4, 7.8), (3.5, 7.4, cx + sgn * 0.3, 3.3, 8.0, 7.4), (7.3, 10.9, cx - sgn * 0.2, 2.8, 7.6, 7.0),
+             (10.8, H, cx + sgn * 0.6, 3.4, 6.6, 6.0)]
+        cr = [(cx + sgn * 2.0, 5.0, 3.0, 15), (cx - sgn * 3.5, 9.0, 2.4, -20), (cx + sgn * 4.5, 2.0, 2.0, 5)]
+        layered_rock(pc, L, rng, base, inner_x=7.0, inner_top=11.0, cracks=cr)
+        out.append(pc)
+    pc = Piece("cave", "top_slab", CAVE_ORIGIN,
+               place={"relativeTo": "the Jaguar_Den_Rocks model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the Roof and Moss MeshParts; keep the Roof's CanCollide; add moss__drape_C / A on the slab's front "
+                                  "edge (anchor ~(x, 15.9, -5.6), scale 1.6-2.2) and 2-3 vine__strand"},
+               notes="the big top slab: 2 stacked layers (lower 38 x 3.2 x 20, upper smaller and set back), underside "
+                     "y 12.6 (>= the opening's 11, today's roof underside ~13), a soft 2-layer moss cap (#589642 -> "
+                     "#60C448) on top and 9 grass tufts (3 blades each, #78D246 / #60C448).")
+    L = [(12.6, 15.9, 0.0, 4.0, 19.0, 10.0), (15.8, 18.2, -0.8, 5.2, 14.5, 7.6)]
+    layered_rock(pc, L, rng, JSTONE_D, n=12, bottom=True, peak=False, cracks=[(-9.0, 14.2, 2.2, 70), (6.0, 14.0, 2.0, 100)])
+    # soft moss cap on the upper layer's top (y ~18.2)
+    ytop = 18.2
+    for cxz, (rx, rz), h0, H, cols, n, k_in in (((-0.6, 5.2), (11.0, 5.4), 0.05, 0.28, (JMOSS, tone(JMOSS, 0.9)), 10, 0.72),
+                                               ((-1.6, 5.0), (6.5, 3.4), 0.31, 0.2, (JMOSS_L, tone(JMOSS_L, 0.92)), 8, 0.65)):
+        a0 = rng.uniform(0, 1)
+        ring = []
+        for i in range(n):
+            a = a0 + 2 * math.pi * i / n + rng.uniform(-0.12, 0.12)
+            r = rng.uniform(0.88, 1.05)
+            ring.append(Vector((cxz[0] + rx * r * math.cos(a), ytop + h0, cxz[1] + rz * r * math.sin(a))))
+        c = Vector((cxz[0], ytop + h0, cxz[1]))
+        inner = [c + (p - c) * k_in + Vector((0, H, 0)) for p in ring]
+        for i in range(n):
+            j = (i + 1) % n
+            pc.face([ring[i], ring[j], inner[j], inner[i]], cols[1], "SmoothPlastic", 0.15, Vector((0, 1, 0)))
+        polygon_fill(pc, inner, cols[0], "SmoothPlastic", 0.15, Vector((0, 1, 0)))
+    for i in range(9):
+        a = rng.uniform(0, 2 * math.pi)
+        r = rng.uniform(0.3, 0.95)
+        base = Vector((-0.6 + 9.5 * r * math.cos(a), ytop + 0.3, 5.2 + 4.6 * r * math.sin(a)))
+        for b in range(3):
+            ang = rng.uniform(0, 2 * math.pi)
+            d = Vector((math.cos(ang), 0, math.sin(ang)))
+            w = Vector((-d.z, 0, d.x)) * 0.18
+            tip = base + d * rng.uniform(0.3, 0.6) + Vector((0, rng.uniform(0.8, 1.3), 0))
+            pc.face([base - w, base + w, tip], JMOSS_LL if b % 2 else JMOSS_L, "SmoothPlastic", 0.06, Vector((d.z, 0.0, -d.x)))
+    out.append(pc)
+    return out
+
+
+def totem_wings():
+    out = []
+    for sgn in (-1, 1):
+        side = "L" if sgn < 0 else "R"
+        pc = Piece("totem", f"wing_{side}", "the EntryArch_Jungle kit pivot (centre of the passage at ground level, front -Z)",
+                   place={"relativeTo": "the EntryArch_Jungle model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                          "replaces": f"the {'left' if sgn < 0 else 'right'} Wing (5.4 x 2.6 x 0.7 at ({sgn * 20.1}, 12.6, 0), tilted 16 deg); "
+                                      "keep its CanCollide on a hidden box"},
+                   notes="carved feathered totem wing on the side of the teal head: a bevelled arm bar along the top, then 3 "
+                         "overlapping rows of feathers with pointed tips fanning from straight down (inner) to outward (tip) (primaries #3CAABE x0.86 "
+                         "with gold tips, secondaries #3CAABE, coverts lighter), each row a little in front of the one "
+                         "behind. Rises outward 16 deg like today; about 7.5 long (today 5.4), 4.5 tall, 0.7 thick.")
+        th = math.radians(16.0) * (1 if sgn < 0 else -1)
+        ca, sa = math.cos(th), math.sin(th)
+        # local frame: u = outward along the wing (0 at the totem's side face, 6.2 at the tip), v = up
+        root = Vector((sgn * 17.65, 13.4, 0.0))
+
+        def W(u, v, z):
+            x = sgn * u * ca
+            y = u * math.sin(math.radians(16.0))
+            return root + Vector((x, v + y, z))
+        # arm bar (bevelled): a 6-sided prism along u
+        prof = [(0.35, -0.1), (0.5, 0.0), (0.35, 0.1), (-0.35, 0.1), (-0.5, 0.0), (-0.35, -0.1)]
+        prof = [(v, z * 3.5) for v, z in prof]
+        secs = [[W(u, v * 1.0, z) for v, z in prof] for u in (0.0, 3.0, 5.6)]
+        for i in range(2):
+            a, b = secs[i], secs[i + 1]
+            for k in range(6):
+                j = (k + 1) % 6
+                q = [a[k], b[k], b[j], a[j]]
+                mid = (a[k] + a[j] + b[k] + b[j]) / 4
+                axis = sum(a + b, Vector()) / 12
+                pc.quad_or_tris(q, tone(TEAL, (1.0, 0.93, 0.86)[k % 3]), "SmoothPlastic", 0.3, mid - axis)
+        polygon_fill(pc, secs[-1], tone(TEAL, 0.9), "SmoothPlastic", 0.3, secs[-1][0] - secs[-2][0])
+
+        def feather(u0, length, width, z, col, tip_col=None, ang=-60.0):
+            # a flat pointed feather from the arm at u0, pointing down / outward at `ang` deg (0 = straight out)
+            d = Vector((math.cos(math.radians(ang)), math.sin(math.radians(ang))))
+            nn = Vector((-d.y, d.x))
+            p = lambda s, w: W(u0 + d.x * s + nn.x * w, -0.2 + d.y * s + nn.y * w, z)
+            a1, a2 = p(0.0, -width / 2), p(0.0, width / 2)
+            b1, b2 = p(length * 0.72, -width / 2), p(length * 0.72, width / 2)
+            tip = p(length, 0.0)
+            pc.face([a1, a2, b2, b1], col, "SmoothPlastic", 0.22, Vector((0, 0, -1)))
+            pc.face([b1, b2, tip], tip_col or col, "SmoothPlastic", 0.22, Vector((0, 0, -1)))
+        for i in range(5):
+            feather(1.0 + i * 0.95, 2.2 + 0.25 * i, 1.0, 0.2, tone(TEAL, 0.86), GOLD, -80.0 + 12.0 * i)
+        for i in range(5):
+            feather(0.7 + i * 0.95, 1.6 + 0.15 * i, 0.95, -0.05, TEAL, None, -84.0 + 11.0 * i)
+        for i in range(4):
+            feather(0.6 + i * 1.15, 1.0, 1.0, -0.3, mix(TEAL, "#FFFFFF", 0.3), None, -75.0 + 9.0 * i)
+        out.append(pc)
+    return out
+
+
+SKULL_PTS = [(1.2, 1.0, 0.9), (1.2, 1.0, -0.5), (0.6, 1.3, 0.2), (0.0, 1.32, -0.4), (1.3, 0.4, -1.0), (1.1, 0.0, 0.9),
+             (0.9, -0.4, -1.1), (0.55, -1.1, -1.2), (0.45, -1.4, -0.85), (0.6, -1.2, 0.2), (0.0, -1.45, -1.05)]
+
+
+def skull_into(pc, R, scale, off, horns=True, rng=None):
+    """Bleached animal (bull) skull, local frame: snout down -Y, face -Z, cranium 2.6 wide; R / scale / off map the
+    local frame to the piece's space."""
+    def xf(p):
+        return R @ (Vector(p) * scale) + Vector(off)
+    pts = []
+    for x, y, z in SKULL_PTS:
+        for s in ((1, -1) if x > 0 else (1,)):
+            pts.append(xf((s * x, y, z)))
+
+    def col(cc, n):
+        ln = R.inverted() @ n
+        if ln.z > 0.6:
+            return tone(BONE, 0.8)
+        if ln.y < -0.5:
+            return tone(BONE, 0.86)
+        return tone(BONE, 1.0 if ln.y > 0.3 else 0.95)
+    tree = hull_into(pc, pts, col, 0.25 * scale)
+    fwd = R @ Vector((0, 0, 1))
+    for sx in (-1, 1):
+        o = xf((sx * 0.62, 0.2, -4.0))
+        surface_quad(pc, tree, o, fwd, [(-0.32 * scale, -0.22 * scale), (0.3 * scale, -0.28 * scale), (0.34 * scale, 0.2 * scale),
+                                        (-0.28 * scale, 0.26 * scale)], JREC, "SmoothPlastic", 0.2 * scale, 0.03 * scale)
+        o = xf((sx * 0.2, -1.05, -4.0))
+        surface_quad(pc, tree, o, fwd, [(-0.1 * scale, -0.16 * scale), (0.1 * scale, -0.16 * scale), (0.0, 0.16 * scale)], JREC,
+                     "SmoothPlastic", 0.12 * scale, 0.03 * scale)
+    o = xf((-0.3, 0.95, -4.0))
+    surface_quad(pc, tree, o, fwd, [(-0.03 * scale, -0.4 * scale), (0.04 * scale, -0.4 * scale), (0.05 * scale, 0.3 * scale),
+                                    (-0.02 * scale, 0.3 * scale)], tone(BONE, 0.6), "SmoothPlastic", 0.08 * scale, 0.02 * scale)
+    if horns:
+        for sx in (-1, 1):
+            hp = [(1.15, 0.85, -0.1), (2.0, 1.1, -0.15), (2.8, 1.7, -0.25), (3.25, 2.6, -0.35), (3.1, 3.5, -0.45), (2.7, 4.0, -0.5)]
+            hp = [xf((sx * x, y, z)) for x, y, z in hp]
+            tube_faces(pc, hp, [0.45 * scale, 0.4 * scale, 0.32 * scale, 0.24 * scale, 0.16 * scale, 0.07 * scale], 6,
+                       lambda s, k: mix(BONE, THATCH, 0.12 * s) if s % 2 == 0 else tone(mix(BONE, THATCH, 0.12 * s), 0.88), 0.2 * scale)
+    return tree
+
+
+def skull_pieces():
+    from mathutils import Matrix
+    hz = Piece("skull", "horned", "the Gate_Jungle_2 kit pivot (centre of the passage at ground level, front -Z)",
+               place={"relativeTo": "the Gate_Jungle_2 model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "Skull, the 2 SkullEyes and the 2 Horns on top of the sign (NOT Barrier children)"},
+               notes="bleached horned bull skull mounted on the sign: cranium 2.6 wide, the long face pointing down, deep "
+                     "dark eye sockets, 2 nasal holes, a crack, 2 curved ribbed horns (6-sided, tapering 0.45 -> 0.07, "
+                     "#E8E2D0 yellowing to the tips). Sits on the SignBack top (y 24.3), snout tip above the price text.")
+    skull_into(hz, Matrix.Identity(3), 1.0, (0.0, 25.75, -1.25), True)
+    sm = Piece("skull", "small", "the piece's own anchor: (0, 0, 0) = the centre under the skull on the ground; the snout points -Z",
+               place={"relativeTo": "Jaguar_Den_Rocks (kit pivot) and any bone pile", "position": [4.5, 0, -4.5],
+                      "orientation": [0, 25, 0], "scale": 1.0, "replaces": "the Skull part (1.5 x 1.3 x 1.6) of the cave"},
+               notes="the same skull lying on the ground without horns, 1.5 wide x 1.3 tall x 1.6 long (face up, snout "
+                     "forward -Z): sockets and nasal holes on top.")
+    rot = Matrix.Rotation(math.radians(90.0), 3, "X")
+    skull_into(sm, rot, 1.5 / 2.6, (0.0, 0.0, 0.0), False)
+    lo = min(p.y for f in sm.faces for p in f["v"])
+    for f in sm.faces:
+        f["v"] = [Vector((p.x, p.y - lo, p.z)) for p in f["v"]]
+    return [hz, sm]
+
+
+def jungle_gates():
+    return [root_arch_side(-1, 2101), root_arch_side(1, 2102), root_arch_crown()] + cave_pieces() + totem_wings() + skull_pieces()
+
+
+def preview_jungle_gates(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    extra = {f"{p.obj}__{p.name}": p for p in moss_pieces() + vine_strand()}
+    g1 = [piece_object(by["root_arch__side_L"], col), piece_object(by["root_arch__side_R"], col),
+          piece_object(by["root_arch__crown"], col)]
+    for x, nm, s in ((-4.0, "drape_C", 1.2), (2.5, "drape_A", 1.3)):
+        g1.append(piece_object(extra["moss__" + nm], col, Vector((x, 23.9, -2.0)), None, s))
+    for x, s in ((-6.5, 1.0), (-2.0, 0.7), (1.5, 1.1), (5.5, 0.8)):
+        g1.append(piece_object(extra["vine__strand"], col, Vector((x, 19.8, -1.2)), None, s))
+    cx = 60.0
+    cctx = [((cx, 8.5, 13), (15, 18, 14), JSTONE_D, (0, 0, 0)), ((cx, 5.5, 5.5), (14, 11, 6), JREC, (0, 0, 0)),
+            ((cx, 0.3, 2.2), (14, 0.6, 1.2), JSTONE_D, (0, 0, 0)), ((cx - 3.0, 0.3, -6.0), (3.0, 0.5, 0.5), BONE, (0, 30, 0)),
+            ((cx + 2.5, 0.3, -7.5), (2.4, 0.5, 0.5), BONE, (0, -50, 0))]
+    g2 = context_boxes(cctx, col) + [piece_object(by[f"cave__{n}"], col, Vector((cx, 0, 0))) for n in ("rock_L", "rock_R", "top_slab")]
+    g2.append(piece_object(by["skull__small"], col, Vector((cx + 4.5, 0, -4.5)), euler_matrix([0, 25, 0])))
+    for x, nm, s in ((-8.0, "drape_C", 1.8), (5.0, "drape_A", 2.0)):
+        g2.append(piece_object(extra["moss__" + nm], col, Vector((cx + x, 15.9, -5.6)), None, s))
+    tx = 120.0
+    tctx = []
+    for sx in (-1, 1):
+        x = tx + sx * 15.5
+        tctx += [((x, 0.75, 0), (6.2, 1.5, 6.2), "#4A3022", (0, 0, 0)), ((x, 3.7, 0), (4.3, 4.4, 4.3), TRED, (0, 0, 0)),
+                 ((x, 8.1, 0), (4.6, 4.4, 4.6), "#D6965C", (0, 0, 0)), ((x, 12.5, 0), (4.3, 4.4, 4.3), TEAL, (0, 0, 0)),
+                 ((x, 16.9, 0), (4.6, 4.4, 4.6), "#68442C", (0, 0, 0))]
+    tctx += [((tx, 20.6, 0), (37, 3, 3), "#703E26", (0, 0, 0))]
+    g3 = context_boxes(tctx, col) + [piece_object(by["totem__wing_L"], col, Vector((tx, 0, 0))),
+                                     piece_object(by["totem__wing_R"], col, Vector((tx, 0, 0)))]
+    sx0 = 170.0
+    sctx = [((sx0, 21.7, -1.2), (13.4, 5.2, 0.6), "#703E26", (0, 0, 0)), ((sx0, 21.7, -1.75), (12, 4, 0.5), "#A86238", (0, 0, 0)),
+            ((sx0, 17.5, 0.2), (32, 3, 3.4), "#703E26", (0, 0, 0))]
+    g4 = context_boxes(sctx, col) + [piece_object(by["skull__horned"], col, Vector((sx0, 0, 0)))]
+    out = os.path.join(P.PREVIEW_DIR, "jungle_gates_facets.png")
+    return render_sheet("jgates", [(g1, [(-25, 8)]), (g2, [(-28, 14)]), (g3, [(-20, 6)]), (g3[-1:], [(-10, 4)]), (g4[-1:], [(-25, 10)])],
+                        None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -2447,7 +2827,8 @@ def main():
                           ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon),
                           ("red_rock", red_rock, preview_red_rock_all), ("monuments", monuments, preview_monuments),
                           ("props", desert_props, preview_props),
-                          ("jungle", jungle_buildings, preview_jungle)):
+                          ("jungle", jungle_buildings, preview_jungle),
+                          ("jungle_gates", jungle_gates, preview_jungle_gates)):
         if only and obj not in only:
             continue
         pieces = fn()

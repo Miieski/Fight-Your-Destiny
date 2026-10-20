@@ -2617,3 +2617,43 @@ tools and the lamp, same positions; keep scripts / tags / prompts), 05 stilt hut
   references). FINAL: every template up to date (check), disk == Studio (190 scripts, 0 written); backup
   after_jungle_buildings (two identical sets, 095810 and 100019). Per object: 01 temple 3 / 3, 02 head 17 / 17, 03
   ruin 6 / 6, 04 six-slot wall 10 / 10, 05 stilt hut 6 / 6 - all OK.
+
+# Jungle gates and entrances (PROMPT 02) - 2026-10-20 (started only after prompt 01 was finished and pushed, 9e04a4e, as the owner asked)
+
+Objects: 01 palisade gate with guards (DO NOT change the guard NPCs, keep their positions; keep door scripts, prompts,
+collisions), 02 stone vine barricade gate (keep it blocking and openable exactly as now), 03 totem arch (keep passage
+width + collisions), 04 root arch (keep passage size), 05 rock cave entrance (keep the opening, collisions, any
+prompts or teleports).
+
+## Status (newest first)
+
+- 10:10 Started. Images in docs/Jungle_Images/02_Gates_and_Entrances/. Backup before_jungle_gates.
+- 10:40 Guide C3 + facets + PILOT 04 ROOT ARCH done. Agent A: section C3 (kits: 01 palisade = Gates.Gate_Jungle_2, 02
+  barricade = Gate_Jungle_3, 03 totem arch = EntryArch_Jungle (Jungle_1.EntryArch, ZoneId + NameSign, no Barrier), 04 =
+  Jungle.Root_Arch_A, 05 = Jungle.Jaguar_Den_Rocks (Toolbox MeshParts); THE 2 "GUARD NPCs" ARE NOT NPCs: no Humanoid in
+  the jungle, they are 2 totem stacks of 9 parts each built into Gate_Jungle_2 -> kept byte-identical; the existing
+  entry_arch / gate_palisade / gate_barricade rules are the PLAINS gates -> 5 new propIds) + facets root_arch__side_L/R /
+  crown, cave__rock_L/R / top_slab, totem__wing_L/R, skull__horned, skull__small (preview approved). Agent B: inventory
+  ("Jungle gates"), per-object backups, root_arch 6 / 6 built from parts (twisted main root + 2 wrapping roots, bark
+  lines, knots, stubs, splayed feet, crown moss + leaf clusters, vines, mushrooms and flowers; ~26k tris - the facet
+  roots alone would cost ~39k, so parts were kept, main agent agreed). Pilot shots sent to the owner.
+- 11:15 PROMPT 02 COMPLETE (Agent B; main agent looked at every after shot and Play-checked).
+  01 jungle_palisade_gate 3 / 3 (octagonal sharpened logs with rope + iron bands, plank double door with Z-braces and
+  strap hinges, carved teal face emblem, sign beam with Agent A's horned skull, iron-cage torches keeping the Ember
+  FirePoints; the 18 guard-totem parts identical on all 3 copies, checked part by part); 02 jungle_barricade_gate 3 /
+  3 (coursed stone piers with diamond marker frames around the Neon glyphs, lashed logs with vines, Neon gems and
+  flowers under Barrier, carved sign frame, braced side beams, layered moss); 03 jungle_totem_arch 3 / 3 (carved totem
+  faces, Agent A's feathered wings, headdresses, stepped plinths, jointed beam with pegs, vines, flowers and a framed
+  gold diamond; ZoneId, NameSign "Jungle", FirePoints kept; 49.75 wide vs 46.1 = +7.9 %); 05 rock_cave 4 / 4 (incl.
+  BossArenas at 0.74; Agent A's layered rocks and slab, stone lip, bones and a small skull; today's 4 colliding
+  MeshParts kept identical; the moss lip took 3 main-agent review passes: flat green boxes -> bead row -> 3 layered
+  mats with rock gaps and drapes, accepted). Barriers unchanged (24x16 at (0,8,0), PrimaryPart, attribute), SubZoneId
+  and PriceSign GUIs kept ("50K Gold", "125K Gold"). Collisions: invisible copies of today's colliding parts, 0 off.
+  MAIN AGENT PLAY CHECK (phone emulator, fresh lockAll + unlockZone Jungle): walked through the Jungle_1 totem arch
+  (sign "Jungle", both torch fires on their FirePoints); Jungle_2 / Jungle_3 gates block while closed, open with their
+  prompts (50K / 125K), every decor piece under Barrier hidden, the player walks through; the palisade torches burn on
+  their FirePoints; Jungle_1 / 2 / 3 at 144 fps, render CPU 2.5-2.6 ms. Output: no game errors (the same
+  rbxassetid://203785492 warning, not from any game instance). FINAL: every template up to date, disk == Studio (192
+  scripts, 0 written); backup after_jungle_gates. Per object: 01 palisade 3 / 3, 02 barricade 3 / 3, 03 totem arch 3 /
+  3, 04 root arch 6 / 6, 05 cave 4 / 4 - all OK.
+

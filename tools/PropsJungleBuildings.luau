@@ -938,5 +938,8 @@ end
 Jungle.install = B2.install
 Jungle.stats = B2.stats
 Jungle.SHAPES = M.SHAPES
+-- for the jungle gates module (DevTools.PropsJungleGates): the same helper tables and the jungle palette
+Jungle.M, Jungle.B2, Jungle.H, Jungle.D, Jungle.Data = M, B2, H, D, Data
+Jungle.PALETTE = { STONE = STONE, STONE_MID = STONE_MID, STONE_DARK = STONE_DARK, RECESS = RECESS, MOSS = MOSS, VINE = VINE }
 
 return Jungle

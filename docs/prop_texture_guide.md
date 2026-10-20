@@ -943,6 +943,160 @@ only functional content is 01's gate contract.
 - **Hanging details:** 2 gourds (balls 0.6-0.8 #C4A068 / #A86238 on a 0.1 cord) and a small lantern (#4A3022 frame, Neon warm #FFD678 core 0.4) under the eaves.
 - **Ladder:** today's angle, as 2 rails 0.3 plus rungs every 0.9.
 
+### C3. Jungle gates and entrances (owner task 2026-10-20, PROMPT_02)
+
+Images: `docs/Jungle_Images/02_Gates_and_Entrances/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_101002_before_jungle_gates_{ServerStorage,Workspace}.rbxm`.
+Same quality target as A / B / C: joints, capped edges, rope and iron bindings, soft gradients, no PBR. The colour
+roles and tone steps are those of C1; the moss and vine rules are those of C2 (reuse `moss__drape_*` and
+`vine__strand`).
+
+**Kits** (all kit pivots at the centre of the passage at ground level, front -Z):
+
+| # | Object | Kit | Parts | Test zone | Game copies |
+|---|---|---|---|---|---|
+| 01 | palisade gate with guards | `MapAssets.Gates.Gate_Jungle_2` | 70 | `_Staging.AssetPreview.Jungle.Gate_Jungle_2` (-3070, 0, 2310) | `Zones.Jungle.Jungle_2.Gate` (6000, 0, 145) |
+| 02 | stone vine barricade gate | `MapAssets.Gates.Gate_Jungle_3` | 54 | `..Jungle.Gate_Jungle_3` (-2985, 0, 2310) | `Zones.Jungle.Jungle_3.Gate` (6000, 0, 435) |
+| 03 | totem arch | `MapAssets.Gates.EntryArch_Jungle` | 54 | `..Jungle.EntryArch_Jungle` | `Zones.Jungle.Jungle_1.EntryArch` (one Base at (5984.5, 0.75, -90): pivot near (6000, 0, -90)) |
+| 04 | root arch | `MapAssets.Jungle.Root_Arch_A` | 19 | `..Jungle.Root_Arch_A` | Jungle_1 `Decor.Props` x2, Jungle_3 `Decor.Ruins` x2 |
+| 05 | rock cave entrance | `MapAssets.Jungle.Jaguar_Den_Rocks` | 9 | `..Jungle.Jaguar_Den_Rocks` | Jungle_3 `Decor.Ruins` x1, `BossArenas.Jungle.Decor.Props` x1 |
+
+**Not these gates: the SyncMapProps rules from props batch 2.** The existing rules `entry_arch`, `gate_palisade` and
+`gate_barricade` (and `gate_mine`) belong to the PLAINS gates: `EntryArch_Plains` / `Plains_1.EntryArch`,
+`Gate_Plains_2` / `Plains_2.Gate`, `Gate_Plains_3` / `Plains_3.Gate`. The jungle gates need NEW propIds, for example
+`jungle_palisade_gate`, `jungle_barricade_gate`, `jungle_totem_arch`, `root_arch`, `rock_cave`. Match them like
+`face_temple_gate`: `m.Name == "Gate"` with parent `Jungle_2` / `Jungle_3`, and `m.Name == "EntryArch"` with parent
+`Jungle_1`.
+
+**Gate contracts** (keep exactly, as for the Plains and desert gates):
+- **01 and 02:**
+  - a `Barrier` 24 x 16 at (0, 8, 0), CanCollide on, with attribute `BarrierDecorIsChildOfBarrier = true`;
+  - everything parented to the Barrier vanishes when the gate opens, so the door / barricade decor must stay CHILDREN of the Barrier, and nothing else may be;
+  - the game copies carry `SubZoneId = "Jungle_2"` / `"Jungle_3"` on the model and a `PriceSign` 12 x 4 x 0.5 with SurfaceGuis `PriceGuiFront` / `PriceGuiBack` -> `PriceLabel` (+ UIStroke).
+- **03:** not a gate (no Barrier). The game copy has `ZoneId = "Jungle"` on the model and a `NameSign` 14 x 4 x 0.5 at (0, 24.6, -1) with SurfaceGuis `NameGuiFront` / `NameGuiBack` -> `NameLabel`.
+- **Torches:** the `Ember` parts (Neon #FF8C28) of 01 and 03 each hold an `Attachment` named `FirePoint`; keep the names and the attachments.
+- **04 and 05:** nothing functional.
+  - 05's model has attributes `SourceAssetId` / `SourceCreator` (a Toolbox asset).
+  - Its 3 Rocks, Roof and Moss are MeshParts.
+- **No script, ProximityPrompt, tag, Humanoid or teleport** in any of the five (in the kits and in the game copies).
+
+**THE 2 GUARDS OF 01 ARE NOT NPCs.** They are 2 totem stacks built into the Gate_Jungle_2 model (not under the Barrier):
+- **Position:** each at x ±16.2, z -4.6.
+- **Parts:**
+  - 3 TotemHead cubes 3.6: red #C44632 at y 1.8 with white eyes, teal #3CAABE at y 5.4 with a yellow Beak wedge, tan #D6965C at y 9.0 with dark eyes;
+  - a red Wing 8.4 x 2 x 0.7 at y 9.2.
+- **9 parts each:** TotemHead x3, Eye x4, Beak, Wing.
+- **Rule:** the owner says keep them as they are: copy these 18 parts unchanged, same positions, same colours.
+
+**Today's shapes:**
+
+01 (Gate_Jungle_2):
+- **Logs:** 10 Logs 3 x 3 (heights 18-23, two colours per log #A15E35..#A96338 / #63412A..#714A30) at x ±14.6 / ±17.75 / ±20.9 / ±24.05 / ±27.2, each with a LogTip (a 2.1 square turned 45°).
+- **Bands:** 4 Bands 16.6 x 1.2 at y 6 and 14.
+- **Lintel:** 32 x 3 x 3.4 at y 17.5, with 2 RopeWraps #C4A068.
+- **Door = the Barrier** 24 x 16 x 1.4 #A86238, with children: 5 Seams, 2 CrossBands #703E26, the teal Mask diamond 5 x 5 at z -0.9, 2 gold MaskEyes, a red MaskMouth.
+- **Torches:** 2 TorchPoles 0.8 x 8 at (±13.4, 4, -7.4) + bowl + ember.
+- **Sign:** SignBack 13.4 x 5.2 + PriceSign at y 21.7.
+- **Skull:** 2.6 x 2.2 x 2.2 #E8E2D0 at (0, 25.4, -1), 2 dark SkullEyes, 2 Horns 0.7 x 3 tilted ±35°.
+
+02 (Gate_Jungle_3):
+- **Piers:** 2 Piers 12 x 20 x 8 #848A7C at x ±18.2 with PierBase 13 x 2 x 9 and PierCap 13 x 1.6 x 9 #5C645C. Dark Block plates, Neon #78FFBE Glyph diamonds 2 x 2 at (±18.2, 12.5, -4.1).
+- **Top:** Lintel 26 x 5.6 x 7.6, Keystone, 2 UpperCourses, 4 flat Moss slabs.
+- **Roots:** 2 big Roots 3 x 25 (support beams) at x ±24.6; a RootTop 34 x 2.6 #4A3022.
+- **Barricade = the Barrier** 24 x 16 x 3 #4A3022, with children: 7 Roots 1.8-2.8 x 16 (tilted ±8..36°), 2 RootCross 22 x 2, 4 Vines, 8 Leaves 2.4 x 1.5, 3 Flowers (#FFAA28, #FF508C, #BE5AFF).
+- **Sign:** PriceSign at (0, 19, -4.5) + SignBack.
+
+03 (EntryArch_Jungle):
+- **Totems:** 2 totems at x ±15.5 on a Base 6.2 x 1.5 #4A3022. 4 TotemHeads 4.3-4.6 stacked: red (white eyes), tan with a yellow Beak, teal with 2 Wings 5.4 x 2.6 tilted ±16°, brown with gold eyes. A Bowl + Ember on top.
+- **Beam:** 37 x 3 x 3 #703E26 at y 20.6, 4 VineWraps, 4 Vine sticks, 2 Flowers, 2 LeafTufts. NameSign + SignBack at y 24.6, a gold Mask diamond 3 x 3 at (0, 28.3, -0.5).
+- **Passage:** 26.4 wide (the totems' inner faces at x ±13.2) x 19.1 tall (under the Beam).
+
+04 (Root_Arch_A):
+- **Sides:** each side 4 Root blocks climbing in steps (y -2.1..8.1 at x ±15.75, then at y 10.25, 16.25, 20.25), a crown Root 12.2 x 4.4 (underside y 19.3), 2 diagonal RootSmall braces, 2 RootFoot wedges at x ±19.5.
+- **Moss and vines:** 3 flat Moss slabs, 3 Vine sticks.
+- **Colours:** #422B1E..#68442C, #4A3022.
+- **Passage:** 25.5 wide at the ground (inner faces x ±12.75), about 17.6 at y 16, 19.3 tall in the middle.
+
+05 (Jaguar_Den_Rocks):
+- **Rocks:** left rock 17 x 15 x 16 #848A7C at (-15, 7, 3), right 17 x 13.5 x 16 #7D8376 at (15, 6.3, 3), back 15 x 18 x 14 #5C645C at (0, 8.5, 13).
+- **Top:** Roof slab 36 x 7 x 20 #5C645C at (0, 16.5, 4) (underside about y 13), Moss 24 x 2.4 x 13 #589642 on top.
+- **Opening:** the dark Shadow 14 x 11 x 6 #292D29 at (0, 5.5, 5.5), CanCollide off. The opening is 14 wide x 11 tall, its front at z 2.5.
+- **Bones:** 2 Bones 3 / 2.4 x 0.5 and a Skull 1.5 x 1.3 x 1.6 in front (z -4.5..-7.5).
+
+**Real colours** (keep): wood #A86238 / #703E26 / #4A3022 / #68442C, logs #A15E35..#A96338 and #63412A..#714A30, roots
+#422B1E..#734B31, rope #C4A068, stone #848A7C / #7D8376 / #5C645C, recess #292D29, bone #E8E2D0, totem red #C44632,
+totem teal #3CAABE, totem tan #D6965C, gold #FFC93C, glyph Neon #78FFBE, ember Neon #FF8C28, leaf #78D246 / #289642 /
+#60C448, vine #46AA3C, moss #589642, flowers #FFAA28 / #FF508C / #BE5AFF.
+
+**Part rules:**
+
+**01 palisade gate:**
+- **Logs:**
+  - keep today's 10 logs, sizes and two-tone colours;
+  - each log becomes an octagonal post (corner chamfers 0.5) with a sharpened point: 4 sloped facets meeting at the tip, 2.4 tall, replacing the turned LogTip;
+  - bark lines: 2 dark strips 0.1 per visible face;
+  - a few knots (0.5 discs, x0.86).
+- **Bindings:**
+  - rope lashings #C4A068: 3 turns of 0.25 rings at both band heights;
+  - iron bands #5C626E 0.3 wide with 2 rivets (0.25 cubes) per log on today's Bands, which keep their y.
+- **Door (all Barrier children):**
+  - **Planks:** 2 leaves of vertical planks 1.9-2.1 wide with 0.08 gaps and 3 tone steps (the Seams become the gaps / the centre split).
+  - **Frame:** a Z-brace per leaf (2 horizontal battens 0.6 + 1 diagonal) on the 2 CrossBands' heights.
+  - **Hinges and studs:** 3 iron strap hinges per leaf (0.5 x 3.5 with a round end); iron studs.
+  - **Emblem:** a carved teal face in a carved frame: today's Mask diamond 5 x 5 #3CAABE with a raised rim 0.3, brows, gold eyes (keep MaskEyes) and a red mouth (keep MaskMouth) with 3 teeth.
+- **Torches:** 2 torches on today's poles: an iron cage bowl (4 bars), Neon ember (keep Ember + FirePoint), a rope wrap on the pole.
+- **Sign:**
+  - a carved frame round the PriceSign (4 strips 0.5, mitred);
+  - the horned skull on top (facet piece `skull__horned`, replacing Skull, SkullEyes and Horns): long snout, deep dark sockets, nasal holes, curved ribbed horns;
+  - 2 crossed bones (cylinders 0.4 with ball ends 0.6) behind it, a rope hanging.
+- **Guards:** unchanged (see above).
+
+**02 stone vine barricade:**
+- **Piers:**
+  - cut stone courses 1.6-2.0 tall, blocks 3-4 long, joints and chamfers as C2;
+  - a carved diamond marker frame (0.3 proud, #5C645C) round each Neon glyph (keep it);
+  - base and cap with chamfered edges;
+  - moss drapes on the caps and the lintel instead of the slabs.
+- **Barricade (all Barrier children):**
+  - the 7 logs as octagonal logs with sawn, lighter end caps;
+  - rope lashings at every crossing (2-3 turns of 0.25);
+  - vine tangles: 2-3 `vine__strand` per side running over the logs, plus leaf clusters;
+  - small glowing gems: Neon 0.5 diamonds #78FFBE / #BE5AFF on 2-3 logs;
+  - flowers: 5 petals round a gold centre, the 3 colours.
+- **Sign:** a carved frame round the PriceSign.
+- **Support beams:** the 2 big side Roots become braced beams with rope ties.
+
+**03 totem arch:**
+- **Totems:**
+  - each TotemHead becomes a carved figure head on today's cube (keep size and colour): a brow ridge, eyes in sockets (keep the white / dark / gold eyes), a carved nose or beak, a mouth with teeth, cheek plates, ear blocks;
+  - the tan head keeps its Beak;
+  - between heads a 0.3 darker joint ring.
+- **Wings:** carved feathered wings (facet pieces `totem__wing_L/R`): 3 rows of feathers, each row shorter and lighter, with scalloped tips.
+- **Headdress and plinth:** a headdress on the top head (3 feather plumes, gold band) under the bowl; a stepped base plinth (2 steps, chamfered).
+- **Beam:**
+  - jointed: 3 timbers with 2 visible joints and pegs;
+  - rope / vine wraps (keep the 4 VineWraps' places);
+  - 2-3 hanging `vine__strand` per side, the 2 flowers, leaf tufts as clusters;
+  - the gold Mask diamond in a carved frame (gold emblem).
+- **Keep** the NameSign + GUIs and the passage 26.4 x 19.1.
+
+**04 root arch** (facet pieces `root_arch__side_L` / `side_R` / `crown`):
+- **Roots:**
+  - tapering twisted roots, grounded: each side has a main root (radius 3.0 -> 2.2) curving from a flared foot to the crown, with 2 thinner roots twisting round it;
+  - small roots splay into the soil;
+  - bark lines and knots on the main root.
+- **Crown:** a thick root with a thinner root wrapped round it, and leaf clusters on top.
+- **Moss and vines:** `moss__drape` patches on the top, 3-5 `vine__strand` hanging from the crown.
+- **Base:** mushrooms (stem 0.3, cap 0.9 #C44632 with #E8E2D0 dots) and flowers at the base.
+- **Keep** the passage 25.5 wide at the ground, 19.3 tall in the middle.
+
+**05 rock cave** (facet pieces `cave__rock_L` / `rock_R` / `top_slab`):
+- **Rocks:** faceted low-mid poly rocks made of stacked natural layers (each layer a little offset, 3 tone steps, darker at the bottom), with 2-3 dark cracks.
+- **Top slab:** layered, with a soft moss cap (2 layers) and grass tufts (3-blade clusters #78D246 / #60C448), moss drapes over its front edge.
+- **Opening:** the dark interior stays (keep the Shadow part) behind a stone lip: a low worn threshold stone 14 x 0.6 x 1.2 #5C645C at the front.
+- **Bones:** 2-3 bones (cylinder 0.35 + ball ends) and a small skull (facet piece `skull__small`) at today's places.
+- **Keep** the opening 14 x 11 at z 2.5 and the collisions (rocks collide, the Shadow does not).
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

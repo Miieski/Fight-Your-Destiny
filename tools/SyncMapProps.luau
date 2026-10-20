@@ -242,6 +242,23 @@ SyncMapProps.RULES = {
 	{ propId = "jungle_ruin_building", names = { "Ruin_Wall_A" } },
 	{ propId = "six_slot_wall", names = { "ArrowTrap_Wall" } },
 	{ propId = "stilt_hut", names = { "TribalHut_A" } },
+	-- jungle gates and entrances (owner JUNGLE PROMPT_02, 2026-10-20): 01 the palisade gate with its 2 totem guards = the
+	-- Jungle_2 gate, 02 the stone vine barricade = the Jungle_3 gate (test Gate_Jungle_<n>, kit MapAssets.Gates,
+	-- Zones.Jungle.Jungle_<n>.Gate: SubZoneId kept, the Barrier is the PrimaryPart, the PriceSign texts move onto the new
+	-- PriceSign), 03 the totem arch = Jungle_1.EntryArch (ZoneId and the NameSign texts kept), 04 the root arch
+	-- (Root_Arch_A), 05 the rock cave (Jaguar_Den_Rocks). The plains rules gate_palisade / gate_barricade / entry_arch
+	-- only catch the Plains copies (names Gate_Plains_* / EntryArch_Plains, zones Plains_*): not touched
+	{ propId = "jungle_palisade_gate", names = { "Gate_Jungle_2" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Jungle_2"
+	end },
+	{ propId = "jungle_barricade_gate", names = { "Gate_Jungle_3" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Jungle_3"
+	end },
+	{ propId = "jungle_totem_arch", names = { "EntryArch_Jungle" }, match = function(m)
+		return m.Name == "EntryArch" and m.Parent ~= nil and m.Parent.Name == "Jungle_1"
+	end },
+	{ propId = "root_arch", names = { "Root_Arch_A" } },
+	{ propId = "rock_cave", names = { "Jaguar_Den_Rocks" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
