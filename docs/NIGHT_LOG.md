@@ -2562,3 +2562,18 @@ and any pickup / interaction).
   diamonds on the stripes, the gold diamond with a linen outline and red centre, faint weave rows, linen fringes,
   the front-left corner folded back; ~1,900 tris; nothing collides (as today). 6 sync rules added; new
   tools/PropsDesertTreasures.luau; backups old_props_2026-10-20_pre_desert_props/.
+- 08:45 PROMPT 05 COMPLETE (Agent B; main agent looked at the jar + amphora, throne, lamp and stand shots and
+  Play-checked). 01 terracotta_jar 41 / 41 (belly band, cream line, rim chips, a lid with a knob; ~900 tris), 02
+  amphora 19 / 19 (turquoise band kept, chequer band, curved handles; ~1,100 tris), 04 golden_stand 24 / 24 (carved
+  stone stem, 8-petal lotus bowl, embers + FirePoint exactly in place - all 12 Fire_Brazier VFX sit on a FirePoint -,
+  a warm PointLight), 05 pharaoh_throne 3 / 3 (BossArenas only: lion armrests with today's Neon gems, paw feet,
+  cushion piping and tassels, framed lapis panel with star inlays, sun disc with a gold ring and 2 uraei; no Seat, as
+  today), 06 golden_lamp 3 / 3 (genie body, curved spout with SmokePoint at today's tip, handle, domed lid, today's
+  Neon gem in prongs). DECISION (Agent B): Agent A's lathe facets cost ~20k tris per jar / amphora (many copies), so
+  the jar, amphora and lotus bowl were built as stacked lathe segments on the same ring radii / bands (~1k tris); the
+  facets are used only for the single-copy throne and lamp. The amphora handles reach 0.45 out (not 0.6) to stay
+  within +10 %. MAIN AGENT PLAY CHECK (phone emulator): Desert_2 village with 39 jars / amphorae, rugs and stands at
+  144 fps / worst 8.4 ms / render CPU 2.6 ms; 12 / 12 streamed stands with FirePoint and light on; no errors. FINAL: 72
+  templates / 710 tagged copies up to date, run 2 = 0; disk == Studio (188 scripts, 0 written); backup
+  after_desert_props_treasures. Per object: 01 jar 41 / 41, 02 amphora 19 / 19, 03 rug 13 / 13, 04 stand 24 / 24, 05
+  throne 3 / 3, 06 lamp 3 / 3 - all OK.

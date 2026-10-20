@@ -149,6 +149,15 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-20: DESERT ZONE PROPS (owner prompts: buildings, gates, rocks / ruins / nature, monuments (PROMPT 04), props /
+treasures (PROMPT 05)).** Every object remade to the fountain / well quality in Studio (parts + one-colour unions; organic
+accents from Agent A's facet JSON) and synced through MapProps (72 templates, 710 tagged copies). Guide sections B-B14 in
+docs/prop_texture_guide.md (desert palette, gate / monument recipes, the RECORDS of the pylon gate's 47 glyph parts,
+the hieroglyph tablet's 12 symbols and the obelisk glyphs - all kept exactly). Builders: tools/PropsDesert*.luau. Collision
+rule: visible pieces never collide; invisible copies of the old colliding parts keep the collision identical. Desert_3
+hoodoos are not kit-based: rebuild with PropsDesertNature.rebuildHoodoos(). SyncMapProps rule field bakedScale(old) for
+copies whose parts were scaled by hand. Log: NIGHT_LOG desert sections; screenshots docs/screenshots/desert_*.
+
 **2026-10-19/20: PROPS BATCH 2 (owner: 16 test-zone objects to the FOUNTAIN / WELL quality, mirrored in the game).**
 All 16 done and synced (100 / 100 copies): portal frames x12, hub wall, stone arch, stone pillar (boss arena),
 entrance arch, palisade gate, barricade, mine door, rebirth altar, egg station, moon gazebo, fruit stall, training
