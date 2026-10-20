@@ -308,6 +308,22 @@ SyncMapProps.RULES = {
 	{ propId = "jungle_temple_pool", names = { "Temple_Pool" }, bakedScale = function(m)
 		return bakedFrom(m, "Rim", 24)
 	end },
+	-- jungle props and decor (owner JUNGLE PROMPT_05, 2026-10-20): 01 the standing torch (Tribal_Torch, 24 copies along
+	-- the paths and gates; its Ember FirePoint is where the zone's Decor.VFX Fire_Torch part burns, kept exact), 02 the
+	-- drum (Drum_A; Jungle_2 x2 and BossArenas x3 resized part by part to 0.8 / 0.9 / 1.2 with Model scale 1: bakedScale
+	-- from today's Foot, 4.6 wide), 03 the skull on a pole (SkullPike_A), 04 the war banner (WarBanner_A)
+	{ propId = "jungle_torch", names = { "Tribal_Torch" }, bakedScale = function(m)
+		return bakedFrom(m, "Foot", 1.7)
+	end },
+	{ propId = "jungle_drum", names = { "Drum_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Foot", 4.6)
+	end },
+	{ propId = "jungle_skull_pole", names = { "SkullPike_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Pole", 0.5)
+	end },
+	{ propId = "jungle_war_banner", names = { "WarBanner_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Crossbar", 5.6)
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

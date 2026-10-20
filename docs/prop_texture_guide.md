@@ -1335,6 +1335,164 @@ over #1E8C96 (basin), moss #589642 / #60C448, leaf #78D246.
 - **Lily pads and moss:** 4-6 lily pads (facet `pool__lily_pad`, 1-2 with a pink #FF508C flower) floating at y 0.82; `moss__drape_A/B` on 3-4 rim edges and at 2 posts.
 - **Keep** the footprint 24.6 and the collisions.
 
+### C6. Jungle props and decor (owner task 2026-10-20, PROMPT_05)
+
+Images: `docs/Jungle_Images/05_Props_and_Decor/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_133614_before_jungle_decor_{ServerStorage,Workspace}.rbxm`.
+The C1 colours, the C2 moss rules and the A recipe apply. These kits have MANY copies (the torch 24 with the kit), so
+every detail is cheap: parts first, facet pieces only for the flame, the iron cup, the skull, the banner cloth and the
+feather (preview `Previews/Props/jungle_decor_facets.png`).
+
+**Kits** (all in `MapAssets.Jungle`, pivot = bottom centre, front -Z, all SmoothPlastic except the Neon Ember):
+
+| # | Object | Kit | Parts | Placed copies | Notes |
+|---|---|---|---|---|---|
+| 01 | torch | `Tribal_Torch` | 6 + Attachment `FirePoint` | **23**: test 1, `Jungle_1.Decor.Props` 4, `Jungle_2.Decor.Props` 6, `Jungle_3.Decor.Props` 10, `BossArenas.Jungle.Decor.Props` 2 | all at scale 1; 2 Jungle_3 copies stand on a ledge (pivot y 7.5, at x 6092 / 6108, z 577) |
+| 02 | drum | `Drum_A` | 5 | **6**: test 1, `Jungle_2.Decor.Props` 2, `BossArenas.Jungle.Decor.Props` 3 | **5 copies part-resized with Model scale 1**: Jungle_2 x0.8 and x1.2, BossArenas x0.8, x0.9, x1.2 -> `bakedScale` = `bakedFrom(m, "Foot", 4.6)` |
+| 03 | skull on pole | `SkullPike_A` | 5 | **13**: test 1, `Jungle_1.Decor.Props` 3, `Jungle_2.Decor.Props` 4, `BossArenas.Jungle.Decor.Props` 5 | all at scale 1, various yaws |
+| 04 | banner | `WarBanner_A` | 8 | **8**: test 1, `Jungle_1.Decor.Props` 1, `Jungle_2.Decor.Props` 2, `BossArenas.Jungle.Decor.Props` 4 | all at scale 1 (yaws 90 / -70 / 60) |
+
+No copy in the hub. Suggested new propIds (none exists yet; the desert `bull_skull` / `skull_bones` rules are other
+kits): `jungle_torch` (names `Tribal_Torch`), `jungle_drum` (`Drum_A`, with the bakedScale above), `jungle_skull_pike`
+(`SkullPike_A`), `jungle_war_banner` (`WarBanner_A`).
+
+**What the kits do (checked):**
+- No script, ProximityPrompt, ClickDetector, Sound, tag or attribute in any kit or copy. `src/` names none of them
+  (no drum sound or interaction exists: nothing to keep but the shape and collisions).
+- **The torch's fire and light are NOT in the torch model.** Each game torch has a separate invisible part
+  `Decor.VFX.Fire_Torch` (1 x 1 x 1, Transparency 1, CanCollide off) placed exactly on its FirePoint, i.e. at the torch
+  pivot + (0, 8.2, 0): Attachment `Fire` with 3 ParticleEmitters (`Flame` rate 14, `Core` 5, `Ember` 3) and a PointLight
+  `Light` (Brightness 1, Range 16, Color #FFAA50, Shadows off). This is the "flicker" (moving particle flames); there is
+  no PropFX entry and no script flicker for these torches. Counts: Jungle_1 6 Fire_Torch (4 torches + 2 for the entry
+  arch), Jungle_2 8 (6 + 2 gate), Jungle_3 10 (10 torches), BossArenas.Jungle 10 (2 torches + 8 Torch_Wall).
+  **Keep:** the `Ember` part exactly (Neon #FF8C28 1.2 x 0.5 x 1.2 at y 7.9) with its child Attachment `FirePoint`
+  (offset (0, 0.3, 0) -> world y 8.2), and do not move, copy or add lights: the VFX parts stay where they are, so the
+  flame must stay at y 8.2. Do not add a PointLight to the torch (it would double today's light).
+- **The test copy has no Fire_Torch part** (the nearest one is 1,870 studs away): in the test zone the torch shows no
+  flame particles and no light today. To make the test copy look like the game, the main agent may clone
+  `MapAssets.VFX.Fire_Torch` to the test torch's FirePoint (-2870, 8.2, 2420); that is the only light change allowed.
+- **Collisions to keep** (invisible copies of today's parts, as in C3-C5):
+  - torch: Foot, Pole, Wrap, Bowl collide; Skull and Ember do not;
+  - drum: all 5 parts collide (Foot, 2 Bands, Body, Skin);
+  - skull pike: Pole and Skull collide; Jaw and Eyes do not;
+  - banner: Pole and Crossbar collide; Cloth, ClothTail, Stripe, Emblem, Skull, Feather do not.
+
+**Today's shapes** (kit space, y 0 = the ground):
+
+01 Tribal_Torch (1.9 x 8.15 x 1.9):
+- Foot 1.7 x 0.5 x 1.7 #848A7C (y 0..0.5); Pole 0.7 x 7 x 0.7 #703E26 (y 0.1..7.1);
+- Wrap 0.95 x 0.8 x 0.95 #C4A068 (y 4.8..5.6) = the tan wrap;
+- Skull 0.9 x 0.9 x 0.5 #E8E2D0 at (0, 6.3, -0.55) on the pole front = what the owner reads as the "white wrap";
+- Bowl 1.9 x 0.8 x 1.9 #68442C (y 6.9..7.7); Ember (Neon) 1.2 x 0.5 x 1.2 #FF8C28 (y 7.65..8.15), FirePoint at y 8.2.
+
+02 Drum_A (4.6 x 3.7 x 4.6): Foot 4.6 x 0.3 x 4.6 #703E26 (y 0..0.3); Body a cylinder 4.0 across x 3.2 tall #A86238
+(y 0.3..3.5); 2 red Bands cylinders 4.25 across x 0.45 #C44632 at y 0.75 and 3.1; Skin a disc 3.8 across x 0.2 #E8E2D0
+(y 3.5..3.7).
+
+03 SkullPike_A (7.9 tall): Pole 0.5 x 6.6 #703E26 centred at (0, 3.3), leaning 2.9 deg toward -X; Skull 1.8 x 1.6 x 1.8
+#E8E2D0 at (0.15, 7.1, 0) (y 6.3..7.9); Jaw 1.3 x 0.5 x 1.2 at (0.15, 6.1, -0.2); 2 Eyes 0.45 x 0.45 x 0.2 #4A3022 at
+(-0.27 / 0.57, 7.25, -0.92).
+
+04 WarBanner_A (5.6 x 17.7 x 1.5):
+- Pole 0.6 x 15 #703E26 (y 0..15); Crossbar 5.6 x 0.5 x 0.5 #703E26 at y 13.4 (13.15..13.65);
+- Cloth 4.6 x 8 x 0.2 #C44632 at (0, 9.2, -0.4) (y 5.2..13.2) + ClothTail (a 3.3 square turned 45 deg at y 5.2: the
+  point down to y 2.87); Stripe 4.6 x 1 x 0.26 #3CAABE at y 11.6; Emblem 2 x 2 x 0.3 #FFC93C turned 45 deg at (0, 8.8, -0.5);
+- Skull 1.5 x 1.4 x 1.5 #E8E2D0 at (0, 15.6, 0) (y 14.9..16.3) on the pole top; Feather 0.5 x 2.2 x 0.2 #FFAA28 at
+  (0.9, 16.6, 0.3) tilted 25 deg out to +X (its foot at (0.44, 15.6), its tip at (1.36, 17.6)).
+
+**Real colours** (keep): wood #703E26 (poles, crossbar, drum foot), #68442C (torch bowl -> carved head), #A86238 (drum
+body), #4A3022 (eyes, dark wood); rope / leather #C4A068; bone / skin / linen #E8E2D0; stone #848A7C / #5C645C; totem red
+#C44632 (drum bands, banner); teal #3CAABE (stripe); gold #FFC93C (emblem); feather orange #FFAA28; ember Neon #FF8C28.
+Added for the details: iron #5C626E (torch cup, drum tacks), flame Neon #FFB648 / #FFD678, hem red #9D3828 (x0.8),
+emblem patch #8D3224, coal bed #3A2E2A, recess #292D29.
+
+**Facet pieces** (`tools/blender/fyd_facets.py -- jungle_decor`, files `Blender_Exports/Props/facets/<piece>.json`):
+
+| Piece | Faces (rect) | Origin | Replaces / adds | Copies x faces |
+|---|---|---|---|---|
+| `torch__flame` | 44 (0) | Tribal_Torch pivot | added on today's Ember (kept with FirePoint); Neon, no collision, CastShadow off | 24 x 44 |
+| `torch__cup` | 39 (0) | Tribal_Torch pivot | the Bowl (keep an invisible Bowl for the collision) | 24 x 39 |
+| `skull_pike__skull` | 74 (11) | SkullPike_A pivot | Skull, Jaw, 2 Eyes (keep an invisible Skull for the collision) | 14 x 74 |
+| `banner__cloth` | 71 (35) | WarBanner_A pivot | Cloth, ClothTail, Stripe, Emblem | 9 x 71 |
+| `banner__finial_skull` | 74 (11) | WarBanner_A pivot | the Skull finial (the same skull at 0.83) | 9 x 74 |
+| `decor__feather` | 9 (0) | own anchor = the quill's foot, pointing +Y | the banner Feather (scale 1, orientation [0, 0, -25] at (0.44, 15.6, 0.3)); 2 small hanging feathers on each skull pike (scale 0.38-0.45) | 9 + 28 uses |
+
+At about 16 triangles a face that is ~1.3k triangles per torch, ~1.5k per skull pike (with its 2 feathers), ~2.5k per banner. If the
+budget is tight: the banner finial may be parts (a Ball cranium 1.3 + a face block + 2 dark sockets) and the torch
+cup may be 3 stacked cylinders (1.0 / 1.5 / 1.9 across); the flame, the pike skull and the cloth should stay facets.
+The drum has no facet: it is all parts (its lacing reads better as rope cylinders than as flat facet strips).
+
+**Part rules:**
+
+**01 torch** (keep 1.9 x 8.15 footprint and height; the flame tip goes to 8.85 = +8.6 %):
+- **Stone base:** today's Foot as a chamfered stone block 1.7 x 0.35 x 1.7 (#848A7C, 0.1 chamfer on the top edges),
+  a smaller stepped collar 1.15 x 0.2 x 1.15 #5C645C on it, 2 tiny cut lines (0.06 dark #292D29) on the front, and one
+  soft moss tuft (2 squashed Balls 0.45 x 0.15 x 0.35, #589642 / #60C448) on one corner, never a flat green slab.
+- **Pole:** today's 0.7 square as an octagon (2 blocks 0.7 x 7 crossed at 45 deg, or 0.15 corner chamfer), #703E26,
+  2 thin bark lines (0.06, x0.86) and 1 knot (0.25 disc) on the lower half.
+- **Leather / cloth wrap with rope:**
+  - today's Wrap (#C4A068, y 4.8..5.6) = a leather grip: 3 overlapping bands 0.3 tall x 0.82 square, each tilted 6
+    deg the other way, 3 tones of #C4A068;
+  - today's white Skull part (y 5.85..6.75) = a linen wrap #E8E2D0 all round the pole: 3 bands 0.32 tall, tilted 8
+    deg, 0.85 square, with a hanging loose end (0.25 x 0.6 x 0.05) on the front;
+  - rope rings #C4A068 x0.86 (cylinders 0.92 across x 0.1, 2 turns each) at y 4.75, 5.65, 5.8 and 6.8;
+  - a leather thong (#4A3022, 0.06) crossing the grip diagonally.
+- **Carved pole head** (today's Bowl colour #68442C): an octagonal collar 1.0 x 0.25 at y 6.85..7.1 with 4 notches
+  (0.1 cuts), from which 4 short wooden prongs (WedgeParts 0.2 x 0.45 x 0.25) rise against the cup at 45 / 135 / 225 /
+  315 deg, so the cup sits IN the carved head, not on a plain box.
+- **Iron cup:** `torch__cup` (8-sided iron bowl, 1.88 across the flats at the rim y 8.0, foot 0.84 at y 6.95, a darker
+  forged band, a flat lip, a dark coal bed at y 7.95, 4 iron claws). If today's Ember corners poke through the rim, turn
+  the Ember 45 deg about Y (the FirePoint stays at y 8.2).
+- **Flame:** `torch__flame` (Neon, layered: a tall central tongue yellow #FFD678 -> #FFB648 -> #FF8C28 tip at y 8.85,
+  3 shorter side tongues round it); CanCollide off, CastShadow off. Keep the Ember part and the FirePoint exactly.
+- **Light:** unchanged (it lives on `Decor.VFX.Fire_Torch`, see above). No new light, no PropFX flicker entry.
+
+**02 drum** (all parts; keep 4.6 x 3.7 x 4.6 and the collisions; bakedScale for 5 copies):
+- **Barrel body:** 14 staves around today's Body (each a block 0.86 wide x 3.2 x 0.3, set on radius 1.85, 0.04 gaps),
+  3 tones of #A86238 (x1 / x0.93 / x0.86, no two neighbours equal), a dark core cylinder 3.6 across #4A3022 inside so
+  the gaps read dark; a slight bulge: the staves' middle third 0.06 further out (or 2 stacked blocks per stave).
+- **Red painted bands with a pattern:** today's 2 Bands (#C44632 cylinders 4.25 x 0.45 at y 0.75 and 3.1) keep their
+  size and place; on each, a pattern of 12 small cream #E8E2D0 diamonds (0.18 blocks turned 45 deg, 0.04 proud) with a
+  thin gold #FFC93C line (0.06) along the band's upper and lower edge.
+- **Rope lacing:** 12 V's round the body between the 2 bands: 24 rope cylinders #C4A068 (0.12 thick, 2.1 long) running
+  diagonally from the top band to the bottom band and back (zigzag), touching the staves (0.06 off), with a small knot
+  (Ball 0.18) at each turn on the bands.
+- **Skin with a stitched edge:** today's Skin (#E8E2D0 disc 3.8 x 0.2) kept; a slightly darker rim ring (x0.9 cylinder
+  3.95 x 0.1 under it), 16 stitches #703E26 (0.22 x 0.05 x 0.08 blocks, radial) round the edge, a soft lighter centre
+  disc (2.0 x 0.02, x1.03) where it is beaten.
+- **Small wooden base:** today's Foot (4.6 x 0.3) as 4 planks 1.1 wide with 0.05 gaps along X (#703E26 tones) on 2
+  battens 0.25 x 0.25 (#4A3022) under them, 4 iron tacks (0.12, #5C626E) at the plank ends. Keep the top at y 0.3.
+- Today's colours stay dominant: wood body, red bands, white skin, dark base.
+
+**03 skull on pole** (keep 7.9 tall; collisions Pole + Skull):
+- **Skull:** `skull_pike__skull` (cranium, cheekbones, brow ridge, deep eye sockets #4A3022 with darker hollows, nose
+  hole, lower jaw, 5 + 4 teeth on dark gum lines), its cranium centre at today's Skull centre (0.15, 7.1, 0).
+- **Pole:** today's 0.5 pole and lean, octagonal (0.1 chamfer), #703E26, bark line; a **carved top**: 2 rings 0.62
+  across x 0.12 (#68442C) at y 5.4 and 5.7 with a notched band between, the pole tip entering the skull underside.
+- **Rope ties:** 2 rope rings #C4A068 (0.6 across x 0.1) at y 5.25 and 5.85, and a rope from the ring hanging 0.6 with
+  the beads.
+- **Feathers and beads:** 2 `decor__feather` at scale 0.38-0.45 hanging from the jaw / ring (see place in the JSON),
+  4-6 beads (Balls 0.16-0.2) on the hanging ropes: teal #3CAABE, red #C44632, gold #FFC93C, bone #E8E2D0.
+- **Base:** a stone stand 1.4 x 0.4 x 1.4 #5C645C with a 0.1 chamfer and 2-3 small stones (0.4-0.6, #848A7C) round the
+  pole foot, a tiny moss tuft on one; the pole foot stays at y 0.
+
+**04 banner** (keep 5.6 x 17.7 x 1.5; collisions Pole + Crossbar):
+- **Cloth:** `banner__cloth`: today's red cloth with a flat centre field (x -1.7 .. 1.7) and 2 pleats per side, a darker
+  sleeve hem at the top, today's cyan stripe (y 11.1 .. 12.1) following the pleats, a zigzag lower edge of 7 teeth
+  (centre point at y 2.9 = today's tail tip), gold #FFC93C trim along every tooth on both sides, the stitched emblem
+  (patch, today's gold diamond, cyan centre, 12 cream stitches). Front at z -0.5 like today (the pole front is -0.3).
+- **Crossbar with rope ties:** today's 5.6 x 0.5 bar as a chamfered beam (0.1) with carved end knobs (0.6 cubes with
+  chamfers, #68442C); a rope X-lashing #C4A068 where it crosses the pole (2 crossed strips 0.12 + 2 rings 0.7 across);
+  5 rope loops (rings 0.62 across x 0.1, tilted 10 deg) at x -2.0 / -1.0 / 0 / 1.0 / 2.0 holding the cloth's sleeve.
+- **Pole:** octagonal, #703E26, a carved collar under the finial (2 rings 0.75 x 0.12 #68442C at y 14.5 and 14.85) and
+  a rope wrap (3 turns) at y 2.0.
+- **Finial and feather:** `banner__finial_skull` (the pike skull at 0.83, top at 16.31 = today) and `decor__feather`
+  at scale 1 (today's Feather place and tilt).
+- **Base:** a stone collar at the foot (1.5 x 0.35 x 1.5 #5C645C, chamfered) with 2 small stones; optional, it keeps the
+  footprint inside 5.6 x 1.5.
+- **Sway (optional, owner liked it on the stalls):** a PropFX `Sway` on the cloth piece (`Hinge = "Top"`, 1.5 deg, 3.5 s,
+  Axis "X") would make the banner breathe; only if Agent B names the cloth part (e.g. `Cloth`). Not required.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

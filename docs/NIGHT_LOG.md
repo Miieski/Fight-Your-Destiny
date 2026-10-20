@@ -2729,3 +2729,43 @@ interaction / healing behaviour).
   to date; disk == Studio (196 scripts, 0 written); backup after_jungle_totems. Per object: 01 tall totem 6 / 6, 02
   figure 6 / 6, 03 shrine 3 / 3, 04 pool 5 / 5 - all OK.
 
+
+# Jungle props and decor (PROMPT 05) - 2026-10-20 (owner: "First, complete this prompt: PROMPT_05_Props_and_Decor.txt. Follow the prompt exactly as written. Once and ONLY once you've FINISHED, run the second prompt named PROMPT_06_Rocks_and_Plants.txt.")
+
+Objects: 01 torch (keep size and light settings, keep any flicker), 02 drum (keep size and any sound / interaction),
+03 skull on pole, 04 banner (keep size).
+
+## Status (newest first)
+
+- 13:36 Started (new Claude session; the agents of the earlier session are re-briefed). Images in
+  docs/Jungle_Images/05_Props_and_Decor/. Backup before_jungle_decor.
+- 14:10 Agent B: PROMPT 05 BUILT AND SYNCED (new Agent B session, method learned from the prompt 01-04 files).
+  4 new rules (`jungle_torch`, `jungle_drum`, `jungle_skull_pole`, `jungle_war_banner`), per-object backups
+  `old_props_2026-10-20_pre_jungle_decor` (4 files), builders `tools/PropsJungleDecor.luau` + Agent A's C6 facets in
+  `tools/PropsJungleDecorData.luau`. PILOT 02 drum 7 / 7 (5 part-resized copies via bakedScale from the Foot; 16-stave
+  barrel, painted hoops with diamonds, rope lacing, stitched skin flap, plank base; ~6.1k tris). 01 torch 24 / 24
+  (stone foot, octagonal pole, leather grip + linen wrap at today's "white wrap", rope rings, carved head, Agent A's
+  iron cup + Neon flame; today's Ember and FirePoint exact on all 24, all 22 Fire_Torch VFX still on a FirePoint, no
+  light added; a plain Fire_Torch clone added on the test torch's FirePoint; ~5.6k tris). 03 skull on a pole 14 / 14
+  (Agent A's skull, carved octagonal pole, rope rings, bead strings, 2 feathers, stone stand; ~4.4k). 04 banner 9 / 9
+  (Agent A's pleated zigzag cloth, carved crossbar with rope lashing and loops, carved collar, skull finial + feather,
+  stone collar; ~7.1k). Colliders exact on every copy (part by part) and ray grids on the 36 workspace copies: 0
+  differences; run 2 = 0; Sync.check all up to date; disk == Studio (198 scripts, 0 written). Shots in
+  docs/screenshots/jungle_decor/. Play check left to the main agent.
+- 14:15 PROMPT 05 COMPLETE (main agent looked at every after shot and Play-checked). Agent A: section C6 (kits
+  Tribal_Torch 23 placed, Drum_A 6 (5 part-resized -> bakedScale from the Foot), SkullPike_A 13, WarBanner_A 8; no
+  script / prompt / sound / tag anywhere, so the drum had no sound to keep; the torch's fire + light (3 emitters +
+  PointLight #FFAA50 r16) live in separate Decor.VFX.Fire_Torch parts on each torch's Ember.FirePoint, so the Ember and
+  FirePoint stay exact and no light is added; the "white wrap" is the 0.9 Skull block -> a linen wrap) + facets
+  torch__flame / cup, skull_pike__skull, banner__cloth / finial_skull, decor__feather (preview approved). Agent B
+  (fresh agents this session): per-object backups, 4 sync rules; 02 jungle_drum 7 / 7 (pilot, shots sent to the
+  owner), 01 jungle_torch 24 / 24, 03 jungle_skull_pole 14 / 14, 04 jungle_war_banner 9 / 9; a plain clone of the
+  Fire_Torch VFX placed on the test torch's FirePoint so the test zone shows the flame like the game.
+  MAIN AGENT PLAY CHECK (phone emulator, unlockAll): Jungle_2 144 fps / render CPU 2.7 ms, Jungle_3 144 / 2.6 ms;
+  every streamed torch has its enabled fire light on its FirePoint (Jungle_2 6 / 6, Jungle_3 10 / 10); the banner,
+  skull pike and torch block the player; the player reached the middle of a small (x0.8) drum - its colliders are
+  exact copies of today's parts (ray grids 0 differences), so this is today's behaviour; no game errors (the same
+  203785492 warning). FINAL: 95 templates / 915 tagged copies up to date; disk == Studio (198 scripts, 0 written);
+  backup after_jungle_decor. Per object: 01 torch 24 / 24, 02 drum 7 / 7, 03 skull on pole 14 / 14, 04 banner 9 / 9 -
+  all OK.
+

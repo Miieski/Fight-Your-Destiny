@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -3425,6 +3425,367 @@ def preview_jungle_totems(pieces):
                         None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# JUNGLE PROPS AND DECOR (guide section C6): torch flame + iron cup, human skull (skull pike + banner finial), banner
+# cloth with pleats, zigzag trimmed edge and a stitched emblem, a small feather. MANY copies (torch 24, skull 14,
+# banner 9): every piece is kept small; everything else of these 4 props is built from parts.
+# ------------------------------------------------------------------------------------------------
+IRON, EMBER_N, FLAME_N, WARM_N = "#5C626E", "#FF8C28", "#FFB648", "#FFD678"
+TORCH_ORIGIN = "the Tribal_Torch kit pivot (base centre, y 0 = the ground, front -Z)"
+
+
+def torch_flame():
+    pc = Piece("torch", "flame", TORCH_ORIGIN,
+               place={"relativeTo": "the Tribal_Torch model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "nothing: it is added on top of today's Ember (Neon #FF8C28 1.2 x 0.5 x 1.2 at y 7.9), which "
+                                  "stays exactly (it holds the Attachment FirePoint at y 8.2); CanCollide off, CastShadow off"},
+               notes="stylized layered flame (all Neon), rising from the coals at y 7.85 to y 8.85 (the torch grows from "
+                     "8.15 to 8.85 = +8.6 %): a tall 5-sided central tongue leaning a little forward, hot yellow #FFD678 "
+                     "at the base, #FFB648 in the middle, #FF8C28 at the tip, and 3 shorter 4-sided side tongues "
+                     "(#FFB648 base, #FF8C28 tip) leaning outward round it at 0 / 120 / 240 deg. The base rings sit "
+                     "under the coal bed (y 7.95), so no open bottom shows. The fire particles and the PointLight of "
+                     "today's Decor.VFX.Fire_Torch part keep burning at the FirePoint (y 8.2) inside it.")
+    prof = [(0.38, 7.85), (0.40, 8.15), (0.30, 8.45), (0.14, 8.68), (0.0, 8.85)]
+    cols = (WARM_N, FLAME_N, FLAME_N, EMBER_N)
+
+    def central():
+        n = 5
+        rings = []
+        for i, (r, y) in enumerate(prof):
+            a0 = math.radians(18.0)
+            lean = Vector((0.03 * i, 0, -0.02 * i))
+            rings.append([Vector((r * math.cos(a0 + 2 * math.pi * k / n), y, r * math.sin(a0 + 2 * math.pi * k / n))) + lean
+                          for k in range(n)])
+        for s in range(len(prof) - 1):
+            lo, hi = rings[s], rings[s + 1]
+            for k in range(n):
+                j = (k + 1) % n
+                mid = (lo[k] + lo[j]) / 2 - Vector((0, lo[k].y, 0)) - Vector((0.03 * s, 0, -0.02 * s))
+                c = cols[s] if not (s == 2 and k % 2) else EMBER_N
+                if s == len(prof) - 2:
+                    pc.face([lo[k], lo[j], hi[0]], c, "Neon", 0.12, mid + Vector((0, 0.3, 0)))
+                else:
+                    pc.quad_or_tris([lo[k], lo[j], hi[j], hi[k]], c, "Neon", 0.12, mid)
+    central()
+    for t_i in range(3):
+        a = math.radians(90.0 + 120.0 * t_i + 25.0)
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        c0 = d * 0.36
+        sp = [(0.2, 7.9, 0.0), (0.17, 8.2, 0.08), (0.0, 8.5 - 0.04 * t_i, 0.2)]
+        n = 4
+        rings = []
+        for i, (r, y, out) in enumerate(sp):
+            cc = c0 + d * out + Vector((0, y, 0))
+            rings.append([cc + Vector((r * math.cos(a + math.pi / 4 + 2 * math.pi * k / n), 0, r * math.sin(a + math.pi / 4 + 2 * math.pi * k / n)))
+                          for k in range(n)])
+        for s in range(2):
+            lo, hi = rings[s], rings[s + 1]
+            for k in range(n):
+                j = (k + 1) % n
+                ctr = c0 + d * sp[s][2] + Vector((0, sp[s][1], 0))
+                mid = (lo[k] + lo[j]) / 2 - ctr
+                if s == 1:
+                    pc.face([lo[k], lo[j], hi[0]], EMBER_N, "Neon", 0.1, mid + Vector((0, 0.2, 0)))
+                else:
+                    pc.quad_or_tris([lo[k], lo[j], hi[j], hi[k]], FLAME_N, "Neon", 0.1, mid)
+    return pc
+
+
+def torch_cup():
+    pc = Piece("torch", "cup", TORCH_ORIGIN,
+               place={"relativeTo": "the Tribal_Torch model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the Bowl (#68442C 1.9 x 0.8 x 1.9 at y 7.3, CanCollide on): keep an invisible copy of the "
+                                  "Bowl for the collision, or let the cup collide"},
+               notes="iron fire cup #5C626E on the carved pole head: an 8-sided bowl 1.88 wide across the flats at the rim "
+                     "(today's Bowl 1.9), 0.84 at the foot (y 6.95), the rim at y 8.0 with a flat 0.14 lip ring, a dark coal bed "
+                     "(#3A2E2A) inside at y 7.95 under today's Neon Ember, a darker forged band (x0.82) round the "
+                     "belly, alternating facet tones, and 4 small iron claws rising 0.25 from the rim at 45 / 135 / "
+                     "225 / 315 deg (they hold the coals). Turn today's Ember 45 deg about Y if its corners poke "
+                     "through the rim (the FirePoint stays at y 8.2).")
+    prof = [(0.42, 6.95), (0.66, 7.12), (0.86, 7.45), (1.02, 8.0), (0.88, 8.0)]
+
+    def col(s, k):
+        if s == 1:
+            return tone(IRON, 0.82)
+        if s == 3:
+            return tone(IRON, 1.12)
+        return tone(IRON, (1.0, 0.92)[k % 2])
+    rings = lathe_faces(pc, prof, 8, col, 0.12, start_angle=math.pi / 8)
+    polygon_fill(pc, [p + Vector((0, -0.05, 0)) for p in rings[-1]], "#3A2E2A", "SmoothPlastic", 0.1, Vector((0, 1, 0)))
+    for i in range(4):
+        a = math.pi / 4 + i * math.pi / 2
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        side = Vector((-d.z, 0, d.x))
+        b = d * 0.96 + Vector((0, 7.96, 0))
+        pc.face([b - side * 0.12, b + side * 0.12, d * 1.06 + Vector((0, 8.26, 0))], tone(IRON, 0.9), "SmoothPlastic", 0.06, d)
+    return pc
+
+
+SKULL_CRANIUM = [(0.0, 0.86, 0.05), (0.42, 0.78, -0.3), (0.42, 0.78, 0.38), (0.9, 0.36, -0.38), (0.9, 0.36, 0.32),
+                 (0.5, 0.35, 0.88), (0.0, 0.12, 0.95), (0.42, 0.5, -0.84), (0.72, 0.16, -0.82), (0.8, -0.32, -0.5),
+                 (0.5, -0.45, 0.55), (0.48, -0.62, -0.62), (0.36, -0.82, -0.7), (0.0, -0.84, -0.78), (0.0, -0.55, -0.9)]
+SKULL_JAW = [(0.36, -0.86, -0.68), (0.0, -0.88, -0.75), (0.34, -1.2, -0.6), (0.0, -1.26, -0.7), (0.62, -0.88, -0.2),
+             (0.6, -1.15, -0.15)]
+
+
+def human_skull_into(pc, scale, off):
+    """Stylized human skull, local frame: (0, 0, 0) = the cranium centre, face -Z, 1.8 wide, 2.1 tall (top +0.85,
+    chin -1.26), 1.85 deep; scale / off map it into the piece's space."""
+    off = Vector(off)
+
+    def xf(p):
+        return Vector(p) * scale + off
+
+    def mirror(src):
+        out = []
+        for x, y, z in src:
+            for s in ((1, -1) if x > 0 else (1,)):
+                out.append(xf((s * x, y, z)))
+        return out
+
+    def col(cc, n):
+        if n.y > 0.55:
+            return BONE
+        if n.y < -0.5:
+            return tone(BONE, 0.8)
+        if n.z > 0.5:
+            return tone(BONE, 0.9)
+        return tone(BONE, 0.95 if abs(n.x) > 0.6 else 0.98)
+    tree = hull_into(pc, mirror(SKULL_CRANIUM), col, 0.2 * scale)
+    jaw = hull_into(pc, mirror(SKULL_JAW), col, 0.15 * scale,
+                    skip=lambda ring: all(p.y >= off.y - 0.9 * scale for p in ring))
+    fwd = Vector((0, 0, 1))
+    s = scale
+    for sx in (-1, 1):
+        # eye sockets: a dark brown socket (today's Eye colour) and a darker hollow inside, the brow side higher
+        o = xf((sx * 0.38, 0.02, -3.0))
+        q = [(-0.23, -0.19), (0.21, -0.2), (0.24, 0.15), (-0.2, 0.2)]
+        q = [(a * -sx * s, b * s) for a, b in q]
+        if sx > 0:
+            q.reverse()
+        surface_quad(pc, tree, o, fwd, q, TWOOD, "SmoothPlastic", 0.08 * s, 0.03 * s)
+        q2 = [(-0.12, -0.12), (0.12, -0.11), (0.13, 0.08), (-0.11, 0.1)]
+        q2 = [(a * -sx * s, b * s) for a, b in q2]
+        if sx > 0:
+            q2.reverse()
+        surface_quad(pc, tree, o, fwd, q2, JREC, "SmoothPlastic", 0.06 * s, 0.06 * s)
+        # nose hole: 2 halves of an upside-down heart
+        o = xf((sx * 0.07, -0.3, -3.0))
+        tri = [(-0.08, -0.15), (0.07, -0.13), (0.0, 0.15)]
+        tri = [(a * -sx * s, b * s) for a, b in tri]
+        surface_quad(pc, tree, o, fwd, tri, TWOOD, "SmoothPlastic", 0.06 * s, 0.03 * s)
+    # upper teeth: a dark gum line and 5 teeth on the maxilla front
+    surface_quad(pc, tree, xf((0.0, -0.74, -3.0)), fwd, [(-0.3 * s, -0.08 * s), (0.3 * s, -0.08 * s), (0.3 * s, 0.08 * s),
+                                                          (-0.3 * s, 0.08 * s)], TWOOD, "SmoothPlastic", 0.05 * s, 0.03 * s)
+    for i in range(5):
+        x = (-0.22 + 0.11 * i)
+        surface_quad(pc, tree, xf((x, -0.75, -3.0)), fwd, [(-0.04 * s, -0.065 * s), (0.04 * s, -0.065 * s), (0.04 * s, 0.065 * s),
+                                                            (-0.04 * s, 0.065 * s)], tone(BONE, 1.03), "SmoothPlastic", 0.05 * s, 0.06 * s)
+    # lower teeth on the jaw
+    surface_quad(pc, jaw, xf((0.0, -0.95, -3.0)), fwd, [(-0.26 * s, -0.06 * s), (0.26 * s, -0.06 * s), (0.26 * s, 0.07 * s),
+                                                         (-0.26 * s, 0.07 * s)], TWOOD, "SmoothPlastic", 0.05 * s, 0.03 * s)
+    for i in range(4):
+        x = (-0.165 + 0.11 * i)
+        surface_quad(pc, jaw, xf((x, -0.95, -3.0)), fwd, [(-0.04 * s, -0.05 * s), (0.04 * s, -0.05 * s), (0.04 * s, 0.06 * s),
+                                                           (-0.04 * s, 0.06 * s)], tone(BONE, 1.03), "SmoothPlastic", 0.05 * s, 0.06 * s)
+    return tree
+
+
+def skull_pike_skull():
+    pc = Piece("skull_pike", "skull", "the SkullPike_A kit pivot (base centre of the pole, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the SkullPike_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "Skull (1.8 x 1.6 x 1.8 at (0.15, 7.1, 0), CanCollide on), Jaw (1.3 x 0.5 x 1.2 at (0.15, "
+                                  "6.1, -0.2)) and the 2 Eyes (#4A3022); keep an invisible copy of today's Skull for the "
+                                  "collision (the jaw and the eyes did not collide)"},
+               notes="stylized human skull on the pike, the cranium centre at (0.15, 7.1, 0) = today's Skull centre, "
+                     "1.8 wide x 2.1 tall (y 5.85 = today's jaw bottom .. 7.95) x 1.85 deep: rounded cranium with "
+                     "cheekbones, a brow ridge over 2 deep eye sockets (dark brown #4A3022 = today's Eye colour, with a "
+                     "darker hollow #292D29), an upside-down heart nose hole, a separate lower jaw, 5 upper and 4 "
+                     "lower teeth on dark gum lines. Bone #E8E2D0, darker underneath (x0.8). The pole "
+                     "top enters the skull's underside at about (0.0, 6.35).")
+    human_skull_into(pc, 1.0, (0.15, 7.1, 0.0))
+    return pc
+
+
+BANNER_ORIGIN = "the WarBanner_A kit pivot (base centre of the pole, y 0 = the ground, front -Z)"
+
+
+def banner_finial_skull():
+    pc = Piece("banner", "finial_skull", BANNER_ORIGIN,
+               place={"relativeTo": "the WarBanner_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the Skull (#E8E2D0 1.5 x 1.4 x 1.5 at (0, 15.6, 0), no collision) on the pole top"},
+               notes="the skull_pike__skull design at 0.83 (1.5 wide like today's Skull) as the banner's carved bone "
+                     "finial: the cranium centre at (0, 15.6, 0), its top at 16.31 (today 16.3), the jaw resting on the "
+                     "pole top (y 14.55 .. 15.0); give the pole top a carved collar under it.")
+    human_skull_into(pc, 0.83, (0.0, 15.6, 0.0))
+    return pc
+
+
+def decor_feather():
+    pc = Piece("decor", "feather", "the piece's own anchor: (0, 0, 0) = the quill's base (the tie point); the feather "
+               "points up +Y, 2.2 long, flat in the XY plane (faces look -Z)",
+               place={"relativeTo": "WarBanner_A / SkullPike_A (any tie point)",
+                      "position": "banner: (0.44, 15.6, 0.3) = the foot of today's Feather; skull pike: hanging from the "
+                                  "jaw at (-0.45, 6.0, -0.55) and (0.75, 6.1, -0.4)",
+                      "orientation": "banner: [0, 0, -25] (leans out to +X like today's Feather); hanging: [0, yaw, 180 +- 10]",
+                      "scale": "banner 1.0 (= today's Feather 2.2 long); skull pike 0.38-0.45 (0.85-1.0 long)",
+                      "replaces": "the banner's Feather (#FFAA28 0.5 x 2.2 x 0.2, no collision)", "collide": "CanCollide off"},
+               notes="stylized feather: a cream quill (#E8E2D0 x0.9) and a vane of 4 segments per side with notches cut "
+                     "between them, orange #FFAA28 (2 tones), a teal #3CAABE band, a dark tip (x0.72).")
+    L = 2.2
+    pc.face([(-0.035, 0.0, 0.0), (0.035, 0.0, 0.0), (0.03, L * 0.95, 0.0), (-0.03, L * 0.95, 0.0)], tone(BONE, 0.9),
+            "SmoothPlastic", 0.07, Vector((0, 0, -1)))
+    segs = [0.16, 0.4, 0.62, 0.82, 1.0]
+    widths = [0.12, 0.27, 0.28, 0.2, 0.0]
+    cols = [tone(FEATHER_O, 0.93), FEATHER_O, TEAL, tone(FEATHER_O, 0.72)]
+    for side in (-1, 1):
+        for k in range(4):
+            s0, s1 = segs[k] * L, segs[k + 1] * L
+            notch = 0.08 if k in (1, 2) else 0.0
+            pts = [Vector((side * 0.035, s0, -0.005)), Vector((side * 0.035, s1, -0.005)),
+                   Vector((side * widths[k + 1], s1 - 0.1 * (k < 3), -0.005)),
+                   Vector((side * widths[k], s0 + notch, -0.005))]
+            if widths[k + 1] < 1e-6:
+                pc.face([pts[0], pts[1], pts[3]], cols[k], "SmoothPlastic", 0.06, Vector((0, 0, -1)))
+            else:
+                pc.face(pts, cols[k], "SmoothPlastic", 0.06, Vector((0, 0, -1)))
+    return pc
+
+
+def banner_cloth():
+    pc = Piece("banner", "cloth", BANNER_ORIGIN,
+               place={"relativeTo": "the WarBanner_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "Cloth (4.6 x 8 x 0.2 at (0, 9.2, -0.4)), ClothTail (3.3 square turned 45 deg at y 5.2), "
+                                  "Stripe (#3CAABE 4.6 x 1 at y 11.6) and Emblem (#FFC93C 2 x 2 turned 45 deg at (0, 8.8, "
+                                  "-0.5)); none collided"},
+               notes="red #C44632 war banner, 4.6 wide, hanging from y 13.2 (under the crossbar) to a zigzag lower edge: "
+                     "a flat centre field (x -1.7 .. 1.7, front at z -0.5 like today) and 2 pleats per side (ridges at x "
+                     "+-2.0 standing 0.16 forward, valleys at the edges). Rows: a darker sleeve hem (x0.8) at the top, "
+                     "today's cyan #3CAABE stripe (y 11.1 .. 12.1), red below. Lower edge: 7 teeth (centre point at y "
+                     "2.9 = today's ClothTail tip, then 3.9 / 4.45 / 4.9 outward), every tooth edge trimmed with a gold "
+                     "#FFC93C band (0.2 wide on the centre teeth, 0.09 on the narrow pleat teeth) on both sides. Stitched emblem on the centre field (front only, like "
+                     "today): a dark red #8D3224 patch diamond (half-diagonal 1.58), today's gold diamond (half-diagonal "
+                     "1.3, today 1.41), a small cyan centre diamond, 12 cream #E8E2D0 running stitches round the gold.")
+    T = 0.18
+    st = [(-2.3, -0.5), (-2.0, -0.66), (-1.7, -0.5), (1.7, -0.5), (2.0, -0.66), (2.3, -0.5)]
+    # bottom outline per panel (x, y) from its left corner to its right corner
+    bottoms = [[(-2.3, 5.6), (-2.15, 4.9), (-2.0, 5.3)],
+               [(-2.0, 5.3), (-1.85, 4.45), (-1.7, 4.9)],
+               [(-1.7, 4.9), (-1.1, 3.9), (-0.55, 4.6), (0.0, 2.9), (0.55, 4.6), (1.1, 3.9), (1.7, 4.9)],
+               [(1.7, 4.9), (1.85, 4.45), (2.0, 5.3)],
+               [(2.0, 5.3), (2.15, 4.9), (2.3, 5.6)]]
+    hem = tone(TRED, 0.8)
+
+    def mapper(i):
+        (xa, za), (xb, zb) = st[i], st[i + 1]
+        n = Vector((zb - za, 0, -(xb - xa))).normalized()
+
+        def P3(x, y, lift=0.0):
+            z = za + (x - xa) / (xb - xa) * (zb - za)
+            return Vector((x, y, z)) + n * lift
+        return P3, n
+    for i, bot in enumerate(bottoms):
+        P3, n = mapper(i)
+        xa, xb = st[i][0], st[i + 1][0]
+        ybot = max(bot[0][1], bot[-1][1])
+        rows = [(13.2, 12.95, hem), (12.95, 12.1, TRED), (12.1, 11.1, TEAL), (11.1, ybot, TRED)]
+        for y0, y1, c in rows:
+            pc.face([P3(xa, y1), P3(xb, y1), P3(xb, y0), P3(xa, y0)], c, "SmoothPlastic", T, n)
+        # the teeth below the rectangle: convex pieces
+        if len(bot) == 3:
+            poly = [(xa, ybot), bot[0], bot[1], bot[2], (xb, ybot)]
+            poly = [p for k, p in enumerate(poly) if k == 0 or (abs(p[0] - poly[k - 1][0]) > 1e-6 or abs(p[1] - poly[k - 1][1]) > 1e-6)]
+            pts = [P3(x, y) for x, y in poly]
+            if len(pts) == 3:
+                pc.face(pts, TRED, "SmoothPlastic", T, n)
+            elif len(pts) == 4:
+                pc.face(pts, TRED, "SmoothPlastic", T, n)
+            else:
+                polygon_fill(pc, pts, TRED, "SmoothPlastic", T, n)
+        else:
+            for piece in ([(-1.7, 4.9), (-1.1, 3.9), (-0.55, 4.6), (-0.55, 4.9)],
+                          [(-0.55, 4.9), (-0.55, 4.6), (0.0, 2.9), (0.55, 4.6), (0.55, 4.9)],
+                          [(0.55, 4.9), (0.55, 4.6), (1.1, 3.9), (1.7, 4.9)]):
+                pts = [P3(x, y) for x, y in piece]
+                if len(pts) <= 4:
+                    pc.face(pts, TRED, "SmoothPlastic", T, n)
+                else:
+                    polygon_fill(pc, pts, TRED, "SmoothPlastic", T, n)
+        # gold trim along the zigzag edge, front and back (mitred offset polyline, 0.2 wide)
+        w = 0.2 if len(bot) > 3 else 0.09
+        segn = []
+        for k in range(len(bot) - 1):
+            dx, dy = bot[k + 1][0] - bot[k][0], bot[k + 1][1] - bot[k][1]
+            L = math.hypot(dx, dy)
+            segn.append((-dy / L, dx / L))
+        off = []
+        for k in range(len(bot)):
+            if k == 0 or k == len(bot) - 1:
+                nn = segn[0] if k == 0 else segn[-1]
+                off.append((bot[k][0], bot[k][1] + w / nn[1]))
+            else:
+                a, b = segn[k - 1], segn[k]
+                m = (a[0] + b[0], a[1] + b[1])
+                ml = math.hypot(*m)
+                m = (m[0] / ml, m[1] / ml)
+                d = w / (m[0] * a[0] + m[1] * a[1])
+                off.append((bot[k][0] + m[0] * d, bot[k][1] + m[1] * d))
+        for k in range(len(bot) - 1):
+            q2 = [bot[k], bot[k + 1], off[k + 1], off[k]]
+            for lift, out, c in ((0.035, n, GOLD), (-(T + 0.035), -n, tone(GOLD, 0.9))):
+                pc.face([P3(x, y, lift) for x, y in q2], c, "SmoothPlastic", 0.035, out)
+    # stitched emblem on the centre field (plane z = -0.5, front only)
+    P3, n = mapper(2)
+    cy = 8.8
+
+    def diamond(h, lift, c, t):
+        pc.face([P3(0.0, cy - h, lift), P3(h, cy, lift), P3(0.0, cy + h, lift), P3(-h, cy, lift)], c, "SmoothPlastic", t, n)
+    diamond(1.58, 0.03, "#8D3224", 0.03)
+    diamond(1.3, 0.06, GOLD, 0.03)
+    diamond(0.38, 0.09, TEAL, 0.03)
+    corners = [(0.0, cy - 1.44), (1.44, cy), (0.0, cy + 1.44), (-1.44, cy)]
+    for k in range(4):
+        a, b = corners[k], corners[(k + 1) % 4]
+        d = Vector((b[0] - a[0], b[1] - a[1], 0)).normalized()
+        pp = Vector((-d.y, d.x, 0))
+        for f in (0.25, 0.5, 0.75):
+            c = Vector((a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 0))
+            q = [c - d * 0.11 - pp * 0.03, c + d * 0.11 - pp * 0.03, c + d * 0.11 + pp * 0.03, c - d * 0.11 + pp * 0.03]
+            pc.face([P3(v.x, v.y, 0.06) for v in q], BONE, "SmoothPlastic", 0.03, n)
+    return pc
+
+
+def jungle_decor():
+    return [torch_flame(), torch_cup(), skull_pike_skull(), banner_cloth(), banner_finial_skull(), decor_feather()]
+
+
+def preview_jungle_decor(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    # torch (today's parts as context, minus Bowl / Skull: the cup replaces the Bowl)
+    tc = [((0, 0.25, 0), (1.7, 0.5, 1.7), JSTONE, (0, 0, 0)), ((0, 3.6, 0), (0.7, 7.0, 0.7), JWOOD_D, (0, 0, 0)),
+          ((0, 5.2, 0), (0.95, 0.8, 0.95), THATCH, (0, 0, 0)), ((0, 6.3, 0), (0.9, 0.9, 0.9), BONE, (0, 0, 0)),
+          ((0, 6.85, 0), (1.0, 0.25, 1.0), "#68442C", (0, 0, 0)), ((0, 7.9, 0), (1.2, 0.5, 1.2), EMBER_N, (0, 45, 0))]
+    g1 = context_boxes(tc, col) + [piece_object(by["torch__cup"], col), piece_object(by["torch__flame"], col)]
+    # skull pike
+    sx = 6.0
+    sc = [((sx - 0.08, 3.3, 0), (0.5, 6.6, 0.5), JWOOD_D, (0, 0, 2.9)), ((sx, 0.2, 0), (1.4, 0.4, 1.4), JSTONE_D, (0, 0, 0))]
+    off = Vector((sx, 0, 0))
+    g2 = context_boxes(sc, col) + [piece_object(by["skull_pike__skull"], col, off)]
+    for pos, ori, s in (((-0.45, 6.0, -0.55), (0, 20, 185), 0.42), ((0.75, 6.1, -0.4), (0, -15, 172), 0.38)):
+        g2.append(piece_object(by["decor__feather"], col, off + Vector(pos), euler_matrix(ori), s))
+    # banner
+    bx = 13.0
+    bc = [((bx, 7.5, 0), (0.6, 15.0, 0.6), JWOOD_D, (0, 0, 0)), ((bx, 13.4, 0), (5.6, 0.5, 0.5), JWOOD_D, (0, 0, 0))]
+    boff = Vector((bx, 0, 0))
+    g3 = context_boxes(bc, col) + [piece_object(by["banner__cloth"], col, boff), piece_object(by["banner__finial_skull"], col, boff),
+                                   piece_object(by["decor__feather"], col, boff + Vector((0.44, 15.6, 0.3)), euler_matrix([0, 0, -25]))]
+    out = os.path.join(P.PREVIEW_DIR, "jungle_decor_facets.png")
+    return render_sheet("jdecor", [(g1, [(-25, 8)]), (g1[-2:], [(-30, 30)]), (g2, [(-25, 6)]), (g2[2:3], [(-20, 5)]),
+                                   (g3, [(-20, 6)]), (g3[2:], [(35, 8)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -3435,7 +3796,8 @@ def main():
                           ("jungle", jungle_buildings, preview_jungle),
                           ("jungle_gates", jungle_gates, preview_jungle_gates),
                           ("jungle_ruins", jungle_ruins, preview_jungle_ruins),
-                          ("jungle_totems", jungle_totems, preview_jungle_totems)):
+                          ("jungle_totems", jungle_totems, preview_jungle_totems),
+                          ("jungle_decor", jungle_decor, preview_jungle_decor)):
         if only and obj not in only:
             continue
         pieces = fn()

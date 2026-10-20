@@ -521,6 +521,48 @@ twice, the second run 0.
 Totals: 20 copies replaced (5 + 6 + 6 + 3); about 413,000 triangles in the place for these four (pool 92k, tall totem
 158k, figure 99k, shrine 64k), of which the copies placed in the jungle zones are about 220,000.
 
+### Jungle decor (owner, jungle PROMPT_05 "Props and decor", 2026-10-20): inventory before the remake (read from Studio)
+
+Prompt: `REMAKE OBJECT/Jungle_Images_By_Category/.../05_Props_and_Decor/PROMPT_05_Props_and_Decor.txt`.
+Images: `docs/Jungle_Images/05_Props_and_Decor/`. Recipe: docs/prop_texture_guide.md C6. Test =
+`workspace._Staging.AssetPreview.Jungle.<Kit>`; BA = `ServerStorage.BossArenas.Jungle.Decor.Props`. Every model named
+like a kit was searched in the whole place (workspace, ServerStorage, ReplicatedStorage, Lighting): the copies are only
+the ones below (none in the hub or the other zones). Checked in Studio and in src: no script, ProximityPrompt,
+ClickDetector, Sound, tag, attribute or Light in any kit or copy, and nothing in src or the Studio scripts names them (no
+drum sound or interaction exists). **The torch's fire and light are not in the torch:** 22 of the 24 torches have a
+`Decor.VFX.Fire_Torch` part (invisible 1 x 1 x 1, Attachment `Fire`, ParticleEmitters Flame / Core / Ember, PointLight
+`Light` #FFAA50 range 16 brightness 1) exactly on their `Ember.FirePoint` (pivot + (0, 8.2, 0)); the test and kit
+copies have none. Backups (kit + test + every copy): `BackUP_Files/old_props_2026-10-20_pre_jungle_decor/<propId>.rbxm`
+(4 files); the main agent's full backup `..._before_jungle_decor`.
+
+| # | object | kit (parts, size) | copies (total incl. kit + test) | collision | functional / notes |
+|---|---|---|---|---|---|
+| 01 | standing torch | `MapAssets.Jungle.Tribal_Torch`: 6 parts (Foot, Pole, Wrap, Bowl, Skull = the owner's "white wrap", Neon Ember + Attachment FirePoint); 1.9 x 8.15 x 1.9 | 24: test, kit, Jungle_1 Props 4, Jungle_2 Props 6, Jungle_3 Props 10 (2 on a ledge at y 7.5), BA 2 | Foot, Pole, Wrap, Bowl | Ember Neon #FF8C28 1.2 x 0.5 x 1.2 at y 7.9, FirePoint at y 8.2 = where the zone's Fire_Torch VFX (fire + light) burns |
+| 02 | drum | `MapAssets.Jungle.Drum_A`: 5 parts (Body, 2 Bands, Skin cylinders, Foot); 4.6 x 3.7 x 4.6 | 7: test, kit, Jungle_2 Props 2 (part-resized x1.2 / x0.8), BA 3 (x1.2 / x0.9 / x0.8) | all 5 | - (no sound, no prompt) |
+| 03 | skull on a pole | `MapAssets.Jungle.SkullPike_A`: 5 parts (Pole leaning 3 deg, Skull, Jaw, 2 Eyes); 1.8 x 7.9 x 1.9 | 14: test, kit, Jungle_1 Props 3, Jungle_2 Props 4, BA 5 | Pole, Skull | - |
+| 04 | war banner | `MapAssets.Jungle.WarBanner_A`: 8 parts (Pole, Crossbar, Cloth, ClothTail, Stripe, Emblem, Skull, Feather); 5.6 x 17.7 x 1.5 | 9: test, kit, Jungle_1 Props 1, Jungle_2 Props 2, BA 4 | Pole, Crossbar | - |
+
+### Jungle decor remake status (Agent B, 2026-10-20)
+
+Builders: `tools/PropsJungleDecor.luau` (`DevTools.PropsJungleDecor`; it uses the jungle totems / ruins / gates /
+buildings helpers); Agent A's facet pieces converted into `tools/PropsJungleDecorData.luau` (`DevTools.PropsJungleDecorData`:
+torch flame, torch cup, pike skull (the banner finial is the same skull at 0.83), banner cloth, feather). Rules:
+`jungle_torch`, `jungle_drum`, `jungle_skull_pole`, `jungle_war_banner` (bakedScale from Foot / Foot / Pole / Crossbar;
+only the drums need it). Collision: invisible `Collision` parts = the kit's colliding parts, checked part by part on
+every copy and with ray grids (4 directions, 13 x 13) on every workspace copy, old vs new: 0 differences. Screenshots
+(test + game, before + after): `docs/screenshots/jungle_decor/`. Sync: `Sync.run` twice per object, the second run 0.
+Status: generated yes, test zone yes, game yes, fountain / well quality: per the main agent's review.
+
+| # | object | MapProps id | replaced | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 02 | drum (pilot) | `jungle_drum` | 7 / 7 (5 baked at 0.8 / 0.9 / 1.2) | 5 -> 9 (Paint, Rope, Skin, Wood + 5 Collision); about 6,100 triangles; 4.72 x 3.74 x 4.62 | a 16-stave barrel (#A86238, 3 tones, V plank lines, grain lines) over a dark core; today's 2 red bands as painted bevelled hoops with 2 dark rules and a row of cream / gold diamonds; a rope lacing of 12 V's with a rope ring at each hoop; the skin (top at today's 3.7, a lighter centre, a painted red ring and gold diamond) pulled over the rim as a flap with 32 cross stitches and 16 iron tacks; the base as 4 chamfered planks with gaps on 2 battens, nail heads, 4 carved feet; a drumstick with a padded head and a small moss patch on the base. Colliders: 35 / 35 exact (Body, 2 Bands, Skin cylinders, Foot) |
+| 01 | standing torch | `jungle_torch` | 24 / 24 | 6 -> 10 (Cloth, Flame, Iron, Stone, Wood, Ember + 4 Collision); about 5,600 triangles; 2.02 x 8.85 x 2.04 | a chamfered stone foot with a darker stepped collar, 2 cut lines and a moss tuft; an 8-sided pole (2 bark tones, bark lines, a knot); today's Wrap as a leather grip of 3 tilted bands crossed by a dark thong; today's white "Skull" as a linen wrap of 3 tilted bands with a hanging loose end; double rope rings at 4.75 / 5.65 / 5.8 / 6.8; a carved pole head (#68442C collar with notches, 4 wooden prongs); Agent A's iron cup (replacing the Bowl) and layered Neon flame (tip 8.85, no shadow). Today's Ember kept exactly (24 / 24) with its FirePoint at y 8.2: all 22 Fire_Torch VFX parts still sit exactly on a FirePoint; no light added in the torch (0 lights in 24 copies). A plain clone of `MapAssets.VFX.Fire_Torch` was added on the test torch's FirePoint (`AssetPreview.Jungle.Fire_Torch`) so the test zone burns like the game. Colliders: 96 / 96 exact |
+| 03 | skull on a pole | `jungle_skull_pole` | 14 / 14 | 5 -> 6 (Bone, Rope, Stone, Wood + 2 Collision); about 4,400 triangles; 1.86 x 7.97 x 1.9 | Agent A's skull (cranium, cheekbones, brow ridge, deep sockets, nose hole, a lower jaw with 5 + 4 teeth) on today's Skull centre; today's leaning pole as an 8-sided pole with a bark line and a carved top (2 #68442C rings with a notched band); 2 rope rings, 2 strings of teal / red / gold / bone beads, 2 small feathers hanging under the jaw; a chamfered stone stand with 3 small stones and a moss tuft. Colliders: 28 / 28 exact |
+| 04 | war banner | `jungle_war_banner` | 9 / 9 | 8 -> 7 (Bone, Cloth, Rope, Stone, Wood + 2 Collision); about 7,100 triangles; 5.66 x 17.61 x 1.62 | Agent A's cloth (pleats, darker sleeve hem, today's cyan stripe, a zigzag lower edge of 7 gold-trimmed teeth, the stitched emblem with today's gold diamond) named `Cloth`; today's crossbar as a chamfered beam with carved end knobs, a rope X-lashing on the pole and 5 rope loops holding the sleeve; an 8-sided pole with a carved collar under the finial and a 3-turn rope wrap; Agent A's skull finial (top 16.31) and feather (today's place and tilt); a chamfered stone collar with 2 stones and a moss tuft. Colliders: 18 / 18 exact |
+
+Totals: 54 copies replaced (7 + 24 + 14 + 9); about 302,000 triangles in the place for these four (torch 134k, drum 43k,
+skull pole 62k, banner 64k), of which the copies placed in the jungle zones (32) are about 176,000.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).
