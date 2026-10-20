@@ -956,6 +956,7 @@ end
 Monuments.install = B2.install
 Monuments.stats = B2.stats
 Monuments.drum16, Monuments.axisFrame, Monuments.tri, Monuments.around = drum16, axisFrame, tri, around
-Monuments.facetPiece, Monuments.GLOW = facetPiece, GLOW
+Monuments.facetPiece, Monuments.GLOW, Monuments.finish = facetPiece, GLOW, finish
+Monuments.D = D
 
 return Monuments

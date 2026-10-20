@@ -304,6 +304,33 @@ Screenshots: `docs/screenshots/desert_monuments/`.
 | 06 | hieroglyph tablet | `hieroglyph_tablet` (names `Hieroglyph_Panel`) | 47 / 47 (test 1, kit 1, Desert_3 1, Desert_4 24, BA 20); 2nd run 0 | 22 -> 21 (Stone, Carve, Gold, Inlay + 17 Glyph parts); about 2,400 triangles; 13.1 x 10.65 x 1.3 | the slab thickened to 1.0 backwards (the front stays at z -0.5), front chamfer 0.15; the gold frame in today's border places, chamfered, 0.15 proud, an inner bevel strip, gold corner rosettes with turquoise studs; each glyph carved with a dark sunk outline; a dark sandstone stand (a sill 13 x 0.6 x 1.2 under the slab, 2 side pilasters with capitals and joints). Nothing collides (as today). **The 12 symbols (17 glyph parts) are kept as separate `Glyph` parts, exact:** checked on all 47 copies (scales 1.0 x31, 1.3 x14, 1.4 x2): 17 / 17 each (position / scale, size, shape, rotation, colour, material) |
 | 07 | golden pyramid altar | `golden_altar` (names `GoldPile_A`) | 23 / 23 (test 1, kit 1, Desert_4 8, Jungle_4 2, BA 11); 2nd run 0 | 11 -> 15 (Stone, Gold, Inlay, Glow + PointLight, 11 invisible Collision); about 4,700 triangles; 9.36 x 3.64 x 8.9 | today's 3 tiers (sizes and turns kept) as sandstone steps plated with gold (a gold top plate 0.2, a gold edge band 0.3, chamfers, sunk panels); 2 front risers 0.4; 4 gold corner pyramids 0.6; on the top tier Agent A's `altar__gem` (x0.75) in a gold cup with 4 prongs and a cyan PointLight range 8; today's 2 gems as smaller cut gems at their places (turquoise, light blue); today's 5 coins embossed; the goblet as foot, stem, cup with a lapis band. The Jungle_4 copy at (6014, 0, 953) had its parts resized to 0.8 with Model scale 1: the rule's `bakedScale` (bottom Heap width / 8, used by run() for copies never synced) builds it at 0.8; checked with a synthetic raw copy (built at 0.8) and a forced run (the Jungle copy stays 0.8, then 0 replaced). Collision: 19,404 rays, 0 off |
 
+
+### Desert props: props, furniture and treasures (owner, 2026-10-20): inventory before the remake (read from Studio)
+
+Prompt: `REMAKE OBJECT/.../05_Props_Furniture_Treasures/PROMPT_05_Props_Furniture_Treasures.txt`. Images:
+`docs/Desert_Images/05_Props_Furniture_Treasures/`. Recipe: docs/prop_texture_guide.md B14. Kit =
+`ServerStorage.MapAssets.Desert.<Kit>`; test = `workspace._Staging.AssetPreview.Desert.<Kit>`; BA =
+`ServerStorage.BossArenas.Desert.Decor`. Every copy found by name; every copy's parts match the kit at its Model scale
+(no baked-scale copy). No copy has a script, ProximityPrompt, Seat, ClickDetector, GUI, light, tag or attribute; no
+script in src names these kits. Functional children: the Attachments `FirePoint` (Brazier_A `Embers`, 24 copies) and
+`SmokePoint` (Lamp_Djinn `SpoutTip`, 3 copies). The braziers' flames are separate VFX parts (`Decor.VFX.Fire_Brazier`
+in Desert_2 x2 / Desert_4 x8 / BA x10, `GateBraziers.Fire_Brazier` x2 in Desert_3) standing at today's FirePoint: the
+new stand keeps the embers top and FirePoint at the same place. The throne is BA decor (no Seat; the boss spawns at
+(4000, 0.5, -563), 74 studs in front of it). Sync rules (SyncMapProps, added before the remake): `terracotta_jar`
+(`ClayJar_A`), `amphora` (`ClayJar_B`), `desert_rug` (`Carpet_A`), `golden_stand` (`Brazier_A`), `pharaoh_throne`
+(`Throne_Gold`), `golden_lamp` (`Lamp_Djinn`). Backups (kit + test + every copy, with a manifest of pivots and
+scales in the log): `BackUP_Files/old_props_2026-10-20_pre_desert_props/<propId>.rbxm` (6 files); the main agent's full
+backup `FightYourDestiny_2026-10-20_014933_before_desert_props_treasures`.
+
+| # | object | kit (parts, size) | copies (total incl. kit + test) | collision | functional / notes |
+|---|---|---|---|---|---|
+| 01 | terracotta jar | `ClayJar_A`: 3 cylinders (Body 2.4 x 2.6, Neck 1.4 x 0.7, Rim 1.9 x 0.35); 2.4 x 3.65 x 2.4 | 41: Desert_1 Camps 3, Desert_2 Village 14, Desert_2 Rocks 18 (scale 0.85-1.39, some sunk / on rocks), Desert_4 Props 4 (1.2) | all collide | - |
+| 02 | amphora | `ClayJar_B`: 7 parts (Foot, Body, turquoise Band, Neck, Rim, 2 block Handles); 3.5 x 5.2 x 3.5 | 19: Desert_2 Village 7, Desert_4 Props 6 (1.2), BA 4 (1.2) | all collide | - |
+| 03 | rug | `Carpet_A`: 6 blocks (Carpet 8 x 0.15 x 10, 2 Stripes, Diamond, 2 Torn pieces); 8.5 x 0.2 x 13 | 13: Desert_1 Camps 3, Desert_2 Village 7, BA 1 (1.3) | none collide (all CanQuery) | - |
+| 04 | golden stand | `Brazier_A`: 6 blocks (stone Base, Stem, 3 gold Bowl pieces, Neon Embers); 5.9 x 5.5 x 5.9 | 24: Desert_2 Village 2, Desert_3 GateBraziers 2 (1.3), Desert_4 Props 8 (1.4 / 1.5), BA 10 (1.2-1.5) | all collide | Attachment `FirePoint` on Embers (kept in place: the Fire_Brazier VFX stand on it) |
+| 05 | throne | `Throne_Gold`: 21 parts (2 dais Steps, Seat, Cushion, Back, lapis Inlay, Neon SunDisc, 8 CornerWedge Spikes, 2 Arms, 2 ArmTops, 2 Neon ArmGems); 13 x 20.6 x 11 | 3: BA 1 (1.5) | all collide | decoration only, no Seat |
+| 06 | golden lamp | `Lamp_Djinn`: 12 blocks (Foot, Stem, 2 Body, lapis Band, Lid, Neon Knob gem, Spout, SpoutTip, 3 Handle); 12.8 x 6.7 x 4.2 | 3: BA 1 (1.5, floating at y 9) | all collide | Attachment `SmokePoint` on SpoutTip (kept at the tip) |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

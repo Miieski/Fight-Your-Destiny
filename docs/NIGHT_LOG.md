@@ -2543,3 +2543,22 @@ Objects: 01 column, 02 fallen columns, 03 obelisk (keep the glowing yellow mark 
   tagged copies up to date, run 2 = 0; disk == Studio (186 scripts, 0 written); backup after_desert_monuments.
   Per object: 01 column 4 / 4, 02 fallen columns 5 / 5, 03 obelisk 5 / 5, 04 anubis 16 / 16, 05 guardian 6 / 6,
   06 tablet 47 / 47 (12 symbols exact), 07 altar 23 / 23 - all OK.
+
+# Desert props, furniture and treasures (PROMPT 05) - 2026-10-20, overnight (started only after prompt 04 was finished, as the owner asked)
+
+Objects: 01 terracotta jar, 02 amphora, 03 rug (keep the footprint), 04 golden stand, 05 throne (keep the seat
+position; if players can sit / interact or it is a boss / NPC spot, keep that exactly), 06 golden lamp (keep size, glow
+and any pickup / interaction).
+
+## Status (newest first)
+
+- 06:30 Started. Images in docs/Desert_Images/05_Props_Furniture_Treasures/. Backup before_desert_props_treasures.
+- 07:40 (after the usage-limit reset) Guide B14 + facets + PILOT 03 RUG done. Agent A: B14 (kits ClayJar_A = jar ~39
+  copies, ClayJar_B = amphora (incl. BossArenas x4), Carpet_A = rug, Brazier_A = golden stand (incl. Desert_3
+  GateBraziers, BossArenas x10), Throne_Gold and Lamp_Djinn (BossArenas only); no script / prompt / Seat / pickup /
+  light in any kit, only the FirePoint and SmokePoint attachments, which are kept) + facets jar body / lid, amphora
+  body / handles, throne lion armrests / paw feet, lamp body / gem, lotus bowl. Agent B: desert_rug replaced 13 / 13
+  (test, kit, Desert_1 x3, Desert_2 x7, BossArenas x1): turquoise border bands with a gold chequer, gold zigzag
+  diamonds on the stripes, the gold diamond with a linen outline and red centre, faint weave rows, linen fringes,
+  the front-left corner folded back; ~1,900 tris; nothing collides (as today). 6 sync rules added; new
+  tools/PropsDesertTreasures.luau; backups old_props_2026-10-20_pre_desert_props/.

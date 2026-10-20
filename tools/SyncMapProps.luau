@@ -224,6 +224,14 @@ SyncMapProps.RULES = {
 		end
 		return if w > 0 then w / 8 else nil
 	end },
+	-- desert props, furniture and treasures (owner PROMPT_05, 2026-10-20): 01 the terracotta jar, 02 the amphora, 03 the
+	-- rug, 04 the golden stand (brazier), 05 the throne, 06 the golden lamp (test row, kit, Desert_1-4, BossArenas.Desert)
+	{ propId = "terracotta_jar", names = { "ClayJar_A" } },
+	{ propId = "amphora", names = { "ClayJar_B" } },
+	{ propId = "desert_rug", names = { "Carpet_A" } },
+	{ propId = "golden_stand", names = { "Brazier_A" } },
+	{ propId = "pharaoh_throne", names = { "Throne_Gold" } },
+	{ propId = "golden_lamp", names = { "Lamp_Djinn" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

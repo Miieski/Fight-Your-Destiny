@@ -740,6 +740,83 @@ The glyphs are all at x 0. The same layout is on every copy.
 
 After the rebuild, Agent B checks each glyph by position, size, shape and colour (x scale) on the test copy and one game copy.
 
+### B14. Desert props, furniture and treasures (owner task 2026-10-20)
+
+Images: `docs/Desert_Images/05_Props_Furniture_Treasures/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_014933_before_desert_props_treasures_{ServerStorage,Workspace}.rbxm`.
+All parts are SmoothPlastic; embers and gems are Neon.
+
+**Functional content:**
+- **None of the 6 kits has a script, ProximityPrompt, Seat, ClickDetector, light or pickup.**
+- Their only extra children are 2 Attachments:
+  - `FirePoint`, under Brazier_A's `Embers`: the fire point, like the other desert lamps;
+  - `SmokePoint`, under Lamp_Djinn's `SpoutTip`.
+- Keep both attachments at the same place on the new flame / spout tip.
+- The throne is decoration only (no Seat; BossArenas.Desert decor), and the lamp has no pickup.
+
+**Kits and copies** (all in `MapAssets.Desert.`; test copy in `_Staging.AssetPreview.Desert`):
+
+| # | Object | Kit | Parts | Copies |
+|---|---|---|---|---|
+| 01 | terracotta jar | `ClayJar_A` | 3 | Desert_1 Camps x3, Desert_2 Village x14, Desert_2 Rocks x18, Desert_4 Props x4 |
+| 02 | amphora | `ClayJar_B` | 7 | Desert_2 Village x7, Desert_4 Props x6, BossArenas.Desert x4 |
+| 03 | rug | `Carpet_A` | 6 | Desert_1 Camps x3, Desert_2 Village x7, BossArenas.Desert x1 |
+| 04 | golden stand | `Brazier_A` | 6 | Desert_2 Village x2, Desert_3 GateBraziers x2, Desert_4 Props x8, BossArenas.Desert x10 |
+| 05 | throne | `Throne_Gold` | 21 | BossArenas.Desert x1 (+ test) |
+| 06 | golden lamp | `Lamp_Djinn` | 12 | BossArenas.Desert x1 (+ test) |
+
+**Today's shapes and real colours** (keep the colours; tone steps x1 / x0.93 / x0.86):
+
+| Object | Parts |
+|---|---|
+| Jar | body cylinder 2.4 dia x 2.6 (y 0..2.6) #CC603E; neck 1.4 dia x 0.7 #BC5839; rim 1.9 dia x 0.35 #CC603E (top y 3.65). The photo shows a lid; the kit has none (the rim reads as one). |
+| Amphora | foot 2.0 dia x 0.8 #DEA46E; body 3.4 dia x 3.0 (y 0.8..3.8) #DEA46E; band turquoise #40D0C4 3.5 dia x 0.6 at y 2.3; neck 1.8 dia x 1.0 #CE9866; rim 2.4 x 0.4 #DEA46E (top y 5.2); 2 block handles 0.5 x 1.6 x 0.5 at x ±1.5, y 3.2..4.8 |
+| Rug | carpet 8 x 0.15 x 10 #D64A3E at z -1; 2 torn pieces #D64A3E / #C14238 at z +5..6; 2 turquoise-blue stripes #3C96AA 8.1 x 1 at z -5.4 and 2.2; gold diamond 3.2 turned 45° at z -1.5 |
+| Stand | stone base 3.2 x 1 #B89262; stem 1.5 x 2.8 #E2BE84 (y 1..3.8); gold bowl 3.2 x 0.6 (y 3.8..4.4) + 2 crossed 4.2 squares #FFC93C / #E5B435 (y 4.4..5.3); Embers Neon #FF8C28 3 x 0.4 at y 5.3 with FirePoint |
+| Throne | dais steps 13 x 1.2 x 11 #B89262 + 11 x 1.2 x 9 #E2BE84; seat 7 x 2.6 x 6 #E5B435 (top y 5.0); arms 1.5 x 3.6 x 6.4 #FFC93C + arm tops #E5B435 (y 6.0..6.7); arm gems Neon #40D0C4 1.9 x 1.3 x 1.6 at (±4.2, 7.35, -1.8); red cushion #D64A3E 7.4 x 0.7 x 6.4 (top 5.7); back 8.4 x 15 x 1.6 #FFC93C (y 2.4..17.4) with a lapis inlay #2C5CC8 5 x 9; Neon gold sun disc 4.4 dia at y 18.4; 2 gold spikes (4 CornerWedges each) at x ±3.6 |
+| Lamp | foot 3 x 0.8 turned 45° #E5B435; stem 1.4 #FFC93C; body 5.4 x 1.0 x 3.2 #E5B435 + 7 x 2.6 x 4 #FFC93C (y 1.8..4.4) with a lapis band #2C5CC8 0.5; spout 4.6 x 1.1 x 1.4 tilted 28° up toward -X, tip at (-7.1, 4.9) with SmokePoint; handle loop at +X (3 blocks, x 3.9..4.95, y 1.7..5.3); lid 5 x 0.9 x 3 #E5B435 (top 5.3); knob gem Neon #40D0C4 1.0 turned (y 5.8) |
+
+**Parts rules** (sizes in studs; joints, chamfers and the gradient as in sections A and B):
+
+- **Wheel-thrown jar / amphora** (facet pieces `jar__body`, `jar__lid`, `amphora__body`, `amphora__handles`):
+  - **Profile:** foot ring → belly (widest at 40-50 % of the height) → shoulder → neck → rolled rim (a torus-like lip 0.15-0.2 thick).
+  - **Facets:** lathe with 14 sides; rings every 0.3-0.5 of height.
+  - **Painted bands:** 1-2 bands 0.25-0.6 tall as separate faces on the belly or shoulder: today's turquoise band on the amphora; a dark #533E28 band and a cream line on the jar.
+  - **Chips:** 2-3 small notches 0.1-0.2 on the rim. Optional: a darker tone step on 1-2 facets.
+  - **Amphora handles:** curved loops 0.35 thick from the shoulder to just under the rim, standing out 0.6.
+  - **Base ring:** a small ring stand under round-bottomed amphorae, 0.3 tall.
+- **Woven rug:**
+  - **Footprint:** keep the 8 x 10 carpet and its 2 torn pieces, 0.15 thick.
+  - **Border:** a 0.6 turquoise-blue band inset 0.3 from the edge, with a zigzag or chequer of 0.4 squares in gold; keep today's 2 cross stripes.
+  - **Fringes:** at the 2 short ends (z ends): 12-16 strands 0.12 wide x 0.6 long, linen #E8E2D0.
+  - **Folded corner:** one corner turned back, a triangle of 2 x 2 flipped over, showing a darker underside (x0.86).
+  - **Slightly wavy surface:** 3-4 gentle humps 0.1 high across the width.
+  - **Centre:** the gold diamond (keep size and place) with a red centre diamond 1.0 and a 0.15 linen outline.
+- **Golden stand** (Brazier_A; facet piece `stand__lotus_bowl`):
+  - **Stone base:** 2 steps (3.2 / 2.6, chamfer 0.15).
+  - **Stem:** a carved stone stem (the 1.5 stem, octagonal, with 2 engraved rings 0.1 deep).
+  - **Bowl:** a gold lotus bowl of 8 petals flaring from radius 0.8 to 2.1 over 1.5 (y 3.8..5.3), with petal tips curling out, 2 engraved gold bands and a lapis rim line.
+  - **Embers:** Neon #FF8C28 inside the bowl at today's height, with FirePoint kept. "A little glow" = a PointLight #FF8C28 range 10, brightness 0.8.
+- **Throne** (facet pieces `throne__armrest_lion`, `throne__paw_foot`):
+  - **Armrests:** lion armrests replace the arm blocks, same footprint (1.5-1.8 wide x 6.8 long x 3.6 + 0.7 tall, y 2.4..6.7). Each lion: a body along the arm, the head at the front (z -2.4) with a mane ring, the arm gem as its forehead jewel or held between its paws.
+  - **Keep** the Neon gems at today's place (±4.2, 7.35, -1.8).
+  - **Back:** a high back with a gold frame 0.6 wide, 0.15 proud, around the lapis panel (keep 5 x 9), and 3-4 gold feather or star inlays 0.05 proud.
+  - **Sun disc:** keep the glowing disc, add a 0.3 gold ring and 2 uraei 1.2 tall beside it.
+  - **Cushion:** the red cushion (keep) with a 0.15 gold piping and 4 gold tassels 0.25 x 0.5 at the corners.
+  - **Legs:** 4 carved legs ending in gold lion paw feet (facet piece), 0.9 wide, under the seat corners.
+  - **Dais:** the 2 steps with a 0.15 chamfer and a lapis band 0.3 on the upper step.
+- **Golden lamp** (facet pieces `lamp__body`, `lamp__gem`):
+  - **Body:** a curved genie lamp: an ellipsoid of 7 x 2.6 x 4 (lathe stretched along X) on today's stem and foot.
+  - **Spout:** a tapered tube curving up to today's spout tip (-7.1, 4.9); keep SmokePoint there.
+  - **Handle:** a loop curling out to x 4.95.
+  - **Lid:** a domed lid with a gold collar.
+  - **Gem setting:** a 4-prong gold setting holding the Neon turquoise gem (keep it Neon, size 1.0, y 5.8).
+  - **Bands:** engraved gold bands (0.1 deep lines) and today's lapis stripe as a ring around the belly.
+
+The organic pieces (jar, lid, amphora, handles, lion armrest, paw foot, lamp body, gem, lotus bowl) are facet data in
+`Blender_Exports/Props/facets/` (made by `tools/blender/fyd_facets.py -- props`). Each is in its kit's space: place it at
+the kit pivot with no offset, at the copy's own scale.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -1689,12 +1689,314 @@ def preview_monuments(pieces):
                                       (c_objs, [(-20, 12)]), (d_objs, [(-25, 30)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# DESERT PROPS / FURNITURE / TREASURES (B14): round and organic pieces. Kit space of each kit, front -Z.
+# ------------------------------------------------------------------------------------------------
+CLAY, CLAY_D, CLAY_L, CREAM, DARKP = "#CC603E", "#BC5839", "#DEA46E", "#E8E2D0", "#533E28"
+GOLD2 = "#E5B435"
+
+
+def lathe_faces(pc, profile, n, colfn, t, xscale=1.0, chips=(), rng=None, start_angle=0.0, center=(0.0, 0.0)):
+    """Faceted lathe around +Y: profile [(r, y), ...] bottom to top; colfn(seg, k) -> colour for the band between
+    profile points seg and seg+1, around-index k. xscale stretches it along X (still planar). chips: [(ring, k, dy)]
+    lowers one ring vertex (rim chips)."""
+    angs = [start_angle + 2 * math.pi * k / n for k in range(n)]
+    rings = [[Vector((center[0] + r * math.cos(a) * xscale, y, center[1] + r * math.sin(a))) for a in angs] for r, y in profile]
+    for ri, k, dy in chips:
+        rings[ri][k] = rings[ri][k] + Vector((0, dy, 0))
+    for s in range(len(profile) - 1):
+        lo, hi = rings[s], rings[s + 1]
+        for k in range(n):
+            j = (k + 1) % n
+            mid = (lo[k] + lo[j] + hi[k] + hi[j]) / 4
+            out = Vector((mid.x - center[0], 0, mid.z - center[1]))
+            dr = profile[s + 1][0] - profile[s][0]
+            dy = profile[s + 1][1] - profile[s][1]
+            out.y = -dr / max(abs(dy) + abs(dr), 1e-6) * out.length if dr != 0 else 0.0
+            if out.length < 1e-6:
+                out = Vector((0, 1 if dr < 0 else -1, 0))
+            if (hi[k] - hi[j]).length < 1e-6:
+                pc.face([lo[k], lo[j], hi[k]], colfn(s, k), "SmoothPlastic", t, out)
+            elif (lo[k] - lo[j]).length < 1e-6:
+                pc.face([lo[k], hi[j], hi[k]], colfn(s, k), "SmoothPlastic", t, out)
+            else:
+                pc.quad_or_tris([lo[k], lo[j], hi[j], hi[k]], colfn(s, k), "SmoothPlastic", t, out)
+    return rings
+
+
+def tube_faces(pc, pts, radii, sides, colfn, t, cap_end=False):
+    """Tube along a polyline (parallel-transport frames), sides-gon section; colfn(seg, k)."""
+    pts = [Vector(p) for p in pts]
+    tangents = []
+    for i in range(len(pts)):
+        a = pts[max(i - 1, 0)]
+        b = pts[min(i + 1, len(pts) - 1)]
+        tangents.append((b - a).normalized())
+    up = Vector((0, 1, 0)) if abs(tangents[0].y) < 0.9 else Vector((1, 0, 0))
+    u = tangents[0].cross(up).normalized()
+    rings = []
+    for i, p in enumerate(pts):
+        if i > 0:
+            u = (u - tangents[i] * u.dot(tangents[i])).normalized()
+        v = tangents[i].cross(u).normalized()
+        r = radii[i] if isinstance(radii, (list, tuple)) else radii
+        rings.append([p + (u * math.cos(2 * math.pi * k / sides) + v * math.sin(2 * math.pi * k / sides)) * r for k in range(sides)])
+    for s in range(len(pts) - 1):
+        for k in range(sides):
+            j = (k + 1) % sides
+            q = [rings[s][k], rings[s][j], rings[s + 1][j], rings[s + 1][k]]
+            out = (q[0] + q[1]) / 2 - pts[s]
+            pc.quad_or_tris(q, colfn(s, k), "SmoothPlastic", t, out)
+    if cap_end:
+        polygon_fill(pc, rings[-1], colfn(len(pts) - 2, 0), "SmoothPlastic", t, tangents[-1])
+    return rings
+
+
+def jar():
+    rng = random.Random(801)
+    place = {"relativeTo": "the ClayJar_A model (kit pivot = base centre)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+             "scale": "the copy's own scale"}
+    body = Piece("jar", "body", "the ClayJar_A kit pivot (base centre, y 0 = the ground)",
+                 notes="wheel-thrown terracotta jar, 14-sided lathe: foot ring, round belly (2.6 wide at y 1.3), shoulder, "
+                       "neck, rolled rim (1.9 wide, top y 3.65 like today) with 2 chips; painted bands: a dark #533E28 band "
+                       "0.25 on the belly and a cream line on the shoulder, as separate faces. #CC603E with tone steps. t 0.25.",
+                 place=dict(place, replaces="Body, Neck, Rim"))
+    prof = [(0.8, 0.0), (0.98, 0.12), (1.2, 0.55), (1.3, 1.15), (1.3, 1.45), (1.29, 1.7), (1.22, 2.05), (1.18, 2.12),
+            (0.95, 2.55), (0.7, 2.78), (0.66, 3.2), (0.9, 3.32), (0.96, 3.5), (0.84, 3.65)]
+
+    def col(s, k):
+        if s == 4:
+            return DARKP
+        if s == 6:
+            return CREAM
+        if s >= 10:
+            return tone(CLAY, rng.choice((1.0, 0.95)))
+        return tone(CLAY if s < 8 else CLAY_D, rng.choice(STEPS))
+    lathe_faces(body, prof, 14, col, 0.25, chips=[(13, 3, -0.14), (13, 9, -0.1), (12, 9, -0.05)])
+    lid = Piece("jar", "lid", "the ClayJar_A kit pivot (base centre)",
+                notes="a lid on the rim: a 1.9 disc (y 3.65 .. 3.75), a low dome and a round knob, top y 4.0 (+9.6 % "
+                      "height). #BC5839 with a cream line. t 0.2. New (the kit has no lid; the photo shows one).",
+                place=dict(place, replaces="(new, sits on the Rim)"))
+    lprof = [(0.95, 3.65), (0.95, 3.75), (0.7, 3.82), (0.32, 3.86), (0.22, 3.88), (0.26, 3.95), (0.18, 4.0), (0.02, 4.0)]
+    lathe_faces(lid, lprof, 14, lambda s, k: CREAM if s == 1 else tone(CLAY_D, rng.choice(STEPS)), 0.2)
+    return [body, lid]
+
+
+def amphora():
+    rng = random.Random(802)
+    place = {"relativeTo": "the ClayJar_B model (kit pivot = base centre)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+             "scale": "the copy's own scale"}
+    body = Piece("amphora", "body", "the ClayJar_B kit pivot (base centre, y 0 = the ground)",
+                 notes="amphora, 14-sided lathe on today's sizes: ring foot (2.0 wide, y 0 .. 0.8), belly 3.5 wide at y 2.3, "
+                       "shoulder, neck 1.6-1.7 wide, rolled rim 2.4 wide (top y 5.2) with 2 chips. Painted: today's "
+                       "turquoise #40D0C4 band (y 2.0 .. 2.6), a chequer band (dark #533E28 / cream) on the shoulder, thin "
+                       "dark lines. #DEA46E with tone steps, the neck #CE9866. t 0.25.",
+                 place=dict(place, replaces="Foot, Body, Band, Neck, Rim"))
+    prof = [(0.95, 0.0), (1.0, 0.22), (0.7, 0.45), (0.85, 0.8), (1.45, 1.35), (1.7, 1.85), (1.75, 2.0), (1.75, 2.6),
+            (1.68, 2.95), (1.55, 3.25), (1.42, 3.45), (1.18, 3.75), (0.85, 4.05), (0.8, 4.65), (1.12, 4.8), (1.2, 5.0),
+            (1.05, 5.2)]
+
+    def col(s, k):
+        if s == 6:
+            return TURQ
+        if s in (5, 7):
+            return DARKP if s == 5 else tone(CLAY_L, 0.93)
+        if s == 9:
+            return DARKP if k % 2 == 0 else CREAM
+        if s in (12, 13):
+            return tone("#CE9866", rng.choice(STEPS))
+        return tone(CLAY_L, rng.choice(STEPS))
+    lathe_faces(body, prof, 14, col, 0.25, chips=[(16, 2, -0.13), (16, 10, -0.1)])
+    handles = Piece("amphora", "handles", "the ClayJar_B kit pivot (base centre)",
+                    notes="2 curved loop handles (6-sided tube 0.35 thick) from the shoulder (y 3.6) out to 0.6 beyond the "
+                          "belly line and back under the rim (y 4.75), at x +-1.5 like today's 2 Handle blocks. #DEA46E. t 0.15.",
+                    place=dict(place, replaces="the 2 Handle blocks"))
+    for sx in (-1, 1):
+        path = [(sx * 1.25, 3.55, 0), (sx * 1.75, 3.75, 0), (sx * 1.98, 4.15, 0), (sx * 1.88, 4.6, 0), (sx * 1.45, 4.82, 0),
+                (sx * 0.95, 4.72, 0)]
+        tube_faces(handles, path, 0.18, 6, lambda s, k: tone(CLAY_L, rng.choice(STEPS)), 0.15)
+    return [body, handles]
+
+
+def throne_pieces():
+    rng = random.Random(803)
+    place = {"relativeTo": "the Throne_Gold model (kit pivot = dais base centre)", "position": [0, 0, 0],
+             "orientation": [0, 0, 0], "scale": "the copy's own scale"}
+    lions = Piece("throne", "armrest_lion", "the Throne_Gold kit pivot (dais base centre, front -Z)",
+                  notes="2 gold lion armrests (left and right, mirror images) on today's arm footprint (x +-4.2, 1.6-1.9 "
+                        "wide, z -2.6 .. 4.4, y 2.4 .. 6.9): a lying lion body along the arm, the head at the front with a "
+                        "mane ring and a snout, 2 front legs with paws at the front corner, dark eyes. Today's Neon arm gems "
+                        "(1.9 x 1.3 x 1.6 at (+-4.2, 7.35, -1.8)) stay and sit on the lions' heads as crown jewels. Gold "
+                        "#FFC93C, mane #E5B435. t 0.3.",
+                  place=dict(place, replaces="the 2 Arm and 2 ArmTop blocks (keep the 2 ArmGems)"))
+    for sx in (-1, 1):
+        x = sx * 4.2
+
+        def P_(dx, y, z):
+            return (x + dx, y, z)
+        body = [P_(dx, y, z) for dx in (-0.8, 0.8) for y, z in ((2.4, -0.4), (2.4, 4.4), (5.9, 4.4), (6.25, 3.0), (6.35, 0.6),
+                                                                  (6.1, -0.6), (4.2, -0.9))]
+        body += [P_(dx, 6.45, z) for dx in (-0.55, 0.55) for z in (1.0, 3.6)]
+        hull_into(lions, body, lambda cc, n: tone(GOLD, (1.05 if n.y > 0.5 else 1.0) * rng.choice(STEPS)), 0.3)
+        mane = [P_(dx, y, z) for dx in (-0.95, 0.95) for y, z in ((5.0, -0.5), (6.75, -0.6), (5.2, -1.5), (6.6, -1.5))]
+        mane += [P_(0.0, 7.0, -1.0), P_(0.0, 4.8, -1.0)]
+        hull_into(lions, mane, lambda cc, n: tone(GOLD2, rng.choice(STEPS)), 0.3)
+        headp = [P_(dx, y, z) for dx in (-0.6, 0.6) for y, z in ((5.35, -1.5), (6.55, -1.5), (5.4, -2.15), (6.4, -2.15))]
+        headp += [P_(dx, y, -2.6) for dx in (-0.35, 0.35) for y in (5.45, 5.95)]
+        htree = hull_into(lions, headp, lambda cc, n: tone(GOLD, (1.04 if n.y > 0.5 else 1.0) * rng.choice(STEPS)), 0.3)
+        for ex in (-0.32, 0.32):
+            surface_quad(lions, htree, (x + ex, 6.2, -5.0), (0, 0, 1), [(-0.12, 0.0), (0.0, 0.08), (0.12, 0.0), (0.0, -0.08)],
+                         DARKP, "SmoothPlastic", 0.05)
+        for dx in (-0.45, 0.45):
+            leg = [P_(dx + ex, y, z) for ex in (-0.3, 0.3) for y, z in ((2.4, -2.55), (2.4, -1.3), (5.0, -1.1), (5.0, -1.7),
+                                                                         (2.95, -2.6))]
+            hull_into(lions, leg, lambda cc, n: tone(GOLD, rng.choice(STEPS)), 0.25,
+                      skip=lambda ring: all(abs(p.y - 2.4) < 1e-4 for p in ring))
+    feet = Piece("throne", "paw_foot", "the CENTRE OF THE PAW'S SOLE (y 0 = the floor it stands on), toes toward -Z",
+                 notes="a gold lion paw foot 0.95 wide x 0.6 tall x 1.15 long: a pad block and 4 rounded toes. Put one "
+                       "under each carved leg at the seat corners, on the upper dais step (y 2.4): (+-3.1, 2.4, -1.6) and "
+                       "(+-3.1, 2.4, 3.6), toes toward -Z (front). t 0.2.",
+                 place={"relativeTo": "the Throne_Gold model", "positions": [[-3.1, 2.4, -1.6], [3.1, 2.4, -1.6], [-3.1, 2.4, 3.6],
+                                                                            [3.1, 2.4, 3.6]], "orientation": [0, 0, 0]})
+    pad = [(dx, y, z) for dx in (-0.45, 0.45) for y, z in ((0.0, -0.2), (0.0, 0.55), (0.6, 0.5), (0.55, -0.15), (0.3, -0.35))]
+    hull_into(feet, pad, lambda cc, n: tone(GOLD, rng.choice(STEPS)), 0.2, skip=lambda ring: all(abs(p.y) < 1e-4 for p in ring))
+    for tx in (-0.34, -0.11, 0.11, 0.34):
+        toe = [(tx + ex, y, z) for ex in (-0.1, 0.1) for y, z in ((0.0, -0.3), (0.0, -0.6), (0.28, -0.55), (0.3, -0.3), (0.15, -0.65))]
+        hull_into(feet, toe, lambda cc, n: tone(GOLD2, rng.choice(STEPS)), 0.15,
+                  skip=lambda ring: all(abs(p.y) < 1e-4 for p in ring))
+    return [lions, feet]
+
+
+def lamp():
+    rng = random.Random(804)
+    place = {"relativeTo": "the Lamp_Djinn model (kit pivot = foot base centre)", "position": [0, 0, 0],
+             "orientation": [0, 0, 0], "scale": "the copy's own scale"}
+    body = Piece("lamp", "body", "the Lamp_Djinn kit pivot (foot base centre, the spout toward -X)",
+                 notes="genie lamp on today's sizes (keep the Foot and Stem parts): a 12-sided lathe body stretched along X "
+                       "(7.0 x 2.6 x 4.0, y 1.8 .. 4.4) with today's lapis #2C5CC8 band as a ring (y 3.0 .. 3.3) and "
+                       "engraved darker gold rings; a tapered curved spout to today's tip (-7.1, 4.9) - keep SmokePoint "
+                       "there; a loop handle curling out to x 4.95; a domed oval lid with a gold collar (top y 5.3); 4 gold "
+                       "prongs for the gem. Gold #FFC93C / #E5B435. t 0.25.",
+                 place=dict(place, replaces="the 2 Body blocks, Band, Spout, SpoutTip, the 3 Handle blocks, Lid"))
+    prof = [(0.55, 1.8), (1.25, 2.05), (1.75, 2.5), (2.0, 2.95), (2.0, 3.0), (2.0, 3.3), (1.92, 3.5), (1.6, 3.95),
+            (1.05, 4.3), (0.85, 4.4)]
+
+    def col(s, k):
+        if s == 4:
+            return LAPIS
+        if s in (2, 6):
+            return tone(GOLD2, 0.9)
+        return tone(GOLD, rng.choice(STEPS))
+    lathe_faces(body, prof, 12, col, 0.25, xscale=1.75)
+    spout = [(-3.1, 3.05, 0), (-4.3, 3.3, 0), (-5.6, 3.8, 0), (-6.6, 4.4, 0), (-7.15, 4.9, 0), (-7.35, 5.15, 0)]
+    tube_faces(body, spout, [0.62, 0.52, 0.42, 0.35, 0.32, 0.36], 8,
+               lambda s, k: tone(GOLD if s < 4 else GOLD2, rng.choice(STEPS)), 0.2)
+    handle = [(3.2, 2.55, 0), (4.3, 2.7, 0), (4.95, 3.5, 0), (4.75, 4.55, 0), (4.0, 5.0, 0), (3.2, 4.45, 0)]
+    tube_faces(body, handle, 0.3, 6, lambda s, k: tone(GOLD, rng.choice(STEPS)), 0.2)
+    lid = [(1.45, 4.35), (1.5, 4.5), (1.38, 4.6), (1.05, 4.95), (0.6, 5.2), (0.42, 5.3)]
+    lathe_faces(body, lid, 12, lambda s, k: GOLD if s == 0 else tone(GOLD2, rng.choice(STEPS)), 0.2, xscale=1.55)
+    for k in range(4):   # prongs: thin gold quads leaning out around the gem (y 5.3 .. 5.95)
+        a = math.radians(45 + 90 * k)
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        side = Vector((-d.z, 0, d.x)) * 0.08
+        b0 = Vector((0, 5.28, 0)) + d * 0.36
+        b1 = Vector((0, 5.95, 0)) + d * 0.5
+        body.face([b0 - side, b0 + side, b1 + side, b1 - side], GOLD, "SmoothPlastic", 0.08, d)
+    gem = Piece("lamp", "gem", "the Lamp_Djinn kit pivot (the gem centre is at (0, 5.8, 0), today's Knob place)",
+                notes="cut turquoise gem, octagonal brilliant 1.1 across x 1.0 tall, Neon #40D0C4 (today's Knob colour) "
+                      "with lighter crown facets; sits in the 4 prongs of lamp__body. t 0.12.",
+                place=dict(place, replaces="the Knob (1.0 Neon cube)"))
+    R, RT, YG, YT, YC = 0.55, 0.3, 0.06, 0.32, -0.62
+    cyan = TURQ
+    c0 = Vector((0, 5.8, 0))
+    angs = [math.radians(22.5 + 45 * k) for k in range(8)]
+    g0 = [c0 + Vector((R * math.cos(a), -YG, R * math.sin(a))) for a in angs]
+    g1 = [c0 + Vector((R * math.cos(a), YG, R * math.sin(a))) for a in angs]
+    tb = [c0 + Vector((RT * math.cos(a), YT, RT * math.sin(a))) for a in angs]
+    cul = c0 + Vector((0, YC + 0.24, 0))
+    for k in range(8):
+        j = (k + 1) % 8
+        mid = (g0[k] + g0[j]) / 2 - c0
+        gem.face([g0[k], g0[j], g1[j], g1[k]], tone(cyan, 0.9), "Neon", 0.12, Vector((mid.x, 0, mid.z)))
+        gem.face([g1[k], g1[j], tb[j], tb[k]], mix(cyan, "#FFFFFF", 0.12 if k % 2 else 0.25), "Neon", 0.12,
+                 Vector((mid.x, 0.8, mid.z)))
+        gem.face([g0[j], g0[k], cul], tone(cyan, 0.86 if k % 2 else 0.95), "Neon", 0.12, Vector((mid.x, -0.8, mid.z)))
+    polygon_fill(gem, list(reversed(tb)), mix(cyan, "#FFFFFF", 0.35), "Neon", 0.12, Vector((0, 1, 0)))
+    return [body, gem]
+
+
+def stand():
+    rng = random.Random(805)
+    pc = Piece("stand", "lotus_bowl", "the Brazier_A kit pivot (base centre)",
+               notes="gold lotus bowl replacing today's 3 Bowl blocks (y 3.8 .. 5.3): 8 petals (16-sided lathe, petal "
+                     "centres full radius, the gaps 15 % in and the tips notched), flaring from radius 0.75 to 2.1, petal "
+                     "tips curling out at the top, an engraved darker ring at y 4.2, a lapis line under the tips, a dark "
+                     "floor at y 4.75 inside. Keep the Embers (Neon, y 5.1 .. 5.5) and their FirePoint. Gold #FFC93C / "
+                     "#E5B435. t 0.2.",
+               place={"relativeTo": "the Brazier_A model", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's own scale", "replaces": "the 3 Bowl blocks (keep Base, Stem, Embers)"})
+    n = 16
+    prof = [(0.75, 3.8), (0.95, 4.0), (1.0, 4.15), (1.0, 4.25), (1.45, 4.55), (1.85, 4.9), (1.95, 5.05), (2.12, 5.3)]
+    angs = [2 * math.pi * k / n for k in range(n)]
+    rings = []
+    for ri, (r, y) in enumerate(prof):
+        ring = []
+        for k, a in enumerate(angs):
+            gap = k % 2 == 1
+            rr = r * (0.85 if (gap and ri >= 4) else 1.0)
+            yy = y - (0.22 if (gap and ri == len(prof) - 1) else 0.0)
+            ring.append(Vector((rr * math.cos(a), yy, rr * math.sin(a))))
+        rings.append(ring)
+    for s in range(len(prof) - 1):
+        for k in range(n):
+            j = (k + 1) % n
+            q = [rings[s][k], rings[s][j], rings[s + 1][j], rings[s + 1][k]]
+            mid = sum(q, Vector()) / 4
+            if s == 2:
+                c = tone(GOLD2, 0.85)
+            elif s == 5:
+                c = LAPIS
+            else:
+                c = tone(GOLD if k % 4 < 2 else GOLD2, rng.choice(STEPS))
+            pc.quad_or_tris(q, c, "SmoothPlastic", 0.2, Vector((mid.x, -0.3, mid.z)))
+    floor = [Vector((1.5 * math.cos(a), 4.75, 1.5 * math.sin(a))) for a in angs]
+    polygon_fill(pc, floor, tone(GOLD2, 0.6), "SmoothPlastic", 0.15, Vector((0, 1, 0)))
+    return [pc]
+
+
+def desert_props():
+    return jar() + amphora() + throne_pieces() + lamp() + stand()
+
+
+def preview_props(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    g1 = [piece_object(by["jar__body"], col), piece_object(by["jar__lid"], col),
+          piece_object(by["amphora__body"], col, Vector((-4.5, 0, 0))), piece_object(by["amphora__handles"], col, Vector((-4.5, 0, 0)))]
+    s_ctx = context_boxes([((-12, 0.5, 0), (3.2, 1.0, 3.2), SAND_D, (0, 0, 0)), ((-12, 2.4, 0), (1.5, 2.8, 1.5), SAND, (0, 0, 0)),
+                           ((-12, 5.3, 0), (3.0, 0.4, 3.0), "#FF8C28", (0, 0, 0))], col)
+    g1 += s_ctx + [piece_object(by["stand__lotus_bowl"], col, Vector((-12, 0, 0)))]
+    t_ctx = context_boxes([((0, 0.6, 0), (13, 1.2, 11), SAND_D, (0, 0, 0)), ((0, 1.8, 0.5), (11, 1.2, 9), SAND, (0, 0, 0)),
+                           ((0, 3.7, 1.0), (7, 2.6, 6), GOLD2, (0, 0, 0)), ((0, 5.35, 1.0), (7.4, 0.7, 6.4), "#D64A3E", (0, 0, 0)),
+                           ((0, 9.9, 4.2), (8.4, 15, 1.6), GOLD, (0, 0, 0)), ((0, 11.5, 3.3), (5, 9, 0.4), LAPIS, (0, 0, 0)),
+                           ((-4.2, 7.35, -1.8), (1.9, 1.3, 1.6), TURQ, (0, 0, 0)), ((4.2, 7.35, -1.8), (1.9, 1.3, 1.6), TURQ, (0, 0, 0))], col)
+    g2 = t_ctx + [piece_object(by["throne__armrest_lion"], col)]
+    for pos in ((-3.1, 2.4, -1.6), (3.1, 2.4, -1.6)):
+        g2.append(piece_object(by["throne__paw_foot"], col, Vector(pos)))
+    l_ctx = context_boxes([((30, 0.4, 0), (3.0, 0.8, 3.0), GOLD2, (0, 45, 0)), ((30, 1.3, 0), (1.4, 1.0, 1.4), GOLD, (0, 0, 0))], col)
+    g3 = l_ctx + [piece_object(by["lamp__body"], col, Vector((30, 0, 0))), piece_object(by["lamp__gem"], col, Vector((30, 0, 0)))]
+    out = os.path.join(P.PREVIEW_DIR, "desert_props_facets.png")
+    return render_sheet("props", [(g1, [(-20, 14)]), (g2, [(-30, 12)]), (g2[-3:-2], [(-40, 15)]), (g3, [(-25, 20)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
     for obj, fn, prev in (("rebirth_altar", rebirth_altar, preview_altar), ("ship", ship, preview_ship),
                           ("golem", golem, preview_golem), ("canyon_gate", canyon_gate, preview_canyon),
-                          ("red_rock", red_rock, preview_red_rock_all), ("monuments", monuments, preview_monuments)):
+                          ("red_rock", red_rock, preview_red_rock_all), ("monuments", monuments, preview_monuments),
+                          ("props", desert_props, preview_props)):
         if only and obj not in only:
             continue
         pieces = fn()
