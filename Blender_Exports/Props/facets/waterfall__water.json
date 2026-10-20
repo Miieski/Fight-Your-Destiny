@@ -1,0 +1,432 @@
+{
+ "object": "waterfall",
+ "piece": "water",
+ "units": "studs",
+ "origin": "the Waterfall_Rock_Set kit pivot (front -Z)",
+ "axes": "Roblox space: x right, y up, front -Z",
+ "size": [
+  7.4,
+  4.58,
+  8.78
+ ],
+ "bounds": {
+  "min": [
+   -3.7,
+   0.35,
+   -2.78
+  ],
+  "max": [
+   3.7,
+   4.93,
+   6.0
+  ]
+ },
+ "faceCount": 14,
+ "rectCount": 10,
+ "notes": "the cyan water block with bevels, today's #30C4BE and size: a flat top (y 4.9, x +-3.45) with 0.25 bevels down to the block's sides and back (y 4.6), a rounded 2-band lip over the front edge (z -2.0 -> -2.45), the falling sheet 7.2 wide down to the basin (y 0.35 at z -2.75), 4 lighter #7FE3DE streaks on it and 2 on the top, a white #F5F6FA foam line on the lip.",
+ "faces": [
+  {
+   "v": [
+    [
+     -3.45,
+     4.9,
+     5.75
+    ],
+    [
+     3.45,
+     4.9,
+     5.75
+    ],
+    [
+     3.45,
+     4.9,
+     -2.0
+    ],
+    [
+     -3.45,
+     4.9,
+     -2.0
+    ]
+   ],
+   "c": "#30C4BE",
+   "m": "SmoothPlastic",
+   "t": 0.25,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -3.45,
+     4.9,
+     -2.0
+    ],
+    [
+     -3.7,
+     4.55,
+     -2.0
+    ],
+    [
+     -3.7,
+     4.55,
+     6.0
+    ],
+    [
+     -3.45,
+     4.9,
+     5.75
+    ]
+   ],
+   "c": "#2BB0AB",
+   "m": "SmoothPlastic",
+   "t": 0.25
+  },
+  {
+   "v": [
+    [
+     3.45,
+     4.9,
+     5.75
+    ],
+    [
+     3.7,
+     4.55,
+     6.0
+    ],
+    [
+     3.7,
+     4.55,
+     -2.0
+    ],
+    [
+     3.45,
+     4.9,
+     -2.0
+    ]
+   ],
+   "c": "#2BB0AB",
+   "m": "SmoothPlastic",
+   "t": 0.25
+  },
+  {
+   "v": [
+    [
+     -3.7,
+     4.55,
+     6.0
+    ],
+    [
+     3.7,
+     4.55,
+     6.0
+    ],
+    [
+     3.45,
+     4.9,
+     5.75
+    ],
+    [
+     -3.45,
+     4.9,
+     5.75
+    ]
+   ],
+   "c": "#2BB0AB",
+   "m": "SmoothPlastic",
+   "t": 0.25
+  },
+  {
+   "v": [
+    [
+     -3.45,
+     4.9,
+     -2.0
+    ],
+    [
+     3.45,
+     4.9,
+     -2.0
+    ],
+    [
+     3.6,
+     4.78,
+     -2.3
+    ],
+    [
+     -3.6,
+     4.78,
+     -2.3
+    ]
+   ],
+   "c": "#34D4CD",
+   "m": "SmoothPlastic",
+   "t": 0.25
+  },
+  {
+   "v": [
+    [
+     -3.6,
+     4.78,
+     -2.3
+    ],
+    [
+     3.6,
+     4.78,
+     -2.3
+    ],
+    [
+     3.6,
+     4.5,
+     -2.45
+    ],
+    [
+     -3.6,
+     4.5,
+     -2.45
+    ]
+   ],
+   "c": "#30C4BE",
+   "m": "SmoothPlastic",
+   "t": 0.25,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -3.6,
+     4.5,
+     -2.45
+    ],
+    [
+     3.6,
+     4.5,
+     -2.45
+    ],
+    [
+     3.6,
+     0.35,
+     -2.75
+    ],
+    [
+     -3.6,
+     0.35,
+     -2.75
+    ]
+   ],
+   "c": "#2EBAB4",
+   "m": "SmoothPlastic",
+   "t": 0.25,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -3.4,
+     4.75,
+     -2.35
+    ],
+    [
+     3.4,
+     4.75,
+     -2.35
+    ],
+    [
+     3.4,
+     4.627,
+     -2.416
+    ],
+    [
+     -3.4,
+     4.627,
+     -2.416
+    ]
+   ],
+   "c": "#F5F6FA",
+   "m": "SmoothPlastic",
+   "t": 0.04,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -2.51,
+     4.295,
+     -2.495
+    ],
+    [
+     -2.29,
+     4.295,
+     -2.495
+    ],
+    [
+     -2.29,
+     1.597,
+     -2.69
+    ],
+    [
+     -2.51,
+     1.597,
+     -2.69
+    ]
+   ],
+   "c": "#7FE3DE",
+   "m": "SmoothPlastic",
+   "t": 0.04,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -0.98,
+     3.88,
+     -2.525
+    ],
+    [
+     -0.82,
+     3.88,
+     -2.525
+    ],
+    [
+     -0.82,
+     0.56,
+     -2.765
+    ],
+    [
+     -0.98,
+     0.56,
+     -2.765
+    ]
+   ],
+   "c": "#7FE3DE",
+   "m": "SmoothPlastic",
+   "t": 0.04,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     0.58,
+     4.502,
+     -2.48
+    ],
+    [
+     0.82,
+     4.502,
+     -2.48
+    ],
+    [
+     0.82,
+     1.182,
+     -2.72
+    ],
+    [
+     0.58,
+     1.182,
+     -2.72
+    ]
+   ],
+   "c": "#7FE3DE",
+   "m": "SmoothPlastic",
+   "t": 0.04,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     2.22,
+     3.672,
+     -2.54
+    ],
+    [
+     2.38,
+     3.672,
+     -2.54
+    ],
+    [
+     2.38,
+     0.352,
+     -2.78
+    ],
+    [
+     2.22,
+     0.352,
+     -2.78
+    ]
+   ],
+   "c": "#7FE3DE",
+   "m": "SmoothPlastic",
+   "t": 0.04,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -1.49,
+     4.93,
+     4.6
+    ],
+    [
+     -1.31,
+     4.93,
+     4.6
+    ],
+    [
+     -1.31,
+     4.93,
+     1.0
+    ],
+    [
+     -1.49,
+     4.93,
+     1.0
+    ]
+   ],
+   "c": "#7FE3DE",
+   "m": "SmoothPlastic",
+   "t": 0.03,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     1.11,
+     4.93,
+     3.2
+    ],
+    [
+     1.29,
+     4.93,
+     3.2
+    ],
+    [
+     1.29,
+     4.93,
+     -0.6
+    ],
+    [
+     1.11,
+     4.93,
+     -0.6
+    ]
+   ],
+   "c": "#7FE3DE",
+   "m": "SmoothPlastic",
+   "t": 0.03,
+   "rect": true
+  }
+ ],
+ "place": {
+  "relativeTo": "the Waterfall_Rock_Set model (kit pivot)",
+  "position": [
+   0,
+   0,
+   0
+  ],
+  "orientation": [
+   0,
+   0,
+   0
+  ],
+  "replaces": "WaterTop (7.4 x 0.4 x 8 at (0, 4.7, 2)) and WaterFall (7.2 x 5 x 0.6 at (0, 2.3, -2.2), tilted 6 deg); both CanCollide off like today. Set Transparency 0.15 on the falling sheet faces (today's WaterFall)",
+  "collide": "CanCollide off"
+ }
+}

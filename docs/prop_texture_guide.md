@@ -1493,6 +1493,189 @@ The drum has no facet: it is all parts (its lacing reads better as rope cylinder
 - **Sway (optional, owner liked it on the stalls):** a PropFX `Sway` on the cloth piece (`Hinge = "Top"`, 1.5 deg, 3.5 s,
   Axis "X") would make the banner breathe; only if Agent B names the cloth part (e.g. `Cloth`). Not required.
 
+### C7. Jungle rocks and plants (owner task 2026-10-20, PROMPT_06)
+
+Images: `docs/Jungle_Images/06_Rocks_and_Plants/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_142011_before_jungle_nature_{ServerStorage,Workspace}.rbxm`.
+The C1 colours, the C2 moss rules (soft layered patches, never flat slabs) and the A recipe apply. **These kits have
+HUNDREDS of copies**: the cost per copy decides the method (budgets below). Facet pieces:
+`tools/blender/fyd_facets.py -- jungle_nature`, preview `Previews/Props/jungle_nature_facets.png`.
+
+**Kits** (all in `MapAssets.Jungle`, pivot = bottom centre, front -Z; no copy in the hub or in other zones):
+
+| # | Object (owner's name) | Kit | Parts | Placed copies | Part-resized copies (Model scale 1) |
+|---|---|---|---|---|---|
+| 01 | large mossy rock | `Mossy_Rock_L` | 4 MeshParts (2 Rock, 2 Moss) | **14**: test 1, Jungle_1 5, Jungle_2 4, Jungle_3 4 | 0.7 x6, 0.9 x5 (only 3 at 1.0) |
+| 02 | small mossy rock | `Mossy_Rock_S` | 2 MeshParts | **70**: test 1, Jungle_1 22, Jungle_2 24, Jungle_3 22, BossArenas 1 | 0.8 / 0.9 / 1.1 / 1.2 / 1.3 (almost all) |
+| 03 | round mossy rock | `Mossy_Rock_M` | 2 MeshParts | **38**: test 1, Jungle_1 12, Jungle_2 12, Jungle_3 12, BossArenas 1 | 0.8 / 1.2 (19 copies) |
+| 04 | rocks with cyan block | `Waterfall_Rock_Set` | 8 (2 Rock + 2 Moss MeshParts, Step, WaterTop, WaterFall, Foam) | **3**: test 1, `Jungle_2.Decor.Props` 2 | none |
+| 05 | lily pads with pink cube | `LilyPad_A` | 3 (2 Pad cylinders, Bloom) | **36**: test 1, Jungle_2 30, Jungle_3 2, Jungle_4 3 | 1.3 / 1.4 (20 copies) |
+| 06 | bamboo cluster | `Bamboo_Cluster_A` | 8 (5 Stalk cylinders, 3 BambooLeaf) | **28**: test 1, Jungle_1 12, Jungle_2 8, Jungle_3 7 | 0.9 / 1.15 / 1.3 (all 27 game copies) |
+| 07 | thin bamboo | `Vine_Hanging_A` (!) | 6 (3 Vine sticks, 3 VineLeaf) | **42**: test 1, Jungle_3 7, Jungle_4 20, BossArenas 14 | 0.6 / 1.6 / 2.0 (34 copies) |
+| 08 | flowering bush | `Bush_Jungle_A` | 3 MeshParts (2 Leaves, Flowers) | **226**: test 1, Jungle_1 85, Jungle_2 70, Jungle_3 70 | 0.8 / 1.3 (about 2/3) |
+
+- **bakedScale for every kit** (`bakedFrom(m, part, kitWidth)`, Size.X of the kit part):
+  - `Rock` 21 (L: the big Rock is the widest);
+  - `Rock` 8 (M); `Rock` 4.6 (S);
+  - `Pad` 0.25 (lily: the pads are cylinders turned upright, so Size.X is their 0.25 thickness);
+  - `Stalk` 21 (bamboo: Size.X of a cylinder is its length, the longest stalk is 21);
+  - `Vine` 0.5 (thin bamboo);
+  - `Leaves` 8.5 (bush).
+  - Mossy_Rock_S's moss and Bush_Jungle_A's clumps scale with them; the scales are uniform (checked on heights).
+- **Suggested propIds** (none exists): `jungle_rock_large`, `jungle_rock_small`, `jungle_rock_round`, `jungle_waterfall_rocks`, `jungle_lily_pads`, `jungle_bamboo`, `jungle_thin_bamboo`, `jungle_flower_bush`. Not to be confused with the plains `Rock_*_A/B`, `RockBlue_*`, `Bush_A/B` (MapAssets.Common) or `LilyPad_Swamp_A` (Swamp_1 x90): other kits, out of scope.
+
+**What the kits do (checked):**
+- No script, ProximityPrompt, ClickDetector, Sound, tag or touch handler in any kit or copy; `src/` names none of them.
+  - **The cyan block is NOT a water source, gem or pickup:** it is a small decorative waterfall. Step (stone 8 x 4.6 x 8), WaterTop (#30C4BE) on it, the WaterFall sheet (#30C4BE, T 0.15) down its front, and Foam (#F5F6FA, T 0.3) = the owner's "pale slab".
+  - **The pink cube is NOT a pickup:** `Bloom` #FF508C 1.3 x 0.9 x 1.3, CanCollide off, no script.
+- **Attributes to keep:**
+  - rocks, waterfall and bush models carry `SourceAssetId`, `SourceCreator`, `Proudism` (Toolbox meshes);
+  - Vine_Hanging_A carries `Height = 14` (on every copy, even the resized ones).
+- **MapFixCollide:** the 2 Jungle_2 `Mossy_Rock_L` copies at (6123.8, 11.6, 260.7) and (6126.3, 11.6, 307.4) have their big `Moss` MeshPart CanCollide ON with attribute `MapFixCollide` (the map-edge fix that stops walking into the rock).
+  - Keep it on those 2 copies: an invisible copy of the Moss collider with CanCollide on + the attribute.
+  - A template cannot carry it for the 12 others: use a SyncMapProps `variant` or a post-sync fix-up.
+- **Collisions** (keep today's MeshParts as invisible colliders, Transparency 1, CastShadow off):
+  - rocks: the Rock MeshParts collide, Moss does not (except the 2 MapFixCollide copies);
+  - waterfall: 2 Rocks + Step collide; the water, Foam, Moss do not;
+  - lily pads, the thin bamboo (Vine_Hanging_A), the bush: nothing collides;
+  - bamboo cluster: the 5 Stalks collide (keep 5 invisible cylinders or the new canes).
+- **07 "thin bamboo" is `Vine_Hanging_A`**, and **34 of its 42 copies HANG in the air**: Jungle_4 x20 (bottoms y 15.6 / 25.6, 8-22 long), BossArenas x14 (bottom y 38, 28 long). Only the test copy and the 7 Jungle_3 copies stand on the ground (bottoms -6 .. 0, partly sunk).
+  - Make the canes, nodes and leaves the same everywhere.
+  - Put the base (roots + grass) ONLY on grounded copies, via a SyncMapProps `variant`: grounded when the model's bottom is within 1 stud of y 0.
+  - Hanging copies get a small leaf cluster at the top instead.
+  - Main agent: check what the Jungle_4 / BossArenas vines hang from before choosing.
+- **Shared meshes** (all Toolbox):
+  - rock A `rbxassetid://7231644778`: S Rock, the L big Rock, the waterfall right Rock, and every Moss (today's moss is that rock mesh squashed flat and painted green);
+  - rock B `9420263160`: M Rock, the L small Rock, the waterfall left Rock;
+  - bush leaves `9299837325` (both clumps);
+  - bush flowers `73813981037663`.
+  - Their triangle counts are not in the file: measure them in Studio (`AssetService:CreateEditableMeshAsync(Content.fromUri(id))`, count the faces) before choosing (a) or (b) below.
+
+**Budgets per copy** (about 16 triangles per facet face, 12 per rectangle part, Roblox cylinders more):
+
+| Kit | Copies | Facet faces (piece) | ~Triangles per copy | ~Total | Method |
+|---|---|---|---|---|---|
+| Mossy_Rock_S | 70 | body 42 + moss 36 | <= 1.3k | 90k | (a), or (b) if rock A is under ~300 triangles and the zone is heavy |
+| Mossy_Rock_M | 38 | body 72 + moss 57 | <= 2.1k | 80k | (a) |
+| Mossy_Rock_L | 14 | body 157 + moss 117 | <= 4.5k | 63k | (a) |
+| Waterfall_Rock_Set | 3 | rocks 205 + water 14 + basin 58 | <= 5k | 15k | (a) |
+| LilyPad_A | 36 | pads 55 + lotus 26 | <= 1.3k | 47k | facets |
+| Bamboo_Cluster_A | 28 | 5-7 leaf sprays x 13 | <= 2.5k (parts canes) | 70k | parts + sprays |
+| Vine_Hanging_A | 42 | 2-3 leaf sprays x 13 | <= 1k | 42k | parts + sprays |
+| Bush_Jungle_A | 226 | flowers 30 + base leaves 10 | <= 650 added to today's 2 leaf meshes | 147k + meshes | (b)-style hybrid |
+
+- **(a) vs (b) for the rocks.** Both keep today's Rock MeshParts as the colliders, so collisions are exact on every copy.
+  - **(a)** hides the rock meshes and draws the facet bodies + facet moss (layered strata, cracks, gray-green tone steps, soft moss with tufts). It is the owner's request and the recommended route for L, M and the waterfall.
+  - **(b)** keeps today's rock meshes visible (recoloured only) and replaces only the moss: about 600 triangles of moss + 2-3 pebble parts, but no strata or cracks.
+  - For S (70 copies) choose by the measured mesh cost: (a) costs ~1.3k, (b) costs mesh + ~0.7k.
+  - The facet bodies are fitted to the Rock boxes (same CFrame and size, about 92-96 % of the box), so the invisible meshes and the visible rocks match within a few tenths of a stud.
+- **The bush (226 copies) must stay cheap:**
+  - keep today's 2 leaf MeshParts (shared mesh, already low-poly facets; the 2 greens #289642 / #78D246 are the gradient);
+  - optionally add a 3rd smaller copy of the same mesh (#46AA3C) low on the side for a third layer;
+  - replace only the Flowers mesh with `bush__flowers`, and add `bush__base_leaves`.
+  - The full facet clump (`bush__clump`, 30 faces) is there only if the leaf mesh turns out heavy; 3 clumps would cost ~1.4k per bush = 320k in total: no.
+
+**Today's shapes** (kit space):
+- **01 Mossy_Rock_L** (28 x 16 x 25):
+  - big Rock 21 x 14.5 x 18 #848A7C at (0, 6.8, 0), yaw 20 deg;
+  - small Rock 9 x 10.5 x 9 #5C645C at (8.5, 4.8, -5.5), tilted;
+  - Moss 15.5 x 3.6 x 13 #589642 at (-0.5, 12.6, 0.5); Moss 6.5 x 2 x 6.5 #60C448 at (8.6, 9.6, -5.4).
+- **02 Mossy_Rock_S**: Rock 4.6 x 3 x 4.6 #848A7C at (0, 1.3, 0) (y -0.2 .. 2.8); Moss 3.6 x 1.1 x 3.6 #589642 at (0.2, 2.5, 0).
+- **03 Mossy_Rock_M**: Rock 8 x 8.5 x 8.4 #5C645C at (0, 4, 0), yaw 40 / tilt 8 deg; Moss 6.6 x 2 x 6.4 #589642 at (0.3, 7.6, 0).
+- **04 Waterfall_Rock_Set** (28 x 9.7 x 13.7):
+  - Rocks 8.5 x 8.5 x 10 #5C645C at (-7.5, 3.6, 0.5) and 9 x 7.4 x 10 #848A7C at (7.5, 3.2, 0.5), each with a Moss;
+  - Step 8 x 4.6 x 8 #5C645C at (0, 2.3, 2);
+  - WaterTop 7.4 x 0.4 x 8 #30C4BE at (0, 4.7, 2); WaterFall 7.2 x 5 x 0.6 #30C4BE T 0.15 at (0, 2.3, -2.2), tilted 6 deg;
+  - Foam 8.4 x 0.3 x 3 #F5F6FA T 0.3 at (0, 0.2, -3.6).
+- **05 LilyPad_A**:
+  - Pad cylinder 5.2 across x 0.25 #289642 at (0, 0.13, 0); Pad 3.2 across #78D246 at (3.4, 0.11, 1.8);
+  - Bloom #FF508C 1.3 x 0.9 x 1.3 at (0.6, 0.65, -0.5), turned 45 deg;
+  - pads lie at the kit pivot height (the water surface: Jungle_2 at y -0.2, Jungle_3 / 4 at 0.8 / 0.9).
+- **06 Bamboo_Cluster_A** (7.2 x 21 x 5.8):
+  - 5 Stalks 0.9 across, 12 / 15 / 17 / 19 / 21 tall, #A2D856 / #9ACD52 / #91C14D / #9ACD52 / #93C44E, tilted 3-5 deg, bottoms sunk to y -0.2;
+  - 3 BambooLeaf blocks 3.6 x 0.3 x 1.3 #78D246 (x2) / #289642 at y 15.2 / 17.5 / 19.8.
+- **07 Vine_Hanging_A** (4.8 x 14 x 2.2): 3 Vine sticks 0.5 square, 14 / 12 / 9.5 long, #46AA3C x2 / #166438; 3 VineLeaf blocks 1.5 x 0.3 x 1 #78D246.
+- **08 Bush_Jungle_A** (11.6 x 6.3 x 11.7):
+  - Leaves mesh 8.5 x 5 x 8 #289642 at (0, 2.4, 0); Leaves 5.4 x 3.6 x 5.4 #78D246 at (1.6, 4.4, -1.2);
+  - Flowers mesh 6.5 x 2.3 x 6.5 #FF508C at (-0.4, 4.5, 0.6).
+
+**Real colours** (keep):
+- stone #848A7C / #5C645C (+ tone steps), crack #292D29;
+- moss #589642 -> #60C448 -> #78D246, grass #78D246 / #60C448;
+- water #30C4BE, lighter streaks #7FE3DE, foam #F5F6FA, basin slab pale #D3D9CF;
+- pads #289642 / #78D246 (veins = +22 % white, rims x0.86); lotus #FF508C / #FF8DB4, gold centre #FFC93C;
+- bamboo #A2D856 / #9ACD52 / #93C44E / #91C14D; thin bamboo #46AA3C / #166438; leaves #78D246 / #60C448 / #289642;
+- bush #289642 / #78D246 (+ #46AA3C), flowers #FF508C.
+
+**Facet pieces** (origin = the kit pivot unless stated; the pieces carry `place` and `replaces` in their JSON):
+
+| Piece | Faces (rect) | Origin / placement | Replaces |
+|---|---|---|---|
+| `rock_s__body` | 42 (0) | Mossy_Rock_S pivot | the Rock look (mesh kept invisible as collider) |
+| `rock_s__moss` | 36 (0) | Mossy_Rock_S pivot, built on the body | Moss |
+| `rock_m__body` | 72 (0) | Mossy_Rock_M pivot, in the Rock's tilted box | the Rock look |
+| `rock_m__moss` | 57 (0) | Mossy_Rock_M pivot | Moss |
+| `rock_l__body` | 157 (0) | Mossy_Rock_L pivot, both rocks | the 2 Rock looks |
+| `rock_l__moss` | 117 (0) | Mossy_Rock_L pivot, both patches | 2 Moss |
+| `waterfall__rocks` | 205 (0) | Waterfall_Rock_Set pivot, both rocks + moss | the 2 Rock looks + 2 Moss |
+| `waterfall__water` | 14 (10) | Waterfall_Rock_Set pivot | WaterTop + WaterFall (no collision; T 0.15 on the sheet) |
+| `waterfall__basin` | 58 (12) | Waterfall_Rock_Set pivot | Foam (no collision; T 0.3 on the foam faces) |
+| `lily__pads` | 55 (0) | LilyPad_A pivot | the 2 Pads |
+| `lily__lotus` | 26 (0) | LilyPad_A pivot, in the Bloom's box | Bloom |
+| `bamboo__leaf_spray` | 13 (0) | own anchor = the twig base on a node, reaching +X | the BambooLeaf / VineLeaf blocks (2-3 per cane top, small ones on side branches) |
+| `bush__flowers` | 30 (4) | Bush_Jungle_A pivot, on today's clumps | Flowers mesh |
+| `bush__base_leaves` | 10 (0) | Bush_Jungle_A pivot | nothing (added) |
+| `bush__clump` | 30 (0) | own anchor = bottom centre, 2 wide (optional) | the Leaves meshes, only if they prove heavy |
+
+Reuse from earlier sections (no new cost):
+- `ruins__plant_tuft` and `ruins__fern` (C4) for grass and plants at rock feet and bamboo bases;
+- `moss__drape_B` (C2) where moss should run over a rock edge (L, waterfall), at scale 0.6-1.0.
+
+**Part rules:**
+
+**Rocks 01 / 02 / 03 (and the waterfall rocks):**
+- **Bodies:** the facet bodies give the layered strata (2-4 stacked natural layers per rock, each offset, the middle one widest so the rock reads round), soft gray-green shading (darker low x0.8, lighter tops, 3 tone steps of #848A7C / #5C645C) and 1-4 dark cracks.
+- **Moss:** soft blankets lying ON the rock facets, 2-3 layers each smaller, lighter and offset (#589642 -> #60C448 -> #78D246), with 2-4 grass tufts. They replace the flat green Moss meshes; never a flat slab.
+- **Pebbles at the base:** 2-4 small pebbles per rock as parts: chamfered blocks or wedges 0.3-0.7 (S) / 0.5-1.2 (M, L), #5C645C / #848A7C tones, half sunk, never floating.
+  - Add 1-2 `ruins__plant_tuft` (scale 0.5-0.8) at the foot.
+  - CanCollide off on everything new.
+- **Variation (owner: rotation / scale only):** each copy keeps its own CFrame and its own (baked) scale; if more variety is wanted, a per-copy yaw of +-15 deg and scale x0.95-1.05 is allowed (stays within +10 %).
+
+**04 rocks with cyan block (a small waterfall):**
+- **Composition:** keep it exactly: the 2 rocks either side (facet bodies + moss, colliders kept), the Step in the middle, the water on and over it, the pale slab in front.
+- **Step:** cut stone blocks: 2 courses of 2.2-2.4 tall, blocks 2.5-4 long, 0.08 joints over a dark #3E453E core, 0.15 chamfers, a capstone row 0.3 proud under the water's back half. Keep its 8 x 4.6 x 8 box and its collision.
+- **Water:** `waterfall__water`: the cyan block with bevels in today's #30C4BE and size (flat top, bevelled sides and back, a rounded lip over the front, the falling sheet with lighter streaks, a foam line on the lip).
+  - "Glowing": an optional PointLight #7FE3DE, range 8, brightness 0.4, at (0, 3, -3).
+  - Water T 0.15 on the sheet like today; CanCollide off.
+- **Pale slab:** `waterfall__basin`: a chipped pale stone slab with a crack (today's Foam footprint 8.4 x 3, top y 0.35) with a white foam ring where the sheet lands; CanCollide off like today.
+- No script or tag exists to keep (checked).
+
+**05 lily pads and lotus:**
+- **Pads:** `lily__pads`: round pads at today's 2 places, a V notch, a domed centre, an upturned curled rim, lighter veins; top at y ~0.25 like today.
+- **Lotus:** `lily__lotus` in the Bloom's box: 6 outer + 5 inner petals folded on their midribs, gold centre.
+- Nothing collides (as today).
+- The copies float at different water heights: keep each copy's CFrame (the kit pivot is the water surface).
+
+**06 bamboo cluster** (keep the 5 cane heights and places; CanCollide on the canes as today):
+- **Canes:** each Stalk = 0.9 cylinders in segments 2.2-2.8 long; at every joint a node ring (cylinder 1.02 across x 0.14, one tone darker x0.86) and a 0.04 waist.
+- **Gradient:** the segments step from x0.86 at the foot to x1.05 at the top of today's cane colour (#91C14D .. #A2D856), a yellowish tint (mix 10 % #D8C080) on the lowest segment.
+  - Cheaper alternative if parts are tight: 3 long segments per cane + node rings only.
+- **Leaves:**
+  - top clusters: 2-3 `bamboo__leaf_spray` (scale 0.9-1.2) at the top node of each of the 3 tallest canes (replacing the 3 BambooLeaf blocks);
+  - side branches: 1-2 small sprays (scale 0.45-0.6) on mid nodes, each on a 0.12 twig (part) 0.6 long.
+- **Base:** a low mound (2 squashed Balls #4A3022 x 0.3 tall) with 4-6 short roots (WedgeParts 0.25 x 0.25 x 0.8, #68442C) splaying from the cane feet, 2 `ruins__plant_tuft` and 1 `ruins__fern` (scale 0.6). CanCollide off on the base.
+
+**07 thin bamboo (`Vine_Hanging_A`)** (keep the 3 lengths 14 / 12 / 9.5 and the places; nothing collides):
+- **Canes:** today's 3 Vine sticks become thin canes 0.5 across, segments 1.6-2.0 with node rings 0.6 x 0.1 (x0.82).
+  - Colours: #46AA3C (2 canes) and the dark #166438 one, with the same light-to-dark gradient as 06.
+- **Leaves:** today's 3 VineLeaf blocks become small `bamboo__leaf_spray` (scale 0.4-0.6) on 1-2 nodes per cane, plus a top cluster of 2 sprays on each cane.
+- **Base:** roots + 2 grass tufts ONLY on the grounded variant (test zone + Jungle_3). Hanging copies (Jungle_4, BossArenas) get no base (see above).
+
+**08 flowering bush** (keep the 11.6 x 6.3 x 11.7 size; nothing collides):
+- **Leaf clumps:** today's 2 leaf MeshParts (the layered clumps, dark #289642 below, light #78D246 on top); optional 3rd small clump (same mesh, #46AA3C, 3.5 x 2.3 x 3.5 at about (-2.6, 1.4, 1.6)).
+- **Flowers:** `bush__flowers` (4 open pink flowers with 5 petals and a gold centre, 2 buds) sitting on today's clump surfaces. Agent B should lay them onto the real mesh surface: the piece assumes ellipsoids at 92 % of the clump boxes, so move each flower along its normal until it touches the leaves.
+- **Base:** `bush__base_leaves` (5 small leaves splayed on the ground at the foot).
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

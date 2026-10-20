@@ -2769,3 +2769,34 @@ Objects: 01 torch (keep size and light settings, keep any flicker), 02 drum (kee
   backup after_jungle_decor. Per object: 01 torch 24 / 24, 02 drum 7 / 7, 03 skull on pole 14 / 14, 04 banner 9 / 9 -
   all OK.
 
+
+# Jungle rocks and plants (PROMPT 06) - 2026-10-20 (started only after prompt 05 was finished and pushed, 032dcc5, as the owner asked)
+
+Objects: 01 large / 02 small / 03 round mossy rocks (same sizes and collisions, ALL instances, small rotation / scale
+variations only), 04 rocks with cyan block (keep the composition; the cyan block and pale slab stay in place; keep
+scripts / tags / interactions), 05 lily pads with pink cube (a lotus in place of the cube, same position and size; if
+it is a script object or pickup keep it), 06 bamboo cluster / 07 thin bamboo (keep heights and placement), 08
+flowering bush.
+
+## Status (newest first)
+
+- 14:20 Started. Images in docs/Jungle_Images/06_Rocks_and_Plants/. Backup before_jungle_nature.
+- 14:25-15:05 (before the crash) Agent A: guide C7 (kits / copies: Mossy_Rock_L 14, Mossy_Rock_S 70, Mossy_Rock_M 38
+  (= the round rock), Waterfall_Rock_Set 3 (the "cyan block" is a small decorative waterfall: Step + WaterTop +
+  WaterFall sheet; the "pale slab" is its Foam), LilyPad_A 36 (the pink cube "Bloom" is plain decor, no pickup),
+  Bamboo_Cluster_A 28, Vine_Hanging_A 42 (= the "thin bamboo"; 34 copies hang in the air), Bush_Jungle_A 226; no
+  script / prompt / tag anywhere; most copies part-resized -> bakedScale; budgets per copy) + 15 cheap facets
+  (preview approved). Agent B: inventory (485 copies), per-object backups old_props_2026-10-20_pre_jungle_nature/;
+  PILOT 01 jungle_rock_large 15 / 15 - first version (smooth egg shapes, a strata belt, hexagon moss rims) REJECTED
+  by the main agent; redone with Agent A's rock facets converted into convex solids (~2 tris per face): angular
+  stacked tilted strata, cracks, moss cushions + ledge mats, grass; 4.4k tris; today's Rock MeshParts kept as
+  invisible Hull colliders (ray grids 0 differences), the 2 Jungle_2 map-edge Moss colliders kept with MapFixCollide.
+  Pilot shots sent to the owner. Then 02 jungle_rock_small, 03 jungle_rock_round, 04 jungle_waterfall_rocks built and
+  synced (+ a PropFX Scroll entry for the waterfall's ripples).
+- 15:35 RESUMED AFTER CRASH (the Claude session ended while Agent B was starting 05 lily pads). Found: in Studio, 01-04
+  have templates, every copy up to date (rock_large 15, rock_round 39, rock_small 71, waterfall 4), no leftovers;
+  05-08 untouched (LilyPad_A 36, Bamboo_Cluster_A 28, Vine_Hanging_A 42, Bush_Jungle_A 226 copies all identical to
+  their kits, none tagged; the 8 sync rules already in Studio). Disk was behind Studio for tools/SyncMapProps.luau ->
+  ExportScripts + pull (1 written). Intermediate backup resume_jungle_rocks_done (6 files, new dated label). Batch
+  01-04 committed and pushed; 05-08 continue with the same rules.
+

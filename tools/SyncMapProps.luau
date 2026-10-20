@@ -324,6 +324,35 @@ SyncMapProps.RULES = {
 	{ propId = "jungle_war_banner", names = { "WarBanner_A" }, bakedScale = function(m)
 		return bakedFrom(m, "Crossbar", 5.6)
 	end },
+	-- jungle rocks and plants (owner JUNGLE PROMPT_06, 2026-10-20): 01 large / 02 small / 03 round mossy rock
+	-- (Mossy_Rock_L / S / M), 04 the rocks with the cyan block (Waterfall_Rock_Set: a small waterfall), 05 the lily pads
+	-- (LilyPad_A), 06 the bamboo cluster (Bamboo_Cluster_A), 07 the thin bamboo (Vine_Hanging_A), 08 the flowering bush
+	-- (Bush_Jungle_A). Almost every placed copy is the kit resized part by part with Model scale 1 (0.6 .. 2.0):
+	-- bakedScale reads the real scale from the kit part named below
+	{ propId = "jungle_rock_large", names = { "Mossy_Rock_L" }, bakedScale = function(m)
+		return bakedFrom(m, "Rock", 21)
+	end },
+	{ propId = "jungle_rock_small", names = { "Mossy_Rock_S" }, bakedScale = function(m)
+		return bakedFrom(m, "Rock", 4.6)
+	end },
+	{ propId = "jungle_rock_round", names = { "Mossy_Rock_M" }, bakedScale = function(m)
+		return bakedFrom(m, "Rock", 8)
+	end },
+	{ propId = "jungle_waterfall_rocks", names = { "Waterfall_Rock_Set" }, bakedScale = function(m)
+		return bakedFrom(m, "Step", 8)
+	end },
+	{ propId = "jungle_lily_pads", names = { "LilyPad_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Bloom", 1.3)
+	end },
+	{ propId = "jungle_bamboo", names = { "Bamboo_Cluster_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Stalk", 21)
+	end },
+	{ propId = "jungle_thin_bamboo", names = { "Vine_Hanging_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Vine", 0.5)
+	end },
+	{ propId = "jungle_flower_bush", names = { "Bush_Jungle_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Leaves", 8.5)
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

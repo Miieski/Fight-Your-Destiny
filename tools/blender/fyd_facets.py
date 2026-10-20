@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -3786,6 +3786,599 @@ def preview_jungle_decor(pieces):
                                    (g3, [(-20, 6)]), (g3[2:], [(35, 8)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# JUNGLE ROCKS AND PLANTS (guide section C7): layered rock bodies + soft moss mounds with grass tufts (Mossy_Rock_S /
+# M / L, Waterfall_Rock_Set), the waterfall's bevelled water and chipped basin slab, lily pads + lotus, a bamboo leaf
+# spray, bush flowers / base leaves / an optional leaf clump. HUNDREDS of copies (bush 226, small rock 70): every
+# piece is budgeted (see C7); everything else is parts.
+# ------------------------------------------------------------------------------------------------
+from mathutils import Matrix as _Mx
+
+LOTUS, LOTUS_L, WATER, WATER_L, FOAM = "#FF508C", "#FF8DB4", "#30C4BE", "#7FE3DE", "#F5F6FA"
+PALE = "#D3D9CF"   # the basin slab (today's Foam is a pale white plate; owner: "a pale slab")
+
+
+def _cf(pos, rot):
+    """rbxm CFrame (row-major 3x3) -> (Matrix, Vector)."""
+    r = rot
+    return _Mx(((r[0], r[1], r[2]), (r[3], r[4], r[5]), (r[6], r[7], r[8]))), Vector(pos)
+
+
+def rock_layers_into(pc, cf, size, layers, rng, base, n=7, sink=None):
+    """Layered faceted rock inside a MeshPart's box: layers [(v0, v1, cu, cw, ku, kw)] in fractions of the box
+    (v = -0.5 .. 0.5 along local Y, cu / cw = centre offsets in fractions of X / Z, ku / kw = half-widths in
+    fractions); points built in the part's local frame then moved by its CFrame. Faces darker low (kit-space
+    gradient), 3 tone steps, the top of each layer a little lighter; faces under `sink` (kit y) are dropped."""
+    R, P0 = cf
+    sx, sy, sz = size
+    trees = []
+    allp = []
+    bottoms = []
+    for li, (v0, v1, cu, cw, ku, kw) in enumerate(layers):
+        pts = []
+        for vv, k in ((v0, 0.86 if li else 0.94), (v1, 0.62 if li == len(layers) - 1 else 0.95)):
+            a0 = rng.uniform(0, 2 * math.pi / n)
+            for i in range(n):
+                a = a0 + 2 * math.pi * i / n + rng.uniform(-0.15, 0.15)
+                c, s = math.cos(a), math.sin(a)
+                r = (abs(c) ** 2.1 + abs(s) ** 2.1) ** (-1 / 2.1) * rng.uniform(0.86, 1.04) * k
+                loc = Vector(((cu + ku * r * c) * sx, (vv + rng.uniform(-0.04, 0.04) * (0 < li or vv > v0)) * sy,
+                              (cw + kw * r * s) * sz))
+                pts.append(R @ loc + P0)
+        bottoms.append({tuple(round(c, 4) for c in p) for p in pts[:n]})
+        if li == len(layers) - 1:
+            pts.append(R @ Vector(((cu + rng.uniform(-0.1, 0.1) * ku) * sx, (v1 + 0.06) * sy, cw * sz)) + P0)
+        allp += pts
+        trees.append(pts)
+    H0 = min(p.y for p in allp)
+    H1 = max(p.y for p in allp)
+    out = []
+    for pts, bset in zip(trees, bottoms):
+        def col(cc, nrm):
+            h = max(0.0, min(1.0, (cc.y - H0) / max(H1 - H0, 1e-6)))
+            g = 0.8 + 0.2 * (h * h * (3 - 2 * h))
+            if nrm.y > 0.65:
+                return tone(base, min(1.06, g + 0.07))
+            return tone(base, g * rng.choice(STEPS))
+        lim = H0 + 0.05 if sink is None else sink
+        out.append(hull_into(pc, pts, col, 0.5, skip=lambda ring, lim=lim, bset=bset: all(p.y <= lim for p in ring) or
+                             all(tuple(round(c, 4) for c in p) in bset for p in ring)))
+    return out
+
+
+def rock_crack(pc, trees, origin, direction, L, ang, s=1.0):
+    ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+    pts2 = [(-0.06 * s, -L / 2), (0.06 * s, -L / 2), (0.1 * s + 0.18 * L, 0.0), (0.0 + 0.18 * L, 0.0)]
+    pts2b = [(0.0 + 0.18 * L, 0.0), (0.1 * s + 0.18 * L, 0.0), (0.08 * s, L / 2), (-0.03 * s, L / 2)]
+    for tree in trees:
+        if surface_quad(pc, tree, origin, direction, [(u * ca - v * sa, u * sa + v * ca) for u, v in pts2], JREC,
+                        "SmoothPlastic", 0.08, 0.03):
+            surface_quad(pc, tree, origin, direction, [(u * ca - v * sa, u * sa + v * ca) for u, v in pts2b], JREC,
+                         "SmoothPlastic", 0.08, 0.03)
+            return True
+    return False
+
+
+def _top_hit(trees, x, z):
+    best = None
+    for t in trees:
+        hit = t.ray_cast(Vector((x, 500.0, z)), Vector((0, -1, 0)))
+        if hit[0] is not None and (best is None or hit[0].y > best[0].y):
+            best = (hit[0], hit[1])
+    return best
+
+
+def moss_mound_into(pc, trees, cx, cz, rx, rz, yaw, rng, layers, tufts=2):
+    """Soft layered moss lying ON the rock top: each layer = an irregular ring projected down onto the rock's
+    facets (lifted so no rock edge pokes through) + a raised centre: a low faceted mound; the next layers smaller,
+    lighter, offset toward the light. layers: [(scale, dx, dz, H, (col, col2), n)]. tufts: 3-blade grass tufts."""
+    ya = math.radians(yaw)
+    lift = 0.0
+    for li, (k, dx, dz, H, cols, n) in enumerate(layers):
+        for _ in range(60):
+            ring2 = []
+            for i in range(n):
+                a = 2 * math.pi * i / n + rng.uniform(-0.18, 0.18)
+                r = rng.uniform(0.82, 1.06)
+                ring2.append((rx * k * r * math.cos(a), rz * k * r * math.sin(a)))
+            if _convex(ring2):
+                break
+        ring = []
+        c0 = _top_hit(trees, cx + dx, cz + dz)
+        for x, z in ring2:
+            for _ in range(12):   # stay on the rock's top: pull a point in while it falls off the side
+                xx = cx + dx + x * math.cos(ya) - z * math.sin(ya)
+                zz = cz + dz + x * math.sin(ya) + z * math.cos(ya)
+                h = _top_hit(trees, xx, zz)
+                if h is not None and (c0 is None or c0[0].y - h[0].y <= 0.45 * max(rx, rz) * k + 0.1):
+                    break
+                x, z = x * 0.88, z * 0.88
+            if h is None:
+                continue
+            ring.append(Vector((xx, h[0].y + 0.06 + lift, zz)))
+        if len(ring) < 3:
+            continue
+        # lift the rim where the rock bulges between two ring points
+        for _ in range(3):
+            for i in range(len(ring)):
+                j = (i + 1) % len(ring)
+                m = (ring[i] + ring[j]) / 2
+                h = _top_hit(trees, m.x, m.z)
+                if h is not None and h[0].y + 0.04 + lift > m.y:
+                    d = h[0].y + 0.04 + lift - m.y
+                    ring[i].y += d
+                    ring[j].y += d
+        c = sum(ring, Vector()) / len(ring)
+        hc = _top_hit(trees, c.x, c.z)
+        # a soft blanket: the rim on the rock, an inner ring 0.6 in lifted H above the rock (it follows the curve),
+        # a low centre; no rock facet may poke through (each triangle is sampled, the inner ring raised if needed)
+        inner = []
+        for p in ring:
+            q = c.lerp(p, 0.6)
+            h = _top_hit(trees, q.x, q.z)
+            inner.append(Vector((q.x, (h[0].y if h else q.y) + lift + 0.06 + H, q.z)))
+        peak = Vector((c.x, max(p.y for p in inner) + H * 0.15, c.z))
+        for _ in range(4):
+            need = 0.0
+            for i in range(len(ring)):
+                j = (i + 1) % len(ring)
+                for tri in ((ring[i], ring[j], inner[j]), (ring[i], inner[j], inner[i]), (inner[i], inner[j], peak)):
+                    q = (tri[0] + tri[1] + tri[2]) / 3
+                    h = _top_hit(trees, q.x, q.z)
+                    if h is not None and h[0].y + 0.04 > q.y:
+                        need = max(need, h[0].y + 0.04 - q.y)
+            if need <= 1e-4:
+                break
+            need = min(need * 1.5, H)
+            inner = [p + Vector((0, need, 0)) for p in inner]
+            peak.y += need
+        for i in range(len(ring)):
+            j = (i + 1) % len(ring)
+            out = (ring[i] + ring[j]) / 2 - c + Vector((0, 1.0, 0))
+            pc.quad_or_tris([ring[i], ring[j], inner[j], inner[i]], cols[1], "SmoothPlastic", 0.12, out)
+            pc.face([inner[i], inner[j], peak], cols[0] if i % 2 else tone(cols[0], 0.95), "SmoothPlastic", 0.12, Vector((0, 1, 0)))
+        lift += H * 0.45
+        if li == 0:
+            top_ring, top_peak = inner, peak
+    for _ in range(tufts):
+        i = rng.randrange(len(top_ring))
+        f = rng.uniform(0.1, 0.5)
+        base = top_ring[i].lerp(top_peak, f)
+        for b in range(3):
+            ang = rng.uniform(0, 2 * math.pi)
+            d = Vector((math.cos(ang), 0, math.sin(ang)))
+            w = Vector((-d.z, 0, d.x)) * 0.09 * min(max(rx, 1.0), 2.5) ** 0.3
+            tip = base + d * rng.uniform(0.15, 0.3) * min(max(rx, 1.0), 2.5) ** 0.5 + Vector((0, rng.uniform(0.35, 0.6) * min(max(rx, 1.0), 2.5) ** 0.5, 0))
+            pc.face([base - w, base + w, tip], JMOSS_LL if b % 2 else JMOSS_L, "SmoothPlastic", 0.05, Vector((d.z, 0.0, -d.x)))
+
+
+def _rock_piece(kit, name, origin_kit, notes, replaces):
+    return Piece(kit, name, f"the {origin_kit} kit pivot (y 0 = the kit's pivot height, front -Z)",
+                 place={"relativeTo": f"the {origin_kit} model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                        "replaces": replaces, "scale": "the copy's scale (bakedScale: many copies were resized part by part)"},
+                 notes=notes)
+
+
+def rock_s():
+    rng = random.Random(6101)
+    body = _rock_piece("rock_s", "body", "Mossy_Rock_S",
+                       "small mossy rock, the shape of today's Rock box (4.6 x 3.0 x 4.6, y -0.2 .. 2.8): 2 stacked natural "
+                       "layers (the upper one domed and offset = strata), 7-sided jittered rings, darker at the bottom "
+                       "(x0.8), 3 tone steps of #848A7C, a dark crack on the front.",
+                       "the look of the Rock MeshPart (keep it, Transparency 1, as the collider: option (a)); no collision on the piece")
+    cf = _cf((0.0, 1.3, 0.0), (1, 0, 0, 0, 1, 0, 0, 0, 1))
+    trees = rock_layers_into(body, cf, (4.6, 3.0, 4.6), [(-0.5, -0.02, 0.0, 0.0, 0.46, 0.45), (-0.06, 0.5, 0.04, -0.03, 0.47, 0.46)],
+                             rng, JSTONE, n=7)
+    rock_crack(body, trees, (-0.5, 1.0, -30), (0, 0, 1), 0.9, 15)
+    moss = _rock_piece("rock_s", "moss", "Mossy_Rock_S",
+                       "soft layered moss on the small rock's top (where today's Moss is, centre (0.2, z 0)): 2 low faceted "
+                       "mounds lying on the rock facets (#589642 -> #60C448), the upper one smaller and offset, 2 grass "
+                       "tufts (3 blades, #78D246 / #60C448). Built on rock_s__body.",
+                       "the Moss MeshPart (CanCollide off like today)")
+    moss_mound_into(moss, trees, 0.2, 0.0, 1.85, 1.75, 60, rng,
+                    [(1.0, 0.0, 0.0, 0.3, (JMOSS, tone(JMOSS, 0.9)), 6), (0.55, 0.25, -0.15, 0.16, (JMOSS_L, tone(JMOSS_L, 0.92)), 4)], tufts=2)
+    return [body, moss]
+
+
+def rock_m():
+    rng = random.Random(6202)
+    body = _rock_piece("rock_m", "body", "Mossy_Rock_M",
+                       "round mossy rock in today's tilted Rock box (8 x 8.5 x 8.4 at (0, 4, 0), turned 40 deg, tilted 8 deg): "
+                       "3 stacked rounded layers (strata, the middle one widest = round), the top one domed, darker #5C645C base tone, 3 tone steps, "
+                       "lighter tops, 2 cracks.",
+                       "the look of the Rock MeshPart (keep it, Transparency 1, as the collider)")
+    cf = _cf((0.0, 4.0, 0.0), (0.7586, -0.1066, 0.6428, 0.1392, 0.9903, 0.0, -0.6365, 0.0895, 0.766))
+    trees = rock_layers_into(body, cf, (8.0, 8.5, 8.4), [(-0.5, -0.12, 0.0, 0.0, 0.42, 0.42), (-0.16, 0.22, -0.02, 0.03, 0.5, 0.49),
+                                                         (0.18, 0.5, 0.03, 0.0, 0.46, 0.46)], rng, JSTONE_D, n=8)
+    rock_crack(body, trees, (-1.2, 3.0, -30), (0, 0, 1), 1.6, 20, 1.4)
+    rock_crack(body, trees, (1.6, 5.2, -30), (0, 0, 1), 1.2, -25, 1.2)
+    moss = _rock_piece("rock_m", "moss", "Mossy_Rock_M",
+                       "soft layered moss cap on the round rock (today's Moss centre (0.3, z 0)): 3 low faceted mounds "
+                       "(#589642 -> #60C448 -> #78D246) lying on the rock, each smaller and offset, 3 grass tufts.",
+                       "the Moss MeshPart (CanCollide off)")
+    moss_mound_into(moss, trees, 0.3, 0.0, 3.3, 3.2, 20, rng,
+                    [(1.0, 0.0, 0.0, 0.42, (JMOSS, tone(JMOSS, 0.9)), 7), (0.62, 0.4, -0.3, 0.24, (JMOSS_L, tone(JMOSS_L, 0.92)), 5),
+                     (0.3, -0.5, 0.4, 0.16, (JMOSS_LL, tone(JMOSS_LL, 0.92)), 4)], tufts=3)
+    return [body, moss]
+
+
+def rock_l():
+    rng = random.Random(6303)
+    body = _rock_piece("rock_l", "body", "Mossy_Rock_L",
+                       "the large mossy rock pair in today's 2 Rock boxes: the big rock 21 x 14.5 x 18 at (0, 6.8, 0) turned "
+                       "20 deg (4 stacked strata layers, #848A7C) and the small one 9 x 10.5 x 9 at (8.5, 4.8, -5.5) tilted "
+                       "(3 layers, darker #5C645C); 3 tone steps, darker low, 4 cracks.",
+                       "the look of the 2 Rock MeshParts (keep them, Transparency 1, as the colliders)")
+    big = rock_layers_into(body, _cf((0.0, 6.8, 0.0), (0.9397, 0.0, 0.342, 0.0, 1.0, 0.0, -0.342, 0.0, 0.9397)), (21.0, 14.5, 18.0),
+                           [(-0.5, -0.22, 0.0, 0.0, 0.47, 0.46), (-0.25, 0.06, 0.02, -0.02, 0.5, 0.49), (0.03, 0.3, -0.03, 0.03, 0.47, 0.46),
+                            (0.26, 0.5, 0.02, 0.0, 0.42, 0.41)], rng, JSTONE, n=8)
+    small = rock_layers_into(body, _cf((8.5, 4.8, -5.5), (0.4938, -0.0782, 0.866, 0.2304, 0.9721, -0.0436, -0.8385, 0.221, 0.4981)),
+                             (9.0, 10.5, 9.0), [(-0.5, -0.12, 0.0, 0.0, 0.44, 0.44), (-0.15, 0.22, 0.03, 0.0, 0.49, 0.48),
+                                                (0.19, 0.5, -0.02, 0.02, 0.45, 0.45)], rng, JSTONE_D, n=7)
+    for o, L, a, s in (((-4.0, 5.0, -40), 3.0, 15, 2.2), ((2.5, 9.5, -40), 2.4, -20, 2.0), ((-7.0, 9.0, -40), 2.0, 40, 1.8)):
+        rock_crack(body, small + big, o, (0, 0, 1), L, a, s)
+    rock_crack(body, small, (8.0, 4.0, -40), (0, 0, 1), 1.8, 10, 1.6)
+    moss = _rock_piece("rock_l", "moss", "Mossy_Rock_L",
+                       "soft layered moss on the large rocks (today's 2 Moss places: (-0.5, z 0.5) on the big rock, (8.6, z "
+                       "-5.4) on the small one): 3 + 2 low faceted mounds (#589642 -> #60C448 -> #78D246) lying on the "
+                       "facets, grass tufts.",
+                       "the 2 Moss MeshParts (CanCollide off; the 2 Jungle_2 copies with MapFixCollide: see C7)")
+    moss_mound_into(moss, big, -0.5, 0.5, 7.4, 6.4, 50, rng,
+                    [(1.0, 0.0, 0.0, 0.6, (JMOSS, tone(JMOSS, 0.9)), 9), (0.6, 1.2, -0.8, 0.35, (JMOSS_L, tone(JMOSS_L, 0.92)), 7),
+                     (0.3, -1.4, 1.0, 0.22, (JMOSS_LL, tone(JMOSS_LL, 0.92)), 5)], tufts=4)
+    moss_mound_into(moss, small, 8.6, -5.4, 3.0, 2.9, 10, rng,
+                    [(1.0, 0.0, 0.0, 0.36, (tone(JMOSS_L, 0.95), tone(JMOSS_L, 0.86)), 7), (0.55, 0.3, -0.2, 0.2, (JMOSS_LL, tone(JMOSS_LL, 0.92)), 5)],
+                    tufts=2)
+    return [body, moss]
+
+
+WF_ORIGIN = "Waterfall_Rock_Set"
+
+
+def waterfall_pieces():
+    rng = random.Random(6404)
+    rocks = _rock_piece("waterfall", "rocks", WF_ORIGIN,
+                        "the 2 mossy rocks either side of the falls, in today's Rock boxes (left 8.5 x 8.5 x 10 at (-7.5, 3.6, "
+                        "0.5) #5C645C, right 9 x 7.4 x 10 at (7.5, 3.2, 0.5) #848A7C): 3 strata layers each, cracks, plus "
+                        "their soft layered moss mounds and grass tufts at today's 2 Moss places.",
+                        "the look of the 2 Rock and 2 Moss MeshParts (keep the Rocks, Transparency 1, as colliders; Moss off)")
+    L = rock_layers_into(rocks, _cf((-7.5, 3.6, 0.5), (0.7618, -0.0801, 0.6428, 0.1045, 0.9945, 0.0, -0.6393, 0.0672, 0.766)), (8.5, 8.5, 10.0),
+                         [(-0.5, -0.12, 0.0, 0.0, 0.44, 0.44), (-0.15, 0.22, 0.02, 0.02, 0.49, 0.49), (0.19, 0.5, -0.02, 0.0, 0.45, 0.45)],
+                         rng, JSTONE_D, n=7)
+    R = rock_layers_into(rocks, _cf((7.5, 3.2, 0.5), (-0.342, 0.0, 0.9397, 0.0, 1.0, 0.0, -0.9397, 0.0, -0.342)), (9.0, 7.4, 10.0),
+                         [(-0.5, -0.12, 0.0, 0.0, 0.44, 0.44), (-0.15, 0.22, 0.03, 0.0, 0.49, 0.48), (0.19, 0.5, 0.0, 0.03, 0.45, 0.45)],
+                         rng, JSTONE, n=7)
+    rock_crack(rocks, L, (-8.5, 3.0, -30), (0, 0, 1), 1.6, 15, 1.4)
+    rock_crack(rocks, R, (8.5, 2.6, -30), (0, 0, 1), 1.4, -20, 1.3)
+    moss_mound_into(rocks, L, -7.4, 0.6, 3.0, 3.0, 20, rng,
+                    [(1.0, 0.0, 0.0, 0.36, (JMOSS, tone(JMOSS, 0.9)), 7), (0.55, 0.3, -0.3, 0.2, (JMOSS_L, tone(JMOSS_L, 0.92)), 5)], tufts=2)
+    moss_mound_into(rocks, R, 7.6, 0.4, 3.0, 3.0, 70, rng,
+                    [(1.0, 0.0, 0.0, 0.34, (tone(JMOSS_L, 0.95), tone(JMOSS_L, 0.86)), 7), (0.55, -0.3, -0.3, 0.18, (JMOSS_LL, tone(JMOSS_LL, 0.92)), 5)],
+                    tufts=2)
+    water = Piece("waterfall", "water", f"the {WF_ORIGIN} kit pivot (front -Z)",
+                  place={"relativeTo": f"the {WF_ORIGIN} model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                         "replaces": "WaterTop (7.4 x 0.4 x 8 at (0, 4.7, 2)) and WaterFall (7.2 x 5 x 0.6 at (0, 2.3, -2.2), tilted "
+                                     "6 deg); both CanCollide off like today. Set Transparency 0.15 on the falling sheet faces "
+                                     "(today's WaterFall)", "collide": "CanCollide off"},
+                  notes="the cyan water block with bevels, today's #30C4BE and size: a flat top (y 4.9, x +-3.45) with "
+                        "0.25 bevels down to the block's sides and back (y 4.6), a rounded 2-band lip over the front edge "
+                        "(z -2.0 -> -2.45), the falling sheet 7.2 wide down to the basin (y 0.35 at z -2.75), 4 lighter "
+                        "#7FE3DE streaks on it and 2 on the top, a white #F5F6FA foam line on the lip.")
+    T = 0.25
+    hx, y0, y1, zf, zb = 3.7, 4.55, 4.9, -2.0, 6.0
+    b = 0.25
+    top = [Vector((-hx + b, y1, zf)), Vector((hx - b, y1, zf)), Vector((hx - b, y1, zb - b)), Vector((-hx + b, y1, zb - b))]
+    water.face(top, WATER, "SmoothPlastic", T, Vector((0, 1, 0)))
+    for sx in (-1, 1):
+        water.face([Vector((sx * (hx - b), y1, zf)), Vector((sx * hx, y0, zf)), Vector((sx * hx, y0, zb)), Vector((sx * (hx - b), y1, zb - b))],
+                   tone(WATER, 0.9), "SmoothPlastic", T, Vector((sx, 1, 0)))
+    water.face([Vector((-hx + b, y1, zb - b)), Vector((hx - b, y1, zb - b)), Vector((hx, y0, zb)), Vector((-hx, y0, zb))],
+               tone(WATER, 0.9), "SmoothPlastic", T, Vector((0, 1, 1)))
+    # lip: 2 bands curving over the front edge, then the sheet
+    prof = [(y1, zf), (y1 - 0.12, zf - 0.3), (y1 - 0.4, zf - 0.45), (0.35, -2.75)]
+    cols = (tone(WATER, 1.08), WATER, tone(WATER, 0.95))
+    for i in range(3):
+        (ya, za), (yb, zb_) = prof[i], prof[i + 1]
+        wa = hx - b if i == 0 else 3.6
+        wb = 3.6
+        q = [Vector((-wa, ya, za)), Vector((wa, ya, za)), Vector((wb, yb, zb_)), Vector((-wb, yb, zb_))]
+        water.quad_or_tris(q, cols[i], "SmoothPlastic", T, Vector((0, 0.3, -1)))
+    # foam line along the lip, streaks on the sheet and the top
+    (ya, za), (yb, zb_) = prof[1], prof[2]
+    d = Vector((0, yb - ya, zb_ - za)).normalized()
+    nrm = Vector((0, d.z, -d.y)) if Vector((0, d.z, -d.y)).z < 0 else Vector((0, -d.z, d.y))
+    p0 = Vector((0, ya, za)) + d * 0.05 + nrm * 0.03
+    water.face([p0 + Vector((-3.4, 0, 0)), p0 + Vector((3.4, 0, 0)), p0 + Vector((3.4, 0, 0)) + d * 0.14, p0 + Vector((-3.4, 0, 0)) + d * 0.14],
+               FOAM, "SmoothPlastic", 0.04, nrm)
+    (ya, za), (yb, zb_) = prof[2], prof[3]
+    d = Vector((0, yb - ya, zb_ - za))
+    L = d.length
+    d.normalize()
+    nrm = Vector((0, -d.z, d.y))
+    if nrm.z > 0:
+        nrm = -nrm
+    for x, w, f0, f1 in ((-2.4, 0.22, 0.05, 0.7), (-0.9, 0.16, 0.15, 0.95), (0.7, 0.24, 0.0, 0.8), (2.3, 0.16, 0.2, 1.0)):
+        a = Vector((x, ya, za)) + d * (L * f0) + nrm * 0.03
+        c = Vector((x, ya, za)) + d * (L * f1) + nrm * 0.03
+        water.face([a - Vector((w / 2, 0, 0)), a + Vector((w / 2, 0, 0)), c + Vector((w / 2, 0, 0)), c - Vector((w / 2, 0, 0))],
+                   WATER_L, "SmoothPlastic", 0.04, nrm)
+    for x, z0, z1 in ((-1.4, 1.0, 4.6), (1.2, -0.6, 3.2)):
+        water.face([Vector((x - 0.09, y1 + 0.03, z0)), Vector((x + 0.09, y1 + 0.03, z0)), Vector((x + 0.09, y1 + 0.03, z1)),
+                    Vector((x - 0.09, y1 + 0.03, z1))], WATER_L, "SmoothPlastic", 0.03, Vector((0, 1, 0)))
+    basin = Piece("waterfall", "basin", f"the {WF_ORIGIN} kit pivot (front -Z)",
+                  place={"relativeTo": f"the {WF_ORIGIN} model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                         "replaces": "Foam (#F5F6FA 8.4 x 0.3 x 3 at (0, 0.2, -3.6), T 0.3, no collision) = the owner's 'pale slab'",
+                         "collide": "CanCollide off (like today's Foam)"},
+                  notes="the pale slab under the falls: a chipped pale stone slab #D3D9CF (8.4 x 3.0 footprint, top y 0.35 "
+                        "like today's Foam, 0.12 bevel, chipped corners, a crack), a white foam ring (#F5F6FA, set "
+                        "Transparency 0.3 like today) where the sheet lands and 3 small foam blobs.")
+    slab_into(basin, chipped_outline(4.2, 1.5, 0.0, rng, chip=(0.2, 0.45), cx=0.0, cz=-3.6), 0.35, 0.0, PALE, rng, bevel=0.12, cracks=1)
+    ring = []
+    for i in range(8):
+        a = 2 * math.pi * i / 8
+        ring.append(Vector((3.0 * math.cos(a) * rng.uniform(0.9, 1.05), 0.39, -2.95 + 0.55 * math.sin(a) * rng.uniform(0.9, 1.05))))
+    polygon_fill(basin, ring, FOAM, "SmoothPlastic", 0.04, Vector((0, 1, 0)))
+    for x, z, r in ((-2.8, -4.1, 0.35), (1.9, -4.4, 0.3), (0.2, -3.9, 0.25)):
+        c = Vector((x, 0.42, z))
+        pk = c + Vector((0, 0.12, 0))
+        rr = [c + Vector((r * math.cos(2 * math.pi * k / 4 + 0.4), 0, r * math.sin(2 * math.pi * k / 4 + 0.4))) for k in range(4)]
+        for k in range(4):
+            basin.face([rr[k], rr[(k + 1) % 4], pk], FOAM, "SmoothPlastic", 0.04, (rr[k] + rr[(k + 1) % 4]) / 2 - c + Vector((0, 0.5, 0)))
+    return [rocks, water, basin]
+
+
+def lily_pad_into(pc, cx, cz, y, R, base, n, rng, notch_a=0.0, veins=5):
+    """Round lily pad with a V notch, a slightly domed centre, an upturned (curled) rim band and lighter veins."""
+    c = Vector((cx, y + 0.06 * R / 2.6 + 0.02, cz))
+    angs = [notch_a + 2 * math.pi * (i + 0.5) / n for i in range(n)]
+    ring = [Vector((cx + R * math.cos(a), y, cz + R * math.sin(a))) for a in angs]
+    rim = [c + (p - c) * 1.0 + Vector((math.cos(a), 0, math.sin(a))) * (0.07 * R) + Vector((0, 0.07 * R + 0.03, 0)) - Vector((0, c.y - y, 0))
+           for p, a in zip(ring, angs)]
+    lighter = mix(base, "#FFFFFF", 0.22)
+    for i in range(n - 1):   # the notch = no face between the last and the first ring point
+        j = i + 1
+        pc.face([c, ring[i], ring[j]], tone(base, (1.0, 0.94)[i % 2]), "SmoothPlastic", 0.08, Vector((0, 1, 0)))
+        pc.quad_or_tris([ring[i], rim[i], rim[j], ring[j]], tone(base, 0.86), "SmoothPlastic", 0.06, Vector((0, 1, 0)))
+    # veins: thin lighter strips lying on every other fan triangle (in its plane)
+    for v in range(veins):
+        i = 1 + v * max(1, (n - 2) // veins)
+        if i >= n - 1:
+            break
+        a, b = ring[i], ring[i + 1]
+        m = (a + b) / 2
+        p0 = c.lerp(m, 0.12)
+        p1 = c.lerp(m, 0.85)
+        side = (b - a).normalized() * 0.035 * R
+        nrm = (a - c).cross(b - c).normalized()
+        if nrm.y < 0:
+            nrm = -nrm
+        lift = nrm * 0.02
+        pc.face([p0 - side + lift, p0 + side + lift, p1 + side * 0.4 + lift, p1 - side * 0.4 + lift], lighter, "SmoothPlastic", 0.03, nrm)
+
+
+def lily_pieces():
+    rng = random.Random(6505)
+    origin = "the LilyPad_A kit pivot (y 0 = the water surface the pads float on, front -Z)"
+    pads = Piece("lily", "pads", origin,
+                 place={"relativeTo": "the LilyPad_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                        "replaces": "the 2 Pad cylinders (#289642 5.2 across at (0, 0.13, 0); #78D246 3.2 across at (3.4, 0.11, 1.8)); "
+                                    "no collision like today", "scale": "the copy's scale (bakedScale)"},
+                 notes="the 2 round lily pads at today's places and sizes, top at y 0.25 like today: a 14 / 11-sided "
+                       "disc with a V notch to the centre, slightly domed, an upturned curled rim band (x0.86), 4-5 "
+                       "lighter veins; big #289642, small #78D246.")
+    lily_pad_into(pads, 0.0, 0.0, 0.2, 2.6, "#289642", 14, rng, notch_a=math.radians(-35), veins=5)
+    lily_pad_into(pads, 3.4, 1.8, 0.18, 1.6, "#78D246", 11, rng, notch_a=math.radians(120), veins=4)
+    lotus = Piece("lily", "lotus", origin,
+                  place={"relativeTo": "the LilyPad_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                         "replaces": "the Bloom (#FF508C 1.3 x 0.9 x 1.3 at (0.6, 0.65, -0.5), turned 45 deg; no script, no "
+                                     "collision): keep a part named Bloom if wanted (invisible) - nothing reads it",
+                         "scale": "the copy's scale"},
+                  notes="pink lotus in the Bloom's box (1.3 wide, y 0.2 .. 1.1): 6 outer petals opening at 35 deg (#FF508C, "
+                        "the inner face lighter #FF8DB4), 5 inner petals more upright (#FF8DB4 / lighter tips), a gold "
+                        "#FFC93C centre (4 faces), each petal folded along its midrib (2 faces).")
+    c = Vector((0.6, 0.22, -0.5))
+    for ring_i, (n, L, W, tilt, a0, cols) in enumerate(((6, 0.62, 0.26, 35, 0.0, (LOTUS, tone(LOTUS, 0.88))),
+                                                       (5, 0.55, 0.22, 62, 0.35, (LOTUS_L, tone(LOTUS_L, 0.9))))):
+        for i in range(n):
+            a = a0 + 2 * math.pi * i / n
+            d = Vector((math.cos(a), 0, math.sin(a)))
+            side = Vector((-d.z, 0, d.x))
+            t = math.radians(tilt)
+            up = d * math.cos(t) + Vector((0, math.sin(t), 0))
+            b0 = c + d * (0.08 + 0.05 * ring_i) + Vector((0, 0.04 * ring_i, 0))
+            mid = b0 + up * (L * 0.5)
+            tip = b0 + up * L + Vector((0, 0.06, 0))
+            fold = Vector((0, -0.05, 0)) if ring_i == 0 else -d * 0.04
+            for sgn, cc in ((1, cols[0]), (-1, cols[1])):
+                pts = [b0, mid + side * (W / 2) * sgn + fold, tip]
+                lotus.face(pts, cc, "SmoothPlastic", 0.04, up.cross(side) * -1 + Vector((0, 0.3, 0)))
+    top = c + Vector((0, 0.32, 0))
+    rr = [c + Vector((0.13 * math.cos(k * math.pi / 2), 0.2, 0.13 * math.sin(k * math.pi / 2))) for k in range(4)]
+    for k in range(4):
+        lotus.face([rr[k], rr[(k + 1) % 4], top], GOLD if k % 2 else tone(GOLD, 0.9), "SmoothPlastic", 0.05,
+                   (rr[k] + rr[(k + 1) % 4]) / 2 - c)
+    return [pads, lotus]
+
+
+def bamboo_leaf_spray():
+    rng = random.Random(6606)
+    pc = Piece("bamboo", "leaf_spray", "the piece's own anchor: (0, 0, 0) = the twig's base on the cane (a node); the "
+               "spray reaches out along +X and up, about 3.2 long",
+               place={"relativeTo": "Bamboo_Cluster_A / Vine_Hanging_A (the thin bamboo)",
+                      "position": "at a cane node: 2-3 per cane top (the leaf clusters, replacing the BambooLeaf parts), 1-2 "
+                                  "small side branches lower down",
+                      "orientation": "[0, yaw, 0] facing out from the cluster centre (any yaw), tilt +-15 deg",
+                      "scale": "tops 0.9-1.2 (cluster), side branches 0.45-0.6; the thin bamboo 0.4-0.6",
+                      "collide": "CanCollide off"},
+               notes="bamboo leaf spray: a thin twig (#9ACD52 x0.86) rising out along +X, and 6 long lance leaves (2.0 "
+                     "x 0.4, folded on the midrib = 2 faces each) fanning down and out from its end and its middle, "
+                     "#78D246 / #60C448 / #289642 mixed (the light and dark greens of today's BambooLeaf parts).")
+    tw0, tw1 = Vector((0, 0, 0)), Vector((1.3, 0.55, 0))
+    pc.face([tw0 + Vector((0, -0.05, 0)), tw0 + Vector((0, 0.05, 0)), tw1 + Vector((0, 0.03, 0)), tw1 + Vector((0, -0.03, 0))],
+            tone("#9ACD52", 0.86), "SmoothPlastic", 0.06, Vector((0, 0, -1)))
+    leaves = [(tw1, 25, -30, 2.0), (tw1, -15, -40, 1.9), (tw1, 70, -20, 1.7), (tw1, -65, -25, 1.8),
+              (tw0.lerp(tw1, 0.55), 45, -50, 1.5), (tw0.lerp(tw1, 0.55), -40, -55, 1.5)]
+    cols = [(JMOSS_LL, tone(JMOSS_LL, 0.88)), (JMOSS_L, tone(JMOSS_L, 0.88)), ("#289642", tone("#289642", 0.88))]
+    for i, (b, yaw, pitch, L) in enumerate(leaves):
+        ya, pa = math.radians(yaw), math.radians(pitch)
+        d = Vector((math.cos(pa) * math.cos(ya), math.sin(pa), math.cos(pa) * math.sin(ya)))
+        side = d.cross(Vector((0, 1, 0)))
+        if side.length < 1e-6:
+            side = Vector((0, 0, 1))
+        side.normalize()
+        up = side.cross(d).normalized()
+        W = 0.2 * L / 2.0
+        mid = b + d * (L * 0.38) + up * 0.06
+        tip = b + d * L - up * 0.12
+        c1, c2 = cols[i % 3]
+        pc.face([b, mid + side * W, tip], c1, "SmoothPlastic", 0.04, up)
+        pc.face([b, tip, mid - side * W], c2, "SmoothPlastic", 0.04, up)
+    return pc
+
+
+BUSH_ORIGIN = "the Bush_Jungle_A kit pivot (y 0 = the ground, front -Z)"
+
+
+def _ellip_pt(c, size, rot_deg, u, v):
+    """Point + normal on an ellipsoid (centre c, full size, yaw rot_deg) at yaw angle u, elevation v (radians)."""
+    rx, ry, rz = size[0] / 2, size[1] / 2, size[2] / 2
+    lp = Vector((rx * math.cos(v) * math.cos(u), ry * math.sin(v), rz * math.cos(v) * math.sin(u)))
+    ln = Vector((lp.x / rx ** 2, lp.y / ry ** 2, lp.z / rz ** 2)).normalized()
+    R = euler_matrix([0, rot_deg, 0])
+    return R @ lp + Vector(c), (R @ ln).normalized()
+
+
+def bush_flowers():
+    rng = random.Random(6707)
+    pc = Piece("bush", "flowers", BUSH_ORIGIN,
+               place={"relativeTo": "the Bush_Jungle_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the Flowers MeshPart (#FF508C 6.5 x 2.3 x 6.5 at (-0.4, 4.5, 0.6)); no collision",
+                      "scale": "the copy's scale (bakedScale: 0.8 / 1.0 / 1.3)"},
+               notes="4 open pink flowers (#FF508C, 5 petals each = 5 flat diamond faces, alternate petals lighter, a gold "
+                     "#FFC93C centre) and 2 closed buds (3 faces, #FF508C x0.86) sitting ON today's 2 leaf clumps (big "
+                     "8.5 x 5 x 8 at (0, 2.4, 0), small 5.4 x 3.6 x 5.4 at (1.6, 4.4, -1.2)), facing out along the clump "
+                     "normal, 0.05 off the leaves; flowers 0.9-1.1 across.")
+    clumps = [((0.0, 2.4, 0.0), (8.5 * 0.92, 5.0 * 0.92, 8.0 * 0.92), 47), ((1.6, 4.4, -1.2), (5.4 * 0.92, 3.6 * 0.92, 5.4 * 0.92), 240)]
+    spots = [(0, 200, 40, 1.0), (0, 320, 30, 0.9), (1, 30, 50, 0.95), (1, 250, 35, 1.1)]
+    for ci, ud, vd, s in spots:
+        cc, size, rot = clumps[ci]
+        p, n = _ellip_pt(cc, size, rot, math.radians(ud), math.radians(vd))
+        a = n.cross(Vector((0, 1, 0)) if abs(n.y) < 0.9 else Vector((1, 0, 0))).normalized()
+        b = n.cross(a).normalized()
+        ctr = p + n * 0.08
+        a0 = rng.uniform(0, 2 * math.pi)
+        for k in range(5):
+            ang = a0 + 2 * math.pi * k / 5
+            d = a * math.cos(ang) + b * math.sin(ang)
+            sd = n.cross(d).normalized()
+            R0, R1, W = 0.08 * s, 0.5 * s, 0.17 * s
+            q = [ctr + d * R0, ctr + d * (R0 + (R1 - R0) * 0.45) + sd * W, ctr + d * R1 + n * 0.05, ctr + d * (R0 + (R1 - R0) * 0.45) - sd * W]
+            m = (q[0] + q[2]) / 2
+            nn = (q[1] - q[3]).cross(q[2] - q[0])
+            if nn.dot(n) < 0:
+                nn = -nn
+            # make the quad planar: project q[2] onto the plane of q[0], q[1], q[3]
+            pn = (q[1] - q[0]).cross(q[3] - q[0]).normalized()
+            q[2] = q[2] - pn * (q[2] - q[0]).dot(pn)
+            pc.face(q, LOTUS if k % 2 else mix(LOTUS, "#FFFFFF", 0.18), "SmoothPlastic", 0.04, n)
+        cen = [ctr + n * 0.04 + (a * math.cos(k * math.pi / 2) + b * math.sin(k * math.pi / 2)) * 0.11 * s for k in range(4)]
+        pc.face(cen, GOLD, "SmoothPlastic", 0.04, n)
+    for ci, ud, vd in ((0, 110, 45), (1, 140, 45)):
+        cc, size, rot = clumps[ci]
+        p, n = _ellip_pt(cc, size, rot, math.radians(ud), math.radians(vd))
+        a = n.cross(Vector((0, 1, 0)) if abs(n.y) < 0.9 else Vector((1, 0, 0))).normalized()
+        b = n.cross(a).normalized()
+        tip = p + n * 0.45
+        base = [p + (a * math.cos(k * 2 * math.pi / 3) + b * math.sin(k * 2 * math.pi / 3)) * 0.14 for k in range(3)]
+        for k in range(3):
+            pc.face([base[k], base[(k + 1) % 3], tip], tone(LOTUS, (0.86, 0.95, 0.8)[k]), "SmoothPlastic", 0.05,
+                    (base[k] + base[(k + 1) % 3]) / 2 - p + n * 0.1)
+    return pc
+
+
+def bush_base_leaves():
+    rng = random.Random(6808)
+    pc = Piece("bush", "base_leaves", BUSH_ORIGIN,
+               place={"relativeTo": "the Bush_Jungle_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "nothing (added): small leaves at the foot of the bush; no collision", "scale": "the copy's scale"},
+               notes="5 small leaves splayed on the ground round the big clump's foot (radius 3.6-4.3), each a flat "
+                     "folded leaf (2 faces) 1.2-1.6 long, tilted up 15-25 deg, #289642 / #46AA3C.")
+    for i in range(5):
+        a = 2 * math.pi * i / 5 + rng.uniform(-0.2, 0.2)
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        side = Vector((-d.z, 0, d.x))
+        r0 = rng.uniform(3.4, 3.8)
+        L = rng.uniform(1.2, 1.6)
+        t = math.radians(rng.uniform(15, 25))
+        b = d * r0 + Vector((0, 0.15, 0))
+        dir_ = d * math.cos(t) + Vector((0, math.sin(t), 0))
+        tip = b + dir_ * L
+        mid = b + dir_ * (L * 0.4)
+        W = 0.28 * L / 1.4
+        c1, c2 = ("#289642", tone("#289642", 0.86)) if i % 2 else (JVINE, tone(JVINE, 0.86))
+        up = side.cross(dir_).normalized()
+        if up.y < 0:
+            up = -up
+        pc.face([b, mid + side * W + up * 0.04, tip], c1, "SmoothPlastic", 0.04, up)
+        pc.face([b, tip, mid - side * W + up * 0.04], c2, "SmoothPlastic", 0.04, up)
+    return pc
+
+
+def bush_clump():
+    pc = Piece("bush", "clump", "the piece's own anchor: (0, 0, 0) = the clump's bottom centre; 2.0 wide x 1.3 tall",
+               place={"relativeTo": "Bush_Jungle_A (OPTIONAL full-facet bush; see C7: keep today's leaf MeshParts first)",
+                      "position": "big clump at (0, -0.1, 0), small at (1.6, 2.6, -1.2), an extra mid clump at (-1.6, 1.8, 1.4)",
+                      "orientation": "any yaw", "scale": "big 4.25 (8.5 wide), small 2.7, mid 2.2 (non-uniform Y 0.9-1.1 ok)",
+                      "colour": "faces carry #289642 with the height gradient; recolour to #78D246 for the top clump"},
+               notes="low faceted leaf clump: hull of 11 jittered dome points + a 6-point flat foot, darker low (x0.82) "
+                     "to light top, 3 tone steps; about 20 faces.")
+    boulder(pc, (2.0, 1.3, 2.0), 6909, "#289642", n_pts=11, t=0.3, jit=(0.85, 1.08))
+    return pc
+
+
+def jungle_nature():
+    return rock_s() + rock_m() + rock_l() + waterfall_pieces() + lily_pieces() + [bamboo_leaf_spray(), bush_flowers(),
+                                                                                  bush_base_leaves(), bush_clump()]
+
+
+def preview_jungle_nature(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    V = Vector
+    g1 = [piece_object(by["rock_s__body"], col), piece_object(by["rock_s__moss"], col)]
+    o = V((9, 0, 0))
+    g1 += [piece_object(by["rock_m__body"], col, o), piece_object(by["rock_m__moss"], col, o)]
+    o = V((32, 0, 0))
+    g2 = [piece_object(by["rock_l__body"], col, o), piece_object(by["rock_l__moss"], col, o)]
+    o = V((70, 0, 0))
+    wctx = [((70, 2.3, 2.0), (8.0, 4.6, 8.0), JSTONE_D, (0, 0, 0))]
+    g3 = context_boxes(wctx, col) + [piece_object(by[f"waterfall__{n}"], col, o) for n in ("rocks", "water", "basin")]
+    o = V((95, 0, 0))
+    g4 = [piece_object(by["lily__pads"], col, o), piece_object(by["lily__lotus"], col, o)]
+    o = V((110, 0, 0))
+    bctx = []
+    for x, z, h, c in ((-1.2, -1.1, 17.0, "#91C14D"), (0.4, 1.5, 15.0, "#9ACD52"), (1.6, 0.3, 12.0, "#A2D856"), (-1.4, 0.8, 19.0, "#9ACD52")):
+        bctx.append(((110 + x, h / 2 - 0.2, z), (0.9, h, 0.9), c, (0, 0, 0)))
+    g5 = context_boxes(bctx, col)
+    for (x, y, z, yaw, s) in ((-1.2, 16.6, -1.1, 200, 1.0), (-1.4, 18.6, 0.8, 120, 1.1), (0.4, 14.6, 1.5, 30, 1.0), (1.6, 11.6, 0.3, -40, 0.9),
+                              (-1.2, 9.0, -1.1, 160, 0.5), (0.4, 7.0, 1.5, 60, 0.5)):
+        g5.append(piece_object(by["bamboo__leaf_spray"], col, o + V((x, y, z)), euler_matrix([0, yaw, 0]), s))
+    o = V((130, 0, 0))
+    lctx = [((130, 2.4, 0), (8.5 * 0.95, 5.0 * 0.95, 8.0 * 0.95), "#289642", (0, 47, 0)), ((131.6, 4.4, -1.2), (5.4 * 0.95, 3.6 * 0.95, 5.4 * 0.95), "#78D246", (0, 240, 0))]
+    g6 = context_boxes(lctx, col)
+    for ob in g6:   # round the boxes so they read as clumps
+        m = ob.modifiers.new("s", "SUBSURF")
+        m.levels = 2
+        m.render_levels = 2
+    g6 += [piece_object(by["bush__flowers"], col, o), piece_object(by["bush__base_leaves"], col, o)]
+    o = V((145, 0, 0))
+    g7 = [piece_object(by["bush__clump"], col, o + V((0, -0.1, 0)), None, 4.25), piece_object(by["bush__clump"], col, o + V((1.6, 2.6, -1.2)), euler_matrix([0, 60, 0]), 2.7)]
+    out = os.path.join(P.PREVIEW_DIR, "jungle_nature_facets.png")
+    return render_sheet("jnature", [(g1, [(-25, 15)]), (g2, [(-25, 15)]), (g3, [(-20, 15)]), (g4, [(-25, 40)]), (g5, [(-20, 6)]),
+                                    (g6, [(-25, 25)]), (g7, [(-25, 20)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -3797,7 +4390,8 @@ def main():
                           ("jungle_gates", jungle_gates, preview_jungle_gates),
                           ("jungle_ruins", jungle_ruins, preview_jungle_ruins),
                           ("jungle_totems", jungle_totems, preview_jungle_totems),
-                          ("jungle_decor", jungle_decor, preview_jungle_decor)):
+                          ("jungle_decor", jungle_decor, preview_jungle_decor),
+                          ("jungle_nature", jungle_nature, preview_jungle_nature)):
         if only and obj not in only:
             continue
         pieces = fn()
