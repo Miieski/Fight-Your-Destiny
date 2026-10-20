@@ -563,6 +563,59 @@ Status: generated yes, test zone yes, game yes, fountain / well quality: per the
 Totals: 54 copies replaced (7 + 24 + 14 + 9); about 302,000 triangles in the place for these four (torch 134k, drum 43k,
 skull pole 62k, banner 64k), of which the copies placed in the jungle zones (32) are about 176,000.
 
+### Jungle nature (owner, jungle PROMPT_06 "Rocks and plants", 2026-10-20): inventory before the remake (read from Studio)
+
+Prompt: `REMAKE OBJECT/Jungle_Images_By_Category/.../06_Rocks_and_Plants/PROMPT_06_Rocks_and_Plants.txt`.
+Images: `docs/Jungle_Images/06_Rocks_and_Plants/`. Recipe: docs/prop_texture_guide.md C7. Test =
+`workspace._Staging.AssetPreview.Jungle.<Kit>`; BA = `ServerStorage.BossArenas.Jungle.Decor.Props`. Every model named
+like a kit was searched in the whole place: 465 copies in total (counts below include the kit and the test copy), none
+in the hub or the other zones. No script, ProximityPrompt, ClickDetector, Sound, tag or Light in any kit or copy; the
+lily "Bloom" cube is plain decor (no pickup). Almost every placed copy is the kit resized part by part with Model
+scale 1 (bakedScale). Backups (kit + test + every copy): `BackUP_Files/old_props_2026-10-20_pre_jungle_nature/<propId>.rbxm`
+(8 files); the main agent's full backup `..._before_jungle_nature`.
+
+| # | object | kit | copies (total incl. kit + test) | collision | notes |
+|---|---|---|---|---|---|
+| 01 | large mossy rock | `MapAssets.Jungle.Mossy_Rock_L`: 2 Rock MeshParts (Toolbox meshes, Hull collision, 21 wide) + Moss | 15: Jungle_1 5, Jungle_2 4, Jungle_3 4 (scales 0.7 x6, 0.9 x5, 1.0) | the 2 Rocks; 2 Jungle_2 map-edge copies also had a colliding Moss | - |
+| 02 | small mossy rock | `Mossy_Rock_S`: Rock MeshPart (4.6 wide) + Moss | 71: Jungle_1 22, Jungle_2 24, Jungle_3 22, BA 1 (0.8 .. 1.3) | Rock | - |
+| 03 | round mossy rock | `Mossy_Rock_M`: Rock MeshPart (8 wide) + Moss | 39: Jungle_1 12, Jungle_2 12, Jungle_3 12, BA 1 (0.8 / 1.0 / 1.2) | Rock | the owner's "round" rock |
+| 04 | rocks with the cyan block | `Waterfall_Rock_Set`: 2 Rocks, grey Step 8 x 4.6 x 8, cyan #30C4BE WaterTop (7.4 x 0.4 x 8.1 in the game copies) and WaterFall (T 0.15), Foam #F5F6FA (T 0.3) = the "pale slab" | 4: Jungle_2 2 | Step + the 2 Rocks; water and foam do not collide | a small decorative waterfall, nothing scripted |
+| 05 | lily pads with the pink cube | `LilyPad_A`: 2 Pad cylinders (5.2 / 3.2 across, #289642 / #78D246) + the pink Bloom block 1.3 x 0.9 x 1.3 | 37: Jungle_2 30, Jungle_3 2, Jungle_4 3 (1.0 / 1.3 / 1.4) | none | Bloom = plain part, no pickup |
+| 06 | bamboo cluster | `Bamboo_Cluster_A`: 5 Stalk cylinders (12 .. 21 tall, tilted) + 3 BambooLeaf blocks; 7.2 x 21 x 5.8 | 29: Jungle_1 12, Jungle_2 8, Jungle_3 7 (0.9 .. 1.3) | the 5 Stalks | - |
+| 07 | thin bamboo | `Vine_Hanging_A`: 3 Vine sticks 0.5 square (14 / 9.5 / 12 long, tops all at 14, #46AA3C / #166438) + 3 VineLeaf blocks; attribute Height = 14 | 43: Jungle_4 20 (hanging from the ceilings at 48 / 24), BA 14 (hanging from the arena ceiling at 66), Jungle_3 7 (grounded: a raycast from above shows the stick feet 1.1 .. 1.5 under the ground or the ruin stone) (0.6 / 1.0 / 1.6 / 2.0) | none | - |
+| 08 | flowering bush | `Bush_Jungle_A`: 2 Leaves MeshParts (mesh 9299837325, #289642 8.5 x 5 x 8 and #78D246 5.4 x 3.6 x 5.4, touchable) + the pink Flowers MeshPart 6.5 x 2.3 x 6.5; attributes SourceAssetId / SourceCreator | 227: Jungle_1 85, Jungle_2 70, Jungle_3 70 (0.8 x84, 1.0 x74, 1.3 x68) | none | - |
+
+### Jungle nature remake status (Agent B, 2026-10-20)
+
+Builders: `tools/PropsJungleNature.luau` (`DevTools.PropsJungleNature`); Agent A's C7 facets in
+`tools/PropsJungleNatureData.luau`, and the rock / moss / waterfall-rock facets converted into convex solids (one per
+connected shell, about 2 triangles per face) in `tools/PropsJungleNatureSolids.luau`. Rules in tools/SyncMapProps.luau
+(bakedScale from Rock 21 / Rock 4.6 / Rock 8 / Step 8 / Bloom 1.3 / Stalk 21 / Vine 0.5 / Leaves 8.5); 07 has 2
+templates (`jungle_thin_bamboo` hanging, `jungle_thin_bamboo_grounded` for Jungle_3 and a second test copy marked
+`ThinBambooGrounded`). PropFX: `jungle_waterfall_rocks` scrolls the WaterTop and WaterFall ripples. Collision:
+invisible `Collision` parts = the kit's colliding parts, checked part by part on every copy and with ray grids on every
+workspace copy that collides, old vs new: 0 differences. Screenshots (test + game, before + after):
+`docs/screenshots/jungle_nature/` (the 02 / 03 game "before" shots were rebuilt from the backup meshes after the sync).
+Sync: `Sync.run` twice per object, the second run 0; a final dry run of the 9 templates: 466 copies, 0 to replace.
+Triangles: visible triangles of the template (the invisible colliders not counted).
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| 01 | large mossy rock (pilot) | `jungle_rock_large` | 15 / 15 | 4,406 | Agent A's angular rock (stacked tilted strata, cracks) as convex solids, moss cushions + ledge mats on the top third, grass and pebbles at the foot; the 2 Rock meshes kept as invisible Hull colliders; the 2 Jungle_2 map-edge copies keep their Moss collider as `MossCollision` (MapPropKeep, MapFixCollide). Colliders 15 / 15 exact, ray grids 14 copies 0 differences |
+| 02 | small mossy rock | `jungle_rock_small` | 71 / 71 | 1,262 | the same method; grass kept under 3.55 so the height stays. Colliders 71 / 71, ray grids 0 differences |
+| 03 | round mossy rock | `jungle_rock_round` | 39 / 39 | 2,114 | the same method, 2 ledge mats. Colliders 39 / 39, ray grids 0 differences |
+| 04 | rocks with the cyan block | `jungle_waterfall_rocks` | 4 / 4 | 3,326 | the rocks as convex solids; the Step as stone courses with a cap row; WaterTop, WaterFall and Foam at today's places, sizes, colours and transparency, the water bevelled with the Ripples texture scrolled by PropFX (like the fountain / well), a lip, foam line, streaks and foam blobs, a soft cyan PointLight; Foam stays pale. Colliders 4 / 4 (Step + 2 Rocks), ray grids 0 differences |
+| 05 | lily pads | `jungle_lily_pads` | 37 / 37 | 1,008 | 2 round pads (today's places, sizes, greens) with a V notch, an upturned rim, a centre dome and lighter veins; Agent A's layered-petal pink lotus in the Bloom's box; nothing collides, is queried or touched |
+| 06 | bamboo cluster | `jungle_bamboo` | 29 / 29 | 2,326 | today's 5 stalks as canes (2 segments in a green gradient, straw-tinted foot, darker node rings every 3.4); 2 leaf sprays at the top of the 3 tallest canes and a side spray on the 2 others; a small dark soil base with 5 roots and 2 grass tufts. The 5 Stalks are the colliders: 29 / 29 exact, ray grids 28 copies (9,072 rays) 0 differences |
+| 07 | thin bamboo | `jungle_thin_bamboo` + `jungle_thin_bamboo_grounded` | 36 / 36 + 8 / 8 | 1,028 / 1,116 | today's 3 sticks as thin canes (places, lengths, tops at 14, colours kept; node rings; today's 3 leaf blocks as 3-leaf sprays on the same side, a 2-leaf spray lower on the outer canes). Hanging copies: no ground base. Grounded variant (Jungle_3 x7 + test): the 2 sticks that started in the air reach the ground line, a small root flare and 2 grass blades per cane. Height = 14 kept on every copy; nothing collides |
+| 08 | flowering bush | `jungle_flower_bush` | 227 / 227 | 736 + today's 2 leaf meshes | today's 2 leaf clumps kept as they are (meshes, places, sizes, colours, touchable); the pink Flowers mesh replaced by 6 open flowers (5 diamond petals in 2 pinks round a gold centre, on short stems) and 3 closed buds, placed on the clump surfaces (a marker profile showed the mesh surface on the clump ellipsoid); Agent A's base leaves. SourceAssetId / SourceCreator kept; nothing collides |
+
+Totals: 466 copies replaced (the 465 of the inventory and the new grounded test copy). Triangles in the place for the new geometry (all copies): about 569,000 (large rock 66k,
+small rock 90k, round rock 82k, waterfall 13k, lily pads 37k, bamboo 67k, thin bamboo 46k, bush 167k), of which the
+copies placed in the jungle zones are about 518,000 and the boss arena about 18,000. The old Toolbox meshes (rocks,
+bush flowers) cannot be read (no EditableMesh permission), so their old triangle counts are unknown; the thin bamboo
+was 72 triangles per copy (6 blocks).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

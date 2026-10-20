@@ -77,6 +77,14 @@ local function bakedFrom(m: Instance, name: string, ref: number): number?
 	return if w > 0 and math.abs(s - 1) > 0.01 then s else nil
 end
 
+-- the grounded thin bamboo copies (owner JUNGLE PROMPT_06 07): Jungle_3's, and the test copy marked ThinBambooGrounded
+local function thinBambooGrounded(m: Instance): boolean
+	local zones = workspace:FindFirstChild("Zones")
+	local jungle = zones and zones:FindFirstChild("Jungle")
+	local jungle3 = jungle and jungle:FindFirstChild("Jungle_3")
+	return (jungle3 ~= nil and m:IsDescendantOf(jungle3)) or m:GetAttribute("ThinBambooGrounded") == true
+end
+
 -- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
 -- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
 SyncMapProps.RULES = {
@@ -347,7 +355,17 @@ SyncMapProps.RULES = {
 	{ propId = "jungle_bamboo", names = { "Bamboo_Cluster_A" }, bakedScale = function(m)
 		return bakedFrom(m, "Stalk", 21)
 	end },
-	{ propId = "jungle_thin_bamboo", names = { "Vine_Hanging_A" }, bakedScale = function(m)
+	-- 07: the hanging copies (Jungle_4 x21 under the ceilings, the kit, the test copy) and the grounded ones (Jungle_3 x7,
+	-- raycast: the stick feet sit 1.1 .. 1.5 under the ground or the ruin stone; the test copy with attribute
+	-- ThinBambooGrounded) are 2 templates
+	{ propId = "jungle_thin_bamboo", names = { "Vine_Hanging_A" }, filter = function(m)
+		return not thinBambooGrounded(m)
+	end, bakedScale = function(m)
+		return bakedFrom(m, "Vine", 0.5)
+	end },
+	{ propId = "jungle_thin_bamboo_grounded", names = { "Vine_Hanging_A" }, filter = function(m)
+		return thinBambooGrounded(m)
+	end, bakedScale = function(m)
 		return bakedFrom(m, "Vine", 0.5)
 	end },
 	{ propId = "jungle_flower_bush", names = { "Bush_Jungle_A" }, bakedScale = function(m)

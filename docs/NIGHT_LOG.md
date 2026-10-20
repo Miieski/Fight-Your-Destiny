@@ -2799,4 +2799,36 @@ flowering bush.
   their kits, none tagged; the 8 sync rules already in Studio). Disk was behind Studio for tools/SyncMapProps.luau ->
   ExportScripts + pull (1 written). Intermediate backup resume_jungle_rocks_done (6 files, new dated label). Batch
   01-04 committed and pushed; 05-08 continue with the same rules.
+- 16:15 Agent B: PROMPT 06 05-08 BUILT AND SYNCED (after the crash; no half-written lily code was left in Studio).
+  05 jungle_lily_pads 37 / 37 (notched round pads with rim, dome and veins; Agent A's pink lotus in the Bloom's box;
+  1.0k tris; nothing collides). 06 jungle_bamboo 29 / 29 (canes with node rings and a green gradient, leaf sprays,
+  soil base with roots and 2 wedge-blade grass tufts - a facet tuft cost 380 tris; 2.3k tris; the 5 Stalks exact on
+  29 / 29, ray grids 28 copies 0 differences). 07 thin bamboo: a raycast from above proved the Jungle_3 x7 copies
+  grounded (stick feet 1.1 .. 1.5 under the ground / ruin stone; the earlier "nothing below" ray started underground),
+  so 2 templates: jungle_thin_bamboo 36 / 36 (Jungle_4 20 + BA 14 hanging from the ceilings, test, kit; no base;
+  1.0k) and jungle_thin_bamboo_grounded 8 / 8 (Jungle_3 7 + a new test copy with attribute ThinBambooGrounded; the
+  2 sticks that started in the air reach the ground line, a root flare and grass blades; 1.1k); Height=14 kept on
+  all; rules filtered by thinBambooGrounded(). 08 jungle_flower_bush 227 / 227 (today's 2 leaf meshes kept; the
+  Flowers mesh replaced by 6 five-petal flowers + 3 buds placed on the clump surfaces (marker profile: the mesh
+  surface is on the clump ellipsoid; Agent A's flower spots sat 4 % inside and were hidden) + Agent A's base
+  leaves; 736 tris + the 2 meshes; SourceAssetId kept). Run 2 = 0 for all; dry run of the 9 templates 466 copies 0
+  to replace. prop_inventory "Jungle nature" sections written. Shots in docs/screenshots/jungle_nature/. Play check
+  left to the main agent.
+- 16:20 PROMPT 06 COMPLETE (main agent looked at the 05-08 shots and Play-checked). 05 jungle_lily_pads 37 / 37 (notched
+  pads with upturned rims, centre dome, veins; Agent A's layered pink lotus in Bloom's box; nothing collides, as
+  today; ~1k tris); 06 jungle_bamboo 29 / 29 (canes with node rings every 3.4 and a green gradient, leaf sprays, a soil
+  base with roots and grass; the 5 Stalks are still the exact colliders; ~2.3k); 07 thin bamboo = Vine_Hanging_A split
+  in 2 rules by a raycast-based filter: jungle_thin_bamboo 36 / 36 hanging copies (Jungle_4, BossArenas: canes +
+  sprays, no base) and jungle_thin_bamboo_grounded 8 / 8 (Jungle_3 x7 + test: root flare and grass), Height=14 kept;
+  08 jungle_flower_bush 227 / 227 (today's 2 leaf meshes kept, the Flowers mesh replaced by 6 five-petal flowers + 3
+  buds on the clump surface, base leaves; ~740 tris + the meshes). Triangle growth for the whole prompt ~569k (518k in
+  the jungle zones).
+  MAIN AGENT PLAY CHECK (phone emulator, unlockAll): Jungle_1 144 fps / render CPU 3.0 ms, Jungle_2 144 / 2.8,
+  Jungle_3 144 / 2.8, Jungle_4 144 / 2.2; walking into the rocks and the bamboo the player climbs ONTO them (root y
+  14.4 on the large rock, 24.7 on top of the bamboo) - their colliders are today's own parts (the rock MeshParts with
+  Hull fidelity, the 5 Stalk cylinders), so this is today's behaviour, unchanged; no game errors (the same 203785492
+  warning). FINAL: 104 templates / 1381 tagged copies up to date; disk == Studio (201 scripts, 0 written); backup
+  after_jungle_nature. Per object: 01 large rock 15 / 15, 02 small rock 71 / 71, 03 round rock 39 / 39, 04 waterfall
+  rocks 4 / 4, 05 lily pads 37 / 37, 06 bamboo 29 / 29, 07 thin bamboo 36 / 36 + 8 / 8, 08 flowering bush 227 / 227 -
+  all OK. ALL SIX JUNGLE PROMPTS DONE.
 

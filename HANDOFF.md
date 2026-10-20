@@ -155,7 +155,7 @@ desert: Studio parts + one-colour unions, organic pieces (carved faces, soft mos
 Agent A's facets, synced through MapProps. Guide section C in docs/prop_texture_guide.md (jungle palette = the real kit
 colours, moss as layered drapes, never flat green slabs). The 01 "stone face temple" is the Jungle_4 GATE
 (Gates.Gate_Jungle_4): its mouth (MouthDark, Glyph, Lips, 11 Teeth) stays under Barrier, the same gate contract as
-the desert gates. Builders: tools/PropsJungle{Buildings,Gates,Ruins,Totems,Decor}*.luau. Walkable props (Ruin_Stairs, the Jungle_2
+the desert gates. Builders: tools/PropsJungle{Buildings,Gates,Ruins,Totems,Decor,Nature}*.luau. Walkable props (Ruin_Stairs, the Jungle_2
 stepping stones = SteppingStone_A) keep their colliders exact; the jungle shrine (Golden_Altar) is jungle_golden_shrine,
 not the desert golden_altar rule. The jungle test row (_Staging.AssetPreview.Jungle) is
 now a SyncMapProps search root. Log: NIGHT_LOG jungle sections; screenshots docs/screenshots/jungle_*.
