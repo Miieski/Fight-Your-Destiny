@@ -1,0 +1,190 @@
+{
+ "object": "ruins",
+ "piece": "plant_tuft",
+ "units": "studs",
+ "origin": "the piece's own anchor: (0, 0, 0) = the base of the tuft on the ground",
+ "axes": "Roblox space: x right, y up, front -Z",
+ "size": [
+  0.563,
+  0.8,
+  0.788
+ ],
+ "bounds": {
+  "min": [
+   -0.306,
+   0.0,
+   -0.358
+  ],
+  "max": [
+   0.257,
+   0.8,
+   0.43
+  ]
+ },
+ "faceCount": 7,
+ "rectCount": 0,
+ "notes": "small grass / leaf tuft: 7 blades 0.5-0.9 tall leaning out, alternating #78D246 / #60C448 / #589642.",
+ "faces": [
+  {
+   "v": [
+    [
+     0.257,
+     0.8,
+     0.077
+    ],
+    [
+     0.032,
+     0.0,
+     0.103
+    ],
+    [
+     0.083,
+     0.0,
+     -0.069
+    ]
+   ],
+   "c": "#78D246",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  },
+  {
+   "v": [
+    [
+     0.171,
+     0.648,
+     0.375
+    ],
+    [
+     -0.057,
+     0.0,
+     0.092
+    ],
+    [
+     0.107,
+     0.0,
+     0.017
+    ]
+   ],
+   "c": "#60C448",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  },
+  {
+   "v": [
+    [
+     -0.069,
+     0.713,
+     0.43
+    ],
+    [
+     -0.098,
+     0.0,
+     0.045
+    ],
+    [
+     0.079,
+     0.0,
+     0.073
+    ]
+   ],
+   "c": "#589642",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  },
+  {
+   "v": [
+    [
+     -0.251,
+     0.591,
+     0.124
+    ],
+    [
+     -0.094,
+     0.0,
+     -0.054
+    ],
+    [
+     -0.014,
+     0.0,
+     0.107
+    ]
+   ],
+   "c": "#78D246",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  },
+  {
+   "v": [
+    [
+     -0.306,
+     0.726,
+     -0.206
+    ],
+    [
+     0.0,
+     0.0,
+     -0.108
+    ],
+    [
+     -0.1,
+     0.0,
+     0.041
+    ]
+   ],
+   "c": "#60C448",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  },
+  {
+   "v": [
+    [
+     -0.093,
+     0.641,
+     -0.278
+    ],
+    [
+     0.066,
+     0.0,
+     -0.085
+    ],
+    [
+     -0.104,
+     0.0,
+     -0.028
+    ]
+   ],
+   "c": "#589642",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  },
+  {
+   "v": [
+    [
+     0.22,
+     0.733,
+     -0.358
+    ],
+    [
+     0.108,
+     0.0,
+     -0.004
+    ],
+    [
+     -0.045,
+     0.0,
+     -0.098
+    ]
+   ],
+   "c": "#78D246",
+   "m": "SmoothPlastic",
+   "t": 0.04
+  }
+ ],
+ "place": {
+  "relativeTo": "stone joints, tread corners, slab gaps",
+  "position": "on the ground / tread",
+  "orientation": "any yaw",
+  "scale": "uniform 0.4..1.2",
+  "collide": "CanCollide off"
+ }
+}

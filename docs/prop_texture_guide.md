@@ -1097,6 +1097,131 @@ totem teal #3CAABE, totem tan #D6965C, gold #FFC93C, glyph Neon #78FFBE, ember N
 - **Bones:** 2-3 bones (cylinder 0.35 + ball ends) and a small skull (facet piece `skull__small`) at today's places.
 - **Keep** the opening 14 x 11 at z 2.5 and the collisions (rocks collide, the Shadow does not).
 
+### C4. Jungle ruins and stonework (owner task 2026-10-20, PROMPT_03)
+
+Images: `docs/Jungle_Images/03_Ruins_and_Stonework/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_112644_before_jungle_ruins_{ServerStorage,Workspace}.rbxm`.
+The C1 colours, C2 stone / moss / vine rules and the A recipe apply. These kits have MANY copies, so every detail
+is cheap: parts first, facet pieces only for the shapes parts cannot do.
+
+**Kits** (all in `MapAssets.Jungle`, pivot = bottom centre, front -Z, SmoothPlastic + Neon accents):
+
+| # | Object | Kit | Parts | Copies (placed) | Notes |
+|---|---|---|---|---|---|
+| 01 | stepped ruin block | `Ruin_Wall_Broken` | 9 | test 1 + `Jungle_3.Decor.Ruins` 6 = **7** | one Jungle_3 copy has its parts resized to 0.8 (Model scale 1) |
+| 02 | stone stairs | `Ruin_Stairs` | 10 | test 1 + `Jungle_3.Decor.Ruins` 1 = **2** | WALKABLE: tread heights below |
+| 03 | broken pillar and blocks | `Ruin_Pillar_Broken` | 6 | test 1 + `Jungle_3.Decor.Ruins` 6 + `Jungle_4.Decor.Props` 6 = **13** | 8 copies resized to 0.8 (2 in Jungle_3, all 6 in Jungle_4) |
+| 04 | mossy slabs | `SteppingStone_A` | 3 | test 1 + `Jungle_2.Decor.Crossings` 4 = **5** | WALKABLE stepping stones over the Jungle_2 water: flat top at pivot y + 1.6; Skirt is a Toolbox MeshPart (SourceAssetId) |
+| 05 | glowing floor pad | `Glyph_Tile` | 6 | test 1 + `Jungle_3.Decor.Ruins` 7 + `Jungle_4.Decor.FloorDecor` 19 + `BossArenas.Jungle.Decor.FloorDecor` 9 = **36** | one BossArenas copy resized to 1.6 |
+
+`Ruin_Pillar_A` (the whole pillar, 7 parts, 11 copies) is NOT in this prompt.
+
+**What the kits do (checked):**
+- No script, ProximityPrompt, tag, attribute (except 04's SourceAssetId / SourceCreator) or touch handler in any kit or copy. `src/` names none of them.
+- **05 is decoration only, not a checkpoint or teleport.**
+  - All 6 parts are CanCollide off: it lies on the floor.
+  - The only touch pads in the code are the sub-zones' `HubReturn` BaseParts (ZoneService, `Touched` -> ToHub) and the hub portals (PortalController). Both are separate parts, not Glyph_Tile.
+  - Keep the Neon glow.
+- **SyncMapProps** already has the rules `jungle_ruin_block`, `jungle_ruin_stairs`, `jungle_broken_pillar`, `mossy_slabs` and `glyph_floor_pad`. Copies with part-resized sizes need a `bakedScale` like `golden_altar`: Ruin_Wall_Broken x1 at 0.8, Ruin_Pillar_Broken x8 at 0.8, Glyph_Tile x1 at 1.6.
+- **Collisions to keep:**
+  - 01: Base, Walls and Rubble collide; Moss doesn't.
+  - 02: Steps, Cheeks and Rubble collide.
+  - 03: Base, Stump, Break, Drum and Chunk collide.
+  - 04: Skirt and Stone collide.
+  - 05: nothing collides.
+
+**Today's shapes:**
+
+01 Ruin_Wall_Broken:
+- **Base:** 20.8 x 1.2 x 4.4 #5C645C.
+- **3 stepped Wall blocks, 3.6 deep:**
+  - x 3..10, 3.2 tall, #848A7C;
+  - x -3..3, 6.5 tall, #8D9384;
+  - x -10..-3, 10 tall, #848A7C.
+- **Moss:** flat slabs on the 2 lower tops and one on the tall block's front.
+- **Rubble:** 2 tilted blocks 2.6 x 2 x 2.4 / 3 x 2.4 x 2.6 in front at (8.6, 0.9, -3.8) and (5, 1.1, -4.6).
+
+02 Ruin_Stairs: climbs toward +Z. Tread tops and fronts are EXACT, keep them:
+
+| Step | Tread top y | Front z | Depth | Width (x) | Colour |
+|---|---|---|---|---|---|
+| 1 | 1.5 | -7.5 | 3 (to -4.5) | -7..7 | #626A62 |
+| 2 | 3.0 | -4.5 | 3 (to -1.5) | -7..7 | #83897B |
+| 3 | 4.5 | -1.5 | 3 (to 1.5) | -7..7 | #575F57 |
+| 4 | 6.0 | 1.5 | 3 (to 4.5) | -7..5 | #83897B |
+| 5 | 7.5 | 4.5 | 3 (to 7.5) | -7..2 | #575F57 |
+
+- **Risers:** all 1.5.
+- **Cheeks (side walls) #5C645C:**
+  - left x -9..-7, z -7.5..7.5, top 4.6;
+  - right x 7..9, z -7.5..0.5, top 2.6.
+- **Moss:** 2 flat slabs: on step 3 (6 x 0.3 x 2.6, top 4.8 = 0.15 proud of the tread) and on the left cheek.
+- **Rubble:** 1 block 3 x 2.2 x 2.6 at (9.5, 1, 4.5).
+
+03 Ruin_Pillar_Broken:
+- **Base:** 6 x 1.6 x 6 #5C645C.
+- **Stump:** 4.2 x 6.5 x 4.2 #848A7C (y 1.6..8.1).
+- **Break:** a Wedge 4.2 x 2.6 x 4.2 on top (y 8.1..10.7), turned 35° = the slanted broken top.
+- **Moss:** slab 4.6 x 0.5 x 3 at y 8.2.
+- **Fallen pieces:**
+  - Drum: a block 4.2 x 4.2 x 6 #808678 lying at (7.5, 2.1, 2), turned 30°;
+  - Chunk: 3 x 2.4 x 3 #5C645C, tilted, at (4.5, 1.1, -5).
+
+04 SteppingStone_A:
+- **Stone:** 6.4 x 1.6 x 6 #848A7C (y 0..1.6), turned 18°.
+- **Skirt:** MeshPart 7.6 x 1.5 x 7.4 #5C645C at y 0.4, turned 50° (the lower slab).
+- **Moss:** 3.4 x 0.2 x 2.8 #589642 on top, turned 40°.
+
+05 Glyph_Tile:
+- **Tile:** 8 x 0.3 x 8 #5C645C.
+- **Neon #78FFBE inlay, top y 0.36:** a square frame of 4 strips (5 x 0.6 at z ±2.2, 0.6 x 3.8 at x ±2.2), 0.1 thick, and a centre diamond 1.5 turned 45°.
+
+**Real colours** (keep): stone #848A7C / #8D9384 / #83897B / #808678 light, #626A62 / #5C645C / #575F57 dark, moss #589642 /
+#60C448, glyph Neon #78FFBE.
+
+**Part rules:**
+
+**01 stepped ruin block:**
+- **Blocks:** each Wall block becomes cut blocks in courses 1.2-1.8 tall, 2-3.5 long, running bond, 0.08 joints over a dark core.
+- **Tones:** a different tone per block: STEPS x mix of #848A7C / #8D9384, 1 in 5 greener (15 % #589642).
+- **Edges:** chipped corners (0.3-0.6 notches) on the exposed ends, broken irregular tops (1-2 blocks missing or set lower on each step).
+- **Base:** wider (keep 20.8 x 1.2 x 4.4) with a chamfered top edge.
+- **Moss and vines:** `moss__drape_A/B` on every step edge instead of the flat slabs (1 per 3-4 studs); 1-2 short `vine__strand` (scale 0.5) on the tall block.
+- **Rubble:** at the foot: today's 2 rubble blocks as chipped stones (`ruins__rubble_A/B/C`), plus 2-3 small ones (scale 0.4-0.6).
+- **Keep** the footprint and collisions.
+
+**02 stone stairs:**
+- **Treads:**
+  - keep every tread top and front exactly (table above);
+  - each step is 2-3 blocks along x with joints;
+  - a bevelled nose: a 0.15 chamfer on the front-top edge only (the tread top stays flat to within 0.15 of the front);
+  - worn corners: the 2 front corners of each tread notched 0.4 x 0.15 high, never more;
+  - tone per block.
+- **Cheeks:** side walls with a capped top: a 0.3 cap 0.2 wider each side, joints every 3, chipped ends.
+- **Moss:** soft moss in the joints: thin `moss__drape_B` patches (scale 0.5-0.7) at the back of 2-3 treads and on the cheek tops. Moss on a tread must not rise more than 0.15: the old Step-3 moss slab is replaced by a drape lying in the back corner.
+- **Plants:** 3-4 small plants (`ruins__plant_tuft` / `fern`) in the corner between the treads and the cheeks, CanCollide off.
+- **Collision:** keep it on the step parts. Detail parts (caps, chips, moss, plants) use CanCollide off, or are flush with the tread, so the walk surface does not change.
+
+**03 broken pillar and blocks:**
+- **Stump:** a 4.2 square shaft with 0.3 chamfered corners, 2 carved bands (0.25 proud, 0.6 tall, #5C645C) at y 3.0 and 6.3, a vertical crack.
+- **Broken top:** the `Break` wedge becomes a jagged slanted break (facet piece `ruins__pillar_break`): rising from y 8.1 on one side to 10.7 on the other, with a jagged rim and 2-3 chips off the edge.
+- **Plinth:** today's Base with a chamfered top edge and 2 chipped corners.
+- **Fallen pieces:** the Drum as a cut block with chamfered edges and a broken end (keep size and place); the Chunk as `ruins__rubble_B`.
+- **Moss and vines:** a moss drape on the break and on the plinth edge, 1 short vine.
+- **Keep** the footprint and collisions.
+
+**04 mossy slabs** (stepping stones):
+- **Slabs:** 2 slabs of different sizes, offset and turned like today (facet pieces `ruins__slab_top`, on today's Stone, and `ruins__slab_low`, on today's Skirt). Irregular cut outlines with chipped corners, a 0.15 bevel on the top edge, 2 cracks.
+- **Top:** keep the TOP SURFACE FLAT at y 1.6 (players hop on it).
+- **Moss and plants:** moss as a soft 2-layer patch lying on top (0.1-0.15 thick) instead of the flat slab, tiny plants (`ruins__plant_tuft`, scale 0.4) in the gap between the slabs.
+
+**05 glowing floor pad** (decoration, no collision):
+- **Slab:** today's 8 x 8 tile, 0.3 thick, with a 0.12 bevel (4 sloped edge strips) and darker edge.
+- **Grooves:** carved square grooves: the Neon frame sits in a groove (a darker #3E453E strip 0.9 wide, 0.05 lower) so it reads as an inlay.
+- **Inlay:** keep the 4 Neon strips, the diamond, their places and #78FFBE.
+- **Diamond:** the centre diamond in a raised stone setting (0.1 ring), with a PointLight #78FFBE, range 8, brightness 0.6, for the soft glow. Only on the test / Jungle_3 copies, or on 1 in 3 copies, to keep the light count low (36 copies).
+- **Moss:** small moss tufts (`moss__drape_B` flattened or 2 small patches) on 2 opposite corners.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

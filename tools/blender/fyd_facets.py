@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -2820,6 +2820,301 @@ def preview_jungle_gates(pieces):
                         None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# JUNGLE RUINS AND STONEWORK (guide section C4): broken pillar top, chipped stepping slabs, rubble, small plants.
+# Many copies: every piece is kept small (<= ~70 faces).
+# ------------------------------------------------------------------------------------------------
+FRESH = "#A9AE9F"   # freshly broken stone face (mix of #848A7C toward white)
+
+
+def _yaw_pts(pts2, deg):
+    a = math.radians(deg)
+    c, s = math.cos(a), math.sin(a)
+    # Roblox yaw (about +Y): x' = x cos + z sin, z' = -x sin + z cos
+    return [(x * c + z * s, -x * s + z * c) for x, z in pts2]
+
+
+def pillar_break():
+    rng = random.Random(3101)
+    pc = Piece("ruins", "pillar_break", "the Ruin_Pillar_Broken kit pivot (base centre, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the Ruin_Pillar_Broken model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the Break wedge (4.2 x 2.6 x 4.2 at y 9.4, turned 35 deg); keep its CanCollide on a hidden "
+                                  "wedge; the 8 copies at 0.8 scale with the model (bakedScale)",
+                      "fits": "a stump 4.2 square with 0.3 chamfered corners, top y 8.1"},
+               notes="jagged slanted break on top of the stump: the 4.2 shaft (0.3 chamfered corners) continues from y 8.0 "
+                     "and ends in a broken surface rising from ~8.4 on the low side to ~10.7 on the high side (high side "
+                     "toward yaw 35 deg like today), with a jagged rim, 3 chips knocked off the edge, a lighter freshly "
+                     "broken face and a dark crack down one side.")
+    h, ch = 2.1, 0.3
+    octa = [(h - ch, -h), (h, -h + ch), (h, h - ch), (h - ch, h), (-h + ch, h), (-h, h - ch), (-h, -h + ch), (-h + ch, -h)]
+    per = []
+    for i in range(8):
+        a, b = octa[i], octa[(i + 1) % 8]
+        per.append(a)
+        if i % 2 == 1:   # long sides get a midpoint
+            per.append(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2))
+    dirx, dirz = math.sin(math.radians(35.0)), -math.cos(math.radians(35.0))
+    chips = set(rng.sample(range(len(per)), 3))
+
+    def top_h(x, z, rim):
+        t = (x * dirx + z * dirz) / (2 * h) + 0.5
+        t = max(0.0, min(1.0, t))
+        y = 8.4 + 2.3 * (t * t * (3 - 2 * t))
+        return y + rng.uniform(-0.28, 0.28) * (1.0 if rim else 0.6)
+    y0 = 8.0
+    tops = []
+    for i, (x, z) in enumerate(per):
+        y = top_h(x, z, True)
+        if i in chips:
+            y -= rng.uniform(0.5, 0.9)
+        tops.append(max(y, 8.25))
+    n = len(per)
+    for i in range(n):
+        j = (i + 1) % n
+        a, b = per[i], per[j]
+        out = Vector(((a[0] + b[0]) / 2, 0, (a[1] + b[1]) / 2))
+        g = rng.choice(STEPS)
+        pc.quad_or_tris([Vector((a[0], y0, a[1])), Vector((b[0], y0, b[1])), Vector((b[0], tops[j], b[1])),
+                         Vector((a[0], tops[i], a[1]))], tone(JSTONE, g), "SmoothPlastic", 0.4, out)
+    # broken surface: rim -> inner ring (55 %) -> centre
+    rim = [Vector((x, tops[i], z)) for i, (x, z) in enumerate(per)]
+    inner = []
+    for i, (x, z) in enumerate(per):
+        xi, zi = x * 0.55 + rng.uniform(-0.12, 0.12), z * 0.55 + rng.uniform(-0.12, 0.12)
+        inner.append(Vector((xi, top_h(xi, zi, False), zi)))
+    cen = Vector((0.0, top_h(0, 0, False) + 0.1, 0.0))
+    for i in range(n):
+        j = (i + 1) % n
+        q = [rim[i], rim[j], inner[j], inner[i]]
+        nrm = newell(q)
+        pc.quad_or_tris(q, tone(FRESH, rng.choice(STEPS)), "SmoothPlastic", 0.4, Vector((0, 1, 0)) if nrm.y >= 0 else Vector((0, 1, 0)))
+        pc.face([inner[i], inner[j], cen], tone(FRESH, rng.choice((1.0, 0.95, 0.9))), "SmoothPlastic", 0.4, Vector((0, 1, 0)))
+    # dark crack down the front face (z = -2.1 side), two kinked strips
+    for (xa, ya, xb, yb) in ((-0.6, 8.9, -0.3, 6.6), (-0.3, 6.6, -0.7, 4.4)):
+        w = 0.07
+        pc.face([Vector((xa - w, ya, -h - 0.02)), Vector((xa + w, ya, -h - 0.02)), Vector((xb + w, yb, -h - 0.02)),
+                 Vector((xb - w, yb, -h - 0.02))], JREC, "SmoothPlastic", 0.08, Vector((0, 0, -1)))
+    return pc
+
+
+def chipped_outline(hx, hz, yaw, rng, chip=(0.25, 0.6), cx=0.0, cz=0.0):
+    """Rectangle 2hx x 2hz with all 4 corners chipped (2 points each) + a slightly bent midpoint on each side;
+    convex; yawed (deg) about the centre."""
+    pts = []
+    corners = [(hx, -hz), (hx, hz), (-hx, hz), (-hx, -hz)]
+    for i, (x, z) in enumerate(corners):
+        px, pz = corners[i - 1]
+        nx, nz = corners[(i + 1) % 4]
+        c1, c2 = rng.uniform(*chip), rng.uniform(*chip)
+        d1 = Vector((px - x, pz - z)).normalized()
+        d2 = Vector((nx - x, nz - z)).normalized()
+        pts.append((x + d1.x * c1, z + d1.y * c1))
+        pts.append((x + d2.x * c2, z + d2.y * c2))
+        mx, mz = (x + nx) / 2, (z + nz) / 2
+        o = Vector((mx, mz)).normalized()
+        k = rng.uniform(0.0, 0.08)
+        pts.append((mx + o.x * k, mz + o.y * k))
+    return [(cx + x, cz + z) for x, z in _yaw_pts(pts, yaw)]
+
+
+def slab_into(pc, outline, y_top, y_bot, base, rng, bevel=0.15, cracks=0, moss=None):
+    c = Vector((sum(p[0] for p in outline) / len(outline), 0, sum(p[1] for p in outline) / len(outline)))
+    outer = [Vector((x, y_top - bevel, z)) for x, z in outline]
+    k = []
+    top = []
+    for p in outer:
+        d = Vector((p.x - c.x, 0, p.z - c.z))
+        f = max(0.0, 1.0 - bevel / max(d.length, 1e-6))
+        top.append(Vector((c.x + d.x * f, y_top, c.z + d.z * f)))
+    n = len(outer)
+    polygon_fill(pc, top, tone(base, 1.0), "SmoothPlastic", 0.4, Vector((0, 1, 0)))
+    for i in range(n):
+        j = (i + 1) % n
+        out = Vector(((outer[i].x + outer[j].x) / 2 - c.x, 0.6, (outer[i].z + outer[j].z) / 2 - c.z))
+        pc.quad_or_tris([outer[i], outer[j], top[j], top[i]], tone(base, 0.95), "SmoothPlastic", 0.15, out)
+        out.y = 0
+        lo_i, lo_j = Vector((outer[i].x, y_bot, outer[i].z)), Vector((outer[j].x, y_bot, outer[j].z))
+        pc.face([lo_i, lo_j, outer[j], outer[i]], tone(base, rng.choice((0.86, 0.82, 0.78))), "SmoothPlastic", 0.4, out)
+    for _ in range(cracks):
+        a = rng.uniform(0, 2 * math.pi)
+        p0 = c + Vector((math.cos(a), 0, math.sin(a))) * 0.3
+        p1 = p0 + Vector((math.cos(a + 0.5), 0, math.sin(a + 0.5))) * 1.3
+        p2 = p1 + Vector((math.cos(a - 0.3), 0, math.sin(a - 0.3))) * 1.1
+        for a_, b_ in ((p0, p1), (p1, p2)):
+            d = (b_ - a_).normalized()
+            w = Vector((-d.z, 0, d.x)) * 0.06
+            y = y_top + 0.02
+            pc.face([Vector((a_.x, y, a_.z)) - w, Vector((a_.x, y, a_.z)) + w, Vector((b_.x, y, b_.z)) + w * 0.5,
+                     Vector((b_.x, y, b_.z)) - w * 0.5], JREC, "SmoothPlastic", 0.05, Vector((0, 1, 0)))
+    if moss:
+        (mx, mz), (rx, rz), yaw = moss
+        for lay, (sc, h0, H, cols) in enumerate(((1.0, 0.02, 0.08, (JMOSS, tone(JMOSS, 0.88))), (0.6, 0.1, 0.06, (JMOSS_L, tone(JMOSS_L, 0.9))))):
+            nm = 10 if lay == 0 else 8
+            for _ in range(60):
+                ring = []
+                for i in range(nm):
+                    a = 2 * math.pi * i / nm + rng.uniform(-0.2, 0.2)
+                    r = rng.uniform(0.76, 1.1)
+                    ring.append((rx * sc * r * math.cos(a), rz * sc * r * math.sin(a)))
+                if _convex(ring):
+                    break
+            ring = [(mx + x + (0.25 * lay), mz + z - (0.2 * lay)) for x, z in _yaw_pts(ring, yaw)]
+            cc = Vector((sum(p[0] for p in ring) / nm, y_top + h0 + H, sum(p[1] for p in ring) / nm))
+            lo = [Vector((x, y_top + h0, z)) for x, z in ring]
+            hi = [cc + (Vector((p.x, cc.y, p.z)) - cc) * 0.7 for p in lo]
+            for i in range(nm):
+                j = (i + 1) % nm
+                pc.face([lo[i], lo[j], hi[j], hi[i]], cols[1], "SmoothPlastic", 0.06, Vector((0, 1, 0)))
+            polygon_fill(pc, hi, cols[0], "SmoothPlastic", 0.06, Vector((0, 1, 0)))
+
+
+def stepping_slabs():
+    rng = random.Random(3202)
+    place = {"relativeTo": "the SteppingStone_A model (kit pivot = bottom centre)", "position": [0, 0, 0], "orientation": [0, 0, 0]}
+    top = Piece("ruins", "slab_top", "the SteppingStone_A kit pivot (y 0 = the pivot, sunk 1.5 into the water bed; front -Z)",
+                place=dict(place, replaces="the Stone (6.4 x 1.6 x 6, turned 18 deg) and the flat Moss; keep CanCollide on a hidden "
+                                           "box 6.4 x 1.6 x 6 (players hop on it: the top stays FLAT at y 1.6)"),
+                notes="the upper stepping slab: an irregular cut outline (6.4 x 6 turned 18 deg like today, 4 chipped "
+                      "corners, slightly bent sides), FLAT top at y 1.6 with a 0.15 bevel, 2 thin dark cracks, and a soft "
+                      "2-layer moss patch lying on it (0.1-0.16 thick, #589642 -> #60C448) where today's Moss is.")
+    slab_into(top, chipped_outline(3.2, 3.0, 18.0, rng), 1.6, 0.0, JSTONE, rng, 0.15, 2,
+              moss=((0.8, -0.6), (1.7, 1.4), 40.0))
+    low = Piece("ruins", "slab_low", "the SteppingStone_A kit pivot (y 0 = the pivot, front -Z)",
+                place=dict(place, replaces="the Skirt MeshPart (7.6 x 1.5 x 7.4 at y 0.4, turned 50 deg); keep its CanCollide on "
+                                           "a hidden box"),
+                notes="the lower, bigger slab under it, offset and turned 50 deg: 7.4 x 7.2, top y 1.15, bottom -0.35, "
+                      "chipped corners, a 0.15 bevel, 1 crack. #5C645C.")
+    slab_into(low, chipped_outline(3.7, 3.6, 50.0, rng, (0.4, 0.9), 0.15, 0.1), 1.15, -0.35, JSTONE_D, rng, 0.15, 1)
+    return [top, low]
+
+
+def rubble_stone(name, size, seed, base, notes):
+    rng = random.Random(seed)
+    sx, sy, sz = (s / 2 for s in size)
+    pc = Piece("ruins", name, "the piece's own anchor: (0, 0, 0) = the CENTRE of the stone's box, axes = the stone's axes",
+               place={"relativeTo": "any ruin kit", "position": "the CFrame of the Rubble / Chunk part it replaces "
+                      "(same centre, same rotation)", "scale": "uniform 0.4..1.2 for extra small rubble"},
+               notes=notes)
+    pts = []
+    for x in (-1, 1):
+        for y in (-1, 1):
+            for z in (-1, 1):
+                p = Vector((x * sx, y * sy, z * sz))
+                if rng.random() < 0.55:      # chip this corner: 3 points pulled back along the 3 edges
+                    c = rng.uniform(0.18, 0.32) * min(size)
+                    pts += [p - Vector((x * c, 0, 0)), p - Vector((0, y * c, 0)), p - Vector((0, 0, z * c))]
+                else:
+                    pts.append(p * rng.uniform(0.97, 1.0))
+
+    def col(cc, n):
+        if n.y > 0.7:
+            return tone(base, 1.04)
+        if n.y < -0.7:
+            return tone(base, 0.75)
+        return tone(base, rng.choice(STEPS) * (0.92 if abs(n.x) + abs(n.y) + abs(n.z) > 1.3 else 1.0))
+    hull_into(pc, pts, col, 0.4 * min(size) / 2.4)
+    return pc
+
+
+def plant_tuft():
+    rng = random.Random(3404)
+    pc = Piece("ruins", "plant_tuft", "the piece's own anchor: (0, 0, 0) = the base of the tuft on the ground",
+               place={"relativeTo": "stone joints, tread corners, slab gaps", "position": "on the ground / tread", "orientation":
+                      "any yaw", "scale": "uniform 0.4..1.2", "collide": "CanCollide off"},
+               notes="small grass / leaf tuft: 7 blades 0.5-0.9 tall leaning out, alternating #78D246 / #60C448 / #589642.")
+    for i in range(7):
+        a = 2 * math.pi * i / 7 + rng.uniform(-0.3, 0.3)
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        w = Vector((-d.z, 0, d.x)) * 0.09
+        b = d * 0.06
+        tip = d * rng.uniform(0.25, 0.45) + Vector((0, rng.uniform(0.5, 0.9), 0))
+        pc.face([b - w, b + w, tip], (JMOSS_LL, JMOSS_L, JMOSS)[i % 3], "SmoothPlastic", 0.04, Vector((d.x, 0.3, d.z)))
+    return pc
+
+
+def fern():
+    rng = random.Random(3505)
+    pc = Piece("ruins", "fern", "the piece's own anchor: (0, 0, 0) = the base of the fern on the ground",
+               place={"relativeTo": "stair corners, wall feet", "position": "on the ground", "orientation": "any yaw",
+                      "scale": "uniform 0.5..1.3", "collide": "CanCollide off"},
+               notes="small fern: 5 arching fronds 1.1-1.4 long, each folded on its midrib (2 faces) with a bent tip "
+                     "(2 more), #60C448 / #589642, darker undersides.")
+    for i in range(5):
+        a = 2 * math.pi * i / 5 + rng.uniform(-0.2, 0.2)
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        side = Vector((-d.z, 0, d.x))
+        L = rng.uniform(1.1, 1.4)
+        b = Vector((0, 0.05, 0))
+        m = d * (L * 0.55) + Vector((0, 0.55, 0))
+        tip = d * L + Vector((0, 0.25, 0))
+        w = 0.22
+        c1, c2 = (JMOSS_L, JMOSS) if i % 2 else (JMOSS, JMOSS_L)
+        pc.face([b, m + side * w, m], c1, "SmoothPlastic", 0.04, Vector((0, 1, 0)))
+        pc.face([b, m, m - side * w], c2, "SmoothPlastic", 0.04, Vector((0, 1, 0)))
+        pc.face([m, m + side * w * 0.8, tip], c1, "SmoothPlastic", 0.04, Vector((0, 1, 0)))
+        pc.face([m, tip, m - side * w * 0.8], c2, "SmoothPlastic", 0.04, Vector((0, 1, 0)))
+    return pc
+
+
+def jungle_ruins():
+    rub = [rubble_stone("rubble_A", (2.6, 2.0, 2.4), 3301, JSTONE,
+                        "chipped cut-stone rubble 2.6 x 2.0 x 2.4 (= Ruin_Wall_Broken's first Rubble): a box with ~half its "
+                        "corners knocked off, 3 tone steps, lighter top. #848A7C."),
+           rubble_stone("rubble_B", (3.0, 2.4, 2.6), 3302, JSTONE_D,
+                        "chipped cut-stone rubble 3.0 x 2.4 x 2.6 (= Ruin_Wall_Broken's 2nd Rubble, Ruin_Stairs' Rubble 3 x 2.2 x "
+                        "2.6, Ruin_Pillar_Broken's Chunk 3 x 2.4 x 3: scale Y / Z to the part). #5C645C (use #848A7C on the "
+                        "stairs' rubble)."),
+           rubble_stone("rubble_C", (1.4, 1.0, 1.2), 3303, JSTONE_M,
+                        "small chipped stone 1.4 x 1.0 x 1.2 for extra rubble at wall feet (2-3 per kit, scale 0.6-1.2). "
+                        "#7B8174.")]
+    return [pillar_break()] + stepping_slabs() + rub + [plant_tuft(), fern()]
+
+
+def _mat(m):
+    from mathutils import Matrix
+    return Matrix(((m[0], m[1], m[2]), (m[3], m[4], m[5]), (m[6], m[7], m[8])))
+
+
+def preview_jungle_ruins(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    extra = {f"{p.obj}__{p.name}": p for p in moss_pieces() + vine_strand()}
+    # broken pillar kit
+    pctx = [((0, 0.8, 0), (6, 1.6, 6), JSTONE_D, (0, 0, 0)), ((0, 4.85, 0), (4.2, 6.5, 4.2), JSTONE, (0, 0, 0)),
+            ((7.5, 2.1, 2.0), (4.2, 4.2, 6.0), "#808678", (0, 30, 0))]
+    g1 = context_boxes(pctx, col) + [piece_object(by["ruins__pillar_break"], col)]
+    g1.append(piece_object(by["ruins__rubble_B"], col, Vector((4.5, 1.1, -5.0)), _mat((0.64, 0.0, 0.77, 0.11, 0.99, -0.09, -0.76, 0.14, 0.64))))
+    g1.append(piece_object(by["ruins__fern"], col, Vector((-3.2, 0, -3.0)), None, 0.9))
+    g1.append(piece_object(extra["moss__drape_B"], col, Vector((-1.2, 1.6, -3.0)), None, 1.0))
+    # stepping slabs
+    sx = 30.0
+    g2 = [piece_object(by["ruins__slab_low"], col, Vector((sx, 0, 0))), piece_object(by["ruins__slab_top"], col, Vector((sx, 0, 0)))]
+    for x, z in ((sx + 3.4, -2.0), (sx - 3.0, 2.6)):
+        g2.append(piece_object(by["ruins__plant_tuft"], col, Vector((x, 1.15, z)), None, 0.5))
+    # stepped ruin block with rubble + moss drapes
+    wx = 60.0
+    wctx = [((wx, 0.6, 0), (20.8, 1.2, 4.4), JSTONE_D, (0, 0, 0)), ((wx + 6.5, 1.6, 0), (7, 3.2, 3.6), JSTONE, (0, 0, 0)),
+            ((wx, 3.25, 0), (6, 6.5, 3.6), "#8D9384", (0, 0, 0)), ((wx - 6.5, 5.0, 0), (7, 10, 3.6), JSTONE, (0, 0, 0))]
+    g3 = context_boxes(wctx, col)
+    g3.append(piece_object(by["ruins__rubble_A"], col, Vector((wx + 8.6, 0.9, -3.8)), _mat((0.5, 0.0, 0.87, 0.15, 0.98, -0.09, -0.85, 0.17, 0.49))))
+    g3.append(piece_object(by["ruins__rubble_B"], col, Vector((wx + 5.0, 1.1, -4.6)), _mat((0.9, -0.13, 0.42, 0.14, 0.99, 0.0, -0.42, 0.06, 0.91))))
+    g3.append(piece_object(by["ruins__rubble_C"], col, Vector((wx + 2.0, 0.5, -3.4))))
+    for x, y, nm in ((wx + 5.0, 3.2, "drape_A"), (wx + 8.4, 3.2, "drape_B"), (wx - 1.5, 6.5, "drape_A"), (wx + 1.8, 6.5, "drape_B"),
+                     (wx - 7.5, 10.0, "drape_C")):
+        g3.append(piece_object(extra["moss__" + nm], col, Vector((x, y, -1.8))))
+    g3.append(piece_object(extra["vine__strand"], col, Vector((wx - 4.5, 9.9, -1.9)), None, 0.5))
+    g3.append(piece_object(by["ruins__fern"], col, Vector((wx - 2.5, 1.2, -2.6)), None, 0.8))
+    # rubble / plants line-up
+    rx = 90.0
+    g4 = [piece_object(by["ruins__rubble_A"], col, Vector((rx - 3.5, 1.0, 0))), piece_object(by["ruins__rubble_B"], col, Vector((rx, 1.2, 0))),
+          piece_object(by["ruins__rubble_C"], col, Vector((rx + 3.0, 0.5, 0))), piece_object(by["ruins__plant_tuft"], col, Vector((rx + 5.0, 0, 0))),
+          piece_object(by["ruins__fern"], col, Vector((rx + 7.5, 0, 0)))]
+    out = os.path.join(P.PREVIEW_DIR, "jungle_ruins_facets.png")
+    return render_sheet("jruins", [(g1, [(-30, 15)]), (g1[3:4], [(-30, 35)]), (g2, [(-25, 35)]), (g3, [(-25, 12)]), (g4, [(-20, 18)])],
+                        None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -2828,7 +3123,8 @@ def main():
                           ("red_rock", red_rock, preview_red_rock_all), ("monuments", monuments, preview_monuments),
                           ("props", desert_props, preview_props),
                           ("jungle", jungle_buildings, preview_jungle),
-                          ("jungle_gates", jungle_gates, preview_jungle_gates)):
+                          ("jungle_gates", jungle_gates, preview_jungle_gates),
+                          ("jungle_ruins", jungle_ruins, preview_jungle_ruins)):
         if only and obj not in only:
             continue
         pieces = fn()

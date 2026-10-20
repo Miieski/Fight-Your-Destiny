@@ -2657,3 +2657,40 @@ prompts or teleports).
   scripts, 0 written); backup after_jungle_gates. Per object: 01 palisade 3 / 3, 02 barricade 3 / 3, 03 totem arch 3 /
   3, 04 root arch 6 / 6, 05 cave 4 / 4 - all OK.
 
+
+# Jungle ruins and stonework (PROMPT 03) - 2026-10-20 (owner: "First, complete this prompt: PROMPT_03_Ruins_and_Stonework.txt. Follow the prompt exactly as written. Once and ONLY once you've FINISHED, run the second prompt named PROMPT_04_Totems_Shrines_Water.txt.")
+
+Objects: 01 stepped ruin block (keep footprint + collisions), 02 stone stairs (keep the step heights and walkability
+exactly), 03 broken pillar and blocks (keep footprint + collisions), 04 mossy slabs, 05 glowing floor pad (KEEP any
+script, touch / step behaviour and glow: it may be a checkpoint or teleport pad).
+
+## Status (newest first)
+
+- 11:27 Started. Images already in docs/Jungle_Images/03_Ruins_and_Stonework/ (copied with the whole jungle set).
+  Backup before_jungle_ruins. Same route: Agent A guide section C4 + facets, Agent B inventory / build / sync, main
+  agent review + Play check + push.
+- 11:50 Guide C4 + facets + PILOT 01 STEPPED RUIN BLOCK done. Agent A: section C4 (kits: 01 = Jungle.Ruin_Wall_Broken
+  7 copies, 02 = Ruin_Stairs 2, 03 = Ruin_Pillar_Broken 13, 04 = SteppingStone_A 5 = the WALKABLE stepping stones of
+  the Jungle_2 crossing (top at pivot +1.6), 05 = Glyph_Tile 36 (pure decoration: no script / tag / touch handler,
+  everything CanCollide off); the exact stair treads recorded; part-resized copies need bakedScale) + cheap facets
+  ruins__pillar_break, slab_top / slab_low, rubble_A/B/C, plant_tuft, fern (preview approved). Agent B: inventory
+  ("Jungle ruins"), per-object backups; pilot jungle_ruin_block 8 / 8 (coursed running-bond blocks with chipped
+  corners and per-block tones, plinth slabs, rubble facets on the old Rubble CFrames, 3 layered moss mats, a drape,
+  short vines, tufts, a fern; ~11.7k tris). Pilot shots sent to the owner.
+- 12:10 PROMPT 03 COMPLETE (Agent B; main agent looked at every after shot and Play-checked).
+  03 jungle_broken_pillar 14 / 14 (8 baked at 0.8; chamfered jointed stump with 2 carved bands with diamond studs and
+  a crack, Agent A's jagged break, chamfered plinth with chipped corners, a fallen octagonal drum, rubble chunk, moss
+  mat, fern; ~8k tris); 04 mossy_slabs 6 / 6 (Agent A's chipped slabs, top kept at 1.600 with a 2-layer moss <= 0.16,
+  cracks, tiny plants; ~5.5k tris); 05 glyph_floor_pad 37 / 37 (bevelled tile, dark groove under the Neon #78FFBE
+  frame, raised setting round the diamond, corner moss; the 5 Neon glyph parts kept; nothing collides as today; no
+  lights since all copies share one template; ~1k tris); 02 jungle_ruin_stairs 3 / 3 (jointed tread blocks exactly at
+  each tread top, 0.15 nose bevels, capped cheek walls, moss <= 0.125 on treads, plants; ~8.8k tris). Collisions:
+  invisible copies of today's parts; walkability ray grids on the placed stairs and stepping stones: 0 differences.
+  Agent B used cheap part drapes on the pillar / stairs (facet drapes cost 2.5-3.8k tris each) and fixed a flipped
+  facet triangle in its converter (slab_top stuck up 0.4 before the fix).
+  MAIN AGENT PLAY CHECK (phone emulator, unlockAll): walked UP the Jungle_3 stairs to the top tread and back DOWN to
+  the ground; walked across the Jungle_2 stepping stones (root height stays 2.3-2.8, reached the far bank); Jungle_3
+  144 fps / render CPU 2.6 ms, Jungle_2 144 / 2.6 ms; no game errors (the same 203785492 warning). FINAL: every
+  template up to date, disk == Studio (194 scripts, 0 written); backup after_jungle_ruins. Per object: 01 ruin block
+  8 / 8, 02 stairs 3 / 3, 03 broken pillar 14 / 14, 04 mossy slabs 6 / 6, 05 floor pad 37 / 37 - all OK.
+

@@ -64,6 +64,19 @@ local function rgbOf(part: Instance?): (number, number, number)
 	return -1, -1, -1
 end
 
+-- the real scale of a copy whose parts were resized one by one (Model scale 1): the largest X size of its parts named
+-- `name` over the kit's value `ref` (nil when it is 1)
+local function bakedFrom(m: Instance, name: string, ref: number): number?
+	local w = 0
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == name then
+			w = math.max(w, c.Size.X)
+		end
+	end
+	local s = w / ref
+	return if w > 0 and math.abs(s - 1) > 0.01 then s else nil
+end
+
 -- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
 -- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
 SyncMapProps.RULES = {
@@ -259,6 +272,26 @@ SyncMapProps.RULES = {
 	end },
 	{ propId = "root_arch", names = { "Root_Arch_A" } },
 	{ propId = "rock_cave", names = { "Jaguar_Den_Rocks" } },
+	-- jungle ruins and stonework (owner JUNGLE PROMPT_03, 2026-10-20): 01 the stepped ruin block (Ruin_Wall_Broken),
+	-- 02 the stone stairs (Ruin_Stairs, walkable), 03 the broken pillar and blocks (Ruin_Pillar_Broken), 04 the mossy
+	-- slabs (SteppingStone_A, the Jungle_2 crossings), 05 the glowing floor pad (Glyph_Tile, decoration only)
+	-- (some copies had their parts resized one by one with Model scale 1: bakedScale reads the real size from the
+	-- kit part named below; Ruin_Wall_Broken x1 and Ruin_Pillar_Broken x8 at 0.8, Glyph_Tile x1 at 1.6)
+	{ propId = "jungle_ruin_block", names = { "Ruin_Wall_Broken" }, bakedScale = function(m)
+		return bakedFrom(m, "Base", 20.8)
+	end },
+	{ propId = "jungle_ruin_stairs", names = { "Ruin_Stairs" }, bakedScale = function(m)
+		return bakedFrom(m, "Cheek", 2)
+	end },
+	{ propId = "jungle_broken_pillar", names = { "Ruin_Pillar_Broken" }, bakedScale = function(m)
+		return bakedFrom(m, "Base", 6)
+	end },
+	{ propId = "mossy_slabs", names = { "SteppingStone_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Stone", 6.4)
+	end },
+	{ propId = "glyph_floor_pad", names = { "Glyph_Tile" }, bakedScale = function(m)
+		return bakedFrom(m, "Tile", 8)
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
