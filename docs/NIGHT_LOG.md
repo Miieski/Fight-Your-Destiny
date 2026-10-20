@@ -2694,3 +2694,38 @@ script, touch / step behaviour and glow: it may be a checkpoint or teleport pad)
   template up to date, disk == Studio (194 scripts, 0 written); backup after_jungle_ruins. Per object: 01 ruin block
   8 / 8, 02 stairs 3 / 3, 03 broken pillar 14 / 14, 04 mossy slabs 6 / 6, 05 floor pad 37 / 37 - all OK.
 
+
+# Jungle totems, shrines and water (PROMPT 04) - 2026-10-20 (started only after prompt 03 was finished and pushed, 391d382, as the owner asked)
+
+Objects: 01 tall totem pole (keep the colours per face and the height), 02 totem figure (same family), 03 golden shrine
+(keep all interactions, prompts and scripts), 04 water pool with gold corners (keep the footprint and any swim /
+interaction / healing behaviour).
+
+## Status (newest first)
+
+- 12:15 Started. Images in docs/Jungle_Images/04_Totems_Shrines_Water/. Backup before_jungle_totems.
+- 12:25 Guide C5 + facets + PILOT 04 WATER POOL done. Agent A: section C5 (kits: 01 tall totem = Jungle.Totem_B 5
+  copies incl. BossArenas, 02 figure = Totem_A 5, 03 shrine = Jungle.Golden_Altar 2 (NOT the desert golden_altar rule
+  = GoldPile_A, whose Jungle_4 copy stands next to it -> new propId), 04 pool = Temple_Pool 4; part-resized copies
+  (shrine x1.6, 2 pools x1.2) -> bakedScale; no script / prompt / tag / touch anywhere; the pool water is a plain
+  non-colliding part, no swim or healing logic in src/; every totem face's colour and height recorded) + facets
+  feather crest, tusks, 2 face reliefs, figure horns / wings, shrine finial / gem setting, lily pad / flower
+  (preview approved). Agent B: inventory ("Jungle totems"), per-object backups; pilot jungle_temple_pool 5 / 5 (cut
+  rim blocks with bevelled caps, wet band, carved posts with 2-step engraved gold caps, fountain / well water - Glass
+  T 0.15 + water_lines ripples sliding through a new PropFX Scroll entry, top kept at 0.8, non-colliding -, lily pads,
+  moss). Pilot shots sent to the owner.
+- 12:50 PROMPT 04 COMPLETE (Agent B; main agent looked at every after shot and Play-checked).
+  01 jungle_tall_totem 6 / 6 (5 heads with today's colours and heights, a different carved expression each: Agent
+  A's reliefs recoloured, eyes in sockets with pupils, mouths with teeth, tusks, feather crest, rope / gold bands with
+  rivets, carved small arms with hands, stone plinth; ~26k tris); 02 jungle_totem_figure 6 / 6 (same family: stern red
+  face, blue bird head with a 2-part beak, tan head, Agent A's wings and horns, hat with a gold band, plinth; ~16k);
+  03 jungle_golden_shrine 3 / 3 (jointed bevelled steps with moss, carved front panel with today's Neon glyph in a
+  recessed groove, engraved gold top with a key pattern, claw settings round today's Neon gems + 2 PointLights, the
+  finial with a Neon tip; ~21k; the desert golden_altar stays 23 / 23); 04 pool 5 / 5. Collisions: invisible copies of
+  today's parts, exact on every copy.
+  MAIN AGENT PLAY CHECK (phone emulator, unlockAll): Jungle_1 144 fps / render CPU 3.3 ms, Jungle_4 144 / 2.3 ms; the
+  tall totem and the figure block the player; the shrine's 2 lights are on (3 Neon parts); the player walks into
+  the Jungle_4 pool as today; no game errors (the same 203785492 warning). FINAL: 91 templates / 861 tagged copies up
+  to date; disk == Studio (196 scripts, 0 written); backup after_jungle_totems. Per object: 01 tall totem 6 / 6, 02
+  figure 6 / 6, 03 shrine 3 / 3, 04 pool 5 / 5 - all OK.
+

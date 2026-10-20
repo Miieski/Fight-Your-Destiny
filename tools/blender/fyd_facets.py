@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -2659,6 +2659,45 @@ def cave_pieces():
     return out
 
 
+def wing_into(pc, sgn, root, ang_deg=16.0, k=1.0):
+    """Carved feathered totem wing (C3 / C5): a bevelled arm bar from `root` (the head's side face) outward and up
+    at ang_deg, then 3 overlapping rows of pointed feathers fanning from straight down (inner) to outward (tip).
+    k scales the lengths / widths (the thickness stays 0.7)."""
+    ca, sa = math.cos(math.radians(ang_deg)), math.sin(math.radians(ang_deg))
+    root = Vector(root)
+
+    def W(u, v, z):
+        return root + Vector((sgn * u * k * ca, v * k + u * k * sa, z))
+    prof = [(0.35, -0.1), (0.5, 0.0), (0.35, 0.1), (-0.35, 0.1), (-0.5, 0.0), (-0.35, -0.1)]
+    prof = [(v, z * 3.5) for v, z in prof]
+    secs = [[W(u, v * 1.0, z) for v, z in prof] for u in (0.0, 3.0, 5.6)]
+    for i in range(2):
+        a, b = secs[i], secs[i + 1]
+        for kk in range(6):
+            j = (kk + 1) % 6
+            q = [a[kk], b[kk], b[j], a[j]]
+            mid = (a[kk] + a[j] + b[kk] + b[j]) / 4
+            axis = sum(a + b, Vector()) / 12
+            pc.quad_or_tris(q, tone(TEAL, (1.0, 0.93, 0.86)[kk % 3]), "SmoothPlastic", 0.3, mid - axis)
+    polygon_fill(pc, secs[-1], tone(TEAL, 0.9), "SmoothPlastic", 0.3, secs[-1][0] - secs[-2][0])
+
+    def feather(u0, length, width, z, col, tip_col=None, ang=-60.0):
+        d = Vector((math.cos(math.radians(ang)), math.sin(math.radians(ang))))
+        nn = Vector((-d.y, d.x))
+        p = lambda s_, w: W(u0 + d.x * s_ + nn.x * w, -0.2 + d.y * s_ + nn.y * w, z)
+        a1, a2 = p(0.0, -width / 2), p(0.0, width / 2)
+        b1, b2 = p(length * 0.72, -width / 2), p(length * 0.72, width / 2)
+        tip = p(length, 0.0)
+        pc.face([a1, a2, b2, b1], col, "SmoothPlastic", 0.22, Vector((0, 0, -1)))
+        pc.face([b1, b2, tip], tip_col or col, "SmoothPlastic", 0.22, Vector((0, 0, -1)))
+    for i in range(5):
+        feather(1.0 + i * 0.95, 2.2 + 0.25 * i, 1.0, 0.2, tone(TEAL, 0.86), GOLD, -80.0 + 12.0 * i)
+    for i in range(5):
+        feather(0.7 + i * 0.95, 1.6 + 0.15 * i, 0.95, -0.05, TEAL, None, -84.0 + 11.0 * i)
+    for i in range(4):
+        feather(0.6 + i * 1.15, 1.0, 1.0, -0.3, mix(TEAL, "#FFFFFF", 0.3), None, -75.0 + 9.0 * i)
+
+
 def totem_wings():
     out = []
     for sgn in (-1, 1):
@@ -2671,45 +2710,7 @@ def totem_wings():
                          "overlapping rows of feathers with pointed tips fanning from straight down (inner) to outward (tip) (primaries #3CAABE x0.86 "
                          "with gold tips, secondaries #3CAABE, coverts lighter), each row a little in front of the one "
                          "behind. Rises outward 16 deg like today; about 7.5 long (today 5.4), 4.5 tall, 0.7 thick.")
-        th = math.radians(16.0) * (1 if sgn < 0 else -1)
-        ca, sa = math.cos(th), math.sin(th)
-        # local frame: u = outward along the wing (0 at the totem's side face, 6.2 at the tip), v = up
-        root = Vector((sgn * 17.65, 13.4, 0.0))
-
-        def W(u, v, z):
-            x = sgn * u * ca
-            y = u * math.sin(math.radians(16.0))
-            return root + Vector((x, v + y, z))
-        # arm bar (bevelled): a 6-sided prism along u
-        prof = [(0.35, -0.1), (0.5, 0.0), (0.35, 0.1), (-0.35, 0.1), (-0.5, 0.0), (-0.35, -0.1)]
-        prof = [(v, z * 3.5) for v, z in prof]
-        secs = [[W(u, v * 1.0, z) for v, z in prof] for u in (0.0, 3.0, 5.6)]
-        for i in range(2):
-            a, b = secs[i], secs[i + 1]
-            for k in range(6):
-                j = (k + 1) % 6
-                q = [a[k], b[k], b[j], a[j]]
-                mid = (a[k] + a[j] + b[k] + b[j]) / 4
-                axis = sum(a + b, Vector()) / 12
-                pc.quad_or_tris(q, tone(TEAL, (1.0, 0.93, 0.86)[k % 3]), "SmoothPlastic", 0.3, mid - axis)
-        polygon_fill(pc, secs[-1], tone(TEAL, 0.9), "SmoothPlastic", 0.3, secs[-1][0] - secs[-2][0])
-
-        def feather(u0, length, width, z, col, tip_col=None, ang=-60.0):
-            # a flat pointed feather from the arm at u0, pointing down / outward at `ang` deg (0 = straight out)
-            d = Vector((math.cos(math.radians(ang)), math.sin(math.radians(ang))))
-            nn = Vector((-d.y, d.x))
-            p = lambda s, w: W(u0 + d.x * s + nn.x * w, -0.2 + d.y * s + nn.y * w, z)
-            a1, a2 = p(0.0, -width / 2), p(0.0, width / 2)
-            b1, b2 = p(length * 0.72, -width / 2), p(length * 0.72, width / 2)
-            tip = p(length, 0.0)
-            pc.face([a1, a2, b2, b1], col, "SmoothPlastic", 0.22, Vector((0, 0, -1)))
-            pc.face([b1, b2, tip], tip_col or col, "SmoothPlastic", 0.22, Vector((0, 0, -1)))
-        for i in range(5):
-            feather(1.0 + i * 0.95, 2.2 + 0.25 * i, 1.0, 0.2, tone(TEAL, 0.86), GOLD, -80.0 + 12.0 * i)
-        for i in range(5):
-            feather(0.7 + i * 0.95, 1.6 + 0.15 * i, 0.95, -0.05, TEAL, None, -84.0 + 11.0 * i)
-        for i in range(4):
-            feather(0.6 + i * 1.15, 1.0, 1.0, -0.3, mix(TEAL, "#FFFFFF", 0.3), None, -75.0 + 9.0 * i)
+        wing_into(pc, sgn, (sgn * 17.65, 13.4, 0.0), 16.0, 1.0)
         out.append(pc)
     return out
 
@@ -3115,6 +3116,315 @@ def preview_jungle_ruins(pieces):
                         None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# JUNGLE TOTEMS, SHRINES AND WATER (guide section C5): feather crest, tusks, horns, wings, face reliefs, shrine
+# finial + gem settings, lily pads.
+# ------------------------------------------------------------------------------------------------
+FEATHER_O, TWOOD = "#FFAA28", "#4A3022"
+
+
+def feather_crest():
+    pc = Piece("totem", "feather_crest", "the Totem_B kit pivot (base centre, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the Totem_B model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the 3 Feather parts on top of the yellow head (top y 18.2); no collision"},
+               notes="feather crest on the yellow head: a gold band (6-sided ring) and 5 fanned feathers (-36 / -18 / 0 / "
+                     "18 / 36 deg; teal, orange, red centre 3.8 long, teal, orange), each a quill + a vane in 4 segments "
+                     "with 2 notches per side and a darker tip; the centre one in front.")
+    base_y = 18.2
+    ring = [Vector((1.05 * math.cos(2 * math.pi * i / 6 + math.pi / 6), 0, 0.75 * math.sin(2 * math.pi * i / 6 + math.pi / 6))) for i in range(6)]
+    for i in range(6):
+        j = (i + 1) % 6
+        a, b = ring[i], ring[j]
+        q = [a + Vector((0, base_y - 0.05, 0)), b + Vector((0, base_y - 0.05, 0)), b + Vector((0, base_y + 0.45, 0)),
+             a + Vector((0, base_y + 0.45, 0))]
+        pc.face(q, tone(GOLD, (1.0, 0.9)[i % 2]), "SmoothPlastic", 0.2, (a + b) / 2)
+    polygon_fill(pc, [p + Vector((0, base_y + 0.45, 0)) for p in ring], tone(GOLD, 0.95), "SmoothPlastic", 0.2, Vector((0, 1, 0)))
+    specs = [(-36, 3.0, TEAL, 0.12), (-18, 3.4, FEATHER_O, 0.06), (0, 3.8, TRED, -0.05), (18, 3.4, TEAL, 0.06), (36, 3.0, FEATHER_O, 0.12)]
+    for ang, L, col, z in specs:
+        a = math.radians(ang)
+        d = Vector((math.sin(a), math.cos(a), 0))
+        nrm = Vector((d.y, -d.x, 0))
+        o = Vector((math.sin(a) * 0.5, base_y + 0.3, z))
+
+        def P2(s, w):
+            return o + d * s + nrm * w
+        # quill
+        pc.face([P2(0.0, -0.06), P2(0.0, 0.06), P2(L * 0.95, 0.04), P2(L * 0.95, -0.04)], tone(BONE, 0.9), "SmoothPlastic", 0.12,
+                Vector((0, 0, -1)))
+        segs = [0.15, 0.4, 0.62, 0.82, 1.0]
+        widths = [0.18, 0.42, 0.45, 0.36, 0.0]
+        for side in (-1, 1):
+            for k in range(4):
+                s0, s1 = segs[k] * L, segs[k + 1] * L
+                w0, w1 = widths[k], widths[k + 1]
+                notch = 0.1 if k in (1, 2) else 0.0
+                cc = tone(col, 0.72) if k == 3 else tone(col, (1.0, 0.94)[(k + (side > 0)) % 2])
+                pts = [P2(s0, side * 0.04), P2(s1, side * 0.04), P2(s1, side * w1), P2(s0 + notch * L * 0.3, side * (w0 - notch * 0.0))]
+                if w1 < 1e-6:
+                    pc.face([pts[0], pts[1], pts[3]], cc, "SmoothPlastic", 0.12, Vector((0, 0, -1)))
+                else:
+                    pc.face(pts, cc, "SmoothPlastic", 0.12, Vector((0, 0, -1)))
+    return pc
+
+
+def _horn_tube(pc, pts, r0, r1, sides, base, t):
+    n = len(pts)
+    radii = [r0 + (r1 - r0) * (i / (n - 1)) ** 0.9 for i in range(n)]
+    tube_faces(pc, pts, radii, sides, lambda s, k: (tone(base, 1.0 if s % 2 == 0 else 0.86) if k % 3 else tone(base, 0.93)), t)
+
+
+def totem_tusks():
+    pc = Piece("totem", "tusks", "the Totem_B kit pivot (base centre, front -Z)",
+               place={"relativeTo": "the Totem_B model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the 2 Tusk parts of the blue bottom head; no collision"},
+               notes="2 curved boar tusks from the corners of the blue head's mouth, curving forward and up, 5-sided, "
+                     "tapering 0.3 -> 0.05, ribbed bone tones #E8E2D0.")
+    for sx in (-1, 1):
+        pts = [Vector((sx * 1.05, 2.1, -1.55)), Vector((sx * 1.2, 2.9, -2.15)), Vector((sx * 1.32, 3.9, -2.45)),
+               Vector((sx * 1.3, 4.8, -2.35)), Vector((sx * 1.15, 5.4, -2.05))]
+        _horn_tube(pc, pts, 0.3, 0.05, 5, BONE, 0.12)
+    return pc
+
+
+def figure_horns():
+    pc = Piece("totem_figure", "horns", "the Totem_A kit pivot (base centre, front -Z)",
+               place={"relativeTo": "the Totem_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the 2 Horn parts on the hat; no collision"},
+               notes="2 curved ribbed horns from the hat's crown (3 x 2.2 x 3 at y 14), out and up, 6-sided, tapering "
+                     "0.38 -> 0.06, #E8E2D0 yellowing to the tips.")
+    for sx in (-1, 1):
+        pts = [Vector((sx * 1.3, 14.4, 0.0)), Vector((sx * 2.1, 14.9, -0.05)), Vector((sx * 2.75, 15.8, -0.1)),
+               Vector((sx * 2.9, 16.9, -0.15)), Vector((sx * 2.6, 17.7, -0.2))]
+        n = len(pts)
+        radii = [0.38, 0.32, 0.24, 0.15, 0.06]
+        tube_faces(pc, pts, radii, 6, lambda s, k: mix(BONE, THATCH, 0.15 * s) if s % 2 == 0 else tone(mix(BONE, THATCH, 0.15 * s), 0.88), 0.15)
+    return pc
+
+
+def figure_wings():
+    out = []
+    for sgn in (-1, 1):
+        side = "L" if sgn < 0 else "R"
+        pc = Piece("totem_figure", f"wing_{side}", "the Totem_A kit pivot (base centre, front -Z)",
+                   place={"relativeTo": "the Totem_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                          "replaces": f"the {'left' if sgn < 0 else 'right'} Wing (5 x 2.4 x 0.7 at ({sgn * 4.3}, 11.2, 0), rising 18 deg); "
+                                      "keep its CanCollide on a hidden box"},
+                   notes="the C3 totem-arch wing design (arm bar + 3 rows of fanned feathers, gold-tipped primaries) at "
+                         "0.78 size on the tan head's side (x +-2.0), rising 18 deg like today; about 5.7 long.")
+        wing_into(pc, sgn, (sgn * 2.0, 11.9, 0.0), 18.0, 0.78)
+        out.append(pc)
+    return out
+
+
+def face_relief(name, seed, brow_tilt, arch, nose_w, notes):
+    """Carved relief for a 3.4 totem head: brow ridge over today's eyes (eyes at local y +0.5, x +-0.95), a carved
+    nose, 2 cheek plates. Local frame: (0,0,0) = centre of the head's FRONT face, front -Z."""
+    rng = random.Random(seed)
+    pc = Piece("totem", name, "the piece's own anchor: (0, 0, 0) = the CENTRE of a totem head's FRONT face; front -Z; "
+               "made for a 3.4 head", place={"relativeTo": "a Totem_A / Totem_B / EntryArch head", "position":
+                                            "the head's front-face centre (e.g. Totem_B blue head (0, 2.9, -1.7))",
+                                            "orientation": [0, 0, 0], "scale": "uniform = head width / 3.4 (3.7 -> 1.09, 4.0 -> 1.18, 4.4 -> 1.29)",
+                                            "colour": "the faces carry the TAN colour #D6965C as a placeholder: recolour to the head's own colour (x0.86 for the shaded faces)"},
+               notes=notes)
+    base = "#D6965C"
+    st = []
+    for x in (-1.5, -1.0, -0.45, 0.0, 0.45, 1.0, 1.5):
+        ax = abs(x)
+        y = 1.1 + arch * (1 - (ax - 0.95) ** 2 / 0.9) * (ax > 0.2) - brow_tilt * (1.5 - ax) / 1.5
+        s = 1.0 - 0.35 * max(0.0, (ax - 1.1) / 0.4)
+        st.append((x, y, s))
+    secs = brow_sections(st, 0.42, 0.52, 0.02)
+    sweep_faces(pc, secs, lambda k, i: tone(base, (1.0, 0.95, 0.9, 0.8, 0.7)[k]), 0.15)
+    # nose (hull) from between the eyes down to above the mouth
+    X, Y0, Y1, ZB, ZF = nose_w, -0.55, 0.85, 0.02, -0.55
+    fr = [(0.35, 1.0, 0.0), (0.38, 0.9, 0.3), (0.5, 0.3, 0.85), (0.4, 0.05, 1.0), (1.0, 0.1, 0.45), (0.95, 0.0, 0.0),
+          (0.6, 0.0, 0.7), (1.0, 0.35, 0.0)]
+    pts = []
+    for u, v, w in fr:
+        for sg in (1, -1):
+            pts.append(Vector((sg * u * X, Y0 + v * (Y1 - Y0), ZB + w * (ZF - ZB))))
+    tree = hull_into(pc, pts, lambda cc, n: tone(base, 0.75 if n.y < -0.4 else (1.0 if n.y > 0.3 else 0.92)), 0.15,
+                     skip=lambda ring: all(abs(p.z - ZB) < 1e-4 for p in ring))
+    for sx in (-1, 1):
+        surface_quad(pc, tree, (sx * 0.4 * X, Y0 - 1.0, ZB + 0.5 * (ZF - ZB)), (0, 1, 0),
+                     [(-0.08, -0.06), (0.08, -0.06), (0.06, 0.06), (-0.06, 0.06)], TWOOD, "SmoothPlastic", 0.05, 0.02)
+    # cheek plates (bevelled, 0.15 proud)
+    for sx in (-1, 1):
+        cx, cy = sx * 1.15, -0.35
+        w, h, d, b = 0.45, 0.32, 0.15, 0.06
+        f = [Vector((cx - w + b, cy - h + b, -d)), Vector((cx + w - b, cy - h + b, -d)), Vector((cx + w - b, cy + h - b, -d)),
+             Vector((cx - w + b, cy + h - b, -d))]
+        bk = [Vector((cx - w, cy - h, 0.02)), Vector((cx + w, cy - h, 0.02)), Vector((cx + w, cy + h, 0.02)), Vector((cx - w, cy + h, 0.02))]
+        pc.face(f, tone(base, 0.97), "SmoothPlastic", 0.12, Vector((0, 0, -1)))
+        for i in range(4):
+            j = (i + 1) % 4
+            pc.face([bk[i], bk[j], f[j], f[i]], tone(base, (0.8, 0.9, 1.0, 0.9)[i]), "SmoothPlastic", 0.1,
+                    (bk[i] + bk[j]) / 2 - Vector((cx, cy, 0.5)))
+    return pc
+
+
+def shrine_finial():
+    pc = Piece("shrine", "finial", "the Golden_Altar kit pivot (base centre, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the Golden_Altar model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "Idol (1.8 x 2.4 x 1.4 at (0, 6.8, 0.6)) and IdolHead; no collision (like today); the Jungle_4 "
+                                  "copy scales x1.6 with the model (bakedScale)"},
+               notes="the shrine's central gold finial on the GoldTop (y 5.6), centred at (0, z 0.6) like the Idol: an "
+                     "8-sided lathe: a 2-step base, a tapering body with 2 engraved bands (darker #E5B435), a neck, a "
+                     "round head with a crown ring, and a spike ending in a small Neon #78FFBE gem (octahedron) at y ~9.6.")
+    prof = [(1.0, 5.6), (1.0, 5.85), (0.85, 5.85), (0.85, 6.1), (0.72, 6.1), (0.66, 6.7), (0.78, 6.75), (0.78, 6.95),
+            (0.62, 7.0), (0.55, 7.6), (0.68, 7.65), (0.68, 7.8), (0.38, 7.85), (0.6, 8.1), (0.62, 8.45), (0.48, 8.7),
+            (0.58, 8.75), (0.58, 8.9), (0.2, 8.95), (0.06, 9.45)]
+    bands = {6, 10, 15, 16}
+
+    def col(s, k):
+        if s in bands:
+            return GOLD2
+        return tone(GOLD, (1.0, 0.93)[k % 2] * (0.9 + 0.1 * s / len(prof)))
+    lathe_faces(pc, prof, 8, col, 0.2, center=(0.0, 0.6))
+    top = Vector((0.0, 9.45, 0.6))
+    gem = [top + Vector((0, 0.45, 0)), top + Vector((0, 0.05, 0))]
+    eq = [top + Vector((0.18 * math.cos(a), 0.25, 0.18 * math.sin(a))) for a in (0.0, math.pi / 2, math.pi, 3 * math.pi / 2)]
+    for i in range(4):
+        j = (i + 1) % 4
+        mid = (eq[i] + eq[j]) / 2 - (top + Vector((0, 0.25, 0)))
+        pc.face([gem[0], eq[j], eq[i]], "#78FFBE", "Neon", 0.08, mid + Vector((0, 0.3, 0)))
+        pc.face([gem[1], eq[i], eq[j]], "#78FFBE", "Neon", 0.08, mid - Vector((0, 0.3, 0)))
+    return pc
+
+
+def gem_setting():
+    pc = Piece("shrine", "gem_setting", "the piece's own anchor: (0, 0, 0) = the GEM'S CENTRE (today's Gem at (+-3, 6.5, 0))",
+               place={"relativeTo": "the Golden_Altar model", "position": "(-3, 6.5, 0) and (3, 6.5, 0)", "orientation": [0, 0, 0],
+                      "replaces": "the 2 Bowl parts (the Neon Gems stay as parts at their places); no collision"},
+               notes="gold claw setting for the shrine's cyan gems: an 8-sided cup on a short stem (from the GoldTop at "
+                     "y -0.9) with an engraved rim, and 4 tapering claws rising round the gem to y +0.22.")
+    prof = [(0.75, -0.9), (0.75, -0.8), (0.42, -0.72), (0.38, -0.6), (0.6, -0.45), (0.62, -0.3), (0.5, -0.24)]
+    lathe_faces(pc, prof, 8, lambda s, k: GOLD2 if s == 4 else tone(GOLD, (1.0, 0.93)[k % 2]), 0.15)
+    for i in range(4):
+        a = math.pi / 4 + i * math.pi / 2
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        side = Vector((-d.z, 0, d.x))
+        b0, b1 = d * 0.5 + Vector((0, -0.3, 0)), d * 0.36 + Vector((0, 0.22, 0))
+        q_out = [b0 - side * 0.09, b0 + side * 0.09, b1 + side * 0.04, b1 - side * 0.04]
+        pc.quad_or_tris(q_out, tone(GOLD, 0.95), "SmoothPlastic", 0.08, d)
+    return pc
+
+
+def lily_pad():
+    rng = random.Random(4404)
+    pad = Piece("pool", "lily_pad", "the piece's own anchor: (0, 0, 0) = the pad's centre ON the water surface",
+                place={"relativeTo": "the Temple_Pool model", "position": "on the water: y 0.82 (today's water top 0.8), 4-6 "
+                       "per pool, not closer than 1.5 to the rim", "orientation": "any yaw", "scale": "uniform 0.6..1.3",
+                       "collide": "CanCollide off"},
+                notes="lily pad 2.0 wide: a 12-sided disc with a V notch (fan of 10 slightly domed triangles, #46AA3C "
+                      "/ #589642 alternating, lighter centre).")
+    n = 12
+    c = Vector((0, 0.06, 0))
+    pts = [Vector((math.cos(2 * math.pi * i / n) * rng.uniform(0.95, 1.02), 0.0, math.sin(2 * math.pi * i / n) * rng.uniform(0.95, 1.02)))
+           for i in range(n)]
+    for i in range(n):
+        if i in (0, n - 1):
+            continue   # the notch: skip the 2 triangles round angle 0
+        j = (i + 1) % n
+        pad.face([c, pts[j], pts[i]], (JVINE, JMOSS)[i % 2], "SmoothPlastic", 0.06, Vector((0, 1, 0)))
+    fl = Piece("pool", "lily_flower", "the piece's own anchor: (0, 0, 0) = the flower's base on a lily pad",
+               place={"relativeTo": "a pool__lily_pad", "position": "on the pad, (0.3, 0.06, 0.2) from its centre",
+                      "orientation": "any yaw", "scale": "uniform 0.8..1.2", "collide": "CanCollide off"},
+               notes="small water lily: 6 pink #FF508C petals (2 faces each, tilted up 40 deg) round a gold #FFC93C "
+                     "centre (4 faces).")
+    for i in range(6):
+        a = 2 * math.pi * i / 6
+        d = Vector((math.cos(a), 0, math.sin(a)))
+        side = Vector((-d.z, 0, d.x))
+        b = Vector((0, 0.05, 0))
+        mid = d * 0.3 + side * 0.13 * 0 + Vector((0, 0.2, 0))
+        tip = d * 0.55 + Vector((0, 0.42, 0))
+        w = side * 0.16
+        cc = "#FF508C" if i % 2 else mix("#FF508C", "#FFFFFF", 0.25)
+        fl.face([b, mid + w, tip], cc, "SmoothPlastic", 0.04, d + Vector((0, 0.6, 0)))
+        fl.face([b, tip, mid - w], cc, "SmoothPlastic", 0.04, d + Vector((0, 0.6, 0)))
+    top = Vector((0, 0.28, 0))
+    ring = [Vector((0.12 * math.cos(a), 0.12, 0.12 * math.sin(a))) for a in (0.0, math.pi / 2, math.pi, 3 * math.pi / 2)]
+    for i in range(4):
+        j = (i + 1) % 4
+        fl.face([top, ring[j], ring[i]], GOLD, "SmoothPlastic", 0.05, (ring[i] + ring[j]) / 2 + Vector((0, 0.2, 0)))
+    return [pad, fl]
+
+
+def jungle_totems():
+    reliefs = [face_relief("face_relief_A", 4501, 0.28, 0.0, 0.42,
+                           "carved face relief, ANGRY: heavy brow ridge slanting down to the middle, a broad nose with "
+                           "nostrils, 2 bevelled cheek plates. For the red / brown / red-figure heads."),
+               face_relief("face_relief_B", 4502, -0.05, 0.16, 0.34,
+                           "carved face relief, SURPRISED / PROUD: 2 arched brows, a narrower nose with nostrils, 2 "
+                           "bevelled cheek plates. For the yellow / tan / blue heads.")]
+    return ([feather_crest(), totem_tusks()] + reliefs + [figure_horns()] + figure_wings() + [shrine_finial(), gem_setting()]
+            + lily_pad())
+
+
+def preview_jungle_totems(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    extra = {f"{p.obj}__{p.name}": p for p in moss_pieces()}
+    # Totem_B
+    tb = [((0, 0.6, 0), (4.8, 1.2, 4.8), TWOOD, (0, 0, 0)), ((0, 2.9, 0), (3.4, 3.4, 3.4), TEAL, (0, 0, 0)),
+          ((0, 6.3, 0), (3.7, 3.4, 3.7), "#D6965C", (0, 0, 0)), ((0, 9.7, 0), (3.4, 3.4, 3.4), TRED, (0, 0, 0)),
+          ((0, 13.1, 0), (3.7, 3.4, 3.7), "#68442C", (0, 0, 0)), ((0, 16.5, 0), (3.4, 3.4, 3.4), GOLD, (0, 0, 0)),
+          ((-2.7, 9.7, 0), (1.6, 2.6, 0.8), GOLD, (0, 0, 0)), ((2.7, 9.7, 0), (1.6, 2.6, 0.8), GOLD, (0, 0, 0))]
+    for y, ec in ((2.9, BONE), (6.3, TWOOD), (9.7, BONE), (13.1, BONE), (16.5, TWOOD)):
+        tb += [((-0.95, y + 0.5, -1.9), (0.8, 0.8, 0.3), ec, (0, 0, 0)), ((0.95, y + 0.5, -1.9), (0.8, 0.8, 0.3), ec, (0, 0, 0))]
+    tb += [((0, 2.0, -1.9), (2.2, 0.6, 0.3), TWOOD, (0, 0, 0)), ((0, 8.8, -1.9), (2.2, 0.6, 0.3), TWOOD, (0, 0, 0)),
+           ((0, 15.6, -1.9), (2.2, 0.6, 0.3), TRED, (0, 0, 0))]
+    g1 = context_boxes(tb, col) + [piece_object(by["totem__feather_crest"], col), piece_object(by["totem__tusks"], col)]
+    for y, z, s, nm in ((2.9, -1.7, 1.0, "B"), (6.3, -1.85, 1.09, "B"), (9.7, -1.7, 1.0, "A"), (13.1, -1.85, 1.09, "A"),
+                        (16.5, -1.7, 1.0, "B")):
+        g1.append(piece_object(by["totem__face_relief_" + nm], col, Vector((0, y, z)), None, s))
+    # Totem_A
+    ax = 16.0
+    ta = [((0, 0.7, 0), (5.2, 1.4, 5.2), TWOOD, (0, 0, 0)), ((0, 3.4, 0), (4, 4, 4), TRED, (0, 0, 0)),
+          ((0, 7.2, 0), (4.4, 3.6, 4.4), TEAL, (0, 0, 0)), ((0, 10.8, 0), (4, 3.6, 4), "#D6965C", (0, 0, 0)),
+          ((0, 12.6, 0), (4.6, 0.7, 4.6), TRED, (0, 0, 0)), ((0, 14.0, 0), (3, 2.2, 3), TRED, (0, 0, 0)),
+          ((0, 7.0, -2.9), (1.6, 1.4, 1.6), GOLD, (0, 0, 0)), ((0, 2.4, -2.05), (2.6, 0.7, 0.3), TWOOD, (0, 0, 0))]
+    for y, ec, w, h, ex in ((4.1, BONE, 1.0, 1.0, 1.0), (8.1, GOLD, 0.9, 0.9, 1.2), (11.1, TWOOD, 0.9, 1.2, 1.0)):
+        zz = -2.25 if y == 8.1 else -2.05
+        ta += [((-ex, y, zz), (w, h, 0.3), ec, (0, 0, 0)), ((ex, y, zz), (w, h, 0.3), ec, (0, 0, 0))]
+    ta = [((p[0] + ax, p[1], p[2]), s, c, r) for p, s, c, r in ta]
+    off = Vector((ax, 0, 0))
+    g2 = context_boxes(ta, col) + [piece_object(by["totem_figure__horns"], col, off), piece_object(by["totem_figure__wing_L"], col, off),
+                                   piece_object(by["totem_figure__wing_R"], col, off)]
+    g2.append(piece_object(by["totem__face_relief_A"], col, off + Vector((0, 3.6, -2.0)), None, 1.18))
+    g2.append(piece_object(by["totem__face_relief_B"], col, off + Vector((0, 10.8 - 0.2, -2.0)), None, 1.18))
+    # shrine
+    sx = 40.0
+    sh = [((0, 0.7, 0), (12, 1.4, 8), JSTONE_D, (0, 0, 0)), ((0, 2.1, 0), (10, 1.4, 6), JSTONE, (0, 0, 0)),
+          ((0, 3.9, 0), (8, 2.2, 4.4), JSTONE, (0, 0, 0)), ((0, 3.9, -2.3), (3, 1, 0.3), "#78FFBE", (0, 0, 0)),
+          ((0, 5.3, 0), (8.6, 0.6, 5), GOLD, (0, 0, 0)), ((-3.8, 3.9, -2.1), (0.5, 2.2, 0.5), GOLD, (0, 0, 0)),
+          ((3.8, 3.9, -2.1), (0.5, 2.2, 0.5), GOLD, (0, 0, 0)), ((-3, 6.5, 0), (0.6, 0.6, 0.6), "#78FFBE", (45, 0, 45)),
+          ((3, 6.5, 0), (0.6, 0.6, 0.6), "#78FFBE", (45, 0, 45))]
+    sh = [((p[0] + sx, p[1], p[2]), s, c, r) for p, s, c, r in sh]
+    g3 = context_boxes(sh, col) + [piece_object(by["shrine__finial"], col, Vector((sx, 0, 0)))]
+    for gx in (-3.0, 3.0):
+        g3.append(piece_object(by["shrine__gem_setting"], col, Vector((sx + gx, 6.5, 0))))
+    g3.append(piece_object(extra["moss__drape_B"], col, Vector((sx - 4.5, 1.4, -4.0))))
+    # pool
+    px = 75.0
+    po = [((0, 0.1, 0), (20, 0.2, 20), "#1E8C96", (0, 0, 0)), ((0, 0.55, 0), (20, 0.5, 20), "#30C4BE", (0, 0, 0)),
+          ((0, 0.7, -11), (24, 1.4, 2), JSTONE, (0, 0, 0)), ((-11, 0.7, 0), (2, 1.4, 20), JSTONE, (0, 0, 0)),
+          ((0, 0.7, 11), (24, 1.4, 2), JSTONE, (0, 0, 0)), ((11, 0.7, 0), (2, 1.4, 20), JSTONE, (0, 0, 0))]
+    for cx_, cz_ in ((-11, -11), (-11, 11), (11, -11), (11, 11)):
+        po += [((cx_, 1.3, cz_), (2.6, 2.6, 2.6), JSTONE_D, (0, 0, 0)), ((cx_, 2.85, cz_), (1.5, 0.5, 1.5), GOLD, (0, 0, 0))]
+    po = [((p[0] + px, p[1], p[2]), s, c, r) for p, s, c, r in po]
+    g4 = context_boxes(po, col)
+    for (lx, lz, yaw, s) in ((-5, -4, 20, 1.0), (3, 2, 150, 1.2), (-2, 6, 260, 0.8), (6, -6, 80, 1.1), (-7, 4, 200, 0.7)):
+        g4.append(piece_object(by["pool__lily_pad"], col, Vector((px + lx, 0.82, lz)), euler_matrix([0, yaw, 0]), s))
+    g4.append(piece_object(by["pool__lily_flower"], col, Vector((px + 3.3, 0.88, 2.2)), None, 1.2))
+    g4.append(piece_object(by["pool__lily_flower"], col, Vector((px - 4.7, 0.88, -3.8)), None, 1.0))
+    out = os.path.join(P.PREVIEW_DIR, "jungle_totems_facets.png")
+    return render_sheet("jtotems", [(g1, [(-20, 6)]), (g1[-5:], [(-25, 8)]), (g2, [(-20, 6)]), (g3, [(-25, 18)]), (g4, [(-25, 35)])],
+                        None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -3124,7 +3434,8 @@ def main():
                           ("props", desert_props, preview_props),
                           ("jungle", jungle_buildings, preview_jungle),
                           ("jungle_gates", jungle_gates, preview_jungle_gates),
-                          ("jungle_ruins", jungle_ruins, preview_jungle_ruins)):
+                          ("jungle_ruins", jungle_ruins, preview_jungle_ruins),
+                          ("jungle_totems", jungle_totems, preview_jungle_totems)):
         if only and obj not in only:
             continue
         pieces = fn()

@@ -478,6 +478,49 @@ per object, the second run 0.
 Totals: 68 copies replaced (8 + 14 + 6 + 37 + 3); in the place about 300,000 triangles for these five (block 93k,
 pillar 111k, slabs 33k, pads 36k, stairs 26k), of which the placed game copies (Jungle_2/3/4) are about 220,000.
 
+### Jungle totems (owner, jungle PROMPT_04 "Totems, shrines and water", 2026-10-20): inventory before the remake (read from Studio)
+
+Prompt: `REMAKE OBJECT/Jungle_Images_By_Category/.../04_Totems_Shrines_Water/PROMPT_04_Totems_Shrines_Water.txt`.
+Images: `docs/Jungle_Images/04_Totems_Shrines_Water/`. Recipe: docs/prop_texture_guide.md C5. Test =
+`workspace._Staging.AssetPreview.Jungle.<Kit>`; BA = `ServerStorage.BossArenas.Jungle.Decor.Props`. Every model named
+like a kit was searched in the whole place (Plains, hub, BossArenas included): the copies are only the ones below.
+Checked in Studio and in src: no script, ProximityPrompt, ClickDetector, tag, attribute, Humanoid, Light or touch handler
+in any of the four, and nothing in src names them (no heal / swim logic for props). The pool's water is a plain
+non-colliding part (no terrain water in or under any copy): players walk through it. The Jungle_4 BossGate's
+`Interact` prompt near the shrine belongs to the BossGate (not touched). The shrine is NOT the existing rule
+`golden_altar` (the desert GoldPile_A, whose Jungle_4 copy stands next to it): 4 new rules with new propIds, names
+that do not overlap (golden_altar still 23 / 23 after the work). Backups (kit + test + every copy):
+`BackUP_Files/old_props_2026-10-20_pre_jungle_totems/<propId>.rbxm` (4 files); the main agent's full backup
+`..._before_jungle_totems`.
+
+| # | object | kit (parts, size) | copies (total incl. kit + test) | collision | functional / notes |
+|---|---|---|---|---|---|
+| 01 | tall totem pole | `MapAssets.Jungle.Totem_B`: 26 parts (Base, 5 Heads, eyes, mouths, 2 gold Ears, 2 Tusks, 3 Feathers); 7 x 21.6 x 5.0 | 6: test, kit, Jungle_1 Props 2, Jungle_2 Props 1, BA 1 | Base, 5 Heads, 2 Ears | - (heads bottom to top: blue 2.9, tan 6.3, red 9.7, brown 13.1, yellow 16.5) |
+| 02 | totem figure | `MapAssets.Jungle.Totem_A`: 18 parts (Base, 3 Heads, Beak, eyes, mouth, 2 Wings, Brow, Crown, 2 Horns); 14.1 x 16.7 x 7.1 | 6: test, kit, Jungle_1 Props 3, Jungle_2 Props 1 | Base, 3 Heads, Brow, Crown, 2 Wings | - |
+| 03 | golden shrine | `MapAssets.Jungle.Golden_Altar`: 13 parts (2 Steps, Table, GoldTop, Idol + IdolHead, 2 Bowls, 2 Neon Gems, 2 Trims, Neon Glyph); 12 x 9.05 x 8 | 3: test, kit, Jungle_4 Props 1 (part-resized x1.6) | 2 Steps, Table, GoldTop | - (no prompt or script) |
+| 04 | water pool with gold corners | `MapAssets.Jungle.Temple_Pool`: 14 parts (4 Rims, 4 Posts, 4 PostCaps, Basin, Water); 24.6 x 3.1 x 24.6 | 5: test, kit, Jungle_3 Ruins 1, Jungle_4 Props 2 (both part-resized x1.2) | 4 Rims, 4 Posts | Water 20 x 0.5 x 20 #30C4BE T 0.25 (top y 0.8), Basin #1E8C96: neither collides, walk-through |
+
+### Jungle totems remake status (Agent B, 2026-10-20)
+
+Builders: `tools/PropsJungleTotems.luau` (`DevTools.PropsJungleTotems`; it uses the jungle ruins / gates / buildings
+helpers); Agent A's facet pieces converted into `tools/PropsJungleTotemsData.luau` (`DevTools.PropsJungleTotemsData`:
+feather crest, tusks, 2 face reliefs, horns, 2 wings, finial, gem setting, lily pad, lily flower; the face reliefs are
+recoloured per head). Rules: `jungle_tall_totem`, `jungle_totem_figure`, `jungle_golden_shrine`, `jungle_temple_pool`
+(bakedScale from Base / Step / Rim). New PropFX entry `jungle_temple_pool` (the ripples slide like the fountain's).
+Collision: invisible `Collision` parts = the kit's colliding parts, checked part by part on every copy (the baked
+copies at their scale). Screenshots (test + game, before + after): `docs/screenshots/jungle_totems/`. Sync: `Sync.run`
+twice, the second run 0.
+
+| # | object | MapProps id | replaced | parts per copy before -> after | notes |
+|---|---|---|---|---|---|
+| 04 | water pool (pilot) | `jungle_temple_pool` | 5 / 5 (2 at 1.2) | 14 -> 13 (Gold, Moss, Stone, Water, Basin + 8 Collision); about 18,400 triangles; 25.3 x 3.36 x 24.9 | rims of cut stone blocks over a dark core with a bevelled cap course (0.2 chamfer, 0.3 overhang over the water, 3 tone steps, chipped corners) and a wet band on the inner faces; carved corner posts (footing, carved band with 2 grooves, recessed panels, chamfered top) with a 2-level engraved gold cap and a pyramid knob; the water like the fountain / well (Glass T 0.15, #30C4BE, the water_lines Ripples texture, top 0.8 as today, not colliding / queried / touched) over today's Basin with stones on the floor; 5 of Agent A's lily pads (2 with his flower); moss mats on 2 cap corners, 2 facet + 3 part drapes, 2 tufts. Colliders: 40 / 40 exact |
+| 01 | tall totem pole | `jungle_tall_totem` | 6 / 6 | 26 -> 15 (Faces, FacesUp, Gold, Heads, Moss, Stone, Wood + 8 Collision); about 26,300 triangles; 7 x 22.3 x 5.3 | 5 chamfered heads at today's sizes, colours and heights, each a different expression: blue grinning (2 rows of teeth, Agent A's curved tusks), tan calm (closed eyes under lids), red angry, brown open-mouthed (upper and lower teeth), yellow surprised (round eyes, an "O" mouth); Agent A's face reliefs (brows, nose, cheek plates) tinted to each head; eyes with dark sockets, 0.16 proud, pupils; rope and gold bands (with rivets) between the sections; today's gold ears as carved small arms with 3-finger hands; Agent A's feather crest in a gold band; a 2-step stone plinth round today's dark wood base (groove band, corner notches), moss on a corner. The faces are 2 unions (one would pass the 20,000 cap). Colliders: 48 / 48 exact |
+| 02 | totem figure | `jungle_totem_figure` | 6 / 6 | 18 -> 15 (Faces, Gold, Heads, Moss, Stone, Wood + 8 Collision); about 16,400 triangles; 15.2 x 17.7 x 7.35 | the same family: red lower face stern (angry relief, sockets, teeth top and bottom); blue bird head (gold eyes in sockets, carved brow wedges, today's beak wedge with a lower jaw, a dark line and nostrils); tan head proud (arched relief, tall dark eyes in lighter sockets); Agent A's spread feathered wings (today's 2 wing boxes kept as colliders); the red hat: chamfered brim, a gold band with a stud round the crown, chamfered top, Agent A's curved horns; a rope and a gold band; the stone plinth round the carved dark base. Colliders: 48 / 48 exact |
+| 03 | golden shrine | `jungle_golden_shrine` | 3 / 3 (1 at 1.6) | 13 -> 12 (Finial, Gold, Glow, Moss, Stone, 2 Gem, Glyph + 4 Collision); about 21,400 triangles; 12.5 x 9.9 x 8.2 | the 2 steps as bevelled jointed slabs (0.2 bevels, joints every 3-4, 3 tones) with 2 moss drapes and a mat in the back joint; the table as a carved front panel (a 0.2 frame, today's Neon glyph kept in a recessed dark groove, 2 carved side glyphs); today's 2 gold corner trims engraved; the gold top plated (raised rim, engraved lines, a key pattern on the front); Agent A's claw settings round today's 2 Neon gems (kept), each with a PointLight #78FFBE range 8 brightness 0.6; Agent A's finial with its small Neon tip (replacing the idol). Colliders: 12 / 12 exact |
+
+Totals: 20 copies replaced (5 + 6 + 6 + 3); about 413,000 triangles in the place for these four (pool 92k, tall totem
+158k, figure 99k, shrine 64k), of which the copies placed in the jungle zones are about 220,000.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

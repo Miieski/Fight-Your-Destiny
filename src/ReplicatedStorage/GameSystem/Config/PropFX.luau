@@ -155,6 +155,10 @@ PropFX.Props = {
 			{ Part = "Stream", V = -3 },
 		},
 	},
+	-- jungle PROMPT_04: the temple pool's water ripples slide like the fountain's
+	jungle_temple_pool = {
+		Scroll = { { Part = "Water", U = 0.22, V = 0.1 } },
+	},
 	-- the forge (a sub-model of each weapon stall): today's Embers light (moved to ForgeLight) with a soft pulse, sparks
 	-- off the anvil face, a thin smoke from the chimney (the flames are the hub's Fire_Torch part)
 	anvil_forge = {

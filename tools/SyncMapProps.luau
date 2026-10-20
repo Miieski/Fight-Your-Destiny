@@ -292,6 +292,22 @@ SyncMapProps.RULES = {
 	{ propId = "glyph_floor_pad", names = { "Glyph_Tile" }, bakedScale = function(m)
 		return bakedFrom(m, "Tile", 8)
 	end },
+	-- jungle totems, shrines and water (owner JUNGLE PROMPT_04, 2026-10-20): 01 the tall totem pole (Totem_B, 5 faces),
+	-- 02 the totem figure (Totem_A, hat, wings, beak), 03 the golden shrine (Golden_Altar; not the desert golden_altar =
+	-- GoldPile_A), 04 the water pool with gold corners (Temple_Pool; its water is a plain non-colliding part, not
+	-- terrain: nothing swims, nothing scripted). Jungle_4's shrine x1 (1.6) and pools x2 (1.2) were resized part by part
+	{ propId = "jungle_tall_totem", names = { "Totem_B" }, bakedScale = function(m)
+		return bakedFrom(m, "Base", 4.8)
+	end },
+	{ propId = "jungle_totem_figure", names = { "Totem_A" }, bakedScale = function(m)
+		return bakedFrom(m, "Base", 5.2)
+	end },
+	{ propId = "jungle_golden_shrine", names = { "Golden_Altar" }, bakedScale = function(m)
+		return bakedFrom(m, "Step", 12)
+	end },
+	{ propId = "jungle_temple_pool", names = { "Temple_Pool" }, bakedScale = function(m)
+		return bakedFrom(m, "Rim", 24)
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

@@ -1222,6 +1222,119 @@ is cheap: parts first, facet pieces only for the shapes parts cannot do.
 - **Diamond:** the centre diamond in a raised stone setting (0.1 ring), with a PointLight #78FFBE, range 8, brightness 0.6, for the soft glow. Only on the test / Jungle_3 copies, or on 1 in 3 copies, to keep the light count low (36 copies).
 - **Moss:** small moss tufts (`moss__drape_B` flattened or 2 small patches) on 2 opposite corners.
 
+### C5. Jungle totems, shrines and water (owner task 2026-10-20, PROMPT_04)
+
+Images: `docs/Jungle_Images/04_Totems_Shrines_Water/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-20_121735_before_jungle_totems_{ServerStorage,Workspace}.rbxm`.
+The C1 colours, the C2 moss / vine rules and the A recipe apply; the totems are the same family as the C3 totem arch
+(EntryArch_Jungle) and the palisade gate's guards.
+
+**Kits** (all in `MapAssets.Jungle`, pivot = bottom centre, front -Z):
+
+| # | Object | Kit | Parts | Placed copies |
+|---|---|---|---|---|
+| 01 | tall totem pole | `Totem_B` | 26 | **5**: test 1, `Jungle_1.Decor.Props` 2, `Jungle_2.Decor.Props` 1, `BossArenas.Jungle.Decor.Props` 1 |
+| 02 | totem figure | `Totem_A` | 18 | **5**: test 1, `Jungle_1.Decor.Props` 3, `Jungle_2.Decor.Props` 1 |
+| 03 | golden shrine | `Golden_Altar` | 13 | **2**: test 1, `Jungle_4.Decor.Props` 1 (part-resized x1.6, at (6000, 0, 950)) |
+| 04 | water pool with gold corners | `Temple_Pool` | 14 | **4**: test 1, `Jungle_3.Decor.Ruins` 1, `Jungle_4.Decor.Props` 2 (both part-resized x1.2) |
+
+**The golden shrine is NOT the desert "golden_altar".** The existing SyncMapProps rule `golden_altar` is the desert
+golden pyramid altar `GoldPile_A`; its Jungle_4 copy stands next to this shrine at (6014, 0, 953). The jungle shrine
+needs its own propId, e.g. `golden_shrine` (names `Golden_Altar`). Its Jungle_4 copy has its parts resized x1.6 with
+Model scale 1, so it needs a `bakedScale`; the pool's 2 Jungle_4 copies need one too (x1.2).
+
+**Functions (checked):**
+- No script, ProximityPrompt, tag, attribute, ClickDetector or touch handler in any of the 4 kits or their copies.
+- `src/` names none of them (no Temple_Pool / Totem / Shrine / Altar / heal / swim logic for props). "Heal" exists only as an admin-panel button, "Swim" only as a pet gait.
+- The only prompt near the shrine is the Jungle_4 BossGate's own `Interact` ProximityPrompt ("Enter", "Ancestral Gorilla's Sanctum") at (6000, 4.6, 983.5), 33 studs away and part of the BossGate model, not of the shrine: do not touch it.
+- **The pool's water is a part:**
+  - `Water` 20 x 0.5 x 20 #30C4BE, Transparency 0.25, CanCollide off, top y 0.8;
+  - over a `Basin` 20 x 0.2 #1E8C96, CanCollide off;
+  - no terrain water in the kit; players walk through it.
+  - Keep it non-colliding.
+- **Collisions:**
+  - totems: the Heads, Base, Ears, Wings, Brow and Crown collide (eyes, mouths, beak, tusks, feathers, horns do not);
+  - shrine: the 2 Steps, Table and GoldTop collide;
+  - pool: the 4 Rims and 4 Posts collide.
+
+**Today's shapes:**
+
+01 Totem_B (21.6 tall):
+- **Base:** 4.8 x 1.2 #4A3022.
+- **5 heads, bottom to top** (keep each colour and height):
+  1. blue #3CAABE 3.4 cube at y 2.9 with white eyes, a dark mouth and 2 white Tusks 0.5 x 1.6 tilted forward;
+  2. tan #D6965C 3.7 at y 6.3, dark eyes;
+  3. red #C44632 3.4 at y 9.7, white eyes, 2 gold #FFC93C "Ears" 1.6 x 2.6 (the small arms);
+  4. brown #68442C 3.7 at y 13.1, white eyes, a red mouth;
+  5. yellow #FFC93C 3.4 at y 16.5, dark eyes.
+- **Feathers on top:** #FFAA28 / #3CAABE / #C44632, 0.8 x 3-3.6, the side ones tilted ±18°.
+
+02 Totem_A (16.7 tall):
+- **Base:** 5.2 x 1.4 #4A3022.
+- **Heads, bottom to top:**
+  - red 4.0 head (white eyes, dark mouth);
+  - blue 4.4 x 3.6 head with gold eyes and a yellow Beak wedge 1.6 x 1.8 x 2.4;
+  - tan 4.0 x 3.6 head with dark tall eyes and 2 blue Wings 5 x 2.4 x 0.7 at (±4.3, 11.2) rising outward 18°.
+- **Hat:** red Brow 4.6 x 0.7 (the hat brim) at y 12.6, red Crown 3 x 2.2 x 3, 2 white Horns 0.7 x 2.6 tilted ±20°.
+
+03 Golden_Altar (9.05 tall):
+- **Steps:** 12 x 1.4 x 8 #5C645C, then 10 x 1.4 x 6 #848A7C.
+- **Table:** 8 x 2.2 x 4.4 #848A7C (the front panel). Neon #78FFBE Glyph 3 x 1 on its front (z -2.3), 2 gold Trims at the front corners.
+- **Top:** GoldTop 8.6 x 0.6 x 5 #FFC93C at y 5.3, 2 gold Bowls 1.5 at x ±3 with Neon #78FFBE Gems 0.7 (turned).
+- **Tower:** a gold Idol 1.8 x 2.4 x 1.4 + IdolHead 1.3 at the back centre (the "central tower").
+
+04 Temple_Pool (24.6 x 3.1 x 24.6):
+- **Rim:** 4 Rims 2 wide x 1.4 tall #848A7C round a 20 x 20 Water.
+- **Posts:** 4 corner Posts 2.6 cube #5C645C at (±11, ±11) with gold PostCaps 1.5 x 0.5.
+
+**Real colours** (keep): wood dark #4A3022, brown #68442C, tan #D6965C, totem red #C44632, totem blue #3CAABE, gold
+#FFC93C, feather orange #FFAA28, bone #E8E2D0, stone #848A7C / #5C645C, glyph Neon #78FFBE, water #30C4BE (surface)
+over #1E8C96 (basin), moss #589642 / #60C448, leaf #78D246.
+
+**Part rules:**
+
+**Totem faces (01 and 02):**
+- **Heads:** each head keeps its cube, size, colour and place; the details are carved on it.
+- **Eyes with depth:** a dark #4A3022 socket plate 0.15 recessed look (a darker frame 0.2 wide around today's eye), the eye itself 0.1 proud, a pupil 0.3 dark dot on the white eyes.
+- **Brows:** a ridge (facet `totem__face_relief_A` angry / `_B` arched) or 2 tilted wedges 0.4 proud.
+- **Nose:** carved, 0.5-0.8 proud with nostrils, in the relief piece or a wedge.
+- **Mouth with teeth:** today's mouth slab, 3-5 white teeth 0.3 cubes along it, lips 0.2 proud in the head's darker tone.
+- **A different expression per face:**
+  - Totem_B: blue grinning with tusks, tan calm (closed eyes = 2 dark bars), red angry (brows in), brown open-mouthed, yellow surprised (round eyes);
+  - Totem_A: red stern (teeth), blue bird (beak), tan proud (tall eyes).
+- **Cheek plates:** cheek plates 0.15 proud; the head's edges chamfered 0.2.
+- **Bands between sections:** a 0.3 rope band #C4A068 or a gold #FFC93C metal band 0.35 tall, 0.1 wider than the head, with 2 rivets on the front.
+- **Small arms / wings between sections:** Totem_B's gold Ears become carved small arms (3 stepped blocks, a hand of 3 fingers) or small wings.
+- **Feathers at the top:** Totem_B's crest = facet `totem__feather_crest` (5 feathers, quill + vane notches, in a gold band).
+- **Tusks:** Totem_B's 2 tusks = facet `totem__tusks` (curved, tapering).
+- **Plinth:** a stepped stone plinth (#5C645C, 2 steps 0.6, chamfered) under today's dark wood Base, with moss on one corner. The total height may grow by 0.6 at most; keep the faces' heights from the ground (raise nothing, sink the plinth into the ground if needed).
+
+**Totem figure (02):**
+- **Hat:** a band (gold #FFC93C 0.35) round the crown above the brim; the brim chamfered.
+- **Horns:** curved tapering horns (facet `totem_figure__horns`, replacing the 2 Horn sticks).
+- **Wings:** spread feathered wings like the totem arch (facet `totem_figure__wing_L/R`, the C3 wing design at this size).
+- **Beak:** the Beak a 2-part hooked beak (upper wedge + a smaller lower jaw, a dark line between).
+- **Faces and base:** the red lower face with teeth and an angry brow; a carved base (the dark Base with a 0.2 groove band and corner notches) on the stone plinth.
+
+**Golden shrine (03):**
+- **Base:** a stepped stone base with bevelled step edges (0.2), joints every 3-4, moss drapes on 2 corners and in the back joint.
+- **Gold plating:** on the GoldTop and Trims, with engraved lines: 2 darker #E5B435 strips 0.08 along the edges, a key pattern on the front (0.1 blocks), a raised rim.
+- **Gems in settings:** the 2 Neon gems (keep size, place, #78FFBE) in gold claw settings (facet `shrine__gem_setting`, replacing the Bowls), with a PointLight #78FFBE range 8 brightness 0.6 on each.
+- **Central finial:** a detailed tower (facet `shrine__finial`, replacing Idol + IdolHead): a stepped gold base, a carved idol body with bands, a head with a crown, a spike with a small Neon tip.
+- **Front panel:** the Table front becomes a carved panel: a 0.2 frame, the Neon glyph (keep 3 x 1 at its place) in a recessed groove as a soft glowing inlay, 2 small carved side glyphs (dark).
+- **Keep** the collisions; there are no prompts to keep (see above).
+
+**Water pool (04):**
+- **Rim:** each rim side is cut blocks 3-4 long with joints, a bevelled cap (0.2 chamfer, a 0.3 overhang inward), 3 tone steps, chipped corners on 2-3 blocks.
+- **Corner posts:** gold-capped carved posts: today's Post cube with a chamfered top, a carved band, and a gold cap stepped in 2 levels with a small pyramid knob (keep today's footprint 2.6).
+- **Water:**
+  - like the fountain / well (A8): Glass, Transparency 0.15, #30C4BE (the real jungle water colour), the `water_lines` Ripples texture, top 0.6 below the rim top (today's y 0.8);
+  - a wet band 0.2 on the rim's inner faces above the waterline;
+  - keep the Basin dark #1E8C96;
+  - CanCollide off.
+- **Lily pads and moss:** 4-6 lily pads (facet `pool__lily_pad`, 1-2 with a pink #FF508C flower) floating at y 0.82; `moss__drape_A/B` on 3-4 rim edges and at 2 posts.
+- **Keep** the footprint 24.6 and the collisions.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
