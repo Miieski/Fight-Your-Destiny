@@ -2870,3 +2870,10 @@ post (keep the light), 10 campfire / brazier parts (check what it is; keep light
   taken from the game copies, which differ from the kit by 0.06-0.17 after an earlier window fix); barrel 43 / 43
   (14 staves over a dark core, 3 riveted hoops at today's heights, planked lid with bung; ~1.46k tris; colliders exact
   43 / 43). Run 2 = 0 for both.
+- 23:50 Agent B: after the restart (new studio id), disk == Studio checked (hashes). PILOTS synced: cottage_one_window
+  (FarmHouse) 3 / 3, barrel 43 / 43 (colliders exact 43 / 43); then cottage_two_windows (Cottage_A) 5 / 5,
+  house_blue_roof (Cottage_B) 4 / 4, stone_tower (Hub_Tower) 3 / 3 (colliders 3 / 3). The houses' game copies differed
+  from their kits by 0.06 .. 0.17 (an earlier window fix): the house templates take their colliders from the game copies
+  (Data.<kit>_game): every game copy exact except the 2nd hub Cottage_B (0.03 .. 0.045 off, its posts / step); the test
+  and kit copies within 0.17. A first "before" stash in ServerStorage was still tagged and got synced too: deleted; the
+  stash now strips tags. Run 2 = 0. Shots test + game before / after in docs/screenshots/batch4/ (b01-b04, p02).

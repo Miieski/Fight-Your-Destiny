@@ -153,8 +153,8 @@ end
 ---------------------------------------------------------------------
 -- The barrel (guide A6 / A7 / D4, owner: "staves with visible plank lines, slightly bulging shape, iron bands with
 -- rivets, a lid with planks and a small bung hole"): 14 staves of 3 tilted thirds each (1.5 at the ends, 1.66 at the
--- belly, 0.2 thick, 0.05 gaps over a dark core, 3 tones, the gradient), their tops standing 0.28 over the lid (the
--- chime); today's 3 hoops (1.05, 3.0, 3.72) as 16-sided iron bands 0.07 proud of the staves, 4 rivets each; a lid of
+-- belly, 0.2 thick, 0.05 gaps over a dark core, 3 tones, the gradient), their tops standing over the lid (the
+-- chime, 0.15); today's 3 hoops (1.05, 3.0, 3.72) as 16-sided iron bands 0.07 proud of the staves, 4 rivets each; a lid of
 -- 5 planks with gaps and a dark bung hole. Today's 3 stave cylinders stay the colliders. Parts: Wood, Iron,
 -- Collision x3.
 local BARREL_H = 4.05
@@ -206,8 +206,8 @@ function B4.barrel(): Model
 			table.insert(U.Wood, piece("Part", Vector3.new(w, (p1 - p0).Magnitude, t), CFrame.fromMatrix((p0 + p1) / 2, x, up), graded(base, (ya + yb) / 2, BARREL_H)))
 		end
 	end
-	-- the lid: 5 planks 0.28 under the stave tops, gaps 0.05, a dark bung hole
-	local lidY, lidR = BARREL_H - 0.28, barrelR(BARREL_H) - t - 0.02
+	-- the lid: 5 planks 0.15 under the stave tops (just over the solid top hoop), gaps 0.05, a dark bung hole
+	local lidY, lidR = BARREL_H - 0.15, barrelR(BARREL_H) - t - 0.02
 	local LID = rgb(150, 86, 50)
 	for k = -2, 2 do
 		local x = k * 0.53
@@ -571,7 +571,8 @@ local function halfTimber(m: Model, kit: string, o: any)
 	local doorRow = rowsNamed(kit, "Door")[1]
 	local doorN = wallNormal(doorRow.cf.Position, W, D)
 	plankDoor(U, rng, doorRow, doorN, handle)
-	do
+	-- the canopy only where there is room under the eaves (3.5 over the door top: the two-storey house)
+	if wallTop - (doorRow.cf.Position.Y + doorRow.size.Y / 2) >= 3.5 then
 		local side = Vector3.yAxis:Cross(doorN).Unit
 		local dp = doorRow.cf.Position
 		local wallFace = if math.abs(doorN.X) > 0.5 then W / 2 else D / 2
@@ -702,7 +703,8 @@ local function halfTimber(m: Model, kit: string, o: any)
 			p.CanQuery = p.Name == "Plaster"
 		end
 	end
-	kitCollision(m, kit)
+	-- the game copies' colliders (Data.<kit>_game: they differ from the kits by 0.06 .. 0.17 after an earlier window fix)
+	kitCollision(m, if KD[kit .. "_game"] then kit .. "_game" else kit)
 end
 B4.halfTimber = halfTimber
 
@@ -1538,13 +1540,13 @@ end
 -- finial and Agent A's flag at 0.72 (static, like today); the door as 5 planks with strap hinges under an arch of 7
 -- dark voussoirs, today's step as 2 courses of blocks; the 3 windows with a dark stone sill and lintel and 2 small
 -- shutters each; moss at the foot. Today's 47 parts stay the exact colliders.
--- Parts: Stone, Roof, Wood, Iron, Gold, Glass, Cloth, Plants, Collision x47.
+-- Parts: Stone, BodyLow, BodyHigh, Roof1-4, Wood, Iron, Gold, Glass, Cloth, Plants, Collision x47.
 function B4.stone_tower(): Model
 	local m = Instance.new("Model")
 	m.Name = "stone_tower"
 	local rng = Random.new(20261411)
 	H.setBevelSelf(true)
-	local U: any = { Stone = {}, Wood = {}, Iron = {}, Gold = {}, Glass = {}, Plants = {} }
+	local U: any = { Stone = {}, BodyLow = {}, BodyHigh = {}, Wood = {}, Iron = {}, Gold = {}, Glass = {}, Plants = {} }
 	local STONE, LIGHT, DARK, MORTAR = rgb(150, 156, 168), rgb(163, 170, 183), rgb(104, 110, 124), rgb(84, 88, 100)
 	-- the openings on the body (angle, half width in radians, y0, y1)
 	local opens = {}
@@ -1573,7 +1575,8 @@ function B4.stone_tower(): Model
 		if y0 + ch > 14.4 and y0 < 15.6 then
 			continue -- the band
 		end
-		plateRing(U.Stone, rng, { n = 16, ap = 9.05, d = 0.5, h = ch, y0 = y0, a0 = (c % 2) * math.pi / 16, color = STONE, Ht = 60, skip = skip })
+		-- (2 unions of about 170 faces each: big unions build slowly)
+		plateRing(if c < 12 then U.BodyLow else U.BodyHigh, rng, { n = 16, ap = 9.05, d = 0.5, h = ch, y0 = y0, a0 = (c % 2) * math.pi / 16, color = STONE, Ht = 60, skip = skip })
 	end
 	plateRing(U.Stone, rng, { n = 16, ap = 9.35, d = 0.8, h = 1.2, y0 = 14.4, color = DARK, Ht = 60, chamfer = 0.2, noJitter = true })
 	-- the base: 2 battered courses of big blocks (today's 21 x 3)
@@ -1606,7 +1609,16 @@ function B4.stone_tower(): Model
 		end
 	end
 	-- the cone roof (Agent A) and the flag pole
-	J.facets(U, FAC.tower_cone_roof, Vector3.one, CFrame.identity, "Roof")
+	-- (the 136 facets in 4 unions of about 100 wedges each: big unions build slowly)
+	for q = 1, 4 do
+		local part = { palette = FAC.tower_cone_roof.palette, tris = {} }
+		for i, t in ipairs(FAC.tower_cone_roof.tris) do
+			if (i - 1) % 4 == q - 1 then
+				table.insert(part.tris, t)
+			end
+		end
+		J.facets(U, part, Vector3.one, CFrame.identity, "Roof" .. q)
+	end
 	local pole = rowsNamed("Hub_Tower", "FlagPole")[1]
 	local pp, plen = pole.cf.Position, pole.size.X
 	table.insert(U.Wood, M.frustumN(8, 0.27, 0.22, pp.Y - plen / 2, pp.Y + plen / 2, CFrame.identity, { pole.color, scaled(pole.color, 0.92) }))

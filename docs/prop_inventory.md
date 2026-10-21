@@ -646,6 +646,24 @@ main agent's full backup `..._before_batch4`.
 | P10 | "campfire or brazier parts" = a wall torch | `MapAssets.Common.Torch_Wall` (4 + FirePoint + PointLight) | 38: test, kit, Plains_4 Mine x4, Desert_4 x10, Jungle_4 x14 (parts resized x1.3), BossArenas Jungle x8 | 22 copies have no light |
 | P11 | signpost + lectern + lantern platform | `MapAssets.Hub.Station_TutorialGuide`; hub copy `workspace.Hub.TutorialGuide` | 3: test, kit, Hub.TutorialGuide | the Guide NPC's marker: Interact (ProximityPrompt "Talk" / "Guide", BillboardGui NameTag), NpcSpot, the nested Lantern (`lantern` MapProp) |
 
+### Batch 4 remake status (Agent B, 2026-10-21)
+
+Builders: `tools/PropsBatch4.luau` (`DevTools.PropsBatch4`, on the earlier helpers); the kits as rows in
+`tools/PropsBatch4Data.luau` (+ the game copies' colliders of the 3 houses: `<kit>_game`); Agent A's D6 facets in
+`tools/PropsBatch4Facets.luau` (banner and flag cloth, cone roof, open book; the torch flame / cup and mace spike facets
+were replaced by part-built pieces: about 3,500 triangles a torch on 59 torches, and a 600-wedge union for the spikes
+that hung Studio's CSG). Rules: tools/SyncMapProps.luau (batch 4 block + the embedded `tent_green`). Collision:
+invisible `Collision` parts = today's colliding parts, checked part by part on every copy before / after (`B4_check`).
+Screenshots (test + game, before + after): `docs/screenshots/batch4/`. Sync: `Sync.run` twice per object, the second 0.
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| B01 | cottage, red roof, one window (pilot) | `cottage_one_window` | 3 / 3 | 20,700 | half-timbered recipe (guide D2): foundation of 2 stone courses, plaster in 2 bands, today's timbers as chamfered beams with pegs, a sole plate, diagonal braces in the free bays, gable collar beams; about 380 individual red tiles in half-offset rows with lifted butts (2 unions, no tile overlapping another in its union), ridge cap, fascia, bargeboards; a stone chimney with a cap and flue; a plank door with strap hinges and today's gold handle; a 3-block step with a worn middle; windows with cross muntins, plank shutters where there is room and a flower box under the front window; a wall lantern by the door; moss at the corners. Colliders: taken from the GAME copy (it differed from the kit by 0.06 .. 0.17 after an earlier window fix): the game copy exact, the test and kit copies within 0.17 |
+| P02 | barrel (pilot) | `barrel` | 43 / 43 | 1,460 | 14 staves in 3 tilted thirds (bulging), plank gaps over a dark core, 3 iron hoops with rivets at today's heights, a planked lid with a bung hole 0.15 under the chime. Colliders 43 / 43 exact (the 3 stave cylinders); the embedded barrels (HunterCamp, fruit stalls, trainer) follow |
+| B02 | cottage, red roof, two windows | `cottage_two_windows` | 5 / 5 | 17,400 | the same recipe; climbing vines on 2 corners. Colliders from the game copies (the 3 hub copies identical): the 3 game copies exact, test / kit within 0.13 |
+| B03 | two-storey house, blue roof | `house_blue_roof` | 4 / 4 | 19,300 | the same recipe with blue tiles, joist ends and carved brackets along the floor rail (the jetty), a small tiled canopy over the door, flower boxes under the upper front windows too. Colliders from the first hub copy: it is exact; the second hub copy differs from it by 0.03 .. 0.045 (posts and step), test / kit within 0.09 |
+| B04 | stone tower, blue roof | `stone_tower` | 3 / 3 | 19,500 | 24 courses of cut stone faces in running bond over a dark core (2 unions), a projecting dark band, a battered 2-course base, a corbel ring under the parapet, 2 courses of parapet blocks, 8 merlons with chamfered caps, the roof drum; Agent A's tiled cone roof (4 unions), the flag at 0.72 (static, like today), the pole with iron rings and the gold finial; a plank door under an arch of 7 voussoirs, a 2-course step; 3 windows with dark sills / lintels and small shutters; moss. Colliders 3 / 3 exact |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).
