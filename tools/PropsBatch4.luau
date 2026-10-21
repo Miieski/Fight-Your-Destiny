@@ -785,6 +785,50 @@ local function knob(list: { BasePart }, pos: Vector3, r: number, color: Color3)
 	table.insert(list, M.frustumN(8, r, r * 0.45, 0, r * 0.85, CFrame.new(pos), { color, scaled(color, 1.05) }))
 end
 
+-- Agent A's facets with each palette colour routed to a list: route(hex) returns the list name (a cloth's red tones
+-- go to single-colour unions Cloth1, Cloth2 ... so the _Variants can recolour the copies whose cloth is another colour)
+local function facetsSplit(U: any, data: any, sc: Vector3, frame: CFrame, route: (string) -> string)
+	local ts = math.min(sc.X, sc.Y, sc.Z)
+	local colors, lists = {}, {}
+	for i, entry in ipairs(data.palette) do
+		local hex = string.match(entry, "^(#%x+)") :: string
+		colors[i] = Color3.fromHex(hex)
+		local dest = route(string.upper(hex))
+		U[dest] = U[dest] or {}
+		lists[i] = U[dest]
+	end
+	for _, t in ipairs(data.tris) do
+		local a = Vector3.new(t[1], t[2], t[3]) * sc
+		local b = Vector3.new(t[4], t[5], t[6]) * sc
+		local c = Vector3.new(t[7], t[8], t[9]) * sc
+		H.triangleParts(lists[t[11]], a, b, c, t[10] * ts, frame, colors[t[11]])
+	end
+end
+
+-- the cloth tone unions (Cloth1..n = the red tones `tones`, hex) as single-colour unions, and a _Variants folder with
+-- one Configuration per other cloth colour of today's copies ("Cloth_<HEX>": each tone = the colour x its tone ratio)
+local function clothVariants(m: Model, tones: { string }, others: { string }): any
+	local base = Color3.fromHex("#D4343C")
+	local opts = {}
+	for i, hex in ipairs(tones) do
+		opts["Cloth" .. i] = { single = Color3.fromHex(hex) }
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "_Variants"
+	for _, other in ipairs(others) do
+		local config = Instance.new("Configuration")
+		config.Name = "Cloth_" .. other
+		local target = Color3.fromHex("#" .. other)
+		for i, hex in ipairs(tones) do
+			local c = Color3.fromHex(hex)
+			config:SetAttribute("Color_Cloth" .. i, scaled(target, (c.R + c.G + c.B) / (base.R + base.G + base.B)))
+		end
+		config.Parent = folder
+	end
+	folder.Parent = m
+	return opts
+end
+
 -- a climbing vine on a wall: a stem zigzagging down from `top` along the wall (normal n) with small diamond leaves
 local function wallVine(list: { BasePart }, rng: Random, top: Vector3, n: Vector3, length: number)
 	local side = Vector3.yAxis:Cross(n).Unit
@@ -998,28 +1042,29 @@ end
 -- invisible part named Board exactly where today's Board is (the sync moves each copy's SurfaceGuis onto it; its front
 -- face lies 0.02 in front of the planks so the texts show as before). Today's 4 parts stay the exact colliders.
 -- Parts: Wood, Stone, Iron, Board (invisible), Collision x4.
-function B4.sign_board(): Model
+local function signModel(id: string, pal: any): Model
 	local m = Instance.new("Model")
-	m.Name = "sign_board"
+	m.Name = id
 	local rng = Random.new(20261408)
 	H.setBevelSelf(true)
 	local U: any = { Wood = {}, Stone = {}, Iron = {} }
 	local post = rowsNamed("Signpost_A", "Post")[1]
 	local board = rowsNamed("Signpost_A", "Board")[1]
-	table.insert(U.Wood, chamfered(post.size - Vector3.new(0, 0.5, 0), post.cf * CFrame.new(0, 0.05, 0), graded(post.color, 3, 6.6), { "vertical" }, 0.12))
-	table.insert(U.Wood, M.frustumN(4, 0.6, 0.1, 6.24, 6.7, CFrame.Angles(0, rad(45), 0), { scaled(post.color, 1.05), post.color }))
+	table.insert(U.Wood, chamfered(post.size - Vector3.new(0, 0.5, 0), post.cf * CFrame.new(0, 0.05, 0), graded(pal.post, 3, 6.6), { "vertical" }, 0.12))
+	table.insert(U.Wood, M.frustumN(4, 0.6, 0.1, 6.24, 6.7, CFrame.Angles(0, rad(45), 0), { scaled(pal.post, 1.05), pal.post }))
 	local bp, bs = board.cf.Position, board.size
 	local front = bp.Z - bs.Z / 2
 	for k = 0, 2 do
 		local h = bs.Y / 3
-		table.insert(U.Wood, chamfered(Vector3.new(bs.X, h - 0.06, bs.Z - 0.04), CFrame.new(bp.X, bp.Y - bs.Y / 2 + h * (k + 0.5), bp.Z + 0.01), scaled(board.color, ({ 1, 0.93, 0.97 })[k + 1]), { "topFrontBack", "bottomFrontBack" }, 0.05))
+		-- (front 0.04 behind the carrier's front, back 0.06 inside its back: both faces can carry a GUI)
+		table.insert(U.Wood, chamfered(Vector3.new(bs.X, h - 0.06, bs.Z - 0.1), CFrame.new(bp.X, bp.Y - bs.Y / 2 + h * (k + 0.5), bp.Z - 0.03), scaled(pal.board, ({ 1, 0.93, 0.97 })[k + 1]), { "topFrontBack", "bottomFrontBack" }, 0.05))
 	end
-	table.insert(U.Wood, piece("Part", Vector3.new(bs.X - 0.2, bs.Y - 0.2, 0.1), CFrame.new(bp.X, bp.Y, bp.Z + bs.Z / 2 - 0.05), scaled(board.color, 0.55)))
+	table.insert(U.Wood, piece("Part", Vector3.new(bs.X - 0.2, bs.Y - 0.2, 0.06), CFrame.new(bp.X, bp.Y, bp.Z + bs.Z / 2 - 0.08), scaled(pal.board, 0.55)))
 	for _, r in ipairs(rowsNamed("Signpost_A", "Part")) do
-		table.insert(U.Wood, chamfered(r.size, r.cf, r.color, { "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, 0.08))
+		table.insert(U.Wood, chamfered(r.size, r.cf, pal.trim, { "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, 0.08))
 	end
 	for _, sx in ipairs({ -1, 1 }) do
-		table.insert(U.Wood, chamfered(Vector3.new(0.4, bs.Y + 0.4, 0.5), CFrame.new(sx * (bs.X / 2 + 0.05), bp.Y, bp.Z), scaled(rgb(168, 98, 56), 0.95), { "vertical" }, 0.08))
+		table.insert(U.Wood, chamfered(Vector3.new(0.4, bs.Y + 0.4, 0.5), CFrame.new(sx * (bs.X / 2 + 0.05), bp.Y, bp.Z), scaled(pal.trim, 0.95), { "vertical" }, 0.08))
 		for _, y in ipairs({ -1, 1 }) do
 			table.insert(U.Iron, piece("Part", Vector3.new(0.5, 0.12, 0.06), CFrame.new(sx * (bs.X / 2 - 0.05), bp.Y + y * (bs.Y / 2 + 0.05), front - 0.3), P.Iron))
 			nail(U.Iron, Vector3.new(sx * (bs.X / 2 + 0.05), bp.Y + y * (bs.Y / 2 - 0.35), front - 0.28))
@@ -1030,7 +1075,7 @@ function B4.sign_board(): Model
 		table.insert(U.Stone, chamfered(Vector3.new(0.78, 0.45, 1.5), CFrame.new(-0.4 + k * 0.8, 0.225, 0), scaled(rgb(150, 156, 168), ({ 1, 0.9 })[k + 1]), { "topFrontBack", "topSides" }, 0.12))
 	end
 	tuft(U.Wood, rng, Vector3.new(0.9, 0.1, 0.5), 0.5, 3)
-	finishB4(m, "sign_board", U, "Wood")
+	finishB4(m, id, U, "Wood")
 	for _, p in ipairs(m:GetChildren()) do
 		if p:IsA("PartOperation") then
 			p.CanQuery = false
@@ -1049,6 +1094,15 @@ function B4.sign_board(): Model
 	return m
 end
 
+function B4.sign_board(): Model
+	return signModel("sign_board", { board = rgb(214, 150, 92), trim = rgb(168, 98, 56), post = rgb(112, 62, 38) })
+end
+
+-- the Tundra_1 "Hub" sign is in dark wood today (Board #997660, trims and post #5C4236): the same sign in those colours
+function B4.sign_board_dark(): Model
+	return signModel("sign_board_dark", { board = rgb(153, 118, 96), trim = rgb(92, 66, 54), post = rgb(92, 66, 54) })
+end
+
 ---------------------------------------------------------------------
 -- 07 BANNER, RED DIAMOND (kit MapAssets.Common.Banner_A: stone Foot 1.4 x 0.6, Pole 0.6 x 13, Crossbar 5.6 at y 12.4,
 -- red Cloth 4.6 x 7 with 2 tail wedges and a gold diamond Emblem, a gold Finial ball 0.9; all 8 parts collide; 11
@@ -1057,14 +1111,24 @@ end
 -- The banner (guide D4 / D6): Agent A's banner cloth (folds, zigzag gold-trimmed lower edge, the stitched gold diamond,
 -- today's red) at the kit pivot; the crossbar as a chamfered beam with carved end knobs, a rope X-lashing at the pole
 -- and 5 rope loops holding the sleeve; an octagonal pole with 2 carved rings; today's gold finial as a faceted ball on a
--- collar; today's stone foot as a 2-step chamfered base. Today's 8 parts stay the exact colliders.
--- Parts: Cloth, Wood, Stone, Gold, Collision x8.
+-- collar; today's stone foot as a 2-step chamfered base. Today's 8 parts stay the exact colliders. The cloth's 4 red
+-- tones are single-colour unions: the _Variants recolour the blue (#4A6CDC x3), purple (#966EFF) and gold (#FFC93C x2)
+-- copies (rule variant = "Cloth_<hex>" of today's Cloth). Parts: Cloth1-4, Trim, Wood, Stone, Gold, Collision x8.
 function B4.banner_diamond(): Model
 	local m = Instance.new("Model")
 	m.Name = "banner_diamond"
 	H.setBevelSelf(true)
 	local U: any = { Wood = {}, Stone = {}, Gold = {} }
-	J.facets(U, FAC.banner_cloth, Vector3.one, CFrame.identity, "Cloth")
+	local TONES_B = { "#AA2A30", "#D4343C", "#832025", "#B62D34" }
+	facetsSplit(U, FAC.banner_cloth, Vector3.one, CFrame.identity, function(hex)
+		for i, t in ipairs(TONES_B) do
+			if t == hex then
+				return "Cloth" .. i
+			end
+		end
+		return "Trim"
+	end)
+	local opts = clothVariants(m, TONES_B, { "4A6CDC", "966EFF", "FFC93C" })
 	local bar = rowsNamed("Banner_A", "Crossbar")[1]
 	local bp = bar.cf.Position
 	table.insert(U.Wood, chamfered(bar.size - Vector3.new(0.5, 0, 0), bar.cf, bar.color, { "topFrontBack", "bottomFrontBack" }, 0.1))
@@ -1087,7 +1151,7 @@ function B4.banner_diamond(): Model
 	local foot = rowsNamed("Banner_A", "Foot")[1]
 	table.insert(U.Stone, chamfered(Vector3.new(1.4, 0.36, 1.4), CFrame.new(0, 0.18, 0), foot.color, { "topFrontBack", "topSides", "vertical" }, 0.1))
 	table.insert(U.Stone, chamfered(Vector3.new(1.0, 0.26, 1.0), CFrame.new(0, 0.48, 0), scaled(foot.color, 1.08), { "topFrontBack", "topSides" }, 0.08))
-	finishB4(m, "banner_diamond", U, "Wood")
+	finishB4(m, "banner_diamond", U, "Wood", opts)
 	for _, p in ipairs(m:GetChildren()) do
 		if p:IsA("PartOperation") then
 			p.CanQuery = false
@@ -1105,13 +1169,23 @@ end
 -- The flagpole (guide D4 / D6): a pole tapered in 3 octagonal sections (0.65 -> 0.45), 3 iron rings, a rope cleat at
 -- y 3 with the halyard up to the flag; Agent A's flag (5 fold panels, hem, gold sleeve) at today's place; today's gold
 -- finial as a faceted ball on a collar; today's foot as an octagonal 2-step stone plinth. Today's 4 parts stay the exact
--- colliders. Parts: Cloth, Wood, Iron, Stone, Gold, Collision x4.
+-- colliders. The flag's 3 red tones are single-colour unions: the _Variants recolour the copies flying another colour
+-- (blue, pink, gold, purple, grey, yellow, cyan). Parts: Cloth1-3, Trim, Wood, Iron, Stone, Gold, Collision x4.
 function B4.flagpole(): Model
 	local m = Instance.new("Model")
 	m.Name = "flagpole"
 	H.setBevelSelf(true)
 	local U: any = { Wood = {}, Iron = {}, Stone = {}, Gold = {} }
-	J.facets(U, FAC.flag_cloth, Vector3.one, CFrame.new(0, 12.8, 0), "Cloth")
+	local TONES_F = { "#D4343C", "#99252B", "#B62D34" }
+	facetsSplit(U, FAC.flag_cloth, Vector3.one, CFrame.new(0, 12.8, 0), function(hex)
+		for i, t in ipairs(TONES_F) do
+			if t == hex then
+				return "Cloth" .. i
+			end
+		end
+		return "Trim"
+	end)
+	local opts = clothVariants(m, TONES_F, { "4A6CDC", "FF5C78", "FFC93C", "966EFF", "5C626E", "FFD646", "34D6EC" })
 	local W0 = rgb(112, 62, 38)
 	local secs = { { 0.55, 6, 0.33, 0.3 }, { 6, 11.5, 0.3, 0.26 }, { 11.5, 16.85, 0.26, 0.23 } }
 	for i, s in ipairs(secs) do
@@ -1128,7 +1202,7 @@ function B4.flagpole(): Model
 	local STONE = rgb(150, 156, 168)
 	table.insert(U.Stone, M.frustumN(8, 0.88, 0.8, 0, 0.36, CFrame.Angles(0, rad(22.5), 0), { STONE, scaled(STONE, 0.93) }))
 	table.insert(U.Stone, M.frustumN(8, 0.66, 0.58, 0.36, 0.6, CFrame.Angles(0, rad(22.5), 0), { rgb(163, 170, 183), scaled(rgb(163, 170, 183), 0.93) }))
-	finishB4(m, "flagpole", U, "Wood")
+	finishB4(m, "flagpole", U, "Wood", opts)
 	for _, p in ipairs(m:GetChildren()) do
 		if p:IsA("PartOperation") then
 			p.CanQuery = false
@@ -1702,7 +1776,7 @@ end
 -- "Talk" / "Guide", BillboardGui NameTag); 3 copies: test, kit, Hub.TutorialGuide)
 ---------------------------------------------------------------------
 -- The guide platform (guide D4): today's platform as a ring of 12 bevelled stone blocks around an inset centre disc
--- with a carved compass star, on a darker kerb ring of 16 blocks (the walking surface stays at y 0.6); the signpost
+-- with a carved 4-point compass star, on a darker kerb ring of 16 blocks (the walking surface stays at y 0.6); the signpost
 -- chamfered with a pyramid cap and today's gold finial as a faceted ball on a collar, 2 iron bands with nails; today's
 -- 2 arrow boards as 2-plank boards with their pointed tips (today's wedges); the lectern on a cross foot, its post
 -- chamfered with 2 rings, its slanted top with a lip and Agent A's open book (pages, text lines, a picture, a red
@@ -1720,10 +1794,15 @@ function B4.tutorial_guide(): Model
 	H.ringBlocks(U.Stone, rng, { n = 16, ro = 6.55, ri = 5.7, y0 = -0.05, h = 0.4, c = 0.12, color = DARK, H = 10 })
 	H.ringBlocks(U.Stone, rng, { n = 12, ro = 6.05, ri = 2.55, y0 = -0.05, h = 0.65, c = 0.15, color = STONE, H = 10, a0 = math.pi / 12 })
 	table.insert(U.Stone, H.prism16(2 * 2.5, 0.6, CFrame.new(0, 0.25, 0), scaled(STONE, 1.06)))
+	-- a 4-point compass star (kites along the 4 axes, symmetric) inlaid 0.04 in the centre disc
 	for k = 0, 3 do
 		local a = k * math.pi / 2
 		local d = Vector3.new(math.cos(a), 0, math.sin(a))
-		table.insert(U.Stone, piece("Part", Vector3.new(0.5, 0.04, 1.9), CFrame.lookAt(d * 1.1 + Vector3.new(0, 0.56, 0), d * 2 + Vector3.new(0, 0.56, 0)) * CFrame.Angles(0, rad(45), 0), DARK))
+		local side = Vector3.new(-d.Z, 0, d.X)
+		local y = 0.56
+		local tip, l, r, c = d * 2.1, d * 0.45 + side * 0.32, d * 0.45 - side * 0.32, Vector3.zero
+		H.triangleParts(U.Stone, c + Vector3.new(0, y, 0), l + Vector3.new(0, y, 0), tip + Vector3.new(0, y, 0), 0.04, CFrame.identity, DARK)
+		H.triangleParts(U.Stone, c + Vector3.new(0, y, 0), tip + Vector3.new(0, y, 0), r + Vector3.new(0, y, 0), 0.04, CFrame.identity, scaled(DARK, 1.12))
 	end
 	-- the signpost
 	local post = rowsNamed("Station_TutorialGuide", "SignPost")[1]
@@ -1783,7 +1862,8 @@ end
 -- a 13 ridge); 3 hosts: test, kit, Plains_3.Decor.HunterCamp; the embedded rule "tent_green" wraps them into a "Tent"
 -- model, pivot = the bottom centre of the group, ridge along Z)
 -- The green tent (guide D3): the same plains tent recipe at 0.92 (ridge 13, height 8), in an opaque olive canvas #7A8A3C
--- / #6E7E35 with #66752F seams, linen bindings and lining, a brown and linen rug, a rolled bedroll inside the open door
+-- / #6E7E35 with #66752F seams, linen bindings, a light olive #9AA65A lining (so the front reads green too), a brown and
+-- linen rug, a rolled bedroll inside the open door
 -- and grass tufts; Transparency 0 everywhere. Today's 7 tent parts (Data.HunterTent, read from the kit's wrapper) stay
 -- the exact colliders. Parts: Canvas, Lining, Wood, Gold, Ground, Plants, Collision x7.
 function B4.tent_green(): Model
@@ -1796,7 +1876,7 @@ function B4.tent_green(): Model
 			ez += r.cf.Position.Z
 		end
 	end
-	local m = tentModel("tent_green", { seed = 20261413, canvas = rgb(122, 138, 60), canvasAlt = rgb(110, 126, 53), seam = rgb(102, 117, 47), binding = LINEN, lining = LINEN, rug = rgb(168, 98, 56), rugStripe = LINEN, bedroll = true })
+	local m = tentModel("tent_green", { seed = 20261413, canvas = rgb(122, 138, 60), canvasAlt = rgb(110, 126, 53), seam = rgb(102, 117, 47), binding = LINEN, lining = rgb(154, 166, 90), rug = rgb(168, 98, 56), rugStripe = LINEN, bedroll = true })
 	local turn = if ez > 0 then CFrame.Angles(0, math.pi, 0) else CFrame.identity
 	for _, p in ipairs(m:GetChildren()) do
 		if p:IsA("BasePart") then
@@ -1812,7 +1892,7 @@ end
 ---------------------------------------------------------------------
 -- registration: the builders go into the same PropsBatch2 table as the jungle props; its install() builds them
 ---------------------------------------------------------------------
-B4.BUILDERS = { barrel = true, cottage_one_window = true, cottage_two_windows = true, house_blue_roof = true, ladder = true, fence_section = true, wooden_post = true, sign_board = true, banner_diamond = true, flagpole = true, standing_torch = true, wall_torch = true, spiked_mace = true, tent_red_white = true, tent_red = true, stone_tower = true, tutorial_guide = true, tent_green = true }
+B4.BUILDERS = { barrel = true, cottage_one_window = true, cottage_two_windows = true, house_blue_roof = true, ladder = true, fence_section = true, wooden_post = true, sign_board = true, banner_diamond = true, flagpole = true, standing_torch = true, wall_torch = true, spiked_mace = true, tent_red_white = true, tent_red = true, stone_tower = true, tutorial_guide = true, tent_green = true, sign_board_dark = true }
 for id in pairs(B4.BUILDERS) do
 	B2[id] = (B4 :: any)[id]
 	B2.BUILDERS[id] = true

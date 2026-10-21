@@ -149,6 +149,12 @@ Work boss by boss and system by system with sub-agents:
 
 ## 5. Current state (as of this handoff)
 
+**2026-10-21/22: HUB AND PLAINS BATCH 4 (17 objects).** Half-timbered cottages / blue house / stone tower, 2 tents
+(derived from the desert tent; the green one opaque olive), mace, barrel (all 43), ladder, fence, sign, post, banner,
+flagpole, standing torch, wall torch (bar flipped "/" per the owner), Guide platform (NPC untouched). Guide section D;
+builders tools/PropsBatch4*.luau. Lessons: never union hundreds of facet wedges in one CSG call (it hung Studio's CSG
+for 30+ minutes); stash "before" copies UNTAGGED (a tagged stash gets synced too). 122 templates / 1536 copies.
+
 **2026-10-20: JUNGLE ZONE PROPS (owner prompts: 01 buildings and temples, 02 gates and entrances, 03 ruins and stonework, 04 totems,
 shrines and water, 05 props and decor, 06 rocks and plants).** Same route as the
 desert: Studio parts + one-colour unions, organic pieces (carved faces, soft moss drapes, vine strands, thatch) from

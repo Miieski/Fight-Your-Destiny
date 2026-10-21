@@ -538,6 +538,17 @@ Data.Cottage_B_game = {
 	{ "Collision", "Part", "Block", 7.6, 0.8, 0.8, -4, 11, -9.15, 1, 0, 0, 0, 1, 0, 0, 0, 1, "000000", true, 1, "SmoothPlastic" },
 }
 
+-- the HunterCamp's tent parts (batch 4 T02), relative to the pivot of its "Tent" wrapper (the tent_green rule)
+Data.HunterTent = {
+	{ "TentCloth", "WedgePart", "", 11, 7.5, 5, -2.5001, 3.75, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0, "68a848", true, 0, "SmoothPlastic" },
+	{ "TentCloth", "WedgePart", "", 11, 7.5, 5, 2.5001, 3.75, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, "68a848", true, 0, "SmoothPlastic" },
+	{ "TentEntrance", "WedgePart", "", 0.2, 5.6, 2.8, -1.4, 2.8, -5.55, 0, 0, 1, 0, 1, 0, -1, 0, 0, "703e26", true, 0, "SmoothPlastic" },
+	{ "TentEntrance", "WedgePart", "", 0.2, 5.6, 2.8, 1.3999, 2.8, -5.55, 0, 0, -1, 0, 1, 0, 1, 0, 0, "703e26", true, 0, "SmoothPlastic" },
+	{ "TentPole", "Part", "Block", 0.5, 0.5, 13, 0, 7.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, "703e26", true, 0, "SmoothPlastic" },
+	{ "TentPole", "Part", "Block", 0.5, 8.1, 0.5, -0.0001, 4.05, -6.1, 1, 0, 0, 0, 1, 0, 0, 0, 1, "703e26", true, 0, "SmoothPlastic" },
+	{ "TentPole", "Part", "Block", 0.5, 8.1, 0.5, 0.0001, 4.05, 6.1, 1, 0, 0, 0, 1, 0, 0, 0, 1, "703e26", true, 0, "SmoothPlastic" },
+}
+
 -- a row as { name, class, shape, size, cf, color, collide, transparency, material }
 function Data.rows(kit: string): { any }
 	local out = {}

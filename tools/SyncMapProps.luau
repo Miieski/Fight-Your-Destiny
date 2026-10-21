@@ -77,6 +77,28 @@ local function bakedFrom(m: Instance, name: string, ref: number): number?
 	return if w > 0 and math.abs(s - 1) > 0.01 then s else nil
 end
 
+-- batch 4: the Tundra_1 sign in dark wood (Board #997660)
+local function darkSign(m: Instance): boolean
+	local r, g, b = rgbOf(m:FindFirstChild("Board"))
+	return math.abs(r - 153) < 3 and math.abs(g - 118) < 3 and math.abs(b - 96) < 3
+end
+
+-- batch 4: a banner's / flag's cloth colour as its variant ("Cloth_<HEX>"; nil for today's red #D4343C)
+local function clothVariant(m: Instance): string?
+	local cloth = m:FindFirstChild("Cloth")
+	if not (cloth and cloth:IsA("BasePart")) then
+		return nil
+	end
+	local hex = string.upper(cloth.Color:ToHex())
+	return if hex == "D4343C" then nil else "Cloth_" .. hex
+end
+
+-- the Plains_2 PirateCamp's red tent (batch 4 T01 variant)
+local function inPirateCamp(m: Instance): boolean
+	local p = m.Parent
+	return p ~= nil and p.Name == "PirateCamp" and m:IsDescendantOf(workspace)
+end
+
 -- the grounded thin bamboo copies (owner JUNGLE PROMPT_06 07): Jungle_3's, and the test copy marked ThinBambooGrounded
 local function thinBambooGrounded(m: Instance): boolean
 	local zones = workspace:FindFirstChild("Zones")
@@ -382,16 +404,32 @@ SyncMapProps.RULES = {
 	{ propId = "cottage_two_windows", names = { "Cottage_A" } },
 	{ propId = "house_blue_roof", names = { "Cottage_B" } },
 	{ propId = "stone_tower", names = { "Hub_Tower" } },
-	{ propId = "tent_red_white", names = { "Tent_A" } },
+	-- Tent_A: the Plains_2 PirateCamp copy is all red today (its own template), the others linen + red
+	{ propId = "tent_red_white", names = { "Tent_A" }, filter = function(m)
+		return not inPirateCamp(m)
+	end },
+	{ propId = "tent_red", names = { "Tent_A" }, filter = function(m)
+		return inPirateCamp(m)
+	end },
 	{ propId = "spiked_mace", names = { "Troll_Club" } },
 	{ propId = "ladder", names = { "Ladder_A" } },
 	{ propId = "fence_section", names = { "Fence_Section" } },
-	{ propId = "sign_board", names = { "Signpost_A" } },
+	-- the Tundra_1 "Hub" sign is in dark wood today: its own template
+	{ propId = "sign_board", names = { "Signpost_A" }, filter = function(m)
+		return not darkSign(m)
+	end },
+	{ propId = "sign_board_dark", names = { "Signpost_A" }, filter = function(m)
+		return darkSign(m)
+	end },
 	{ propId = "wooden_post", names = { "Fence_Post" } },
-	{ propId = "banner_diamond", names = { "Banner_A" } },
-	{ propId = "flagpole", names = { "Flag_Pole_A" } },
+	-- banners and flags: the copies whose cloth is not red get the template's "Cloth_<hex>" recolour
+	{ propId = "banner_diamond", names = { "Banner_A" }, variant = clothVariant },
+	{ propId = "flagpole", names = { "Flag_Pole_A" }, variant = clothVariant },
 	{ propId = "standing_torch", names = { "Torch_Standing" } },
-	{ propId = "wall_torch", names = { "Torch_Wall" } },
+	-- the 14 Jungle_4 wall torches are the kit resized part by part (x1.3, Model scale 1)
+	{ propId = "wall_torch", names = { "Torch_Wall" }, bakedScale = function(m)
+		return bakedFrom(m, "Stick", 0.5)
+	end },
 	{ propId = "tutorial_guide", names = { "Station_TutorialGuide" }, hubNames = { "TutorialGuide" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")

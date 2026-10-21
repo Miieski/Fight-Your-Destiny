@@ -2877,3 +2877,35 @@ post (keep the light), 10 campfire / brazier parts (check what it is; keep light
   (Data.<kit>_game): every game copy exact except the 2nd hub Cottage_B (0.03 .. 0.045 off, its posts / step); the test
   and kit copies within 0.17. A first "before" stash in ServerStorage was still tagged and got synced too: deleted; the
   stash now strips tags. Run 2 = 0. Shots test + game before / after in docs/screenshots/batch4/ (b01-b04, p02).
+- 00:05 Agent B: groups 2 + 3 synced. Tents: tent_red_white 3 / 3 + tent_red (PirateCamp, all red) 1 / 1, tent_green
+  (HunterCamp, embedded) 3 / 3 in opaque olive (Transparency 0). Props: spiked_mace 3 / 3, ladder 3 / 3, fence_section
+  16 / 16, sign_board 9 / 9 + sign_board_dark (Tundra_1) 1 / 1 (all 9 SurfaceGui texts kept on an invisible Board
+  carrier), wooden_post 7 / 7 (the empty Plains_1 Fence_Post at (2020, 0, -50) deleted), banner_diamond 11 / 11 and
+  flagpole 21 / 21 (cloth colour variants keep the blue / purple / gold / pink / grey / cyan copies), standing_torch
+  21 / 21 and wall_torch 38 / 38 (owner directive: the bar flipped to "/", cup on its top end; Ember / FirePoint
+  exact, 41 FirePoints on their VFX, 35 PointLights carried by MapPropKeep TorchLight parts, colliders unchanged; the 14
+  Jungle_4 copies keep their x1.3 size via bakedScale), tutorial_guide 3 / 3 (Guide NPC, Interact prompt "Talk", NameTag,
+  NpcSpot, Lantern untouched). Colliders exact on every copy (part by part). Run 2 = 0; dry run 122 templates / 1534
+  copies all up to date. Disk == Studio (204 scripts, 0 written). Shots in docs/screenshots/batch4/.
+- 00:05 BATCH 4 COMPLETE (Agent B; main agent looked at the after shots and Play-checked). Buildings (pushed e04f417):
+  cottage_two_windows 5 / 5, house_blue_roof 4 / 4, stone_tower 3 / 3. Tents: tent_red_white 3 / 3 + tent_red 1 / 1 (the
+  all-red PirateCamp copy), tent_green 3 / 3 (opaque olive canvas, Transparency 0; the old one was never transparent,
+  its green matched the grass). Props: spiked_mace 3 / 3 (spikes part-built), ladder 3 / 3 (rung / rail colliders
+  unchanged, climbing as before), fence_section 16 / 16 (rail ends at +-4, sections still line up), sign_board 9 / 9
+  + sign_board_dark 1 / 1 (all texts kept on an invisible Board carrier, both sides of the Desert_1 sign),
+  wooden_post 7 / 7 (an EMPTY Fence_Post model with no parts at Plains_1 (2020, 0, -50) deleted), banner_diamond
+  11 / 11 and flagpole 21 / 21 (Agent A's cloth / flag; each copy keeps its colour; static, as today), standing_torch
+  21 / 21 (glass lantern with an open top), wall_torch 38 / 38 (OWNER DIRECTIVE: the bar flipped from "\" to "/", from
+  the back plate up into the cup, an iron collar carries the cup, no gap; ember, FirePoint, lights and the collider set
+  unchanged), tutorial_guide 3 / 3 (platform, signpost, lectern with an open book, lantern; the Guide NPC, its
+  "Talk" prompt, NameTag and NpcSpot untouched). Torch lights: each copy's own PointLight kept on an invisible
+  TorchLight carrier (19 lamp posts, 16 wall torches; copies that had none still have none); all 41 FirePoints still
+  on their fire VFX parts. ~494k tris in total for the batch (~298k in the hub, zones and arenas).
+  MAIN AGENT PLAY CHECK (phone emulator): BLACK SCREEN GONE - no full-screen dark GUI and normal lighting at join
+  (hub), after the hub -> Plains portal teleport, after zone transitions Plains_1 -> Plains_2 -> Plains_3 (the
+  CurrentSubZone attribute follows), after a respawn (7.1 s, back in Plains_1), and after the HubReturn pad teleport
+  back to the hub; captures in Plains_1 and Plains_3 render normally. Guide prompt "Talk / Guide" on Interact,
+  enabled, range 12. Plains_1 144 fps / render CPU 2.6 ms; no game errors (the same 203785492 warning). FINAL: 122
+  templates / 1536 tagged copies up to date; disk == Studio (204 scripts, 0 written); backup after_batch4. All 17
+  objects OK.
+
