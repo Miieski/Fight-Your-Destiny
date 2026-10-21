@@ -616,6 +616,36 @@ copies placed in the jungle zones are about 518,000 and the boss arena about 18,
 bush flowers) cannot be read (no EditableMesh permission), so their old triangle counts are unknown; the thin bamboo
 was 72 triangles per copy (6 blocks).
 
+### Batch 4 (owner, "HUB AND PLAINS BUILDINGS AND PROPS IMPROVEMENT - BATCH 4", 2026-10-21): inventory before the remake (read from Studio)
+
+Prompt: `REMAKE OBJECT/Hub_Plains_Props_Batch4/Hub_Plains_Props_Batch4/PROMPT_Hub_Plains_Props_Batch4.txt`. Images:
+`docs/Hub_Plains_Props_Batch4/{01_Buildings, 02_Tents, 03_Props}/`. Recipe: docs/prop_texture_guide.md section D (+ A).
+Test = `workspace._Staging.AssetPreview.ModelsA.Lineup.<Common|Plains|Hub>.<Kit>`; BA = `ServerStorage.BossArenas`.
+Every model named like a kit was searched in workspace, ServerStorage and ReplicatedStorage; counts include the kit and
+the test copy. The kits as they were are kept as rows in `tools/PropsBatch4Data.luau` (the builders read them).
+Backups (kit + test + every copy): `BackUP_Files/old_props_2026-10-21_pre_batch4/<propId>.rbxm` (17 files); the
+main agent's full backup `..._before_batch4`.
+
+| # | owner's object | kit | copies (total) | functional / notes |
+|---|---|---|---|---|
+| B01 | cottage, red roof, one window | `MapAssets.Plains.FarmHouse` (73 parts) | 3: test, kit, Plains_1.Decor.Farm | no NPC / prompt / script; every part collides except the window bars, frames and sills |
+| B02 | cottage, red roof, two windows | `MapAssets.Hub.Cottage_A` (65) | 5: test, kit, Hub.Decor.Village x3 | as B01 |
+| B03 | two-storey house, blue roof | `MapAssets.Hub.Cottage_B` (76) | 4: test, kit, Hub.Decor.Village x2 | as B01 |
+| B04 | stone tower, blue roof | `MapAssets.Hub.Hub_Tower` (47) | 3: test, kit, Hub.Decor.Village | everything collides; the flag is a static wedge |
+| T01 | tent red / white | `MapAssets.Common.Tent_A` (9, = NomadTent_A's parts) | 4: test, kit, Hub AFKCorner (linen + red), Plains_2 PirateCamp (all red) | static |
+| T02 | green "transparent" tent | the 7 tent parts inside `MapAssets.Plains.HunterCamp` | 3 hosts: test, kit, Plains_3.Decor.HunterCamp | Transparency 0 everywhere: the #68A848 canvas is the grass colour |
+| P01 | spiked mace | `MapAssets.Plains.Troll_Club` (12; 6 Spike MeshParts) | 3: test, kit, BossArenas Plains TrollDen | Toolbox attributes SourceAssetId / SourceCreator |
+| P02 | barrel | the existing `barrel` template | 43: Barrel_A x33 + embedded (HunterCamp x3, Market_Awning_A x4, Station_Trainer x3) | the staves collide |
+| P03 | ladder | `MapAssets.Common.Ladder_A` (8) | 3: test, kit, Plains_4 Mine | plain parts (no TrussPart, no script): rails at x +-1.4, rungs 2.6 x 0.3 every 1.5 |
+| P04 | fence section | `MapAssets.Common.Fence_Section` (4) | 16: test, kit, Plains_1 Farm x14 | 8 long, laid end to end every 8 |
+| P05 | sign board | `MapAssets.Common.Signpost_A` (4) | 10: test, kit, Hub AFKCorner ("AFK Zone"), the "Hub" return signs of Plains_1, Desert_1 (front + back), Jungle_1, Tundra_1, Volcano_1, Abyss_1, Void_1 | the texts are SurfaceGuis on the Board |
+| P06 | wooden post | `MapAssets.Common.Fence_Post` (2) | 8: test, kit, Plains_1 Farm x6 (one an empty model, deleted) | |
+| P07 | banner, red diamond | `MapAssets.Common.Banner_A` (8) | 11: test, kit, Hub Flags x6, AltarBackdrop x3 (1.5 / 1.5 / 1.9) | static |
+| P08 | flagpole, red flag | `MapAssets.Common.Flag_Pole_A` (4) | 21: test, kit, Hub Flags x12, Islets x6 (2.2), Plains_2 PirateCamp | static |
+| P09 | short lamp post | `MapAssets.Common.Torch_Standing` (4 + FirePoint + PointLight) | 21: test, kit, Hub Harbor x2 / AltarBackdrop x2 (no light), Plains_4 Cavern x5, Desert_3 Caves x4, BossArenas Plains x6 | each copy's light differs (16 / 0.7, 20 / 0.9, 28 / 1.2, none); a Decor.VFX Fire_Torch part stands on each game copy's FirePoint |
+| P10 | "campfire or brazier parts" = a wall torch | `MapAssets.Common.Torch_Wall` (4 + FirePoint + PointLight) | 38: test, kit, Plains_4 Mine x4, Desert_4 x10, Jungle_4 x14 (parts resized x1.3), BossArenas Jungle x8 | 22 copies have no light |
+| P11 | signpost + lectern + lantern platform | `MapAssets.Hub.Station_TutorialGuide`; hub copy `workspace.Hub.TutorialGuide` | 3: test, kit, Hub.TutorialGuide | the Guide NPC's marker: Interact (ProximityPrompt "Talk" / "Guide", BillboardGui NameTag), NpcSpot, the nested Lantern (`lantern` MapProp) |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

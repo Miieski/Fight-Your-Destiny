@@ -1676,6 +1676,311 @@ Reuse from earlier sections (no new cost):
 - **Flowers:** `bush__flowers` (4 open pink flowers with 5 petals and a gold centre, 2 buds) sitting on today's clump surfaces. Agent B should lay them onto the real mesh surface: the piece assumes ellipsoids at 92 % of the clump boxes, so move each flower along its normal until it touches the leaves.
 - **Base:** `bush__base_leaves` (5 small leaves splayed on the ground at the foot).
 
+## D. Hub and plains: batch 4 (owner task 2026-10-21)
+
+Images: `docs/Hub_Plains_Props_Batch4/{01_Buildings, 02_Tents, 03_Props}/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-21_212207_before_batch4_{ServerStorage,Workspace}.rbxm`.
+Same quality target and recipes as section A (fountain / well), the plains palette (A1, section 3), and the desert and
+jungle work (the B6 tent, the C6 banner and torch flame). Everything is parts + unions unless a facet piece is named
+(`tools/blender/fyd_facets.py -- batch4`, preview `Previews/Props/batch4_facets.png`).
+
+### D0. Today's kits, copies and functions
+
+All parts are SmoothPlastic (glass panes too); no kit has a script. Scale = Model:ScaleTo unless noted.
+
+| # | Owner's name | Kit | Parts | Placed copies (test zone = `_Staging.AssetPreview.ModelsA.Lineup.*`) |
+|---|---|---|---|---|
+| B01 | cottage, red roof, one window | `MapAssets.Plains.FarmHouse` | 73 | **2**: test (Lineup.Plains), `Plains_1.Decor.Farm` |
+| B02 | cottage, red roof, two windows | `MapAssets.Hub.Cottage_A` | 65 | **4**: test (Lineup.Hub), `Hub.Decor.Village` x3 |
+| B03 | two-storey house, blue roof | `MapAssets.Hub.Cottage_B` | 76 | **3**: test, `Hub.Decor.Village` x2 |
+| B04 | round stone tower | `MapAssets.Hub.Hub_Tower` | 47 (16 in a `RoofCone` model) | **2**: test, `Hub.Decor.Village` |
+| T01 | tent red / white | `MapAssets.Common.Tent_A` | 9 | **3**: test (Lineup.Common, linen + red), `Hub.Decor.Props.AFKCorner` (linen + red), `Plains_2.Decor.PirateCamp` (**all red**: ClothL/R #D4343C) |
+| T02 | green "transparent" tent | the tent INSIDE `MapAssets.Plains.HunterCamp` (TentCloth x2, TentEntrance x2, TentPole x3) | 7 of 92 | **2**: test (Lineup.Plains.HunterCamp), `Plains_3.Decor.HunterCamp.HunterCamp` |
+| P01 | spiked mace | `MapAssets.Plains.Troll_Club` | 12 (6 Spike MeshParts `rbxassetid://100106311518324`) | **2**: test (Lineup.Plains), `BossArenas.Plains.Decor.TrollDen` |
+| P02 | barrel | `MapAssets.Common.Barrel_A` = **existing propId `barrel`** | 13 | **39 placed**: 31 `Barrel_A` (Hub 9: Harbor 8, AFKCorner 1; Desert_1 3, Desert_2 5, Desert_3 1; Plains_1 2, Plains_2 6, Plains_4 3; Volcano_1 1; test 1) + BossArenas.Plains.TrollDen 1 + 7 nested `Barrel` (Hub Market_Awning_A x2, Hub.Trainer x1, Plains_3 HunterCamp x1, test x3; scale 0.79-0.84) |
+| P03 | ladder | `MapAssets.Common.Ladder_A` | 8 | **2**: test, `Plains_4.Decor.Mine` |
+| P04 | fence section | `MapAssets.Common.Fence_Section` | 4 | **15**: test, `Plains_1.Decor.Farm` x14 |
+| P05 | sign board | `MapAssets.Common.Signpost_A` | 4 + GUI | **9**: test (no GUI), Hub AFKCorner ("AFK Zone"), `HubReturnDecor` of Plains_1 / Desert_1 / Jungle_1 / Tundra_1 / Abyss_1 ("Hub"), `Decor.Props` of Volcano_1 / Void_1 ("Hub") |
+| P06 | wooden post | `MapAssets.Common.Fence_Post` | 2 | **7**: test, `Plains_1.Decor.Farm` x6 (**one of them is an EMPTY model with 0 parts**) |
+| P07 | banner, red diamond | `MapAssets.Common.Banner_A` | 8 | **10**: test, Hub `Decor.Props.Flags` x6 (scale 1), `Decor.Props.AltarBackdrop` x3 (scale 1.5 / 1.5 / 1.9) |
+| P08 | flagpole, red flag | `MapAssets.Common.Flag_Pole_A` | 4 | **20**: test, Hub `Decor.Props.Flags` x12 (4 at 1.0, 8 at 1.35), `Decor.Backdrop.Islets.Islet` x6 (2.2), `Plains_2.Decor.PirateCamp` x1 |
+| P09 | short lamp post | `MapAssets.Common.Torch_Standing` (a standing TORCH) | 4 + FirePoint + PointLight | **20**: test, Hub AltarBackdrop x2 (1.4) / Harbor x2 (1.3), Desert_3 Caves x4, Plains_4 Cavern x5 (1.3), BossArenas.Plains x6 (1.4) |
+| P10 | "campfire or brazier parts" | `MapAssets.Common.Torch_Wall` (a WALL TORCH) | 4 + FirePoint + PointLight | **37**: test, Desert_4 x10, Jungle_4 x14 (**parts resized x1.3, Model scale 1 -> bakedScale `bakedFrom(m, "Stick", 0.5)`**), Plains_4 Mine x4, BossArenas.Jungle x8 |
+| P11 | signpost + lectern + lantern platform | `MapAssets.Hub.Station_TutorialGuide`; hub copy = `workspace.Hub.TutorialGuide` (renamed) | 21 + nested `Lantern` | **2**: test (Lineup.Hub.Station_TutorialGuide), `Hub.TutorialGuide` |
+
+Only Torch_Wall has part-resized copies; every other scaled copy uses Model scale (kept by the sync).
+**Not in this batch:** the existing templates `lamp_post` (Lantern_Post), `street_lamp` (LampPost_A) and `lantern` (the
+nested lanterns) are other kits; the owner's "short lamp post" is Torch_Standing. `Volcano.Miner_Tent` is the same
+9-part tent in grey (out of scope, like in the desert batch).
+
+**Existing SyncMapProps rules:**
+- **Already covered:** only the barrel (`barrel`: names `Barrel_A`, plus the nested `Barrel` wrapper groups in HunterCamp / Market_Awning_A; template version fddb6) and the platform's nested `lantern` (d23af38c, PointLight 1.2 / 16 / #FFD28C, kept).
+- **No rule yet:** FarmHouse, Cottage_A / B, Hub_Tower, Tent_A, the HunterCamp tent, Troll_Club, Ladder_A, Fence_Section, Signpost_A, Fence_Post, Banner_A, Flag_Pole_A, Torch_Standing, Torch_Wall, Station_TutorialGuide.
+- **Suggested propIds:**
+  - buildings: `plains_farmhouse`, `hub_cottage_red`, `hub_house_blue`, `hub_tower`;
+  - tents: `plains_tent` (Tent_A), `plains_tent_green` (nested, wrapper "Tent" in HunterCamp);
+  - props: `troll_mace`, `ladder`, `fence_section`, `sign_board`, `wooden_post`, `hub_banner`, `flagpole`, `standing_torch`, `wall_torch`;
+  - platform: `guide_platform` (names `Station_TutorialGuide`, hubNames `TutorialGuide`).
+
+**Functions (checked in the data and `src/`):**
+- **Buildings:** no prompt, script, NPC, door logic or tag; the doors are plain colliding slabs. Keep every colliding part's collision (Foundation, Walls, Roof, Gables, Chimney, Step, Door, frames; Hub_Tower everything).
+- **T02 is NOT transparent:** TentCloth is #68A848, Transparency 0, SmoothPlastic, in every copy.
+  - It reads as see-through because #68A848 is the plains grass green: the canvas melts into the ground behind it.
+  - Fix: an opaque **olive canvas** clearly darker than the grass (D3).
+- **P03 ladder:** plain Parts, NOT a TrussPart; no climb script.
+  - 2 Rails 0.5 x 10 at x +-1.4, 6 Rungs 2.6 x 0.35 x 0.35 at y 1.3 / 2.8 / 4.3 / 5.8 / 7.3 / 8.8; everything collides.
+  - Whatever climbing works today comes from this rung geometry: keep the rung heights, the 0.35 section and the rail positions exactly (exact invisible copies if the new look differs).
+- **P04 fence:**
+  - each section is 8 long: Rails 8 x 0.7 x 0.4 at y 1.4 and 3.0, Posts 0.9 x 4 x 0.9 at x +-3.5;
+  - sections sit end to end at an 8-stud pitch along X (2 posts side by side at each joint), some overlap (4.5 / 1 pitch in places);
+  - corners and ends use Fence_Post;
+  - keep the rail ends at x +-4, the posts at +-3.5, the rail heights and the 0.4 depth so every line still joins.
+- **P05 sign:** the text is a **SurfaceGui on the `Board` part** (Face Front; Desert_1 also a Back GUI). Names vary (`SignGui` / `SignLabel`, `SurfaceGui` / `TextLabel`, `HubGuiFront` / `HubGuiBack`); texts "Hub" (7) and "AFK Zone" (1).
+  - **SyncMapProps hazard:** a child is kept only when the template has no direct child with the same name and class. A template part named `Board` would win and drop the GUIs.
+  - Either the sync moves the SurfaceGuis from the old Board onto the new Board (same Face), or the template's panel gets another name and keeps today's `Board` part as the GUI carrier.
+- **P07 / P08:** no PropFX entry, no script: **the flags and banners do not wave today**, so they stay static.
+- **P09 / P10 torches:**
+  - `Ember` = Neon #FF8C28 ball; FirePoint Attachment on `Head` (Torch_Standing (0.6, 0, 0) = 0.6 above the Head along its axis; Torch_Wall (0.39, 0, -0.37)).
+  - In the game a separate invisible `Decor.VFX.Fire_Torch` part stands on EVERY copy's FirePoint (particles + its own PointLight 1 / 16 / #FFAA50), as for the jungle torch. The test copies have none.
+  - Each copy's own PointLight on `Head` differs (Shadows off, #FFD678):
+
+    | Copies | Light |
+    |---|---|
+    | kit, test, Hub Harbor, Desert_3, Desert_4 | 0.7 / range 16 |
+    | Plains_4 (both kits) | 0.9 / 20 |
+    | BossArenas.Plains | 1.2 / 28 |
+    | Hub AltarBackdrop, Jungle_4, BossArenas.Jungle | NO light |
+
+  - **No on / off logic** exists (no day-night script, no PropFX flicker).
+  - Keep each copy's light values (a variant per light setting, or carry the copy's light onto the new Head) and the FirePoint world position (the VFX parts do not move).
+- **P11 platform:** `Hub.TutorialGuide` is the **marker of the Guide NPC** (`Config/NPCs`: Marker "TutorialGuide", Window "Quests", tips).
+  - NPCService stands the NPC on `NpcSpot` (2 x 0.2 x 2, invisible) and replaces the `NPC` stand-in model.
+  - `Interact` (6 x 6 x 6, invisible) holds the ProximityPrompt (ActionText "Talk", ObjectText "Guide", range 12, key E, no hold) and the BillboardGui `NameTag` -> "Guide".
+  - SyncMapProps keeps Interact / NpcSpot / NPC by name: the template must NOT contain parts with these names.
+  - The nested `Lantern` is the `lantern` MapProp (kept, synced by its own rule).
+  - No text on the signboards today.
+
+### D1. Batch 4 palette (the real Part colours; tone steps x1 / x0.93 / x0.86)
+
+| Role | Hex | Used by |
+|---|---|---|
+| plaster | #F0E4C8 | Walls, Gables |
+| timber | #703E26 | Timber frame, DoorFrame, poles, rails, ladder rails, posts |
+| wood light / mid | #D6965C / #A86238 | sign board, door, rungs, rails, lectern, cap |
+| window frame / sill | #804E30 | |
+| glass | #5FD4FF | windows (keep; SmoothPlastic, optionally Glass T 0.3 + a #2A6F8F back pane) |
+| stone (blue-grey) | #969CA8 / #A3AAB7 light / #686E7C dark | foundations, tower body / parapet / base, chimney, steps, cap |
+| roof red / ridge | #C4403A / #A53630 | FarmHouse, Cottage_A |
+| roof blue / ridge | #4078D4 / #3666B5 (tower cone #3D74CD..#427CDC, rib #2F5CAA) | Cottage_B, Hub_Tower |
+| gold | #FFC93C | handles, finials, emblem, flag sleeve |
+| flag / banner / tent red | #D4343C | |
+| linen canvas | #E8E2D0 | Tent_A |
+| tent green (today) -> olive (new) | #68A848 -> #7A8A3C, seams #66752F | HunterCamp tent |
+| iron | #5C626E, worn #969CA8 | mace bands / spikes, torch heads, brackets |
+| ember / flame Neon | #FF8C28 / #FFB648 / #FFD678 | torches |
+| flower box | #C4403A / #FFC93C flowers, #589642 leaves | |
+
+### D2. Half-timbered houses (B01 FarmHouse, B02 Cottage_A, B03 Cottage_B)
+
+One recipe for the 3 houses (same family); keep each footprint, height, door, window and chimney place.
+
+**Today:**
+- **FarmHouse:**
+  - Walls 28 x 12 x 22 on a Foundation 29 x 1.6 x 23; Roof 2 slabs 31.6 x 1.2 x 18.06 at 45 deg; Ridge 32 x 1 x 1.4 at y 25.5;
+  - door 6 x 9 at x -5 (Step 8 x 1.6 x 3 in front); windows 4 x 4: 1 front (x 6), 2 sides, 2 back;
+  - chimney 3.2 x 16 at (8, 21.6, 5.5) with cap 3.9 x 1.
+- **Cottage_A:** walls 22 x 11 x 18, foundation 23 x 19, roof 25.6 x 15.23, ridge at y 22.5, door centred, 2 front windows at x +-7, 1 per side, chimney at (-6, 19.6, 4.5).
+- **Cottage_B:** walls 20 x 19 x 18 (2 storeys in one block), roof 23.6 x 15.95 at 48 deg (blue), ridge y 31.5, door at x -4, ground window at x 5, 2 upper front windows at y 16.1, 1 per side per floor, chimney at (6, 28.1, 4.5).
+- **All three:** 19-23 Timber strips #703E26, window frames + bars + sills.
+
+**Rules:**
+- **Stone foundation:** today's plinth as cut blocks.
+  - Courses 0.8 tall (2 courses on the 1.6 plinth), blocks 1.8-2.8 long, running bond, 0.08 joints over a #545864 core.
+  - 0.15 chamfers, 3 tone steps of #969CA8, a 0.2 overhang, a darker #686E7C top course; moss tufts (A4) at 2-3 places at the foot.
+- **Walls:**
+  - **Plaster:** today's wall block stays as the white plaster core #F0E4C8 (gradient x0.92 at the foot).
+  - **Timber frame**, 0.6-0.7 wide, 0.15 proud, #703E26 tones:
+    - sole plate on the foundation, corner posts, a mid rail at the window-sill height, a top plate under the eaves;
+    - posts at every wall end and either side of each opening;
+    - diagonal braces (45 deg) in the wall bays without openings, 1-2 per side, crossing nothing;
+    - every crossing a cross-lap: the beam runs 0.15 past it, 2 wooden pegs 0.15;
+    - one-step-darker plates on the gables;
+    - joints visible: a 0.05 gap where a brace meets a post.
+  - **Jettied upper floor (Cottage_B only):** the upper storey (above y 11.1) steps out 0.6 on the front and sides. A row of 6-8 carved brackets (wedges 0.6 x 0.8 x 0.6, #703E26) under the jetty, the floor joist ends (0.4 squares, #804E30, every 1.4) visible along it. Height unchanged.
+- **Roofs** (red #C4403A / blue #4078D4) with individual tiles per A5:
+  - tiles 1.5 wide x 1.6 long x 0.1, 0.06 gaps, rows every 1.35 with a 0.25 overlap, half-offset rows, butts lifted 0.08, 3 tone steps, darker toward the eave;
+  - on today's roof slab (it stays as the under-board and the collider);
+  - ridge cap tiles (#A53630 / #3666B5) 0.62 each side, bargeboards 0.15 x 0.34 #703E26 on both gables;
+  - eaves: keep today's 1.3-1.8 overhang, a fascia board 0.3 under the lowest row.
+  - Cost: about 300-360 tile parts per house (2-4 copies each).
+- **Chimney:** cut stone #969CA8 in courses 0.7 with joints, a #686E7C cap slab 3.9 x 0.4 with a 0.35 overhang, 2 dark flue openings on top, a lead flashing strip (#5C626E 0.1) where it meets the roof.
+- **Windows** (keep each 4 x 4 opening and its glass):
+  - frame 0.4 #804E30, 0.12 proud, cross mullion 0.2 (today's 2 WindowBars);
+  - a sill 0.3 thick with a 0.2 drip lip;
+  - 2 shutters (#A86238, 3 vertical planks 0.65 with 0.04 gaps, a Z-brace, 2 iron hinge straps) opened flat against the wall either side;
+  - a flower box under the front windows: planter 4.4 x 0.6 x 0.7 #A86238 with 2 iron bands, 5-7 flowers (#C4403A / #FFC93C / #E84A9C, a 0.25 bloom on a stem) over a #589642 leaf mound.
+- **Door** (keep 6 x 9, place and collision):
+  - 5 vertical planks 1.1-1.3 with 0.05 V-gaps over a dark #4A3022 back, 2 battens and a Z-brace on the back;
+  - 3 iron strap hinges (#5C626E, 0.3 x 2.6, round ends, 4 nails) on the hinge side; today's gold handle #FFC93C as a ring pull on a back plate 0.5;
+  - the frame: 2 posts + a lintel 0.8 with chamfered edges, pegs;
+  - a canopy over the door: 2 brackets (wedges) carrying a small tiled roof 7 x 0.2 x 2 in the roof colour.
+- **Step:** today's 8 x 1.6 x 3 stone step as 2 blocks with a joint, a worn front edge (0.15 chamfer + 2 chips), darker #686E7C.
+- **Small details (vary per house):**
+  - a lantern by the door: reuse the `lantern` MapProp at 0.8 on an iron wall bracket, at 7.5 high;
+  - B02: a barrel (`barrel` MapProp) by a side wall;
+  - B01: a climbing vine (C2 `vine__strand`, 3 strands) on one corner;
+  - B03: window boxes on both upper windows, or a small balcony (a 0.4 floor 4 x 1.2 on 2 brackets, a 1.0 railing of balusters 0.2 every 0.5).
+- **Gradient:** walls and timbers x0.9 at the foot -> x1.0 under the eaves (A9).
+
+### D3. Tents (T01 Tent_A, T02 the HunterCamp tent)
+
+**T01 = the desert tent recoloured:**
+- **Same model:** Tent_A has exactly NomadTent_A's 9 parts, names and sizes (ClothL/R wedges 12 x 8 x 5.5, Trim, Entrance, 2 Poles 0.5 x 8.6, RidgePole 14).
+- **Build:** clone the `desert_tent` template (guide B6, `tools/PropsDesert.luau` 04 TENT) and recolour it:
+  - canvas panels linen #E8E2D0 / alt #DCD5C2;
+  - seams and hem darker linen #C9C1AC;
+  - flaps folded back with a red #D4343C lining, red bindings and rope ties #C4A068;
+  - poles #703E26 with gold ball caps #FFC93C; stakes and guy ropes as in B6;
+  - a red / linen striped rug at the door; grass tufts instead of the sand drift.
+- **Colour variant:** the Plains_2 PirateCamp copy is all red. Use a `variant` (ClothL colour): red canvas #D4343C / alt #BF2E36 with a linen lining.
+- **Keep:** today's collision (the entrance is closed and collides, as on the desert tent).
+
+**T02 = the green tent:**
+- **Today:** inside HunterCamp, 2 TentCloth wedges 11 x 7.5 x 5 (#68A848, turned 65 deg in the camp), 2 TentEntrance wedges #703E26, 3 TentPoles (2 x 8.1 tall, ridge 13 long).
+- **New look:** the same desert-tent recipe at this size (ridge 13, height 7.5-8.1), canvas **olive #7A8A3C** (alt #6E7E35, seams #66752F), linen #E8E2D0 bindings and lining, a bedroll (a rolled #A86238 / #E8E2D0 cylinder 0.6 x 2.4) inside the open door.
+- **Opaque:** Transparency 0 everywhere.
+- **Sync:** a nested prop like the camp's crate / barrel / laundry rack. Rule `plains_tent_green` (wrapper "Tent", host HunterCamp, group = TentCloth / TentEntrance / TentPole).
+- **Keep:** the camp's collision.
+
+### D4. Props
+
+**P01 mace** (Troll_Club, 16.7 x 8.1 x 7.6, lying on the ground):
+- **Head:** today's 2 Head cylinders (4.0 x 3.2 dia, 5.0 x 4.6 dia #A86238) as a carved wooden head.
+  - Wood: 8-sided (or today's cylinders) with 6 shallow carved grooves along X, x0.86.
+  - Bands: today's 2 Bands (0.8 x 4.9 #5C626E) as iron bands with 8 rivets each (0.2 domes) and a raised edge rim 0.1.
+  - End: an iron end cap (#5C626E, 4.6 dia x 0.3) with a centre boss.
+- **Spikes:** `b4_mace__spike` at today's 6 Spike CFrames exactly (8-sided collar, bevelled 4-sided blade, polished tip).
+- **Handle:**
+  - today's 8 x 1.7 handle (#703E26) with a leather wrap: 6 spiral bands #4A3022, 0.6 wide, tilted 12 deg, 0.05 proud, on the middle 4 studs, and a cord end;
+  - a collar ring (#5C626E 2.0 x 0.4) where it enters the head;
+  - today's Pommel (#5C626E 2.2 x 1.0) as a faceted iron pommel with a ring.
+- Keep the Toolbox attributes (SourceAssetId / SourceCreator) on the model and today's collisions (Pommel, Handle, Heads, Bands).
+
+**P02 barrel** (new template for the existing `barrel` rule; 3.46 x 4.05; ~45 parts, ~600 triangles, 43 instances):
+- **Staves:** 14 staves, each 2 blocks (lower / upper half) tilted 3-4 deg so the middle bulges 0.2 (belly 3.4 dia, ends 3.0).
+  - 0.04 gaps over a dark #4A3022 core cylinder; 3 tone steps of #A86238 / #955731 / #B96D3F.
+- **Hoops:** 3 iron hoops (#474A56, 0.3 tall, 0.06 proud) at today's heights 1.05 / 3.0 / 3.72, 6 rivets each (0.14).
+- **Lid:** 4 planks (#784329 tones, 0.06 gaps) inside a 0.1 chime rim, a round bung (0.35, #5C626E plug) on the side at y 2.0, and one lid plank with a pull ring.
+- **Sync:** keep the nested `Barrel` wrapper scale (0.79-0.84) working (the template's footprint 3.46 is the REF) and the collision (staves collide).
+
+**P03 ladder:**
+- **Rails:** 2 rails 0.5 x 10 (#703E26) with bevelled tops (0.12) and a 0.06 chamfer on the long edges.
+- **Rungs:** 6 rungs at today's heights (#A86238 tones), round-ish (chamfered 0.35 squares), each set into the rails: a darker 0.45 square "mortise" plate on the rail face + a 0.15 peg head on the outside.
+- **Wear:** a lighter middle on the 3 lowest rungs (x1.06), 1 crack on a rail.
+- **Collision:** the rung and rail positions exactly as today (climbing).
+
+**P04 fence section:**
+- **Posts:** today's 2 posts (0.9 x 4) with a pyramid cap (wedges, 0.15 overhang, #A86238), 2 nails (0.12) where each rail meets, a rope lashing #C4A068 (2 turns 0.15) on one post.
+- **Rails:** today's 2 rails, each 2 split boards with a scarf joint at x 0 (0.06 step, 2 pegs), a 0.05 sag / tilt (+-1 deg) and 3 tone steps; the rail ends still at x +-4.
+- **Base:** 2-3 grass tufts (`ruins__plant_tuft` scale 0.5) at the post feet, CanCollide off.
+
+**P05 sign board** (Signpost_A):
+- **Post:** today's post 0.8 x 6.5 with a chamfer and a pyramid cap, a stone footing (1.6 x 0.5 x 1.6 #969CA8, chamfered, 2 blocks).
+- **Board:** today's Board 5.5 x 2.6 (#D6965C) as 3 horizontal planks 0.85 with 0.04 gaps, in a frame of 4 mitred trim strips 0.35 (#A86238, today's 2 trim Parts on top / bottom + 2 new sides), 8 nail heads (0.14, #5C626E), 2 iron L-plates on the corners.
+- **GUIs:** keep the SurfaceGuis on the front face of a part named `Board` (see D0 for the sync hazard). The text area must stay flat 5.5 x 2.6.
+
+**P06 wooden post** (Fence_Post):
+- **Post:** today's 1.0 x 4.2 post with a bevelled cap (today's Cap 1.3 x 0.4 + a 0.2 pyramid), 2 vertical cracks (dark 0.06), 3 nails.
+- **Rope:** a rope wrap #C4A068 (3 turns 0.12) at y 3.2 with a hanging end 0.8.
+- **Footing:** a stone footing 1.5 x 0.4 x 1.5 #969CA8 with chamfers, 2 grass tufts.
+- The empty Plains_1 Fence_Post model (0 parts) will become a full post after the sync: ask whether to delete it instead.
+
+**P07 banner** (Banner_A):
+- **Cloth:** `b4_banner__cloth` (the C6 banner in Banner_A red, gold trims, gold diamond emblem at today's y 9.2, tip at y 3.2).
+- **Crossbar:** today's 5.6 x 0.5 bar as a chamfered beam with carved end knobs (#703E26), a rope X-lashing at the pole, 5 rope loops holding the sleeve.
+- **Pole:** carved (2 rings #A86238 at y 11.0 and 12.9), today's gold Finial ball 0.9 on a small gold collar.
+- **Base:** today's stone Foot (1.4 x 0.6) as a carved stone base: 2 steps, chamfered, 4 corner notches.
+- **Collision:** Foot, Pole, Crossbar as today; the cloth CanCollide off unless a player can reach it.
+
+**P08 flagpole** (Flag_Pole_A, 17.8 tall):
+- **Pole:** today's 0.6 pole tapered (0.65 at the foot -> 0.45 at the top: 3 stacked cylinders), 3 iron rings (#5C626E 0.8 x 0.2) at y 4 / 9 / 13, a rope cleat at y 3 with the halyard (0.08 line) up to the flag.
+- **Flag:** `b4_flag__cloth` (5 fold panels, hem, gold sleeve) at today's place; static.
+- **Finial:** today's gold Finial ball 1.0 on a gold collar (0.6 x 0.3).
+- **Base:** today's white-grey Foot (1.6 x 0.6) as a carved stone base: an octagonal 2-step plinth 2.0 / 1.4 with bevelled edges (#969CA8 / #A3AAB7 top).
+
+**P09 short lamp post** (Torch_Standing, 6.55 tall):
+- **Post:** today's 0.6 pole (iron-banded at 2 heights) on today's round stone Foot (1.8 x 0.5) as a bevelled octagonal stone base.
+- **Bracket:** an iron collar (#5C626E) at the top carrying the lantern.
+- **Lantern:** a glass lantern 1.3 wide around today's Ember, keeping the fire:
+  - 4 iron corner posts 0.1, a base plate 1.4 and an OPEN crown 1.4 (a ring, not a lid), so the fire particles of the copy's VFX part rise out of it;
+  - 4 glass panes Glass T 0.4 #FFE296 (like the hub lanterns);
+  - the flame `b4_torch__flame` at 0.8 inside (anchor (0, 5.95, 0)).
+- **Keep:** the Neon Ember + Attachment FirePoint (its world position: the VFX part does not move) and each copy's own PointLight on Head (or no light). Name the part holding the FirePoint `Head`.
+
+**P10 wall torch** (Torch_Wall; pivot ON the wall plane, the torch sticks out to -Z; NOT a campfire):
+- **Bracket:** an iron back plate (today's Bracket 0.9 x 1.4 x 0.3) with 4 rivets, a scroll arm.
+- **Torch:** today's tilted Stick (0.5 x 3, 22 deg) with a leather wrap at the grip and 2 iron rings.
+- **Cup and flame:** today's Head as `b4_torch__cup` (scale 0.58, anchor (0, 3.55, -1.6)) and `b4_torch__flame` (0.7, anchor (0, 3.35, -1.65)).
+- **Keep:** Ember + FirePoint + each copy's light as for P09; bakedScale for the 14 Jungle_4 copies (x1.3).
+
+**P11 guide platform** (Station_TutorialGuide / Hub.TutorialGuide):
+- **Platform:** today's round platform (12 dia x 0.6, rim 13 dia) as 2 rings of bevelled stone blocks.
+  - 10-12 wedge-shaped blocks per ring, 0.08 joints over a dark core, 0.15 top chamfer, 3 tone steps of #969CA8.
+  - A darker #686E7C kerb ring of blocks on today's rim; a 1-step inset centre disc (radius 2.5) with a carved compass star (4 #686E7C points, 0.05 deep).
+  - Keep the walking surface at y 0.6.
+- **Signpost:** today's post 0.8 x 9 with a pyramid cap under today's gold Finial ball 1.0 (on a collar).
+  - 2 carved arrow boards at today's places (Board 4.4 x 1.3 #D6965C pointing +X, ArrowBoard 4.0 x 1.2 #A86238 pointing -X): each 2 planks with a joint, a pointed tip (today's ArrowTip wedges merged into the board shape), a 0.12 frame groove, 2 iron bands at the post with nails.
+  - Carved letters are optional (no text today).
+- **Lectern:**
+  - today's post 1.2 x 3.4 as a turned / chamfered post with 2 rings, on a foot cross (2 crossed boards 2.2 x 0.5);
+  - a slanted top (15 deg toward the reader, front -Z) with a 0.15 lip;
+  - `b4_guide__open_book` on it (2 curved page blocks, text lines, a framed picture, a red ribbon bookmark), replacing the 2 Book parts.
+- **Lantern:** the nested `lantern` MapProp stays (synced by its own rule).
+- **Keep exactly:**
+  - `Interact` (+ ProximityPrompt + BillboardGui NameTag) and `NpcSpot`, their places and invisibility;
+  - the NPC slot (NPCService places the Guide on NpcSpot and faces it to the plaza);
+  - the collisions of the platform.
+  - The template has no part named Interact, NpcSpot or NPC.
+
+### D5. Round stone tower (B04 Hub_Tower, 22.6 x 60.65)
+
+**Today:**
+- Base cylinder 21 x 3 (#686E7C), Body 18 dia x 31 (#969CA8, y 3..34), Band 18.6 x 1.2 at y 15;
+- ParapetRim 22.6 x 0.8 + Parapet 22 x 3.6 (#A3AAB7) + 8 Merlons 3.2 x 2 x 2.4;
+- RoofDrum 15 x 2, RoofCone (16 wedges, r 10, y 37.6-53.6), FlagPole 0.5 x 7 (53.1-60.1), gold Finial, red Cloth flag 5.4 x 2.6;
+- door 5 x 8 at z -8.7 in a frame, DoorStep 7 x 3 x 4; 3 windows 2.2 x 3.6 with frames.
+
+**Rules:**
+- **Body:** brick / stone rows: 24-28 curved block segments per course (wedge-ended blocks 2.0-2.6 long on the 9 radius), courses 1.0 tall, running bond, 0.08 joints over a #545864 core cylinder, 0.12 chamfers, 3 tone steps of #969CA8, x0.88 at the foot. (Or: today's Body cylinder as the core + a ring of 0.25-proud block faces per course; about 30 courses x 26 = 780 parts. A facet band per course is an alternative.)
+- **Banded ring:** today's Band as a projecting ring of #686E7C blocks 0.3 proud with a chamfered top.
+- **Parapet:** today's parapet as blocks with joints, the ParapetRim as a corbel ring (12-16 small brackets 0.6 under it); the 8 Merlons as capped crenellations (a #686E7C cap slab 0.25 with a 0.15 overhang, chamfered).
+- **Cone roof:** `b4_tower__cone_roof` (8 rows of individual tiles, half-offset, lifted butts, 8 darker hip ribs, a gold apex collar, closed eave), on the RoofDrum as today.
+- **Flag:** `b4_flag__cloth` at 0.72 on the FlagPole (static, like today), the pole with 2 iron rings, today's gold Finial.
+- **Door** (keep 5 x 8 and the collision):
+  - an arched frame of 7 voussoir blocks #686E7C over the door;
+  - the door: 5 planks with V-gaps, 3 iron bands with nails (#5C626E 0.3) and ring handle;
+  - today's DoorStep as 2 stone steps with chamfers.
+- **Windows:** the 3 windows with stone surrounds (sill + lintel #686E7C), 2 small shutters each, today's glass.
+- **Base:** today's Base as a battered (wider at the foot) plinth of large blocks with a chamfered top; moss tufts at the foot.
+
+### D6. Facet pieces (batch4)
+
+| Piece | Faces (rect) | Origin / placement | Replaces |
+|---|---|---|---|
+| `b4_torch__flame` | 44 (0) | own anchor = flame base; Torch_Standing (0, 5.95, 0) scale 0.8, Torch_Wall (0, 3.35, -1.65) scale 0.7 | nothing (added on the kept Ember) |
+| `b4_torch__cup` | 39 (0) | own anchor = rim centre; Torch_Wall (0, 3.55, -1.6) scale 0.58 | the wall torch's Head look |
+| `b4_banner__cloth` | 61 (25) | Banner_A pivot | Cloth, 2 ClothTail, Emblem |
+| `b4_flag__cloth` | 14 (8) | own anchor = pole axis at the flag's bottom; Flag_Pole_A (0, 12.8, 0); Hub_Tower (0, 57.1, 0) scale 0.72 | the Cloth wedge |
+| `b4_tower__cone_roof` | 136 (0) | Hub_Tower pivot | the RoofCone model |
+| `b4_guide__open_book` | 27 (19) | own anchor = spine centre; lectern (-2.6, 4.4, -1.75), tilt [-15, 0, 0] | the 2 Book parts |
+| `b4_mace__spike` | 32 (0) | own anchor = today's Spike box centre; today's 6 Spike CFrames | the 6 Spike MeshParts |
+
+**Cost:**
+- the torches: 83 faces = ~1.3k triangles on 57 torches, 74k in all: use the flame only (44) on the 37 wall torches if the zones get heavy (Jungle_4 has 14);
+- the flags: 14 faces x 20;
+- the banners: 61 x 10;
+- the rest: only 2 copies each.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

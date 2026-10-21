@@ -2832,3 +2832,41 @@ flowering bush.
   rocks 4 / 4, 05 lily pads 37 / 37, 06 bamboo 29 / 29, 07 thin bamboo 36 / 36 + 8 / 8, 08 flowering bush 227 / 227 -
   all OK. ALL SIX JUNGLE PROMPTS DONE.
 
+
+# Hub and plains buildings and props - BATCH 4 (17 objects) - 2026-10-21 (owner prompt REMAKE OBJECT/Hub_Plains_Props_Batch4/.../PROMPT_Hub_Plains_Props_Batch4.txt)
+
+Objects: buildings 01 cottage red roof one window, 02 cottage red roof two windows, 03 two-storey house blue roof, 04
+stone tower blue roof; tents 01 red / white, 02 green (today transparent: fix it) - both derived from the improved
+desert tent; props 01 spiked mace, 02 barrel (ALL copies), 03 ladder (keep climbing), 04 fence section (keep length
+and alignment), 05 sign board (keep text), 06 wooden post, 07 banner red diamond, 08 flagpole red flag, 09 short lamp
+post (keep the light), 10 campfire / brazier parts (check what it is; keep light / particles / sound / interaction),
+11 signpost + lectern + lantern platform (keep ALL interactions, prompts and text).
+
+## Status (newest first)
+
+- 21:22 Started. Studio was reopened by the owner (new studio id); checked first: the place holds all the jungle work (104
+  templates, 1381 tagged copies, all up to date). Images copied to docs/Hub_Plains_Props_Batch4/ (the path the prompt
+  names). Backup before_batch4.
+- 21:45-22:20 Inventory (245 copies; 16 new rules, the barrel keeps its own; Torch_Standing = the "short lamp post",
+  Torch_Wall = the "campfire / brazier parts"; the green tent is not transparent - same green as the grass; the
+  platform is the Guide NPC's station). Agent A: guide section D + 7 facets (preview approved). Agent B built 13 of 16
+  templates (not synced; game copies untouched). Torch flame / cup and mace spike facets swapped for part-built pieces
+  (~150 tris instead of ~3.5k per torch on 59 torches).
+  BLOCKER 1: since the owner reopened Studio, the 3D viewport renders black (Play start / stop did not help; the
+  owner declined computer-use access to Studio) -> all screenshots deferred.
+  BLOCKER 2: one union of ~600 facet wedges (the first mace) hung Studio's CSG for 30+ minutes; every later union
+  waits behind it. Agent B's modules are saved on disk (ExportScripts + pull at 22:14). Asked the owner to save and
+  restart Studio.
+- 22:40 Owner message: continue as planned; the black screen should be fixed (check it in Play: join, teleports, zone
+  transitions, respawn); NEW DIRECTIVE for the wall torch (Torch_Wall): flip the brown bar from "\" to "/" so its
+  top reaches the cup, attach the cup + flame ON the bar's upper end (bracket / bands, a cup with a rim, a layered
+  flame), keep flame / light / post / size / collisions, apply to the test zone and every wall torch. Checked: the
+  Edit viewport renders again (screen_capture OK). The CSG queue is still hung (same Studio process since 21:08,
+  ~1.9 cores busy; a 2-part probe union queued at 22:39:44 never returned), so building waits for a Studio restart.
+- 23:30 Owner restarted Studio (new id 0363ad4a...): viewport renders, CSG works again (2-part probe union 0.01 s).
+  PILOTS DONE (main agent looked at both shots, sent to the owner): cottage_one_window (FarmHouse) 3 / 3 (2 cut-stone
+  courses, plaster with chamfered pegged timbers and braces, ~380 individual red tiles with ridge cap and bargeboards,
+  stone chimney, plank door with strap hinges, shutters, flower box, wall lantern, worn step; ~20.7k tris; colliders
+  taken from the game copies, which differ from the kit by 0.06-0.17 after an earlier window fix); barrel 43 / 43
+  (14 staves over a dark core, 3 riveted hoops at today's heights, planked lid with bung; ~1.46k tris; colliders exact
+  43 / 43). Run 2 = 0 for both.

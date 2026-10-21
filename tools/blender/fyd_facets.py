@@ -5,7 +5,7 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature batch4]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -3666,15 +3666,25 @@ def banner_cloth():
                      "#FFC93C band (0.2 wide on the centre teeth, 0.09 on the narrow pleat teeth) on both sides. Stitched emblem on the centre field (front only, like "
                      "today): a dark red #8D3224 patch diamond (half-diagonal 1.58), today's gold diamond (half-diagonal "
                      "1.3, today 1.41), a small cyan centre diamond, 12 cream #E8E2D0 running stitches round the gold.")
+    return banner_cloth_into(pc)
+
+
+def banner_cloth_into(pc, top=13.2, tip=2.9, zf=-0.5, stripe=(12.1, 11.1, TEAL), emblem_y=8.8, base=TRED,
+                      centre=TEAL, patch="#8D3224", trim=GOLD):
+    """The C6 banner cloth (4.6 wide, flat centre field x +-1.7, 2 pleats per side, 7 trimmed zigzag teeth, the
+    stitched diamond emblem), hanging from `top` to the centre tooth tip `tip`, front face at z `zf`."""
     T = 0.18
-    st = [(-2.3, -0.5), (-2.0, -0.66), (-1.7, -0.5), (1.7, -0.5), (2.0, -0.66), (2.3, -0.5)]
+    dz = zf + 0.5
+    st = [(-2.3, -0.5 + dz), (-2.0, -0.66 + dz), (-1.7, -0.5 + dz), (1.7, -0.5 + dz), (2.0, -0.66 + dz), (2.3, -0.5 + dz)]
     # bottom outline per panel (x, y) from its left corner to its right corner
+    tip_dy = tip - 2.9
     bottoms = [[(-2.3, 5.6), (-2.15, 4.9), (-2.0, 5.3)],
                [(-2.0, 5.3), (-1.85, 4.45), (-1.7, 4.9)],
                [(-1.7, 4.9), (-1.1, 3.9), (-0.55, 4.6), (0.0, 2.9), (0.55, 4.6), (1.1, 3.9), (1.7, 4.9)],
                [(1.7, 4.9), (1.85, 4.45), (2.0, 5.3)],
                [(2.0, 5.3), (2.15, 4.9), (2.3, 5.6)]]
-    hem = tone(TRED, 0.8)
+    bottoms = [[(x, y + tip_dy) for x, y in bot] for bot in bottoms]
+    hem = tone(base, 0.8)
 
     def mapper(i):
         (xa, za), (xb, zb) = st[i], st[i + 1]
@@ -3688,7 +3698,10 @@ def banner_cloth():
         P3, n = mapper(i)
         xa, xb = st[i][0], st[i + 1][0]
         ybot = max(bot[0][1], bot[-1][1])
-        rows = [(13.2, 12.95, hem), (12.95, 12.1, TRED), (12.1, 11.1, TEAL), (11.1, ybot, TRED)]
+        if stripe:
+            rows = [(top, top - 0.25, hem), (top - 0.25, stripe[0], base), (stripe[0], stripe[1], stripe[2]), (stripe[1], ybot, base)]
+        else:
+            rows = [(top, top - 0.25, hem), (top - 0.25, ybot, base)]
         for y0, y1, c in rows:
             pc.face([P3(xa, y1), P3(xb, y1), P3(xb, y0), P3(xa, y0)], c, "SmoothPlastic", T, n)
         # the teeth below the rectangle: convex pieces
@@ -3697,20 +3710,20 @@ def banner_cloth():
             poly = [p for k, p in enumerate(poly) if k == 0 or (abs(p[0] - poly[k - 1][0]) > 1e-6 or abs(p[1] - poly[k - 1][1]) > 1e-6)]
             pts = [P3(x, y) for x, y in poly]
             if len(pts) == 3:
-                pc.face(pts, TRED, "SmoothPlastic", T, n)
+                pc.face(pts, base, "SmoothPlastic", T, n)
             elif len(pts) == 4:
-                pc.face(pts, TRED, "SmoothPlastic", T, n)
+                pc.face(pts, base, "SmoothPlastic", T, n)
             else:
-                polygon_fill(pc, pts, TRED, "SmoothPlastic", T, n)
+                polygon_fill(pc, pts, base, "SmoothPlastic", T, n)
         else:
             for piece in ([(-1.7, 4.9), (-1.1, 3.9), (-0.55, 4.6), (-0.55, 4.9)],
                           [(-0.55, 4.9), (-0.55, 4.6), (0.0, 2.9), (0.55, 4.6), (0.55, 4.9)],
                           [(0.55, 4.9), (0.55, 4.6), (1.1, 3.9), (1.7, 4.9)]):
-                pts = [P3(x, y) for x, y in piece]
+                pts = [P3(x, y + tip_dy) for x, y in piece]
                 if len(pts) <= 4:
-                    pc.face(pts, TRED, "SmoothPlastic", T, n)
+                    pc.face(pts, base, "SmoothPlastic", T, n)
                 else:
-                    polygon_fill(pc, pts, TRED, "SmoothPlastic", T, n)
+                    polygon_fill(pc, pts, base, "SmoothPlastic", T, n)
         # gold trim along the zigzag edge, front and back (mitred offset polyline, 0.2 wide)
         w = 0.2 if len(bot) > 3 else 0.09
         segn = []
@@ -3732,17 +3745,17 @@ def banner_cloth():
                 off.append((bot[k][0] + m[0] * d, bot[k][1] + m[1] * d))
         for k in range(len(bot) - 1):
             q2 = [bot[k], bot[k + 1], off[k + 1], off[k]]
-            for lift, out, c in ((0.035, n, GOLD), (-(T + 0.035), -n, tone(GOLD, 0.9))):
+            for lift, out, c in ((0.035, n, trim), (-(T + 0.035), -n, tone(trim, 0.9))):
                 pc.face([P3(x, y, lift) for x, y in q2], c, "SmoothPlastic", 0.035, out)
     # stitched emblem on the centre field (plane z = -0.5, front only)
     P3, n = mapper(2)
-    cy = 8.8
+    cy = emblem_y
 
     def diamond(h, lift, c, t):
         pc.face([P3(0.0, cy - h, lift), P3(h, cy, lift), P3(0.0, cy + h, lift), P3(-h, cy, lift)], c, "SmoothPlastic", t, n)
-    diamond(1.58, 0.03, "#8D3224", 0.03)
+    diamond(1.58, 0.03, patch, 0.03)
     diamond(1.3, 0.06, GOLD, 0.03)
-    diamond(0.38, 0.09, TEAL, 0.03)
+    diamond(0.38, 0.09, centre, 0.03)
     corners = [(0.0, cy - 1.44), (1.44, cy), (0.0, cy + 1.44), (-1.44, cy)]
     for k in range(4):
         a, b = corners[k], corners[(k + 1) % 4]
@@ -3753,6 +3766,8 @@ def banner_cloth():
             q = [c - d * 0.11 - pp * 0.03, c + d * 0.11 - pp * 0.03, c + d * 0.11 + pp * 0.03, c - d * 0.11 + pp * 0.03]
             pc.face([P3(v.x, v.y, 0.06) for v in q], BONE, "SmoothPlastic", 0.03, n)
     return pc
+
+
 
 
 def jungle_decor():
@@ -4379,6 +4394,309 @@ def preview_jungle_nature(pieces):
                                     (g6, [(-25, 25)]), (g7, [(-25, 20)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# HUB AND PLAINS BATCH 4 (guide section D): torch flame + iron cup re-anchored for Torch_Standing / Torch_Wall, the
+# Banner_A cloth (the C6 banner design), the Flag_Pole_A / Hub_Tower flag with folds, the tower's tiled cone roof, the
+# guide platform's open book, the mace spike. Everything else of batch 4 is parts.
+# ------------------------------------------------------------------------------------------------
+B4_RED, B4_BLUE, B4_BLUE_D, B4_GOLD = "#D4343C", "#4078D4", "#2F5CAA", "#FFC93C"
+
+
+def _moved(src, obj, name, origin, dy, place, notes):
+    pc = Piece(obj, name, origin, place=place, notes=notes)
+    for f in src.faces:
+        pc.faces.append(dict(f, v=[p + Vector((0, dy, 0)) for p in f["v"]]))
+    return pc
+
+
+def b4_flame():
+    return _moved(torch_flame(), "b4_torch", "flame",
+                  "the piece's own anchor: (0, 0, 0) = the flame's base centre (it rises 1.0 along +Y, 1.0 wide)",
+                  -7.85,
+                  {"relativeTo": "Torch_Standing / Torch_Wall (kit pivots)",
+                   "position": "Torch_Standing: (0, 5.95, 0) (inside today's Ember ball, top of the Head at 6.05); Torch_Wall: "
+                               "(0, 3.35, -1.65) (today's Ember centre 3.5 minus 0.15)",
+                   "orientation": "[0, 0, 0] (upright, also on the tilted wall torch)", "scale": "standing 0.8, wall 0.7 "
+                   "(times the copy's scale)", "keeps": "today's Neon Ember + Attachment FirePoint + PointLight exactly",
+                   "collide": "CanCollide off, CastShadow off"},
+                  "the C6 jungle torch flame re-anchored: a 5-sided central tongue #FFD678 -> #FFB648 -> #FF8C28 and 3 "
+                  "side tongues, all Neon. The fire particles + light of the copy's Decor.VFX.Fire_Torch part stay at the "
+                  "FirePoint inside it.")
+
+
+def b4_cup():
+    return _moved(torch_cup(), "b4_torch", "cup",
+                  "the piece's own anchor: (0, 0, 0) = the centre of the cup's rim (the cup hangs 1.05 below, 1.88 wide "
+                  "across the flats, claws rise 0.26 above)",
+                  -8.0,
+                  {"relativeTo": "Torch_Wall (kit pivot)", "position": "(0, 3.55, -1.6) (today's Head top)",
+                   "orientation": "[0, 0, 0]", "scale": "0.58 (1.1 wide = today's Head)",
+                   "replaces": "the wall torch's Head cylinder (keep it invisible as the FirePoint host if the FirePoint must "
+                               "not move: FirePoint world position is the contract)"},
+                  "the C6 iron fire cup (8-sided, forged band, flat lip, dark coal bed, 4 claws) re-anchored at its rim.")
+
+
+def b4_banner():
+    pc = Piece("b4_banner", "cloth", "the Banner_A kit pivot (base centre of the pole, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the Banner_A model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "Cloth (4.6 x 7 x 0.2 at (0, 8.7, -0.55)), the 2 ClothTail wedges (the V point down to y "
+                                  "3.2) and Emblem (gold 2 x 2 turned 45 deg at (0, 9.2, -0.7)); all collide today: keep "
+                                  "an invisible copy of the Cloth for the collision, or CanCollide off if no player can "
+                                  "reach it", "scale": "the copy's own scale (1.0 / 1.5 / 1.9)"},
+               notes="the C6 war-banner design in today's Banner_A colours: red #D4343C cloth from y 12.2 (under the "
+                     "crossbar) to a zigzag edge of 7 gold-trimmed teeth (centre point at y 3.2 = today's tip), a flat "
+                     "centre field and 2 pleats per side, a darker sleeve hem, no stripe; the stitched emblem: a dark red "
+                     "patch, today's gold diamond (half-diagonal 1.3) centred at y 9.2 like today, a small red centre, 12 "
+                     "cream stitches.")
+    banner_cloth_into(pc, top=12.2, tip=3.2, zf=-0.65, stripe=None, emblem_y=9.2, base=B4_RED, centre=tone(B4_RED, 0.86),
+                      patch=tone(B4_RED, 0.62), trim=B4_GOLD)
+    return pc
+
+
+def b4_flag():
+    pc = Piece("b4_flag", "cloth", "the piece's own anchor: (0, 0, 0) = on the pole axis at the flag's BOTTOM edge; the flag "
+               "flies along +X, 7.5 long, 3.6 tall at the pole",
+               place={"relativeTo": "Flag_Pole_A / Hub_Tower", "position": "Flag_Pole_A: (0, 12.8, 0) (today's Cloth wedge: "
+                      "bottom edge y 12.8, pole side x 0.2, tip x 7.7); Hub_Tower: (0, 57.1, 0)",
+                      "orientation": "[0, 0, 0] (both kits fly the flag toward +X)",
+                      "scale": "Flag_Pole_A 1.0 (times the copy's scale 1.0 / 1.35 / 2.2); Hub_Tower 0.72 (5.4 x 2.6 like today)",
+                      "replaces": "the Cloth wedge (Flag_Pole_A, Hub_Tower); it collided: no player reaches it, CanCollide off"},
+               notes="red #D4343C pennant with folds, today's right-triangle shape (vertical edge at the pole 3.6 tall, "
+                     "horizontal bottom edge, the top edge falling to the tip): 5 vertical fold panels standing "
+                     "alternately 0.22 forward / 0.12 back (lit / shaded tones), a darker hem band along the bottom, a "
+                     "gold #FFC93C sleeve round the pole. Static like today (no PropFX: it does not wave).")
+    st = [(0.2, 0.0), (1.6, 0.22), (3.1, -0.12), (4.6, 0.2), (6.1, -0.08), (7.7, 0.0)]
+    H, L = 3.6, 7.7
+
+    def ytop(x):
+        return H * (1 - (x - 0.2) / (L - 0.2))
+    for i in range(len(st) - 1):
+        (xa, za), (xb, zb) = st[i], st[i + 1]
+        n = Vector((-(zb - za), 0, (xb - xa))).normalized() * -1
+        if n.z > 0:
+            n = -n
+        c = B4_RED if i % 2 == 0 else tone(B4_RED, 0.86)
+        hem = tone(B4_RED, 0.72)
+        yh = 0.28
+
+        def Pp(x, y, xa=xa, xb=xb, za=za, zb=zb):
+            return Vector((x, y, za + (x - xa) / (xb - xa) * (zb - za)))
+        ya, yb = ytop(xa), ytop(xb)
+        x_cut = 0.2 + (1 - yh / H) * (L - 0.2)          # where the top edge meets the hem line
+        body = [(xa, yh), (min(xb, x_cut), yh)] + ([(xb, yb)] if yb > yh + 1e-4 else []) + [(xa, ya)]
+        hemp = [(xa, 0.0), (xb, 0.0)] + ([(xb, min(yb, yh))] if yb > 1e-4 else []) + ([(x_cut, yh)] if x_cut < xb - 1e-4 else []) + [(xa, yh)]
+        for poly, cc in ((body, c), (hemp, hem)):
+            pts = [Pp(x, y) for x, y in poly]
+            if len(pts) <= 4:
+                pc.face(pts, cc, "SmoothPlastic", 0.1, n)
+            else:
+                polygon_fill(pc, pts, cc, "SmoothPlastic", 0.1, n)
+    # gold sleeve round the pole (4 faces of a square tube 0.7 wide)
+    for k in range(4):
+        a0, a1 = math.pi / 4 + k * math.pi / 2, math.pi / 4 + (k + 1) * math.pi / 2
+        p0 = Vector((0.42 * math.cos(a0), 0, 0.42 * math.sin(a0)))
+        p1 = Vector((0.42 * math.cos(a1), 0, 0.42 * math.sin(a1)))
+        pc.face([p0, p1, p1 + Vector((0, H + 0.1, 0)), p0 + Vector((0, H + 0.1, 0))], tone(B4_GOLD, (1.0, 0.9)[k % 2]),
+                "SmoothPlastic", 0.08, (p0 + p1) / 2)
+    return pc
+
+
+def b4_tower_cone():
+    rng = random.Random(7104)
+    pc = Piece("b4_tower", "cone_roof", "the Hub_Tower kit pivot (base centre, y 0 = the ground, front -Z)",
+               place={"relativeTo": "the Hub_Tower model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "replaces": "the RoofCone model (16 Facet wedges, #3D74CD .. #427CDC, y 37.6 .. 53.6, r 10 at the eave); "
+                                  "keep its collision as an invisible cone or the union (players cannot reach it)"},
+               notes="tiled blue cone roof: 8 rows of individual tiles from the eave (r 9.9 at y 39.3, 0.35 past the "
+                     "drum's merlon ring) to the apex (y 53.4, under today's FlagPole foot 53.1): 16 tiles per row in the "
+                     "5 lower rows, 8 in the 3 upper ones, each row offset half a tile, 4 % gaps, butts lifted 0.12 "
+                     "(they cast a line), 3 tone steps of #4078D4, darker toward the eave; 8 darker #2F5CAA hip ribs; "
+                     "a gold #FFC93C collar at the apex; the eave underside closed (#2F5CAA) down to the RoofDrum (r 7.5).")
+    R0, Y0, YA = 9.9, 39.3, 53.4
+    rows = 8
+    s_len = 1.0 / rows
+
+    def at(f, ang, lift=0.0):
+        r = R0 * (1 - f)
+        y = Y0 + (YA - Y0) * f
+        return Vector((math.cos(ang) * (r + lift), y, math.sin(ang) * (r + lift)))
+    for i in range(rows):
+        n = 16 if i < 5 else 8
+        f0 = i * s_len - (0.035 if i else 0.0)       # each row runs a little under the one below (overlap)
+        f1 = min((i + 1) * s_len + 0.012, 0.985)
+        off = (math.pi / n) * (i % 2)
+        for k in range(n):
+            a0 = off + 2 * math.pi * k / n + 0.02 * 2 * math.pi / n
+            a1 = off + 2 * math.pi * (k + 1) / n - 0.02 * 2 * math.pi / n
+            g = 0.86 + 0.14 * (i / (rows - 1))
+            col = tone(B4_BLUE, g * rng.choice(STEPS))
+            q = [at(f0, a0, 0.12), at(f0, a1, 0.12), at(f1, a1), at(f1, a0)]
+            pc.face(q, col, "SmoothPlastic", 0.12, (q[0] + q[1]) / 2 - Vector((0, (q[0].y + q[2].y) / 2 - 2.0, 0)))
+    # hip ribs
+    for k in range(8):
+        a = math.pi / 8 + 2 * math.pi * k / 8
+        side = Vector((-math.sin(a), 0, math.cos(a))) * 0.16
+        p0, p1 = at(0.0, a, 0.25), at(0.97, a, 0.18)
+        pc.face([p0 - side, p0 + side, p1 + side * 0.6, p1 - side * 0.6], B4_BLUE_D, "SmoothPlastic", 0.15, (p0 + p1) / 2 - Vector((0, 46.0, 0)))
+    # apex collar (gold, 8 faces) and eave underside (16 faces)
+    for k in range(8):
+        a0, a1 = 2 * math.pi * k / 8, 2 * math.pi * (k + 1) / 8
+        q = [Vector((0.55 * math.cos(a0), YA - 0.55, 0.55 * math.sin(a0))), Vector((0.55 * math.cos(a1), YA - 0.55, 0.55 * math.sin(a1))),
+             Vector((0.4 * math.cos(a1), YA + 0.15, 0.4 * math.sin(a1))), Vector((0.4 * math.cos(a0), YA + 0.15, 0.4 * math.sin(a0)))]
+        pc.face(q, tone(B4_GOLD, (1.0, 0.9)[k % 2]), "SmoothPlastic", 0.12, (q[0] + q[1]) / 2 - Vector((0, YA, 0)))
+    for k in range(16):
+        a0, a1 = 2 * math.pi * k / 16, 2 * math.pi * (k + 1) / 16
+        q = [Vector((R0 * math.cos(a0), Y0, R0 * math.sin(a0))), Vector((R0 * math.cos(a1), Y0, R0 * math.sin(a1))),
+             Vector((7.5 * math.cos(a1), Y0 + 0.3, 7.5 * math.sin(a1))), Vector((7.5 * math.cos(a0), Y0 + 0.3, 7.5 * math.sin(a0)))]
+        pc.quad_or_tris(q, B4_BLUE_D, "SmoothPlastic", 0.15, Vector((0, -1, 0)))
+    return pc
+
+
+def b4_book():
+    pc = Piece("b4_guide", "open_book", "the piece's own anchor: (0, 0, 0) = the middle of the spine on the lectern board; "
+               "pages open along +-X (2.9 wide), the page height along Z (1.9), lying flat (+Y up)",
+               place={"relativeTo": "Station_TutorialGuide / Hub.TutorialGuide (kit pivot)",
+                      "position": "the lectern board centre: kit (-2.6, 4.4, -1.75) (today's 2 Book parts at (-3.3 / -1.9, 4.5, -1.75))",
+                      "orientation": "[-15, 0, 0] when the new lectern top is slanted 15 deg toward the reader (front -Z); "
+                                     "[0, 0, 0] on a flat top", "scale": 1.0,
+                      "replaces": "the 2 Book parts (#F5F6FA / #E8E2D0 1.4 x 0.25 x 1.9; they collide: no need, CanCollide off)"},
+               notes="readable open book: a red leather cover #8C2F2A (2 boards + spine) under 2 page blocks that curve up "
+                     "from the spine (3 strips per side, #F5F6FA / #E8E2D0, edges #D8CDB0), 4 dark text lines on each page "
+                     "(#4A3022), a small gold-framed picture on the right page, a red ribbon bookmark hanging over the "
+                     "front edge.")
+    W, D = 1.42, 0.95
+    cover = "#8C2F2A"
+    for sx in (-1, 1):
+        pc.face([Vector((0, 0.0, -D - 0.05)), Vector((sx * (W + 0.06), 0.03, -D - 0.05)), Vector((sx * (W + 0.06), 0.03, D + 0.05)),
+                 Vector((0, 0.0, D + 0.05))], tone(cover, 0.9), "SmoothPlastic", 0.06, Vector((0, 1, 0)))
+    pc.face([Vector((-0.1, -0.05, -D - 0.05)), Vector((0.1, -0.05, -D - 0.05)), Vector((0.1, -0.05, D + 0.05)), Vector((-0.1, -0.05, D + 0.05))],
+            cover, "SmoothPlastic", 0.06, Vector((0, -1, 0)))
+    prof = [(0.0, 0.1), (0.35, 0.2), (0.95, 0.22), (W, 0.17)]   # (x from the spine, page height)
+    for sx in (-1, 1):
+        for i in range(3):
+            (x0, y0), (x1, y1) = prof[i], prof[i + 1]
+            a, b = Vector((sx * x0, y0, -D)), Vector((sx * x1, y1, -D))
+            c, d = Vector((sx * x1, y1, D)), Vector((sx * x0, y0, D))
+            colp = "#F5F6FA" if sx < 0 else "#EEE8D8"
+            pc.face([a, b, c, d], tone(colp, (0.94, 1.0, 0.97)[i]), "SmoothPlastic", 0.05, Vector((0, 1, 0)))
+            # front edge of the page block (seen by the reader)
+            pc.face([Vector((sx * x0, 0.03, -D)), Vector((sx * x1, 0.03, -D)), b, a], "#D8CDB0", "SmoothPlastic", 0.04, Vector((0, 0, -1)))
+        # outer edge
+        pc.face([Vector((sx * W, 0.03, -D)), Vector((sx * W, 0.03, D)), Vector((sx * W, prof[-1][1], D)), Vector((sx * W, prof[-1][1], -D))],
+                "#D8CDB0", "SmoothPlastic", 0.04, Vector((sx, 0, 0)))
+        # 4 text lines on the flattest strip (x 0.35 .. 0.95)
+        (x0, y0), (x1, y1) = prof[1], prof[2]
+        for j, z in enumerate((-0.6, -0.3, 0.0, 0.3)):
+            if sx > 0 and j >= 2:
+                continue   # the right page has a picture lower down
+            u0, u1 = 0.05, 0.92 if j % 2 == 0 else 0.7
+            pa = Vector((sx * (x0 + (x1 - x0) * u0), y0 + (y1 - y0) * u0 + 0.012, z))
+            pb = Vector((sx * (x0 + (x1 - x0) * u1), y0 + (y1 - y0) * u1 + 0.012, z))
+            pc.face([pa, pb, pb + Vector((0, 0, 0.07)), pa + Vector((0, 0, 0.07))], "#4A3022", "SmoothPlastic", 0.01, Vector((0, 1, 0)))
+    # picture on the right page (gold frame + a sky-blue inside), on the flattest strip
+    (x0, y0), (x1, y1) = prof[1], prof[2]
+
+    def on(u, z, lift):
+        return Vector((x0 + (x1 - x0) * u, y0 + (y1 - y0) * u + lift, z))
+    pc.face([on(0.1, 0.05, 0.012), on(0.9, 0.05, 0.012), on(0.9, 0.75, 0.012), on(0.1, 0.75, 0.012)], B4_GOLD, "SmoothPlastic", 0.01, Vector((0, 1, 0)))
+    pc.face([on(0.2, 0.15, 0.022), on(0.8, 0.15, 0.022), on(0.8, 0.65, 0.022), on(0.2, 0.65, 0.022)], "#5FD4FF", "SmoothPlastic", 0.01, Vector((0, 1, 0)))
+    # ribbon bookmark: lying on the left page from the spine top, hanging over the front edge
+    r0 = Vector((-0.12, 0.13, D - 0.1))
+    r1 = Vector((-0.3, 0.2, -D))
+    side = Vector((0.07, 0, 0))
+    pc.face([r1 - side, r1 + side, r0 + side, r0 - side], "#C4403A", "SmoothPlastic", 0.02, Vector((0, 1, 0)))
+    pc.face([r1 - side, r1 + side, r1 + side + Vector((0.05, -0.55, -0.08)), r1 - side + Vector((0.05, -0.55, -0.08))], "#A53630",
+            "SmoothPlastic", 0.02, Vector((0, 0, -1)))
+    return pc
+
+
+def b4_spike():
+    pc = Piece("b4_mace", "spike", "the piece's own anchor: (0, 0, 0) = the CENTRE of today's Spike box (1.1 x 2.4 x 1.0): "
+               "the base at y -1.2 (on the head), the tip at y +1.2",
+               place={"relativeTo": "Troll_Club (kit pivot)", "position": "each of today's 6 Spike MeshPart CFrames, exactly",
+                      "orientation": "the Spike's own rotation", "scale": 1.0,
+                      "replaces": "the 6 Spike MeshParts (no collision today)"},
+               notes="bevelled iron spike: an 8-sided collar plate (#5C626E, 1.1 x 1.0, 0.22 tall) on the head, then a "
+                     "4-sided pyramid with narrow bevelled corner faces (#969CA8 sides, lighter #B4BAC4 bevels), a short "
+                     "polished tip (#C8CDD6).")
+    def octo(hx, hz, b, y):
+        return [Vector((hx, y, -hz + b)), Vector((hx, y, hz - b)), Vector((hx - b, y, hz)), Vector((-hx + b, y, hz)),
+                Vector((-hx, y, hz - b)), Vector((-hx, y, -hz + b)), Vector((-hx + b, y, -hz)), Vector((hx - b, y, -hz))]
+    r0 = octo(0.55, 0.5, 0.16, -1.2)
+    r1 = octo(0.495, 0.45, 0.144, -0.98)
+    r2 = octo(0.38, 0.34, 0.1, -0.92)
+    r3 = octo(0.38 * 0.34, 0.34 * 0.34, 0.1 * 0.34, 0.75)
+    tip = Vector((0.0, 1.2, 0.0))
+    for k in range(8):
+        j = (k + 1) % 8
+        mid = (r0[k] + r0[j]) / 2
+        out = Vector((mid.x, 0, mid.z))
+        pc.face([r0[k], r0[j], r1[j], r1[k]], tone("#5C626E", (1.0, 0.9)[k % 2]), "SmoothPlastic", 0.1, out)
+        pc.quad_or_tris([r1[k], r1[j], r2[j], r2[k]], "#5C626E", "SmoothPlastic", 0.1, out + Vector((0, 1.0, 0)))
+        bevel = k % 2 == 1
+        pc.face([r2[k], r2[j], r3[j], r3[k]], "#B4BAC4" if bevel else tone("#969CA8", (1.0, 0.9)[(k // 2) % 2]), "SmoothPlastic", 0.12,
+                out + Vector((0, 0.3, 0)))
+        pc.face([r3[k], r3[j], tip], "#C8CDD6", "SmoothPlastic", 0.06, out + Vector((0, 0.5, 0)))
+    return pc
+
+
+def batch4():
+    return [b4_flame(), b4_cup(), b4_banner(), b4_flag(), b4_tower_cone(), b4_book(), b4_spike()]
+
+
+def preview_batch4(pieces):
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    V = Vector
+    # tower top
+    tctx = [((0, 35.8, 0), (22.0, 3.6, 22.0), "#A3AAB7", (0, 0, 0)), ((0, 38.6, 0), (15.0, 2.0, 15.0), "#686E7C", (0, 0, 0)),
+            ((0, 56.6, 0), (0.5, 7.0, 0.5), "#703E26", (0, 0, 0)), ((0, 60.2, 0), (0.9, 0.9, 0.9), B4_GOLD, (0, 0, 0))]
+    for k in range(8):
+        a = 2 * math.pi * k / 8
+        tctx.append(((9.8 * math.sin(a), 38.6, -9.8 * math.cos(a)), (3.2, 2.0, 2.4), "#969CA8", (0, -math.degrees(a), 0)))
+    g1 = context_boxes(tctx, col) + [piece_object(by["b4_tower__cone_roof"], col),
+                                     piece_object(by["b4_flag__cloth"], col, V((0, 57.1, 0)), None, 0.72)]
+    # flag pole
+    fx = 30.0
+    g2 = context_boxes([((fx, 8.5, 0), (0.6, 17.0, 0.6), "#703E26", (0, 0, 0)), ((fx, 0.3, 0), (1.6, 0.6, 1.6), "#969CA8", (0, 0, 0)),
+                        ((fx, 17.3, 0), (1.0, 1.0, 1.0), B4_GOLD, (0, 0, 0))], col) + [piece_object(by["b4_flag__cloth"], col, V((fx, 12.8, 0)))]
+    # banner
+    bx = 45.0
+    g3 = context_boxes([((bx, 6.5, 0), (0.6, 13.0, 0.6), "#703E26", (0, 0, 0)), ((bx, 12.4, -0.5), (5.6, 0.5, 0.5), "#703E26", (0, 0, 0)),
+                        ((bx, 0.3, 0), (1.4, 0.6, 1.4), "#969CA8", (0, 0, 0)), ((bx, 13.2, 0), (0.9, 0.9, 0.9), B4_GOLD, (0, 0, 0))], col)
+    g3.append(piece_object(by["b4_banner__cloth"], col, V((bx, 0, 0))))
+    # torches
+    sx_ = 60.0
+    g4 = context_boxes([((sx_, 0.25, 0), (1.8, 0.5, 1.8), "#969CA8", (0, 0, 0)), ((sx_, 2.9, 0), (0.6, 5.2, 0.6), "#703E26", (0, 0, 0)),
+                        ((sx_, 5.6, 0), (1.3, 0.9, 1.3), "#5C626E", (0, 0, 0)), ((sx_ + 4, 0.7, -0.15), (0.9, 1.4, 0.3), "#5C626E", (0, 0, 0)),
+                        ((sx_ + 4, 1.7, -0.95), (0.5, 3.0, 0.5), "#703E26", (22, 0, 0)), ((sx_ + 4, 2.0, 0.2), (3.0, 4.0, 0.4), "#A3AAB7", (0, 0, 0))], col)
+    g4 += [piece_object(by["b4_torch__flame"], col, V((sx_, 5.95, 0)), None, 0.8),
+           piece_object(by["b4_torch__cup"], col, V((sx_ + 4, 3.55, -1.6)), None, 0.58),
+           piece_object(by["b4_torch__flame"], col, V((sx_ + 4, 3.35, -1.65)), None, 0.7)]
+    # lectern + book
+    lx = 75.0
+    g5 = context_boxes([((lx, 2.3, 0), (1.2, 3.4, 1.2), "#703E26", (0, 0, 0)), ((lx, 4.2, 0), (3.2, 0.4, 2.4), "#A86238", (-15, 0, 0))], col)
+    g5.append(piece_object(by["b4_guide__open_book"], col, V((lx, 4.42, 0)), euler_matrix([-15, 0, 0])))
+    # mace head with 6 spikes at today's CFrames
+    mx = 90.0
+    g6 = context_boxes([((mx - 0.5, 3.77, 0), (4.0, 3.2, 3.2), "#A86238", (0, 0, -4)), ((mx + 3.5, 4.07, 0), (5.0, 4.6, 4.6), "#A86238", (0, 0, -4)),
+                        ((mx - 6.0, 3.37, 0), (8.0, 1.7, 1.7), "#703E26", (0, 0, -4))], col)
+    spikes = [((3.8, 1.24, 0.0), (1.0, -0.07, 0.0, -0.07, -1.0, 0.0, -0.0, -0.0, -1.0)),
+              ((2.61, 2.69, 2.38), (1.0, -0.07, 0.0, -0.03, -0.5, -0.87, 0.06, 0.86, -0.5)),
+              ((2.61, 2.69, -2.38), (1.0, -0.07, 0.0, -0.03, -0.5, 0.87, -0.06, -0.86, -0.5)),
+              ((3.8, 5.49, 2.46), (1.0, -0.07, 0.0, 0.03, 0.5, -0.87, 0.06, 0.86, 0.5)),
+              ((3.8, 5.49, -2.46), (1.0, -0.07, 0.0, 0.03, 0.5, 0.87, -0.06, -0.86, 0.5)),
+              ((2.61, 6.82, 0.0), (1.0, -0.07, 0.0, 0.07, 1.0, 0.0, 0.0, 0.0, 1.0))]
+    from mathutils import Matrix
+    for pos, r in spikes:
+        R = Matrix(((r[0], r[1], r[2]), (r[3], r[4], r[5]), (r[6], r[7], r[8])))
+        g6.append(piece_object(by["b4_mace__spike"], col, V((mx + pos[0], pos[1], pos[2])), R))
+    out = os.path.join(P.PREVIEW_DIR, "batch4_facets.png")
+    return render_sheet("batch4", [(g1, [(-25, 20)]), (g2, [(-20, 8)]), (g3, [(-20, 6)]), (g4, [(-30, 15)]), (g5, [(-10, 40)]),
+                                   (g6, [(-30, 15)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -4391,7 +4709,8 @@ def main():
                           ("jungle_ruins", jungle_ruins, preview_jungle_ruins),
                           ("jungle_totems", jungle_totems, preview_jungle_totems),
                           ("jungle_decor", jungle_decor, preview_jungle_decor),
-                          ("jungle_nature", jungle_nature, preview_jungle_nature)):
+                          ("jungle_nature", jungle_nature, preview_jungle_nature),
+                          ("batch4", batch4, preview_batch4)):
         if only and obj not in only:
             continue
         pieces = fn()

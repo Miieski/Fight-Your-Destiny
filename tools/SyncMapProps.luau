@@ -371,6 +371,28 @@ SyncMapProps.RULES = {
 	{ propId = "jungle_flower_bush", names = { "Bush_Jungle_A" }, bakedScale = function(m)
 		return bakedFrom(m, "Leaves", 8.5)
 	end },
+	-- hub and plains batch 4 (owner PROMPT_Hub_Plains_Props_Batch4, 2026-10-21): buildings 01 the cottage with one
+	-- window (FarmHouse), 02 the cottage with two windows (Cottage_A), 03 the two-storey house with the blue roof
+	-- (Cottage_B), 04 the stone tower (Hub_Tower); tents 01 red / white (Tent_A), 02 green (the HunterCamp's embedded
+	-- tent, below); props 01 spiked mace (Troll_Club), 03 ladder, 04 fence section, 05 sign board (Signpost_A: its
+	-- Board's SurfaceGuis move onto the new Board), 06 wooden post (Fence_Post), 07 banner (Banner_A), 08 flagpole,
+	-- 09 the short lamp post (Torch_Standing), 10 the wall torch (Torch_Wall), 11 the tutorial guide's platform
+	-- (Station_TutorialGuide, the hub's TutorialGuide). 02 barrel = the existing "barrel" rule
+	{ propId = "cottage_one_window", names = { "FarmHouse" } },
+	{ propId = "cottage_two_windows", names = { "Cottage_A" } },
+	{ propId = "house_blue_roof", names = { "Cottage_B" } },
+	{ propId = "stone_tower", names = { "Hub_Tower" } },
+	{ propId = "tent_red_white", names = { "Tent_A" } },
+	{ propId = "spiked_mace", names = { "Troll_Club" } },
+	{ propId = "ladder", names = { "Ladder_A" } },
+	{ propId = "fence_section", names = { "Fence_Section" } },
+	{ propId = "sign_board", names = { "Signpost_A" } },
+	{ propId = "wooden_post", names = { "Fence_Post" } },
+	{ propId = "banner_diamond", names = { "Banner_A" } },
+	{ propId = "flagpole", names = { "Flag_Pole_A" } },
+	{ propId = "standing_torch", names = { "Torch_Standing" } },
+	{ propId = "wall_torch", names = { "Torch_Wall" } },
+	{ propId = "tutorial_guide", names = { "Station_TutorialGuide" }, hubNames = { "TutorialGuide" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -474,6 +496,21 @@ SyncMapProps.EMBEDDED = {
 		local pivot = bottomPivot(parts, upright(bar.CFrame))
 		local ground = host:GetPivot().Y -- the legs dip 0.14 under the camp floor: pivot on the floor
 		return { { parts = parts, pivot = pivot + Vector3.new(0, ground - pivot.Y, 0), scale = 1 } }
+	end },
+	-- the HunterCamp's green tent (batch 4 tent 02): its 2 TentCloth wedges, 2 TentEntrance flaps and 3 TentPoles
+	{ propId = "tent_green", wrapper = "Tent", hosts = { "HunterCamp" }, groups = function(host)
+		local parts = partsNamed(host, { TentCloth = true, TentEntrance = true, TentPole = true })
+		if #parts == 0 then
+			return {}
+		end
+		local ridge = parts[1]
+		for _, p in ipairs(parts) do
+			if p.Name == "TentPole" and p.Size.Z > ridge.Size.Z then
+				ridge = p -- the ridge pole (13 long on its Z axis)
+			end
+		end
+		local pivot = bottomPivot(parts, upright(ridge.CFrame))
+		return { { parts = parts, pivot = pivot, scale = 1 } }
 	end },
 	{ propId = "anvil_forge", wrapper = "AnvilForge", hosts = { "Station_WeaponShop", "WeaponShop" }, groups = function(host)
 		local parts = partsNamed(host, { Forge = true, Chimney = true, Embers = true, Stump = true, Anvil = true, AnvilHorn = true })

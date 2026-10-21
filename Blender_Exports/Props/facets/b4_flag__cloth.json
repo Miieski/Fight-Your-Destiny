@@ -1,0 +1,417 @@
+{
+ "object": "b4_flag",
+ "piece": "cloth",
+ "units": "studs",
+ "origin": "the piece's own anchor: (0, 0, 0) = on the pole axis at the flag's BOTTOM edge; the flag flies along +X, 7.5 long, 3.6 tall at the pole",
+ "axes": "Roblox space: x right, y up, front -Z",
+ "size": [
+  7.997,
+  3.7,
+  0.594
+ ],
+ "bounds": {
+  "min": [
+   -0.297,
+   0.0,
+   -0.297
+  ],
+  "max": [
+   7.7,
+   3.7,
+   0.297
+  ]
+ },
+ "faceCount": 14,
+ "rectCount": 8,
+ "notes": "red #D4343C pennant with folds, today's right-triangle shape (vertical edge at the pole 3.6 tall, horizontal bottom edge, the top edge falling to the tip): 5 vertical fold panels standing alternately 0.22 forward / 0.12 back (lit / shaded tones), a darker hem band along the bottom, a gold #FFC93C sleeve round the pole. Static like today (no PropFX: it does not wave).",
+ "faces": [
+  {
+   "v": [
+    [
+     0.2,
+     3.6,
+     0.0
+    ],
+    [
+     1.6,
+     2.928,
+     0.22
+    ],
+    [
+     1.6,
+     0.28,
+     0.22
+    ],
+    [
+     0.2,
+     0.28,
+     0.0
+    ]
+   ],
+   "c": "#D4343C",
+   "m": "SmoothPlastic",
+   "t": 0.1
+  },
+  {
+   "v": [
+    [
+     0.2,
+     0.28,
+     0.0
+    ],
+    [
+     1.6,
+     0.28,
+     0.22
+    ],
+    [
+     1.6,
+     0.0,
+     0.22
+    ],
+    [
+     0.2,
+     0.0,
+     0.0
+    ]
+   ],
+   "c": "#99252B",
+   "m": "SmoothPlastic",
+   "t": 0.1,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     1.6,
+     2.928,
+     0.22
+    ],
+    [
+     3.1,
+     2.208,
+     -0.12
+    ],
+    [
+     3.1,
+     0.28,
+     -0.12
+    ],
+    [
+     1.6,
+     0.28,
+     0.22
+    ]
+   ],
+   "c": "#B62D34",
+   "m": "SmoothPlastic",
+   "t": 0.1
+  },
+  {
+   "v": [
+    [
+     1.6,
+     0.28,
+     0.22
+    ],
+    [
+     3.1,
+     0.28,
+     -0.12
+    ],
+    [
+     3.1,
+     0.0,
+     -0.12
+    ],
+    [
+     1.6,
+     0.0,
+     0.22
+    ]
+   ],
+   "c": "#99252B",
+   "m": "SmoothPlastic",
+   "t": 0.1,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     3.1,
+     2.208,
+     -0.12
+    ],
+    [
+     4.6,
+     1.488,
+     0.2
+    ],
+    [
+     4.6,
+     0.28,
+     0.2
+    ],
+    [
+     3.1,
+     0.28,
+     -0.12
+    ]
+   ],
+   "c": "#D4343C",
+   "m": "SmoothPlastic",
+   "t": 0.1
+  },
+  {
+   "v": [
+    [
+     3.1,
+     0.28,
+     -0.12
+    ],
+    [
+     4.6,
+     0.28,
+     0.2
+    ],
+    [
+     4.6,
+     0.0,
+     0.2
+    ],
+    [
+     3.1,
+     0.0,
+     -0.12
+    ]
+   ],
+   "c": "#99252B",
+   "m": "SmoothPlastic",
+   "t": 0.1,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     4.6,
+     1.488,
+     0.2
+    ],
+    [
+     6.1,
+     0.768,
+     -0.08
+    ],
+    [
+     6.1,
+     0.28,
+     -0.08
+    ],
+    [
+     4.6,
+     0.28,
+     0.2
+    ]
+   ],
+   "c": "#B62D34",
+   "m": "SmoothPlastic",
+   "t": 0.1
+  },
+  {
+   "v": [
+    [
+     4.6,
+     0.28,
+     0.2
+    ],
+    [
+     6.1,
+     0.28,
+     -0.08
+    ],
+    [
+     6.1,
+     0.0,
+     -0.08
+    ],
+    [
+     4.6,
+     0.0,
+     0.2
+    ]
+   ],
+   "c": "#99252B",
+   "m": "SmoothPlastic",
+   "t": 0.1,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     6.1,
+     0.768,
+     -0.08
+    ],
+    [
+     7.117,
+     0.28,
+     -0.029
+    ],
+    [
+     6.1,
+     0.28,
+     -0.08
+    ]
+   ],
+   "c": "#D4343C",
+   "m": "SmoothPlastic",
+   "t": 0.1
+  },
+  {
+   "v": [
+    [
+     6.1,
+     0.28,
+     -0.08
+    ],
+    [
+     7.117,
+     0.28,
+     -0.029
+    ],
+    [
+     7.7,
+     0.0,
+     0.0
+    ],
+    [
+     6.1,
+     0.0,
+     -0.08
+    ]
+   ],
+   "c": "#99252B",
+   "m": "SmoothPlastic",
+   "t": 0.1
+  },
+  {
+   "v": [
+    [
+     0.297,
+     3.7,
+     0.297
+    ],
+    [
+     -0.297,
+     3.7,
+     0.297
+    ],
+    [
+     -0.297,
+     0.0,
+     0.297
+    ],
+    [
+     0.297,
+     0.0,
+     0.297
+    ]
+   ],
+   "c": "#FFC93C",
+   "m": "SmoothPlastic",
+   "t": 0.08,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -0.297,
+     3.7,
+     0.297
+    ],
+    [
+     -0.297,
+     3.7,
+     -0.297
+    ],
+    [
+     -0.297,
+     0.0,
+     -0.297
+    ],
+    [
+     -0.297,
+     0.0,
+     0.297
+    ]
+   ],
+   "c": "#E6B536",
+   "m": "SmoothPlastic",
+   "t": 0.08,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     -0.297,
+     3.7,
+     -0.297
+    ],
+    [
+     0.297,
+     3.7,
+     -0.297
+    ],
+    [
+     0.297,
+     0.0,
+     -0.297
+    ],
+    [
+     -0.297,
+     0.0,
+     -0.297
+    ]
+   ],
+   "c": "#FFC93C",
+   "m": "SmoothPlastic",
+   "t": 0.08,
+   "rect": true
+  },
+  {
+   "v": [
+    [
+     0.297,
+     3.7,
+     -0.297
+    ],
+    [
+     0.297,
+     3.7,
+     0.297
+    ],
+    [
+     0.297,
+     0.0,
+     0.297
+    ],
+    [
+     0.297,
+     0.0,
+     -0.297
+    ]
+   ],
+   "c": "#E6B536",
+   "m": "SmoothPlastic",
+   "t": 0.08,
+   "rect": true
+  }
+ ],
+ "place": {
+  "relativeTo": "Flag_Pole_A / Hub_Tower",
+  "position": "Flag_Pole_A: (0, 12.8, 0) (today's Cloth wedge: bottom edge y 12.8, pole side x 0.2, tip x 7.7); Hub_Tower: (0, 57.1, 0)",
+  "orientation": "[0, 0, 0] (both kits fly the flag toward +X)",
+  "scale": "Flag_Pole_A 1.0 (times the copy's scale 1.0 / 1.35 / 2.2); Hub_Tower 0.72 (5.4 x 2.6 like today)",
+  "replaces": "the Cloth wedge (Flag_Pole_A, Hub_Tower); it collided: no player reaches it, CanCollide off"
+ }
+}
