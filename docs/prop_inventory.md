@@ -682,6 +682,47 @@ fence 12k, signs 7k, posts 5k, banners 36k, flags 20k, lamp posts 9k, wall torch
 in the hub, zones and boss arenas (without the kits and test copies) about 298,000. The old parts were plain blocks (a
 few hundred triangles per house).
 
+### Tundra buildings (owner, "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Buildings and structures", 2026-10-22): inventory before the remake (read from Studio)
+
+Images: `docs/Tundra_Images/01_Buildings_and_Structures/`. Recipe: docs/prop_texture_guide.md section E (+ A).
+Test = `workspace._Staging.AssetPreview.Tundra.<Kit>` (the tundra test row, a SyncMapProps search root since this
+task); kit = `ServerStorage.MapAssets.Tundra.<Kit>`. Every model named like a kit (and every cabin / cave / scaffold /
+bridge name) was searched in workspace, ServerStorage and ReplicatedStorage. No copy has a script, prompt, NPC,
+teleport, tag or attribute, and nothing functional stands within 40 studs of one. The kits as they were are kept as
+rows in `tools/PropsTundraBuildingsData.luau` (+ the game copies that differ: `<kit>_game`). Backups (kit + test + every
+copy): `BackUP_Files/old_props_2026-10-22_pre_tundra_buildings/<propId>.rbxm` (4 files); the main agent's full backup
+`..._before_tundra_buildings`.
+
+| # | owner's object | kit | copies (total) | functional / notes |
+|---|---|---|---|---|
+| 01 | wrecked wooden cabin | `Cabin_Broken` (40 parts, 26.3 x 18 x 26) | 3: test, kit, Tundra_1.Decor.Props | not enterable: the door is a colliding askew slab and the solid DoorDark closes the doorway; everything collides except the 6 LogLines and 2 WindowBars (32 colliders). The Tundra_1 copy differs from the kit by 0.05 .. 0.2 (walls, log lines and window pushed out) |
+| 02 | ice cave entrance | `Ice_Cave_Mouth` (9 parts, 29 x 18.2 x 13) | 7: test, kit, Tundra_2 x4, BossArenas Tundra (Model scale 1.25) | closed niche: the solid Dark panel closes the opening (no teleport); colliders Back, Dark and 3 IceRock MeshParts (2 boulders, the slab rock); the Snow mesh and 3 Icicle meshes do not collide |
+| 03 | wooden scaffold stand | `Wooden_Scaffold` (15 parts, 16 x 13.6 x 8) | 5: test, kit, Tundra_3 x3 | colliders 4 Posts, Deck (top y 10.8), Rail (top 13.55); braces, plank lines and 2 snow slabs do not collide |
+| 04 | curved snow bridge slab | `Snow_Bridge_Section` (11 parts, 41.6 x 9.8 x 10.6) | 5: test, kit, Tundra_3 x3 | colliders 3 Span + 3 SpanSnow (middle top y 8.0; sides 13 deg, 7.93 -> 4.92); the 3 game copies' side parts are 0.1 deeper (10.1 / 10.7); they float along the Tundra_3 walls and connect to nothing |
+
+### Tundra buildings remake status (Agent B, 2026-10-22)
+
+Builders: `tools/PropsTundraBuildings.luau` (`DevTools.PropsTundraBuildings`, on the earlier helpers); the kits as rows
+in `tools/PropsTundraBuildingsData.luau`; Agent A's E7 facet pieces as convex solids (one per closed shell) in
+`tools/PropsTundraBuildingsSolids.luau`, written by `tools/tundra_facets_to_solids.py` from
+`Blender_Exports/Props/facets/tundra_*.json` (the 2 cabin roof-snow pieces are left out: the cabin was approved before
+the facets came). Rules: tools/SyncMapProps.luau (tundra block + the tundra test row as a search root). Collision:
+invisible `Collision` parts = today's colliding parts (the cave's IceRock MeshParts keep mesh, size and fidelity),
+checked part by part on every copy and with offset ray grids (5 directions, 0.5 step) on every workspace copy before /
+after. Screenshots (test + game, before + after): `docs/screenshots/tundra_buildings/`. Sync: `Sync.run` twice per
+object, the second 0.
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| 01 | wrecked wooden cabin (pilot) | `tundra_wrecked_cabin` | 3 / 3 | 16,700 | 8-sided round logs with saddle-notched corners running 0.6 past the walls with lighter cut ends, on a slate footing; the left half to the eaves, the right wall and the front right broken in jagged steps with splintered ends and 2 boards nailed across; log gables; a plank roof on rafters with fascia, bargeboards and nails under a soft thick snow cap with drooping lumps and 15 small icicles; the right roof remnant with broken boards, a fallen section inside, the bare splintered rafter, the log ridge; a stone chimney (17 courses in bond, cap, snow round the flue, icicles); the frozen cross-frame window (ice pane T 0.3, frost corners, snowy sill, drips); the plank door with iron straps hanging askew off its top hinge (bottom strap torn, empty pintle); snow inside, rounded drifts on today's 3 wedges, loose planks. Colliders from the GAME copy: exact there (32 / 32 part by part; ray grid 23,805 rays, 0 real differences: 22 rays grazing exact part edges, a ray shifted 0.03 gives the old value); test / kit within 0.2 (as the batch 4 houses). Size 28.4 x 18 x 26 (+8 %) |
+| 02 | ice cave entrance | `tundra_ice_cave` | 7 / 7 | 7,100 | Agent A's 2 faceted glass boulders (Glass T 0.3, light chamfered edges, opaque deep cores), the 2-strata slate slab and its soft snow cap (5 front drips, 2 per end); today's 3 icicles at their x / z (roots on the slab underside, no tip under y 7.0) + 2 clusters; today's Back and Dark exactly as they are (the opening stays closed) with an inner slate frame (2 jambs, 5 voussoirs) lined in navy and a frozen stone lip (threshold, ice glaze, 3 stubs); 4 shard clusters, 2 capped ice blocks, soft drifts. Colliders 5 / 5 exact on all 7 (the arena copy at 1.25 too); ray grids 0 differences on the 5 workspace copies |
+| 03 | wooden scaffold stand | `tundra_scaffold` | 5 / 5 | 7,500 | posts chamfered on slate footings with 2 iron bands, an ice glaze at the feet, capped front posts with snow caps; today's front X braces cross-lapped (iron strap, pegs) with rope lashings at the posts; the side diagonals strapped and nailed; 2 knee braces; the deck as 6 planks with gaps (top exactly y 10.8) over a dark board and 2 joists, nails, one plank shorter; today's rail chamfered + 2 side rails to 2 stub posts, rope ties, frost rime, a 0.15 snow line on the rail; today's 2 snow patches as soft caps (today's height, 0.45 over the deck, as today: no collider), 3 capped ice blocks, 3 icicle clusters, 2 low drifts at post feet. Colliders 6 / 6 exact on all 5; ray grids 0 differences. Size 16.5 x 14.2 x 8.7 (+9 %) |
+| 04 | curved snow bridge slab | `tundra_snow_bridge` | 5 / 5 | 6,700 | Agent A's layered faceted ice undersides (3 strata, keels, light edges, Glass T 0.25 over opaque cores; the left side = the right piece turned 180) and soft snow whose tops are exactly the collider tops (lips and drips over the long edges and the ends); a soft snow roll over each joint (at most 0.1 over a walk top: checked analytically on the solids' planes over 4,968 columns, 0 columns more than 0.15 over); today's 5 icicles at their x / z + 16 small singles under the lips. Colliders from the GAME copies: 6 / 6 exact on the 3 game copies (ray grids 43,245 rays, 0 real differences: 2 edge-grazing rays); test / kit 0.05 deeper per side than before (the game copies' 10.1 / 10.7) |
+
+Totals: 20 copies replaced (4 templates). Triangles of the new geometry, all copies: about 171,000 (cabin 50k, cave 50k,
+scaffold 38k, bridge 34k), of which the copies in the zones and the boss arena (without the kits and test copies) about
+95,000.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

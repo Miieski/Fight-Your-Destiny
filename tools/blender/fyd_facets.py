@@ -5,7 +5,8 @@ part (a rectangle = 1 Part, any other quad / triangle = wedges), extruded INWARD
 unioned. Everything else of batch 2 is built from parts with the fountain / well recipe (docs/prop_texture_guide.md
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
-    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature batch4]
+    blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature batch4
+    tundra_buildings]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -4697,6 +4698,710 @@ def preview_batch4(pieces):
                                    (g6, [(-30, 15)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# TUNDRA BUILDINGS AND STRUCTURES (guide section E, owner task 2026-10-22): faceted translucent ice (cave boulders,
+# the bridge's layered underside, blocks, shards, icicles), soft snow caps with an irregular edge (roof, bridge, cave
+# slab, a reusable cap, a wedge drift) and the cave's stone slab. EVERY piece is made of closed convex shells
+# (convex hulls; separate shells share no vertex), so Agent B can turn each shell into a convex solid (~2 tris per
+# face). Kit space = the kit pivot (bottom centre at the kit origin, front -Z). Everything else is parts.
+# ------------------------------------------------------------------------------------------------
+T_SNOW, T_SNOW_S = "#F4F8FF", "#CEDEF6"
+T_ICE, T_ICE_DEEP, T_FROST = "#96D6FA", "#54A0E8", "#D6ECFF"
+T_ICE_L, T_ICE_M, T_ICE_D, T_NAVY = "#BFE9F5", "#6EC6EA", "#1E7FD6", "#234A8F"
+T_ROCK, T_ROCK_D, T_WHITE = "#768096", "#4E566E", "#F2F6F8"
+SNOW_WHITE = (T_SNOW, "#E1EBFA", T_SNOW_S)               # top / sides / undersides and lips
+SNOW_SHADE = (T_SNOW_S, "#C2D5F0", "#B2C7E8")
+
+# today's part frames (rbxm CFrame rotation, row-major), kit space
+M_ID = (1, 0, 0, 0, 1, 0, 0, 0, 1)
+M_ROOF_MAIN = (0.8572, -0.515, 0.0, 0.515, 0.8572, 0.0, 0.0, 0.0, 1.0)     # cabin -X slope (+31 deg)
+M_ROOF_SMALL = (0.8572, 0.515, 0.0, -0.515, 0.8572, 0.0, 0.0, 0.0, 1.0)    # cabin +X slope (-31 deg)
+M_SPAN_R = (0.9744, 0.225, 0.0, -0.225, 0.9744, 0.0, 0.0, 0.0, 1.0)        # bridge right span (-13 deg)
+M_ROCK_L = (0.8208, 0.0863, 0.5646, -0.1045, 0.9945, 0.0, -0.5615, -0.059, 0.8253)
+M_ROCK_R = (-0.7334, 0.0771, 0.6755, 0.1045, 0.9945, 0.0, -0.6718, 0.0706, -0.7374)
+
+
+def _mat3(m):
+    from mathutils import Matrix
+    return Matrix(((m[0], m[1], m[2]), (m[3], m[4], m[5]), (m[6], m[7], m[8])))
+
+
+def _xf(pos, m):
+    """local -> kit space through a part CFrame (pos, row-major rotation)."""
+    R, p = _mat3(m), Vector(pos)
+    return lambda v: p + R @ Vector(v)
+
+
+def _clean_ring(ring, eps=1e-4):
+    """Drops repeated and collinear corners of a planar polygon ring."""
+    out = list(ring)
+    changed = True
+    while changed and len(out) > 3:
+        changed = False
+        for i in range(len(out)):
+            a, b, c = out[i - 1], out[i], out[(i + 1) % len(out)]
+            if (b - a).length < eps or (b - a).cross(c - b).length < eps * max((b - a).length * (c - b).length, 1e-9):
+                out.pop(i)
+                changed = True
+                break
+    return out
+
+
+def _hull_faces(pts):
+    """Convex hull of pts -> [(ring, outward normal)], exactly coplanar triangles merged into planar polygons."""
+    bm = bmesh.new()
+    vs = [bm.verts.new(Vector(p)) for p in pts]
+    bmesh.ops.convex_hull(bm, input=vs)
+    loose = [v for v in bm.verts if not v.link_faces]
+    if loose:
+        bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bmesh.ops.dissolve_limit(bm, angle_limit=1e-3, verts=list(bm.verts), edges=list(bm.edges), delimit=set())
+    bm.normal_update()
+    cen = sum((v.co for v in bm.verts), Vector()) / len(bm.verts)
+    out = []
+    for f in bm.faces:
+        ring = _clean_ring([l.vert.co.copy() for l in f.loops])
+        n = newell(ring).normalized()
+        if n.dot(sum(ring, Vector()) / len(ring) - cen) < 0:
+            ring.reverse()
+            n = -n
+        out.append((ring, n))
+    bm.free()
+    return out
+
+
+def _emit(pc, ring, n, col, m, t):
+    if len(ring) == 3:
+        pc.face(ring, col, m, t, n)
+    elif len(ring) == 4:
+        pc.quad_or_tris(ring, col, m, t, n)
+    else:
+        polygon_fill(pc, ring, col, m, t, n)
+
+
+def shell(pc, pts, colfn, m="SmoothPlastic", t=0.3, mfn=None):
+    """One closed convex shell (the hull of pts); colfn(centroid, normal) -> colour."""
+    for ring, n in _hull_faces(pts):
+        cc = sum(ring, Vector()) / len(ring)
+        _emit(pc, ring, n, colfn(cc, n), mfn(cc, n) if mfn else m, t)
+
+
+def bevel_shell(pc, pts, d, body, edge, m="SmoothPlastic", m_edge=None, t=0.3):
+    """Hull of pts with every edge chamfered by about d: each hull face is inset by d in its own plane (parallel
+    edges, so the chamfers are planar quads), then the hull of the inset corners. The big faces keep body(cc, n), the
+    narrow chamfer / corner faces take edge(cc, n): the light crystal edges."""
+    base = _hull_faces(pts)
+    new, normals = [], []
+    for ring, n in base:
+        k = len(ring)
+        dd = min(d, 0.22 * min((ring[(i + 1) % k] - ring[i]).length for i in range(k)))
+        cen = sum(ring, Vector()) / k
+        normals.append(n)
+        for i in range(k):
+            a, b, c = ring[i - 1], ring[i], ring[(i + 1) % k]
+            i0, i1 = n.cross((b - a).normalized()), n.cross((c - b).normalized())
+            mv = (i0 + i1) / max(1.0 + i0.dot(i1), 1e-3) * dd
+            lim = 0.4 * (cen - b).length
+            if mv.length > lim:
+                mv = mv.normalized() * lim
+            new.append(b + mv)
+    for ring, n in _hull_faces(new):
+        cc = sum(ring, Vector()) / len(ring)
+        flat = any(n.dot(bn) > 0.99995 for bn in normals)
+        _emit(pc, ring, n, body(cc, n) if flat else edge(cc, n), m if flat else (m_edge or m), t)
+
+
+def shell_count(pc):
+    """Connected shells (faces sharing a corner, 0.001 stud) of a piece."""
+    par = list(range(len(pc.faces)))
+
+    def f(i):
+        while par[i] != i:
+            par[i] = par[par[i]]
+            i = par[i]
+        return i
+    owner = {}
+    for i, fc in enumerate(pc.faces):
+        for p in fc["v"]:
+            k = tuple(round(c, 3) for c in p)
+            if k in owner:
+                par[f(i)] = f(owner[k])
+            else:
+                owner[k] = i
+    return len({f(i) for i in range(len(pc.faces))})
+
+
+def snow_colfn(scheme):
+    top, side, under = scheme
+
+    def f(cc, n):
+        if n.y > 0.72:
+            return top
+        if n.y > 0.3:
+            return mix(top, side, 0.5)
+        if n.y > -0.3:
+            return side
+        return under
+    return f
+
+
+def ice_colfn(base, lo_y, hi_y, rng, light=T_ICE_L):
+    """Ice faces: deeper at the bottom (x0.88), lighter / whiter toward the top, up-facing facets lighter, 2 steps."""
+    def f(cc, n):
+        h = max(0.0, min(1.0, (cc.y - lo_y) / max(hi_y - lo_y, 1e-6)))
+        c = mix(tone(base, 0.88 + 0.12 * h), light, 0.16 * h + (0.14 if n.y > 0.55 else 0.0))
+        return tone(c, rng.choice((1.0, 0.95)))
+    return f
+
+
+def superellipse(n_pts, rx, rz, p, rng, jr=0.0, phase=0.0, cx=0.0, cz=0.0):
+    out = []
+    for k in range(n_pts):
+        a = phase + 2 * math.pi * (k + rng.uniform(-0.12, 0.12)) / n_pts
+        c, s = math.cos(a), math.sin(a)
+        r = (abs(c) ** p + abs(s) ** p) ** (-1.0 / p)
+        j = 1.0 + rng.uniform(-jr, jr)
+        out.append((cx + rx * c * r * j, cz + rz * s * r * j))
+    return out
+
+
+def lump_pts(c, hx, hy, hz, rng, n=10, drop=0.0):
+    """Jittered points on a small ellipsoid (a snow drip / lump); drop: one point hanging below (a drip tip)."""
+    pts = []
+    for i in range(n):
+        yy = 1 - 2 * (i + 0.5) / n
+        rr = math.sqrt(max(0.0, 1 - yy * yy))
+        a = i * 2.39996 + rng.uniform(-0.3, 0.3)
+        pts.append(Vector((c[0] + math.cos(a) * rr * hx * rng.uniform(0.85, 1.05), c[1] + yy * hy * rng.uniform(0.9, 1.05),
+                           c[2] + math.sin(a) * rr * hz * rng.uniform(0.85, 1.05))))
+    if drop:
+        pts.append(Vector((c[0] + rng.uniform(-0.2, 0.2) * hx, c[1] - hy - drop, c[2])))
+    return pts
+
+
+def slab_snow_into(pc, xf, hx, hz, top, sides, rng, scheme, n=22, r=0.3):
+    """Soft thick snow layer on a box top (local frame of the box, top plane at local y = top, xf -> kit space): the
+    TOP is exactly flat at `top` (it is the walk surface of the kept collider), a bulging rounded rim, a lip that drops
+    over the edges; sides = {"-x" | "+x" | "-z" | "+z": (overhang, drop, drips)}. Drip lumps hang over the lips.
+    Returns suggested icicle roots (kit space) under the lips with drips."""
+    def side_w(x, z):
+        wx, wz = (abs(x) / hx) ** 6, (abs(z) / hz) ** 6
+        sx = sides["+x" if x > 0 else "-x"]
+        sz = sides["+z" if z > 0 else "-z"]
+        s = wx + wz + 1e-9
+        return wx / s, wz / s, sx, sz
+
+    tp, rim, lip = [], [], []
+    for (x, z) in superellipse(n, hx - r, hz - r, 8, rng, 0.0, 0.07):
+        tp.append(Vector((x, top, z)))
+    for (x, z) in superellipse(n, hx, hz, 8, rng, 0.0, 0.0):
+        wx, wz, sx, sz = side_w(x, z)
+        ov = wx * sx[0] + wz * sz[0]
+        dr = wx * sx[1] + wz * sz[1]
+        ox = math.copysign(sx[0], x) * wx
+        oz = math.copysign(sz[0], z) * wz
+        j = rng.uniform(-0.05, 0.05)
+        rim.append(Vector((x + ox * 0.85 + j * (x / hx), top - 0.38 * dr - rng.uniform(0.0, 0.05), z + oz * 0.85 + j * (z / hz))))
+        lip.append(Vector((x * 0.985 + ox * 0.55, top - dr + rng.uniform(-0.06, 0.06), z * 0.985 + oz * 0.55)))
+        _ = ov
+    shell(pc, [xf(p) for p in tp + rim + lip], snow_colfn(scheme), t=0.3)
+    roots = []
+    for key, (ov, dr, drips) in sides.items():
+        if drips <= 0:
+            continue
+        along_x = key[1] == "z"
+        L = hx if along_x else hz
+        sgn = 1.0 if key[0] == "+" else -1.0
+        for k in range(drips):
+            u = -L * 0.8 + (2 * L * 0.8) * (k + 0.5 + rng.uniform(-0.25, 0.25)) / drips
+            e = (hz if along_x else hx) + ov * 0.6
+            c = (u, top - dr + 0.08, sgn * e) if along_x else (sgn * e, top - dr + 0.08, u)
+            ha = rng.uniform(0.45, 0.75)
+            hy = rng.uniform(0.28, 0.38)
+            pts = lump_pts(c, ha if along_x else 0.26, hy, 0.26 if along_x else ha, rng, n=10, drop=rng.uniform(0.12, 0.25))
+            shell(pc, [xf(p) for p in pts], snow_colfn(scheme), t=0.3)
+            if k < drips - 1:
+                u2 = u + L * 0.8 / drips
+                rt = (u2, top - dr + 0.1, sgn * (e - 0.35)) if along_x else (sgn * (e - 0.35), top - dr + 0.1, u2)
+                roots.append([round(c_, 2) for c_ in xf(rt)])
+    return roots
+
+
+def cap_into(pc, rng, scheme, drips=0):
+    """Reusable soft snow cap, normalized: footprint 1 x 1 (x, z -0.5..0.5, 4 % overhang), bottom y 0, top y 1.0."""
+    pts = [Vector((x, 0.0, z)) for (x, z) in superellipse(12, 0.52, 0.52, 4, rng, 0.02)]
+    pts += [Vector((x, 0.32 + rng.uniform(-0.04, 0.04), z)) for (x, z) in superellipse(12, 0.565, 0.565, 3.5, rng, 0.035, math.pi / 12)]
+    pts += [Vector((x, 0.76 + rng.uniform(-0.04, 0.04), z)) for (x, z) in superellipse(10, 0.42, 0.42, 3, rng, 0.05)]
+    pts += [Vector((rng.uniform(-0.12, 0.12), 1.0 - rng.uniform(0.0, 0.04), rng.uniform(-0.12, 0.12))) for _ in range(3)]
+    shell(pc, pts, snow_colfn(scheme))
+    for k in range(drips):
+        x = -0.3 + 0.62 * k / max(drips - 1, 1) + rng.uniform(-0.04, 0.04)
+        shell(pc, lump_pts((x, 0.14, -0.55), rng.uniform(0.09, 0.13), 0.2, 0.07, rng, n=9, drop=0.12), snow_colfn(scheme))
+
+
+def drift_into(pc, rng, scheme):
+    """Snow drift in a unit WedgePart box (x, z -0.5..0.5, y 0..1, high side +Z, low toe at -Z): a soft bulging
+    slope (above the wedge's straight slope), rounded ends that sink to 0.15 of the height, a vertical back."""
+    pts = []
+    for k in range(9):
+        x = -0.5 + k / 8
+        hf = 0.15 + 0.85 * math.sqrt(max(0.0, 1 - abs(2 * x) ** 2.5))
+        for (z, y) in ((0.5, 0.97), (0.28, 0.92), (0.0, 0.68), (-0.27, 0.36), (-0.44, 0.1)):
+            pts.append(Vector((x * (0.98 if abs(x) > 0.45 else 1.0), (y + rng.uniform(-0.03, 0.03)) * hf,
+                               z + rng.uniform(-0.02, 0.02))))
+        pts += [Vector((x, 0.0, -0.5)), Vector((x, 0.0, 0.5))]
+    shell(pc, pts, snow_colfn(scheme))
+
+
+def icicle_pts(c, L, r, rng, sides=6):
+    """A tapering icicle hanging from c (root centre): root ring, a slight swelling, a narrower ring, the tip."""
+    ph = rng.uniform(0, math.pi)
+    lean = (rng.uniform(-0.06, 0.06) * L, rng.uniform(-0.06, 0.06) * L)
+    pts = []
+    for (f, k) in ((0.0, 1.0), (0.15, 1.08), (0.5, 0.68)):
+        for i in range(sides):
+            a = ph + 2 * math.pi * i / sides
+            pts.append(Vector((c[0] + lean[0] * f + r * k * math.cos(a), c[1] - f * L, c[2] + lean[1] * f + r * k * math.sin(a))))
+    pts.append(Vector((c[0] + lean[0], c[1] - L, c[2] + lean[1])))
+    return pts
+
+
+def icicle_colfn(top_y, L, rng):
+    def f(cc, n):
+        if n.y > 0.8:
+            return T_FROST
+        if cc.y < top_y - 0.62 * L:
+            return mix(T_ICE_L, T_WHITE, 0.45)
+        return T_FROST if int((math.atan2(n.z, n.x) + math.pi) / (math.pi / 3)) % 2 == 0 else T_ICE_L
+    return f
+
+
+def shard_pts(base, h, r, tilt, yaw, rng, sides=5):
+    """A crystal shard: a 5-sided prism from 0.3 below the ground, leaning `tilt` deg toward `yaw`, pointed tip."""
+    ax = Vector((math.sin(math.radians(tilt)) * math.cos(math.radians(yaw)), math.cos(math.radians(tilt)),
+                 math.sin(math.radians(tilt)) * math.sin(math.radians(yaw))))
+    u = ax.cross(Vector((0, 0, 1)))
+    if u.length < 1e-4:
+        u = ax.cross(Vector((1, 0, 0)))
+    u.normalize()
+    v = ax.cross(u).normalized()
+    ph = rng.uniform(0, math.pi)
+    b = Vector(base)
+    pts = []
+    for (f, k) in ((-0.3 / h, 1.0), (0.62, 0.92)):
+        for i in range(sides):
+            a = ph + 2 * math.pi * i / sides + (0.15 if f > 0 else 0.0)
+            pts.append(b + ax * (f * h) + (u * math.cos(a) + v * math.sin(a)) * r * k)
+    pts.append(b + ax * h + u * rng.uniform(-0.05, 0.05) * r)
+    return pts, b, ax, h
+
+
+def boulder_local(rng, rings=((-0.93, 5, 0.8), (-0.4, 6, 1.0), (0.28, 6, 0.97), (0.78, 4, 0.64)), top=0.99):
+    pts = []
+    ph = 0.0
+    for (y, k, r) in rings:
+        ph += rng.uniform(0.3, 0.9)
+        for i in range(k):
+            a = ph + 2 * math.pi * (i + rng.uniform(-0.2, 0.2)) / k
+            j = rng.uniform(0.9, 1.04)
+            pts.append(Vector((math.cos(a) * r * j, y + rng.uniform(-0.06, 0.06), math.sin(a) * r * j)))
+    pts.append(Vector((rng.uniform(-0.15, 0.15), top, rng.uniform(-0.15, 0.15))))
+    return pts
+
+
+def _rect8(hx, hz, ch, y, rng=None, jy=0.0, jr=0.0):
+    """Rectangle with chamfered corners (8 points) at height y."""
+    pts = [(hx, -hz + ch), (hx, hz - ch), (hx - ch, hz), (-hx + ch, hz), (-hx, hz - ch), (-hx, -hz + ch), (-hx + ch, -hz), (hx - ch, -hz)]
+    out = []
+    for (x, z) in pts:
+        jx = 1 + (rng.uniform(-jr, jr) if rng else 0.0)
+        out.append(Vector((x * jx, y + (rng.uniform(-jy, jy) if rng else 0.0), z * jx)))
+    return out
+
+
+# --- shared pieces --------------------------------------------------------------------------------------------
+def t_snow_caps():
+    out = []
+    for name, scheme, drips, seed, col in (("cap", SNOW_WHITE, 0, 8101, "#F4F8FF"), ("cap_shade", SNOW_SHADE, 0, 8102, "#CEDEF6"),
+                                           ("cap_drip", SNOW_WHITE, 3, 8103, "#F4F8FF")):
+        rng = random.Random(seed)
+        pc = Piece("tundra_snow", name, "the piece's own anchor: (0, 0, 0) = the bottom centre; NORMALIZED: footprint 1 x 1 "
+                   "(x, z -0.5..0.5, the rim bulges 4-7 % past it), height 1",
+                   place={"relativeTo": "the part it caps", "position": "the centre of that part's top face",
+                          "orientation": "the part's rotation", "scale": "NON-UNIFORM (width, thickness, depth): chimney "
+                          "(3.9, 0.8, 3.9) at kit (-5.5, 17.0, 5); post tops (1.1, 0.45, 1.1); scaffold deck patches (4, 0.45, 3) "
+                          "/ (8.6, 0.5, 4.6); ice blocks (1.5, 0.35, 1.3)",
+                          "replaces": "ChimneySnow (keep it invisible: it collides) and the flat scaffold Snow slabs (no collision)",
+                          "collide": "CanCollide off, CanQuery off, CastShadow on"},
+                   notes=f"soft thick snow cap, a closed convex shell: flat-ish domed top {col}, a rim that bulges out past the "
+                         "footprint (irregular 12-sided outline, jittered heights), sides / undersides one and two steps darker "
+                         "(snow -> shaded snow)" + (", 3 drip lumps hanging over the -Z edge (separate shells)" if drips else "")
+                         + ". Use cap_shade on the #CEDEF6 objects.")
+        cap_into(pc, rng, scheme, drips)
+        out.append(pc)
+    return out
+
+
+def t_snow_drifts():
+    out = []
+    for name, scheme, seed in (("drift", SNOW_WHITE, 8111), ("drift_shade", SNOW_SHADE, 8112)):
+        pc = Piece("tundra_snow", name, "NORMALIZED to a WedgePart box: x, z -0.5..0.5, y 0..1 (bottom centre at y 0), the high "
+                   "side at +Z (against the wall), the toe at -Z, exactly like a Roblox WedgePart",
+                   place={"relativeTo": "Cabin_Broken (kit pivot)",
+                          "position": "each Drift wedge's CFrame moved down by half its height (the wedge's bottom centre): "
+                                      "(-6.5, 0, -10.5) / (0, 0, 10.5) / (-13, 0, 0)",
+                          "orientation": "the wedge's rotation: [0, 0, 0] / [0, 180, 0] / [0, 90, 0]",
+                          "scale": "NON-UNIFORM = the wedge size: (9, 3.5, 5) / (20, 4, 5) / (14, 4.5, 6); extra drifts "
+                                   "in the broken part about (5, 1.6, 3) and (6, 2, 3) (no collider)",
+                          "replaces": "the look of the 3 Drift wedges (keep them invisible: they collide); drift_shade on the "
+                                      "#CEDEF6 one (-13, 2.25, 0)", "collide": "CanCollide off"},
+                   notes="snow drift: a soft convex mound bulging above the wedge slope, ends rounding down to 15 % of the "
+                         "height, irregular facets; snow on top, darker toward the toe and the ends. One closed convex shell.")
+        drift_into(pc, random.Random(seed), scheme)
+        out.append(pc)
+    return out
+
+
+def t_icicles():
+    rng = random.Random(8121)
+    one = Piece("tundra_ice", "icicle", "the piece's own anchor: (0, 0, 0) = the centre of the root (top); it hangs 3.0 down "
+                "along -Y, 0.9 across at the root",
+                place={"relativeTo": "the underside it hangs from", "position": "today's Icicle root: cave (0.4, 11.2, -0.6), "
+                       "(-3.2, 11.2, -0.6), (3.4, 11.2, -0.6) (roots now at the slab underside); bridge: root at the span bottom "
+                       "above today's 5 Icicles (x -9 / -4 / 1 / 6 / 11, z -3 / 2.5 / -3 / 2.5 / -3); cabin / bridge snow "
+                       "lips: the `icicleRoots` listed in their snow pieces",
+                       "orientation": "[0, any yaw, 0]", "scale": "uniform 0.5-1.6, or Y = today's length / 3 (cave 4.2 / "
+                       "3.0 / 2.6, bridge 5.0 / 4.6 / 3.4 / 3.0 / 2.6)",
+                       "replaces": "each Icicle MeshPart (spike mesh 100106311518324; no collision)",
+                       "collide": "CanCollide off, CanQuery off, CastShadow off (as today)"},
+                notes="small tapering 6-sided icicle: root ring, a slight swelling, a narrower ring, a leaning tip. Facets "
+                      "alternate #D6ECFF / #BFE9F5, the tip part #D6EFF6; Glass, Transparency 0.25. One closed convex shell.")
+    shell(one, icicle_pts((0, 0, 0), 3.0, 0.45, rng), icicle_colfn(0.0, 3.0, rng), m="Glass")
+    cl = Piece("tundra_ice", "icicle_cluster", "the piece's own anchor: (0, 0, 0) = the middle of the frozen root bar (top); "
+               "4 icicles in a row along X (x -0.85..1.1), 3.0 / 2.1 / 1.5 / 0.9 long",
+               place={"relativeTo": "the underside it hangs from", "position": "eaves and lips: between the drips of the "
+                      "snow pieces (their `icicleRoots`), the cave slab front (y 10.35, z -3.2) x2, the bridge span edges",
+                      "orientation": "[0, yaw along the edge, 0]", "scale": "uniform 0.5-1.2",
+                      "replaces": "nothing (added)", "collide": "CanCollide off, CanQuery off, CastShadow off"},
+               notes="cluster of 4 tapering icicles under a small frozen root lump (5 closed convex shells); Glass "
+                     "Transparency 0.25, the colours of tundra_ice__icicle.")
+    for (x, z, L, r) in ((-0.85, 0.05, 3.0, 0.42), (-0.15, -0.08, 2.1, 0.34), (0.5, 0.06, 1.5, 0.28), (1.1, -0.04, 0.9, 0.22)):
+        shell(cl, icicle_pts((x, -0.05, z), L, r, rng), icicle_colfn(-0.05, L, rng), m="Glass")
+    shell(cl, lump_pts((0.12, 0.0, 0.0), 1.25, 0.16, 0.36, rng, n=12), lambda cc, n: T_FROST if n.y > 0.3 else T_ICE_L, m="Glass")
+    return [one, cl]
+
+
+def t_ice_block():
+    rng = random.Random(8131)
+    pc = Piece("tundra_ice", "block", "the piece's own anchor: (0, 0, 0) = the bottom centre; 1.6 x 1.2 x 1.4",
+               place={"relativeTo": "Wooden_Scaffold (kit pivot)", "position": "on the deck (top y 10.8): (4.6, 10.8, 1.6) yaw 18, "
+                      "(5.9, 10.8, 2.6) yaw -25 scale 0.7, (-6.2, 10.8, -1.9) yaw 40 scale 0.85; at the cave foot "
+                      "(-12.4, 0, -3.0), (11.6, 0, -3.4) scale 1.2", "orientation": "[0, yaw, 0]",
+                      "scale": "uniform 0.6-1.3", "replaces": "nothing (added)", "collide": "CanCollide off"},
+               notes="small ice block: a jittered box with every edge chamfered (light #BFE9F5 edges), #96D6FA body facets "
+                     "lighter on top; Glass, Transparency 0.3 (edges 0.2). One closed convex shell; a cap (tundra_snow__cap, "
+                     "scale (1.5, 0.35, 1.3)) may sit on top.")
+    pts = []
+    for (x, y, z) in ((-0.8, 0, -0.7), (0.8, 0, -0.7), (0.8, 0, 0.7), (-0.8, 0, 0.7), (-0.78, 1.2, -0.68), (0.8, 1.15, -0.7),
+                      (0.76, 1.2, 0.68), (-0.8, 1.13, 0.7)):
+        pts.append(Vector((x + rng.uniform(-0.05, 0.05), y + (rng.uniform(-0.04, 0.04) if y else 0.0), z + rng.uniform(-0.05, 0.05))))
+    bevel_shell(pc, pts, 0.13, ice_colfn(T_ICE, 0.0, 1.2, rng), lambda cc, n: T_ICE_L, m="Glass")
+    return [pc]
+
+
+def t_ice_shards():
+    rng = random.Random(8141)
+    pc = Piece("tundra_ice", "shards", "the piece's own anchor: (0, 0, 0) = the centre of the cluster on the ground; 5 shards "
+               "within about 2.4 x 2.2 tall, the tallest leaning back (+Z)",
+               place={"relativeTo": "Ice_Cave_Mouth (kit pivot)", "position": "the cave foot: (-4.9, 0, -5.2) yaw 20, "
+                      "(5.3, 0, -5.4) yaw -35 scale 0.8, (-11.8, 0, -2.6) scale 0.7, (12.3, 0, -1.8) yaw 150 scale 0.6",
+                      "orientation": "[0, yaw, 0]", "scale": "uniform 0.5-1.0 (times the copy's scale)",
+                      "replaces": "nothing (added)", "collide": "CanCollide off"},
+               notes="small ice shards: 5 leaning 5-sided crystals (closed convex shells) in #96D6FA / #6EC6EA / #54A0E8, "
+                     "facets alternate lighter, the tip faces #BFE9F5; Glass, Transparency 0.3. Each shard sinks 0.3 into "
+                     "the ground.")
+    for (bx, bz, h, r, tilt, yaw, col) in ((0.0, 0.35, 2.2, 0.36, 10, 90, T_ICE), (-0.75, -0.1, 1.55, 0.3, 24, 200, T_ICE_M),
+                                           (0.7, -0.2, 1.3, 0.27, 22, -20, T_ICE_DEEP), (0.15, -0.75, 0.95, 0.24, 30, -95, T_ICE),
+                                           (-0.35, 0.95, 0.7, 0.2, 35, 130, T_ICE_M)):
+        pts, b, ax, hh = shard_pts((bx, 0.0, bz), h, r, tilt, yaw, rng)
+
+        def colf(cc, n, b=b, ax=ax, hh=hh, col=col):
+            if (cc - b).dot(ax) > 0.66 * hh:
+                return T_ICE_L
+            return col if int((math.atan2(n.z, n.x) + math.pi) / (math.pi / 2.5)) % 2 == 0 else mix(col, T_ICE_L, 0.3)
+        shell(pc, pts, colf, m="Glass")
+    return [pc]
+
+
+# --- 02 ice cave ----------------------------------------------------------------------------------------------
+def t_cave_boulders():
+    out = []
+    for side, pos, size, m, base, light, core, seed in (
+            ("left", (-8.0, 7.2, 0.0), (8.0, 15.0, 9.0), M_ROCK_L, T_ICE_DEEP, T_ICE_L, T_NAVY, 8201),
+            ("right", (8.0, 6.7, 0.0), (8.0, 14.0, 9.0), M_ROCK_R, T_ICE, mix(T_ICE_L, T_WHITE, 0.4), T_ICE_D, 8202)):
+        rng = random.Random(seed)
+        xf = _xf(pos, m)
+        half = Vector(size) * 0.5
+
+        def kit(v, k=0.95):
+            q = xf(Vector((v.x * half.x * k, v.y * half.y * k, v.z * half.z * k)))
+            return Vector((q.x, max(q.y, -0.3), q.z))
+        pc = Piece("tundra_cave", f"ice_{side}", "the Ice_Cave_Mouth kit pivot (bottom centre, front -Z = the opening side)",
+                   place={"relativeTo": "the Ice_Cave_Mouth model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                          "scale": "the copy's Model scale (1.0; the arena copy 1.25)",
+                          "replaces": f"the look of the {side} IceRock MeshPart ({size[0]:g} x {size[1]:g} x {size[2]:g} at "
+                                      f"{pos}, {base}); keep it as the invisible collider (Transparency 1)",
+                          "collide": "CanCollide off on the piece"},
+                   notes=f"faceted translucent ice boulder fitted to 95 % of today's IceRock box, flat bottom at y -0.3: an "
+                         f"OUTER shell of big facets in {base} (deeper x0.88 at the bottom, lighter toward the top, up-facing "
+                         f"facets lighter) with every edge chamfered in light {light} (the 'light edges'), Glass Transparency "
+                         f"0.3 (edges 0.2); an opaque INNER core shell ({core}, SmoothPlastic, 62 % size, set low) that shows "
+                         "through the glass as the inner colour gradient. 2 closed convex shells.")
+        pts = [kit(v) for v in boulder_local(rng)]
+        low = min(p.y for p in pts)
+        pts += [Vector((p.x, -0.3, p.z)) for p in pts if p.y < low + 1.2]     # the foot sits 0.3 into the ground
+        lo = min(p.y for p in pts)
+        hi = max(p.y for p in pts)
+        bevel_shell(pc, pts, 0.16, ice_colfn(base, lo, hi, rng), lambda cc, n, light=light: light, m="Glass")
+        cpts = [kit(Vector((v.x * 0.62, v.y * 0.66 - 0.1, v.z * 0.62))) for v in
+                boulder_local(rng, rings=((-0.9, 4, 0.8), (-0.2, 5, 1.0), (0.6, 4, 0.75)), top=0.95)]
+        shell(pc, cpts, lambda cc, n, core=core: mix(core, base, 0.25) if n.y > 0.5 else core)
+        out.append(pc)
+    return out
+
+
+def t_cave_slab():
+    rng = random.Random(8211)
+    pc = Piece("tundra_cave", "slab", "the Ice_Cave_Mouth kit pivot (bottom centre, front -Z)",
+               place={"relativeTo": "the Ice_Cave_Mouth model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale",
+                      "replaces": "the look of the top IceRock MeshPart (the slab, 23 x 6 x 10 #768096 at (0, 13.4, 0.5)); keep "
+                                  "it as the invisible collider", "collide": "CanCollide off on the piece"},
+               notes="thick slate rock slab in 2 strata: a lower darker layer #4E566E (y 10.3..12.7, its underside = the "
+                     "opening's top, today 10.4) and the main layer #768096 (y 12.4..15.3) that overhangs 0.6-0.9 at the "
+                     "front, its sloped top band in a lighter slate #8891A4 (the chamfer); 3 tone steps, darker low. 2 "
+                     "closed convex shells.")
+    lo = [Vector((x, 10.3, z)) for (x, z) in superellipse(10, 10.3, 4.3, 4, rng, 0.03, 0.2, 0.0, 0.6)]
+    lo += [Vector((x, 12.7 + rng.uniform(-0.1, 0.1), z)) for (x, z) in superellipse(10, 10.9, 4.7, 4, rng, 0.03, 0.5, 0.0, 0.5)]
+    shell(pc, lo, lambda cc, n: tone(T_ROCK_D, (0.92 if n.y < -0.5 else 1.0) * rng.choice(STEPS)))
+    up = [Vector((x, 12.4, z)) for (x, z) in superellipse(9, 10.8, 4.6, 4, rng, 0.03, 0.1, 0.0, 0.5)]
+    up += [Vector((x, 13.6 + rng.uniform(-0.15, 0.15), z)) for (x, z) in superellipse(10, 11.5, 5.1, 4, rng, 0.03, 0.4, 0.0, 0.35)]
+    up += [Vector((x, 14.55 + rng.uniform(-0.1, 0.1), z)) for (x, z) in superellipse(10, 11.1, 4.75, 4, rng, 0.03, 0.05, 0.0, 0.4)]
+    up += [Vector((x, 15.2 + rng.uniform(-0.08, 0.08), z)) for (x, z) in superellipse(8, 9.8, 3.9, 3.5, rng, 0.04, 0.25, 0.0, 0.5)]
+
+    def upcol(cc, n):
+        if 0.3 < n.y < 0.85:     # the sloped band round the top = the lighter chamfer
+            return mix(T_ROCK, "#FFFFFF", 0.13)
+        return tone(T_ROCK, (0.86 + 0.14 * max(0.0, min(1.0, (cc.y - 12.4) / 3.0))) * rng.choice(STEPS))
+    shell(pc, up, upcol)
+    return [pc]
+
+
+def t_cave_slab_snow():
+    rng = random.Random(8221)
+    pc = Piece("tundra_cave", "slab_snow", "the Ice_Cave_Mouth kit pivot (bottom centre, front -Z)",
+               place={"relativeTo": "the Ice_Cave_Mouth model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale",
+                      "replaces": "the Snow MeshPart (20.7 x 6 x 9 at (0, 14.5, 0.5), no collision)", "collide": "CanCollide off"},
+               notes="soft thick snow cap on tundra_cave__slab: a domed pillow (top y 17.3, today's snow top 17.5) whose "
+                     "rim bulges 0.4-0.6 past the slab's top edge, irregular 14-sided outline; 5 drip lumps over the front "
+                     "edge and 2 on each end (separate shells). Snow #F4F8FF on top -> #E1EBFA sides -> #CEDEF6 undersides. "
+                     "10 closed convex shells.")
+    pts = [Vector((x, 14.7, z)) for (x, z) in superellipse(14, 10.2, 4.0, 4, rng, 0.02, 0.1, 0.0, 0.45)]
+    pts += [Vector((x, 15.55 + rng.uniform(-0.08, 0.08), z)) for (x, z) in superellipse(14, 10.95, 4.75, 4, rng, 0.03, 0.3, 0.0, 0.35)]
+    pts += [Vector((x, 16.75 + rng.uniform(-0.08, 0.08), z)) for (x, z) in superellipse(12, 9.2, 3.4, 3, rng, 0.04, 0.0, 0.0, 0.45)]
+    pts += [Vector((rng.uniform(-4, 4), 17.3 + rng.uniform(-0.06, 0.04), rng.uniform(-1.0, 1.4))) for _ in range(4)]
+    shell(pc, pts, snow_colfn(SNOW_WHITE))
+    for x in (-8.2, -4.5, -0.6, 3.4, 7.6):
+        shell(pc, lump_pts((x + rng.uniform(-0.3, 0.3), 15.05, -4.25), rng.uniform(0.6, 0.9), rng.uniform(0.42, 0.55), 0.35, rng,
+                           drop=rng.uniform(0.18, 0.3)), snow_colfn(SNOW_WHITE))
+    for sx in (-1, 1):
+        for z in (-1.4, 2.1):
+            shell(pc, lump_pts((sx * 10.7, 15.1, z + rng.uniform(-0.3, 0.3)), 0.35, 0.42, rng.uniform(0.6, 0.8), rng,
+                               drop=rng.uniform(0.15, 0.25)), snow_colfn(SNOW_WHITE))
+    return [pc]
+
+
+# --- 04 snow bridge -------------------------------------------------------------------------------------------
+def _span_ice(pc, xf, hx, rng, cols, core, light):
+    """Layered faceted ice body of one Span box (local half sizes hx x 2 x 5): 3 strata stepping inward going down
+    (chamfered edges in `light`) and an opaque core."""
+    hz = 5.0
+    # planar rings with parallel edges (the side faces stay quads); the facets come from a few bulge / keel points
+    l1 = _rect8(hx, hz, 0.35, 1.98) + _rect8(hx - 0.12, hz - 0.12, 0.35, 0.55)
+    l2 = _rect8(hx - 0.3, hz - 0.35, 0.45, 0.75) + _rect8(hx - 0.7, hz - 0.75, 0.6, -0.95)
+    l2 += [Vector((u * (hx - 1.5), -0.1 + rng.uniform(-0.1, 0.1), s * (hz - 0.25))) for (u, s) in ((-0.45, -1), (0.4, 1))]
+    l3 = _rect8(hx - 0.9, hz - 0.95, 0.6, -0.75) + _rect8(hx - 1.8, hz - 2.05, 0.7, -1.95)
+    l3 += [Vector((u * (hx - 3.0), -2.45 + rng.uniform(-0.1, 0.1), rng.uniform(-0.6, 0.6))) for u in (-1, 0.05, 1)]
+    for pts, col in ((l1, cols[0]), (l2, cols[1]), (l3, cols[2])):
+        bevel_shell(pc, [xf(p) for p in pts], 0.1, lambda cc, n, col=col: tone(col, rng.choice((1.0, 0.95)) * (1.04 if n.y < -0.5 else 1.0)),
+                    lambda cc, n: light, m="Glass")
+    cpts = _rect8(hx - 1.2, hz - 1.4, 0.6, 1.4) + _rect8(hx - 2.0, hz - 2.4, 0.6, -1.6)
+    shell(pc, [xf(p) for p in cpts], lambda cc, n: core)
+
+
+def t_bridge():
+    rng = random.Random(8301)
+    pv = {"relativeTo": "the Snow_Bridge_Section model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+          "scale": "the copy's Model scale (1.0 everywhere)"}
+    mid = Piece("tundra_bridge", "ice_mid", "the Snow_Bridge_Section kit pivot (y 0 = the pivot, the span runs along X)",
+                place=dict(pv, replaces="the look of the middle Span (16 x 4 x 10 #54A0E8 at (0, 5, 0)); keep it as the invisible "
+                           "collider", collide="CanCollide off on the piece"),
+                notes="layered blue ice underside of the middle span: 3 faceted strata stepping inward going down (top band "
+                      "#74B6EC, main #54A0E8, keel #1E7FD6 hanging 0.45 below the box), every edge chamfered in light "
+                      "#BFE9F5; Glass Transparency 0.25 (edges 0.2) over an opaque navy #234A8F core = the inner colour "
+                      "gradient. 4 closed convex shells.")
+    _span_ice(mid, _xf((0.0, 5.0, 0.0), M_ID), 8.0, rng, (mix(T_ICE_DEEP, T_ICE_L, 0.3), T_ICE_DEEP, T_ICE_D), T_NAVY, T_ICE_L)
+    side = Piece("tundra_bridge", "ice_side", "the Snow_Bridge_Section kit pivot; built on the RIGHT span (+X)",
+                 place=dict(pv, orientation="[0, 0, 0] for the right span; [0, 180, 0] (same kit pivot) for the left span",
+                            replaces="the look of the side Spans (13 x 4 x 10 #96D6FA at (+-13.6, 3.5, 0), roll -+13 deg; the "
+                            "Tundra_3 copies 10.1 deep); keep them as invisible colliders", collide="CanCollide off on the piece"),
+                 notes="layered ice underside of a side span, same recipe in the side colours (top band #A2DCF8, main "
+                       "#96D6FA, keel #6EC6EA), light #BFE9F5 chamfers, Glass T 0.25 over an opaque #1E7FD6 core. 4 closed "
+                       "convex shells.")
+    _span_ice(side, _xf((13.6, 3.5, 0.0), M_SPAN_R), 6.5, rng, (mix(T_ICE, T_ICE_L, 0.3), T_ICE, T_ICE_M), T_ICE_D, mix(T_ICE_L, T_WHITE, 0.3))
+    smid = Piece("tundra_bridge", "snow_mid", "the Snow_Bridge_Section kit pivot",
+                 place=dict(pv, replaces="the look of the middle SpanSnow (16.4 x 1.2 x 10.6 #F4F8FF at (0, 7.4, 0)); keep it "
+                            "as the invisible collider: the walk top stays y 8.0", collide="CanCollide off on the piece"),
+                 notes="soft snow on the middle span: the TOP is exactly flat at y 8.0 (= the collider top) and 0.3 inside "
+                       "the edges, a bulging rim, lips rolling 1.0 down over both long edges (z +-5.5) with 4 drip lumps "
+                       "each, short 0.25 bevels at the ends where it meets the side snow. #F4F8FF / #E1EBFA / #CEDEF6.")
+    r1 = slab_snow_into(smid, _xf((0.0, 7.4, 0.0), M_ID), 8.2, 5.3, 0.6,
+                        {"-x": (0.0, 0.25, 0), "+x": (0.0, 0.25, 0), "-z": (0.18, 1.0, 4), "+z": (0.18, 1.0, 4)}, rng, SNOW_WHITE)
+    smid.place["icicleRoots"] = r1
+    sside = Piece("tundra_bridge", "snow_side", "the Snow_Bridge_Section kit pivot; built on the RIGHT span (+X)",
+                  place=dict(pv, orientation="[0, 0, 0] right; [0, 180, 0] left",
+                             replaces="the look of the side SpanSnows (13.4 x 1.2 x 10.6 #CEDEF6 at (+-14.14, 5.84, 0), roll -+13; "
+                             "the Tundra_3 copies 10.7 deep); keep them as invisible colliders: the walk tops stay exactly",
+                             collide="CanCollide off on the piece"),
+                  notes="soft snow on a side span in #CEDEF6 (its own colour): the top exactly on the collider's tilted top "
+                        "plane (local y +0.6), lips 0.95 down over the long edges with 3 drips each, a 0.9 lip with 2 drips "
+                        "over the bridge end (x 20.8), a short bevel at the inner end. The icicleRoots are for the right "
+                        "span (mirror x and z for the left).")
+    r2 = slab_snow_into(sside, _xf((14.1399, 5.8385, 0.0), M_SPAN_R), 6.7, 5.3, 0.6,
+                        {"-x": (0.0, 0.25, 0), "+x": (0.15, 0.9, 2), "-z": (0.18, 0.95, 3), "+z": (0.18, 0.95, 3)}, rng, SNOW_SHADE)
+    sside.place["icicleRoots"] = r2
+    return [mid, side, smid, sside]
+
+
+# --- 01 cabin roof snow ---------------------------------------------------------------------------------------
+def t_cabin_roof():
+    rng = random.Random(8401)
+    main = Piece("tundra_cabin", "roof_snow", "the Cabin_Broken kit pivot (bottom centre, front -Z; the ridge runs along Z)",
+                 place={"relativeTo": "the Cabin_Broken model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                        "scale": 1.0, "replaces": "the look of the main RoofSnow (11.6 x 1.0 x 17.6 #F4F8FF at (-5.64, 13.07, 0), "
+                        "roll 31 deg); keep it as the invisible collider (its top = the piece's flat top)",
+                        "collide": "CanCollide off on the piece"},
+                 notes="thick soft snow on the whole -X roof slope: flat top exactly on the collider's top plane, a rim "
+                       "that bulges past the gables (0.25) and rolls 1.15 down over the eave (0.45 past it, covering the "
+                       "board end) with 5 drip lumps; 2 drips on each gable edge; it stops at the ridge. icicleRoots = "
+                       "points under the eave lip between the drips (hang tundra_ice__icicle / cluster there).")
+    main.place["icicleRoots"] = slab_snow_into(main, _xf((-5.6378, 13.0686, 0.0), M_ROOF_MAIN), 5.8, 8.8, 0.5,
+                                               {"-x": (0.45, 1.15, 5), "+x": (0.0, 0.3, 0), "-z": (0.25, 0.6, 2), "+z": (0.25, 0.6, 2)},
+                                               rng, SNOW_WHITE, n=24)
+    small = Piece("tundra_cabin", "roof_snow_small", "the Cabin_Broken kit pivot",
+                  place={"relativeTo": "the Cabin_Broken model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                         "scale": 1.0, "replaces": "the look of the small RoofSnow (6.4 x 0.9 x 6.6 #CEDEF6 at (3.61, 14.23, 5.5), "
+                         "roll -31 deg); keep it as the invisible collider", "collide": "CanCollide off on the piece"},
+                  notes="snow on the surviving piece of the +X slope in #CEDEF6: flat top on the collider top, a 1.0 lip "
+                        "over the eave (+X) with 2 drips, a ragged lip with 2 drips on the broken front edge (z 2.2), 1 on "
+                        "the back gable.")
+    small.place["icicleRoots"] = slab_snow_into(small, _xf((3.612, 14.2257, 5.5), M_ROOF_SMALL), 3.2, 3.3, 0.45,
+                                                {"+x": (0.4, 1.0, 2), "-x": (0.0, 0.3, 0), "-z": (0.2, 0.6, 2), "+z": (0.2, 0.5, 1)},
+                                                rng, SNOW_SHADE, n=18)
+    return [main, small]
+
+
+def tundra_buildings():
+    pieces = t_cabin_roof() + t_cave_boulders() + t_cave_slab() + t_cave_slab_snow() + t_bridge() + t_snow_caps() \
+        + t_snow_drifts() + t_icicles() + t_ice_block() + t_ice_shards()
+    for pc in pieces:
+        pc.notes += f" [{shell_count(pc)} shells]"
+    return pieces
+
+
+def _glassy(ob, pc, alpha=0.8):
+    """Preview only: faces whose material is Glass render see-through, like Studio: closed shells, back faces culled
+    (no solidify), so only the front facets and the opaque core behind them show."""
+    cols = sorted(set(f["c"] for f in pc.faces))
+    glass = set(f["c"] for f in pc.faces if f["m"] == "Glass")
+    if glass:
+        for md in list(ob.modifiers):
+            ob.modifiers.remove(md)
+        for mt in ob.data.materials:
+            P._try(lambda mt=mt: setattr(mt, "use_backface_culling", True))
+    for i, c in enumerate(cols):
+        if c in glass and i < len(ob.data.materials):
+            mt = ob.data.materials[i]
+            b = mt.node_tree.nodes.get("Principled BSDF")
+            P._try(lambda: setattr(b.inputs["Alpha"], "default_value", alpha))
+            P._try(lambda: setattr(mt, "surface_render_method", "BLENDED"))
+            P._try(lambda: setattr(mt, "blend_method", "BLEND"))
+    return ob
+
+
+def preview_tundra_buildings(pieces):
+    from mathutils import Matrix
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    by = {f"{p.obj}__{p.name}": p for p in pieces}
+    V = Vector
+
+    def put(name, off=V((0, 0, 0)), rot=None, scale=1.0):
+        pc = by[name]
+        return _glassy(piece_object(pc, col, off, rot, scale), pc)
+
+    def nonuni(m, s):
+        return _mat3(m) @ Matrix(((s[0], 0, 0), (0, s[1], 0), (0, 0, s[2])))
+    # 1 cabin (kit space)
+    W, D = "#865C42", "#5C4236"
+    g1 = context_boxes([((0, 0.3, 0), (20, 0.6, 16), D, (0, 0, 0)), ((0, 4.5, 7.5), (20, 9, 1), W, (0, 0, 0)),
+                        ((-9.5, 4.5, 0), (1, 9, 14), W, (0, 0, 0)), ((-6.5, 4.5, -7.5), (7, 9, 1), W, (0, 0, 0)),
+                        ((6.5, 2.75, -7.5), (7, 5.5, 1), W, (0, 0, 0)), ((9.5, 2.5, 0), (1, 5, 14), W, (0, 0, 0)),
+                        ((0, 7.75, -7.5), (6, 2.5, 1), D, (0, 0, 0)), ((0, 3.25, -7.2), (6, 6.5, 0.3), "#1F222B", (0, 0, 0)),
+                        ((-5.5, 8.5, 5), (3.2, 17, 3.2), T_ROCK, (0, 0, 0)), ((-5.2, 12.34, 0), (12.4, 0.8, 18), D, (0, 0, 31)),
+                        ((3.2, 13.54, 5.5), (7, 0.8, 7), D, (0, 0, -31)), ((0, 15.2, 0), (1.4, 1.4, 18.6), D, (0, 0, 0)),
+                        ((-6.5, 5, -7.5), (3, 3, 1.2), "#1F222B", (0, 0, 0))], col)
+    g1 += [put("tundra_cabin__roof_snow"), put("tundra_cabin__roof_snow_small"),
+           put("tundra_snow__cap", V((-5.5, 17.0, 5.0)), nonuni(M_ID, (3.9, 0.8, 3.9)))]
+    for pos, m, s, nm in (((-6.5, 0, -10.5), M_ID, (9, 3.5, 5), "drift"), ((0, 0, 10.5), (-1, 0, 0, 0, 1, 0, 0, 0, -1), (20, 4, 5), "drift"),
+                          ((-13, 0, 0), (0, 0, 1, 0, 1, 0, -1, 0, 0), (14, 4.5, 6), "drift_shade")):
+        g1.append(put(f"tundra_snow__{nm}", V(pos), nonuni(m, s)))
+    for i, r in enumerate(by["tundra_cabin__roof_snow"].place["icicleRoots"]):
+        nm = "tundra_ice__icicle_cluster" if i % 2 else "tundra_ice__icicle"
+        g1.append(put(nm, V(r), euler_matrix([0, 90, 0]), 0.55 if i % 2 else 0.6))
+    # 2 cave (offset +X 50)
+    o = V((50, 0, 0))
+    g2 = context_boxes([((50, 5.5, 1.8), (12, 11, 2), "#0F1F36", (0, 0, 0)), ((50, 7, 3.6), (18, 14, 2), T_ROCK_D, (0, 0, 0))], col)
+    g2 += [put(f"tundra_cave__{n}", o) for n in ("ice_left", "ice_right", "slab", "slab_snow")]
+    for (x, z, yaw, s) in ((-4.9, -5.2, 20, 1.0), (5.3, -5.4, -35, 0.8), (-11.8, -2.6, 0, 0.7), (12.3, -1.8, 150, 0.6)):
+        g2.append(put("tundra_ice__shards", o + V((x, 0, z)), euler_matrix([0, yaw, 0]), s))
+    for (x, L) in ((0.4, 4.2), (-3.2, 3.0), (3.4, 2.6)):
+        g2.append(put("tundra_ice__icicle", o + V((x, 10.4, -0.6)), nonuni(M_ID, (1.0, L / 3.0, 1.0))))
+    g2.append(put("tundra_ice__icicle_cluster", o + V((-1.6, 10.35, -2.6)), None, 0.8))
+    g2.append(put("tundra_ice__icicle_cluster", o + V((2.2, 10.35, -2.9)), euler_matrix([0, 180, 0]), 0.7))
+    # 3 bridge (offset +X 100)
+    o = V((100, 0, 0))
+    g3 = [put("tundra_bridge__ice_mid", o), put("tundra_bridge__ice_side", o), put("tundra_bridge__ice_side", o, euler_matrix([0, 180, 0])),
+          put("tundra_bridge__snow_mid", o), put("tundra_bridge__snow_side", o), put("tundra_bridge__snow_side", o, euler_matrix([0, 180, 0]))]
+    for (x, z, L) in ((-9, -3, 3.0), (-4, 2.5, 4.6), (1, -3, 2.6), (6, 2.5, 5.0), (11, -3, 3.4)):
+        top = 3.0 if abs(x) < 8 else 1.55 + (abs(x) - 13.15) * -0.231 + 0.1
+        g3.append(put("tundra_ice__icicle", o + V((x, top + 0.2, z)), nonuni(M_ID, (0.9, L / 3.0, 0.9))))
+    for r in by["tundra_bridge__snow_mid"].place["icicleRoots"][::2]:
+        g3.append(put("tundra_ice__icicle_cluster", o + V(r), None, 0.5))
+    # 4 shared pieces line-up (offset +X 150)
+    x0 = 150.0
+    g4 = context_boxes([((x0, 0.5, 0), (3.2, 1.0, 3.2), T_ROCK, (0, 0, 0)), ((x0 + 6, 2.0, 2.2), (6.0, 0.4, 1.0), "#5C4236", (0, 0, 0))], col)
+    g4 += [put("tundra_snow__cap", V((x0, 1.0, 0)), None, 3.4), put("tundra_snow__cap_drip", V((x0 + 4.5, 0, -1.0)), None, 2.6),
+           put("tundra_snow__cap_shade", V((x0 + 8.5, 0, -1.0)), None, 2.6),
+           put("tundra_snow__drift", V((x0 + 1.5, 0, 6)), nonuni(M_ID, (6, 2.2, 3.5))),
+           put("tundra_snow__drift_shade", V((x0 + 8, 0, 6)), nonuni(M_ID, (5, 1.8, 3))),
+           put("tundra_ice__icicle", V((x0 + 4.2, 1.8, 2.2)), None, 0.55), put("tundra_ice__icicle_cluster", V((x0 + 6.8, 1.8, 2.2)), None, 0.6),
+           put("tundra_ice__block", V((x0 + 12, 0, 0.5)), None, 1.3), put("tundra_ice__shards", V((x0 + 12.5, 0, 5)), None, 1.2)]
+    out = os.path.join(P.PREVIEW_DIR, "tundra_buildings_facets.png")
+    return render_sheet("tundra", [(g1, [(-35, 22)]), (g2, [(-20, 12)]), (g3, [(-25, 12)]), (g4, [(-20, 15)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -4710,7 +5415,8 @@ def main():
                           ("jungle_totems", jungle_totems, preview_jungle_totems),
                           ("jungle_decor", jungle_decor, preview_jungle_decor),
                           ("jungle_nature", jungle_nature, preview_jungle_nature),
-                          ("batch4", batch4, preview_batch4)):
+                          ("batch4", batch4, preview_batch4),
+                          ("tundra_buildings", tundra_buildings, preview_tundra_buildings)):
         if only and obj not in only:
             continue
         pieces = fn()

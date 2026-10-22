@@ -1981,6 +1981,410 @@ One recipe for the 3 houses (same family); keep each footprint, height, door, wi
 - the banners: 61 x 10;
 - the rest: only 2 copies each.
 
+## E. Tundra: buildings and structures (owner task 2026-10-22)
+
+Images: `docs/Tundra_Images/01_Buildings_and_Structures/` (4 objects + the overview sheet). Data read from
+`BackUP_Files/FightYourDestiny_2026-10-22_130526_before_tundra_buildings_{ServerStorage,Workspace}.rbxm`.
+Same quality target as section A (the well): low-mid poly, bevelled logs and planks with visible joints, capped
+edges, thick timbers with joints and iron bands, rope, small readable details, soft gradients, clean saturated
+colours, no PBR, no grain. Everything is parts + unions unless a facet piece is named
+(`tools/blender/fyd_facets.py -- tundra_buildings`, preview `Previews/Props/tundra_buildings_facets.png`).
+
+### E0. Today's kits, copies, functions and hazards
+
+All kits are in `ServerStorage.MapAssets.Tundra` (pivot = bottom centre at the kit origin, front -Z, all
+SmoothPlastic, no Neon, no union). Built by the zone builder on 2026-10-04 (`docs/ASSET_KIT_TUNDRA.md`).
+
+| # | Owner's name | Kit | Parts | Placed copies (test zone = `_Staging.AssetPreview.Tundra.*`) |
+|---|---|---|---|---|
+| 01 | wrecked wooden cabin | `Cabin_Broken` (26.3 x 18 x 26 with the drifts; house 20 x 16) | 40 | **2**: test; `Zones.Tundra.Tundra_1.Decor.Props` at (7905, -0.2, 35), turned so the kit front (-Z) faces world +X |
+| 02 | ice cave entrance | `Ice_Cave_Mouth` (29 x 18.2 x 13) | 9 (5 MeshParts) | **6**: test; `Tundra_2.Decor.Props` x4: (7884, 1, 248) and (7884, 1, 338) facing +X, (8116, 1, 228) facing -X, (7928, 0.5, 410) facing -Z; `ServerStorage.BossArenas.Tundra.Decor.Props` at (7884, 0, -600), **Model scale 1.25** |
+| 03 | wooden scaffold stand | `Wooden_Scaffold` (16 x 13.6 x 8) | 15 | **4**: test; `Tundra_3.Decor.Props` x3: (8119, 0, 500), (7882, 0, 490), (7881, **8**, 580) (on the T2Body ground, deck top at world y 18.8) |
+| 04 | curved snow bridge slab | `Snow_Bridge_Section` (41.6 x 9.8 x 10.6) | 11 (5 MeshParts) | **4**: test (on the ground, pivot y 0); `Tundra_3.Decor.Props` x3, all turned so kit +X = world -Z: A (8117, 30, 566), B (7884, 34, 548), C (7883, 36, 665) |
+
+- **Scale:** Model scale 1 everywhere except the arena cave (Model scale 1.25, kept by the sync). **No part-resized
+  copy**: no bakedScale needed.
+- **Game copies that differ from their kit** (take the colliders from the game copies, as for the batch 4 houses):
+  - Tundra_1 cabin: the walls and LogLines are pushed out 0.05 (WallBack 20.1 long at z 7.55, the back LogLines 20.2,
+    WallLeft at x -9.55, WallFrontL / R at z -7.55, WallRight at x 9.55) and the Window sits at z -7.3 (the earlier
+    "pane 0.12 out of the wall" fix, `HANDOFF.md`);
+  - the 3 Tundra_3 bridges: both side `Span` parts are 10.1 deep and both side `SpanSnow` parts 10.7 (kit 10 / 10.6).
+  - Every other copy is identical to its kit (part by part, 0.03 tolerance).
+- **Shared Toolbox meshes:** cave `IceRock` L / R = rock B `rbxassetid://9420263160`; cave top `IceRock` (the slab)
+  and `Snow` = rock A `7231644778` (the jungle rock meshes, recoloured); every `Icicle` (cave and bridge) =
+  `100106311518324` (the mace spike mesh, flipped upside down).
+
+**Functions (checked in the data and `src/`):**
+- **Nothing functional in any kit or copy:** no script, ProximityPrompt, ClickDetector, Attachment, light, sound,
+  attribute, tag or `Barrier`. `src/` names none of the 4 kits. The only ProximityPrompt in the Tundra zones is the
+  Tundra_4 `BossGate.Interact` (not one of these kits).
+- **No SyncMapProps rule** claims these kits (the Tundra entries of `tools/SyncMapProps.luau` are the Tundra_1 dark
+  sign and the frozen ship). Suggested propIds: `tundra_cabin_wrecked`, `tundra_ice_cave`, `tundra_scaffold`,
+  `tundra_snow_bridge`.
+- **01 cabin: no door logic, no NPC.** The `Door` is a colliding slab hanging askew in front of the doorway
+  (4.6 x 6.4 x 0.4 at (-1.6, 3.1, -8.7), orientation about (-8.8, 28.4, -4.7)); the doorway itself is closed by
+  `DoorDark` (6 x 6.5 x 0.3, collides). The cabin is NOT enterable. Keep both, the Door's CFrame and the closed
+  doorway.
+- **02 cave: no prompt, no teleport.** `Dark` (12 x 11 x 2 at (0, 5.5, 1.8)) and `Back` (18 x 14 x 2 at (0, 7, 3.6))
+  both collide: the recess is a closed niche 1.8 deep. Every game copy backs onto a zone `Bounds` wall or the
+  Tundra_2 drift facets.
+- **03 scaffold: decor stand, no ladder.** Deck top y **10.8** (Deck 16 x 0.8 x 8 at (0, 10.4, 0)), Rail on the front
+  (-Z) 16 x 0.5 x 0.5 at (0, 13.3, -3.4).
+- **04 bridge: the 3 game copies do NOT chain to anything.** No other bridge piece, ledge or cliff lies within 6
+  studs of any end; they float 22-36 studs above the Tundra_3 ground along the east (A) and west (B, C) `Bounds`
+  walls (nothing reaches them: B's west end is 20 studs above the scaffold deck at (7881, 18.8, 572..588)). The
+  "connection" is the kit's own 3 spans; keep them exactly:
+
+  | Surface (kit space) | Exact value |
+  |---|---|
+  | middle walk top (`SpanSnow` 16.4 x 1.2 x 10.6 at (0, 7.4, 0)) | flat y **8.0**, x -8.2..8.2, z -5.3..5.3 |
+  | side walk tops (`SpanSnow` 13.4 x 1.2 x 10.6 at (+-14.14, 5.84, 0), roll -+13 deg) | planes falling 13 deg outward: (+-7.75, **7.93**) inner edge -> (+-20.80, **4.92**) outer edge; top centre (+-14.28, 6.43) |
+  | joint middle / side | the middle top stands 0.07 (x +-7.75) .. 0.17 (x +-8.2) above the side top: today's small step, keep it |
+  | ice bodies (`Span`) | middle 16 x 4 x 10 at (0, 5, 0) (y 3..7); sides 13 x 4 x 10 at (+-13.6, 3.5, 0), roll -+13 (top edge (+-7.72, 6.91) -> (+-20.38, 3.99)) |
+  | world walk heights (game) | A: middle 38.0, ends 34.92 at world z 545.2 / 586.8 (x 8117); B: 42.0 / 38.92 at z 527.2 / 568.8 (x 7884); C: 44.0 / 40.92 at z 644.2 / 685.8 (x 7883) |
+
+**Collisions to keep** (today's parts become invisible colliders, Transparency 1, CastShadow off, exact CFrame and size
+of the game copy):
+
+| Kit | Colliding today | Not colliding (CanCollide + CanQuery off, CastShadow off) |
+|---|---|---|
+| Cabin_Broken | everything except the 8 lines: Floor, SnowInside, 3 Drift wedges, WallBack / Left / Right / FrontL / FrontR, WallRightBroken, WallFrontRBroken, 4 Post cylinders, Lintel, Door, DoorDark, Window, 3 Gables, Rafter, RoofFallen, 2 Roof, 2 RoofSnow, Ridge, Chimney, ChimneySnow | 6 LogLine, 2 WindowBar |
+| Ice_Cave_Mouth | Dark, Back, the 3 IceRock MeshParts (L, R and the top slab) | Snow, 3 Icicle |
+| Wooden_Scaffold | 4 Post, Deck, Rail | 4 Brace, 3 PlankLine, 2 Snow |
+| Snow_Bridge_Section | 3 Span, 3 SpanSnow | 5 Icicle |
+
+**Today's shapes** (kit space):
+- **01 Cabin_Broken:**
+  - Floor 20 x 0.6 x 16 #5C4236; SnowInside 17 x 1.2 x 13 #CEDEF6 at (1, 0.9, 0) (top 1.5);
+  - walls 1.0 thick #865C42: WallBack 20 x 9 (z 7.5), WallLeft 14 x 9 (x -9.5), WallFrontL 7 x 9 at x -6.5, WallFrontR 7 x 5.5 at x 6.5 (+ WallFrontRBroken wedge 5 x 3 on it), WallRight 14 x 5 at x 9.5 (+ WallRightBroken wedge 7 x 3.5 at z 3.5);
+  - 4 corner Post cylinders 1.6 dia #5C4236 (3 x 9.6 tall, the front-right one 6.4); 6 LogLine strips 0.25 x 1.1 at y 3 and 6 (the only "logs" today);
+  - doorway 6 x 6.5 at x 0 (DoorDark #1F222B, Lintel 6 x 2.5 x 1 #5C4236 above), the askew Door #865C42;
+  - Window 3 x 3 x 1.2 #1F222B at (-6.5, 5, -7.5) with a cross of 2 WindowBars 0.3 #5C4236;
+  - roof: the ridge runs along Z (Ridge cylinder 18.6 x 1.4 at y 15.2); the -X slope is whole: Roof board 12.4 x 0.8 x 18 at (-5.2, 12.34, 0), roll +31 deg, RoofSnow 11.6 x 1.0 x 17.6 #F4F8FF on it (eave at x -10.6, y 10.1); the +X slope survives only at the back: Roof 7 x 0.8 x 7 at (3.2, 13.54, 5.5), roll -31, RoofSnow 6.4 x 0.9 x 6.6 #CEDEF6; RoofFallen 8 x 0.8 x 7 lies inside at (5.6, 3.6, -2.5) tilted 52 deg; one Rafter 9 x 0.7 x 0.7 at (4, 12.3, -4);
+  - 3 Gable wedges (the front-right one is missing); Chimney 3.2 x 17 x 3.2 #768096 at (-5.5, 8.5, 5) with ChimneySnow 3.8 x 0.9 x 3.8;
+  - 3 Drift wedges: 9 x 3.5 x 5 #F4F8FF at (-6.5, 1.75, -10.5) against the front wall; 20 x 4 x 5 #F4F8FF at (0, 2, 10.5) against the back wall; 14 x 4.5 x 6 #CEDEF6 at (-13, 2.25, 0) against the left wall (each high side against its wall).
+- **02 Ice_Cave_Mouth:**
+  - IceRock L 8 x 15 x 9 #54A0E8 at (-8, 7.2, 0), yaw 34.4 roll -6; IceRock R 8 x 14 x 9 #96D6FA T 0.1 at (8, 6.7, 0), yaw 137.5 roll 6;
+  - the slab = IceRock 23 x 6 x 10 #768096 at (0, 13.4, 0.5) (y 10.4..16.4); Snow 20.7 x 6 x 9 #F4F8FF at (0, 14.5, 0.5);
+  - Dark 12 x 11 x 2 #0F1F36 at (0, 5.5, 1.8); Back 18 x 14 x 2 #4E566E at (0, 7, 3.6);
+  - 3 Icicles #D6ECFF T 0.15 (1.2 x 4.2 / 3.0 / 2.6) hanging at x 0.4 / -3.2 / 3.4, z -0.6, tips at y 7.0 / 8.2 / 8.6.
+  - The opening = the gap between the boulders' inner faces (about x -4..4) under the slab (y 10.4), Dark 1.8 behind the front.
+- **03 Wooden_Scaffold:**
+  - 4 Posts 0.9 square #5C4236: back (z 3.4) 10 tall, front (z -3.4) 13.6 tall (they carry the Rail), at x +-7.4;
+  - 2 side Braces 0.5 x 10.4 at x +-7.4, pitched 52 deg (one diagonal per side); 2 front Braces 17.4 long at +-31 deg crossing in an X at z -3.4 / -3.5 (#865C42);
+  - Deck 16 x 0.8 x 8 #865C42 (top 10.8) with 3 PlankLines #5C4236 (0.15 wide, at z -2 / 0 / 2);
+  - 2 Snow slabs on the deck: 9 x 0.5 x 5 #F4F8FF at (-2, 11, 0.6), 4 x 0.4 x 3 #CEDEF6 at (5, 10.95, -1.5).
+- **04 Snow_Bridge_Section:** 3 Spans (middle #54A0E8, sides #96D6FA) with their SpanSnow layers (middle #F4F8FF, sides #CEDEF6), see the table above; 5 Icicles #D6ECFF T 0.15 (1.4 wide, 2.6-5.0 long) at x -9 / -4 / 1 / 6 / 11, z -3 / 2.5 / -3 / 2.5 / -3, roots inside the spans, tips down to y -1.8.
+
+### E1. Tundra palette (the owner's examples next to the real colours; use the REAL ones, tone steps x1 / x0.93 / x0.86)
+
+The owner: "keep each object's own main colors". The real colours are `Kit.Palette.Tundra` (`tools/BuildKit.luau`).
+The owner's examples that have no real counterpart become the NEW accent colours (edges, cores, gradients).
+
+| Role | Owner's example | Real colour (keep) | Used by / rule |
+|---|---|---|---|
+| snow | #F2F6F8 | **#F4F8FF** (Snow) | RoofSnow (main slope), ChimneySnow, 2 Drifts, cave Snow, scaffold big Snow, bridge middle SpanSnow; the TOP faces of every snow cap |
+| shaded snow | #D5E3EC | **#CEDEF6** (SnowShade) | SnowInside, the left Drift, the small RoofSnow, the small scaffold Snow, the bridge side SpanSnows; the UNDERSIDES and lips of every cap (a cap's sides = the mix #E1EBFA) |
+| ice light | #BFE9F5 | new accent (+ today's #D6ECFF Frost on the icicles) | the light bevel EDGES of every ice piece; icicle facets alternate #D6ECFF / #BFE9F5, tips #F2F6F8 |
+| ice mid | #6EC6EA | **#96D6FA** (Ice) | cave right boulder (T 0.1 today), bridge side spans; #6EC6EA = their deeper lower layer |
+| ice deep | #1E7FD6 | **#54A0E8** (IceDeep) | cave left boulder, bridge middle span; #1E7FD6 = their deeper lower layer / the core of the light ice |
+| navy | #234A8F | new accent (today's darks: cave Dark **#0F1F36**, cabin DoorDark / Window **#1F222B**) | the opaque CORE inside deep ice; the cave interior gradient #234A8F (rim) -> #0F1F36 (back) |
+| slate stone | #4F6A86 | **#768096** (Rock), **#4E566E** (RockDark) | chimney, cave slab (#768096); cave Back, slab underside, chimney cap, mortar (#4E566E) |
+| frosted dark wood | #4A2A1A | **#5C4236** (Trunk) | posts, floor, ridge, lintel, roof boards, window frame, plank lines, the cabin's dark logs |
+| frosted wood | #6A3A22 | **#865C42** (Wood) | wall logs, gables, door, rafter, braces, deck planks, rail |
+| cyan glow | #35E6F5 | none today (no Neon in these 4 kits) | optional only: a faint Neon glint deep in the cave (see E-cave); nothing else glows |
+| gold | #F2C230 | none today (#FFC93C is the game gold) | not used by these kits |
+| new details | | | iron #5C626E (straps, nails, bands, hinges); rope #C4A068; log ends #C49A6C with a #865C42 ring; frost on wood #E6EEF6; cut-wood splinters #A87A55 |
+
+- **Ice** = faceted translucent crystal: Glass, **Transparency 0.25-0.35** on the body faces, 0.2 on the light edges;
+  an opaque deeper core inside (the "inner colour gradient"). Neon only where something glows (nothing here).
+- **Snow** = soft thick caps with an irregular edge (never a flat white box): flat top where people walk, a rounded
+  bulging rim, drip lumps over edges.
+- **Icicles** = small tapering 6-sided cones, Glass T 0.25.
+- **Gradient (A9):** wood and stone x0.86 at the foot -> x1.0 at the top; ice deeper toward the bottom; snow
+  lighter on top. Glass / ice faces are not darkened by the A9 formula (their gradient is built into the layers).
+
+### E2. Part rules shared by the 4 objects (studs; joints, chamfers, caps and the gradient exactly as section A)
+
+**Round logs** (cabin walls, corner crossings):
+- One Cylinder per course and wall, **1.0-1.1 dia**, axis along the wall. The courses step **0.92** apart, so the
+  logs overlap 0.1-0.15 and no light passes. 9 courses on a 9-tall wall (y 0.55, 1.47, ... 7.91, top log at about 8.4).
+- **Chinking:** a dark #4A3022 strip, 0.18 tall, 0.1 behind the log faces, in every joint (the A2 mortar idea). A
+  thin frost line #E6EEF6 (0.06 tall) lies on the top of 1 log in 3, on the outside only.
+- **Tone:** 3 tone steps of #865C42 per log, never the same on 2 neighbours; the bottom 2 courses x0.86, the top ones
+  x1.0 (A9). 1 log in 5 uses the dark #5C4236 (a replaced log).
+- **Notched corners** (owner: "notched corners and visible log ends"):
+  - the logs of the front / back walls sit on even courses, the side-wall logs on odd courses (offset by half a log, 0.46);
+  - every log runs **0.7 past** the corner, so the corner is a stack of crossing log ends;
+  - a saddle notch = a darker #5C4236 cylinder collar 1.15 dia x 0.3 where the 2 logs cross.
+- **Log ends:** a disc on each end (Cylinder 0.06 proud, dia 0.92 x the log): #C49A6C. On it, a darker ring #865C42
+  (dia 0.6, 0.02 proud), 1 radial crack (#5C4236, 0.06 wide); a snow pinch (`tundra_snow__cap` scale (0.7, 0.18, 0.4))
+  on the top logs only.
+- **Broken logs** (the collapsed corner, the broken walls): the log stops at a jagged end. 2-3 WedgeParts 0.3-0.5 long
+  form splinter teeth, in the lighter cut-wood #A87A55, with 1 tooth longer; never a clean flat cut.
+
+**Planks** (roof boards, deck, door, the fallen roof, loose planks):
+- Planks are **1.1-1.4 wide, 0.2-0.25 thick**, with **0.05-0.08 gaps** over a dark #3A2A22 backing board (the A6 rule:
+  no light through hollow boxes).
+- **Nails:** heads 0.14 dia (Ball or Cylinder 0.05 proud) #5C626E, 2 per plank at every batten / beam, 0.25 in from
+  the plank ends.
+- **Splinters:** on broken plank ends, 2-3 thin wedges (0.15 x 0.08 x 0.4-0.7) in #A87A55; a lighter edge (x1.08) on
+  the last 0.3 of a broken plank.
+- **Tone:** 3 tone steps of the kit colour, slightly varied lengths (+-0.2) where the ends are free.
+
+**Thick timbers with joints** (posts, braces, rails; A6):
+- **Posts:** today's 0.9 square posts with a **0.18 chamfer** on the 4 long edges and a pyramid cap (wedges, 0.12
+  overhang). A flat stone footing #4E566E (1.5 x 0.35 x 1.5, chamfered) under each grounded post.
+- **Cross-lap joints:** where a brace crosses a post or another brace, it runs 0.2 past and is held by:
+  - **rope:** #C4A068, 2-3 turns of 0.12 cylinders, tilted 8 deg, plus a hanging end 0.5;
+  - **or iron:** a #5C626E strap 0.3 wide, 0.06 proud, wrapped over 3 faces, with 2 nails.
+- **Metal bands:** on posts 0.3 wide, 0.06 proud (A7), 1/6 from the post ends.
+
+**Snow caps** (owner: "soft thick caps with a slightly irregular edge, not flat white boxes"; facet pieces E7):
+- **Walk surfaces:** where people walk (roofs, bridge decks), the visible snow TOP is exactly the kept collider's top
+  plane (the pieces are built that way). Never lift it: the feet must not float.
+- **Shape:** a rounded rim **bulging 0.15-0.5 past** the edge it covers, with lips that roll **0.6-1.2 down** over
+  eaves and outer edges, plus drip lumps (0.9-1.5 wide, 0.6-0.8 tall) every 2-4 studs along the lips.
+- **Thickness:** 0.6-1.0 on roofs and slabs, 0.35-0.5 on beams, posts and planks.
+- **Colours:** snow #F4F8FF on top -> #E1EBFA on the sides -> #CEDEF6 on the undersides and lips. The shaded variant
+  (#CEDEF6 objects): #CEDEF6 / #C2D5F0 / #B2C7E8.
+- **Small caps** (posts, chimney, planks, log ends, ice blocks): `tundra_snow__cap` / `_shade` / `_drip`, scaled
+  non-uniformly.
+- **Placement:** snow only on tops and on the windward side (+X in kit space for the cabin roof's surviving piece). It
+  is never on the vertical faces, except in drifts.
+- **CanCollide off** on every visual cap: the kept parts collide.
+
+**Snow drifts:** `tundra_snow__drift` / `_shade` fitted to today's Drift wedges (they stay as invisible colliders);
+extra drifts with no collider go in corners and in the broken part.
+
+**Icicles** (owner: "small tapering cones"):
+- **Pieces:** `tundra_ice__icicle` (3.0 long, 0.9 at the root) and `tundra_ice__icicle_cluster` (4 cones under a
+  frozen root lump).
+- **Material:** Glass, Transparency 0.25; facets #D6ECFF / #BFE9F5, tips #D6EFF6.
+- **Placement:**
+  - roots touch the underside they hang from (eave lips, slab and span bottoms);
+  - lengths vary 0.8-3.0 (scale 0.3-1.0) in irregular groups of 2-5;
+  - the longest ones go at the corners and over doors, and they never block the cave opening below y 7.0 (today's
+    lowest tip).
+- **Collisions:** CanCollide / CanQuery / CastShadow off, as today.
+
+**Faceted ice** (owner: "faceted translucent crystal, low-mid poly facets, lighter edges, slightly glassy, T 0.2-0.4"):
+- **Pieces:** the facet pieces `tundra_cave__ice_left / _right`, `tundra_bridge__ice_mid / _side`, `tundra_ice__block`,
+  `tundra_ice__shards`.
+- **Each piece:** large flat facets in the object's own ice colour, every edge chamfered in a lighter colour
+  (#BFE9F5, or #D3EEF6 on the light ice), Glass **Transparency 0.3** on the body faces and **0.2** on the edges.
+- **Inner gradient:** an opaque deeper CORE shell inside (#234A8F in the deep ice, #1E7FD6 in the light ice). It
+  shows through the glass as the inner colour gradient.
+- **Neon:** none (nothing glows today). An emissive edge only if the owner asks for a glow.
+- **Studio build:** each closed shell becomes ONE convex solid (the jungle-rock method, ~2 tris per face). Never one
+  part per face (NIGHT_LOG 21:45: a 600-wedge union hung the CSG).
+
+**Frost on wood:**
+- **Rime:** thin #E6EEF6 strips 0.06-0.08 thick on the TOP edges of beams, rails, sills and frames (on 1/2 to 2/3 of
+  their length, broken in 2-3 runs).
+- **Ice glaze:** a #BFE9F5 Glass T 0.35 film (0.05) on the lowest 0.3 of posts that stand in snow.
+- No white paint over whole faces.
+
+### E3. 01 wrecked wooden cabin (Cabin_Broken; 2 copies)
+
+Keep the 20 x 16 footprint, every height, the broken +X side and the askew door. Every colliding part of the game copy
+stays an invisible collider; the test / kit copies take the same template.
+
+- **Walls:** round logs (E2) on today's 5 walls, at today's heights.
+  - Back wall: 9 courses, 20 long + 0.7 at each end.
+  - Left wall: 9 courses.
+  - Front-left wall: 9 courses, 7 long, with the window opening.
+  - Front-right wall: 6 courses, broken. The top 2 logs stop at x 4.2 and 5.6 with splintered ends, following today's
+    WallFrontRBroken wedge.
+  - Right wall: 5 courses, plus 3-4 shortening broken logs on today's WallRightBroken wedge (z 0..7, up to y 8.5), each
+    with a splintered free end.
+  - Gables: horizontal logs, shortening to the roof line (today's 3 Gable wedges). The front-right gable stays missing.
+- **Corners:** the 3 intact corners as notched log crossings (log ends 0.7 out). They replace the look of today's 4
+  Post cylinders, which stay as invisible colliders. The broken front-right corner shows a short stack (5 courses)
+  ending in a split log.
+- **Floor and inside:**
+  - Floor: today's Floor as planks (E2), visible only through the broken side.
+  - SnowInside: a soft snow layer (keep the 1.5 top; `tundra_snow__drift_shade` mounds 0.6 tall in 2 corners).
+  - 1 drift under the hole in the roof.
+- **Roof** (plank roof with snow caps; owner):
+  - Boards: today's Roof boards as planks running down the slope, 1.3 wide with 0.06 gaps, on 2 purlins (#5C4236
+    0.5 square) under them.
+  - Edges: a 0.3 x 0.35 bargeboard #5C4236 on the gable edges.
+  - Ridge: today's Ridge log as a round log with 2 log ends and an iron band.
+  - Snow: `tundra_cabin__roof_snow` and `tundra_cabin__roof_snow_small`, with icicles at their `icicleRoots` (6 + 2
+    points: single icicles and clusters, scale 0.4-0.8).
+  - The broken edge of the small roof: 3 board ends sticking out 0.4-1.1 past the snow, splintered, 1 hanging down 15 deg.
+- **Collapsed part:**
+  - RoofFallen: 5 planks (1.3 wide) in today's tilted box, held by 2 battens. Nails on the battens, splintered top end,
+    a snow strip (`tundra_snow__cap` (1.0, 0.25, 6)) on its upper edge, 1 plank slid 0.6 down from the others.
+  - Rafter: today's Rafter as a log 0.7 dia, its lower end split.
+  - Debris inside: 2-3 short broken logs.
+- **Chimney** (stone with a snow cap; owner):
+  - Courses: today's 3.2 x 17 x 3.2 as cut slate courses 0.85 tall, 2 blocks per face per course (1.5-1.7 long,
+    running bond), 0.08 joints over a #4E566E core, 0.15 chamfers, 3 tone steps of #768096, x0.86 at the foot.
+  - Top: a #4E566E cap slab 3.8 x 0.35 (0.3 overhang), a dark flue #1F222B 1.6 square, 0.3 deep.
+  - Snow: `tundra_snow__cap_drip` at (-5.5, 17.0, 5), scale (3.9, 0.8, 3.9), with 1 icicle. Keep ChimneySnow invisible.
+- **Window** (cross frame, frozen frame; owner): keep the 3 x 3 opening (at z -7.3 in the game copy).
+  - Frame: 0.35 #5C4236 (chamfered), the cross mullion 0.25 (today's 2 WindowBars).
+  - Panes: 4 panes #BFE9F5, Glass T 0.35, over today's dark #1F222B back.
+  - Frost: white #F2F6F8 frost triangles in each pane's outer corners (2 wedges, 0.5) and a frost rim on the frame top.
+  - Sill: 3.6 x 0.25 x 0.5 with a 0.15 drip lip and a snow cap (`tundra_snow__cap` (3.7, 0.35, 0.6)), 2 icicles 0.4 under it.
+- **Door** (hanging off one hinge with iron straps; owner):
+  - Planks: at today's Door CFrame, 4 vertical planks 1.1 wide, 0.05 gaps, 2 battens + a Z-brace on the back.
+  - Straps: 2 iron straps #5C626E (0.3 x 3.4, rounded ends, 4 nails each) on the hinge side, which is the door's local
+    -X edge (it reaches the left jamb).
+    - Top strap: still pinned to a hinge knuckle on a new left door post (0.6 x 6.5 #5C4236, the frame).
+    - Bottom strap: torn off, bent 20 deg, its pin missing.
+  - Handle: an iron ring.
+  - Damage: 1 plank 0.5 shorter at the bottom with splinters; snow on its top edge (`tundra_snow__cap` (4.4, 0.25, 0.5)).
+  - Keep the Door part (invisible) and DoorDark (the dark doorway stays closed and visible).
+- **Doorway frame:** 2 posts 0.6 + today's Lintel as a chamfered beam with 2 nails each side. A worn threshold log.
+- **Drifts:**
+  - `tundra_snow__drift` on today's 2 white Drift wedges and `_drift_shade` on the left one (wedges kept as colliders).
+  - 2 more, no collider: one against the right wall's outside (about (12.5, 0, 2), scale (6, 2.2, 3), yaw -90), one in
+    the broken corner inside (about (6, 0.6, -5), scale (5, 1.6, 3)).
+- **Scattered planks** (owner: "a few scattered planks"): 4 loose planks, no collision.
+  - 2 lying flat in the snow by the broken corner (1.2 x 0.22 x 4.5 and 5.5, yaw 20 / -35, half sunk).
+  - 1 leaning on the right wall (tilt 65 deg).
+  - 1 broken in two near the door.
+  - Each: 2 nails, a splintered end, a thin snow line on top.
+- **Gradient:**
+  - logs x0.86 at the foot -> x1.0 at the eaves (A9);
+  - the inside faces one step darker (x0.86: the cabin interior is in shadow);
+  - snow and ice not darkened.
+
+### E4. 02 ice cave entrance (Ice_Cave_Mouth; 6 copies, the arena one at Model scale 1.25)
+
+Keep the opening (between the boulders' inner faces, under the slab at y 10.3-10.4, Dark 1.8 behind), the 5
+colliders (Dark, Back, 3 IceRock meshes, kept invisible) and the closed niche (no teleport exists).
+- **Boulders:** `tundra_cave__ice_left` (#54A0E8, navy core) and `_ice_right` (#96D6FA, #1E7FD6 core): faceted
+  translucent ice with light edges, at today's IceRock places. The feet sink 0.3 into the ground.
+- **Slab:** `tundra_cave__slab` (2 strata: dark #4E566E under, #768096 above with a front overhang and a lighter top
+  band) + `tundra_cave__slab_snow` (thick soft cap, top y 17.3, 5 front drips, 2 per end).
+- **Icicles in the opening:**
+  - today's 3 at their x / z with roots at the slab underside (y 10.35), lengths 4.2 / 3.0 / 2.6
+    (`tundra_ice__icicle` Y scale 1.4 / 1.0 / 0.87);
+  - 2 clusters along the slab front edge (z about -3.0, scale 0.7-0.8);
+  - 2-3 short ones (scale 0.4) under each side overhang.
+  - No tip below y 7.0 inside the opening.
+- **Dark interior with a frozen stone lip:**
+  - Gradient: today's Dark stays the far back (#0F1F36). In front of it, 1.0 behind the opening, an inner frame of
+    slate blocks #4E566E (2 jambs 1.2 wide and an arch of 5 voussoir blocks under the slab, 0.08 joints).
+  - Recess: a #234A8F navy band (0.8 deep, Transparency 0) lining the inside of that frame, so the recess reads deep:
+    navy rim -> near-black back.
+  - Lip: on the ground across the opening, a frozen stone lip. A threshold slab 9 x 0.5 x 1.6 #4E566E, chamfered, with
+    an ice glaze #BFE9F5 Glass T 0.35 (0.08) over its front half and 3 small icicle stubs (scale 0.25) on its front
+    edge.
+  - Optional (owner: Neon only where it glows): 2-3 tiny Neon #35E6F5 glints (0.15 balls) deep in the recess,
+    PointLight none.
+- **Base:**
+  - `tundra_ice__shards` at 4 places (in the piece's `place`), `tundra_ice__block` x2 (scale 1.0-1.2);
+  - `tundra_snow__drift` mounds against both boulders' feet (scale about (7, 1.6, 3), yaw toward the boulder, no
+    collider) and a low drift in front of each side.
+  - CanCollide off on all of them.
+- **Arena copy:** Model scale 1.25, kept by the sync (all pieces scale with it).
+
+### E5. 03 wooden scaffold stand (Wooden_Scaffold; 4 copies)
+
+Keep the 16 x 13.6 x 8 size, the deck top **y 10.8**, the Rail and the 6 colliders (4 Posts, Deck, Rail).
+- **Posts:** today's 4 posts (back 10, front 13.6 tall):
+  - E2 chamfers, a footing stone each;
+  - the front posts end in a pyramid cap above the rail, with a snow cap (`tundra_snow__cap` (1.1, 0.4, 1.1));
+  - an iron band 1/6 from the top and bottom;
+  - frost rime on the top edges, an ice glaze at the feet.
+- **Braces** (crossed, with joints and rope or iron ties; owner):
+  - Today's front X: 2 braces 0.5 square, chamfered. They cross-lap at the centre (a 0.06 notch line, 2 pegs) with an
+    iron strap; a rope lashing (E2) where each end meets a post.
+  - The 2 side diagonals: iron straps and nails at the ends.
+  - Add a short knee brace (45 deg, 2.0 long) under the deck at each front post.
+- **Deck** (plank deck with gaps; owner):
+  - today's Deck stays the invisible collider (top 10.8);
+  - on it, 6 planks running along X (16.2 long, 1.25 wide, 0.06 gaps, top at exactly 10.8, 0.2 thick), over a dark
+    #3A2A22 board 0.15 below;
+  - 2 joists (#5C4236 0.5 square) under the deck along X at z +-2.5;
+  - nails at the posts; 1 plank 0.3 shorter at one end.
+- **Rail** (a small rail; owner):
+  - today's Rail on the front;
+  - 2 short side rails (0.4 square, 7 long along Z at y 13.0, from the front posts toward 2 new back stub posts 0.6 x
+    2.6 on the deck corners);
+  - a rope tie at each joint; snow on the rail top (`tundra_snow__cap` (16, 0.3, 0.6), or 3 shorter pieces).
+- **On top** (snow patches and small ice blocks; owner):
+  - today's 2 Snow slabs as caps `tundra_snow__cap` (8.6, 0.5, 4.6) at (-2, 10.8, 0.6) and `_cap_shade` (4, 0.4, 3)
+    at (5, 10.8, -1.5), CanCollide off as today;
+  - 3 `tundra_ice__block` (places in the piece) with small caps;
+  - 2 icicle clusters (scale 0.45) under the deck front edge;
+  - 1 under the rail.
+- **Ground:** a low `tundra_snow__drift` (scale about (5, 1.2, 2.5)) against 2 post feet, no collider.
+
+### E6. 04 curved snow bridge slab (Snow_Bridge_Section; 4 copies)
+
+Keep the 6 colliders EXACTLY (the game copies' 10.1 / 10.7 deep side parts, invisible), so the walk tops of E0 do
+not change: middle y 8.0, sides 7.93 -> 4.92 (13 deg), ends at x +-20.8. Nothing else connects to the bridge.
+- **Ice underside** (owner: a visible layered blue ice underside with facets):
+  - `tundra_bridge__ice_mid` and `tundra_bridge__ice_side` (the right span; yaw 180 for the left one);
+  - 3 strata stepping inward going down, a faceted keel hanging 0.45 below each span;
+  - light chamfered edges, Glass T 0.25, opaque cores.
+- **Snow** (soft, irregular edge; owner):
+  - `tundra_bridge__snow_mid` (#F4F8FF) and `tundra_bridge__snow_side` (#CEDEF6, yaw 180 for the left one);
+  - their tops are EXACTLY the collider tops; lips over the long edges and the bridge ends, drip lumps.
+- **Bevelled edge between the snow and the ice:** a slab rim. Each span gets a thin "stone / ice slab" lip: a
+  chamfered band (0.3 tall, 0.15 proud, #BFE9F5 Glass T 0.3) along both long edges just under the snow lip.
+  - Parts, or the light top chamfer of the strata, which already reads as it in the preview.
+- **Icicles** (small icicles under it; owner):
+  - today's 5 at their x / z as `tundra_ice__icicle` (Y scale = today's length / 3, roots inside the keel);
+  - plus single icicles (scale 0.35-0.6) at 4-6 of the snow pieces' `icicleRoots` per side.
+  - Singles, not clusters, on the bridge (cost, E7).
+- **Joints:** the middle snow ends 0.07-0.17 above the side snow (today's step).
+  - Hide the seam with a soft snow roll across the joint: `tundra_snow__cap` (0.9, 0.3, 10.8), yaw 0, sunk so its top
+    is 0.1 above the middle top. It is visual only, and it does not change the colliders.
+- **The test copy stands on the ground** (pivot y 0): the keels and today's icicle tips go into the ground there,
+  as today.
+
+### E7. Facet pieces (tundra_buildings)
+
+`tools/blender/fyd_facets.py -- tundra_buildings` writes `Blender_Exports/Props/facets/tundra_*.json` and
+`Previews/Props/tundra_buildings_facets.png`.
+- **Shells:** every piece is made of **closed convex shells** (convex hulls; separate shells share no vertex).
+  `faceCount` <= 300, quads planar, checked.
+- **Placement:** each piece's JSON `place` gives its placement; the roof and bridge snow pieces also give
+  `icicleRoots` (kit space).
+- **Materials:** Glass faces = the ice (Transparency in the notes: 0.3 body / 0.2 edges; icicles 0.25); everything
+  else SmoothPlastic.
+
+| Piece | Faces (shells) | Origin / placement | Replaces |
+|---|---|---|---|
+| `tundra_cabin__roof_snow` | 259 (10) | Cabin_Broken pivot; flat top = the main RoofSnow top plane; 6 icicleRoots under the eave | the main RoofSnow look (kept invisible, collides) |
+| `tundra_cabin__roof_snow_small` | 163 (6) | Cabin_Broken pivot; top = the small RoofSnow top; 2 icicleRoots | the small RoofSnow look |
+| `tundra_cave__ice_left` | 190 (2) | Ice_Cave_Mouth pivot; 95 % of the IceRock box, foot at y -0.3 | the left IceRock look (mesh kept invisible) |
+| `tundra_cave__ice_right` | 206 (2) | same, right IceRock | the right IceRock look |
+| `tundra_cave__slab` | 99 (2) | Ice_Cave_Mouth pivot; y 10.3..15.3 | the slab IceRock look (mesh kept invisible) |
+| `tundra_cave__slab_snow` | 240 (10) | Ice_Cave_Mouth pivot; top y 17.3 | the Snow mesh |
+| `tundra_bridge__ice_mid` | 247 (4) | Snow_Bridge_Section pivot | the middle Span look (kept invisible) |
+| `tundra_bridge__ice_side` | 250 (4) | Snow_Bridge_Section pivot, right span; [0, 180, 0] for the left | the side Span looks |
+| `tundra_bridge__snow_mid` | 236 (9) | Snow_Bridge_Section pivot; top exactly y 8.0; 6 icicleRoots | the middle SpanSnow look |
+| `tundra_bridge__snow_side` | 234 (9) | Snow_Bridge_Section pivot, right; yaw 180 left; top on the tilted collider plane; 5 icicleRoots | the side SpanSnow looks |
+| `tundra_snow__cap` / `_cap_shade` | 65 (1) each | own anchor = bottom centre, NORMALIZED 1 x 1 x 1: scale non-uniformly | ChimneySnow look, scaffold Snow slabs; added caps |
+| `tundra_snow__cap_drip` | 113 (4) | same + 3 drips over -Z | chimney cap, sills, beam ends |
+| `tundra_snow__drift` / `_drift_shade` | 63 / 53 (1) | NORMALIZED WedgePart box (high side +Z): the wedge's bottom centre, rotation, size as scale | the 3 cabin Drift looks (wedges kept invisible); added drifts |
+| `tundra_ice__icicle` | 20 (1) | own anchor = root centre, hangs 3.0 along -Y | the Icicle MeshParts (3 per cave, 5 per bridge) |
+| `tundra_ice__icicle_cluster` | 100 (5) | own anchor = root lump centre, row along X | nothing (added at eaves, lips) |
+| `tundra_ice__block` | 48 (1) | own anchor = bottom centre, 1.6 x 1.2 x 1.4 | nothing (scaffold top, cave foot) |
+| `tundra_ice__shards` | 85 (5) | own anchor = cluster centre on the ground | nothing (cave foot) |
+
+**Cost** (~2 tris per face once the shells are convex solids):
+
+| Copy | Facet faces | ~Tris | Copies | ~Total |
+|---|---|---|---|---|
+| cabin: 2 roof snows, 3 drifts + 2 extra, chimney cap, ~6 icicles + 3 clusters, small caps | ~1.3k | ~2.6k | 2 | 5k |
+| cave: 2 boulders, slab, slab snow, 4 shard clusters, 3 + ~5 icicles, 2 clusters, 2 blocks | ~1.7k | ~3.4k | 6 | 20k |
+| scaffold: 3 blocks, ~6 caps, 3 clusters (scale 0.45) | ~0.8k | ~1.6k | 4 | 6k |
+| bridge: 2 ice + 2 snow bodies (sides twice), ~15 single icicles | ~2.0k | ~4.0k | 4 | 16k |
+
+- **Total:** about 47k triangles over 16 copies, plus the parts.
+- **Cheaper options:**
+  - The icicle clusters are the expensive accent (100 faces): use singles (20) wherever a row is long.
+  - On the 2 cave sides away from the camera (the backs face Bounds walls), the shards can be dropped.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

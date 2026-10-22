@@ -2909,3 +2909,71 @@ post (keep the light), 10 campfire / brazier parts (check what it is; keep light
   templates / 1536 tagged copies up to date; disk == Studio (204 scripts, 0 written); backup after_batch4. All 17
   objects OK.
 
+
+# Tundra buildings and structures - 2026-10-22 (owner prompt "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Buildings and structures")
+
+Objects: 01 wrecked wooden cabin (keep size, collisions, door, any prompt / NPC), 02 ice cave entrance (keep the
+opening, collisions, any prompt / teleport), 03 wooden scaffold stand, 04 curved snow bridge slab (keep size,
+walkability and how it connects to the other pieces). Ice = faceted translucent crystal (T 0.2-0.4, Neon only where
+it glows), snow = soft thick caps with an irregular edge, icicles = small tapering cones.
+
+## Status (newest first)
+
+- 13:05 Started. Studio reopened by the owner (new id decd631a...). Sync.check: 122 templates / 1536 copies, but
+  banner_diamond (11) and tutorial_guide (3) report OUT OF DATE since the reopen -> to investigate before syncing
+  anything. Images copied to docs/Tundra_Images/ (all 4 tundra categories). Backup before_tundra_buildings.
+- 13:15 Agent B, STEP 0 (sync anomaly): harmless float drift. One rotated invisible Collision WedgePart in each template
+  (banner: the kit row at (1.15, 4.2, -0.55); guide: (7.35, 7.875, 1.1)) had rotation components of exactly 0 that came
+  back from the save / reload as tiny negatives, so the 3-decimal fingerprint text read "-0.000" and the fingerprint
+  changed (a fresh rebuild of each template gives exactly the old fingerprints 7b3aa0e4 / 2399351e; every other line
+  identical, no GUI / cloth / NPC / template change). Re-synced only those two: banner_diamond 11 / 11, tutorial_guide
+  3 / 3, run 2 = 0; the 11 cloth colours identical before / after, the Guide's "Talk" prompt (Hub.TutorialGuide.Interact,
+  enabled, range 12) kept.
+- 13:25 Agent B, ROOT-CAUSE FIX (main agent's request): SyncMapProps' round() (the fingerprint number formatter) now
+  writes any value under 0.0005 in size as "0.000", so a -0 can no longer flip a fingerprint after a reopen. The change
+  itself flipped the fingerprints of 38 templates (those with a "-0.000" somewhere; their content unchanged: every
+  stored template version equalled its old fingerprint). Their 372 copies were re-stamped in place (MapPropVersion old ->
+  new fingerprint, only where the copy carried exactly the old one: 372 / 372, 0 mismatches) instead of replacing them
+  with identical clones. Sync.check: 0 out of date; dry run 122 templates / 1534 copies, 0 to replace.
+- 13:20 Agent B, inventory (prop_inventory "Tundra buildings"): 01 Cabin_Broken 3 (test, kit, Tundra_1), 02
+  Ice_Cave_Mouth 7 (test, kit, Tundra_2 x4, BossArenas Tundra at Model scale 1.25), 03 Wooden_Scaffold 5 (test, kit,
+  Tundra_3 x3), 04 Snow_Bridge_Section 5 (test, kit, Tundra_3 x3). No script / prompt / NPC / teleport / tag on any
+  copy or within 40 studs. The cave's opening is closed today by the solid "Dark" panel: kept exactly (main agent).
+  4 rules + the Tundra test row as a search root in SyncMapProps. Per-object backups
+  BackUP_Files/old_props_2026-10-22_pre_tundra_buildings/ (4 files).
+- 13:35 Agent B, PILOT 01 tundra_wrecked_cabin 3 / 3 (run 2 = 0): round 8-sided logs with notched overrunning corners
+  and cut ends, broken right side with splinters, plank roof under soft snow caps with drooping lumps and icicles, roof
+  remnant / fallen section / bare rafter, stone chimney with a snow cap, frozen cross-frame window, door hanging off its
+  top hinge with iron straps, drifts, loose planks; ~16.7k tris; colliders = the Tundra_1 copy's 32 parts (exact there;
+  test / kit within 0.2, as the batch 4 houses). Approved by the main agent as built (before Agent A's facets came).
+- 13:50 Agent B: Agent A's 19 E7 facet pieces -> convex solids: tools/tundra_facets_to_solids.py writes
+  tools/PropsTundraBuildingsSolids.luau (one plane set per closed shell, coplanar faces merged; 4 faces of the 2 bridge
+  side pieces that are not faces of their shell's hull, a hair concave by 0.02 / 0.17, left out). The 40 KB module was
+  pasted into Studio in checked chunks (per-chunk and whole-file hashes equal to the disk file).
+- 13:55 Agent B: 02 tundra_ice_cave 7 / 7 (incl. the BossArenas copy at scale 1.25), 03 tundra_scaffold 5 / 5, 04
+  tundra_snow_bridge 5 / 5, run 2 = 0 each; colliders exact part by part on every copy, offset ray grids 0 real
+  differences (the only differing rays graze exact part edges). The cave's Back and Dark are kept exactly as they are
+  (the opening stays closed). Scaffold deck planks top exactly y 10.8; today's 2 deck snow patches keep today's height
+  (0.45 over the deck, no collider, as today). Bridge: snow tops = collider tops; the joint snow rolls stand at most 0.1
+  over a walk top (analytic check on the planes, 0 columns over 0.15). Disk == Studio (207 scripts, 0 written);
+  Sync.check 0 out of date, dry run 126 templates / 1554 copies 0 to replace. Play check left to the main agent.
+- 14:00 TUNDRA BUILDINGS COMPLETE (main agent looked at every after shot and Play-checked). Agent A: guide section E
+  (kits Cabin_Broken, Ice_Cave_Mouth, Wooden_Scaffold, Snow_Bridge_Section; nothing functional; the cabin and the cave
+  are closed today and stay closed; exact walk surfaces) + 19 facet pieces (glass ice with lighter edges and a deep
+  core, rock slab, soft snow caps / drifts, icicles, shards, bridge ice / snow). Agent B: step 0 - the banner_diamond /
+  tutorial_guide "out of date" after the reopen was float drift (-0.000 in the fingerprint text) -> re-synced, and
+  SyncMapProps round() now writes |n| < 0.0005 as 0 (38 templates' fingerprints changed, their 372 copies re-stamped,
+  content unchanged). tundra_wrecked_cabin 3 / 3 (pilot, shots sent to the owner; notched round logs, nailed plank
+  roof with soft snow caps + icicles, stone chimney, frozen window, door off one hinge, drifts, loose planks; ~16.7k
+  tris), tundra_ice_cave 7 / 7 (incl. BossArenas at 1.25; faceted glass ice, rock slab with snow, icicles, frozen
+  lip, shards; Dark / Back kept so the opening stays closed; ~7.1k), tundra_scaffold 5 / 5 (capped posts, braces with
+  iron ties, gapped deck at y 10.8, rail, snow, ice blocks; its 2 snow patches stand 0.45 above the deck like today's
+  slabs, no collider; ~7.5k), tundra_snow_bridge 5 / 5 (layered glass-ice underside, soft snow on the exact walk
+  planes, icicles; ~6.7k). Colliders: game copies' parts, exact; ray grids 0 real differences.
+  MAIN AGENT PLAY CHECK (phone emulator): Tundra_1 144 fps / render CPU 3.2 ms, Tundra_2 144 / 3.2, Tundra_3 144 /
+  5.3; the cabin blocks the player (not enterable, as today); the cave blocks at its face; standing on a scaffold deck
+  puts the root exactly 2.7 above the deck top (all 3 copies); on the bridge the middle walk top is 8.0 and walking to
+  the end follows the tilted side plane (root 5.95 above pivot at x 16.3 = the plane); no game errors (the same
+  203785492 warning). FINAL: 126 templates / 1556 copies up to date; disk == Studio (207 scripts, 0 written); backup
+  after_tundra_buildings. Per object: cabin 3 / 3, cave 7 / 7, scaffold 5 / 5, bridge 5 / 5 - all OK.
+

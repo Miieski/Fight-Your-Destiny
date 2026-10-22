@@ -431,6 +431,14 @@ SyncMapProps.RULES = {
 		return bakedFrom(m, "Stick", 0.5)
 	end },
 	{ propId = "tutorial_guide", names = { "Station_TutorialGuide" }, hubNames = { "TutorialGuide" } },
+	-- tundra buildings and structures (owner "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Buildings and structures",
+	-- 2026-10-22): 01 the wrecked wooden cabin (Cabin_Broken), 02 the ice cave entrance (Ice_Cave_Mouth; the BossArenas
+	-- Tundra copy at Model scale 1.25), 03 the wooden scaffold stand (Wooden_Scaffold), 04 the curved snow bridge slab
+	-- (Snow_Bridge_Section)
+	{ propId = "tundra_wrecked_cabin", names = { "Cabin_Broken" } },
+	{ propId = "tundra_ice_cave", names = { "Ice_Cave_Mouth" } },
+	{ propId = "tundra_scaffold", names = { "Wooden_Scaffold" } },
+	{ propId = "tundra_snow_bridge", names = { "Snow_Bridge_Section" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -605,6 +613,7 @@ local function searchRoots(): { Instance }
 	add(preview and preview:FindFirstChild("ModelsA"))
 	add(preview and preview:FindFirstChild("Desert")) -- the desert test row (desert buildings, 2026-10-19)
 	add(preview and preview:FindFirstChild("Jungle")) -- the jungle test row (jungle buildings, 2026-10-20)
+	add(preview and preview:FindFirstChild("Tundra")) -- the tundra test row (tundra buildings, 2026-10-22)
 	add(ServerStorage:FindFirstChild("MapAssets"))
 	add(ServerStorage:FindFirstChild("BossArenas"))
 	return list
@@ -661,7 +670,13 @@ local function isCustom(child: Instance, template: Instance?): boolean
 		or holdsKeepClass(child)
 end
 
+-- (a value that rounds to zero is written "0.000": a rotation component saved as exactly 0 can come back from a
+-- save / reload as a tiny negative number, and "-0.000" flipped the fingerprints of banner_diamond and
+-- tutorial_guide after the owner reopened the place on 2026-10-22)
 local function round(n: number): string
+	if math.abs(n) < 0.0005 then
+		n = 0
+	end
 	return string.format("%.3f", n)
 end
 
