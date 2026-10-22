@@ -456,6 +456,19 @@ SyncMapProps.RULES = {
 	{ propId = "tundra_ice_castle_gate", names = { "Gate_Tundra_4" }, match = function(m)
 		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Tundra_4"
 	end },
+	-- tundra ice monuments, statues and shrines (owner "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Ice monuments, statues and
+	-- shrines", 2026-10-22): 01 ice pillar, 02 ice knight in a glass case, 03 ice throne (decor, no Seat), 04 the "yellow
+	-- dome pedestal" = Warm_Brazier (test, kit and the 4 BossArenas.Tundra.WarmSpots copies renamed WarmBrazier, whose
+	-- 11th part "Fire" (3 emitters + a PointLight) is kept as a MapPropKeep child; the Embers FirePoint kept), 05 the glass
+	-- frame with the checkmark =
+	-- Ice_Wall_Panel (decor), 06 the blue lamp post = Blue_Torch_Standing (its Head FirePoint, where the zones'
+	-- Fire_Torch_Blue VFX burn, kept). Every copy is Model-scaled (no part-resized copy)
+	{ propId = "tundra_ice_pillar", names = { "Ice_Pillar" } },
+	{ propId = "tundra_ice_knight", names = { "Frozen_Knight_Statue" } },
+	{ propId = "tundra_ice_throne", names = { "Ice_Throne_Small" } },
+	{ propId = "tundra_dome_brazier", names = { "Warm_Brazier", "WarmBrazier" } },
+	{ propId = "tundra_glass_frame", names = { "Ice_Wall_Panel" } },
+	{ propId = "tundra_blue_lamp", names = { "Blue_Torch_Standing" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

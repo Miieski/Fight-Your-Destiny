@@ -3027,3 +3027,53 @@ lock / open behaviour exactly.
   144 / 2.3, Tundra_4 144 / 2.0; no game errors (the same 203785492 warning). FINAL: 130 templates / 1568 copies up to
   date; disk == Studio (210 scripts, 0 written); backup after_tundra_gates. All 4 gates OK.
 
+
+# Tundra ice monuments, statues and shrines - 2026-10-22 (owner prompt "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Ice monuments, statues and shrines")
+
+Objects: 01 ice pillar (same size), 02 ice knight in a glass case (keep size, position, any interaction), 03 ice throne
+(keep the seat position; if players sit or it is a boss / NPC spot keep that exactly), 04 yellow dome pedestal (check
+what it does; keep size, light, interaction), 05 glass frame with a checkmark (check what it is - portal, quest
+marker, mirror - and keep its function and script), 06 blue lamp post (keep the light colour, range, on / off logic).
+
+## Status (newest first)
+
+- Done (Agent B). Final checks: every rebuild's fingerprint = the stored one (pillar 843520b3, knight 9b45fc78, throne
+  0f5a269f, brazier c0ca9e1b, frame 1aa159d8, lamp 4ea4c039; the gates' log arch still 11e2912d); Sync.check 0 problems;
+  dry run 136 templates / 1628 copies, 0 to replace; 0 untagged leftovers. Colliders part by part on all 62 copies and
+  33 ray grids (CanCollide-respecting): 0 differences. Lamp FirePoints 0 moved (10); BossGate 36 children, its prompt
+  "Enter / Frost King's Throne" enabled; the 4 WarmBrazier Fire parts and lights (b0.9 r24 #FFB85A) kept. Export + pull
+  212 scripts, 0 written; graphify update. Play check left to the main agent. Details: docs/prop_inventory.md
+  "Tundra monuments".
+- Grid compare: keys looked up by exact position gave false "missing" rows on copies whose pivot drifted by float
+  (4 vs 3.999999); switched to keys matched within 0.01 - all copies 0 differences.
+- 02-06 built and synced (run 2 = 0 each): knight 12 / 12 (gold belt kept + green sash, glass T 0.5 so the figure reads,
+  gate 4 spire crystals; the 2 BossGate copies synced, BossGate untouched), throne 4 / 4 (seat top y 3.6; the glow disc
+  replaced by a thin Neon diamond outline), brazier 6 / 6, frame 10 / 10 (the 4 Exterior wall panels exact), lamp
+  10 / 10 (Head / FirePoint / Ember exact, Fire_Torch_Blue lights untouched). Size overruns over +10 % fixed by moving /
+  shrinking details (throne side crystals, brazier dome lowered, frame trims, lamp snow lumps).
+- Brazier: E9 found 4 more copies, ServerStorage BossArenas.Tundra.WarmSpots "WarmBrazier" at 1.3, each with a "Fire"
+  part (emitters + PointLight). Rule now names Warm_Brazier and WarmBrazier; the Fire parts are kept as children. Their
+  old copies re-collected into the backup (collect_backup skips existing files: the old file moved aside first).
+- Pilot 01 ice pillar: 20 / 20, Agent A's pillar shaft facets; colliders exact; shots sent; approved.
+- Inventory: 6 kits in ServerStorage.MapAssets.Tundra, 62 copies (test, kit, Tundra_4 Decor / Exterior / BossGate,
+  BossArenas.Tundra); no scripts, no Seat; functions = colliders, Embers / FirePoints, the lamp Head, the BossGate prompt.
+  Per-object backups BackUP_Files/old_props_2026-10-22_pre_tundra_monuments/ (6 files).
+- 17:27 Started. Images in docs/Tundra_Images/03_Ice_Monuments_and_Statues/. Sync.check 130 templates, 0 out of
+  date. Backup before_tundra_monuments.
+- 17:50 TUNDRA MONUMENTS COMPLETE (main agent looked at the after shots and Play-checked). Agent A: guide E9 (kits,
+  62 copies incl. nested BossGate knights / lamps and the 4 BossArenas WarmSpots "WarmBrazier" copies; nothing scripted;
+  04 = a fire brazier (the "yellow dome" is its glow ball, the "windows" its log ends), 05 = an ice wall panel (the
+  "checkmark" is 2 tilted strips; the 4 Exterior copies are zone walls), the throne's Seat is a plain part) + 3 facets.
+  Agent B: tundra_ice_pillar 20 / 20 (pilot, shots sent to the owner), tundra_ice_knight 12 / 12 (plate armour,
+  pauldrons, glowing visor, plume, gold belt + the owner's green sash, planted sword, carved plinth, glass case with
+  ice frames and a snow lid; BossGate's own parts and prompt untouched), tundra_ice_throne 4 / 4 (crystal spikes, tall
+  back with a glowing diamond, armrests, cushion, stepped bevelled base; seat top kept at 3.6), tundra_dome_brazier 6 / 6
+  (stone pedestal, ribbed gold dome with rim and warm windows, snow on the rim; Embers + FirePoint exact; the 4 arena
+  copies keep scale 1.3 and their Fire part with its light), tundra_glass_frame 10 / 10 (bevelled frame with corner
+  studs, pane with reflection lines, carved glowing checkmark, base; the 4 wall panels' colliders exact),
+  tundra_blue_lamp 10 / 10 (banded post, bracket, glass lantern, bevelled base with snow, icicles; FirePoint exact).
+  MAIN AGENT PLAY CHECK (phone emulator): Tundra_4 144 fps / render CPU 2.9 ms; pillar, knight case, throne and glass
+  panel block the player; BossGate prompt "Enter solo / Boss room" enabled; both Tundra_4 blue lamps have their
+  Fire_Torch_Blue light (#96D7FF r24) on the FirePoint; no game errors (the same 203785492 warning). FINAL: 136
+  templates / 1630 copies up to date; disk == Studio (212 scripts, 0 written); backup after_tundra_monuments. All 6 OK.
+

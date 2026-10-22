@@ -6,7 +6,7 @@ unioned. Everything else of batch 2 is built from parts with the fountain / well
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
     blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature batch4
-    tundra_buildings tundra_gates]
+    tundra_buildings tundra_gates tundra_monuments]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -5667,6 +5667,174 @@ def preview_tundra_gates(pieces):
     return render_sheet("tgates", [(g1, [(-20, 10)]), (g2, [(-25, 15)]), (g3, [(-15, 10)]), (g4, [(-25, 12)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# TUNDRA ICE MONUMENTS, STATUES AND SHRINES (guide section E9, owner task 2026-10-22): the faceted ice pillar shaft,
+# the ice knight's helmet / pauldrons / plume, the warm brazier's glowing ribbed dome. The throne crystals reuse
+# tundra_gate4__spire; caps, icicles and shards reuse tundra_snow__* / tundra_ice__*. Closed convex shells.
+# ------------------------------------------------------------------------------------------------
+def _ring_pts(n, r, y, ph=0.0, cx=0.0, cz=0.0, rz=None):
+    rz = r if rz is None else rz
+    return [Vector((cx + r * math.cos(ph + 2 * math.pi * k / n), y, cz + rz * math.sin(ph + 2 * math.pi * k / n))) for k in range(n)]
+
+
+def t_pillar_shaft():
+    rng = random.Random(8801)
+    pc = Piece("tundra_mon", "pillar_shaft", "the Ice_Pillar kit pivot (bottom centre, front -Z)",
+               place={"relativeTo": "the Ice_Pillar model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale (1.0 kit / test, 1.2 Tundra_4, 1.5 BossArenas)",
+                      "replaces": "the look of the 2 crossed Shaft parts (4.6 / 4.5 square, 30 tall, y 5..35, #96D6FA + #54A0E8 "
+                                  "turned 45 deg); keep them as invisible colliders", "collide": "CanCollide off"},
+               notes="faceted ice shaft: an 8-sided prism with a slight entasis (r 2.45 at the foot, 2.6 in the middle, 2.3 "
+                     "under the capital), the faces alternating today's two colours #96D6FA / #54A0E8 (they read as flutes), "
+                     "every edge chamfered in light #D3EEF6 (the lighter edge); Glass Transparency 0.15 on the faces, 0.1 on "
+                     "the edges, over an opaque #3468B4 core. The Neon chevrons are parts on the faces (guide E9). 2 closed "
+                     "convex shells.")
+    ph = math.pi / 8
+    pts = []
+    for (y, r) in ((5.0, 2.45), (6.2, 2.55), (20.0, 2.62), (33.8, 2.42), (35.0, 2.3)):
+        pts += _ring_pts(8, r, y, ph)
+
+    def body(cc, n):
+        k = int(round((math.atan2(n.z, n.x) - ph) / (math.pi / 4))) % 2
+        return tone(T_ICE if k == 0 else T_ICE_DEEP, 0.92 + 0.08 * max(0.0, min(1.0, (cc.y - 5) / 30)))
+    bevel_shell(pc, pts, 0.2, body, lambda cc, n: mix(T_ICE_L, T_WHITE, 0.3), m="Glass")
+    core = _ring_pts(8, 1.5, 5.3, ph) + _ring_pts(8, 1.5, 34.7, ph)
+    shell(pc, core, lambda cc, n: "#3468B4")
+    return [pc]
+
+
+def t_knight_armor():
+    rng = random.Random(8811)
+    pc = Piece("tundra_mon", "knight_armor", "the Frozen_Knight_Statue kit pivot (bottom centre, front -Z; the knight faces -Z)",
+               place={"relativeTo": "the Frozen_Knight_Statue model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale (1.0 / 1.15 / 1.2 / 1.25)",
+                      "replaces": "Head (2 x 2 x 2 #5C626E at (0, 11.2, 0)), the 2 Shoulder blocks (1.8 x 1.4 x 2.4 at (+-2.7, 9.5, 0)) "
+                                  "and the Plume (0.5 x 1.2 x 1.8 #BAAAEC); none collides today. Keep today's Neon Visor (1.4 x 0.3 "
+                                  "at (0, 11.3, -1.02)): it stands 0.07 proud of the helm's flat front face",
+                      "collide": "CanCollide off"},
+               notes="great helm: an 8-sided steel helm (#5C626E, lighter #7A808C on the upper facets) with a flat front face "
+                     "for today's Neon visor, a domed crown and a low crest ridge; 2 pauldrons, each a domed upper plate and a "
+                     "wider lower lame (#5C626E / rim tone #7A808C), inside today's glass case (max x 3.65 < the case's 3.7); a "
+                     "4-segment plume curving back from the crest in today's #BAAAEC. 9 closed convex shells.")
+    steel, light = "#5C626E", "#7A808C"
+
+    def steel_col(cc, n):
+        return tone(light if n.y > 0.45 else steel, rng.choice((1.0, 0.94)))
+    ph = math.pi / 8
+    apo = 1.05 / math.cos(math.pi / 8)
+    helm = _ring_pts(8, apo, 10.1, ph) + _ring_pts(8, apo * 1.02, 11.55, ph) + _ring_pts(8, apo * 0.82, 12.2, ph)
+    helm += [Vector((0.0, 12.5, 0.15)), Vector((0.0, 12.42, -0.55)), Vector((0.0, 12.42, 0.75))]
+    shell(pc, helm, steel_col)
+    for sx in (-1, 1):
+        cx = sx * 2.7
+        top = [Vector((cx + 0.95 * math.cos(a) * rr, 9.62 + h, 1.25 * math.sin(a) * rr))
+               for (h, rr) in ((0.0, 1.0), (0.35, 0.8), (0.6, 0.45)) for a in [2 * math.pi * k / 10 for k in range(10)]]
+        top.append(Vector((cx + sx * 0.05, 10.32, 0.0)))
+        shell(pc, top, steel_col)
+        lame = [Vector((cx + sx * 0.04 + 0.9 * math.cos(a) * rr, y, 1.3 * math.sin(a) * rr))
+                for (y, rr) in ((9.05, 0.97), (9.6, 1.0)) for a in [2 * math.pi * k / 10 for k in range(10)]]
+        shell(pc, lame, lambda cc, n: tone(light if n.y > 0.3 else steel, 0.92))
+    segs = [(Vector((0.0, 12.45, 0.1)), Vector((0.0, 13.0, 0.3))), (Vector((0.0, 13.0, 0.3)), Vector((0.0, 13.35, 0.75))),
+            (Vector((0.0, 13.35, 0.75)), Vector((0.0, 13.3, 1.3))), (Vector((0.0, 13.3, 1.3)), Vector((0.0, 12.85, 1.7)))]
+    for i, (a, b) in enumerate(segs):
+        d = (b - a).normalized()
+        side = Vector((1, 0, 0))
+        up = d.cross(side).normalized()
+        w, h = 0.24 - 0.03 * i, 0.32 - 0.04 * i
+        pts = [p + side * sx * w + up * sy * h for p in (a - d * 0.05, b + d * 0.05) for sx in (-1, 1) for sy in (-1, 1)]
+        shell(pc, pts, lambda cc, n, i=i: tone("#BAAAEC", (1.0, 0.93, 1.0, 0.88)[i] * (1.05 if n.y > 0.3 else 1.0)))
+    return [pc]
+
+
+def t_brazier_dome():
+    rng = random.Random(8821)
+    pc = Piece("tundra_mon", "brazier_dome", "the Warm_Brazier kit pivot (bottom centre)",
+               place={"relativeTo": "the Warm_Brazier / WarmBrazier model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale (1.0 kit / test, 1.3 the 4 BossArenas WarmSpots)",
+                      "replaces": "the look of today's EmberGlow (Neon #FF8C28 ball 4.6 at (0, 6.45, 0)) = the owner's 'yellow dome'; "
+                                  "keep Embers + FirePoint and, in the arena copies, the Fire part (VFX + PointLight) exactly",
+                      "collide": "CanCollide off"},
+               notes="glowing ribbed dome on today's gold rim (y 6.15): a warm glass dome (Neon #FFB648, Transparency 0.35, so "
+                     "today's embers / fire VFX show through it; r 3.2 at the rim -> top y 8.8, inside today's 8.75 + 0.05) in "
+                     "a cage of 8 gold #FFC93C ribs (3 straight segments each) and a brass #C99A2E crown ring at the top: the "
+                     "openings between the ribs are the owner's 'small windows with frames and a warm glow'. 33 closed convex "
+                     "shells (1 dome + 24 rib segments + 8 crown segments).")
+    prof = ((3.2, 6.15), (2.85, 7.3), (1.9, 8.25), (0.9, 8.7))
+    dome = []
+    for (r, y) in prof:
+        dome += _ring_pts(16, r, y)
+    dome.append(Vector((0.0, 8.8, 0.0)))
+    shell(pc, dome, lambda cc, n: mix("#FFB648", "#FFD678", 0.35) if n.y > 0.6 else "#FFB648", m="Neon")
+
+    def bar(a, b, w, t, col):
+        d = (b - a).normalized()
+        out = Vector((a.x + b.x, 0.0, a.z + b.z)).normalized()
+        side = d.cross(out).normalized()
+        nrm = side.cross(d).normalized()
+        pts = [p + side * sx * w / 2 + nrm * sy * t / 2 for p in (a, b) for sx in (-1, 1) for sy in (-1, 1)]
+        shell(pc, pts, lambda cc, n: tone(col, 1.0 if n.y > 0.2 else 0.9))
+    for k in range(8):
+        ang = 2 * math.pi * k / 8 + math.pi / 16
+        ring = [Vector(((r + 0.06) * math.cos(ang), y, (r + 0.06) * math.sin(ang))) for (r, y) in prof]
+        for i in range(3):
+            bar(ring[i], ring[i + 1], 0.28, 0.16, "#FFC93C")
+    crown = _ring_pts(8, 1.02, 8.72, math.pi / 8)
+    for i in range(8):
+        bar(crown[i], crown[(i + 1) % 8], 0.22, 0.2, "#C99A2E")
+    return [pc]
+
+
+def tundra_monuments():
+    pieces = t_pillar_shaft() + t_knight_armor() + t_brazier_dome()
+    for pc in pieces:
+        pc.notes += f" [{shell_count(pc)} shells]"
+    return pieces
+
+
+def preview_tundra_monuments(pieces):
+    from mathutils import Matrix
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    extra = t_snow_caps() + t_icicles() + t_ice_shards() + t_gate4_spire()
+    by = {f"{p.obj}__{p.name}": p for p in pieces + extra}
+    V = Vector
+
+    def put(name, off=V((0, 0, 0)), rot=None, scale=1.0):
+        pc = by[name]
+        return _glassy(piece_object(pc, col, off, rot, scale), pc)
+    # 1 pillar
+    g1 = context_boxes([((0, 1.5, 0), (8, 3, 8), "#3468B4", (0, 0, 0)), ((0, 4, 0), (6.4, 2, 6.4), T_ICE_DEEP, (0, 0, 0)),
+                        ((0, 36, 0), (6.4, 2, 6.4), T_ICE_DEEP, (0, 0, 0)), ((0, 38.5, 0), (8, 3, 8), "#3468B4", (0, 0, 0))], col)
+    g1 += [put("tundra_mon__pillar_shaft"), put("tundra_snow__cap", V((0, 40, 0)), _mat3(M_ID) @ Matrix(((8.3, 0, 0), (0, 0.8, 0), (0, 0, 8.3))))]
+    # 2 knight (offset 20)
+    o = V((20, 0, 0))
+    g2 = context_boxes([((20, 1, 0), (8, 2, 8), "#3468B4", (0, 0, 0)), ((19, 4, 0), (1.5, 4, 1.6), "#5C626E", (0, 0, 0)),
+                        ((21, 4, 0), (1.5, 4, 1.6), "#5C626E", (0, 0, 0)), ((20, 8.1, 0), (4, 4.2, 2.2), "#686E7C", (0, 0, 0)),
+                        ((17.3, 7.4, -0.5), (1.2, 3.6, 1.4), "#686E7C", (20, 0, 0)), ((22.7, 7.4, -0.5), (1.2, 3.6, 1.4), "#686E7C", (20, 0, 0)),
+                        ((20, 6.3, 0), (4.2, 0.7, 2.4), "#FFC93C", (0, 0, 0)), ((20, 11.3, -1.02), (1.4, 0.3, 0.2), "#60BEFF", (0, 0, 0)),
+                        ((20, 5.4, -1.7), (0.5, 6.6, 0.25), "#F5F6FA", (0, 0, 0))], col)
+    g2.append(put("tundra_mon__knight_armor", o))
+    for (x, z, s) in ((4.0, -2.4, 0.22), (-4.0, -2.6, 0.28)):
+        g2.append(put("tundra_gate4__spire", o + V((x, 1.8, z)), euler_matrix([0, 0 if x > 0 else 180, 0]), s))
+    # 3 throne (offset 40)
+    o = V((40, 0, 0))
+    g3 = context_boxes([((40, 0.5, 0), (9, 1, 8), "#3468B4", (0, 0, 0)), ((40, 1.5, 0.6), (7.5, 1, 6), T_ICE_DEEP, (0, 0, 0)),
+                        ((40, 2.8, 0.6), (5, 1.6, 4.4), T_ICE, (0, 0, 0)), ((37, 3.8, 0.6), (1.2, 2.4, 4.2), T_ICE, (0, 0, 0)),
+                        ((43, 3.8, 0.6), (1.2, 2.4, 4.2), T_ICE, (0, 0, 0)), ((40, 7.3, 2.7), (5.4, 9, 1.4), T_ICE_DEEP, (0, 0, 0)),
+                        ((40, 9.6, 1.9), (0.9, 0.9, 0.5), "#60BEFF", (0, 0, 45))], col)
+    for (x, y, z, yaw, s) in ((0, 11.1, 2.7, 90, 0.4), (-2.0, 11.1, 2.7, 180, 0.29), (2.0, 11.1, 2.7, 0, 0.29),
+                              (-4.8, 0.0, 2.6, 180, 0.43), (4.8, 0.0, 2.6, 0, 0.43)):
+        g3.append(put("tundra_gate4__spire", o + V((x, y, z)), euler_matrix([0, yaw, 0]), s))
+    # 4 brazier (offset 60)
+    o = V((60, 0, 0))
+    g4 = context_boxes([((60, 0.6, 0), (7, 1.2, 7), T_ROCK_D, (0, 0, 0)), ((60, 1.7, 0), (5, 1, 5), T_ROCK, (0, 0, 0)),
+                        ((60, 3.3, 0), (2.4, 2.2, 2.4), "#5C626E", (0, 0, 0)), ((60, 5.0, 0), (8, 1.6, 8), "#5C626E", (0, 0, 0)),
+                        ((60, 5.9, 0), (8.6, 0.5, 8.6), "#FFC93C", (0, 0, 0)), ((60, 6.05, 0), (7, 0.5, 7), "#FF8C28", (0, 0, 0))], col)
+    g4.append(put("tundra_mon__brazier_dome", o))
+    out = os.path.join(P.PREVIEW_DIR, "tundra_monuments_facets.png")
+    return render_sheet("tmon", [(g1, [(-25, 15)]), (g2, [(-25, 12)]), (g3, [(-35, 15)]), (g4, [(-30, 25)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -5682,7 +5850,8 @@ def main():
                           ("jungle_nature", jungle_nature, preview_jungle_nature),
                           ("batch4", batch4, preview_batch4),
                           ("tundra_buildings", tundra_buildings, preview_tundra_buildings),
-                          ("tundra_gates", tundra_gates, preview_tundra_gates)):
+                          ("tundra_gates", tundra_gates, preview_tundra_gates),
+                          ("tundra_monuments", tundra_monuments, preview_tundra_monuments)):
         if only and obj not in only:
             continue
         pieces = fn()

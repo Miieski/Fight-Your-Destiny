@@ -2656,6 +2656,238 @@ Facets, Emblem under it vanish on open), the colliders and the PriceSign.
 - Total about 11.6k tris per set; 3 copies of each set (kit, test, game) = about 35k, plus the parts.
 - If 01 is heavy, use 2 log-cap segments per beam at scale 1.2.
 
+### E9. Tundra ice monuments, statues and shrines (owner task 2026-10-22)
+
+Images: `docs/Tundra_Images/03_Ice_Monuments_and_Statues/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-22_171819_before_tundra_monuments_{ServerStorage,Workspace}.rbxm`.
+Same target and palette as E1-E2. Facet pieces: `tools/blender/fyd_facets.py -- tundra_monuments`, preview
+`Previews/Props/tundra_monuments_facets.png`.
+
+**E9.0 Kits, copies, functions**
+
+All kits are in `ServerStorage.MapAssets.Tundra` (pivot = bottom centre at the origin, front -Z, SmoothPlastic unless
+noted). Every scaled copy uses Model scale (checked part by part against kit x scale: 0 differences). **No bakedScale
+is needed.**
+
+| # | Owner's name | Kit (parts, bbox) | Placed copies (test = `_Staging.AssetPreview.Tundra`) | Total |
+|---|---|---|---|---|
+| 01 | ice pillar | `Ice_Pillar` (8; 8 x 40 x 8) | test; `Tundra_4.Decor.Props` x10 (scale 1.2); `ServerStorage.BossArenas.Tundra.Decor.Props` x8 (1.5) | 20 with the kit |
+| 02 | ice knight in glass case | `Frozen_Knight_Statue` (19; 11 x 14.7 x 8.6) | test; `Tundra_4.Decor.Props` x4 (1.15); **nested in `Tundra_4.BossGate`** x2 (1.25, at (7964 / 8036, 0, 932)); BossArenas x4 (2 at 1.0, 2 at 1.2 standing at y 1.5) | 12 |
+| 03 | ice throne | `Ice_Throne_Small` (12; 13 x 18.4 x 8.5) | test; `Tundra_4.Decor.Props` x1 (7930, 0, 932) scale 1.0; BossArenas x1 (8115, 0, -600) scale 1.1 | 4 |
+| 04 | "yellow dome pedestal" | **`Warm_Brazier`** (10; 8.6 x 8.75 x 8.6) | test; **BossArenas `WarmSpots` x4, renamed `WarmBrazier`** (scale 1.3, + an 11th part `Fire`) | 6 |
+| 05 | "glass frame with checkmark" | **`Ice_Wall_Panel`** (7; 20 x 24 x 3) | test; `Tundra_4.Decor.Exterior` x4 (scale 1.0, pivots y 3 at x 7907 / 7937 / 8063 / 8093, z 724.4: the zone wall either side of the Tundra_4 gate); `Tundra_4.Decor.Props` x4 (1.2, y 4) | 10 |
+| 06 | blue lamp post | **`Blue_Torch_Standing`** (4; 1.8 x 6.55 x 1.8) | test; **nested in `Tundra_4.BossGate`** x2 (1.7); BossArenas x6 (1.5 x2, 1.7 x2, 2.0 x2) | 10 |
+
+- **Nested copies:** the BossGate holds 2 knights and 2 torches. The sync rules must find those nested copies (as the
+  nested barrels / lanterns did) and keep the BossGate's own parts and its `Interact` ProximityPrompt untouched.
+- **No hub copies; no SyncMapProps rule yet.** Suggested propIds: `tundra_ice_pillar`, `tundra_ice_knight`,
+  `tundra_ice_throne`, `tundra_warm_brazier` (names `Warm_Brazier` + `WarmBrazier`), `tundra_ice_panel`,
+  `tundra_blue_lamp`.
+
+**What 04 and 05 are** (checked in the data and in `src/`):
+- **Nothing to keep beyond decoration:**
+  - `src/` names none of the 6 kits, nor "Warm", "WarmSpot", "Brazier", "Checkpoint", "Quest", "Heater" or "Throne"
+    as logic. The only Seat logic is BenchService, for `workspace.Hub` benches.
+  - No kit or copy has a script, ProximityPrompt, ClickDetector, Seat, tag or attribute.
+- **04 = `Warm_Brazier`, a fire brazier.**
+  - The "yellow dome" is today's `EmberGlow`: a Neon #FF8C28 ball 4.6 across at (0, 6.45, 0), which renders
+    yellow-orange.
+  - The "small dark windows" are the ends of the 3 `Log` blocks (#703E26) poking out of it.
+  - The "golden rim" is `Rim` (#FFC93C 8.6 dia at y 5.9) on an iron `Bowl` (#5C626E 8 x 1.6) and `Stem`, on a slate
+    `Step` #768096 and `Base` #4E566E.
+  - The 4 arena copies are the boss arena's "warm safe spots" (`BossArenas.Tundra.WarmSpots`, design intent from
+    `docs/ASSET_KIT_TUNDRA.md`). Each holds a child Part **`Fire`** (invisible 0.77 ball, CanCollide off, at the
+    FirePoint (0, 6.55, 0) x 1.3) with Attachment `Fire`, 3 ParticleEmitters (Flame, Ember, Core) and a PointLight
+    **#FFB85A, Brightness 0.9, Range 24**, Shadows off.
+  - No script reads them (no warmth or cold mechanic in `src/`).
+  - **Keep:** the `Embers` part with its `FirePoint`, and the arena copies' `Fire` part, emitters and light exactly
+    (a MapPropKeep carrier, as for the batch 4 torch lights).
+- **05 = `Ice_Wall_Panel`, an ice wall panel.**
+  - A Glass `Pane` (#96D6FA T 0.45, 15.2 x 19.6 x 1.2) between 2 `Post`s 2.4 x 24 x 3 (#54A0E8) on a `Rail` #3468B4
+    (bottom), under a `Rail` #54A0E8 (top).
+  - The "checkmark" is its 2 `Facet` strips (#D6ECFF, 0.3 x 11 / 15, tilted -32 / +24 deg at x 3.4 / -2.5), which
+    form a V.
+  - Not a portal, quest marker or mirror.
+  - The 4 `Decor.Exterior` copies are **walls**: their Pane, Posts and Rails collide and close the zone either side
+    of the gate. Their collisions must stay exact.
+- **03 throne:** the `Seat` is a plain Part, not a Seat: nobody can sit. It is not a boss or NPC spot (the boss
+  stands at the `IceThrone` landmark). Keep the seat top at y 3.6 (kit) and the collisions.
+- **06 lamp:** no light inside the model.
+  - The light is a separate `Decor.VFX.Fire_Torch_Blue` part on each FirePoint (Tundra_4 BossGate x2, BossArenas x6),
+    with a PointLight **#96D7FF, Brightness 0.9, Range 24**, Shadows off, plus blue fire emitters. The test and kit
+    copies have none.
+  - There is no on/off logic.
+  - Keep the `Head` + `FirePoint` world position (the VFX parts do not move) and the Neon `Ember` (#60BEFF 0.9 ball
+    at y 6.1).
+
+**Colliders** (today's parts kept as invisible colliders at the copy's scale):
+
+| Kit | Colliding | Not colliding |
+|---|---|---|
+| Ice_Pillar | Base, Plinth, 2 Shaft, Capital, Top | 2 Glow |
+| Frozen_Knight_Statue | Plinth, IceBlock (the glass case, Glass T 0.55) | everything inside (legs, torso, arms, belt, guard, blade, grip, head, visor, plume, shoulders), 2 Shard meshes, SnowCap |
+| Ice_Throne_Small | 2 Step, Seat, 2 ArmRest, Back, 2 Crystal meshes | Gem, 3 Spike meshes (CanQuery on) |
+| Warm_Brazier | Base, Step, Stem, Bowl, Rim | Embers, EmberGlow, 3 Log (and `Fire`) |
+| Ice_Wall_Panel | 2 Rail, Pane, 2 Post | 2 Facet |
+| Blue_Torch_Standing | Foot, Pole, Head | Ember |
+
+**Today's shapes and real colours** (kit space; keep the main colours):
+- **01 pillar** (8 x 40 x 8):
+  - Base 8 x 3 x 8 #3468B4, Plinth 6.4 x 2 #54A0E8;
+  - Glow Neon #60BEFF 5.6 x 0.4 turned 45 deg at y 6.4 and 33.6;
+  - 2 crossed Shafts (4.6 square #96D6FA + 4.5 square #54A0E8 turned 45 deg, y 5..35);
+  - Capital 6.4 x 2 #54A0E8 at y 36, Top 8 x 3 #3468B4 (y 37..40).
+- **02 knight:**
+  - Plinth 8 x 2 x 8 #3468B4;
+  - Legs 1.5 x 4 #5C626E; Torso 4 x 4.2 x 2.2 #686E7C; Arms 1.2 x 3.6 #686E7C (tilted 20 deg);
+  - Shoulders 1.8 x 1.4 x 2.4 #5C626E; Head 2 x 2 x 2 #5C626E with the Neon Visor #60BEFF 1.4 x 0.3 at (0, 11.3, -1.02);
+  - Plume 0.5 x 1.2 x 1.8 #BAAAEC;
+  - Belt 4.2 x 0.7 #FFC93C;
+  - sword planted in front: Blade #F5F6FA 0.5 x 6.6 at (0, 5.4, -1.7), Guard #FFC93C, Grip #703E26;
+  - the case `IceBlock` 7.4 x 12.2 x 6 Glass #96D6FA T 0.55 at (0, 8.1, -0.2), SnowCap 7.8 x 0.6 x 6.4 #F4F8FF on top;
+  - 2 Shards (spike meshes #96D6FA / #D6ECFF T 0.15) at the plinth's front corners.
+  - **The owner's "green sash" is the gold belt seen through the cyan glass.** Keep it gold #FFC93C (a cloth sash
+    #FFC93C / #C99A2E hanging from it reads as the owner's sash).
+- **03 throne:**
+  - Steps 9 x 1 x 8 #3468B4 and 7.5 x 1 x 6 #54A0E8;
+  - Seat 5 x 1.6 x 4.4 #96D6FA (top y 3.6); ArmRests 1.2 x 2.4 x 4.2 #96D6FA;
+  - Back 5.4 x 9 x 1.4 #54A0E8 (y 2.8..11.8, z 2.7); Gem Neon #60BEFF 0.9 diamond at (0, 9.6, 1.9);
+  - 3 Spikes behind the top (#D6ECFF / #96D6FA, 5 / 7 tall, from y 11.1);
+  - 2 Crystals at the sides (2.4 x 7.5, colliding).
+- **04 brazier:** see above. Kit colours: #4E566E, #768096, #5C626E, gold #FFC93C, Neon #FF8C28, logs #703E26.
+- **05 panel:** see above.
+- **06 lamp:**
+  - Foot cylinder 1.8 x 0.5 #3468B4; Pole 0.6 x 5.2 #4E566E;
+  - Head cylinder 1.3 x 0.9 #5C626E (FirePoint at (0, 6.2, 0) in kit space);
+  - Ember Neon #60BEFF.
+
+**E9.1 Part rules**
+
+**01 ice pillar** (same size; collisions = today's 6 parts):
+- **Shaft:** `tundra_mon__pillar_shaft`, an 8-sided faceted ice shaft with entasis.
+  - Faces alternate today's #96D6FA / #54A0E8 (they read as flutes), light chamfered edges, Glass T 0.15 over a
+    #3468B4 core.
+- **Glowing cyan chevrons:** on each of the 4 broad faces, 2 chevrons (V shapes) near the foot (y 6.5-8) and under the
+  capital (y 32-33.5).
+  - Each = 2 Neon #60BEFF strips 0.25 x 1.6 x 0.08 at +-35 deg, set 0.04 proud.
+  - Today's 2 Glow rings stay as thin Neon bands under the chevrons (or go).
+- **Capital** (carved; today's Capital 6.4 x 2 + Top 8 x 3):
+  - an echinus band (8-sided, 6.2 -> 7.0, #54A0E8) under a chamfered abacus (today's Top, #3468B4, 0.25 chamfers);
+  - 4 small corner volutes (cylinders 0.6 x 0.4 #96D6FA) at the abacus corners;
+  - a `tundra_snow__cap` (8.3, 0.8, 8.3) on the Top, 4 icicles (scale 0.3-0.5) under the abacus corners.
+- **Base:** today's Base + Plinth as a bevelled square base.
+  - 2 stepped slabs with 0.25 chamfers and a 0.08 joint ring, 4 corner blocks.
+  - Tiny frost crystals at the foot: `tundra_ice__shards` scale 0.35-0.5 at 2 corners, `tundra_snow__drift` small
+    (3, 0.6, 1.5) on 1-2 sides.
+
+**02 ice knight in glass case** (keep the size, the plinth and the case collider; nothing inside collides):
+- **Armour:**
+  - `tundra_mon__knight_armor` (great helm with a flat front for today's Neon visor, 2 pauldrons of 2 plates,
+    4-segment plume in today's #BAAAEC);
+  - the torso as a breastplate: today's Torso + a 0.2-proud chest plate with a centre ridge (2 wedges) and 3 #7A808C
+    lames over the stomach;
+  - plate legs: greaves (0.1-proud plates) and knee cops (0.5 cubes turned 45 deg);
+  - the arms with couters (elbow plates) and gauntlets (1.3 blocks, #5C626E) resting on the sword pommel.
+- **Belt and sword:**
+  - today's gold Belt with a buckle, plus a sash: 2 hanging cloth panels 0.6 x 2.2 #FFC93C / #C99A2E (see above);
+  - the sword planted in front: today's Blade with a fuller line (#D6ECFF), today's gold Guard (with 2 small end
+    knobs), the Grip with a leather wrap and a gold pommel ball.
+- **Carved plinth:** today's Plinth (8 x 2 x 8) with a 0.25 chamfered top edge and a carved frieze.
+  - The frieze: a recessed band 0.3 tall, 0.08 deep, with 4 small Neon #60BEFF diamonds, one per face.
+  - A darker #234A8F foot course.
+- **Glass case:**
+  - today's IceBlock stays the visible pane volume: Glass #96D6FA, T 0.55 -> 0.6;
+  - 4 metal-like ice frame posts at the corners (0.45 square, #54A0E8 with #D6ECFF edge strips), a bottom frame and a
+    top frame;
+  - the lid: today's SnowCap as a white #F4F8FF lid slab 7.8 x 0.5 x 6.4 with a 0.15 rim lip and a
+    `tundra_snow__cap` mound (7.6, 0.5, 6.2);
+  - 2-3 icicles under the lid's front edge;
+  - 2 faint reflection streaks per front / side pane: thin #F2F6F8 strips at 45 deg, 0.05 proud, T 0.5.
+- **Shards:** the 2 Shards as `tundra_gate4__spire` scale 0.22 / 0.28 at today's places.
+
+**03 ice throne** (keep the seat top y 3.6, the footprint and the colliders):
+- **Stepped base:** today's 2 Steps as bevelled block courses: blocks 2-3 long, 0.08 joints, 0.15 chamfers, #3468B4 /
+  #54A0E8 tones, and a frost line #E6EEF6 on the step noses.
+- **Seat and armrests:**
+  - a pale blue cushion on today's Seat: a soft convex pad 4.6 x 0.5 x 4.0 #D6ECFF, tufted with 4 small #BFE9F5
+    buttons; the Seat itself stays #96D6FA;
+  - armrests: today's ArmRests with a rounded front scroll (a cylinder 1.2 x 1.2 across the front end) and a chamfered top.
+- **Back panel:** today's Back, tall, with a bevelled #3468B4 frame strip round its front face.
+  - Inlay: today's Neon Gem as a glowing cyan diamond inlay in a recessed diamond frame (#234A8F 1.5, 0.1 deep, 4
+    facets #96D6FA).
+- **Crystal spikes:** `tundra_gate4__spire` instead of the 5 spike meshes. The 2 Crystal meshes stay invisible as
+  colliders.
+  - behind the top: (0, 11.1, 2.7) scale 0.4 yaw 90; (+-2.0, 11.1, 2.7) scale 0.29, leaning outward;
+  - at the sides: (+-4.8, 0, 2.6) scale 0.43.
+- **Frost:** a `tundra_snow__cap_shade` (5.6, 0.35, 1.6) on the back's top behind the crystals, and 2 small icicles
+  under each armrest front.
+
+**04 warm brazier, the "yellow dome pedestal"** (keep the size, the colliders, Embers + FirePoint, and the arena
+`Fire` part with its emitters and light exactly):
+- **Stone pedestal:** today's Base (#4E566E 7 x 1.2 x 7) and Step (#768096 5 x 1 x 5) as bevelled slate blocks.
+  - 4 blocks per course, 0.08 joints over #3E4558, 0.15 chamfers, a 0.3 plinth lip;
+  - `tundra_snow__cap` strips (scale (7.2, 0.35, 1.0)) on 2 sides of the Base top.
+- **Stem and bowl:** today's iron Stem and Bowl in dark steel #3E4C66 with 2 riveted bands (#56688A).
+- **Rim:** today's gold Rim with 16 small studs, and a `tundra_snow__cap` arc piece (2 of (3, 0.3, 0.8)) on the rim's
+  back half, away from the fire.
+- **Dome:** `tundra_mon__brazier_dome`, a warm glowing glass dome (Neon #FFB648, T 0.35) in a cage of 8 gold ribs and
+  a brass crown ring.
+  - The panels between the ribs are the owner's "small windows with frames and a warm glow".
+  - Today's EmberGlow goes. Today's Embers disc (Neon #FF8C28) stays under the dome; the 3 Logs stay inside as the
+    burning wood.
+- **Light:** the arena copies keep their `Fire` (warm light #FFB85A 0.9 / 24 + emitters, at the FirePoint).
+  - Add nothing to the kit / test copies (they had no light).
+  - Optional, for the look without the VFX: a PointLight #FFB648 0.6 / 10 under the dome, only if the owner asks.
+
+**05 ice wall panel with a checkmark** (keep the size and EVERY collider: 4 of the copies are the zone wall):
+- **Frame:** thick bevelled ice-blue stone.
+  - Today's 2 Posts and 2 Rails as frame members with 0.3 chamfers, a 0.2-proud inner bead (#96D6FA) round the pane;
+  - 4 corner blocks (2.6 x 2.6, #3468B4) with a raised diamond stud each.
+  - Base block: today's bottom Rail as a 2-step base (#3468B4 / #234A8F), with snow on its top front
+    (`tundra_snow__cap` (15, 0.35, 0.8)).
+- **Pane:** today's Pane, Glass #96D6FA T 0.45, with 3 subtle reflection lines (#F2F6F8, 0.08 wide, T 0.5, at 50 deg,
+  0.03 proud, on the front face only).
+- **Checkmark:** today's 2 Facets as a carved glowing check.
+  - Each stroke = a bevelled bar (0.6 wide, 0.3 proud, #D6ECFF, chamfered) with a Neon #60BEFF inlay strip 0.15 wide
+    along its middle.
+  - Same angles and lengths as today; the 2 strokes meet in a mitred point.
+- **Top:** a `tundra_snow__cap_drip` (15.5, 0.6, 3.2) on the top Rail, 4-6 icicles under it.
+
+**06 blue lamp post** (keep the FirePoint world position, the Ember, and the VFX lights #96D7FF 0.9 / 24 on their
+parts):
+- **Base:** today's Foot as a bevelled octagonal slate base (#3468B4 -> #4E566E, 2 steps) with a
+  `tundra_snow__cap_shade` (2.0, 0.3, 2.0) on it.
+- **Post:** today's Pole as a slim chamfered post (#4E566E) with 3 dark-steel bands (#3E4C66, 0.15 proud) and frost
+  rime on the top 1/3.
+- **Lantern:** a bracket collar under the Head, then a small glass lantern round today's Ember.
+  - Frame: 4 corner rods 0.08, base plate 1.3, an open crown ring (the VFX particles rise through it).
+  - Panes: 4 glass panes #BFE9F5 Glass T 0.4.
+  - Today's Neon Ember inside (keep it and its colour #60BEFF, or the cyan #35E6F5).
+  - Today's Head = the lantern base, holding the FirePoint at its place.
+- **Icicles:** 3-4 tiny icicles (`tundra_ice__icicle` scale 0.15-0.25) under the crown ring, and a tiny snow cap on it.
+
+**E9.2 Facet pieces (tundra_monuments; plus the reused pieces of E7 / E8)**
+
+| Piece | Faces (shells) | Origin / placement | Replaces |
+|---|---|---|---|
+| `tundra_mon__pillar_shaft` | 164 (2) | Ice_Pillar pivot; copy's Model scale | the 2 Shaft looks (kept as colliders) |
+| `tundra_mon__knight_armor` | 159 (9) | Frozen_Knight_Statue pivot; copy's Model scale; inside the case (max x 3.65) | Head, 2 Shoulders, Plume (none collide) |
+| `tundra_mon__brazier_dome` | 263 (33) | Warm_Brazier pivot (also the renamed `WarmBrazier`); copy's Model scale | EmberGlow |
+| `tundra_gate4__spire` (E8) | 186 (4) | throne: 5 places (E9.1); knight shards: scale 0.22 / 0.28 | the throne's 3 Spikes + 2 Crystal looks, the knight's 2 Shards |
+| `tundra_snow__cap*`, `tundra_ice__icicle`, `tundra_ice__shards`, `tundra_snow__drift` (E7) | | as listed in E9.1 | |
+
+**Cost** (about 2 tris per facet face):
+
+| Piece use | ~Tris per copy | Copies | ~Total |
+|---|---|---|---|
+| pillar shaft | 330 | 20 | 6.6k |
+| knight armour | 320 | 12 | 3.8k |
+| brazier dome | 530 | 6 | 3.2k |
+| throne spires (5) | ~1.9k | 4 | 7.4k |
+
+The caps and icicles come on top. On the 20 pillars, if needed, drop the shaft's bevel: 8 plain faces + the core =
+about 40 tris.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

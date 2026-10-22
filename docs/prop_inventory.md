@@ -762,6 +762,45 @@ children are not hit). Screenshots (test + game, before + after): `docs/screensh
 Totals: 12 copies replaced (4 templates). Triangles of the new geometry, all copies: about 203,000 (arch 45k, palisade
 66k, ice rock 38k, castle 53k), of which the 4 game copies about 68,000.
 
+### Tundra monuments (owner, "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Ice monuments, statues and shrines", 2026-10-22): inventory before the remake (read from Studio)
+
+Images: `docs/Tundra_Images/03_Ice_Monuments_and_Statues/`. Test = `workspace._Staging.AssetPreview.Tundra.<Kit>`, kit =
+`ServerStorage.MapAssets.Tundra.<Kit>`; the kits' parts are kept as rows in `tools/PropsTundraMonumentsData.luau`.
+Backups: `BackUP_Files/old_props_2026-10-22_pre_tundra_monuments/<propId>.rbxm` (6 files, every copy); the main agent's
+full backup `..._before_tundra_monuments`.
+
+| # | owner's object | kit | copies | contract / functional parts |
+|---|---|---|---|---|
+| 01 | ice pillar | `Ice_Pillar` | 20: test, kit, Tundra_4.Decor.Props x10, ServerStorage BossArenas.Tundra.Decor.Props x8 | shaft, base and cap collide |
+| 02 | ice knight in a glass case | `Frozen_Knight_Statue` | 12: test, kit, Tundra_4.Decor.Props x4 (1.15), Tundra_4.BossGate x2 (1.25), BossArenas.Tundra.Decor.Props x4 | the case collides; the 2 BossGate copies are nested in the BossGate (its Interact prompt "Enter / Frost King's Throne" stays on the BossGate) |
+| 03 | ice throne | `Ice_Throne_Small` | 4: test, kit, Tundra_4.Decor.Props, BossArenas.Tundra.Decor.Props (1.1) | seat top y 3.6, back, arms collide |
+| 04 | yellow dome pedestal | `Warm_Brazier` / `WarmBrazier` | 6: test, kit, ServerStorage BossArenas.Tundra.WarmSpots x4 (scale 1.3) | Embers + FirePoint; the 4 arena copies carry an extra `Fire` part (emitters + PointLight #FFB85A b0.9 r24) |
+| 05 | glass frame with a checkmark | `Ice_Wall_Panel` | 10: test, kit, Tundra_4.Decor.Props x4, Tundra_4.Decor.Exterior x4 | the Exterior panels are zone wall panels: every collider exact |
+| 06 | blue lamp post | `Blue_Torch_Standing` | 10: test, kit, Tundra_4.BossGate x2 (1.7), BossArenas.Tundra.Decor.Props x6 (1.5 .. 2.0) | Head (invisible), FirePoint, Ember; its lights are the zones' Fire_Torch_Blue VFX parts (not touched) |
+
+### Tundra monuments remake status (Agent B, 2026-10-22)
+
+Builders: `tools/PropsTundraMonuments.luau` (`DevTools.PropsTundraMonuments`, on DevTools.PropsTundraGates, which now
+exports `TB` / `GS`); kit rows in `tools/PropsTundraMonumentsData.luau`. Agent A's facet `tundra_mon__pillar_shaft` is
+used; `knight_armor` / `brazier_dome` were not needed (built from parts); the crystals reuse the gate 4 spire solid.
+Rules: tools/SyncMapProps.luau (6 monument rules; `Warm_Brazier` and `WarmBrazier`; AssetPreview.Tundra as a search
+root). Collision: invisible `Collision` parts = today's colliding parts (MeshParts cloned from a source with the same
+mesh and fidelity), checked part by part on every copy and with ray grids that respect CanCollide (position-tolerant
+keys). Screenshots (test + game, before + after; the brazier test only): `docs/screenshots/tundra_monuments/`. Run 2 = 0.
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| 01 | ice pillar (pilot) | `tundra_ice_pillar` | 20 / 20 | 3,400 | Agent A's faceted fluted ice shaft with lighter edges, glowing cyan chevrons, a carved capital, a bevelled square base, frost crystals. Size 8.2 x 40.6 x 8.8 (within +10 %). Colliders exact on all 20 (part signatures, symmetric shafts within 0.04); 11 grids 0 differences |
+| 02 | ice knight in a glass case | `tundra_ice_knight` | 12 / 12 | 4,100 | plate armour, pauldrons, a helmet with a glowing cyan visor and a plume, the gold belt with a green sash, a sword planted in front, a carved plinth; glass panes (T 0.5) in ice frames; a snow-white lid with a rim; spire crystals. Size 11.9 x 15.4 x 8.0. Colliders exact on 12; 7 grids 0 differences; the 2 BossGate copies synced, the BossGate (36 children) and its prompt unchanged |
+| 03 | ice throne | `tundra_ice_throne` | 4 / 4 | 4,400 | crystal spikes, a tall back with a thin Neon diamond inlay, armrests, a pale blue cushion, a stepped base, frost. Seat top stays y 3.6. Size 13.2 x 18.5 x 8.5. Colliders exact on 4; 2 grids 0 differences |
+| 04 | yellow dome pedestal | `tundra_dome_brazier` | 6 / 6 | 2,700 | a bevelled stone pedestal, a ribbed golden dome with a rim, framed warm-glow windows, snow on the rim; Embers + FirePoint exact; the 4 arena copies keep their `Fire` part and its light (b0.9 r24 #FFB85A) and their scale 1.3. Size 9.2 x 9.4 x 9.2. Colliders exact on 6; grid 0 differences |
+| 05 | glass frame with a checkmark | `tundra_glass_frame` | 10 / 10 | 2,400 | today's posts as bevelled ice pilasters (inner bead, base, capital), the bottom rail as a base block, the top rail as a lintel with dentils, a soft snow cap and icicles; 4 corner bosses with diamond studs; the pane as ice glass (T 0.4) with 3 reflection streaks; the checkmark carved in raised light ice with a glowing cyan core line. Size 20.3 x 24.5 x 3.3. Colliders exact on 10 (the 4 Exterior wall panels too); 9 grids 0 differences |
+| 06 | blue lamp post | `tundra_blue_lamp` | 10 / 10 | 1,400 | a bevelled 2-tier octagonal slate base with a snow ring, a slim octagonal post with 2 steel bands and 2 scroll brackets, a glass lantern (steel plate, 4 posts, 4 cyan glass panes, a pyramid roof with a ring and a snow cap, tiny icicles); Head, FirePoint (0 moved on all 10) and Ember exact; the Fire_Torch_Blue lights not touched. Size 1.8 x 7.1 x 1.8. Colliders exact on 10; 3 grids 0 differences |
+
+Totals: 62 copies replaced (6 templates). Triangles of the new geometry, all copies: about 189,000 (pillar 68k, knight
+49k, throne 18k, brazier 16k, frame 24k, lamp 14k), of which the copies in the zones, the BossGate and the boss arena
+(without the kits and test copies) about 152,000.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

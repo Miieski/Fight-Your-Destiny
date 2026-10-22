@@ -931,6 +931,7 @@ for id in pairs(TG.BUILDERS) do
 	B2.BUILDERS[id] = true
 end
 TG.install = B2.install
+TG.TB, TG.GS = TB, GS -- (shared with DevTools.PropsTundraMonuments)
 TG.stats = B2.stats
 
 return TG
