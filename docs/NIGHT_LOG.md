@@ -3086,6 +3086,13 @@ scarf, 05 snowman with a blue hat (same recipe as 04), 06 ice drying rack (keep 
 
 ## Status (newest first)
 
+- 01 skeleton REDONE (owner follow-up, backup before_tundra_skull_redo): the plains `skull_bones` (sad-face skull,
+  crossed bones, rib cage: its 3 MeshParts) duplicated into tundra_frozen_skeleton, x 0.76, inside Agent A's ice block
+  (scaled 1.2 / 1.05 / 1.15, moved 1.0 left / 0.4 front; the best fit of the meshes' vertices: 3 % outside, covered
+  by 5 thin glass lumps); rime flakes on the bone tops, frost patches, snow cap 0.25, 3 icicles, shards at 2 feet;
+  today's stick bones / ribs / arm and Agent A's skull facet removed. 11 / 11, run 2 = 0, colliders 16 / 16 exact,
+  5 grids 0 differences, size 6.58 x 3.48 x 6.00; Sync.check 142 up to date; export + pull 0 written. OWED: after
+  shots test + game (screen captures still denied).
 - Done (Agent B), the shots excepted. 01 / 02 / 03 / 06 synced on the main agent's go (b) while screen captures were
   denied: before evidence = the owner's images in docs/Tundra_Images/04_Props_and_Decor/ (test zone) and the backups in
   BackUP_Files/old_props_2026-10-22_pre_tundra_props/ (game). OWED: the after shots, test + game, of 01 skeleton, 02
@@ -3124,3 +3131,7 @@ scarf, 05 snowman with a blue hat (same recipe as 04), 06 ice drying rack (keep 
   step onto the sled and the rack's base plank, and walks over the hole); no game errors (the same 203785492 warning).
   FINAL: 142 templates / 1682 copies up to date; disk == Studio (215 scripts, 0 written); backup after_tundra_props.
 
+- 19:38 OWNER FOLLOW-UP: redo the tundra frozen skeleton by DUPLICATING the finished plains skull_bones model (sad
+  skull, crossed knobbed bones, curved rib cage) inside a faceted translucent ice block (lighter edges, inner gradient),
+  compact pose in today's footprint, frost on the bones, a thin ice layer over parts that stick out, a soft snow cap,
+  icicles and small shards; keep size, position and collisions; all copies. Backup before_tundra_skull_redo.

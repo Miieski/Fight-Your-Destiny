@@ -394,94 +394,164 @@ local FROST = rgb(242, 246, 248) -- #F2F6F8
 -- 01 FROZEN SKELETON IN ICE (kit MapAssets.Tundra.Bone_Pile_Ice, 18 parts, 7.3 x 3.2 x 5.8; 11 copies: test, kit,
 -- Tundra_3 x3 (one on a ledge at y 8), Tundra_4 x1, BossArenas x5 at 1.5)
 ---------------------------------------------------------------------
--- The frozen skeleton (guide E10): Agent A's faceted translucent ice block (Glass T 0.4, light edges, no core) in place of
--- today's Ice mesh; Agent A's skull (sockets, jaw, teeth) on today's Skull / Jaw / EyeSocket places; today's 3 bones as
--- 8-sided shafts thinning to the middle with knobbed ends (2 overlapping knobs) at today's BoneEnds; today's 3 ribs as
--- curved, tapered ribs (2 segments, bent 20 deg); a bone arm frozen inside the ice (humerus, forearm, a hand of 4 finger
--- bones) reaching toward the front face; 4 frost patches on the ice; Agent A's ice shards at one foot; a soft snow cap
--- on the ice top toward the back (in place of today's Snow mesh). Colliders: today's 16 bone parts.
--- Parts: Bone, Ice, Frost, Shards, Snow, Collision x16.
+-- Owner follow-up (2026-10-22): not remodelled - the PLAINS biome's finished skull-and-bones (the `skull_bones` MapProp:
+-- the skull with the sad face and dark eyes, 2 crossed bones with knobbed ends, the curved rib cage; its 3 MeshParts
+-- Bones / Aged / Sockets) is duplicated here, compacted (x 0.76 round the point under today's skull, so the pose fits
+-- today's tundra footprint) and frozen in Agent A's faceted translucent ice block (Glass T 0.4, light edges, the
+-- darker inner facets: the gradient), the block widened to hold it (x 1.2, y 1.05, z 1.15, moved 1.0 left and 0.4 to
+-- the front; checked on the meshes' vertices: about 3 % of them are outside); a thin glass ice layer over the bits
+-- that stick out; frost (small rime flakes) on the bones' tops; 4 frost patches on the ice; a soft snow cap on the
+-- top toward the back; 3 small icicles under the block's upper edges; Agent A's ice shards at 2 feet.
+-- Colliders: today's 16 bone parts, exactly. Parts: Bones, Aged, Sockets (the plains meshes), Ice, Frost, Shards, Snow,
+-- Icicles, Collision x16.
+local SKEL = {
+	s = 0.76, -- the plains skull-and-bones' scale, round g (the ground under today's skull)
+	g = Vector3.new(0.3, 0, 0.2),
+	d = Vector3.new(0.15, 0, -0.15), -- and moved by d
+	iceS = Vector3.new(1.2, 1.05, 1.15), -- Agent A's ice block scaled round c and moved by iceOff
+	c = Vector3.new(0.5, 0, 0.53),
+	iceOff = Vector3.new(-1.0, 0, -0.4),
+}
+TP.SKEL = SKEL
+
 function TP.tundra_frozen_skeleton(): Model
+	local AssetService = game:GetService("AssetService")
 	local m = Instance.new("Model")
 	m.Name = "tundra_frozen_skeleton"
 	local rng = Random.new(20261801)
 	H.setBevelSelf(true)
-	local U: any = { Bone = {}, Ice = {}, Frost = {}, Shards = {}, Snow = {} }
+	local U: any = { Ice = {}, Frost = {}, Shards = {}, Snow = {}, Icicles = {} }
 	local kit = "Bone_Pile_Ice"
+	-- Agent A's ice block, scaled and moved (its planes kept for the surface points below)
 	local ice = PS.tundra_props__skeleton_ice
-	facetPiece(U, ice, CFrame.identity, nil, "Ice", "Ice")
-	facetPiece(U, PS.tundra_props__skull, CFrame.identity, nil, "Bone", "Bone")
-	local function boneTone(n: Vector3): Color3
-		return if n.Y > 0.3 then BONE elseif n.Y > -0.3 then scaled(BONE, 0.96) else BONE_D
+	local T = SKEL.c + SKEL.iceOff - SKEL.c * SKEL.iceS
+	facetPiece(U, ice, CFrame.new(T), SKEL.iceS, "Ice", "Ice")
+	local sd = ice.solids[1]
+	local function toLocal(q: Vector3): Vector3
+		return (q - T) / SKEL.iceS
 	end
-	-- the 3 bones: 8-sided shafts thinning to the middle
-	local bones = rowsNamed(kit, "Bone")
-	local ends = {}
-	for _, b in ipairs(bones) do
-		local dir, L, r = b.cf.XVector, b.size.X, b.size.Y / 2
-		local a, c = b.cf.Position - dir * L / 2, b.cf.Position + dir * L / 2
-		local mid = b.cf.Position
-		stick(U.Bone, a + dir * 0.25, mid, r * 0.9, r * 0.66, BONE)
-		stick(U.Bone, c - dir * 0.25, mid, r * 0.9, r * 0.66, BONE)
-		table.insert(ends, { p = a, dir = dir })
-		table.insert(ends, { p = c, dir = dir })
+	local function depth(q: Vector3): number
+		local p = toLocal(q)
+		local w = -math.huge
+		for _, pl in ipairs(sd.planes) do
+			local n = Vector3.new(pl[1], pl[2], pl[3])
+			w = math.max(w, (n:Dot(p) - pl[4]) / n.Magnitude)
+		end
+		return w
 	end
-	-- the knobbed ends: 2 overlapping knobs (0.15 apart, across the bone) at each of today's BoneEnds
-	for _, e in ipairs(rowsNamed(kit, "BoneEnd")) do
-		local p = e.cf.Position
-		local best, dir = math.huge, Vector3.xAxis
-		for _, q in ipairs(ends) do
-			local d = (q.p - p).Magnitude
-			if d < best then
-				best, dir = d, q.dir
+	local function exitAt(o: Vector3, dir: Vector3): (Vector3, Vector3)
+		local p, n = exitOf(sd, toLocal(o), dir / SKEL.iceS)
+		return T + p * SKEL.iceS, (n / SKEL.iceS).Unit
+	end
+	-- the plains skull-and-bones: its 3 MeshParts, compacted and placed
+	local src = ServerStorage.MapProps:FindFirstChild("skull_bones")
+	assert(src, "PropsTundraProps: ServerStorage.MapProps.skull_bones missing")
+	local spiv = src:GetPivot()
+	local function place(p: Vector3): Vector3
+		return SKEL.g + (p - SKEL.g) * SKEL.s + SKEL.d
+	end
+	local verts: { Vector3 } = {}
+	local tops: { [string]: Vector3 } = {}
+	for _, name in ipairs({ "Bones", "Aged", "Sockets" }) do
+		local orig = src:FindFirstChild(name) :: MeshPart
+		assert(orig, `PropsTundraProps: skull_bones.{name} missing`)
+		local mp = orig:Clone()
+		mp:ClearAllChildren()
+		for key in pairs(mp:GetAttributes()) do
+			mp:SetAttribute(key, nil)
+		end
+		local rel = spiv:ToObjectSpace(orig.CFrame)
+		mp.Size = orig.Size * SKEL.s
+		mp.CFrame = CFrame.new(place(rel.Position)) * rel.Rotation
+		mp.Anchored = true
+		mp.CanCollide, mp.CanQuery, mp.CanTouch = false, false, false
+		mp.Parent = m
+		-- its vertices (for the ice layer and the frost): kit space
+		local em = AssetService:CreateEditableMeshAsync(Content.fromUri(orig.MeshId))
+		local k = orig.Size / orig.MeshSize
+		for _, id in ipairs(em:GetVertices()) do
+			local q = place(rel * (em:GetPosition(id) * k))
+			table.insert(verts, q)
+			if name == "Bones" and q.Y > 0.3 then
+				local key = string.format("%d,%d", math.floor(q.X / 0.45), math.floor(q.Z / 0.45))
+				if not tops[key] or q.Y > tops[key].Y then
+					tops[key] = q
+				end
 			end
 		end
-		local across = dir:Cross(UP)
-		across = if across.Magnitude > 0.01 then across.Unit else Vector3.zAxis
-		local r = e.size.X / 2
-		for _, s in ipairs({ -1, 1 }) do
-			lump(U.Bone, rng, CFrame.new(p + across * s * 0.075) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), r * 0.82, r * 0.82, r * 0.82, boneTone)
+		em:Destroy()
+	end
+	-- a thin glass ice layer over what sticks out of the block (by 0.5-stud cells)
+	local cells: { [string]: { lo: Vector3, hi: Vector3 } } = {}
+	for _, q in ipairs(verts) do
+		if depth(q) > -0.04 then
+			local key = string.format("%d,%d,%d", math.floor(q.X / 0.5), math.floor(q.Y / 0.5), math.floor(q.Z / 0.5))
+			local c = cells[key]
+			if c then
+				c.lo, c.hi = c.lo:Min(q), c.hi:Max(q)
+			else
+				cells[key] = { lo = q, hi = q }
+			end
 		end
 	end
-	-- the 3 ribs: 2 tapered segments, the upper one bent 20 deg (toward the ice)
-	for _, rb in ipairs(rowsNamed(kit, "Rib")) do
-		local ax, L, r = rb.cf.YVector, rb.size.Y, rb.size.X / 2
-		local a = rb.cf.Position - ax * L / 2
-		local mid = rb.cf.Position
-		local ax2 = (CFrame.Angles(0, 0, rad(-20)) * ax).Unit
-		stick(U.Bone, a, mid + ax * 0.04, r * 1.05, r * 0.85, BONE)
-		stick(U.Bone, mid, mid + ax2 * L / 2, r * 0.85, r * 0.5, BONE)
+	local keys = {}
+	for key in pairs(cells) do
+		table.insert(keys, key)
 	end
-	-- a bone arm frozen in the ice, reaching toward the front face: humerus, forearm, 4 finger bones
-	local sh, el, wr = Vector3.new(2.45, 0.8, 1.55), Vector3.new(2.3, 0.72, -0.2), Vector3.new(1.7, 0.64, -1.18)
-	stick(U.Bone, sh, el, 0.18, 0.13, BONE)
-	stick(U.Bone, el, wr, 0.15, 0.11, BONE)
-	for _, k in ipairs({ sh, el }) do
-		lump(U.Bone, rng, CFrame.new(k), 0.2, 0.18, 0.2, boneTone)
+	table.sort(keys)
+	local layer = 0
+	for _, key in ipairs(keys) do
+		local c = cells[key]
+		local mid, half = (c.lo + c.hi) / 2, (c.hi - c.lo) / 2 + Vector3.new(0.12, 0.12, 0.12)
+		lump(U.Ice, rng, CFrame.new(mid), math.max(half.X, 0.18), math.max(half.Y, 0.15), math.max(half.Z, 0.18), TB.iceTone(rgb(191, 233, 245)), math.max(0, mid.Y))
+		layer += 1
 	end
-	local fwd = (wr - el).Unit
-	local side = fwd:Cross(UP).Unit
-	for i = -1.5, 1.5 do
-		local f0 = wr + side * (i * 0.1)
-		stick(U.Bone, f0, f0 + (fwd + side * i * 0.18 - UP * 0.05).Unit * (0.26 - math.abs(i) * 0.04), 0.06, 0.04, BONE)
+	TP.lastIceLayer = layer
+	-- frost on the bones: small rime flakes on their tops (cells 0.45, spread out)
+	local tkeys = {}
+	for key in pairs(tops) do
+		table.insert(tkeys, key)
+	end
+	table.sort(tkeys)
+	local chosen: { Vector3 } = {}
+	for _, key in ipairs(tkeys) do
+		local q = tops[key]
+		local far = true
+		for _, o in ipairs(chosen) do
+			if (o - q).Magnitude < 0.8 then
+				far = false
+			end
+		end
+		if far and #chosen < 16 then
+			table.insert(chosen, q)
+			frostPatch(U.Frost, rng, q - UP * 0.015, UP, rng:NextNumber(0.1, 0.16), FROST)
+		end
 	end
 	-- frost patches on the ice (from inside its centre out)
-	local sd = ice.solids[1]
-	local c0 = Vector3.new(0.5, 1.0, 0.5)
+	local c0 = T + Vector3.new(0.5, 1.0, 0.5) * SKEL.iceS
 	for _, d in ipairs({ Vector3.new(-0.5, 0.75, -0.45), Vector3.new(0.75, 0.6, 0.3), Vector3.new(-0.7, 0.45, 0.55), Vector3.new(0.25, 0.85, 0.5) }) do
-		local p, n = exitOf(sd, c0, d.Unit)
+		local p, n = exitAt(c0, d.Unit)
 		frostPatch(U.Frost, rng, p, n, rng:NextNumber(0.32, 0.45), FROST)
 	end
-	-- Agent A's ice shards at one foot
-	facetPiece(U, TS.tundra_ice__shards, CFrame.new(2.85, 0, -1.0) * CFrame.Angles(0, rad(-30), 0), Vector3.one * 0.3, "Shards", "Shards")
 	-- the snow cap on the ice top, toward the back, on the face it sits on
-	local top, tn = exitOf(sd, Vector3.new(0.7, 1.0, 1.5), UP)
-	facetPiece(U, TS.tundra_snow__cap, CFrame.fromMatrix(top - tn * 0.08, tn:Cross(Vector3.zAxis).Unit, tn), Vector3.new(2.8, 0.35, 2.2), "Snow", "Snow")
+	local top, tn = exitAt(T + Vector3.new(0.7, 1.0, 1.5) * SKEL.iceS, UP)
+	facetPiece(U, TS.tundra_snow__cap, CFrame.fromMatrix(top - tn * 0.1, tn:Cross(Vector3.zAxis).Unit, tn), Vector3.new(2.8, 0.25, 2.2), "Snow", "Snow")
+	-- 3 small icicles under the block's upper edges (front, left, right)
+	for _, d in ipairs({ Vector3.new(0.1, 0, -1), Vector3.new(-1, 0, 0.2), Vector3.new(1, 0, 0.3) }) do
+		local p = exitAt(c0 + Vector3.new(0, 0.75, 0), d.Unit)
+		facetIcicle(U, "Icicles", p - d.Unit * 0.12, rng:NextNumber(0.18, 0.26), 0.22, rng:NextNumber(0, 6.28))
+	end
+	-- Agent A's ice shards at 2 feet
+	local f1 = exitAt(c0 - Vector3.new(0, 0.9, 0), Vector3.new(1, 0, -0.5).Unit)
+	facetPiece(U, TS.tundra_ice__shards, CFrame.new(f1.X, 0, f1.Z) * CFrame.Angles(0, rad(-30), 0), Vector3.one * 0.3, "Shards", "Shards")
+	local f2 = exitAt(c0 - Vector3.new(0, 0.9, 0), Vector3.new(-0.6, 0, 1).Unit)
+	facetPiece(U, TS.tundra_ice__shards, CFrame.new(f2.X, 0, f2.Z) * CFrame.Angles(0, rad(120), 0), Vector3.one * 0.22, "Shards", "Shards")
 
-	TB.finishTB(m, "tundra_frozen_skeleton", U, "Bone", {
+	TB.finishTB(m, "tundra_frozen_skeleton", U, "Ice", {
 		Ice = { material = Enum.Material.Glass, transparency = 0.4, shadow = false, query = true },
 		Frost = { transparency = 0.3, shadow = false },
 		Shards = TB.GLASS_OPTS,
+		Icicles = TB.ICICLE_OPTS,
 	})
 	collisionRows(m, kit)
 	return m
