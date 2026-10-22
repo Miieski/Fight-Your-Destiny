@@ -3054,7 +3054,7 @@ marker, mirror - and keep its function and script), 06 blue lamp post (keep the 
 - Brazier: E9 found 4 more copies, ServerStorage BossArenas.Tundra.WarmSpots "WarmBrazier" at 1.3, each with a "Fire"
   part (emitters + PointLight). Rule now names Warm_Brazier and WarmBrazier; the Fire parts are kept as children. Their
   old copies re-collected into the backup (collect_backup skips existing files: the old file moved aside first).
-- Pilot 01 ice pillar: 20 / 20, Agent A's pillar shaft facets; colliders exact; shots sent; approved.
+- Pilot 01 ice pillar: 20 / 20, shaft built as a bevelled 8-sided prism (Agent A's pillar_shaft facet not used); colliders exact; shots sent; approved.
 - Inventory: 6 kits in ServerStorage.MapAssets.Tundra, 62 copies (test, kit, Tundra_4 Decor / Exterior / BossGate,
   BossArenas.Tundra); no scripts, no Seat; functions = colliders, Embers / FirePoints, the lamp Head, the BossGate prompt.
   Per-object backups BackUP_Files/old_props_2026-10-22_pre_tundra_monuments/ (6 files).
@@ -3076,4 +3076,51 @@ marker, mirror - and keep its function and script), 06 blue lamp post (keep the 
   panel block the player; BossGate prompt "Enter solo / Boss room" enabled; both Tundra_4 blue lamps have their
   Fire_Torch_Blue light (#96D7FF r24) on the FirePoint; no game errors (the same 203785492 warning). FINAL: 136
   templates / 1630 copies up to date; disk == Studio (212 scripts, 0 written); backup after_tundra_monuments. All 6 OK.
+
+
+# Tundra props and decor - 2026-10-22 (owner prompt "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Props and decor")
+
+Objects: 01 frozen skeleton in ice (keep size), 02 ice fishing hole (keep positions, size and any fishing prompt /
+interaction; the barrel = the same as the new barrel), 03 sled (keep size), 04 snowman with a gray hat and purple
+scarf, 05 snowman with a blue hat (same recipe as 04), 06 ice drying rack (keep size and any interaction).
+
+## Status (newest first)
+
+- Done (Agent B), the shots excepted. 01 / 02 / 03 / 06 synced on the main agent's go (b) while screen captures were
+  denied: before evidence = the owner's images in docs/Tundra_Images/04_Props_and_Decor/ (test zone) and the backups in
+  BackUP_Files/old_props_2026-10-22_pre_tundra_props/ (game). OWED: the after shots, test + game, of 01 skeleton, 02
+  fishing hole, 03 sled, 06 rack (the main agent takes them). Checks: skeleton 11 / 11, fishing hole 6 / 6, sled 5 / 5,
+  rack 10 / 10, run 2 = 0; colliders part by part exact on every copy (corner difference 0 against the kit rows), ray
+  grids 0 differences on every workspace copy; Sync.check 142 templates all up to date; 0 untagged kit-named models;
+  the barrel rule finds 49 barrels (43 + the 6 nested in the fishing holes), all up to date; PropFX
+  `tundra_fishing_hole` Scroll on `Water`; the skeleton's bone arm checked inside the ice's planes (moved 0.2 back:
+  its fingertips touched the front face). Export + pull: 215 scripts, 0 written; graphify update.
+- Screen captures: Studio stopped rendering (display asleep); a 1 px mouse nudge woke it, but a background
+  keep-awake loop was denied by the auto-mode classifier and every screen_capture after it was denied too. Not
+  retried (main agent: go (b), the owner is told).
+- 05 blue snowman: 6 / 6, the same recipe; the third button on the base ball (E10's y 3.6 is inside the base ball).
+- Pilot 04 gray snowman: 6 / 6, colliders exact, grids 0; shots sent. A first build's packed-snow collars and smile were
+  too big / too high: smaller collars, flatter drifts, a lower smile.
+- E10 facets converted (tools/tundra_facets_to_solids.py gained a "props" set; buildings / gates regenerate identical).
+- Inventory: 6 kits, 44 copies, no prompt / script / nested MapProp; 06 is a frozen weapon rack (built as one, with the
+  owner's blue pennant and gray cloth). Backups old_props_2026-10-22_pre_tundra_props (6 files).
+- 18:21 Started. Images in docs/Tundra_Images/04_Props_and_Decor/. Sync.check 136 templates, 0 out of date.
+  Backup before_tundra_props.
+- 19:00 TUNDRA PROPS SYNCED - AFTER SHOTS OF 01 / 02 / 03 / 06 OWED. Agent A: guide E10 + 6 facets (glass ice block,
+  skull, bumpy snowball, carrot, rack ice). Agent B: tundra_snowman_gray 6 / 6 (pilot, shots sent to the owner),
+  tundra_snowman_blue 6 / 6 (all 8 snowman shots taken), tundra_frozen_skeleton 11 / 11, tundra_fishing_hole 6 / 6
+  (the real `barrel` MapProp nested at the old Bucket spot at 0.4 -> the barrel rule now covers 49 copies, all up to
+  date; the Bucket stays the invisible collider; water like the fountain / well + a PropFX Scroll entry; 2 fish kept + 2
+  planks added; no fishing interaction existed), tundra_sled 5 / 5, tundra_ice_rack 10 / 10 (hybrid: spear, axe and
+  frozen sword kept + a blue pennant under the spear head and a grey cloth under the axe head, per the owner's words;
+  the 4 Tundra_4 rails trimmed 0.04 per end). Colliders exact on every copy, ray grids 0 differences.
+  BLOCKER: the display slept; Agent B's background keep-awake loop was denied by the auto-mode classifier
+  ("Unauthorized Persistence") and every screen_capture has been denied since. The main agent did NOT run those
+  actions on its behalf; the owner is asked to re-allow screen_capture. "Before" evidence for 01 / 02 / 03 / 06 = the
+  owner's reference images (docs/Tundra_Images/04_Props_and_Decor/) + the per-object .rbxm backups. Owed: 8 after
+  shots (test + game for 01, 02, 03, 06; camera positions in Agent B's report).
+  MAIN AGENT PLAY CHECK (phone emulator): Tundra_1 / 2 / 3 / 4 at 144 fps, render CPU 2.7-3.2 ms; the snowmen block the
+  player; the sled, fishing hole, skeleton and rack behave as today (their colliders are today's parts: the player can
+  step onto the sled and the rack's base plank, and walks over the hole); no game errors (the same 203785492 warning).
+  FINAL: 142 templates / 1682 copies up to date; disk == Studio (215 scripts, 0 written); backup after_tundra_props.
 

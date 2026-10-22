@@ -5,9 +5,10 @@ import base64, glob, json, math, os, struct, sys
 
 ROOT = sys.argv[1]
 # set "buildings" (default): the tundra buildings' pieces -> PropsTundraBuildingsSolids; set "gates": the tundra gates'
-# pieces (tundra_gate*, tundra_snow__log_cap) -> PropsTundraGatesSolids
+# pieces (tundra_gate*, tundra_snow__log_cap) -> PropsTundraGatesSolids; set "props": the tundra props' pieces
+# (tundra_props__*) -> PropsTundraPropsSolids
 SET = sys.argv[2] if len(sys.argv) > 2 else "buildings"
-NAME = "PropsTundraGatesSolids" if SET == "gates" else "PropsTundraBuildingsSolids"
+NAME = {"gates": "PropsTundraGatesSolids", "props": "PropsTundraPropsSolids"}.get(SET, "PropsTundraBuildingsSolids")
 # the solids' boxes are i16 in 1/1000 stud (buildings) or 1/100 stud (gates: boxes reach x +-36)
 BOX = 100 if SET == "gates" else 1000
 OUT = os.path.join(ROOT, "tools", NAME + ".luau")
@@ -15,9 +16,13 @@ OUT = os.path.join(ROOT, "tools", NAME + ".luau")
 def wanted(f):
     b = os.path.basename(f)
     gate = b.startswith("tundra_gate") or b.startswith("tundra_snow__log_cap")
+    props = b.startswith("tundra_props__")
     if SET == "gates":
         return gate
-    return not gate and not b.startswith("tundra_cabin__")
+    if SET == "props":
+        return props
+    # the monuments' facets (tundra_mon__*) were not used (all 6 monuments are built from parts)
+    return not gate and not props and not b.startswith("tundra_mon__") and not b.startswith("tundra_cabin__")
 files = sorted(f for f in glob.glob(os.path.join(ROOT, "Blender_Exports", "Props", "facets", "tundra_*.json")) if wanted(f))
 
 def sub(a, b): return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
@@ -103,7 +108,16 @@ for f in files:
 
 out = []
 out.append("--[[")
-if SET == "gates":
+if SET == "props":
+    out.append("\tPropsTundraPropsSolids (dev tool data) - Agent A's tundra props facet pieces (Blender_Exports/Props/facets/")
+    out.append("\ttundra_props__*.json; guide E10) rebuilt as convex solids by Agent B, exactly as PropsTundraBuildingsSolids: every")
+    out.append("\tpiece is made of closed convex shells, each shell becomes the intersection of its face planes (coplanar faces merged;")
+    out.append("\teach plane keeps its face colour; a face that would cut its own shell is left out). Compact form: per piece a palette")
+    out.append("\tand a base64 blob: the solid count (u16), then per solid the plane count (u8), a Glass flag (u8), the box min / max")
+    out.append("\t(6 x i16, 1/1000 stud), then per plane nx, ny, nz (3 x i16, 1/30000), d (i32, 1/1000 stud) and the palette index")
+    out.append("\t(u8). Origins and placements: each piece's `place` in its JSON (guide E10). Source of truth:")
+    out.append("\ttools/PropsTundraPropsSolids.luau; regenerate with python tools/tundra_facets_to_solids.py <project root> props.")
+elif SET == "gates":
     out.append("\tPropsTundraGatesSolids (dev tool data) - Agent A's tundra gate facet pieces (Blender_Exports/Props/facets/tundra_gate*.json,")
     out.append("\ttundra_snow__log_cap.json; guide E8) rebuilt as convex solids by Agent B, exactly as PropsTundraBuildingsSolids: every")
     out.append("\tpiece is made of closed convex shells, each shell becomes the intersection of its face planes (coplanar faces merged;")

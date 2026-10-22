@@ -2888,6 +2888,212 @@ parts):
 The caps and icicles come on top. On the 20 pillars, if needed, drop the shaft's bevel: 8 plain faces + the core =
 about 40 tris.
 
+### E10. Tundra props and decor (owner task 2026-10-22)
+
+Images: `docs/Tundra_Images/04_Props_and_Decor/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-22_181154_before_tundra_props_{ServerStorage,Workspace}.rbxm`.
+Same target and palette as E1-E2. Facet pieces: `tools/blender/fyd_facets.py -- tundra_props`, preview
+`Previews/Props/tundra_props_facets.png`.
+
+**E10.0 Kits, copies, functions**
+
+All kits are in `ServerStorage.MapAssets.Tundra` (pivot = bottom centre, front -Z, SmoothPlastic). Every scaled copy uses
+Model scale (checked part by part): **no bakedScale**. No hub copies.
+
+| # | Owner's name | Kit (parts, bbox) | Placed copies (test = `_Staging.AssetPreview.Tundra`) | Total |
+|---|---|---|---|---|
+| 01 | frozen skeleton in ice | `Bone_Pile_Ice` (18; 7.3 x 3.2 x 5.8) | test; `Tundra_3.Decor.Props` x3 (one at (8030, **8**, 600) on a ledge); `Tundra_4.Decor.Props` x1; `BossArenas.Tundra.Decor.Props` x5 (scale 1.5) | 11 with the kit |
+| 02 | ice fishing hole | `FishingHole` (12; 9.1 x 4.1 x 7.4) | test; `Tundra_2.Decor.Props` x4 (y 0.1, on the frozen lake) | 6 |
+| 03 | sled | `Sled_A` (16; 3.6 x 2 x 10.4) | test; Tundra_1, Tundra_2, Tundra_3 x1 each | 5 |
+| 04 | snowman, gray hat, purple scarf | **`Snowman_B`** (11; 6.7 x 8 x 3.7) | test; Tundra_1 x3; Tundra_2 x1 | 6 |
+| 05 | snowman, blue hat | **`Snowman_A`** (12; 8.4 x 10 x 4.5) | test; Tundra_1 x4 | 6 |
+| 06 | "ice drying rack" | **`Weapon_Rack_Frozen`** (16; 8 x 8.9 x 3.4) | test; `Tundra_4.Decor.Props` x4 (1.2); BossArenas x4 (1.3) | 10 |
+
+- **Functions: none.**
+  - No kit or copy has a script, ProximityPrompt, ClickDetector, Seat, tag or attribute.
+  - `src/` has no fishing, sled, snowman or rack logic: "Fish" / "Snowman" there are only enemy rig families
+    (`tundra_cursed_snowman`, `tundra_swordfish`).
+  - **No fishing prompt exists.** The stool's `Seat` is a plain Part.
+- **Game copies:** identical to their kits, except the 4 Tundra_4 racks: both Rails are 7.88 long (kit 7.8), and the
+  Handle and SpearTip are shifted 0.04. Take their colliders from the game copies.
+- **No nested MapProp in any kit:**
+  - **02's "barrel" is NOT the `barrel` MapProp.** It is a plain `Bucket` cylinder (#5C626E iron, 1.4 x 1.4, collides)
+    at (4.6, 0.7, -2.4).
+  - The owner asks for "a wooden barrel with metal bands (same as the new barrel)": nest the existing `barrel` MapProp
+    there as a keg at scale **0.4** (3.46 -> 1.38 wide, 1.62 tall), like the nested `Barrel` wrappers of the HunterCamp
+    (the `barrel` rule already handles nested wrappers and their scale). Today's Bucket stays as the invisible collider.
+- **What the owner's words map to:**
+  - 02 "planks on the ice": the 2 blue `Fish` blocks (#4696D6 / #54A0E8) next to the hole.
+  - 04 / 05: the GRAY-hat snowman with the purple scarf is `Snowman_B` (a tilted `Bucket` hat #5C626E); the BLUE-hat
+    one is `Snowman_A` (top hat #4E566E).
+  - 06 "ice drying rack": `Weapon_Rack_Frozen`, a frozen weapon rack.
+    - The "blue flag" is the spear's `SpearTip` (#7080CC, 0.6 x 1.3 x 0.2) on its long `Shaft`.
+    - The "cloth hanging" is the `AxeHead` (#5C626E 1.7 x 1.5 x 0.3) on its `Handle`.
+    - The "faceted ice block" is the `Ice` mesh frozen round the `Blade` + gold `Guard` (a sword), and the "ice block
+      base" is the lower `Ice` mesh.
+    - Keep it a weapon rack, and add what the owner sees (E10.1).
+- **Suggested propIds:** `tundra_bone_ice`, `tundra_fishing_hole`, `tundra_sled`, `tundra_snowman_gray` (Snowman_B),
+  `tundra_snowman_blue` (Snowman_A), `tundra_weapon_rack`.
+
+**Colliders** (today's parts kept invisible at the copy's scale):
+
+| Kit | Colliding | Not colliding |
+|---|---|---|
+| Bone_Pile_Ice | every bone: Skull, 2 EyeSocket, Jaw, 3 Bone, 7 BoneEnd, 3 Rib | Ice mesh (CanQuery on), Snow mesh |
+| FishingHole | Bucket, 3 Leg, Fork, Seat (the stool) | Rim, Water, 2 Fish, Rod, Line (the hole is flat and walkable) |
+| Sled_A | 2 Runner, 2 RunnerTip, 4 Leg, 2 Cross, 5 Slat | Rope |
+| Snowman_A / B | Base, Body, Head (Ball parts) | hat(s), eyes, nose, buttons, arms, scarf |
+| Weapon_Rack_Frozen | Base, 2 Post, 2 Rail | 2 Ice meshes (CanQuery on), weapons, 3 Icicles |
+
+**Today's shapes and real colours** (kit space; keep the main colours):
+- **01 skeleton:**
+  - `Ice` 6 x 3 x 5.5 #96D6FA T 0.4 at (0.6, 1.2, 0.4) (the rock mesh 7231644778);
+  - `Skull` ball 2.4 #F0E8D0 at (0.3, 1.68, 0.2) with 2 `EyeSocket` blocks #3E3C4E at (-0.2 / 0.8, 1.88, -0.95);
+  - `Jaw` 1.5 x 0.9 x 1.3; 3 Bones (cylinders 0.4-0.5, 3.7-5.7 long); 7 BoneEnds (balls 0.68-0.85);
+  - 3 Ribs 0.3 x 2.2 at x -3 / -2.2 / -1.4, z -2.2 (they stick out of the ice);
+  - `Snow` mesh 3.4 x 1.4 x 3 #F4F8FF at (-2, 0.4, 1.6).
+- **02 fishing hole:**
+  - Rim disc 7.4 #D6ECFF, Water disc 6.0 #3468B4 (both 0.24-0.3 thick at ground level);
+  - stool: Seat disc 2.0 x 0.4 #865C42 at (4.4, 1.7, 0.5) on 3 Legs 0.3 x 1.6 #5C4236;
+  - `Fork` post 0.3 x 2.2 at (2.9, 1.1, 0) holding the `Rod` (6 x 0.2, #865C42, tilted 25 deg); `Line` 0.08 x 3.8 #F5F6FA
+    hanging at x -1.1 into the water;
+  - Bucket, 2 Fish.
+- **03 sled:**
+  - 2 Runners 0.4 x 0.5 x 7 #5C4236 + RunnerTips (35 deg up at the front, -Z);
+  - 4 Legs 0.4 x 1.2, 2 Cross bars 3.6 x 0.35 x 0.6 #5C4236;
+  - 5 Slats 0.6 x 0.3 x 6.4 alternating #865C42 / #D6965C;
+  - Rope 0.15 x 3.2 #C4A068 trailing from the front.
+- **05 Snowman_A:**
+  - balls Base 4.4 #F4F8FF (y 1.9), Body 3.3 #CEDEF6 (4.7), Head 2.4 #F4F8FF (6.9);
+  - top hat: Hat 1.8 x 1.6 + HatBrim 2.7 x 0.3, #4E566E;
+  - 2 coal Buttons 0.4 #1F222B; Eyes 0.35 #1F222B; Nose 0.4 x 1.4 #FF8C28;
+  - 2 stick Arms 3.2 x 0.3 #5C4236 at +-25 deg.
+- **04 Snowman_B:**
+  - balls Base 3.6 #CEDEF6 (1.5), Body 2.7 #F4F8FF (3.8, x 0.15), Head 2.0 #F4F8FF (5.6, x 0.35) (a slight lean);
+  - Scarf ring 2.1 x 0.5 + ScarfTail 0.6 x 1.6 #BAAAEC;
+  - "Bucket" hat 1.7 x 1.3 #5C626E tilted 8 deg;
+  - Eyes, Nose 0.35 x 1.2, 2 Arms 2.6 x 0.25 (-15 / -40 deg); no buttons.
+- **06 weapon rack:**
+  - Base 8 x 0.5 x 2.4 #5C4236; 2 Posts 0.6 x 6 #5C4236; 2 Rails 7.8 x 0.4 #865C42 (y 2.2 and 5.0, z 0.6);
+  - Ice lump 7 x 3.2 x 3.4 #96D6FA T 0.4 at (0.5, 1.3, 0); Ice block 3 x 4 x 2.6 #D6ECFF T 0.4 at (-2.4, 4, 0.3);
+  - sword (Blade #F5F6FA, Guard #FFC93C) inside it; axe (Handle #703E26, AxeHead #5C626E);
+  - spear (Shaft #703E26 7.4 long, SpearTip #7080CC); all leaning 9 deg;
+  - 3 Icicles #D6ECFF T 0.15 under the top rail.
+
+**E10.1 Part rules**
+
+**01 frozen skeleton in ice** (keep the size and every bone collider):
+- **Ice block:** `tundra_props__skeleton_ice`, a faceted translucent block with light edges, Glass T 0.4, no core.
+  Today's Ice mesh goes (it did not collide).
+- **Skull:** `tundra_props__skull` (the C6 skull at scale 1.32 in today's bone colour, with today's socket colour
+  #3E3C4E) on today's Skull / Jaw places. Today's 3 parts stay as invisible colliders.
+- **Bones:**
+  - today's 3 Bones as 8-sided shafts tapering slightly to the middle, with knobbed ends (2 overlapping balls per end,
+    0.15 apart) at today's BoneEnds;
+  - the 3 Ribs as curved ribs: 2 segments each, bent 20 deg, tapered, ending in the ice;
+  - add 1 bone arm inside the ice: humerus + forearm (2 shafts 0.35, 1.8 / 1.5 long) and a hand of 4 finger bones
+    (0.12), reaching toward the front face.
+- **Frost:** 3-4 frost patches on the ice surface (thin #F2F6F8 quads, T 0.3, 0.03 proud, irregular 5-sided);
+  `tundra_ice__shards` scale 0.3 at one foot.
+- **Snow cap:** `tundra_snow__cap` (2.8, 0.35, 2.2) on the ice top, toward the back (+Z), so the skull stays visible.
+  It replaces the Snow mesh.
+
+**02 ice fishing hole** (keep every position and the stool / bucket colliders; no prompt to keep):
+- **Hole:** today's Water disc as deep water like the fountain / well (A8): Glass #3468B4 -> a deep #1E5FA8 disc, T 0.15,
+  plus the `water_lines` "Ripples" Texture; 0.35 below the rim top.
+  - A darker #234A8F ring 0.3 wide on the inside wall.
+- **Ice rim of cut slabs:** today's Rim as 10 cut ice slabs.
+  - Each slab: an annular sector 0.35 thick, 0.7 wide, #D6ECFF tones, 0.08 joints, 0.1 top chamfer, light #BFE9F5
+    edge; outer radius 3.7, inner 3.0.
+  - A thin snow ring outside (`tundra_snow__cap` strips, 0.15 thick).
+- **Stool:**
+  - today's Seat disc as 3 planks (0.06 gaps) in a round outline, with 2 nails each;
+  - 3 Legs as tapered, chamfered legs with cross braces (2 rungs 0.15 at y 0.6);
+  - a small snow cap on the seat edge.
+- **Barrel:** the `barrel` MapProp nested at the Bucket's place (4.6, 0, -2.4), scale 0.4 (the new barrel: staves,
+  3 riveted hoops, lid). The Bucket stays an invisible collider.
+- **Fishing pole:**
+  - today's Rod as a tapered 2-piece rod (#865C42 -> #A86238) with 3 line guides (0.08 rings), a reel (#5C626E
+    cylinder 0.35 + handle) near the butt;
+  - the Fork as a forked stick (2 short prongs);
+  - today's Line (keep its place) ending in a bobber: a red / white ball 0.3 (#D4343C top, #F5F6FA bottom) at the
+    water surface, with a small Neon-free ripple ring (#BFE9F5, T 0.4, 0.6 across).
+- **On the ice:** today's 2 Fish as fish (a body wedge pair + a tail fin, #4696D6 / #54A0E8, a lighter belly, a dark
+  eye dot), plus 2 loose planks (#865C42, 0.8 x 0.15 x 2.4 and 2.0, crossed, a nail each) between the stool and the
+  hole: the owner's "planks on the ice".
+- **Snow:** 2 light snow patches (`tundra_snow__cap` (2, 0.15, 1.2)) on the ice; CanCollide off on everything new.
+
+**03 sled** (keep the size and colliders):
+- **Runners:** today's Runners + RunnerTips as one curved runner per side.
+  - The tip: 3 segments curling up and back (35 / 70 / 110 deg), ending in a scroll.
+  - A dark-steel edge strip (#3E4C66, 0.1 thick) along the underside and up the curl, with 4 rivets per side.
+- **Bench:**
+  - the 4 Legs with chamfers, the 2 Cross bars with a notch joint and 2 nails each;
+  - 2 diagonal cross braces (0.2 x 0.2) between the legs on each side.
+- **Slats:** today's 5 Slats with 0.08 gaps (as today) over 2 under-battens; 2 nails per slat per batten; ends
+  rounded with a 0.1 chamfer; today's alternating #865C42 / #D6965C.
+- **Rope:** today's Rope as a twisted rope.
+  - 2 tilted 0.12 cylinders spiralling, #C4A068 / #A88A55;
+  - tied to a front cross bar with a knot ball, ending in a frayed tuft (3 thin wedges).
+- **Snow dusting:** `tundra_snow__cap` (3.4, 0.15, 5.6) over the back half of the slats, a pinch on each runner curl.
+
+**04 / 05 snowmen** (keep the sizes and colours; ONE recipe for both, so they match):
+- **Balls:** `tundra_props__snowball` / `_snowball_shade` at each Ball's centre and diameter (see the piece's place:
+  white or shaded by today's ball colour), each turned a different yaw. The Ball parts stay as invisible colliders.
+- **Hats:**
+  - 04 (Snowman_B): a top hat in today's gray #5C626E, replacing the "Bucket": crown 1.5 x 1.3, brim 2.3 x 0.15, a
+    band #3E4C66 0.25, tilted 8 deg like today.
+  - 05 (Snowman_A): today's #4E566E top hat with a BLUE band #3468B4 0.3 and a 0.1-proud brim edge.
+  - Both: a small snow cap on the crown (`tundra_snow__cap` (1.5, 0.2, 1.5)).
+- **Scarf (04):** today's purple #BAAAEC as a knitted scarf.
+  - The ring as 2 thick rolled turns (0.45) with 3 darker stripes #9A8ACC (0.15 bands);
+  - a knot (a 0.5 ball) at the front left;
+  - today's ScarfTail as 2 hanging ends with stripes and a fringe (4 thin wedges 0.15).
+  - 05 gets no scarf (it has none today), or a blue one only if the owner wants them identical.
+- **Face:**
+  - `tundra_props__carrot` at today's Nose (A scale 1.0, B 0.86);
+  - coal eyes as 5-sided chunky lumps 0.35 (#1F222B), 0.1 proud;
+  - a smile of 5 coal pebbles 0.18 under the nose.
+- **Buttons:** 05 keeps its 2 buttons as coal lumps 0.4 and adds a third (y 3.6); 04 gets 3 coal buttons 0.32 on the
+  Body (owner: "coal eyes and buttons").
+- **Arms:** today's stick Arms as 8-sided sticks (#5C4236) tapering to the tip, each with 2 twigs (0.08, 0.6 long,
+  at 35 deg) and a fork at the end.
+- **Base:** a low `tundra_snow__drift` ring (2 small drifts (2.4, 0.5, 1.2)) at the foot.
+
+**06 frozen weapon rack, the owner's "ice drying rack"** (keep the size and colliders):
+- **Frame:**
+  - today's 2 Posts and 2 Rails as a sturdy frame: chamfered posts with pyramid caps, the rails cross-lapped into
+    the posts with 2 pegs each;
+  - a third crossbar at y 3.6 (no collider), rope ties (#C4A068, E2) at every rail-post joint;
+  - frost rime on the top rail, a snow cap on each post cap and on the top rail (`tundra_snow__cap` (7.6, 0.3, 0.6)).
+- **Plank base:** today's Base as 4 planks along X (0.06 gaps, nails), on 2 cross battens, a snow strip at the back.
+- **Ice:** `tundra_props__rack_ice` (the faceted lump on the base + the faceted block round the sword).
+- **Weapons:** today's places and angles.
+  - Spear: the blue SpearTip as a bevelled spear head, plus a small blue pennant (#7080CC, 2 triangles 0.8 long)
+    tied under it with a cord: the owner's "blue flag".
+  - Axe: the AxeHead with an edge bevel and a cloth strip wrapped round the handle under it, hanging 1.2 (#7080CC or
+    #E8E2D0): the owner's "cloth hanging".
+  - Sword: the frozen sword kept as it is inside the block (blade with a fuller line, gold guard).
+- **Icicles:** today's 3 + 3-4 more (`tundra_ice__icicle` scale 0.3-0.6) under the rails, a small icicle cluster under
+  the top rail's middle.
+
+**E10.2 Facet pieces (tundra_props; plus the reused pieces of E7)**
+
+| Piece | Faces (shells) | Origin / placement | Replaces |
+|---|---|---|---|
+| `tundra_props__skeleton_ice` | 225 (1) | Bone_Pile_Ice pivot; copy's Model scale | the Ice mesh (no collision) |
+| `tundra_props__skull` | 74 (2 hulls + detail faces) | Bone_Pile_Ice pivot; skull centre (0.3, 1.85, 0.2), scale 1.32 built in | Skull, 2 EyeSocket, Jaw looks (kept as colliders) |
+| `tundra_props__snowball` / `_snowball_shade` | 78 (1) each | own anchor = ball centre, diameter 2; scale = Ball diameter / 2 | the 3 Ball looks per snowman (kept as colliders) |
+| `tundra_props__carrot` | 26 (1) | own anchor = the thick end's centre, points -Z, 1.4 long; A (0, 6.9, -0.9) scale 1, B (0.35, 5.6, -0.7) scale 0.86 | Nose |
+| `tundra_props__rack_ice` | 295 (2) | Weapon_Rack_Frozen pivot; copy's Model scale | the 2 Ice meshes (no collision) |
+
+**Cost:**
+- snowballs 3 x ~160 tris x 12 snowmen = 5.8k;
+- skeleton ice + skull ~600 x 11 = 6.6k;
+- rack ice ~590 x 10 = 5.9k;
+- carrots 52 x 12.
+- About 19k triangles in all, plus the parts and the reused caps, icicles and the 6 nested barrels.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

@@ -163,6 +163,10 @@ PropFX.Props = {
 	jungle_waterfall_rocks = {
 		Scroll = { { Part = "WaterTop", U = 0.2, V = -0.35 }, { Part = "WaterFall", V = -3 } },
 	},
+	-- tundra props: the ice fishing hole's water ripples slide like the temple pool's
+	tundra_fishing_hole = {
+		Scroll = { { Part = "Water", U = 0.18, V = 0.1 } },
+	},
 	-- the forge (a sub-model of each weapon stall): today's Embers light (moved to ForgeLight) with a soft pulse, sparks
 	-- off the anvil face, a thin smoke from the chimney (the flames are the hub's Fire_Torch part)
 	anvil_forge = {

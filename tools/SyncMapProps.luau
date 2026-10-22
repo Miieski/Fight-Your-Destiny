@@ -469,6 +469,17 @@ SyncMapProps.RULES = {
 	{ propId = "tundra_dome_brazier", names = { "Warm_Brazier", "WarmBrazier" } },
 	{ propId = "tundra_glass_frame", names = { "Ice_Wall_Panel" } },
 	{ propId = "tundra_blue_lamp", names = { "Blue_Torch_Standing" } },
+	-- tundra props and decor (owner "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Props and decor", 2026-10-22): 01 the frozen
+	-- skeleton in ice = Bone_Pile_Ice, 02 the ice fishing hole = FishingHole (decor: no prompt, no script; its "barrel" is
+	-- the Bucket part, not a nested barrel MapProp), 03 the sled = Sled_A, 04 the snowman with the gray hat = Snowman_B
+	-- (purple scarf), 05 the snowman with the blue hat = Snowman_A (buttons), 06 the ice drying rack = Weapon_Rack_Frozen.
+	-- Every copy is Model-scaled (no part-resized copy)
+	{ propId = "tundra_frozen_skeleton", names = { "Bone_Pile_Ice" } },
+	{ propId = "tundra_fishing_hole", names = { "FishingHole" } },
+	{ propId = "tundra_sled", names = { "Sled_A" } },
+	{ propId = "tundra_snowman_gray", names = { "Snowman_B" } },
+	{ propId = "tundra_snowman_blue", names = { "Snowman_A" } },
+	{ propId = "tundra_ice_rack", names = { "Weapon_Rack_Frozen" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

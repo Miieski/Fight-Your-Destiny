@@ -781,8 +781,9 @@ full backup `..._before_tundra_monuments`.
 ### Tundra monuments remake status (Agent B, 2026-10-22)
 
 Builders: `tools/PropsTundraMonuments.luau` (`DevTools.PropsTundraMonuments`, on DevTools.PropsTundraGates, which now
-exports `TB` / `GS`); kit rows in `tools/PropsTundraMonumentsData.luau`. Agent A's facet `tundra_mon__pillar_shaft` is
-used; `knight_armor` / `brazier_dome` were not needed (built from parts); the crystals reuse the gate 4 spire solid.
+exports `TB` / `GS`); kit rows in `tools/PropsTundraMonumentsData.luau`. Agent A's monument facets
+(`tundra_mon__pillar_shaft` / `knight_armor` / `brazier_dome`) were not used: all 6 are built from parts (the pillar
+shaft as a bevelled 8-sided prism); the crystals reuse the gate 4 spire solid and the tundra shards.
 Rules: tools/SyncMapProps.luau (6 monument rules; `Warm_Brazier` and `WarmBrazier`; AssetPreview.Tundra as a search
 root). Collision: invisible `Collision` parts = today's colliding parts (MeshParts cloned from a source with the same
 mesh and fidelity), checked part by part on every copy and with ray grids that respect CanCollide (position-tolerant
@@ -800,6 +801,49 @@ keys). Screenshots (test + game, before + after; the brazier test only): `docs/s
 Totals: 62 copies replaced (6 templates). Triangles of the new geometry, all copies: about 189,000 (pillar 68k, knight
 49k, throne 18k, brazier 16k, frame 24k, lamp 14k), of which the copies in the zones, the BossGate and the boss arena
 (without the kits and test copies) about 152,000.
+
+### Tundra props (owner, "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Props and decor", 2026-10-22): inventory before the remake (read from Studio)
+
+Images: `docs/Tundra_Images/04_Props_and_Decor/`. Recipe: docs/prop_texture_guide.md section E10. Test =
+`workspace._Staging.AssetPreview.Tundra.<Kit>`, kit = `ServerStorage.MapAssets.Tundra.<Kit>`; the kits' parts are kept as
+rows in `tools/PropsTundraPropsData.luau`. Every copy is the kit at a Model scale (checked part by part, within 0.001;
+the 4 Tundra_4 racks' 2 Rails are 7.88 long instead of 7.8). No kit or copy has a script, prompt, ClickDetector, Seat,
+light, tag, attribute or nested MapProp, and no script names them: **no function to keep** (no fishing prompt).
+Backups (every copy): `BackUP_Files/old_props_2026-10-22_pre_tundra_props/<propId>.rbxm` (6 files); the main agent's full
+backup `..._before_tundra_props`.
+
+| # | owner's object | kit | copies | colliders today |
+|---|---|---|---|---|
+| 01 | frozen skeleton in ice | `Bone_Pile_Ice` (18 parts, 7.3 x 3.2 x 5.8) | 11: test, kit, Tundra_3 x3 (one at y 8 on a ledge), Tundra_4 x1, BossArenas.Tundra.Decor.Props x5 (1.5) | the 16 bone parts (Skull, Jaw, 2 EyeSocket, 3 Bone, 7 BoneEnd, 3 Rib); the Ice mesh only queries, the Snow mesh nothing |
+| 02 | ice fishing hole | `FishingHole` (12, 9.1 x 4.1 x 7.4) | 6: test, kit, Tundra_2 x4 (on the frozen lake, y 0.14) | Seat, 3 Legs, Fork, Bucket (the owner's "barrel": a plain #5C626E cylinder, not the barrel MapProp); Rim, Water, Rod, Line, 2 Fish do not collide |
+| 03 | sled | `Sled_A` (16, 3.6 x 2 x 10.4) | 5: test, kit, Tundra_1 / 2 / 3 x1 | 2 Runners, 2 RunnerTips, 4 Legs, 2 Cross, 5 Slats (not the Rope) |
+| 04 | snowman with the gray hat | `Snowman_B` (11, 6.7 x 8 x 3.7; gray bucket hat #5C626E tilted 8 deg, purple scarf #BAAAEC) | 6: test, kit, Tundra_1 x3, Tundra_2 x1 | the 3 balls |
+| 05 | snowman with the blue hat | `Snowman_A` (12, 8.4 x 10 x 4.5; top hat #4E566E, 2 buttons) | 6: test, kit, Tundra_1 x4 | the 3 balls |
+| 06 | "ice drying rack" = a frozen weapon rack | `Weapon_Rack_Frozen` (16, 8 x 8.9 x 3.4; sword, axe, spear, 2 Ice meshes, 3 icicles) | 10: test, kit, Tundra_4 x4 (1.2), BossArenas x4 (1.3) | Base, 2 Posts, 2 Rails |
+
+### Tundra props remake status (Agent B, 2026-10-22)
+
+Builders: `tools/PropsTundraProps.luau` (`DevTools.PropsTundraProps`, on DevTools.PropsTundraGates); Agent A's E10 facets as
+convex solids in `tools/PropsTundraPropsSolids.luau` (written by `tools/tundra_facets_to_solids.py <root> props`; the
+buildings / gates outputs regenerate byte-identical). Rules: tools/SyncMapProps.luau (6 rules). Collision: invisible
+`Collision` parts = today's colliding parts, checked part by part on every copy (corner difference 0 against the kit
+rows) and with ray grids that respect CanCollide on every workspace copy (0 differences). Run 2 = 0 for each.
+Before evidence: 04 / 05 test + game shots in `docs/screenshots/tundra_props/`; for 01 / 02 / 03 / 06 (synced while
+screen captures were denied) the owner's reference images in `docs/Tundra_Images/04_Props_and_Decor/` (test zone) and
+the per-object .rbxm backups (game). After shots of 01 / 02 / 03 / 06 (test + game) are still owed.
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| 01 | frozen skeleton in ice | `tundra_frozen_skeleton` | 11 / 11 | 4,300 | Agent A's faceted ice block (Glass T 0.4, light edges, queries like today's mesh) and skull (sockets, jaw); today's 3 bones as 8-sided shafts thinning to the middle with double knobs at today's BoneEnds; the 3 ribs curved (2 tapered segments, 20 deg); a bone arm (humerus, forearm, 4 finger bones) inside the ice toward the front (checked inside the ice's planes); 4 frost patches (T 0.3); Agent A's shards at one foot; a snow cap toward the back. Size 6.73 x 3.50 x 5.78 (+9 % height). Colliders 16 / 16 exact on all 11; 5 grids 0 differences |
+| 02 | ice fishing hole | `tundra_fishing_hole` | 6 / 6 | 6,900 (+ the nested barrel) | 10 cut ice slabs (0.38, 3.0 -> 3.7) with a dark inside band; deep water (Glass T 0.15 #1E5FA8, water_lines Ripples, PropFX `tundra_fishing_hole` Scroll on `Water`) 0.35 under the rim top; snow round the outside and on 2 slabs; the stool as 3 round-cut planks with nails on 2 battens, 3 tapered legs, 2 rungs; the `barrel` MapProp nested at today's Bucket at scale 0.4 (the barrel rule now finds 49 barrels, 43 + 6, all up to date; its 3 colliders add 0.2 over today's 1.4 Bucket, which stays the invisible collider); a forked stick, a 2-piece rod with a ferrule, 3 guides and a reel; today's Line with a red / white bobber and a ripple ring; today's 2 fish as fish (belly, tail fin, eyes) on the slabs; 2 crossed planks with nails. Size 9.43 x 4.09 x 7.95 (+7 %). Colliders 6 / 6 exact; 5 grids 0 differences (the nested barrel set aside) |
+| 03 | sled | `tundra_sled` | 5 / 5 | 4,700 | curved runners (straight runner + a 3-segment curl 35 / 70 / 110 deg to a scroll) with a dark-steel shoe up the curl and 4 rivets a side; a front dowel; chamfered legs; cross bars with notch lines and nails; an X brace a side; today's 5 slats (0.08 gaps, rounded ends) on 2 battens, 2 nails per slat per batten; today's rope as 2 twisted strands tied to the dowel with a knot, a frayed tuft; snow on the back of the slats and the curls. Size 3.82 x 2.15 x 10.59 (+7.5 % height). Colliders 15 / 15 exact; 4 grids 0 differences |
+| 04 | snowman with the gray hat (pilot) | `tundra_snowman_gray` | 6 / 6 | 5,800 | Agent A's snowballs (the shaded one on the #CEDEF6 ball) with packed-snow collars, 2 drifts at the foot; a gray #5C626E top hat (crown 1.5, brim 2.3, #3E4C66 band, snow cap) at today's 8 deg tilt; a knitted scarf (2 rolled turns, #9A8ACC stripes, a knot, 2 striped tails with a fringe); Agent A's carrot (0.86), chunky coal eyes, a 5-pebble smile, 3 coal buttons; stick arms with 2 twigs and a fork. Size 6.70 x 8.06 x 3.72. Colliders 3 / 3 exact; 5 grids 0 differences |
+| 05 | snowman with the blue hat | `tundra_snowman_blue` | 6 / 6 | 5,300 | the same recipe; today's #4E566E top hat with a blue #3468B4 band and a 0.1-proud brim edge; today's 2 buttons as coal lumps 0.4 and a third on the base ball (E10's y 3.6 is inside the base ball); no scarf (none today). Size 8.45 x 10.18 x 4.51. Colliders 3 / 3 exact; 5 grids 0 differences |
+| 06 | frozen weapon rack ("ice drying rack") | `tundra_ice_rack` | 10 / 10 | 5,000 | chamfered posts with pyramid caps and snow; today's rails + a third crossbar at y 3.6 (no collider), 2 pegs and a rope tie at every joint; rime and a snow cap on the top rail; today's Base as 4 planks with nails on 2 battens, a snow strip; Agent A's 2 ice blocks; the spear (bevelled blue head on a socket) with a blue swallow-tail pennant tied under the head (the owner's "blue flag"); the axe (bevelled light edge) with a gray cloth wrapped under the head and hanging (the owner's "cloth"); the sword frozen in the ice (fuller lines, gold guard); today's 3 icicles + 4 and a small cluster. Size 8.54 x 8.56 x 2.96. Colliders 5 / 5 exact (from the kit: the 4 Tundra_4 copies' rails were 0.04 longer per end past the posts, now flush, as approved); 5 grids 0 differences |
+
+Totals: 44 copies replaced (6 templates). Triangles of the new geometry, all copies: about 228,000 (skeleton 47k, fishing
+hole 42k, sled 23k, gray snowman 35k, blue snowman 32k, rack 50k), of which the copies in the zones and the boss arena
+(without the kits and test copies) about 164,000.
 
 ---
 

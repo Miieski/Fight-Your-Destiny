@@ -6,7 +6,7 @@ unioned. Everything else of batch 2 is built from parts with the fountain / well
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
     blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature batch4
-    tundra_buildings tundra_gates tundra_monuments]
+    tundra_buildings tundra_gates tundra_monuments tundra_props]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -5835,6 +5835,192 @@ def preview_tundra_monuments(pieces):
     return render_sheet("tmon", [(g1, [(-25, 15)]), (g2, [(-25, 12)]), (g3, [(-35, 15)]), (g4, [(-30, 25)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# TUNDRA PROPS AND DECOR (guide section E10, owner task 2026-10-22): the frozen skeleton's ice block and skull, a
+# reusable soft snowball (snowmen), a carrot nose, the weapon rack's 2 ice blocks. Everything else is parts; caps,
+# drifts, icicles and shards reuse tundra_snow__* / tundra_ice__*. Closed convex shells (+ a few skull detail faces).
+# ------------------------------------------------------------------------------------------------
+T_BONE = "#F0E8D0"
+
+
+def _ice_box_block(pc, rng, pos, size, base, light, floor, k=0.95, rings=None, d=0.14):
+    half = Vector(size) * 0.5
+    pts = []
+    for v in boulder_local(rng, rings=rings) if rings else boulder_local(rng):
+        q = Vector((pos[0] + v.x * half.x * k, pos[1] + v.y * half.y * k, pos[2] + v.z * half.z * k))
+        pts.append(Vector((q.x, max(q.y, floor), q.z)))
+    low = min(p.y for p in pts)
+    pts += [Vector((p.x, floor, p.z)) for p in pts if p.y < low + 0.4]
+    lo, hi = min(p.y for p in pts), max(p.y for p in pts)
+    bevel_shell(pc, pts, d, ice_colfn(base, lo, hi, rng), lambda cc, n: light, m="Glass")
+
+
+def t_skeleton():
+    rng = random.Random(8901)
+    ice = Piece("tundra_props", "skeleton_ice", "the Bone_Pile_Ice kit pivot (bottom centre, front -Z)",
+                place={"relativeTo": "the Bone_Pile_Ice model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                       "scale": "the copy's Model scale (1.0; 1.5 in the boss arena)",
+                       "replaces": "the Ice MeshPart (rock mesh 7231644778, 6 x 3 x 5.5 #96D6FA T 0.4 at (0.6, 1.2, 0.4); CanCollide "
+                                   "off, CanQuery on today)", "collide": "CanCollide off (as today)"},
+                notes="faceted translucent ice block fitted to 95 % of today's Ice box (flat foot sunk to y -0.3): big facets "
+                      "#96D6FA (deeper at the foot, lighter on top), every edge chamfered in light #BFE9F5; Glass Transparency "
+                      "0.4 (edges 0.3) and NO core, so the skull, ribs and bones read inside. 1 closed convex shell.")
+    _ice_box_block(ice, rng, (0.6, 1.2, 0.4), (6.0, 3.0, 5.5), T_ICE, T_ICE_L, -0.3,
+                   rings=((-0.9, 6, 0.86), (-0.25, 7, 1.0), (0.45, 6, 0.9), (0.85, 4, 0.55)))
+    sk = Piece("tundra_props", "skull", "the Bone_Pile_Ice kit pivot",
+               place={"relativeTo": "the Bone_Pile_Ice model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale",
+                      "replaces": "the Skull ball (2.4 at (0.3, 1.68, 0.2)), the 2 EyeSocket blocks and the Jaw block (all collide: "
+                                  "keep them invisible as colliders)", "collide": "CanCollide off"},
+               notes="the C6 stylized human skull in today's bone colour #F0E8D0: cranium hull + jaw hull, dark eye sockets "
+                     "(#3E3C4E, today's colour, a darker hollow inside) at today's socket places (x -0.2 / 0.8, y 1.88), a nose "
+                     "hole, a gum line with 5 upper / 4 lower teeth; scale 1.32 so it fills today's 2.4 ball (top y 2.97, chin "
+                     "0.19). The detail quads are thin loose faces on the hulls.")
+    tmp = Piece("tmp", "tmp", "")
+    human_skull_into(tmp, 1.32, (0.3, 1.85, 0.2))
+    remap = {BONE: T_BONE, TWOOD: "#3E3C4E", JREC: "#1F222B"}
+    for f in tmp.faces:
+        c = f["c"]
+        for a, b in remap.items():
+            if c == a:
+                c = b
+                break
+        else:
+            for k_ in (0.8, 0.9, 0.95, 0.98, 1.03):
+                if c == tone(BONE, k_):
+                    c = tone(T_BONE, k_)
+        sk.faces.append(dict(f, c=c))
+    return [ice, sk]
+
+
+def t_snowball():
+    out = []
+    for name, scheme, seed in (("snowball", SNOW_WHITE, 8911), ("snowball_shade", SNOW_SHADE, 8912)):
+        rng = random.Random(seed)
+        pc = Piece("tundra_props", name, "the piece's own anchor: (0, 0, 0) = the CENTRE of a snowball of diameter 2 (radius 1)",
+                   place={"relativeTo": "the snowman model (kit pivot)",
+                          "position": "each Ball's centre: Snowman_A Base (0, 1.9, 0), Body (0, 4.7, 0), Head (0, 6.9, 0); "
+                                      "Snowman_B Base (0, 1.5, 0), Body (0.15, 3.8, 0), Head (0.35, 5.6, 0)",
+                          "orientation": "any yaw (vary per ball)", "scale": "uniform = the Ball's diameter / 2 (A: 2.2 / 1.65 / "
+                          "1.2; B: 1.8 / 1.35 / 1.0), times the copy's scale",
+                          "replaces": "the look of the Ball parts (they collide: keep them invisible as colliders); "
+                                      + ("white #F4F8FF balls (A Base / Head, B Body / Head)" if scheme is SNOW_WHITE else
+                                         "the shaded #CEDEF6 balls (A Body, B Base)"),
+                          "collide": "CanCollide off"},
+                   notes="soft low-poly snowball with subtle bumps: the convex hull of 42 points on a sphere jittered "
+                         "+-4 %, slightly flattened underneath (it sits); top faces " + scheme[0] + ", sides " + scheme[1]
+                         + ", underside " + scheme[2] + ". 1 closed convex shell.")
+        pts = []
+        n = 42
+        for i in range(n):
+            yy = 1 - 2 * (i + 0.5) / n
+            rr = math.sqrt(max(0.0, 1 - yy * yy))
+            a = i * 2.39996 + rng.uniform(-0.15, 0.15)
+            j = rng.uniform(0.96, 1.04)
+            y = yy * j
+            if y < -0.86:
+                y = -0.86 - (y + 0.86) * 0.3      # a slightly flattened seat
+            pts.append(Vector((math.cos(a) * rr * j, y, math.sin(a) * rr * j)))
+        shell(pc, pts, snow_colfn(scheme))
+        out.append(pc)
+    return out
+
+
+def t_carrot():
+    rng = random.Random(8921)
+    pc = Piece("tundra_props", "carrot", "the piece's own anchor: (0, 0, 0) = the centre of the carrot's thick end; it points "
+               "along -Z, 1.4 long, 0.44 thick at the root",
+               place={"relativeTo": "the snowman model (kit pivot)",
+                      "position": "Snowman_A (0, 6.9, -0.9) (today's Nose 1.4 long, centre z -1.6); Snowman_B (0.35, 5.6, -0.7)",
+                      "orientation": "[0, 0, 0] (or a slight droop [-6, 0, 0])", "scale": "A 1.0, B 0.86",
+                      "replaces": "the Nose block (#FF8C28, no collision)", "collide": "CanCollide off"},
+               notes="carrot nose: a 6-sided tapering cone with a slight bend and 2 shallow steps (growth rings), facets "
+                     "alternating #FF8C28 / #E87A1E, a darker #C8641A root face. 1 closed convex shell.")
+    pts = []
+    for (z, r, dy) in ((0.0, 0.22, 0.0), (-0.12, 0.215, 0.0), (-0.55, 0.16, -0.02), (-1.0, 0.09, -0.05)):
+        for i in range(6):
+            a = 2 * math.pi * i / 6 + 0.3
+            pts.append(Vector((r * math.cos(a), dy + r * math.sin(a), z)))
+    pts.append(Vector((0.02, -0.09, -1.4)))
+
+    def col(cc, n):
+        if n.z > 0.8:
+            return "#C8641A"
+        return "#FF8C28" if int((math.atan2(n.y, n.x) + math.pi) / (math.pi / 3)) % 2 == 0 else "#E87A1E"
+    shell(pc, pts, col)
+    return [pc]
+
+
+def t_rack_ice():
+    rng = random.Random(8931)
+    pc = Piece("tundra_props", "rack_ice", "the Weapon_Rack_Frozen kit pivot (bottom centre, front -Z)",
+               place={"relativeTo": "the Weapon_Rack_Frozen model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0],
+                      "scale": "the copy's Model scale (1.0; 1.2 Tundra_4; 1.3 boss arena)",
+                      "replaces": "the 2 Ice MeshParts: the base lump (rock mesh 7231644778, 7 x 3.2 x 3.4 #96D6FA T 0.4 at (0.5, 1.3, 0)) "
+                                  "and the block round the sword (mesh 2557003083, 3 x 4 x 2.6 #D6ECFF T 0.4 at (-2.4, 4.0, 0.3)); "
+                                  "neither collides today", "collide": "CanCollide off (as today)"},
+               notes="2 faceted translucent ice blocks fitted to 95 % of today's Ice boxes: the low base lump (#96D6FA) on the "
+                     "plank base, and the tall faceted block (#D6ECFF, crystal-like, a squarer outline) frozen round the "
+                     "sword; light #BFE9F5 chamfered edges; Glass Transparency 0.4, NO core (the weapons read inside). 2 "
+                     "closed convex shells.")
+    _ice_box_block(pc, rng, (0.5, 1.3, 0.0), (7.0, 3.2, 3.4), T_ICE, T_ICE_L, 0.3,
+                   rings=((-0.9, 5, 0.86), (-0.2, 6, 1.0), (0.5, 5, 0.85), (0.88, 3, 0.5)))
+    _ice_box_block(pc, rng, (-2.4, 4.0, 0.3), (3.0, 4.0, 2.6), T_FROST, mix(T_ICE_L, T_WHITE, 0.3), 2.2,
+                   rings=((-0.95, 4, 1.05), (0.3, 4, 1.1), (0.85, 4, 0.7)), d=0.12)
+    return [pc]
+
+
+def tundra_props():
+    pieces = t_skeleton() + t_snowball() + t_carrot() + t_rack_ice()
+    for pc in pieces:
+        pc.notes += f" [{shell_count(pc)} shells]"
+    return pieces
+
+
+def preview_tundra_props(pieces):
+    from mathutils import Matrix
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    extra = t_snow_caps() + t_icicles()
+    by = {f"{p.obj}__{p.name}": p for p in pieces + extra}
+    V = Vector
+
+    def put(name, off=V((0, 0, 0)), rot=None, scale=1.0):
+        pc = by[name]
+        return _glassy(piece_object(pc, col, off, rot, scale), pc)
+    # 1 skeleton: bones as context boxes (bone ends / ribs), the skull and the ice block
+    ctx = [((-0.25, 0.63, -0.25), (5.7, 0.5, 0.5), T_BONE, (0, -15, 0)), ((0.25, 1.08, 0.0), (5.37, 0.5, 0.5), T_BONE, (0, 49, 0)),
+           ((-1.0, 0.93, 2.0), (3.67, 0.4, 0.4), T_BONE, (0, -34, 0))]
+    for x in (-3.0, -2.2, -1.4):
+        ctx.append(((x, 1.08, -2.2), (0.3, 2.2, 0.3), T_BONE, (0, 0, 25)))
+    for (x, y, z, s) in ((-3, 0.58, -1, 0.85), (0.5, 0.58, 3, 0.68), (2.5, 0.68, 0.5, 0.85), (-1.5, 0.68, 2, 0.85), (2, 1.48, -2, 0.85)):
+        ctx.append(((x, y, z), (s, s, s), T_BONE, (0, 0, 0)))
+    g1 = context_boxes(ctx, col) + [put("tundra_props__skull"), put("tundra_props__skeleton_ice"),
+                                     put("tundra_snow__cap", V((0.2, 2.55, 0.6)), _mat3(M_ID) @ Matrix(((3.2, 0, 0), (0, 0.45, 0), (0, 0, 2.6))))]
+    # 2 snowman A (offset 14) and B (offset 24)
+    g2 = []
+    for ox, balls, nose, ns in ((14, (("snowball", (0, 1.9, 0), 2.2), ("snowball_shade", (0, 4.7, 0), 1.65), ("snowball", (0, 6.9, 0), 1.2)), (0, 6.9, -0.9), 1.0),
+                                (24, (("snowball_shade", (0, 1.5, 0), 1.8), ("snowball", (0.15, 3.8, 0), 1.35), ("snowball", (0.35, 5.6, 0), 1.0)), (0.35, 5.6, -0.7), 0.86)):
+        o = V((ox, 0, 0))
+        for i, (nm, c, s) in enumerate(balls):
+            g2.append(put(f"tundra_props__{nm}", o + V(c), euler_matrix([0, 40 * i, 0]), s))
+        g2.append(put("tundra_props__carrot", o + V(nose), None, ns))
+    g2 += context_boxes([((14, 8.0, 0), (2.7, 0.3, 2.7), "#4E566E", (0, 0, 0)), ((14, 8.9, 0), (1.8, 1.6, 1.8), "#4E566E", (0, 0, 0)),
+                         ((24.45, 6.9, 0), (1.7, 1.3, 1.7), "#5C626E", (0, 0, 8)), ((24.25, 4.85, 0), (2.1, 0.5, 2.1), "#BAAAEC", (0, 0, 0))], col)
+    # 3 weapon rack (offset 36)
+    o = V((36, 0, 0))
+    g3 = context_boxes([((36, 0.25, 0), (8, 0.5, 2.4), "#5C4236", (0, 0, 0)), ((32.4, 3, 0.6), (0.6, 6, 0.6), "#5C4236", (0, 0, 0)),
+                        ((39.6, 3, 0.6), (0.6, 6, 0.6), "#5C4236", (0, 0, 0)), ((36, 2.2, 0.6), (7.8, 0.4, 0.4), "#865C42", (0, 0, 0)),
+                        ((36, 5.0, 0.6), (7.8, 0.4, 0.4), "#865C42", (0, 0, 0)), ((33.8, 3.2, 0.1), (0.5, 4.4, 0.15), "#F5F6FA", (-9, 0, 0)),
+                        ((36.7, 5.1, -0.2), (1.7, 1.5, 0.3), "#5C626E", (-9, 0, 0)), ((38.2, 3.9, 0.1), (0.25, 7.4, 0.25), "#703E26", (-9, 0, 0)),
+                        ((38.2, 7.9, -0.55), (0.6, 1.3, 0.2), "#7080CC", (-9, 0, 0))], col)
+    g3.append(put("tundra_props__rack_ice", o))
+    for x in (-1.0, 1.2, 3.0):
+        g3.append(put("tundra_ice__icicle", o + V((x, 4.8, 0.6)), None, 0.5))
+    out = os.path.join(P.PREVIEW_DIR, "tundra_props_facets.png")
+    return render_sheet("tprops", [(g1, [(-30, 25)]), (g2, [(-15, 10)]), (g3, [(-20, 12)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -5851,7 +6037,8 @@ def main():
                           ("batch4", batch4, preview_batch4),
                           ("tundra_buildings", tundra_buildings, preview_tundra_buildings),
                           ("tundra_gates", tundra_gates, preview_tundra_gates),
-                          ("tundra_monuments", tundra_monuments, preview_tundra_monuments)):
+                          ("tundra_monuments", tundra_monuments, preview_tundra_monuments),
+                          ("tundra_props", tundra_props, preview_tundra_props)):
         if only and obj not in only:
             continue
         pieces = fn()
