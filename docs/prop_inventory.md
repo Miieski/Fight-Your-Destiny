@@ -723,6 +723,45 @@ Totals: 20 copies replaced (4 templates). Triangles of the new geometry, all cop
 scaffold 38k, bridge 34k), of which the copies in the zones and the boss arena (without the kits and test copies) about
 95,000.
 
+### Tundra gates (owner, "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Gates and entrances", 2026-10-22): inventory before the remake (read from Studio)
+
+Images: `docs/Tundra_Images/02_Gates_and_Entrances/`. Recipe: docs/prop_texture_guide.md sections E and E8 (+ A).
+Test = `workspace._Staging.AssetPreview.Tundra.<Kit>`, kit = `ServerStorage.MapAssets.Gates.<Kit>`. Each gate has exactly 3
+copies (test, kit, game); no other copy anywhere, no boss-arena copy. The game copies' parts are kept as rows in
+`tools/PropsTundraGatesData.luau` (the kits / test copies of 02 and 04 differ from them by 0.05 .. 0.15 on a few parts:
+the colliders come from the game copies). Backups (3 copies each): `BackUP_Files/old_props_2026-10-22_pre_tundra_gates/<propId>.rbxm`
+(4 files); the main agent's full backup `..._before_tundra_gates`.
+
+| # | owner's object | kit -> game copy | contract / functional parts | notes |
+|---|---|---|---|---|
+| 01 | log torii arch with a blue sign | `EntryArch_Tundra` -> `Tundra_1.EntryArch` (37 parts) | ZoneId "Tundra", NameSign with NameGuiFront / Back; no Barrier | 2 slate bases, 4 round posts in pairs, 4 bindings, 2 round beams, the blue NameSign + SignFrame, 2 Neon lanterns #60BEFF with PointLight b0.8 r14 (already cold), 4 colliding Crystal MeshParts (Hull), snow parts, 6 icicle meshes |
+| 02 | palisade gate | `Gate_Tundra_2` -> `Tundra_2.Gate` (60) | SubZoneId, PrimaryPart Barrier 24 x 16 x 1.4 (19 door children incl. 2 snow banks, 2 yellow handles, 2 bands), PriceSign "500K Gold" GUIs, 2 Embers + FirePoints; their lights are the zone's 2 Decor.VFX.Fire_Torch parts (warm b1 r16 #FFAA50) | the plains palisade kit recoloured with snow: 8 logs, 8 colliding snow discs, 2 slate bases, bindings, lintel, sign posts / frame, 2 SignRoof wedges (ridge z -0.4), 2 torch sticks, 4 colliding Drift wedges |
+| 03 | ice rock gate | `Gate_Tundra_3` -> `Tundra_3.Gate` (32) | SubZoneId, invisible colliding Barrier 24 x 16 x 2 (12 ice blocks, the Neon Rune, top snow, snow bank under it), PriceSign "1.25M Gold" | 2 Pillar + 2 Rock MeshParts (Hull, colliding) with snow meshes, 2 jambs, a round beam, 2 ropes, sign frame |
+| 04 | ice castle gate | `Gate_Tundra_4` -> `Tundra_4.Gate` (38) | SubZoneId, Glass Barrier 24 x 16 x 3 T 0.35 colliding (3 frames, seam, 4 facets, Neon Emblem under it), PriceSign "3.12M Gold" | 2 towers, 2 bands, 2 caps, wall, cornice, 4 crenels, 2 buttresses, 2 Neon slits, 2 Spire meshes (query only), sign frame, 5 icicle meshes, 2 colliding Drift wedges |
+
+### Tundra gates remake status (Agent B, 2026-10-22)
+
+Builders: `tools/PropsTundraGates.luau` (`DevTools.PropsTundraGates`, on DevTools.PropsTundraBuildings); 01 and 02 reuse the
+PLAINS gate builders' parts (props batch 2 entry_arch / gate_palisade: `ringCourse` piers, octagonal logs, riveted straps,
+the plank double door, the wall torch, `shingleRoof`; PropsBatch2 now exports `ringCourse` / `capSlabs`) re-proportioned
+to the tundra kits; Agent A's E8 facets as convex solids in `tools/PropsTundraGatesSolids.luau` (written by
+`tools/tundra_facets_to_solids.py <root> gates`). Rules: tools/SyncMapProps.luau (tundra gates block). Gate contract on
+every copy: the Barrier is the PrimaryPart and collides (exact), every door piece and glow is under it, SubZoneId /
+ZoneId and the model attribute BarrierDecorIsChildOfBarrier kept, the PriceSign / NameSign GUIs moved onto the exact new
+signs (texts checked). Collision: invisible `Collision` parts = today's colliding parts (MeshParts with today's mesh and
+Hull fidelity), checked part by part and with ray grids that respect CanCollide (a colliding Barrier's non-colliding
+children are not hit). Screenshots (test + game, before + after): `docs/screenshots/tundra_gates/`. Run 2 = 0 for each.
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| 01 | log torii arch (pilot) | `tundra_log_arch` | 3 / 3 | 15,100 | from the plains entry arch: coursed blue-grey slate piers (ringCourse) under soft caps, today's paired posts and 2 beams as frosted 8-sided logs with cut ends, steel collars / rings, rime, domed post caps, Agent A's log snow on both beams (0.7-0.85 thick, drips), icicle groups; dark blue steel straps with rivets at today's binding heights; 2 struts; today's NameSign exactly (icy blue #4C8CD2, "Tundra" both faces) in a frosted frame with ice corners; the 2 hanging lanterns: today's Neon cores and PointLights (b0.8 r14 #60BEFF) in steel cages with frosted panes, capped roofs, chains, beam rings; Agent A's shards on today's 4 Crystal colliders; drifts. ZoneId kept. Colliders 18 / 18 exact (+ the NameSign); ray grids 0 real differences (the Crystal meshes must be cloned from a Hull-fidelity source: CollisionFidelity cannot be set by script) |
+| 02 | palisade gate | `tundra_palisade_gate` | 3 / 3 | 22,100 | the plains gate_palisade almost 1:1: ringCourse slate bases with caps, the 8 octagonal frosted logs with domed caps on today's snow discs, riveted steel straps, the lintel with steel bands under Agent A's lintel snow (icicles end above y 16.2), the plains shingle roof in blue-grey tiles on today's SignRoof ridge (z -0.4) under Agent A's roof snow on both slopes, icicles; today's PriceSign exactly (icy blue, "500K Gold") in a frosted frame; the 2 wall torches (bar leaning "/" up into a steel cup, today's Ember + FirePoint exact, the flame cold #C8F0FF); drifts on today's 4 Drift wedges. Door under the Barrier (dark core): 10 frosted planks a leaf, rails and today's 2 diagonal braces, today's 2 bands as blue steel bands with rivets, strap hinges, today's yellow handles as gold grips (both faces), the 2 snow banks as soft drifts. Owner's cold light: the 2 Tundra_2 Decor.VFX.Fire_Torch parts recoloured (PointLight #C8F0FF, brightness 1 / range 16 kept; particles like Tundra_4's Fire_Torch_Blue). Colliders 36 / 36 exact; grid vs today's colliding rows 0 differences |
+| 03 | ice rock gate | `tundra_ice_rock_gate` | 3 / 3 | 12,700 | Agent A's 2 layered blue ice-rock pillars and 2 side rocks with snow caps on today's Pillar / Rock Hull colliders; today's jambs as dark blue slate pillars (10 courses, capstone, snow, icicles); the beam as a frosted log with steel rings and Agent A's log snow, icicles; today's PriceSign exactly (icy blue, "1.25M Gold") in a frosted frame on 2 steel chains; stones and drifts outside the passage. Door under the invisible Barrier: today's 12 ice blocks as bevelled Glass bricks (T 0.25) over a frosty joint wall, an arch of 7 light ice voussoirs with a Neon cyan diamond keystone, today's Neon Rune kept, soft top snow and snow bank. Colliders 10 / 10 exact; grids 0 real differences (7 rays graze the Hull silhouettes) |
+| 04 | ice castle gate | `tundra_ice_castle_gate` | 3 / 3 | 17,800 | bevelled ice-block masonry on the towers (front and sides) and the wall over the door, over deep blue cores; today's bands (studs) and caps (chamfered, snow, icicles); Agent A's crystal spires on the caps; today's Neon slits in ice frames; today's cornice with dentils and 4 merlons with snow; icicles under the cornice (today's 5 + 7 singles); today's buttresses as bevelled ice pilasters (base, 4 drums, capital, snow); today's PriceSign exactly ("3.12M Gold") in a frosted ice frame with corner gems; drifts on today's 2 wedges. Door: today's Glass Barrier exactly, under it lighter ice frames and seam, today's 4 facets as frosted lines, frost corners, today's Neon Emblem in a faceted ice setting with a cold PointLight (b0.6 r10, it goes out with the Barrier). Colliders 19 / 19 exact; game grid 0 differences (test / kit within 0.05: the game copy's parts) |
+
+Totals: 12 copies replaced (4 templates). Triangles of the new geometry, all copies: about 203,000 (arch 45k, palisade
+66k, ice rock 38k, castle 53k), of which the 4 game copies about 68,000.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

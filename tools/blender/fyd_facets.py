@@ -6,7 +6,7 @@ unioned. Everything else of batch 2 is built from parts with the fountain / well
 section A). Budget: at most 300 faces per piece; rectangles are flagged "rect": true.
 
     blender --background --factory-startup --python tools/blender/fyd_facets.py [-- rebirth_altar ship golem canyon_gate red_rock monuments props jungle jungle_gates jungle_ruins jungle_totems jungle_decor jungle_nature batch4
-    tundra_buildings]
+    tundra_buildings tundra_gates]
 
 Writes Blender_Exports/Props/facets/<object>__<piece>.json and Previews/Props/batch2_<object>_facets.png.
 JSON: {"object", "piece", "units": "studs", "origin": "<what (0,0,0) is>", "axes", "size" [x, y, z] (bounding box),
@@ -5402,6 +5402,271 @@ def preview_tundra_buildings(pieces):
     return render_sheet("tundra", [(g1, [(-35, 22)]), (g2, [(-20, 12)]), (g3, [(-25, 12)]), (g4, [(-20, 15)])], None, out)
 
 
+# ------------------------------------------------------------------------------------------------
+# TUNDRA GATES AND ENTRANCES (guide section E8, owner task 2026-10-22): only the organic pieces the parts do badly.
+# 01 / 02 are duplicated from the plains templates (entry_arch, gate_palisade) by Agent B; here: a snow cap for round
+# logs (01 beams, 03 beam), the 02 roof slope snow and lintel snow, the 03 ice-rock boulders (big pillars + small side
+# rocks, layered blues + snow caps), the 04 crystal spire (also the 01 foot crystals at a smaller scale). Closed convex
+# shells, as the buildings group; the tundra_snow__* / tundra_ice__* pieces are reused for caps, drifts and icicles.
+# ------------------------------------------------------------------------------------------------
+M_PILLAR_L = (0.9198, -0.0482, -0.3894, 0.0523, 0.9986, 0.0, 0.3889, -0.0204, 0.9211)
+M_PILLAR_R = (0.9198, 0.0482, 0.3894, -0.0523, 0.9986, 0.0, -0.3889, -0.0204, 0.9211)
+M_GROCK_L = (0.3624, 0.0, -0.932, 0.0, 1.0, 0.0, 0.932, 0.0, 0.3624)
+M_GROCK_R = (0.3624, 0.0, 0.932, 0.0, 1.0, 0.0, -0.932, 0.0, 0.3624)
+_S = 1.0 / math.sqrt(3.5 * 3.5 + 3.0 * 3.0)
+M_ROOF2 = (1.0, 0.0, 0.0, 0.0, 3.5 * _S, 3.0 * _S, 0.0, -3.0 * _S, 3.5 * _S)   # 02 front roof slope (x, normal, up-slope)
+
+
+def t_log_cap():
+    rng = random.Random(8501)
+    pc = Piece("tundra_snow", "log_cap", "the piece's own anchor: (0, 0, 0) = on the AXIS of a round log 2.4 thick, at the "
+               "middle of a 12-stud segment along X; the snow lies on the log's top (+Y)",
+               place={"relativeTo": "the gate kit (pivot)", "position": "segments every 11 studs along each round beam, centres "
+                      "on the beam axis: 01 main Beam (y 18.5, 38 long): x -12.5 / 0 / 12.5; 01 top Beam (y 25.6, d 2.0, 32 long): "
+                      "x -10.5 / 0 / 10.5 at scale 0.83; 03 Beam (y 22.6, d 2.2, 34 long): x -11 / 0 / 11 at scale 0.92",
+                      "orientation": "[0, 0, 0] or [0, 180, 0] alternately (variety); the beams run along X",
+                      "scale": "uniform = the log diameter / 2.4 (the segments overlap 1 stud)",
+                      "replaces": "BeamSnow (01: 30 x 0.8 x 2.6; 03: 30 x 0.5 x 1.6; no collision)", "collide": "CanCollide off"},
+               notes="thick soft snow along the top of a round log: 3 overlapping convex mounds of different heights (an "
+                     "irregular crest 0.7-0.85 above the log), a rim that bulges 0.55 past the log's sides and sinks into the "
+                     "log below its widest line, 3 drip lumps over the front (-Z) side and 1 at the back. #F4F8FF / #E1EBFA / "
+                     "#CEDEF6.")
+    R = 1.2
+    for (x0, x1, crest) in ((-6.0, -1.4, 1.95), (-2.6, 2.4, 2.05), (1.3, 6.0, 1.9)):
+        pts = []
+        n = 3
+        for i in range(n):
+            x = x0 + (x1 - x0) * i / (n - 1)
+            end = 0.72 if i in (0, n - 1) else 1.0
+            for (y, z) in ((0.5, 0.95), (1.05, 1.22), (crest - 0.25, 0.78), (crest, 0.25)):
+                for s in (-1, 1):
+                    yy = R + (y * R / 1.2 - R) * end if y > 1.0 else y * R / 1.2
+                    pts.append(Vector((x + rng.uniform(-0.1, 0.1), yy + rng.uniform(-0.05, 0.05), s * z * end + rng.uniform(-0.05, 0.05))))
+        shell(pc, pts, snow_colfn(SNOW_WHITE))
+    for (x, z, hz) in ((-4.0, -1.15, 0.3), (0.6, -1.2, 0.3), (4.3, -1.15, 0.28), (-1.8, 1.15, 0.26)):
+        shell(pc, lump_pts((x + rng.uniform(-0.4, 0.4), 0.85, z), rng.uniform(0.5, 0.75), 0.32, hz, rng, n=9, drop=rng.uniform(0.12, 0.22)),
+              snow_colfn(SNOW_WHITE))
+    return [pc]
+
+
+def t_gate2_snow():
+    rng = random.Random(8511)
+    roof = Piece("tundra_gate2", "roof_snow", "the Gate_Tundra_2 kit pivot (bottom centre, front -Z); built on the FRONT slope "
+                 "of the gate_palisade template's sign roof (ridge y 27.2 at z 0, eaves y 24.2 at z -3.5, x -15.5..15.5)",
+                 place={"relativeTo": "the gate model (kit pivot)", "position": [0, 0, 0],
+                        "orientation": "[0, 0, 0] front slope; [0, 180, 0] back slope",
+                        "scale": 1.0, "replaces": "the white SignRoof look (keep the 2 SignRoof wedges as invisible colliders); "
+                        "the duplicated template's tiles stay under it, recoloured blue-grey, visible at the eave",
+                        "note": "if the duplicated roof is moved -0.4 in z to sit on the tundra SignRoof wedges (their ridge is "
+                                "at z -0.4), move this piece the same", "collide": "CanCollide off"},
+                 notes="snow on one slope of the 02 sign roof: a thick layer 0.6 over the tiles (top parallel to the slope), "
+                       "the rim rolling 0.9 over the eave with 5 drip lumps, softer lips at the gable ends (1 drip each), "
+                       "meeting the back slope's snow on the ridge. icicleRoots = under the eave lip.")
+    slope_mid = Vector((0.0, 25.7, -1.75)) + Vector((0.0, 3.5 * _S, -3.0 * _S)) * 0.2
+    roof.place["icicleRoots"] = slab_snow_into(roof, _xf(tuple(slope_mid), M_ROOF2), 15.5, 2.3, 0.6,
+                                               {"-z": (0.35, 0.95, 5), "+z": (0.0, 0.45, 0), "-x": (0.25, 0.6, 1), "+x": (0.25, 0.6, 1)},
+                                               rng, SNOW_WHITE, n=20)
+    lint = Piece("tundra_gate2", "lintel_snow", "the Gate_Tundra_2 kit pivot",
+                 place={"relativeTo": "the gate model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0], "scale": 1.0,
+                        "replaces": "LintelSnow (28.8 x 0.7 x 3.6 at y 18.9, no collision)", "collide": "CanCollide off"},
+                 notes="soft snow on the lintel (28.6 x 2.6 x 3.2, top y 18.6): flat-ish top at y 19.2, lips 1.25 down the "
+                       "front with 4 drips and 0.9 down the back with 2; the sign posts stand through it. icicleRoots under the "
+                       "front lip (keep the door opening clear: the tips must stay above y 16.2).")
+    lint.place["icicleRoots"] = slab_snow_into(lint, _xf((0.0, 17.3, 0.0), M_ID), 14.3, 1.6, 1.9,
+                                               {"-z": (0.15, 1.25, 4), "+z": (0.15, 0.9, 2), "-x": (0.2, 0.8, 0), "+x": (0.2, 0.8, 0)},
+                                               rng, SNOW_WHITE, n=20)
+    return [roof, lint]
+
+
+def _layered_rock(pc, xf, half, rng, layers, snow, k=0.95, floor=-0.5):
+    """Faceted rock-ice in a MeshPart box: stacked convex layers (local unit coords: (y0, r0, y1, r1, colour,
+    offset)), each slightly offset, + a snow cap shell (rings (y, r) list) on the top layer. xf: local -> kit."""
+    def kit(v):
+        q = xf(Vector((v.x * half.x * k, v.y * half.y * k, v.z * half.z * k)))
+        return Vector((q.x, max(q.y, floor), q.z))
+    lo_all = None
+    for (y0, r0, y1, r1, col, off, top) in layers:
+        ph = rng.uniform(0, math.pi)
+        pts = []
+        for (y, r, n) in ((y0, r0, 7), (y1, r1, 7 if r1 > 0.3 else 5)):
+            for i in range(n):
+                a = ph + 2 * math.pi * (i + rng.uniform(-0.2, 0.2)) / n
+                j = rng.uniform(0.9, 1.04)
+                pts.append(Vector((off[0] + math.cos(a) * r * j, y + rng.uniform(-0.03, 0.03), off[1] + math.sin(a) * r * j)))
+            ph += 0.45
+        if top:
+            pts.append(Vector((off[0] * 1.5 + top[0], top[1], off[1] * 1.5 + top[2])))
+        kp = [kit(v) for v in pts]
+        if lo_all is None:
+            low = min(p.y for p in kp)
+            kp += [Vector((p.x, floor, p.z)) for p in kp if p.y < low + 0.8]
+            lo_all = floor
+        ys = [p.y for p in kp]
+        y_lo, y_hi = min(ys), max(ys)
+
+        def colf(cc, n, col=col, y_lo=y_lo, y_hi=y_hi):
+            h = max(0.0, min(1.0, (cc.y - y_lo) / max(y_hi - y_lo, 1e-6)))
+            c = tone(col, (0.88 + 0.12 * h) * rng.choice(STEPS))
+            return mix(c, "#FFFFFF", 0.1) if n.y > 0.6 else c
+        shell(pc, kp, colf)
+    if snow:
+        ph = rng.uniform(0, math.pi)
+        pts = []
+        for (y, r, n, ox, oz) in snow["rings"]:
+            for i in range(n):
+                a = ph + 2 * math.pi * (i + rng.uniform(-0.2, 0.2)) / n
+                pts.append(Vector((ox + math.cos(a) * r * rng.uniform(0.93, 1.05), y + rng.uniform(-0.03, 0.03), oz + math.sin(a) * r * rng.uniform(0.93, 1.05))))
+            ph += 0.5
+        pts.append(Vector(snow["top"]))
+        shell(pc, [kit(v) for v in pts], snow_colfn(SNOW_WHITE))
+
+
+def t_gate3_rocks():
+    out = []
+    specs = (("boulder_left", (-22.5, 17.5, 0.0), (17.0, 36.0, 16.0), M_PILLAR_L, T_ROCK, 8601, "Pillar"),
+             ("boulder_right", (22.5, 17.5, 0.0), (17.0, 36.0, 16.0), M_PILLAR_R, T_ROCK_D, 8602, "Pillar"),
+             ("rock_left", (-31.5, 6.0, -3.0), (11.0, 13.0, 11.0), M_GROCK_L, T_ROCK_D, 8611, "Rock"),
+             ("rock_right", (31.5, 6.0, -3.0), (11.0, 13.0, 11.0), M_GROCK_R, T_ROCK, 8612, "Rock"))
+    for name, pos, size, m, base, seed, kitname in specs:
+        rng = random.Random(seed)
+        big = kitname == "Pillar"
+        deep, mid, light = mix(base, T_NAVY, 0.35), mix(base, "#3468B4", 0.22), mix(base, T_ICE_M, 0.2)
+        if big:
+            layers = ((-1.0, 0.86, -0.36, 0.98, deep, (0.0, 0.0), None),
+                      (-0.42, 0.93, 0.3, 0.86, mid, (0.04, -0.02), None),
+                      (0.24, 0.84, 0.72, 0.5, light, (0.06, 0.02), (0.05, 0.96, -0.04)))
+            snow = {"rings": ((0.5, 0.7, 9, 0.08, 0.03), (0.74, 0.5, 8, 0.09, 0.02), (0.9, 0.24, 6, 0.1, 0.0)), "top": (0.12, 1.02, -0.02)}
+        else:
+            layers = ((-1.0, 0.82, -0.2, 0.98, deep, (0.0, 0.0), None),
+                      (-0.28, 0.92, 0.55, 0.7, mid, (0.03, 0.03), (0.0, 0.8, 0.02)))
+            snow = {"rings": ((0.35, 0.8, 8, 0.03, 0.03), (0.68, 0.48, 7, 0.04, 0.03)), "top": (0.05, 0.93, 0.0)}
+        pc = Piece("tundra_gate3", name, "the Gate_Tundra_3 kit pivot (bottom centre, front -Z)",
+                   place={"relativeTo": "the gate model (kit pivot)", "position": [0, 0, 0], "orientation": [0, 0, 0], "scale": 1.0,
+                          "replaces": f"the look of today's {kitname} MeshPart ({size[0]:g} x {size[1]:g} x {size[2]:g} at {pos}, {base}) "
+                                      f"and its Snow MeshPart; keep the {kitname} as the invisible collider (it collides), the "
+                                      "Snow had no collision", "collide": "CanCollide off"},
+                   notes=f"faceted ice-rock {'pillar boulder' if big else 'side rock'} fitted to 95 % of today's {kitname} box "
+                         f"(foot at y -0.5): {len(layers)} stacked convex strata in layered blues of today's {base} (deep "
+                         f"{deep} at the foot, {mid}, light {light} on top), each offset a little, up-facing facets lighter; "
+                         "a thick snow cap shell over the top third (#F4F8FF / #E1EBFA / #CEDEF6).")
+        _layered_rock(pc, _xf(pos, m), Vector(size) * 0.5, rng, layers, snow, floor=-0.5)
+        out.append(pc)
+    return out
+
+
+def t_gate4_spire():
+    rng = random.Random(8701)
+    pc = Piece("tundra_gate4", "spire", "the piece's own anchor: (0, 0, 0) = the bottom centre of the cluster (it stands on a "
+               "tower cap); 10 x 18 x 10 like today's Spire mesh; the main crystal leans 4 deg toward +X",
+               place={"relativeTo": "the gate model (kit pivot)", "position": "04: (-19.5, 43.0, 2.0) and (19.5, 43.0, 2.0) (on "
+                      "the TowerCap tops, today's Spire meshes 10 x 18 x 10 at y 51.5); 01: the 4 foot Crystals: (-21.0, 0, -1.5) "
+                      "scale 0.48 and (-19.6, 0, -3.6) scale 0.3, mirrored at +x",
+                      "orientation": "04: yaw [0, -57, 0] / [0, 57, 0] (today's); 01: yaw so the lean points away from the "
+                                     "passage ([0, 180, 0] on the left foot, [0, 0, 0] on the right)",
+                      "scale": "04: 1.0; 01: 0.3-0.48",
+                      "replaces": "04: the 2 Spire meshes (CanCollide off today, CanQuery on); 01: the 4 Crystal meshes (they "
+                                  "COLLIDE today: keep them invisible as colliders)", "collide": "CanCollide off"},
+               notes="big faceted crystal spire: a 6-sided main crystal (body, shoulder, tip at 17.6) with every edge "
+                     "chamfered in light #D3EEF6 over #96D6FA facets, an opaque #54A0E8 core inside, and 2 smaller crystals "
+                     "leaning out from its foot (#6EC6EA, #96D6FA). Glass Transparency 0.3 (edges 0.2). 4 closed convex shells.")
+
+    def crystal(base, r, body, sh, tip, lean_deg, yaw_deg, sides=6, ph=0.0):
+        ax = Vector((math.sin(math.radians(lean_deg)) * math.cos(math.radians(yaw_deg)), math.cos(math.radians(lean_deg)),
+                     math.sin(math.radians(lean_deg)) * math.sin(math.radians(yaw_deg))))
+        u = ax.cross(Vector((0, 0, 1)))
+        u = (u if u.length > 1e-4 else ax.cross(Vector((1, 0, 0)))).normalized()
+        v = ax.cross(u).normalized()
+        b = Vector(base)
+        pts = []
+        for (h, k) in ((-0.6, 0.86), (body, 1.0), (body + sh, 0.55)):
+            for i in range(sides):
+                a = ph + 2 * math.pi * i / sides
+                pts.append(b + ax * h + (u * math.cos(a) + v * math.sin(a)) * r * k * rng.uniform(0.96, 1.03))
+        pts.append(b + ax * tip + u * 0.1 * r)
+        return pts, b, ax
+    main, b, ax = crystal((0.0, 0.0, 0.0), 3.1, 10.5, 3.0, 17.6, 4, 0, ph=0.3)
+    bevel_shell(pc, main, 0.18, ice_colfn(T_ICE, -0.5, 17.6, rng), lambda cc, n: mix(T_ICE_L, T_WHITE, 0.3), m="Glass")
+    core, _, _ = crystal((0.0, 0.3, 0.0), 1.7, 8.5, 2.0, 12.5, 4, 0, ph=0.8)
+    shell(pc, core, lambda cc, n: T_ICE_DEEP if n.y < 0.5 else mix(T_ICE_DEEP, T_ICE_M, 0.3))
+    for (pos, r, body, sh, tip, lean, yaw, col) in (((2.7, 0.0, 1.3), 1.5, 5.6, 1.6, 9.2, 22, 20, T_ICE_M),
+                                                    ((-2.4, 0.0, -1.7), 1.2, 4.0, 1.3, 6.6, 26, 210, T_ICE)):
+        pts, _, _ = crystal(pos, r, body, sh, tip, lean, yaw, sides=5, ph=rng.uniform(0, 1))
+        shell(pc, pts, lambda cc, n, col=col: mix(col, T_ICE_L, 0.35) if n.y > 0.45 else tone(col, rng.choice((1.0, 0.94))), m="Glass")
+    return [pc]
+
+
+def tundra_gates():
+    pieces = t_log_cap() + t_gate2_snow() + t_gate3_rocks() + t_gate4_spire()
+    for pc in pieces:
+        pc.notes += f" [{shell_count(pc)} shells]"
+    return pieces
+
+
+def preview_tundra_gates(pieces):
+    from mathutils import Matrix
+    scn = clear_scene()
+    col = P.collection(P.SUBJECT, scn)
+    # the reused tundra_buildings pieces (same seeds = the same faces as their JSON)
+    by = {f"{p.obj}__{p.name}": p for p in pieces + t_snow_caps() + t_snow_drifts() + t_icicles()}
+    V = Vector
+    D, W, WL = "#5C4236", "#865C42", "#997660"
+
+    def put(name, off=V((0, 0, 0)), rot=None, scale=1.0):
+        pc = by[name]
+        return _glassy(piece_object(pc, col, off, rot, scale), pc)
+    # 01 torii arch (context boxes for the logs)
+    g1 = context_boxes([((-16, 1.5, 0), (8, 3, 7), T_ROCK, (0, 0, 0)), ((16, 1.5, 0), (8, 3, 7), T_ROCK, (0, 0, 0)),
+                        ((-17.4, 9.0, 0), (2.4, 18, 2.4), WL, (0, 0, 0)), ((17.4, 9.0, 0), (2.4, 18, 2.4), WL, (0, 0, 0)),
+                        ((-14.6, 11.5, 0), (2.6, 23, 2.6), W, (0, 0, 0)), ((14.6, 11.5, 0), (2.6, 23, 2.6), W, (0, 0, 0)),
+                        ((0, 18.5, 0), (38, 2.4, 2.4), D, (0, 0, 0)), ((0, 25.6, 0), (32, 2.0, 2.0), D, (0, 0, 0)),
+                        ((0, 22.2, -0.2), (15.4, 5.2, 0.6), D, (0, 0, 0)), ((0, 22.2, -0.6), (14, 4, 0.5), "#3468B4", (0, 0, 0))], col)
+    for x in (-12.5, 0.0, 12.5):
+        g1.append(put("tundra_snow__log_cap", V((x, 18.5, 0)), euler_matrix([0, 180 if x == 0 else 0, 0])))
+    for x in (-10.5, 0.0, 10.5):
+        g1.append(put("tundra_snow__log_cap", V((x, 25.6, 0)), euler_matrix([0, 0 if x == 0 else 180, 0]), 0.83))
+    for sx in (-1, 1):
+        g1.append(put("tundra_gate4__spire", V((sx * 21.0, 0, -1.5)), euler_matrix([0, 0 if sx > 0 else 180, 0]), 0.48))
+        g1.append(put("tundra_gate4__spire", V((sx * 19.6, 0, -3.6)), euler_matrix([0, 0 if sx > 0 else 180, 0]), 0.3))
+        g1.append(put("tundra_snow__cap", V((sx * 16, 3.0, 0)), _mat3(M_ID) @ Matrix(((8.4, 0, 0), (0, 0.7, 0), (0, 0, 7.3)))))
+    # 02 palisade (offset +60)
+    o = V((60, 0, 0))
+    ctx2 = [((60, 17.3, 0), (28.6, 2.6, 3.2), D, (0, 0, 0)), ((60, 8, 0), (24, 16, 1.4), W, (0, 0, 0)),
+            ((60, 21.3, -1.25), (12, 4, 0.5), "#3468B4", (0, 0, 0))]
+    for (x, h, c) in ((13.2, 21, W), (15.7, 23, WL), (18.2, 22, W), (20.7, 20, WL)):
+        for sx in (-1, 1):
+            ctx2.append(((60 + sx * x, (2.9 + h) / 2, 0), (2.6, h - 2.9, 2.6), c, (0, 0, 0)))
+    for sx in (-1, 1):
+        ctx2.append(((60 + sx * 17, 1.5, 0), (10.5, 3, 7.5), T_ROCK, (0, 0, 0)))
+    for s in (-1, 1):   # the template's roof slopes (blue-grey tiles)
+        ctx2.append(((60, 25.7, s * 1.75), (31.0, 0.3, 4.61), "#5E6E86", (s * 40.6, 0, 0)))
+    g2 = context_boxes(ctx2, col)
+    g2 += [put("tundra_gate2__roof_snow", o), put("tundra_gate2__roof_snow", o, euler_matrix([0, 180, 0])), put("tundra_gate2__lintel_snow", o)]
+    for (x, h) in ((13.2, 21), (15.7, 23), (18.2, 22), (20.7, 20)):
+        for sx in (-1, 1):
+            g2.append(put("tundra_snow__cap", o + V((sx * x, h, 0)), _mat3(M_ID) @ Matrix(((2.9, 0, 0), (0, 0.7, 0), (0, 0, 2.9)))))
+    for r in by["tundra_gate2__roof_snow"].place["icicleRoots"]:
+        g2.append(put("tundra_ice__icicle", o + V(r), None, 0.45))
+    for (pos, m, s) in (((-17.5, 0, -6.4), M_ID, (12, 5.5, 6)), ((17.5, 0, -6.4), M_ID, (12, 5.5, 6))):
+        g2.append(put("tundra_snow__drift", o + V(pos), _mat3(m) @ Matrix(((s[0], 0, 0), (0, s[1], 0), (0, 0, s[2])))))
+    # 03 ice rock gate (offset +140)
+    o = V((140, 0, 0))
+    g3 = context_boxes([((140 - 13.7, 9.5, 0), (3.4, 19, 6), T_ROCK_D, (0, 0, 0)), ((140 + 13.7, 9.5, 0), (3.4, 19, 6), T_ROCK_D, (0, 0, 0)),
+                        ((140, 22.6, 0), (34, 2.2, 2.2), D, (0, 0, 0)), ((140, 8, 0), (24, 16, 2.0), T_ICE, (0, 0, 0)),
+                        ((140, 18.6, -0.6), (13.2, 5, 0.4), D, (0, 0, 0))], col)
+    g3 += [put(f"tundra_gate3__{n}", o) for n in ("boulder_left", "boulder_right", "rock_left", "rock_right")]
+    for x in (-11.0, 0.0, 11.0):
+        g3.append(put("tundra_snow__log_cap", o + V((x, 22.6, 0)), None, 0.92))
+    # 04 ice castle towers + spires (offset +220)
+    o = V((220, 0, 0))
+    g4 = context_boxes([((220 - 19.5, 20, 2), (15, 40, 12), T_ICE_DEEP, (0, 0, 0)), ((220 + 19.5, 20, 2), (15, 40, 12), T_ICE_DEEP, (0, 0, 0)),
+                        ((220 - 19.5, 41.5, 2), (17, 3, 14), "#3468B4", (0, 0, 0)), ((220 + 19.5, 41.5, 2), (17, 3, 14), "#3468B4", (0, 0, 0)),
+                        ((220, 26, 2), (24.2, 20, 8), T_ICE_DEEP, (0, 0, 0)), ((220, 37, 2), (27, 2, 9.5), "#3468B4", (0, 0, 0))], col)
+    g4 += [put("tundra_gate4__spire", o + V((-19.5, 43.0, 2.0)), euler_matrix([0, -57, 0])),
+           put("tundra_gate4__spire", o + V((19.5, 43.0, 2.0)), euler_matrix([0, 57, 0]))]
+    out = os.path.join(P.PREVIEW_DIR, "tundra_gates_facets.png")
+    return render_sheet("tgates", [(g1, [(-20, 10)]), (g2, [(-25, 15)]), (g3, [(-15, 10)]), (g4, [(-25, 12)])], None, out)
+
+
 def main():
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     report = []
@@ -5416,7 +5681,8 @@ def main():
                           ("jungle_decor", jungle_decor, preview_jungle_decor),
                           ("jungle_nature", jungle_nature, preview_jungle_nature),
                           ("batch4", batch4, preview_batch4),
-                          ("tundra_buildings", tundra_buildings, preview_tundra_buildings)):
+                          ("tundra_buildings", tundra_buildings, preview_tundra_buildings),
+                          ("tundra_gates", tundra_gates, preview_tundra_gates)):
         if only and obj not in only:
             continue
         pieces = fn()

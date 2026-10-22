@@ -2385,6 +2385,277 @@ not change: middle y 8.0, sides 7.93 -> 4.92 (13 deg), ends at x +-20.8. Nothing
   - The icicle clusters are the expensive accent (100 faces): use singles (20) wherever a row is long.
   - On the 2 cave sides away from the camera (the backs face Bounds walls), the shards can be dropped.
 
+### E8. Tundra gates and entrances (owner task 2026-10-22)
+
+Images: `docs/Tundra_Images/02_Gates_and_Entrances/`. Data read from
+`BackUP_Files/FightYourDestiny_2026-10-22_143631_before_tundra_gates_{ServerStorage,Workspace}.rbxm`.
+Same target and palette as E1-E2 (faceted translucent ice T 0.2-0.4, soft irregular snow caps, tapering icicles).
+
+**Owner's token rule:** 01 and 02 are NOT rebuilt from zero. They DUPLICATE the finished plains templates and change
+only what the snow biome needs:
+- `entry_arch`: `PropsBatch2.entry_arch`, `tools/PropsBatch2.luau:1298`, version bac9bca5;
+- `gate_palisade`: `PropsBatch2.gate_palisade`, `:1430`, version b00e5eb3;
+- test copies: `_Staging.AssetPreview.ModelsA.Lineup.Gates.EntryArch_Plains` / `Gate_Plains_2`.
+
+03 and 04 are new.
+
+**E8.0 Kits, copies, contracts** (all in `ServerStorage.MapAssets.Gates`, pivot = bottom centre at the origin, front
+-Z, SmoothPlastic unless noted; no script in any kit):
+
+| # | Owner's name | Kit (parts, bbox) | Copies | Contract (keep exactly) |
+|---|---|---|---|---|
+| 01 | log torii arch, blue sign | `EntryArch_Tundra` (37; 47.5 x 27.2 x 9.3) | **3**: kit, test `_Staging.AssetPreview.Tundra`, game `Zones.Tundra.Tundra_1.EntryArch` (8000, 0, -88) | NOT a gate: no Barrier, no PriceSign. Model attr `ZoneId = "Tundra"`. `NameSign` (14 x 4 x 0.5 #3468B4 at (0, 22.2, -0.6)) holds SurfaceGuis `NameGuiFront` / `NameGuiBack` -> `NameLabel` "Tundra" (+ UIStroke); the game copy's name stays `EntryArch` |
+| 02 | palisade gate | `Gate_Tundra_2` (60; 47 x 27.2 x 17.9 with the drifts) | **3**: kit, test, game `Zones.Tundra.Tundra_2.Gate` (8000, 0, 145) | Sub-zone gate. Model attrs `SubZoneId = "Tundra_2"` (game copy), `BarrierDecorIsChildOfBarrier = true`; `PriceSign` GUIs `PriceGuiFront` / `PriceGuiBack` -> `PriceLabel` ("500K Gold"); 2 `Ember` (Neon #FF8C28 0.9 balls at (+-15.6, 12.6, -2.2)) each with Attachment `FirePoint` |
+| 03 | ice rock gate | `Gate_Tundra_3` (32; 77.2 x 39 x 22.1) | **3**: kit, test, game `Zones.Tundra.Tundra_3.Gate` (8000, 0, 435) | Sub-zone gate: `SubZoneId = "Tundra_3"`, `BarrierDecorIsChildOfBarrier`; PriceLabel "1.25M Gold" |
+| 04 | ice castle gate | `Gate_Tundra_4` (38; 56 x 60.5 x 19) | **3**: kit, test, game `Zones.Tundra.Tundra_4.Gate` (8000, 0, 725) | Sub-zone gate: `SubZoneId = "Tundra_4"`, `BarrierDecorIsChildOfBarrier`; PriceLabel "3.12M Gold". (`Tundra_4.BossGate` at (8000, 0, 938) is another model, out of scope) |
+
+**How the gates work** (`src/.../ZoneService.luau` 225-245, `GateController.luau` 17-42):
+- **Prompt:** ZoneService finds the model named **`Gate`** in the sub-zone folder. It needs `gate.PrimaryPart`, and
+  creates the ProximityPrompt **`GatePrompt`** in it at run time ("Open (<price> Gold)", hold 0.4, range 18).
+  **PrimaryPart = `Barrier` is mandatory** (the kits have no PrimaryPart; the game copies must keep theirs).
+- **Opening:** GateController takes `gate.PrimaryPart or FindFirstChild("Barrier", true)`.
+  - On open it turns off CanCollide and sets LocalTransparencyModifier 1 on the Barrier AND every BasePart under it,
+    and disables every light, emitter, beam and prompt under it.
+  - So anything that must vanish with the door is a CHILD of `Barrier`; anything that must stay is not.
+  - A light added to a door gem (04) goes under the Barrier and switches off by itself when the gate opens.
+- **Price:** every `TextLabel` named `PriceLabel` in the model gets the price or "OPEN".
+- **Sync:** the existing SyncMapProps rules `entry_arch` / `gate_palisade` only match `EntryArch_Plains` /
+  `Gate_Plains_2` (zones Plains_*). The tundra duplicates need NEW rules: suggested `tundra_entry_arch`,
+  `tundra_gate_palisade`, `tundra_gate_ice_rock`, `tundra_gate_ice_castle`.
+  - They keep the game-copy names (`EntryArch` / `Gate`), the attributes, the GUIs moved onto the new
+    NameSign / PriceSign, the Embers + FirePoints and PrimaryPart = Barrier, as the plains rules do.
+- **Copy differences:** the game copies match their kits except 0.05 shifts:
+  - 02: the 2 Bands are 24.1 long, the 10 PlankLines at y 8.05;
+  - 03: TopSnow at z +0.05;
+  - 04: the Frames / Seam at +0.05, the top Frame 24.1 long, the Buttresses at x +-13.95.
+  - Take the colliders from the game copies (as for batch 4).
+
+**Colliders** (today's parts kept as invisible colliders, exact game-copy CFrame and size; Barrier children keep their
+own flags):
+
+| Gate | Colliding today | Not colliding |
+|---|---|---|
+| 01 | 2 Base, **4 Crystal meshes**, 4 Binding, 4 Post cylinders, 2 Beam cylinders, SignFrame, NameSign | 2 BaseSnow, 4 PostSnow, BeamSnow, 2 Lantern, 2 LanternCap, 2 Chain, 6 Icicles |
+| 02 | 2 TowerBase, **4 Drift wedges**, 4 Binding, Barrier, 8 Log, 2 TorchStick, Lintel, **8 LogEnd snow discs (0.8 x 2.8)**, 2 SignPost, SignFrame, PriceSign, 2 SignRoof wedges | 2 BaseSnow, LintelSnow, 2 Ember; under Barrier (CanCollide off, CanQuery on): 2 SnowBank, 2 Band, Seam, 10 PlankLine, 2 Handle, 2 Brace |
+| 03 | 2 Pillar meshes, 2 Rock meshes, 2 Jamb, Beam cylinder, SignFrame, PriceSign, the INVISIBLE Barrier (T 1) | 4 Snow meshes, BeamSnow, 2 Rope; under Barrier: 12 IceBlock (T 0.12, CanQuery on), Rune, TopSnow, SnowBank |
+| 04 | 2 Drift wedges, Barrier (Glass T 0.35), 2 Buttress, 2 Tower, Wall, 2 TowerBand, Cornice, 4 Crenel, 2 TowerCap, SignFrame, PriceSign | 2 Spire meshes (CanQuery on), 2 Slit, 6 Icicles; under Barrier: Seam, 3 Frame, 4 Facet, Emblem |
+
+**Lights and fire today:**
+- **01:** each `Lantern` (Neon #60BEFF 1.4 x 1.8 at (+-9.5, 14.4, 0), hanging on a `Chain` from the main beam under a
+  `LanternCap`) holds a PointLight #60BEFF, Brightness 0.8, Range 14, Shadows off.
+- **02:** the Embers carry no light. The zone has 2 separate parts `Tundra_2.Decor.VFX.Fire_Torch` exactly on the 2
+  FirePoints (world (7984.4 / 8015.6, 12.8, 142.8)), each with 3 emitters (Flame, Ember, Core) and a WARM PointLight
+  #FFAA50, 1 / 16.
+  - They are outside the gate model: the sync does not touch them.
+  - For the owner's "cold light", the main agent replaces them by clones of `MapAssets.VFX.Fire_Torch_Blue` at the same
+    CFrame, with the light recoloured pale cyan-white #CFF4FF (Brightness 1, Range 16).
+  - Keep the Ember + FirePoint positions exact.
+- **03 / 04:** Neon glows only (03 Rune #60BEFF; 04 Emblem, 2 Slits #60BEFF), no lights.
+
+**E8.1 Real colours** (keep; tone steps x1 / x0.93 / x0.86) and the owner's changes:
+
+| Role | Real today | Owner's change -> use |
+|---|---|---|
+| logs light / mid | #997660 / #865C42 (01 posts, 02 logs) | "frosted wood, darker, slightly desaturated": keep these two (already darker and greyer than the plains #D6965C / #A86238); frost rime #E6EEF6 on the top edges (E2) |
+| dark wood | #5C4236 (bindings, beams, lintel, sign frames / posts) | keep |
+| stone | #768096 (01 / 02 bases), #4E566E (03 jambs, 03 pillar R, 02 none) | "blue-grey slate with snow on top": the plains templates' #969CA8 / #686E7C stone -> #768096 / #4E566E, mortar #3E4558 |
+| iron | #5C626E (02 bands, 01 lantern caps / chains) | "dark blue steel": #3E4C66, rivets / edges #56688A |
+| roof (02) | the SignRoof wedges are plain white #F4F8FF | "snow-covered tiles, blue-grey under the snow": the template's shingles recoloured #5E6E86, ridge cap #4A5870, under `tundra_gate2__roof_snow` |
+| sign board | 01 NameSign #3468B4; 02 / 03 PriceSign #997660 (wood); 04 PriceSign #3468B4 | "icy blue sign with a frosted frame": board #3468B4 on all 4 (the GUI text stays readable); frame #D6ECFF with a #F2F6F8 rime strip on its top, 4 small #BFE9F5 Glass T 0.3 corner plates |
+| lantern / torch light | 01 #60BEFF Neon + light #60BEFF; 02 Ember #FF8C28 (warm VFX) | "cold light, pale cyan-white": lantern glass #D8F6FF Neon (T 0.4), flames / Ember #D8F6FF Neon, PointLights #CFF4FF (keep each copy's Brightness / Range: 01 0.8 / 14) |
+| ice | #96D6FA, #54A0E8, #D6ECFF (crystals, icicles, ice blocks, 04 towers) | faceted Glass ice with light edges (E2) |
+| ice-castle accents | #3468B4 (04 bands, caps, cornice), #60BEFF Neon glows | keep; the cyan glows may move to #35E6F5 (the owner's cyan glow) |
+| snow | #F4F8FF / #CEDEF6 | caps, drifts (E2) |
+| gold | 02 Handles #FFC93C | keep (the template's gold ring handles) |
+
+**E8.2 01 log torii arch (duplicate `entry_arch`, refit to the tundra proportions)**
+
+The plains template does not fit 1:1:
+
+| | plains `entry_arch` | tundra `EntryArch_Tundra` (keep) |
+|---|---|---|
+| bases | stone pier 8 x 8 x 5 + cap 8.8 x 1 (top 6) at x +-16 | slate base 8 x 3 x 7 (top 3) + BaseSnow |
+| posts | octagonal logs 3.0, from y 6: inner x +-14.2 (to 19), outer +-17.6 (to 17) | round logs from the ground: inner 2.6 at x +-14.6 (to 23), outer 2.4 at x +-17.4 (to 18) |
+| beams | main box 40 x 2.6 x 3.4 at y 20.3, lower 30 x 1.6 at 17.2 | round: main 38 x 2.4 at y 18.5, top 32 x 2.0 at y 25.6 |
+| sign | NameSign 14 x 4 x 3.4 at (0, 23.9, 0) | 14 x 4 x 0.5 at (0, 22.2, -0.6) in a 15.4 x 5.2 frame |
+| lanterns | `lantern` props at (+-13.4, 12.3, -2.3) on wall brackets | Neon lanterns at (+-9.5, 14.4, 0) hanging on chains from the main beam |
+| top | shingle roof y 26.4-29.6, 2 flags | no roof, no flags; the snowy top beam is the torii top |
+| feet | moss | 4 ice crystals (colliding meshes) |
+
+- **Size:** about 50 x 29.6 x 9 (plains) vs 47.5 x 27.2 x 9.3 (tundra).
+- **Build:** duplicate the builder, not the model. Same helpers (`ringCourse`, `capSlabs`, `octagon`, `band`,
+  `rivet`, `timber`, the sign frame with iron corners, BEVEL_SELF), at the tundra numbers. The torii keeps its own
+  look: round logs in pairs, small bands, snow on the beams, the blue sign, hanging ice lanterns, crystals at the feet.
+- **Bases:** 2 courses of 1.5 slate blocks (#768096, 8 x 7), a #4E566E cap slab 0.4 with 0.3 overhang, then
+  `tundra_snow__cap` (8.6, 0.6, 7.6) on top (replaces BaseSnow) and a `tundra_snow__drift` (6, 1.6, 3) against the
+  outer and front faces.
+- **Posts:**
+  - today's 4 round posts as 8-sided logs (the template's `octagon`) at today's x, diameter and height;
+  - 2 dark-steel collars (#3E4C66, 0.6 tall) at the base top;
+  - today's 4 Bindings (6 x 1 x 3 at y 8 and 14.5) as the template's riveted `band`s round each pair (#3E4C66,
+    rivets #56688A), with a rope lashing #C4A068 under the upper one;
+  - log ends #C49A6C on the outer post tops (y 18) under a `tundra_snow__cap` (2.7, 0.6, 2.7); the same on the inner
+    tops (y 23), replacing the PostSnow discs.
+- **Beams:** today's 2 round beams as 8-sided logs (#5C4236 tones) with log ends at both ends.
+  - Over each post: 2 steel bands with rivets and a wooden peg pair (the template's beam bands, at x +-11.6 / +-18.6
+    -> +-13.3 / +-18.8).
+  - `tundra_snow__log_cap` segments on both beams (place in the piece), replacing BeamSnow.
+  - Icicles under the main beam: today's 6 (`tundra_ice__icicle`, Y scale = today's length / 3) plus 4-6 singles
+    (scale 0.3-0.6). None below y 13 inside the 26.6-wide passage.
+- **Sign:**
+  - today's NameSign 14 x 4 x 0.5 at (0, 22.2, -0.6) in #3468B4 (keep: it carries the GUIs);
+  - the frame as the template's framed timber surround (4 strips 0.5, #5C4236) frosted: a #D6ECFF inner bead 0.15, a
+    rime strip on the top bar, 4 steel corner plates with rivets;
+  - 2 short king posts (0.6 square) from the main beam to the frame, as the template's sign mounts;
+  - a small `tundra_snow__cap` (15, 0.4, 0.9) on the frame top.
+- **Lanterns** (keep today's place, chain and light):
+  - the template's lantern design (iron frame, 4 glass panes, cap, roof, handle) at (+-9.5, 14.4, 0), 1.4 x 1.8,
+    in dark steel #3E4C66 with #D8F6FF Neon panes T 0.4 and a cold flame #D8F6FF;
+  - the PointLight moves from the old Lantern part to the new glass part, recoloured #CFF4FF (0.8 / 14);
+  - the Chain as 4 links (0.25 rings) from a steel eye on the beam;
+  - a small icicle under each lantern base, `tundra_snow__cap` (1.9, 0.25, 1.9) on each cap.
+- **Crystals at the feet:** `tundra_gate4__spire` at the 4 Crystal places (scale 0.48 / 0.3, leaning away from the
+  passage), today's 4 Crystal meshes kept invisible as colliders.
+
+**E8.3 02 palisade gate (duplicate `gate_palisade`: same geometry)**
+
+- **Fit:** `Gate_Tundra_2` IS the old Gate_Plains_2 kit recoloured: every log, base, binding, band, lintel, sign post,
+  door part, torch stick and Ember is at the same place and size, plus 9 snow parts. So the `gate_palisade` template
+  drops in 1:1: duplicate it as `tundra_gate_palisade` and change only the following.
+- **Differences to absorb:**
+  - today's PriceSign is 12 x 4 x **0.5 at z -1.25** (the template's own is 1.2 thick at z 0; keep the template's,
+    the GUIs move onto it);
+  - the SignRoof wedges' ridge is at **z -0.4** (the template roof is centred on z 0);
+  - the 8 LogEnd snow discs are 0.8 x 2.8 and COLLIDE (the log tops stand 0.7 higher than the template's log ends);
+  - 4 colliding Drift wedges stand in front of and behind the towers.
+  - Overall about 44.6 x 27.2 x 7.65 (template) vs 47 x 27.2 x 17.9 (with the drifts). Every one of these stays an
+    invisible collider.
+- **Recolour:**
+  - logs #997660 / #865C42 with 3 tones, the dark wood #5C4236;
+  - the template's stone bases to slate #768096 / #4E566E;
+  - all iron (bands, rivets, hinges, door bands, torch brackets and cups) to dark steel #3E4C66 / #56688A;
+  - the gold ring handles stay #FFC93C.
+- **Snow:**
+  - `tundra_gate2__roof_snow` on both roof slopes (yaw 180 for the back), the shingles under it in blue-grey
+    #5E6E86 / ridge #4A5870, visible in a 0.3-0.6 band at the eaves;
+  - `tundra_gate2__lintel_snow` on the lintel (replaces LintelSnow);
+  - `tundra_snow__cap` (2.9, 0.7, 2.9) on the 8 log tops (replaces the LogEnd discs' look; the discs stay as invisible
+    colliders);
+  - `tundra_snow__cap` (11, 0.6, 8) on the bases (replaces BaseSnow).
+- **Drifts** (owner: "snow drifts instead of the white boxes in front"): `tundra_snow__drift` on the 4 Drift wedges
+  (front (+-17.5, 0, -6.4), scale (12, 5.5, 6); back (+-17.5, 0, 6.0), yaw 180, scale (12, 4.5, 5)), wedges kept as
+  invisible colliders.
+- **Door foot:** the 2 SnowBank wedges stay Barrier children, as soft drifts (`tundra_snow__drift` (24, 3.2, 3.4)
+  yaw 180 at the back, (24, 4.6, 4.4) at the front). Parent them under Barrier: they vanish with the door, as today.
+- **Icicles:**
+  - under the roof eaves: the `icicleRoots` of the roof snow (front and mirrored back), scale 0.35-0.6;
+  - under the lintel front: its `icicleRoots`, scale 0.3-0.45 (tips above y 16.2, the door top);
+  - 1-2 under each torch cup ring.
+- **Torches:**
+  - the template's wall torch (bracket on the log, the stick rising up and OUT toward -Z, the cup sitting ON the
+    stick's upper end: the owner's "/" directive) in dark steel;
+  - the Ember recoloured cold #D8F6FF (Neon, same 0.9 ball, same place) with its FirePoint;
+  - the zone's Fire_Torch VFX swapped for the cold version (see E8.0).
+- **Sign:** board #3468B4, frame frosted (E8.1), a snow line on the frame top.
+
+**E8.4 03 ice rock gate (new)**
+
+Keep the passage (Barrier 24 x 16 x 2 at (0, 8, 0), between the Jambs' inner faces x +-12.0), the colliders and the
+behaviour: the Barrier stays INVISIBLE (T 1) and collides; everything that must vanish on open is under it.
+- **Big boulders:** `tundra_gate3__boulder_left` / `_right` (faceted rock-ice in 3 layered blue strata + a thick snow
+  cap over the top third) at today's Pillar places; the 2 Pillar meshes stay as invisible colliders, the 2 Snow
+  meshes go.
+- **Side rocks:** `tundra_gate3__rock_left` / `_right` (2 strata + snow cap) at today's Rock places; the Rock meshes
+  stay invisible colliders.
+- **Dark blue stone pillars with caps** (today's Jambs 3.4 x 19 x 6 #4E566E at x +-13.7):
+  - courses of slate blocks 1.2 tall (2 blocks per course on the front, running bond, 0.08 joints over #3E4558, 0.15
+    chamfers, 3 tones of #4E566E, x0.86 at the foot);
+  - a plinth course 0.4 wider; a #3468B4-tinted cap slab 4.0 x 0.5 x 6.6 (0.3 overhang, chamfered);
+  - `tundra_snow__cap_drip` (4.1, 0.6, 6.7) on it, 2 icicles under the cap front.
+- **Thick wooden beam** (today's Beam 34 x 2.2 at y 22.6):
+  - an 8-sided log #5C4236 with log ends;
+  - 2 dark-steel bands where it rests on the boulders;
+  - `tundra_snow__log_cap` x3 (scale 0.92, place in the piece);
+  - 4-6 small icicles under it (outside the sign).
+- **Frosted sign:**
+  - today's PriceSign (keep its CFrame: GUIs) in #3468B4 with the E8.1 frosted frame;
+  - today's 2 Ropes as rope lines #C4A068 (2 cylinders 0.2 with a knot ball) from 2 steel eyes on the beam;
+  - a snow line on the frame top.
+- **Small ice-brick arch with a glowing cyan diamond key** (the door, ALL under the invisible Barrier):
+  - today's 12 IceBlocks as bevelled ice bricks: each block with a 0.15 chamfer, #96D6FA / #54A0E8 / #D6ECFF as today,
+    Glass T 0.25, light #BFE9F5 edges, 0.12 joints showing the dark #234A8F backing (a thin backing slab, also under
+    the Barrier);
+  - the top row cut as a flat arch: 5 voussoir bricks fanning around the centre;
+  - the keystone = today's Neon Rune diamond (1.8, #60BEFF, or #35E6F5) in a bevelled ice setting with 4 small facets,
+    glowing;
+  - an optional PointLight #35E6F5 0.6 / 8 under the Barrier (it switches off when the gate opens);
+  - TopSnow / SnowBank as a `tundra_snow__cap` strip and a drift (Barrier children).
+- **Ground:**
+  - `tundra_snow__drift` (scale about (8, 2, 4)) against each boulder's front and the jamb feet;
+  - 4-6 small rocks (chamfered #4E566E / #768096 blocks 0.6-1.4, half sunk);
+  - 2 `tundra_ice__shards` at the jamb feet.
+  - CanCollide off on the additions.
+
+**E8.5 04 ice castle gate (new)**
+
+Keep the opening (Barrier 24 x 16 x 3 at (0, 8, 1)), the door behaviour (Barrier Glass T 0.35 collides; Seam, Frames,
+Facets, Emblem under it vanish on open), the colliders and the PriceSign.
+- **Towers of bevelled ice blocks** (today's 2 Towers 15 x 40 x 12 #54A0E8 at x +-19.5, z 2):
+  - courses 2.5 tall of blocks 3.5-5 long (running bond), 0.12 joints over a darker #3468B4 core, 0.25 chamfers
+    with light #96D6FA edge strips, 3 tones of #54A0E8, x0.88 at the foot;
+  - only the visible faces need blocks (front, sides, back where seen);
+  - today's TowerBand (y 30) as a projecting band course of #3468B4 blocks with a chamfered top, plus a second thin
+    band at y 15;
+  - today's 2 Neon Slits as arrow slits: a recessed #234A8F frame 1.3 x 5 with the Neon #60BEFF strip inside.
+- **Caps and spires:**
+  - today's TowerCaps as corbelled caps: a row of 0.6 corbels under a chamfered #3468B4 slab, a snow layer
+    (`tundra_snow__cap` (17.4, 0.7, 14.4)) and icicles at the corners;
+  - `tundra_gate4__spire` on each cap at (+-19.5, 43, 2), yaw -+57: big faceted crystal spires, Glass T 0.3, light
+    edges, opaque core. The Spire meshes go (they did not collide).
+- **Wall and crenellations with icicles:**
+  - today's Wall (24.2 x 20 x 8) in the same ice-block courses;
+  - the Cornice as a 2-step corbelled cornice #3468B4;
+  - today's 4 Crenels as capped merlons (#96D6FA ice blocks, a #3468B4 cap slab 0.3 with 0.15 overhang, a small
+    snow cap each);
+  - icicles: today's 6 at their places + 6-8 smaller ones along the cornice front (`tundra_ice__icicle` /
+    `_cluster`, roots at y 36, the cornice underside).
+- **Framed name sign:** today's PriceSign (12 x 4 #3468B4 at (0, 20, -2.35), GUIs) in today's frame #D6ECFF made a
+  raised ice frame: 4 bevelled strips 0.7, light edges, 4 corner studs #96D6FA, a snow line on top.
+- **Frosted-glass double door with ice frames and a glowing cyan gem** (everything under the Barrier):
+  - today's Barrier as the frosted pane (Glass T 0.35 #96D6FA, keep);
+  - today's 3 Frames as bevelled ice frames (#54A0E8 with #96D6FA edges), plus a centre mullion = today's Seam;
+  - today's 4 Facets as raised frost ribs (#D6ECFF, 0.15 proud) in a diamond pattern on each leaf;
+  - the Emblem as a faceted gem (an 8-facet diamond, Neon #60BEFF or #35E6F5) in a #3468B4 setting with 4 claws;
+  - an optional PointLight #35E6F5 0.8 / 10 inside the Emblem (it switches off when the gate opens).
+- **Pilasters** (today's 2 Buttresses 4 x 22 x 3 #96D6FA at (+-14, 11, -5)): ice-block pilasters with a base block and
+  a capital (chamfered), light edges; snow on the capital.
+- **Base:**
+  - `tundra_snow__drift` on today's 2 Drift wedges (15 x 6 x 6, kept as colliders);
+  - `tundra_snow__cap` strips along the tower feet;
+  - 2 `tundra_ice__shards` by the pilasters.
+
+**E8.6 Facet pieces (tundra_gates; plus the reused tundra_snow__* / tundra_ice__* of E7)**
+
+`tools/blender/fyd_facets.py -- tundra_gates` -> `Blender_Exports/Props/facets/` and
+`Previews/Props/tundra_gates_facets.png`. Closed convex shells, <= 300 faces, checked.
+
+| Piece | Faces (shells) | Origin / placement | Replaces |
+|---|---|---|---|
+| `tundra_snow__log_cap` | 194 (7) | own anchor = the axis of a 2.4 round log, 12-stud segment along X; scale = diameter / 2.4; 3 segments per beam (01 main: x -12.5 / 0 / 12.5 at y 18.5; 01 top: x -10.5 / 0 / 10.5 at y 25.6, scale 0.83; 03: x -11 / 0 / 11 at y 22.6, scale 0.92), yaw 0 / 180 alternately | 01 / 03 BeamSnow |
+| `tundra_gate2__roof_snow` | 213 (8) | Gate_Tundra_2 pivot; the template roof's front slope; yaw 180 = back slope; 4 icicleRoots | the white SignRoof look (wedges kept as colliders) |
+| `tundra_gate2__lintel_snow` | 196 (7) | Gate_Tundra_2 pivot; top y 19.2; 4 icicleRoots | LintelSnow |
+| `tundra_gate3__boulder_left` / `_right` | 119 / 117 (4 each) | Gate_Tundra_3 pivot; 95 % of the Pillar boxes, foot y -0.5 | the 2 Pillar looks + their Snow meshes (Pillars kept as colliders) |
+| `tundra_gate3__rock_left` / `_right` | 80 / 76 (3 each) | Gate_Tundra_3 pivot; 95 % of the Rock boxes | the 2 Rock looks + their Snow meshes (Rocks kept as colliders) |
+| `tundra_gate4__spire` | 186 (4) | own anchor = bottom centre, 10 x 18 x 10; 04 at (+-19.5, 43, 2) yaw -+57; 01 feet at scale 0.48 / 0.3 | the 2 Spire meshes (04); the 4 Crystal looks (01, meshes kept as colliders) |
+
+**Cost:**
+- 01: 6 log caps + 4 crystals + caps + icicles = about 2.1k faces (about 4.2k tris);
+- 02: 2 roof snows + lintel + 8 caps + 4 drifts + icicles = about 1.7k;
+- 03: boulders + rocks + 3 log caps + caps = about 1.2k;
+- 04: 2 spires + caps + icicles = about 0.8k.
+- Total about 11.6k tris per set; 3 copies of each set (kit, test, game) = about 35k, plus the parts.
+- If 01 is heavy, use 2 log-cap segments per beam at scale 1.2.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

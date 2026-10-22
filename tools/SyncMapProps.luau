@@ -439,6 +439,23 @@ SyncMapProps.RULES = {
 	{ propId = "tundra_ice_cave", names = { "Ice_Cave_Mouth" } },
 	{ propId = "tundra_scaffold", names = { "Wooden_Scaffold" } },
 	{ propId = "tundra_snow_bridge", names = { "Snow_Bridge_Section" } },
+	-- tundra gates and entrances (owner "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Gates and entrances", 2026-10-22): 01 the log
+	-- torii arch = Tundra_1.EntryArch (ZoneId and the NameSign texts kept), 02 the palisade gate = the Tundra_2 gate, 03 the
+	-- ice rock gate = the Tundra_3 gate, 04 the ice castle gate = the Tundra_4 gate (test Gate_Tundra_<n>, kit MapAssets.Gates,
+	-- Zones.Tundra.Tundra_<n>.Gate: SubZoneId kept, the Barrier is the PrimaryPart, the PriceSign texts move onto the new
+	-- PriceSign)
+	{ propId = "tundra_log_arch", names = { "EntryArch_Tundra" }, match = function(m)
+		return m.Name == "EntryArch" and m.Parent ~= nil and m.Parent.Name == "Tundra_1"
+	end },
+	{ propId = "tundra_palisade_gate", names = { "Gate_Tundra_2" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Tundra_2"
+	end },
+	{ propId = "tundra_ice_rock_gate", names = { "Gate_Tundra_3" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Tundra_3"
+	end },
+	{ propId = "tundra_ice_castle_gate", names = { "Gate_Tundra_4" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Tundra_4"
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

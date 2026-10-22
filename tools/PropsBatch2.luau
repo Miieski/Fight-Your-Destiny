@@ -5269,6 +5269,7 @@ PropsBatch2.H = {
 	octagon = octagon, prism16 = prism16, disc16 = disc16, ringBlocks = ringBlocks, pyramidPlanes = pyramidPlanes,
 	flame = flame, shingleRoof = shingleRoof, slatCrate = slatCrate, fruitPiece = fruitPiece, scroll = scroll,
 	mossPad = mossPad, cutSegments = cutSegments, triangleParts = triangleParts, course = course, slabs = slabs,
+	ringCourse = ringCourse, capSlabs = capSlabs, -- (the plains gates' pier courses and caps, reused by the tundra gates)
 	setBevelSelf = function(on: boolean)
 		BEVEL_SELF = on
 	end,

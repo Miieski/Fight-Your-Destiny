@@ -2977,3 +2977,53 @@ it glows), snow = soft thick caps with an irregular edge, icicles = small taperi
   203785492 warning). FINAL: 126 templates / 1556 copies up to date; disk == Studio (207 scripts, 0 written); backup
   after_tundra_buildings. Per object: cabin 3 / 3, cave 7 / 7, scaffold 5 / 5, bridge 5 / 5 - all OK.
 
+
+# Tundra gates and entrances - 2026-10-22 (owner prompt "TUNDRA (SNOW BIOME) PROP IMPROVEMENT - Gates and entrances")
+
+Objects: 01 log torii arch with blue sign and 02 palisade gate - DERIVED from the finished plains entry arch and plains
+palisade gate (duplicate, then snow caps / drifts / icicles, frosted wood, slate bases, blue steel bands, cold-light
+lanterns and torches, snow-covered blue-gray tiles, icy sign; the wall torch keeps the "/" bar with the cup on top);
+03 ice rock gate and 04 ice castle gate - new models. Keep each gate's position, size, collisions, scripts, prompts and
+lock / open behaviour exactly.
+
+## Status (newest first)
+
+- 14:37 Started. Images in docs/Tundra_Images/02_Gates_and_Entrances/. Sync.check 126 templates, 0 out of date. Backup
+  before_tundra_gates.
+- 14:45 Agent B: inventory (prop_inventory "Tundra gates"): 4 gates x 3 copies (test, kit, game); the Tundra_2 torch lights
+  are 2 Decor.VFX.Fire_Torch parts; 4 rules in SyncMapProps; backups old_props_2026-10-22_pre_tundra_gates/ (4 files).
+- 14:55 Agent B: PILOT 01 tundra_log_arch 3 / 3 from the plains entry_arch helpers (PropsBatch2 now exports ringCourse /
+  capSlabs). Caught by the ray grid on the first sync: the 4 Crystal collider MeshParts had been cloned from a Box-fidelity
+  source (CollisionFidelity cannot be set by a script) - the source must now match the row's fidelity (Hull); re-synced,
+  grids 0. Main agent's fix (thicker beam snow): Agent A's log snow segments + domed post caps, re-synced 3 / 3.
+- 15:05 Agent B: Agent A's E8 facets -> tools/PropsTundraGatesSolids.luau (the converter takes a "gates" set; its boxes
+  in 1/100 stud since they reach x +-36), pasted into Studio with per-chunk hashes (= disk).
+- 15:10 Agent B: 02 tundra_palisade_gate 3 / 3 (the plains gate_palisade almost 1:1), 03 tundra_ice_rock_gate 3 / 3, 04
+  tundra_ice_castle_gate 3 / 3, run 2 = 0 each; contract checked on every copy (Barrier = PrimaryPart, colliding, door
+  pieces under it, SubZoneId, BarrierDecorIsChildOfBarrier, PriceSign texts 500K / 1.25M / 3.12M Gold). Owner's cold light:
+  ONLY the 2 Tundra_2 Decor.VFX.Fire_Torch parts recoloured (PointLight #FFAA50 -> #C8F0FF, brightness 1 / range 16 kept;
+  Flame / Ember / Core particles in Tundra_4's Fire_Torch_Blue colours); the 2 Embers' Neon now #C8F0FF; no other zone's
+  torch touched. Ray-grid note: a raycast whitelist includes a part's descendants, so the gates' grids now respect
+  CanCollide (the Barrier's non-colliding door children are not "colliders"). Disk == Studio (210 scripts, 0 written);
+  Sync.check 0 out of date, dry run 130 templates / 1566 copies 0 to replace. Play check (gates open / close, prompts,
+  torch FirePoints) left to the main agent.
+- 15:15 TUNDRA GATES COMPLETE (main agent looked at every after shot and Play-checked). Agent A: guide E8 (kits
+  EntryArch_Tundra / Gate_Tundra_2-4, 3 copies each; 01 = ZoneId arch with NameSign; 02-04 = sub-zone gates with the
+  Barrier contract; the plains templates to duplicate: gate_palisade 1:1 for 02, entry_arch's builder with the
+  tundra numbers for 01) + 8 facets (log snow, palisade roof / lintel snow, layered ice-rock pillars, crystal spires).
+  Agent B: tundra_log_arch 3 / 3 (pilot, shots sent to the owner; snow on the beams thickened at the main agent's
+  request), tundra_palisade_gate 3 / 3 (plains palisade almost 1:1: blue-grey shingles under snow, frosted logs, blue
+  steel bands, wall torches with the "/" bar and the cup on top, snow banks; the 2 Tundra_2 Decor.VFX.Fire_Torch
+  lights recoloured to cold #C8F0FF (b1 r16 kept), particles in Tundra_4's blue torch colours, owner-requested),
+  tundra_ice_rock_gate 3 / 3 (layered ice-rock pillars, slate jambs, frosted beam, chained sign, ice-brick door with a
+  cyan diamond keystone under the invisible Barrier), tundra_ice_castle_gate 3 / 3 (bevelled ice-block towers, crystal
+  spires, merlons with snow and icicles, frosted-glass Barrier door with ice frames and the gem, cold glow under the
+  Barrier). Colliders exact on every copy; a Box-fidelity crystal mesh caught by the ray grid on the first sync and
+  fixed (the builder now clones a Hull source).
+  MAIN AGENT PLAY CHECK (phone emulator, fresh lockAll + unlockZone Tundra): walked through the Tundra_1 arch (sign
+  "Tundra", 2 lantern lights on); Tundra_2 / 3 / 4 gates block while closed, open with their prompts (500K / 1.25M /
+  3.12M Gold), every piece under the Barrier hides and no light stays on under it, the player walks through; the
+  Tundra_2 torch lights are #C8F0FF b1 r16 exactly on their FirePoints; Tundra_2 144 fps / render CPU 2.5 ms, Tundra_3
+  144 / 2.3, Tundra_4 144 / 2.0; no game errors (the same 203785492 warning). FINAL: 130 templates / 1568 copies up to
+  date; disk == Studio (210 scripts, 0 written); backup after_tundra_gates. All 4 gates OK.
+

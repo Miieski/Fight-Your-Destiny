@@ -1084,5 +1084,7 @@ end
 TB.install = B2.install
 TB.stats = B2.stats
 TB.KD = KD
+-- (shared with DevTools.PropsTundraGates)
+TB.B2, TB.H, TB.M, TB.Nat, TB.TS, TB.meshSource, TB.finishTB = B2, H, M, Nat, TS, meshSource, finishTB
 
 return TB
