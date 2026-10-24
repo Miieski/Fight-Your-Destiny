@@ -132,6 +132,28 @@ local function stiltHutRoof(m: Instance): string?
 	return if split then "RoofSplit" else nil
 end
 
+-- docks (2026-10-24): the open side of a Stilt_Platform copy before its first sync (its side rails, parts "Part"
+-- 0.5 x 0.5 x 15 at local x -7.4 / +7.4): "OpenLeft" / "OpenRight" when one is missing (the walk-over to a rail dock)
+local function rampDockOpenSide(m: Instance): string?
+	local left, right = false, false
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == "Part" and math.abs(c.Size.Z - 15) < 0.05 and c.Size.X < 0.6 then
+			local x = (m :: Model):GetPivot():PointToObjectSpace(c.Position).X
+			if x < -7 then
+				left = true
+			elseif x > 7 then
+				right = true
+			end
+		end
+	end
+	if right and not left then
+		return "OpenLeft"
+	elseif left and not right then
+		return "OpenRight"
+	end
+	return nil
+end
+
 -- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
 -- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
 SyncMapProps.RULES = {
@@ -516,6 +538,22 @@ SyncMapProps.RULES = {
 	{ propId = "swamp_witch_hut", names = { "Stilt_Cabin_B" }, match = function(m)
 		return swampVillageCabin(m, { [2] = true, [4] = true, [6] = true })
 	end },
+	-- plains + swamp docks and platforms (owner "PLAINS + CURSED SWAMP PROP IMPROVEMENT - Docks and platforms",
+	-- 2026-10-24): 06 the plains plank platform with round posts = Dock_Section (test, kit, Plains_1 Pond, Plains_2 Docks
+	-- x5 and the 4 hub docks renamed Dock_Harbor / Dock_AFK), 05 the plains deck with rails = Bridge_Wood_Section, swamp
+	-- 01 the large dock platform = Walkway_Section, 02 the small dock platform = Walkway_Corner, 03 the dock with the ramp
+	-- = Stilt_Platform, 04 the dock with rails = Rope_Bridge_Swamp. The game copies of Dock_Section and Walkway_Section
+	-- have their own small plank heights: each copy keeps its own walk colliders (folder WalkCollision, MapPropKeep)
+	{ propId = "plains_plank_dock", names = { "Dock_Section" }, match = function(m)
+		local hub = workspace:FindFirstChild("Hub")
+		return (m.Name == "Dock_Harbor" or m.Name == "Dock_AFK") and hub ~= nil and m:IsDescendantOf(hub)
+	end },
+	{ propId = "plains_rail_deck", names = { "Bridge_Wood_Section" } },
+	{ propId = "swamp_dock_large", names = { "Walkway_Section" } },
+	{ propId = "swamp_dock_small", names = { "Walkway_Corner" } },
+	-- (the 4 Swamp_3 village Stilt_Platforms miss one side rail where a rail dock joins them: Variant OpenLeft / OpenRight)
+	{ propId = "swamp_ramp_dock", names = { "Stilt_Platform" }, variant = rampDockOpenSide },
+	{ propId = "swamp_rail_dock", names = { "Rope_Bridge_Swamp" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

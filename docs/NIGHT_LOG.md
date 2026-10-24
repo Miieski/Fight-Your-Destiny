@@ -3181,3 +3181,43 @@ the magenta glow, door, ladder climbing, collisions). Images copied to docs/Swam
   templates / 1693 copies up to date; disk == Studio (216 scripts, 0 written); backup after_swamp_huts (two full sets:
   the first execute_luau call reported a network error but had run).
 
+
+# Plains + Cursed Swamp docks and platforms - 2026-10-24 (owner prompt "PLAINS + CURSED SWAMP PROP IMPROVEMENT - Docks and platforms (done in one go)")
+
+Order: STEP 1 the 2 PLAINS pieces (05 deck with steps and rails, 06 plank platform with round posts) on one shared
+plank / post / rail recipe, all their copies; STEP 2 the 4 SWAMP pieces derived from them (04 from 05; 01 and 02 from
+06; 03 ramp dock from the same recipe). Never change walk surfaces, sizes, connection points or collisions.
+
+## Status (newest first)
+
+- 18:26 Agent B: DONE. One recipe (tools/PropsDocks.luau): the plains 06 plank platform (Dock_Section) and the 05
+  deck with rails (Bridge_Wood_Section) were built first; swamp 01 / 02 (Walkway_Section / _Corner) derive from 06,
+  swamp 04 (Rope_Bridge_Swamp) from 05, and swamp 03 (Stilt_Platform) uses the same recipe.
+  - Replaced: plains_plank_dock 12 / 12, plains_rail_deck 2 / 2, swamp_dock_large 11 / 11, swamp_dock_small 2 / 2,
+    swamp_ramp_dock 6 / 6, swamp_rail_dock 4 / 4. Run 2 = 0 for all.
+  - Walk colliders: the game docks / walkways have their own plank heights, so each copy keeps its own planks as
+    invisible WalkCollision (MapPropKeep). Approved; a 0.05-0.15 float over the raised planks is accepted.
+  - Ramp dock: the village copies miss the side rail toward the rail docks. This was found by the ray grids and a
+    part-by-part check against the deserialized backup, and is handled by the variants OpenLeft / OpenRight.
+  - Checks: ray grids (6 directions incl. from above) on all 31 workspace copies, 0 differences; Sync.check clean; dry
+    run 150 templates / 1726 copies, 0 to replace; 0 untagged leftovers.
+  - Disk == Studio (217 scripts, 0 written). Backups old_props_2026-10-24_pre_docks (6). Shots docs/screenshots/docks/.
+    Play check left to the main agent.
+- 17:46 Started. Studio reopened (new id 3ebd0540). Sync.check 144 templates, 0 out of date. Backup
+  before_docks. One Studio agent only (parts recipe; no Blender agent needed).
+- 18:30 DOCKS COMPLETE (one Studio agent; main agent looked at the shots and Play-checked). One shared plank / post / rail
+  recipe (tools/PropsDocks.luau), guide note F3. PLAINS: plains_plank_dock 12 / 12 (Common.Dock_Section: Plains_1 Pond,
+  Plains_2 Docks x5, the 4 renamed hub docks), plains_rail_deck 2 / 2 (Bridge_Wood_Section, test + kit only). SWAMP
+  derived from them: swamp_dock_large 11 / 11 (Swamp_1 walkways x9), swamp_dock_small 2 / 2 (test + kit only),
+  swamp_rail_dock 4 / 4 and swamp_ramp_dock 6 / 6 (Swamp_3 village). Walk tops exact (only nail heads 0.045, cracks and
+  algae stains under 0.02 above them); the game copies of 06 / 01 had their own random plank heights, so each keeps its
+  own planks as invisible WalkCollision (MapPropKeep) - feet may float 0.05-0.15 over a raised plank, collisions
+  unchanged; 4 village ramp docks have one open side today (no rail where the rail docks join) -> variants OpenLeft /
+  OpenRight (caught by the ray grids after a first rebuild had put the rail back). Main agent's ultra call: NO missing
+  or broken planks (walk-surface risk); cracks instead. Swamp: darker rotten boards, algae rings, mud collars, hanging
+  moss under decks, ghost mushrooms at post feet, rusty lantern hooks (no lights) on 03 / 04.
+  MAIN AGENT PLAY CHECK (phone emulator): Swamp_1 144 fps / render CPU 2.5 ms, Swamp_3 144 / 2.5; standing on the large
+  dock, the rail dock and the ramp-dock platform puts the root exactly 2.7 above each walk top (4.70 / 3.70 / 8.70 above
+  the pivots); walking down the ramp follows its slope; no game errors (the same 203785492 warning). FINAL: 150 templates /
+  1730 copies up to date; disk == Studio (217 scripts, 0 written); backup after_docks.
+

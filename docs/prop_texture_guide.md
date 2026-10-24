@@ -3167,6 +3167,49 @@ Kits in `ServerStorage.MapAssets.Swamp` (pivot = ground centre, front -Z, Smooth
 - **Collisions:** every visible union has CanCollide false. Invisible `Collision` parts are exact copies of today's
   colliding parts. The ladder stays non-colliding as today.
 
+### F3. Docks and platforms (owner task 2026-10-24: plains + swamp, one recipe)
+
+One recipe, `tools/PropsDocks.luau` `build()`. The plains pieces are built first; each swamp piece is the same build
+run with the swamp style.
+
+| Piece | Kit | Derived from |
+|---|---|---|
+| 06 plains plank platform | `Common.Dock_Section` | (plains base) |
+| 05 plains deck with rails | `Common.Bridge_Wood_Section` | (plains base) |
+| swamp 01 large dock | `Swamp.Walkway_Section` | 06 |
+| swamp 02 small dock | `Swamp.Walkway_Corner` | 06 |
+| swamp 03 ramp dock | `Swamp.Stilt_Platform` | the same plank / rail recipe |
+| swamp 04 rail dock | `Swamp.Rope_Bridge_Swamp` (= 05 recoloured) | 05 |
+
+- **Walk surfaces are sacred.**
+  - Each kit plank becomes boards about 0.95 wide (0.06 gaps over a dark core, 3 tones, chamfered top edges, butt
+    joints on boards over 9 long).
+  - The board TOPS are exactly the kit plank's top.
+  - Only these may stand above a walk top: nail heads (0.04), crack lines and knots (0.015), and the swamp's flat
+    algae stains (0.016). Nothing else, so no moss mats, mushrooms or mud on a walk surface.
+  - No missing or broken planks: use cracks instead (main agent).
+- **Posts:**
+  - Piles and platform posts are round 8-sided logs with a cap disc and a low dome, a rope wrap above or below the
+    deck, and an iron band.
+  - Rail posts are chamfered timbers with a 4-sided pyramid cap and an iron band.
+- **Under the deck:** stringers are chamfered timbers with bolts. X braces with a rope lashing go between neighbouring
+  supports on the long sides, on their inner faces, below the stringers (so the piece keeps its size).
+- **Rails:** bevelled-top timbers, each held to every post it crosses by an iron U-bracket (top strap, 2 side straps,
+  2 rivets).
+- **Plains:** grass tufts (thin wedge blades #54AA3A / #6CBE46 / #468E32) at the feet, on the inner sides, and along
+  the long edges of a deck lying on the ground.
+- **Swamp:**
+  - colours: the kits' own darker colours, a rotten board now and then (x #3A2A1C), more cracks;
+  - water line: algae (#1E4A4F -> #3F7A2C rings) and a mud collar at the post feet;
+  - moss: hanging moss under raised decks and on a rail, moss on one cap;
+  - ghost mushrooms at post feet (never on a deck);
+  - rusty-iron lantern HOOKS (no lamp, no light), pointing away from every walk-over.
+- **Per-copy walk colliders:** the game copies of 06 and swamp 01 have their own plank heights (+0.05 .. +0.15).
+  - Their planks (and 01's stringers) are not in the template.
+  - Each copy keeps its own, invisible, in a `WalkCollision` folder (MapPropKeep).
+- **Open-side variants:** the 4 village ramp docks miss the side rail where a rail dock joins them. Variants
+  `OpenLeft` / `OpenRight` hide that side's rail union and switch its collider off.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

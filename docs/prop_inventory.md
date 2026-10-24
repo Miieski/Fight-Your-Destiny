@@ -887,6 +887,56 @@ Images: `docs/Swamp_Images/01_Buildings_and_Huts/`. Recipe: docs/prop_texture_gu
 Totals: 11 copies replaced (2 templates). Triangles of the new geometry: about 351,000 over all copies, of which the 7
 village copies about 225,000.
 
+### Docks (owner, "PLAINS + CURSED SWAMP PROP IMPROVEMENT - Docks and platforms", 2026-10-24): inventory before the remake (read from Studio)
+
+Images: `docs/Swamp_Images/02_Docks_and_Platforms/`. The 05 / 06 pictures were only in `REMAKE OBJECT/...`; they were
+copied there. Recipe: docs/prop_texture_guide.md F3. The kits' parts are kept as rows in `tools/PropsDocks.luau`
+(Data).
+
+- **Rules:** no earlier rule claimed any of these kits; 6 rules were added.
+- **Functions:** no kit or copy has a script, prompt, light, tag or attribute (only DevTools.MapAudit names them).
+- **Scale:** every copy is Model scale 1.
+- **Backups:** `BackUP_Files/old_props_2026-10-24_pre_docks/<propId>.rbxm` (6 files); the main agent's full backup
+  `..._before_docks`.
+
+| # | owner's object | kit | copies | walk top | notes |
+|---|---|---|---|---|---|
+| 06 | plains plank platform, round posts | `Common.Dock_Section` (16 parts) | 12: test, kit, Plains_1.Decor.Pond, Plains_2.Decor.Docks x5, Hub.Decor.Village `Dock_Harbor` x2 + `Dock_AFK` x2 (renamed) | y 5.0 | the 10 game copies raise 3 planks +0.06 each, in 7 different patterns |
+| 05 | plains deck with rails | `Common.Bridge_Wood_Section` (15) | 2: test, kit | y 1.0 | |
+| swamp 01 | large dock platform | `Swamp.Walkway_Section` (13) | 11: test, kit, Swamp_1.Decor.Walkways x9 | y 2.0 | the 9 game copies raise 2-5 planks and some stringers by +0.05 .. +0.15, in 8 patterns |
+| swamp 02 | small dock platform | `Swamp.Walkway_Corner` (9) | 2: test, kit | y 2.0 | |
+| swamp 03 | dock with the ramp | `Swamp.Stilt_Platform` (16) | 6: test, kit, Swamp_3.Decor.Village x4 | y 6.0 + the ramp | the village copies (15 parts) have no side rail where a rail dock joins them: 10034 / 9930 at x -7.4, 9966 / 10070 at x +7.4 |
+| swamp 04 | dock with rails | `Swamp.Rope_Bridge_Swamp` (15, = Bridge_Wood_Section recoloured) | 4: test, kit, Village x2 (at y 5, joining the stilt platforms, top y 6.0) | y 1.0 | |
+
+### Docks remake status (Agent B, 2026-10-24)
+
+- **Builder:** `tools/PropsDocks.luau` (`DevTools.PropsDocks`, on DevTools.PropsSwampHuts, which now exports its TB / B2
+  / H / M tables). One `build()`; the swamp pieces are the plains build in the swamp style.
+- **Rules:** 6 in tools/SyncMapProps.luau. 06 also matches the hub's renamed Dock_Harbor / Dock_AFK. The ramp dock
+  has a variant function `rampDockOpenSide`.
+- **Per-copy walk colliders:** for 06 and swamp 01, `PD.prepWalk()` put each copy's own planks (and 01's stringers),
+  invisible, into a `WalkCollision` folder (MapPropKeep) before the first sync. Sync keeps it on each copy; no template
+  has one.
+- **Ramp dock variants:** `OpenLeft` (Village 10034 / 9930) and `OpenRight` (9966 / 10070) hide that side's rail
+  union (Transparency 1, no shadow) and switch its collider off.
+- **Collisions:** CanCollide-respecting ray grids (6 directions, 0.5 step, incl. walk heights from above) on all 31
+  workspace copies: **0 differences**.
+  - The first sync of the ramp dock showed differences. A part-by-part check against the deserialized backup found
+    the missing village side rails, so the variants were added and the dock re-synced.
+- **Sync:** run 2 = 0 for all 6. Rebuilding all 6 templates from the final source gives the same fingerprints.
+- **Shots:** `docs/screenshots/docks/` (05 and swamp 02 have only test shots: no game copy).
+
+| # | object | MapProps id | replaced | triangles per copy | size (kit) | notes |
+|---|---|---|---|---|---|---|
+| 06 | plains plank platform (pilot) | `plains_plank_dock` | 12 / 12 | 5,600 | 12.88 x 6.58 x 20.12 (12.6 x 6.2 x 20.16) | boards with joints, nails, cracks and knots; round capped piles with rope and iron bands; bolted stringers; X braces with rope; grass. Walk colliders kept per copy |
+| 05 | plains deck with rails | `plains_rail_deck` | 2 / 2 | 4,900 | 17.25 x 5.60 x 20.00 (16 x 5.35 x 20) | boards; capped square posts with iron bands; bevelled rails in iron U-brackets; grass along the edges |
+| swamp 01 | large dock platform | `swamp_dock_large` | 11 / 11 | 9,800 | 15.00 x 4.93 x 20.01 (14.04 x 4.65 x 20.05) | 06's recipe in swamp style: rotten boards, cracks, algae stains, algae and mud at the post feet, moss, hanging moss, mushrooms. Walk colliders kept per copy |
+| swamp 02 | small dock platform | `swamp_dock_small` | 2 / 2 | 7,400 | 15.02 x 4.50 x 12.70 (13.8 x 4.2 x 12.11) | as 01 |
+| swamp 03 | dock with the ramp | `swamp_ramp_dock` | 6 / 6 | 10,500 | 17.39 x 11.47 x 29.70 (16.31 x 11.19 x 28.35) | round stilts with caps and rope; rails in brackets (side rails split for the variants); ramp boards flush with today's slope; 2 lantern hooks at the back; a flat mud patch at the ramp foot (0.1 max). Variants OpenLeft x2 / OpenRight x2 |
+| swamp 04 | dock with rails | `swamp_rail_dock` | 4 / 4 | 5,500 | 17.31 x 5.52 x 20.00 (16 x 5.35 x 20) | 05's recipe in swamp style; 2 lantern hooks on the middle posts, pointing out sideways |
+
+Totals: 37 copies replaced (6 templates). Hub parts 5,143 -> 5,175.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

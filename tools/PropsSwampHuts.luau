@@ -978,5 +978,7 @@ for id in pairs(SH.BUILDERS) do
 end
 SH.install = B2.install
 SH.stats = B2.stats
+-- for the docks module (DevTools.PropsDocks): the same helper tables
+SH.TB, SH.B2, SH.H, SH.M = TB, B2, H, M
 
 return SH
