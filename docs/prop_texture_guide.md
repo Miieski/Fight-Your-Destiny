@@ -3094,6 +3094,79 @@ Model scale (checked part by part): **no bakedScale**. No hub copies.
 - carrots 52 x 12.
 - About 19k triangles in all, plus the parts and the reused caps, icicles and the 6 nested barrels.
 
+## F. Cursed Swamp (owner task 2026-10-24, "Buildings and huts")
+
+Images: `docs/Swamp_Images/01_Buildings_and_Huts/`. Same quality target as section A (the well): low-mid poly,
+bevelled planks and blocks with visible joints, thick timber with rope and iron bands, small readable details, soft
+gradients, clean saturated colours; no PBR, no grain. Mood: dark, damp, a little creepy but cartoon and readable (all
+ages): moss and lichen, dripping vines, rotten and cracked wood, small mushrooms, no gore. Parts + unions only.
+
+### F0. Kits, copies, functions
+
+Kits in `ServerStorage.MapAssets.Swamp` (pivot = ground centre, front -Z, SmoothPlastic, no union, no tag).
+
+| # | Owner's object | Kit | Parts | Copies (test = `_Staging.AssetPreview.Swamp.*`) |
+|---|---|---|---|---|
+| 01 | stilt hut, green roof | `Stilt_Cabin_A` (18 x 29.7 x 20.5) | 26 | 6: test, kit, `Zones.Swamp.Swamp_3.Decor.Village.Cabin_1 / 3 / 5 / 7` |
+| 02 | witch hut, purple hat | `Stilt_Cabin_B` (14.3 x 36.7 x 18.7) | 24 | 5: test, kit, `Village.Cabin_2 / 4 / 6` |
+
+- **Functions:** none scripted. No script, prompt, ClickDetector, light, tag or attribute in a kit, a copy or within
+  22 studs; no script names them. The village copies are renamed `Cabin_<n>` (Model scale 1).
+- **Glow points:** Neon `Window` (01 #FFC460, 02 #AA50FF) and Neon `Lantern` #FFC460. There is no PointLight today.
+- **Collisions:** stilts, deck, body, door, lintel, window and frame, roof planes / hat tiers, ridge, gable facets,
+  chimney collide. Lantern, its bracket, the 02 brace, the ladder rails and rungs do not.
+- **Ladders:** the rails and rungs are CanCollide AND CanQuery false. They are decorative today (not climbable), and
+  they stay that way.
+- **01 roof:** its 2 Roof planes are 0.05 apart along Z on Cabin_1 / 5 / 7, and Cabin_3's right plane is 13.6 deep.
+  Variants switch the matching invisible roof colliders on.
+
+### F1. Palette (the owner's examples next to the real kit colours; keep the REAL ones, tones x1 / x0.93 / x0.86)
+
+| Role | Owner | Real colour (keep) | Used by |
+|---|---|---|---|
+| swamp mud | #5A4128 | **#684C34** (Deck, Rung) | deck planks, ladder rungs, mud at the stilt feet |
+| dark mud | #3A2A1C | new accent | the wet band at the water line, deck underside, joints |
+| rotten wood | #4A2A1A | **#5E4531** / **#57402E** (Body), **#58412F** (gable facets), **#4E3A2C** (Stilt) | wall planks, gables, stilts |
+| near-black wood | #2A1E1A | **#322620** (Stilt, Door, frames, ridge, rails, hat brim) | posts, door, window ring backing, beams, brim |
+| roof green | (moss #3F7A2C) | **#354027 / #3C4D2A** (01 Roof) | 01 shingles in 3 tones; moss on them in #3F7A2C |
+| moss | #3F7A2C | new accent | moss patches, hanging moss, algae |
+| olive | #8E9A2E | new accent | lichen spots, the lighter top layer of moss, vine leaves |
+| purple hat | (magic purple #7A2BC8) | **#472859 / #532D6D** (02 hat tiers) | 02 hat shingles; #7A2BC8 only as a thin highlight on tier lips |
+| toxic glow | #C8E83A | new accent (Neon only on a glow point) | the inner ring of 01's porthole glow |
+| magenta glow | #E83AE8 | new accent | the pupil of 02's eye window (inside the #AA50FF glow) |
+| warm glow | (keep) | **#FFC460** (Window 01, Lanterns) | porthole, lanterns, the hanging tag |
+| ghost mushroom | #BFF5F0 | new accent (not Neon: they do not glow today) | mushroom caps; stems bone #F2E4C0 |
+| bone | #F2E4C0 | new accent | mushroom stems, potion corks |
+| dark water | #1E4A4F | new accent | algae band and wet stains at the stilt feet |
+| iron | (A7) #5C626E | **#373A41** (lantern bracket) | straps, porthole ring, hinges, buckle |
+
+### F2. Part rules
+
+- **Rot / cracks:**
+  - planks 0.9-1.1 wide, 0.16-0.2 thick, with 0.05 gaps over a dark core, tones x1 / x0.93 / x0.86;
+  - 1 plank in 4 is shorter (a broken end with 2 splinters) or tilted 2-4 degrees;
+  - cracks are thin dark #2A1E1A strips (0.06 wide, 0.02 proud) in 2-3 zig-zag segments;
+  - the bottom 0.6 of every wall plank and stilt is x0.8 darker (damp).
+- **Moss and lichen:**
+  - **Moss:** soft layered mats (the jungle mossPatch / mossDrape recipe, recoloured #3F7A2C -> #4C8A33 -> #8E9A2E),
+    2-3 stacked rounded layers, never a flat green box. It lies on tops, roof shingles, sills and the deck edge.
+  - **Lichen:** small olive #8E9A2E discs (0.3-0.6, 0.04 thick) in groups of 2-4 on the walls.
+- **Dripping vines and hanging moss:**
+  - **Vines:** the jungle vine recipe (tapering stems, alternating leaves) in #3F7A2C / #8E9A2E, 1.5-3.5 long, from
+    eaves and the deck edge.
+  - **Hanging moss:** thin strands (0.12-0.2 wide, 1-2.5 long) in 2 tones, with a drip ball at the tip (dark water
+    #1E4A4F).
+- **Water line / algae:** a #1E4A4F -> #3F7A2C band 0.5 tall around each stilt at the foot, with a mud collar #3A2A1C.
+- **Mushrooms:** in clusters of 2-4 at a stilt foot, on the deck or on a ledge:
+  - stem: bone #F2E4C0, 0.12-0.25 wide;
+  - cap: a flattened ball, cyan-white #BFF5F0 with a #8FD8D0 underside, 0.3-0.8 wide;
+  - SmoothPlastic, not Neon.
+- **Glow:** Neon only on today's glow points (window, lantern). Keep the glow colour. An inner accent ring may use
+  #C8E83A (01) or #E83AE8 (02). No PointLight is added (none exists today; the main agent's decision).
+- **Iron:** straps 0.3 wide, 0.06 proud, #5C626E, with rivets #7A808C. Porthole ring: 0.35 wide, 8 rivets.
+- **Collisions:** every visible union has CanCollide false. Invisible `Collision` parts are exact copies of today's
+  colliding parts. The ladder stays non-colliding as today.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

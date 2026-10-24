@@ -845,6 +845,48 @@ Totals: 44 copies replaced (6 templates). Triangles of the new geometry, all cop
 hole 42k, sled 23k, gray snowman 35k, blue snowman 32k, rack 50k), of which the copies in the zones and the boss arena
 (without the kits and test copies) about 158,000.
 
+### Swamp huts (owner, "CURSED SWAMP PROP IMPROVEMENT - Buildings and huts", 2026-10-24): inventory before the remake (read from Studio)
+
+Images: `docs/Swamp_Images/01_Buildings_and_Huts/`. Recipe: docs/prop_texture_guide.md section F. Test =
+`workspace._Staging.AssetPreview.Swamp.<Kit>` (this row is now a SyncMapProps search root), kit =
+`ServerStorage.MapAssets.Swamp.<Kit>`; the kits' parts are kept as rows in `tools/PropsSwampHuts.luau` (Data).
+
+- **Copies:** every copy is the kit at Model scale 1. The village copies are renamed `Cabin_<n>`; the rules match them by
+  number under `Swamp_3.Decor.Village`.
+- **Functions:** no kit or copy has a script, prompt, ClickDetector, light, tag, attribute or nested MapProp, and no
+  script names them. The glow points are the Neon `Window` and `Lantern` parts.
+- **Ladders:** the rails and rungs are CanCollide and CanQuery false. The ladders are decorative today (not climbable)
+  and stay that way.
+- **Backups:** `BackUP_Files/old_props_2026-10-24_pre_swamp_huts/<propId>.rbxm` (2 files); the main agent's full backup
+  `..._before_swamp_huts`.
+
+| # | owner's object | kit | copies | colliders today |
+|---|---|---|---|---|
+| 01 | stilt hut, green roof | `Stilt_Cabin_A` (26 parts, 18 x 29.7 x 20.5; Window Neon #FFC460, Lantern Neon #FFC460) | 6: test, kit, `Zones.Swamp.Swamp_3.Decor.Village.Cabin_1 / 3 / 5 / 7` | 18: 4 Stilts, Deck, Body, Door, lintel, ridge, 2 Roof planes, 4 gable Facets (wedges), Chimney, Window, WindowFrame. On Cabin_1 / 5 / 7 the 2 Roof planes are 0.05 apart along Z (left z 0.95, right z 1.05); on Cabin_3 the right plane is 13.6 deep |
+| 02 | witch hut, purple hat | `Stilt_Cabin_B` (24 parts, 14.3 x 36.7 x 18.7; Window Neon #AA50FF, Lantern Neon #FFC460) | 5: test, kit, `Village.Cabin_2 / 4 / 6` | 15: 4 Stilts, Deck, Body, Door, lintel, brim + 4 hat tiers (Roof), Window, WindowFrame. The front diagonal brace, the lantern and its bracket, and the ladder do not collide |
+
+### Swamp huts remake status (Agent B, 2026-10-24)
+
+- **Builder:** `tools/PropsSwampHuts.luau` (`DevTools.PropsSwampHuts`, on DevTools.PropsTundraBuildings). BASE = the jungle
+  `stilt_hut` recipe (`tools/PropsJungleBuildings.luau`) and its vines.
+- **Moss:** the mats and drapes were reworked on the main agent's request. They are soft rounded faceted lumps: a dark
+  #3F7A2C base, a smaller and lighter #5B852D top layer, and thin drips.
+- **Rules:** 2 in tools/SyncMapProps.luau, plus the swamp test row as a search root.
+- **Collision:** invisible `Collision` parts are today's colliding parts. Checked part by part on every copy (worst
+  corner 0.0016, the float drift of the old copies) and with CanCollide-respecting ray grids (6 directions, 0.5 step) on
+  every workspace copy: 0 differences.
+- **Glow:** today's Window and Lantern Neon in today's colours. No light was added (the main agent's decision). Run 2 = 0
+  for both.
+- **Shots:** `docs/screenshots/swamp_huts/<nn>_<name>_{test,game}_{before,after}.jpg` (game = Village.Cabin_7 / Cabin_6).
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| 01 | stilt hut with the green roof (pilot) | `swamp_stilt_hut` | 6 / 6 | 34,400 | Today's 4 splayed stilts are thick 8-sided logs: an iron band, rope ties under the deck, an algae band and a mud collar at the water line, X braces with rope on 3 sides and a low front rail. The deck is rotten planks (2 broken, with splinters) on rim beams. The crooked body has rotten plank walls (cracks, damp darker feet, lichen) on a dark core, with corner posts, a sill, a top plate and a foundation beam. The 4 gable facets have board joints. The 2 roof planes carry overlapping shingles: 3 tones of today's greens, some mossy, a few crooked or missing, plus moss mats, a mushroom cluster, hanging moss and vines at the eaves. The ridge is a timber with 3 rope lashings; the chimney is stone courses with a cap, a flue and moss. The porthole keeps today's glow and frame inside an iron ring with rivets. The door is planked with 3 iron straps, pintles and a ring handle, in a chamfered frame. Also: today's lintel with nails, the lantern in an iron frame on today's bracket, ladder rails and round rungs with rope (not colliding, as today), and mushrooms at 2 stilt feet and on the deck. Size 18.39 x 30.01 x 20.74 (+2.2 / +1.2 / +1.4 %). Variants: Cabin_1 / 5 / 7 `RoofSplit`, Cabin_3 `RoofWide` (they switch the matching invisible roof colliders on). Colliders 18 / 18 on every copy; 5 grids 0 differences |
+| 02 | witch hut with the purple hat | `swamp_witch_hut` | 5 / 5 | 29,000 | Same recipe: stilts, deck, plank body, strapped door, lantern (the hanging yellow tag), ladder. Today's front diagonal brace is a log with rope. The eye window keeps today's #AA50FF glow whole, in an iron ring under an arched wooden brow. The hat: today's brim as a rounded (octagonal) chamfered slab with moss and hanging moss; a dark band with a brass buckle round the crown; today's 4 crooked tiers clad in 3 rows of purple shingles (today's 2 purples, kicked-out butts, corner trims, a #7A2BC8 lip line, a shingled top); a bent tip of 3 tapering segments curling on from the top tier. Also 3 potion bottles and a straw broom on the deck, and mushrooms. Size 14.91 x 37.18 x 19.30 (+4.0 / +1.3 / +3.2 %). Colliders 15 / 15 on every copy; 4 grids 0 differences |
+
+Totals: 11 copies replaced (2 templates). Triangles of the new geometry: about 351,000 over all copies, of which the 7
+village copies about 225,000.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

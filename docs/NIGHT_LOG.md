@@ -3139,3 +3139,45 @@ scarf, 05 snowman with a blue hat (same recipe as 04), 06 ice drying rack (keep 
   agent (docs/screenshots/tundra_props/01_frozen_skeleton_*, 02_fishing_hole_*, 03_sled_*, 06_ice_rack_*
   {test,game}_after.jpg). Tundra props are now fully verified.
 
+
+# Cursed Swamp buildings and huts - 2026-10-24 (owner prompt "CURSED SWAMP PROP IMPROVEMENT - Buildings and huts")
+
+Objects: 01 stilt hut with a green roof (BASE = the jungle stilt_hut, duplicated and adjusted: rot, moss, mud, a toxic
+glow porthole, keep the light; keep size, door, ladder climbing, collisions), 02 witch hut with a purple hat (keep
+the magenta glow, door, ladder climbing, collisions). Images copied to docs/Swamp_Images/ (all 6 swamp categories).
+
+## Status (newest first)
+
+- 16:57 Agent B: DONE.
+  - Inventory ("Swamp huts" in prop_inventory): Stilt_Cabin_A x6 (test, kit, Swamp_3 Village.Cabin_1 / 3 / 5 / 7)
+    and Stilt_Cabin_B x5 (test, kit, Village.Cabin_2 / 4 / 6). Nothing is scripted; the glow is Neon only (no light);
+    the ladders do not collide today and stay that way. Backups `old_props_2026-10-24_pre_swamp_huts/` (2 files).
+  - Guide F written (kits, palette, part rules). Rules swamp_stilt_hut / swamp_witch_hut and the AssetPreview.Swamp
+    search root added to SyncMapProps.
+  - 01's roof planes differ on 4 village copies, handled by the RoofSplit (Cabin_1 / 5 / 7) and RoofWide (Cabin_3)
+    variants, which switch the matching invisible roof colliders on.
+  - Builder `tools/PropsSwampHuts.luau`, from the jungle stilt_hut recipe. Results: swamp_stilt_hut 6 / 6 (pilot,
+    ~34.4k tris; moss reworked into soft dark rounded mats with drips at the main agent's request, re-synced 6 / 6) and
+    swamp_witch_hut 5 / 5 (~29k tris). Run 2 = 0 for both.
+  - Checks: colliders part by part exact on all 11 copies (worst 0.0016); CanCollide-respecting ray grids on the 9
+    workspace copies, 0 differences; sizes +4 % at most; Sync.check all up to date; dry run 144 templates / 1689 copies,
+    0 to replace; 0 untagged kit-named leftovers; ServerStorage._SwampHutGrids removed.
+  - Disk == Studio: export + pull 216 scripts, 0 written. Shots in docs/screenshots/swamp_huts/. Play check left to the
+    main agent.
+- 16:25 Started. Backup before_swamp_huts.
+- 17:20 SWAMP HUTS COMPLETE (one Studio agent, no Blender agent: 2 objects, parts only; main agent looked at the shots
+  and Play-checked). Guide section F (Cursed Swamp: F0 kits, F1 palette, F2 rot / moss / vines / mushrooms / glow).
+  swamp_stilt_hut 6 / 6 (Stilt_Cabin_A, test + kit + Swamp_3 Village Cabin_1/3/5/7; derived from the jungle stilt_hut
+  builder: rotten dark planks with cracks, crooked mossy shingle roof with a ridge beam, thick stilts with braces, rope
+  ties and algae, porthole with a metal ring, strapped door, lantern, hanging moss, mushrooms; variants RoofSplit /
+  RoofWide keep each village copy's own roof colliders; the first moss read as lime boxes -> redone as soft dark
+  layered lumps with drips at the main agent's request), swamp_witch_hut 5 / 5 (Stilt_Cabin_B, Cabin_2/4/6; tiered
+  purple shingle hat with a bent tip, brim, band and buckle, mossy plank body, glowing magenta porthole, hinged door,
+  yellow tag lantern, potions and a broom). No script / prompt / light anywhere: the glows are Neon parts, kept at
+  today's colours; the ladders are not climbable today (no collision, no query) and stay that way. Colliders exact,
+  ray grids 0 differences, run 2 = 0.
+  MAIN AGENT PLAY CHECK (phone emulator): Swamp_3 render CPU 2.9 ms (36 fps = the unfocused Studio window cap, as
+  noted before); both huts' colliders behave as today; no game errors (the same 203785492 warning). FINAL: 144
+  templates / 1693 copies up to date; disk == Studio (216 scripts, 0 written); backup after_swamp_huts (two full sets:
+  the first execute_luau call reported a network error but had run).
+

@@ -107,6 +107,31 @@ local function thinBambooGrounded(m: Instance): boolean
 	return (jungle3 ~= nil and m:IsDescendantOf(jungle3)) or m:GetAttribute("ThinBambooGrounded") == true
 end
 
+-- swamp huts (2026-10-24): the Swamp_3 village copies, renamed Cabin_<n> (numbers = the set of n for one kit)
+local function swampVillageCabin(m: Instance, numbers: { [number]: boolean }): boolean
+	local n = tonumber(string.match(m.Name, "^Cabin_(%d+)$"))
+	local village = m.Parent
+	local zone = village and village.Parent and village.Parent.Parent
+	return n ~= nil and numbers[n] == true and village ~= nil and village.Name == "Village" and zone ~= nil and zone.Name == "Swamp_3"
+end
+
+-- swamp huts: the roof layout of a stilt hut copy before its first sync (its 2 Roof planes in its pivot space): nil =
+-- the kit's (both at z 1.0, 13.5 deep), "RoofSplit" = the planes 0.05 apart along Z, "RoofWide" = a plane 13.6 deep
+local function stiltHutRoof(m: Instance): string?
+	local split = false
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == "Roof" then
+			if c.Size.Z > 13.55 then
+				return "RoofWide"
+			end
+			if math.abs((m :: Model):GetPivot():PointToObjectSpace(c.Position).Z - 1) > 0.025 then
+				split = true
+			end
+		end
+	end
+	return if split then "RoofSplit" else nil
+end
+
 -- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
 -- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
 SyncMapProps.RULES = {
@@ -480,6 +505,17 @@ SyncMapProps.RULES = {
 	{ propId = "tundra_snowman_gray", names = { "Snowman_B" } },
 	{ propId = "tundra_snowman_blue", names = { "Snowman_A" } },
 	{ propId = "tundra_ice_rack", names = { "Weapon_Rack_Frozen" } },
+	-- cursed swamp buildings and huts (owner "CURSED SWAMP PROP IMPROVEMENT - Buildings and huts", 2026-10-24): 01 the stilt
+	-- hut with the green roof = Stilt_Cabin_A (test, kit, Zones.Swamp.Swamp_3.Decor.Village.Cabin_1 / 3 / 5 / 7), 02 the
+	-- witch hut with the purple hat = Stilt_Cabin_B (test, kit, Village.Cabin_2 / 4 / 6). Every copy is Model scale 1.
+	-- 01's 2 Roof planes differ on 4 village copies (Cabin_1 / 5 / 7 0.05 apart along Z, Cabin_3's right plane 13.6
+	-- deep): their Variant switches the matching invisible roof colliders on, so every copy keeps its own roof collision
+	{ propId = "swamp_stilt_hut", names = { "Stilt_Cabin_A" }, match = function(m)
+		return swampVillageCabin(m, { [1] = true, [3] = true, [5] = true, [7] = true })
+	end, variant = stiltHutRoof },
+	{ propId = "swamp_witch_hut", names = { "Stilt_Cabin_B" }, match = function(m)
+		return swampVillageCabin(m, { [2] = true, [4] = true, [6] = true })
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
@@ -655,6 +691,7 @@ local function searchRoots(): { Instance }
 	add(preview and preview:FindFirstChild("Desert")) -- the desert test row (desert buildings, 2026-10-19)
 	add(preview and preview:FindFirstChild("Jungle")) -- the jungle test row (jungle buildings, 2026-10-20)
 	add(preview and preview:FindFirstChild("Tundra")) -- the tundra test row (tundra buildings, 2026-10-22)
+	add(preview and preview:FindFirstChild("Swamp")) -- the swamp test row (swamp huts, 2026-10-24)
 	add(ServerStorage:FindFirstChild("MapAssets"))
 	add(ServerStorage:FindFirstChild("BossArenas"))
 	return list
