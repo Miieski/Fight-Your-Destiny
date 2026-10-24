@@ -3135,3 +3135,7 @@ scarf, 05 snowman with a blue hat (same recipe as 04), 06 ice drying rack (keep 
   skull, crossed knobbed bones, curved rib cage) inside a faceted translucent ice block (lighter edges, inner gradient),
   compact pose in today's footprint, frost on the bones, a thin ice layer over parts that stick out, a soft snow cap,
   icicles and small shards; keep size, position and collisions; all copies. Backup before_tundra_skull_redo.
+- 2026-10-24: screen_capture works again (new Studio id c5c2beea). The 8 OWED tundra props after shots taken by the main
+  agent (docs/screenshots/tundra_props/01_frozen_skeleton_*, 02_fishing_hole_*, 03_sled_*, 06_ice_rack_*
+  {test,game}_after.jpg). Tundra props are now fully verified.
+
