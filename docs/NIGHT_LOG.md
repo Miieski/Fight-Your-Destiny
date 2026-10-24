@@ -3221,3 +3221,38 @@ plank / post / rail recipe, all their copies; STEP 2 the 4 SWAMP pieces derived 
   the pivots); walking down the ramp follows its slope; no game errors (the same 203785492 warning). FINAL: 150 templates /
   1730 copies up to date; disk == Studio (217 scripts, 0 written); backup after_docks.
 
+
+# Cursed Swamp gates and entrances - 2026-10-24 (owner prompt "CURSED SWAMP PROP IMPROVEMENT - Gates and entrances")
+
+Objects: 01 mushroom vine arch (BASE plains arch; keep the raven and its position, the mushrooms' glow), 02 wooden gate
+with dead trees (BASE plains palisade), 03 rock barricade gate (BASE jungle barricade; keep it blocking and openable
+exactly as now, the magenta glows), 04 skull palisade gate (BASE plains / tundra palisade; keep door scripts,
+prompts, collisions, the magenta glows). Keep each gate's position, size, collisions, scripts and prompts.
+
+## Status (newest first)
+
+- 19:45 Agent B: DONE. Builder tools/PropsSwampGates.luau; data tools/PropsSwampGatesData.luau (the game copies'
+  parts, plus KitRows).
+  - Replaced: swamp_vine_arch 3 / 3, swamp_tree_gate 3 / 3, swamp_rock_gate 3 / 3, swamp_skull_gate 3 / 3. Run 2 = 0
+    for all.
+  - Kept exactly: the raven (8 / 8 parts on every copy), the ghost mushroom glow, the lantern cores and lights, the
+    magenta orbs / skull eyes / rune crosses, the signs and GUIs.
+  - Gate contract: Barrier = PrimaryPart and colliding; decor under it (the 03 barricade, buds included, still hides
+    when the gate opens); BarrierDecorIsChildOfBarrier; SubZoneId.
+  - Colliders exact: CanCollide ray grids old vs new, 0 differences on every copy. The 04 kit and test trunks turned
+    out to be tilted 0.0005 off the game's, caught by an off-lattice grid against the deserialized backup, so Variant
+    Kit now carries them (as for the 04 lintel and the 01 left beam).
+  - Checks: Sync.check clean; dry run 154 templates / 1738 copies, 0 to replace; no untagged leftovers; the grid
+    stashes were deleted.
+  - Disk == Studio (219 scripts, 0 written). Backups old_props_2026-10-24_pre_swamp_gates (4). Shots
+    docs/screenshots/swamp_gates/ (16). Play check left to the main agent.
+- 19:09 Started. Sync.check 150 templates, 0 out of date. Backup before_swamp_gates. Main agent's ultra calls:
+  the raven is NOT remodelled here (the magic-props prompt owns it; kept exactly); the 02 dead trees are improved
+  inside this gate from its own parts (the trees prompt is not done yet).
+- 19:50 MAIN AGENT VERIFIED + PUSHED. Looked at the 4 after shots (the arch pilot sent to the owner). PLAY CHECK (phone
+  emulator, fresh lockAll + unlockZone Swamp): walked through the Swamp_1 arch (sign "Cursed Swamp", 2 lights on);
+  Swamp_2 / 3 / 4 gates block while closed, open with their prompts (5M / 12.5M / 31.25M Gold), every piece under the
+  Barrier hides and no light stays on under it, the player walks through; Swamp_2 / 3 / 4 at 144 fps, render CPU
+  2.4-2.5 ms; no game errors (the same 203785492 warning). 154 templates / 1742 copies up to date; disk == Studio (219
+  scripts, 0 written); backup after_swamp_gates.
+

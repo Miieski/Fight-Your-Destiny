@@ -937,6 +937,68 @@ copied there. Recipe: docs/prop_texture_guide.md F3. The kits' parts are kept as
 
 Totals: 37 copies replaced (6 templates). Hub parts 5,143 -> 5,175.
 
+### Swamp gates (owner, "CURSED SWAMP PROP IMPROVEMENT - Gates and entrances", 2026-10-24): inventory before the remake (read from Studio)
+
+Images: `docs/Swamp_Images/03_Gates_and_Entrances/`. The game copies' parts are kept as rows in
+`tools/PropsSwampGatesData.luau` (`DevTools.PropsSwampGatesData`). Its `KitRows` hold the colliders where the kit and
+test copies differ from the game copy.
+
+- **Copies:** each gate has 3: the kit (`ServerStorage.MapAssets.Gates`), the test copy
+  (`_Staging.AssetPreview.Swamp`) and the game copy (`Zones.Swamp.Swamp_1..4`). All are Model scale 1.
+- **Rules:** no earlier rule claimed them; 4 rules were added.
+- **Functions:**
+  - no scripts or prompts in the models (ZoneService adds the GatePrompt at run time);
+  - attributes: `ZoneId` (01), and `SubZoneId` + `BarrierDecorIsChildOfBarrier` (02-04);
+  - 2 SurfaceGuis on each game copy (the NameSign / PriceSign);
+  - 2 lantern PointLights on 01, 02 and 04.
+- **Backups:** `BackUP_Files/old_props_2026-10-24_pre_swamp_gates/<propId>.rbxm` (4 files); the main agent's full
+  backup `..._before_swamp_gates`.
+
+| # | owner's object | kit | parts | colliding | glows (Neon / lights) | size | notes |
+|---|---|---|---|---|---|---|---|
+| 01 | mushroom vine arch | `EntryArch_Swamp` -> `Swamp_1.EntryArch` | 47 (4 meshes) | 15 | 4 / 2 | 41.92 x 28.19 x 9.97 | the raven = 8 "Part" rows; the kit and test left Beam is 1.8 thick (the game's 1.9) |
+| 02 | wooden gate with dead trees | `Gate_Swamp_2` -> `Swamp_2.Gate` | 54 (6 meshes: 2 trees, mushrooms) | 15 | 4 / 2 | 56.97 x 37.05 x 12.11 | the door is the Barrier with 11 parts under it |
+| 03 | rock barricade | `Gate_Swamp_3` -> `Swamp_3.Gate` | 52 (8 meshes: 4 rocks, 2 moss, mushrooms) | 12 | 6 / 0 | 113.71 x 42.15 x 30.58 | invisible Barrier; the barricade, incl. the 5 magenta Buds, sits under it and hides when the gate opens |
+| 04 | skull palisade | `Gate_Swamp_4` -> `Swamp_4.Gate` | 49 | 18 | 12 / 2 | 64.41 x 32.49 x 13.54 | the door is the Barrier with 23 parts under it; the kit and test top Lintel sit at z 0 (the game's -0.05), and their 8 Trunks are tilted up to 0.0005 off the game's |
+
+### Swamp gates remake status (Agent B, 2026-10-24)
+
+- **Builder:** `tools/PropsSwampGates.luau` (`DevTools.PropsSwampGates`, built on DevTools.PropsSwampHuts' TB / B2 / H
+  / M). It reuses the plains entry arch / palisade, the tundra palisade, and the jungle barricade + rock recipes.
+- **Rules:** 4 in tools/SyncMapProps.luau (`EntryArch_Swamp`, `Gate_Swamp_2..4`, plus a match on the zone copies).
+  01 and 04 have a variant function (`swampArchKit`, `swampGate4Kit`) that gives the kit and test copies Variant
+  `Kit`, which switches to their own colliders.
+- **Gate contract:**
+  - the Barrier is the PrimaryPart and keeps its collision;
+  - the door / barricade decor and any glow on the door sit under the Barrier;
+  - `BarrierDecorIsChildOfBarrier` = true;
+  - SubZoneId / ZoneId and the sign GUIs are kept.
+- **Kept exactly:**
+  - the 01 raven: 8 / 8 parts on all 3 copies;
+  - the ghost mushroom meshes and their glow;
+  - the lantern cores and PointLights;
+  - the magenta glows: the 03 orbs, the 04 skull eyes and rune crosses;
+  - the 04 Neon shelf mushrooms;
+  - the signs.
+- **Collisions:**
+  - Visible pieces never collide.
+  - Today's colliding parts are invisible "Collision" copies. The 02 tree meshes and 03 rock meshes collide through
+    their own Hull mesh copies.
+  - CanCollide-respecting ray grids (6 directions, 0.5 step), old vs new on every copy: **0 differences**.
+  - On 04, an extra grid shifted off the 0.5 lattice was run against the deserialized backup. It found that the kit
+    and test trunks are 0.0005 off the game's; Variant `Kit` now carries those 8 trunks too.
+- **Sync:** run 2 = 0 for all 4. Full dry run: 154 templates / 1738 copies, 0 to replace.
+- **Shots:** `docs/screenshots/swamp_gates/` (before / after, test and game, for each gate).
+
+| # | object | MapProps id | replaced | triangles per copy | size (before) | notes |
+|---|---|---|---|---|---|---|
+| 01 | mushroom vine arch (pilot) | `swamp_vine_arch` | 3 / 3 | 17,300 | 41.92 x 29.02 x 9.97 (41.92 x 28.19 x 9.97) | rotten 8-sided logs with iron bands, rivets and rope at every joint; bent roots into mud bases; beams with moss mats and hanging moss; NameSign in a rotten frame; curtains of leafy vines; lanterns in iron frames with chain links. Variant Kit (left beam) |
+| 02 | wooden gate with dead trees | `swamp_tree_gate` | 3 / 3 | 20,400 | 58.01 x 37.24 x 12.34 (56.97 x 37.05 x 12.11) | crooked stakes with points, iron bands, rope, mud; the dead trees keep today's meshes as trunks, with roots, bark shelves, twisted branches, hanging moss and vines placed on the probed trunk surface; plank double door with straps, strap hinges and ring handles under the Barrier |
+| 03 | rock barricade | `swamp_rock_gate` | 3 / 3 | 19,000 | 113.71 x 40.96 x 30.58 (113.71 x 42.15 x 30.58) | 4 faceted convex rocks on the measured hulls of today's meshes, with moss caps and hanging moss; dark logs with rope; under the Barrier: crossed 8-sided branches lashed with rope, bone thorns, and the 5 orbs kept in iron rings. Blocking and opening unchanged |
+| 04 | skull palisade | `swamp_skull_gate` | 3 / 3 | 13,000 | 64.61 x 33.28 x 14.71 (64.41 x 32.49 x 13.54) | crooked rotten planks with pointed tops, iron bands, rope; broken stubs; support beams with foot plates; door boards in place (the runes stay visible), iron bands, a rounded bone skull (brow, cheekbones, teeth; eyes kept) with a round iron ring. Variant Kit (lintel + 8 trunks) |
+
+Totals: 12 copies replaced (4 templates).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

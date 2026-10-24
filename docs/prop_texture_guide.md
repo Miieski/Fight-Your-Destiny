@@ -3210,6 +3210,29 @@ run with the swamp style.
 - **Open-side variants:** the 4 village ramp docks miss the side rail where a rail dock joins them. Variants
   `OpenLeft` / `OpenRight` hide that side's rail union and switch its collider off.
 
+### F4. Gates and entrances (owner task 2026-10-24)
+
+`tools/PropsSwampGates.luau`, one builder per gate. Each builder starts from the parts of today's gate (rows in
+`tools/PropsSwampGatesData.luau`) and reuses the finished recipes:
+
+| Gate | Base recipe | Swamp touches |
+|---|---|---|
+| 01 mushroom vine arch | plains entry arch | rotten 8-sided logs, mud bases, moss mats and hanging moss, curtains of leafy vines |
+| 02 wooden gate, dead trees | plains / tundra palisade | today's tree meshes kept as trunks; roots, bark shelves and bare branches placed on the probed trunk surface |
+| 03 rock barricade | jungle barricade + jungle rock (convex hull of today's mesh) | moss caps that follow the facets, bone thorns, orbs in iron rings |
+| 04 skull palisade | plains / tundra palisade | 2 crooked planks per trunk, broken stubs, a rounded bone skull with a round iron ring |
+
+- **The gate contract** (as for the jungle and tundra gates):
+  - the Barrier stays the PrimaryPart and keeps its collision;
+  - everything on the door or barricade, glows included, goes under the Barrier, so it hides when the gate opens.
+- **Glows are kept part for part:** the ghost mushroom meshes, the lantern cores and lights, the magenta orbs / eyes /
+  crosses, and the shelf mushrooms. Only their frames are new.
+- **Meshes that collide today** (the trees and rocks) keep a Hull copy of the mesh as their collider. The visible new
+  pieces never collide.
+- **Kit vs game differences:** when a kit's colliders differ from the game copy even slightly (0.0005 is enough to move
+  grazing rays), give the kit its own colliders and switch them with a Variant. Check with an off-lattice ray grid
+  against the deserialized backup.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

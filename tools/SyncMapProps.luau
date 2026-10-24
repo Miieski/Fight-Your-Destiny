@@ -154,6 +154,28 @@ local function rampDockOpenSide(m: Instance): string?
 	return nil
 end
 
+-- swamp gates (2026-10-24): the kit and test copies of 2 gates differ from the game copy in one colliding part (the
+-- arch's left Beam is 1.8 thick, the game's 1.9; gate 4's top Lintel sits at z 0, the game's at -0.05): Variant "Kit"
+local function swampArchKit(m: Instance): string?
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == "Beam" and (m :: Model):GetPivot():PointToObjectSpace(c.Position).X < 0 then
+			return if c.Size.X < 1.85 then "Kit" else nil
+		end
+	end
+	return nil
+end
+local function swampGate4Kit(m: Instance): string?
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == "Lintel" then
+			local p = (m :: Model):GetPivot():PointToObjectSpace(c.Position)
+			if p.Y > 23 then
+				return if math.abs(p.Z) < 0.025 then "Kit" else nil
+			end
+		end
+	end
+	return nil
+end
+
 -- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
 -- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
 SyncMapProps.RULES = {
@@ -554,6 +576,23 @@ SyncMapProps.RULES = {
 	-- (the 4 Swamp_3 village Stilt_Platforms miss one side rail where a rail dock joins them: Variant OpenLeft / OpenRight)
 	{ propId = "swamp_ramp_dock", names = { "Stilt_Platform" }, variant = rampDockOpenSide },
 	{ propId = "swamp_rail_dock", names = { "Rope_Bridge_Swamp" } },
+	-- cursed swamp gates (owner "CURSED SWAMP PROP IMPROVEMENT - Gates and entrances", 2026-10-24): 01 the mushroom vine arch
+	-- = Swamp_1.EntryArch (ZoneId and the NameSign texts kept), 02 the wooden gate with the dead trees = the Swamp_2 gate,
+	-- 03 the rock barricade = the Swamp_3 gate, 04 the skull palisade = the Swamp_4 gate (test Gate_Swamp_<n>, kit
+	-- MapAssets.Gates, Zones.Swamp.Swamp_<n>.Gate: SubZoneId kept, the Barrier is the PrimaryPart, the PriceSign texts
+	-- move onto the new PriceSign). The kit and test copies of 01 and 04 take Variant "Kit" (one collider each differs)
+	{ propId = "swamp_vine_arch", names = { "EntryArch_Swamp" }, match = function(m)
+		return m.Name == "EntryArch" and m.Parent ~= nil and m.Parent.Name == "Swamp_1"
+	end, variant = swampArchKit },
+	{ propId = "swamp_tree_gate", names = { "Gate_Swamp_2" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Swamp_2"
+	end },
+	{ propId = "swamp_rock_gate", names = { "Gate_Swamp_3" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Swamp_3"
+	end },
+	{ propId = "swamp_skull_gate", names = { "Gate_Swamp_4" }, match = function(m)
+		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Swamp_4"
+	end, variant = swampGate4Kit },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
