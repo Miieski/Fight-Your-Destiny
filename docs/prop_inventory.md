@@ -1135,6 +1135,55 @@ rows are stored at scale 1.
 
 Totals: 143 copies replaced (9 templates), plus the 2 gate templates re-synced.
 
+### Swamp reuse (owner, "CURSED SWAMP PROP IMPROVEMENT - Objects reused from other biomes", 2026-10-25): inventory before the remake (read from Studio)
+
+Images: `docs/Swamp_Images/06_Reuse_From_Other_Biomes/`. Today's kit parts are kept as rows in
+`tools/PropsSwampReuseData.luau` (`DevTools.PropsSwampReuseData`). Each object already exists, finished, in another
+biome; the owner asked to DUPLICATE that finished version and only adjust it.
+
+- **Copies:** every copy is its kit at a Model scale (0.82 to 1.39). The kit copy lives in `MapAssets.Swamp`, the test
+  copy in `Workspace._Staging.AssetPreview.Swamp`.
+- **Rules:** no plains or jungle rule claimed these kits; they have their own names (Barrel_A, Scarecrow_A,
+  Rowboat_Wreck and LilyPad_A are the plains / jungle kits). 4 rules were added. The plains / jungle counts are
+  unchanged: barrel 33, scarecrow 3, rowboat 8, jungle_lily_pads 37. Potion_Barrel has a Variant Purple (the 4 copies
+  with a purple liquid; the potion bottle's helper).
+- **Functions:** no script, prompt, click detector or touch handler on any of the 4 kits; src/ never names them.
+  - The white cube of the lily pads is the part "Bloom" (1.3 x 0.9 x 1.3, #DED6BE, turned 45 degrees). It does not
+    collide, is not queried or touched: decoration (the same Bloom the jungle pads have).
+  - Rowboat_Sunk has the attribute SinkDepth = 1 (only the asset docs name it; kept on the copies).
+- **Odd copies:** 14 lily pads have the small pad 0.05 higher (visual only; they take the template).
+- **Backups:** `BackUP_Files/old_props_2026-10-25_pre_swamp_reuse/<propId>.rbxm` (4 files).
+
+| # | owner's object | kit | base (duplicated) | copies | parts today | colliding | glow | size |
+|---|---|---|---|---|---|---|---|---|
+| 01 | barrel with a glowing top | `Potion_Barrel` | `barrel` (PropsBatch4.barrel) | 18: test, kit, Swamp_3 x16 | 6 (Body, Belly, 2 Band, Lid, Liquid) | 5 | Liquid #8CFF5A (4 copies #AA50FF) | 3.45 x 4.17 x 3.45 |
+| 02 | scarecrow with a top hat | `Scarecrow_Swamp` | `scarecrow` template (MeshParts) | 6: test, kit, Swamp_3 x4 | 11 (Pole, Arms, Shirt, 3 Hay, Head, HatBrim, HatTop, 2 Eye) | 11 | 2 Eye #FFE860 | 8 x 9.45 x 3.6 |
+| 03 | rowboat | `Rowboat_Sunk` | `rowboat` template (MeshParts) | 4: test, kit, Swamp_1 x2 (sunk, y -2.6) | 13 (the plains wreck's 12 + Moss) | 12 | - | 14.1 x 4.98 x 11.14 |
+| 04 | lily pads with the white cube | `LilyPad_Swamp_A` | `jungle_lily_pads` (PropsJungleNature) | 92: test, kit, Swamp_1 x90 (on the water, y -0.48) | 3 (2 Pad, Bloom) | 0 | - | 7.6 x 1.12 x 6 |
+
+### Swamp reuse remake status (Agent B, 2026-10-25)
+
+- **Builder:** `tools/PropsSwampReuse.luau` (`DevTools.PropsSwampReuse`). Each prop is DUPLICATED from its finished base
+  and only adjusted:
+  - 01 swamp_barrel: the PropsBatch4.barrel recipe;
+  - 02 swamp_scarecrow and 03 swamp_rowboat: the plains templates' MeshParts, cloned and recoloured (`SR.baseCopy`);
+  - 04 swamp_lily_pads: the PropsJungleNature lily pad recipe.
+- **Rules:** 4 in tools/SyncMapProps.luau; Potion_Barrel uses `swampPotionPurple` for its Variant Purple.
+- **Collisions:** today's swamp kit colliders, invisible. 01 / 02 on the template (every copy equals the kit); 03 per
+  copy (KeptCollision, `SR.prepColliders`); 04 none, as today. Corners worst 0.00000, ray grids 0 differences.
+- **Nested:** the scarecrow's small raven is the swamp_raven template (scale 0.45), tagged and kept current by the sync.
+- **Sync:** run 2 = 0. Full dry run: 174 templates / 2241 copies, 0 to replace.
+- **Shots:** `docs/screenshots/swamp_reuse/`.
+
+| # | object | MapProps id | replaced | triangles per copy | size (kit) | notes |
+|---|---|---|---|---|---|---|
+| 01 | barrel with a glowing top (pilot) | `swamp_barrel` | 18 / 18 | 2,600 | 3.51 x 4.33 x 3.50 (3.45 x 4.17 x 3.45) | the plains barrel's 14 staves in thirds and 3 hoops; dark wet wood; open top: sludge, today's Liquid exactly, bubbles, a slick and 3 glowing drips over the rim; dark iron hoops with rust rivets, the middle one dented; moss at the foot; Variant Purple (4) recolours the liquid and its drips |
+| 02 | scarecrow with a top hat | `swamp_scarecrow` | 6 / 6 | 2,200 + the plains meshes | 8.04 x 9.57 x 3.63 (8 x 9.45 x 3.6) | the plains meshes in today's purple / olive / dark wood; a black top hat with a purple band; a pale ghost head with dark sockets round today's eyes; dark gloves; tears, a stitched patch, torn strips; moss; a small raven on the sleeve |
+| 03 | rowboat | `swamp_rowboat` | 4 / 4 | 3,400 + the plains meshes | 14.09 x 4.95 x 10.43 (14.1 x 4.98 x 11.14) | the plains hull, ribs, thwarts, oar darker and wetter; mud and algae bands at the waterline; moss on the benches and gunwale; 2 broken planks (holes, splinters) and 2 cracks; 3 hanging vines; the green block as a slimy cargo (crate, sack, moss mound, slime drips) |
+| 04 | lily pads with the white cube | `swamp_lily_pads` | 92 / 92 | 1,000 | 7.73 x 1.06 x 6.30 (7.6 x 1.12 x 6) | the jungle pads in today's darker greens with a wet sheen film, ragged holes, curled edges, veins, algae clumps; the Bloom as a pale bud with a glowing pearl in its box |
+
+Totals: 120 copies replaced (4 templates).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

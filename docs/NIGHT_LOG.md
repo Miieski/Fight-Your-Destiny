@@ -3332,3 +3332,35 @@ Keep every glow.
 Objects, each DUPLICATED from its finished base: 01 barrel with a glowing top (plains barrel; all swamp instances), 02
 scarecrow with a top hat (plains scarecrow), 03 rowboat (plains rowboat), 04 lily pads with the white cube (jungle lily
 pads; find what the cube is and keep it). Runs right after the magic props 06-09 are finished.
+- 20:15 REUSE PAUSED: 01 swamp_barrel 18/18 (4 Purple) and 02 swamp_scarecrow 6/6 synced and verified with shots;
+  03 swamp_rowboat and 04 swamp_lily_pads templates built (broken planks done as holes / cracks on the single hull
+  mesh, colliders unchanged; the decorative Bloom box is now a pale bud with a Neon pearl) but NOT synced: Studio
+  stopped rendering again, so their before shots are owed. Waiting for the owner to bring Studio forward.
+- 21:45 Agent B: REUSE DONE. Builder tools/PropsSwampReuse.luau; data tools/PropsSwampReuseData.luau; 4 rules.
+  - Replaced: swamp_barrel 18 / 18 (4 Purple), swamp_scarecrow 6 / 6, swamp_rowboat 4 / 4, swamp_lily_pads 92 / 92.
+    Run 2 = 0 for all. The plains / jungle bases are untouched (barrel 33, scarecrow 3, rowboat 8, jungle_lily_pads 37).
+  - Triangles per copy: barrel 2.6k, scarecrow 2.2k + the plains meshes, rowboat 3.4k + the plains meshes, lily pads
+    1.0k.
+  - Colliders exact: corners worst 0.00000 on every copy; ray grids 0 differences (barrel, scarecrow, rowboat on all 4).
+    The rowboat keeps each copy's own colliders (KeptCollision): the 2 game copies' Side is 9.1 long, not the kit's 9.
+  - Kept exactly: the barrel Liquid (18 / 18, Variant Purple also recolours its drips), the scarecrow Eyes (12 / 12), the
+    rowboat's SinkDepth (4 / 4). The lily pads' white cube was the decorative "Bloom" (no script / prompt / touch): now a
+    pale bud with a Neon pearl in its box. Nothing of the pads collides, as before.
+  - 03 broken planks: holes and cracks painted on the single hull mesh; nothing cut away, colliders unchanged.
+  - Checks: dry run 174 templates / 2241 copies, 0 to replace; the templates rebuild with the same fingerprints; the
+    stashes were deleted. Disk == Studio (225 scripts, 0 written). Backups old_props_2026-10-25_pre_swamp_reuse (4).
+    Shots docs/screenshots/swamp_reuse/. Play check left to the main agent.
+
+# Cursed Swamp ROUND 2 - finish 3 objects + redo 8 (owner prompt "CURSED SWAMP - ROUND 2", 2026-10-25)
+
+PART A (not finished): 01 rowboat, 02 hanging lantern (the owner's screenshot shows a lantern on a crooked pole: check
+which kit that is), 03 lily pads with the white cube. PART B (redo prettier, still low poly): 04 skull on frame (from
+the plains skull_bones skull), 05 frog statue altar (pilot), 06 frog totem (sleepy / grinning / surprised faces), 07
+hollow magic stump (runes carved INTO the bark), 08 dead tree with face (spooky-cute), 09 skull palisade gate (reuse
+the 04 skull), 10 rock barricade gate, 11 wooden gate with dead trees (the new dead-tree recipe). The 11 screenshots
+were not in the project: saved from the chat into docs/Swamp_Fixes_Round2/.
+
+## Status (newest first)
+
+- 21:32 Studio renders again (owner brought it forward). Backup before_swamp_round2. Part A 01 / 03 = the reuse
+  task's pending rowboat and lily pads (templates built, before shots owed).

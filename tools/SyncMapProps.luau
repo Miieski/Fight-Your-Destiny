@@ -643,6 +643,16 @@ SyncMapProps.RULES = {
 	{ propId = "swamp_raven", names = { "Crow_A" }, filter = function(m)
 		return not deadCrow(m)
 	end },
+	-- CURSED SWAMP PROP IMPROVEMENT - Objects reused from other biomes (owner, 2026-10-25), each duplicated from its
+	-- finished base: 01 the barrel with a glowing top = Potion_Barrel (from `barrel`; Variant Purple: the 4 copies with
+	-- a purple liquid), 02 the scarecrow with a top hat = Scarecrow_Swamp (from `scarecrow`), 03 the rowboat =
+	-- Rowboat_Sunk (from `rowboat`; attribute SinkDepth kept), 04 the lily pads with the bloom = LilyPad_Swamp_A (from
+	-- `jungle_lily_pads`). Own propIds: the plains / jungle rules (Barrel_A, Scarecrow_A, Rowboat_Wreck, LilyPad_A) never
+	-- claim these kits, and these rules never claim theirs
+	{ propId = "swamp_barrel", names = { "Potion_Barrel" }, variant = swampPotionPurple },
+	{ propId = "swamp_scarecrow", names = { "Scarecrow_Swamp" } },
+	{ propId = "swamp_rowboat", names = { "Rowboat_Sunk" } },
+	{ propId = "swamp_lily_pads", names = { "LilyPad_Swamp_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

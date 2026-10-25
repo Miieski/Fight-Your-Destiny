@@ -3278,6 +3278,22 @@ them.
   template itself, scaled and placed at the old pose. The sync's later pass keeps it current.
 - **Budget:** the many-copy kits stay under 1,000 triangles (lantern 900, raven 830, bottle 550, spellbook 630).
 
+### F7. Objects reused from other biomes (owner task 2026-10-25)
+
+`tools/PropsSwampReuse.luau`. When a finished version exists in another biome, duplicate it and only adjust it.
+
+- **Recipes** (barrel, lily pads): copy the builder's recipe and change only the colours and the swamp extras.
+- **MeshParts** (the plains scarecrow and rowboat): clone them from the template (`SR.baseCopy`), recolour, and leave
+  out the parts the swamp look replaces (the button eyes, the straw hat).
+- **Swamp extras:** moss cushions, algae and mud bands along a measured surface, slime drips, torn cloth, a nested
+  swamp_raven.
+- **Placement on a mesh:** measure the mesh surface first (PreciseConvexDecomposition on a preview clone, then
+  raycasts). Store the samples in the builder; never guess.
+- **Colliders:** always the swamp kit's own parts, never the base's simplified colliders. Keep them per copy when the
+  copies differ.
+- **Glass:** Glass material mirrors the sky (blue). For a wet sheen use a translucent SmoothPlastic film with
+  Reflectance 0.2.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
