@@ -3522,6 +3522,12 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   0 changed; dry run 0; tag / build again 0 (the first call's reply was lost by the MCP bridge; state re-checked).
   Not assets: 41 loose-part folders (hills, edge walls, ground, paths, river, plaza, temple shell / floor, MapFix).
   Shot 03_Jungle.jpg.
+- 04 Tundra DONE: 49 assets (S 5 / M 20 / L 24), 916 copies; 24 new templates (tundra_*: arena door, landmarks frozen
+  tree / ice cave peak / ice throne (arena) / frozen ship (host: its tagged ship nested), blue wall torch, frozen bush,
+  3 ice chunks, ice cliff, 2 ice spikes, icicle row, snow cliff, snow drift, 3 snow rocks, dead ice tree, 3 snow pines,
+  boss gate); 812 copies tagged + 1832 attributes; check 0; compare 14448 -> 14448, 0 changed; dry run 0; tag / build
+  again 0. Not assets: 25 loose-part folders (drifts, ground, mountains, lake, citadel floor / walls / shell / banners,
+  MapFix). Shot 04_Tundra.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
