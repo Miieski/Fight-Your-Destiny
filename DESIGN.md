@@ -643,6 +643,8 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
   back by hand. Workspace, Lighting, Terrain and ServerStorage models are not mapped.
 * Repo: https://github.com/Miieski/Fight-Your-Destiny (scripts and docs only).
 * **Toolbox first:** use the Toolbox for props and base models, **Blender** only when needed.
+* **Asset preview:** every new asset added to a map must also be added to the asset preview (run tools/BuildAssetPreview.luau). Every visible object is a MapProps template with one sample per
+  zone in `workspace._Staging.AssetPreview.ByZone` (Edit mode only; the server moves `_Staging` out at start).
 * **Mandatory sanitising of every Toolbox asset:** delete ALL scripts, remotes, values and
   GUIs inside it, check for `require(<number>)` and obfuscated code, anchor static props.
 * **Sub-agents:** one per boss/system with strict file ownership, a reviewer sub-agent after each

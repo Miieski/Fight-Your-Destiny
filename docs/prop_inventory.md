@@ -1,5 +1,7 @@
 # Prop inventory - model upgrade (docs/model_upgrade_brief.txt, step 4A)
 
+**Rule (owner, round 4):** every new asset added to a map must also be added to the asset preview (run tools/BuildAssetPreview.luau). The full list of assets per zone is `docs/asset_preview_index.md`.
+
 ## Implant status (OWNER CORRECTION, 2026-10-19, FINAL state after the owner's import, read from Studio)
 
 Read by Agent B from the live place (Studio id ab74fac5..., Edit mode), not from notes. "Generated" = the files exist:

@@ -128,6 +128,8 @@ models in `ServerStorage` live **only in the place file**. The owner saves from 
 3. `BackUP_Files/` is gitignored (the files are large), so the backups stay on the owner's
    computer. Remind the owner to copy them to a cloud drive or an external disk.
 4. If the backup step or the push fails, say so plainly and do not continue as if it worked.
+5. **Asset preview:** every new asset added to a map must also be added to the asset preview (run tools/BuildAssetPreview.luau): `B.tag(zone)` then `B.build(zone)` and `B.check(zone)` (usage at the top of
+   the tool). Index: `docs/asset_preview_index.md` / `.json`.
 
 ## 4. Sub-agents (the owner explicitly wants them used)
 
