@@ -3515,6 +3515,13 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   tree, palm, boss gate); 333 copies tagged + 1340 attributes; check 0; compare 13238 -> 13238, 0 changed; dry run 0;
   tag / build again 0. Not assets: 30 loose-part folders (dunes, backdrop, ripples, lake, talus, pyramid columns /
   floor inlay / shell / structure, MapFix). Shot 02_Desert.jpg.
+- 03 Jungle DONE: 63 assets (S 6 / M 31 / L 26), 1813 copies; 18 new templates (jungle_*: floating dock, rope bridge,
+  boss gate, arena door, landmarks giant tree / golden idol (arena) / step pyramid / waterfall cliff, fern, 3 flowers,
+  2 giant leaf plants, ruin pillar, 3 jungle trees); the other 45 reuse Hub / Plains / older templates (fern, trees,
+  leaf plants and flowers had parts resized one by one: MapPropScale on those copies); check 0; compare 15307 -> 15307,
+  0 changed; dry run 0; tag / build again 0 (the first call's reply was lost by the MCP bridge; state re-checked).
+  Not assets: 41 loose-part folders (hills, edge walls, ground, paths, river, plaza, temple shell / floor, MapFix).
+  Shot 03_Jungle.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
