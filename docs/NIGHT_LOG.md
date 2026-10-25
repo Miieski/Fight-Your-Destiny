@@ -3510,6 +3510,12 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
 
 - Main agent: zone 00 Hub PLAY CHECK OK: _Staging is in ServerStorage on the server and absent on the client (preview
   unreachable), 0 preview samples in the live workspace, 462 Hub MapProps, 22 Hub lights on, 144 fps, 0 errors.
+- 02 Desert DONE: 56 assets (S 7 / M 25 / L 24), 670 copies; 16 new templates (desert_*: arena door, landmarks oasis
+  well / sarcophagus (arena) / stone bridge / rock arch, spear, canyon cliff, 3 hoodoo variants, 3 sand rocks, dead
+  tree, palm, boss gate); 333 copies tagged + 1340 attributes; check 0; compare 13238 -> 13238, 0 changed; dry run 0;
+  tag / build again 0. Not assets: 30 loose-part folders (dunes, backdrop, ripples, lake, talus, pyramid columns /
+  floor inlay / shell / structure, MapFix). Shot 02_Desert.jpg.
+
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
 
