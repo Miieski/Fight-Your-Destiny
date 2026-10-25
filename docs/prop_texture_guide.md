@@ -3311,6 +3311,26 @@ them.
 - **Random streams:** additions get their own `Random` so the rest of a builder (mud, moss) is drawn exactly as before
   and the bounding box does not grow.
 
+### F9. The big landmarks (owner task 2026-10-25, round 3)
+
+`tools/PropsSwampLandmarks.luau`. Map-only stand-ins become MapProps first (`capture()`), then a builder remakes them.
+
+- **Capture:** a rule that matches `Landmark` + LandmarkName, tagAll, then `Sync.capture(propId, instance)`. The map
+  instance is re-placed by an identical template copy; check every part afterwards (here all within 0.001).
+- **Data at full precision:** write the rows with `%.9g`. Six digits drift colliders by 0.0001, and ray grids then
+  show grazing differences on coplanar faces.
+- **Pivots:** capture can leave a 1e-7 rotation noise on the instance pivot; put the original pivot back.
+- **Timber-frame walls:** per face, vertical planks in 3 tones with gaps over a dark core, cut round the openings
+  (each opening's rectangle in the face's (along, up) coordinates), corner posts, a beam at the foot and the top, a
+  brace on faces without an opening. One union per wall tier.
+- **Witch hat:** per tilted tier, a 12-sided core frustum and 2 rows of 12 overlapping shingle plates tangent to it;
+  the last tier curls to a point; a drooping 16-sided brim; a dark band with a gold buckle facing the door.
+- **Big faces:** a rounded face mound (`SM.ellipsoidSolid` with a flat front at the kept face parts), brows of 5 lumps
+  per eye, a dark recess and a shadow ring per socket, a long tapered nose, crooked lips and a few teeth; keep roots
+  and branches out of the face.
+- **Nested props:** rebuild from their templates at the recorded poses and scales; a nested lantern that carried its
+  own light gets a `KeptLight_Lantern` part (MapPropKeep) with that light.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

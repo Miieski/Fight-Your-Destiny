@@ -1214,6 +1214,29 @@ kept); the key words were rounded (faceted convex solids, not boxes) and integra
 | 10 | rock barricade gate | `swamp_rock_gate` | 3 / 3 | 27,900 | strata lines and a ledge on each boulder; soft moss pads instead of the cut cap; glowing mushrooms |
 | 11 | wooden gate with dead trees | `swamp_tree_gate` | 3 / 3 | 26,200 | the 2 dead trees on the dead-tree recipe (trunk, 5 limbs into the crown, roots, shelves, moss) |
 
+### Swamp round 3 (owner, "CURSED SWAMP - ROUND 3", parts 1 and 2, 2026-10-25): the 3 big landmarks
+
+The 3 objects were map-only stand-ins (`Decor.Landmark` with attribute LandmarkName). Part 1 captured each one as a
+MapProps template, tagged it and placed a sample in the asset preview; part 2 remade them. Today's parts are rows in
+`tools/PropsSwampLandmarksData.luau`; the builder is `tools/PropsSwampLandmarks.luau`.
+
+- **Rules:** 3, matching `Landmark` + LandmarkName (the windmill pattern): swamp_witch_tower (WitchTower),
+  swamp_horror_tree (SwingTree), swamp_hollow_log (SunkenTrunk).
+- **Preview:** a second swamp ground strip `Ground_Row2` (z 3675 .. 3805, row 1 untouched) with the 3 samples at real
+  scale and a label board each (`Labels_Row2`).
+- **Functions:** no script, prompt or touch handler; src/ never names them. The tree's NoClimb folder (22 invisible
+  walls, attribute NoClimb) and every light are kept.
+- **Collisions:** today's colliding parts as invisible copies (names and attributes for the NoClimb walls). The hollow
+  stays walkable, the tree's path stays exactly as it was.
+
+| # | object | MapProps id | map | parts today (colliding) | glow / light | replaced | triangles | notes |
+|---|---|---|---|---|---|---|---|---|
+| 01 | witch tower | `swamp_witch_tower` | Swamp_3 (10050, 0, 674) | 55 (39) + 6 nested | 5 Neon windows, 1 PointLight #AA50FF r40; a lantern light | 2 / 2 | 28,000 | stone base and plinth in courses, stone steps with moss; timber-frame wall tiers (planks cut round the door and windows, corner posts, beams, braces) with today's offsets and tilts; plank floors and balcony with rails and balusters; struts with iron plates; the round windows kept in iron rings with mullions, shutters on the yellow ones; a plank door with iron straps, rivets and a ring handle; a stone chimney; the witch hat: a drooping brim, 5 tiers of overlapping purple shingles following today's bend, a dark band with a gold buckle; vines; the raven, lanterns and vine curtains nested |
+| 02 | giant horror tree | `swamp_horror_tree` | Swamp_2 (10038, 0, 380) | 65 (35, incl. 22 NoClimb) + 9 nested | 2 Neon pupils, 3 glowing mushrooms; a lantern light | 2 / 2 | 19,000 | the dead-tree recipe at landmark size; a rounded face mound with heavy brows, deep sockets, cheek knobs, a long nose, crooked lips with 5 teeth, a moss beard (today's eyes, pupils, mouth exact); gnarled arms with forks and twigs; tapered roots with buttress fins and mud collars; a framed window with a warm pane over the lantern; a twig nest under a raven; rope swing with a 2-board seat; ghost mushrooms and moss |
+| 03 | fallen hollow log | `swamp_hollow_log` | Swamp_1 (10074, 0, 92) | 24 (14) + 3 nested | 3 glowing mushrooms | 2 / 2 | 19,000 | pale heartwood inside, bark plates with broken ridges and grooves outside; the broken end with end grain, growth rings and splinters; the 2 holes (today's knots) with thick bark lips; stubs with splintered tips; gnarled roots; soft moss cushions and strands; ghost mushrooms and ferns; 3 nested lily pads on the marsh water |
+
+Totals: 6 copies replaced (3 templates, 1 map copy + 1 preview sample each).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

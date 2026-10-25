@@ -3416,6 +3416,38 @@ were not in the project: saved from the chat into docs/Swamp_Fixes_Round2/.
   the first row untouched) with the 3 samples at real scale (log x -3108, tree x -2990, tower x -2875) and a label
   board in front of each (Labels_Row2). PART 1 DONE: shots docs/screenshots/swamp_round3/ (3 map before shots, the
   preview row).
+- 00:05 Part 2 decision: the remakes are new builders in tools/PropsSwampLandmarks.luau; today's parts were read
+  from the untagged before-copies into tools/PropsSwampLandmarksData.luau at full float precision (a 6-digit first pass
+  left 0.0001 collider drift: regenerated). The nested props are rebuilt from their templates at their poses; the
+  witch tower's and the tree's lit lantern keeps its own light on a KeptLight_Lantern part, as on the map.
+- 00:05 Part 2 decision: capture() had left the 3 map pivots with a 1e-7 rotation noise; the witch tower's was put
+  back to its exact original pivot (the tree's and the log's original pivots already carried that noise).
+- 00:05 Part 2 decision (tree): the root under the face keeps its exact collider; its visible root starts under the
+  mouth so the face reads (an invisible collider sliver stays just under the lower lip, as today's root block).
+- 00:05 Part 2 decision (tree): "a framed window with the warm lantern light": today's nested lantern and its light kept,
+  plus a small framed window with a warm Neon pane on the trunk above it. "A raven nest": a twig nest under the raven on
+  the south branch (the 3 nested ravens kept).
+- 00:05 Part 2 decision (log): the 2 holes are today's dark Knot discs (decor, not openings): kept exactly with thick
+  bark lips; the walkable hollow is the trunk's open octagon (colliders unchanged). The water is the marsh's own (the
+  log lies in it; MudBed -1.6, water -0.4): no extra water part; 3 nested swamp_lily_pads on it.
+- 00:15 Agent B: ROUND 3 (parts 1 and 2) DONE.
+  - Replaced: swamp_witch_tower 2 / 2, swamp_horror_tree 2 / 2, swamp_hollow_log 2 / 2 (the map stand-in and the
+    preview sample each). Run 2 = 0.
+  - Triangles: tower 28k, tree 19k, log 19k (1 copy each on the map).
+  - Colliders exact: tower 39 / 39 worst 0.00000, tree 35 / 35 (+ the 22 NoClimb walls with their attribute) worst
+    0.00003, log 14 / 14 worst 0.00002 (float32 at x 10000); ray grids on and off the lattice: tower 0 / 270k, tree
+    0 / 504k, log 5 / 621k differ by at most 0.0011 (grazing rays, float32 noise).
+  - Kept exactly: the tower's 5 Neon windows, frames and the magenta window's light, the lanterns (and the lit one's
+    light), raven, vine curtains; the tree's eyes, pupils, mouth, the 3 glowing mushroom meshes, the NoClimb folder,
+    lantern and light, 3 ravens, 5 curtains; the log's 2 knots, 3 glowing mushrooms, 3 curtains; LandmarkName on all.
+  - Checks: dry run 178 templates / 2279 copies, 0 to replace; the templates rebuild with the same fingerprints; the
+    stashes were deleted. Disk == Studio (227 scripts, 0 written). Before round 3 backup: after_swamp_round2. Shots
+    docs/screenshots/swamp_round3/. Play check left to the main agent.
+
+- 00:40 Main agent: ROUND 3 PLAY CHECK OK. Portal to the swamp, the hollow log (Swamp_1), horror tree (Swamp_2) and
+  witch tower (Swamp_3) streamed in with their glows and lights (tree 1 light, tower 2), 144 fps next to each, 0 game
+  errors. Shots looked at: tower, tree and face read well; follow-ups for the owner: the log's flat top / plank-like bark
+  reads a little like a boat hull, the tower walls look darker in the preview light. Backup after_swamp_round3.
 
 # Cursed Swamp ROUND 3 - QUEUED (owner prompt "CURSED SWAMP - ROUND 3 (DO THIS LAST ...)", received 2026-10-25)
 
