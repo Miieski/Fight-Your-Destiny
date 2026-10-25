@@ -3528,6 +3528,12 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   boss gate); 812 copies tagged + 1832 attributes; check 0; compare 14448 -> 14448, 0 changed; dry run 0; tag / build
   again 0. Not assets: 25 loose-part folders (drifts, ground, mountains, lake, citadel floor / walls / shell / banners,
   MapFix). Shot 04_Tundra.jpg.
+- 05 Swamp DONE: 54 assets (S 8 / M 22 / L 24), 1138 copies; 21 new templates (swamp_*: fence, crate, boss gate, arena
+  door, landmark giant cauldron (arena), 2 glow mushrooms, reed cluster, log, stump, cliff, 3 rocks, mud mound,
+  stalactite, 2 stalagmite variants, hub sign, bone pile, twisted tree); the 33 improved swamp templates of the earlier
+  rounds reused (witch tower, horror tree, hollow log, huts, gates, docks, magic props ...); 643 copies tagged + 2276
+  attributes; check 0; compare 10409 -> 10409, 0 changed; full dry run 0 (311 templates / 7810 copies); tag / build
+  again 0. Not assets: 29 loose-part folders (ground, water, mud, mountains, paths, MapFix). Shot 05_Swamp.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
