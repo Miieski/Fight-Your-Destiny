@@ -1,3 +1,15 @@
+# NIGHT RUN DECISIONS (round 4, owner asleep, 2026-10-25/26) - newest first
+
+- Order: finish swamp ROUND 2 (sync / verify / push) -> ROUND 3 parts 1 + 2 (witch tower, giant horror tree, fallen
+  hollow log: templates + preview samples + remake) -> ROUND 4 (every visible asset in the asset preview, by zone);
+  round 3 part 3 is replaced by round 4, as the owner said.
+- Studio rendering: the display sleeps during long runs and screen_capture then fails. The keep-awake loop was denied
+  by the auto-mode classifier earlier, so it is NOT retried. When rendering stops, the agents keep doing the
+  non-visual work (templates, sync where before-evidence already exists, audits, docs) and list the owed screenshots
+  here; nothing that needs a before shot is synced without one.
+- Round 4 "zone order" = the order of Config/Zones (Hub first). Size thresholds (small < 6, medium 6-25, large > 25
+  studs) go into a Config module so they can be tuned.
+
 # Night log - 2026-10-05 (overnight autonomous task)
 
 Owner's overnight order: Part A (UI redo with 3D icons), Part B (teleport menu), Part C (96 weapons
@@ -3364,3 +3376,45 @@ were not in the project: saved from the chat into docs/Swamp_Fixes_Round2/.
 
 - 21:32 Studio renders again (owner brought it forward). Backup before_swamp_round2. Part A 01 / 03 = the reuse
   task's pending rowboat and lily pads (templates built, before shots owed).
+- 22:30 ROUND 2 PAUSED (Studio stopped rendering again). SYNCED: 05 frog altar 3/3 (pilot, shots sent: rounded
+  faceted frog with an open grin, bulging eyes, webbed hands; lily-pad relief on the plinth), 06 frog totem 6/6
+  (sleepy / grinning / surprised faces, hands holding the frog below), 04 skull knocker 3/3 (new rounded skull; after
+  shot owed). Part A 02: the owner's "hanging lantern" screenshot was the Broom_A kit -> the owner chose a witch's broom.
+  BUILT, NOT SYNCED (before shots owed): swamp_broom, 09 skull gate (emblem = the nested new skull), 07 stump (runes
+  carved into bark channels), 08 face tree + 11 tree gate (one shared dead-tree recipe), 10 rock gate (strata, soft moss
+  pads). Waiting for the owner to bring Studio forward.
+- 23:45 Agent B: ROUND 2 DONE. Synced, run 2 = 0, colliders exact (corners 0.00000, ray grids 0 differences):
+  - Part A: 01 rowboat 4 / 4 and 03 lily pads 92 / 92 (the reuse task); 02 = Broom_A -> swamp_broom 5 / 5 (a crooked
+    faceted handle, 18 bundled twigs, a rope binding, moss; the owner chose a broom over a lantern; new rule).
+  - Part B: 05 frog altar 3 / 3 (pilot), 06 frog totem 6 / 6, 04 skull knocker 3 / 3 (+ 3 nested in the skull gate),
+    09 skull gate 3 / 3 (emblem = the nested new skull x 1.9 on today's skull rows, worst 0.0004; planks in 2 widths
+    with grain), 07 magic stump 4 / 4 (22-stave bark trunk, runes carved in channels, glowing liquid top), 08 face tree
+    34 / 34 and 11 tree gate 3 / 3 (one shared dead-tree recipe: PropsSwampTrees.deadTrunk / fineBranch), 10 rock gate
+    3 / 3 (strata, soft moss pads, glowing mushrooms; barrier untouched).
+  - Kept exactly: every glow (eyes, pupils, bowls, sap runes, pool, crystals, orbs, runes, crosses), the mouth bars,
+    the altar light; the gate contracts (PrimaryPart, Barrier, SubZoneId / ZoneId, BarrierDecorIsChildOfBarrier, GUIs,
+    lights) unchanged on all 9 gate copies.
+  - Checks: dry run 175 templates / 2249 copies, 0 to replace; every template rebuilds with the same fingerprint; the
+    stashes were deleted. Disk == Studio (225 scripts, 0 written). Backups old_props_2026-10-25_pre_swamp_round2 (6) +
+    before_swamp_round2. Shots docs/screenshots/swamp_round2/ (05 / 06 / 04 / 07 test only). Play check left to the
+    main agent.
+- 23:55 Main agent: PLAY CHECK OK. Swamp_2 tree gate, Swamp_3 rock gate, Swamp_4 skull gate: block when closed,
+  the hold prompt opens them, decor under the barrier hides (3/3, 9/9, 15/15), walked through; 144 fps on desktop and on
+  the iPhone 17 Pro emulator (landscape) in Swamp_1-4, render 2.2-2.9 ms; 0 game errors. Backup after_swamp_round2.
+
+# Cursed Swamp ROUND 3 - QUEUED (owner prompt "CURSED SWAMP - ROUND 3 (DO THIS LAST ...)", received 2026-10-25)
+
+To run only after round 2 is finished and verified. Part 1: the witch tower, giant horror tree and fallen hollow log
+(map-only today) captured as MapProps templates + a sample each in the asset preview (enlarge the preview ground if
+needed). Part 2: remake the 3 to the same quality (keep entrance / path / lights / glows / raven / collisions). Part 3:
+audit EVERY unique asset of EVERY map, add the missing ones to the preview by biome with labels, write
+docs/asset_preview_index.md (propId, biome, in preview, instances, quality state). The 3 screenshots were saved from
+the chat into docs/Swamp_Big_Props_Round3/.
+
+# ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
+
+Replaces round 3 part 3. Runs after round 2 and round 3 parts 1-2. Tool tools/BuildAssetPreview.luau (idempotent), one
+block per zone in game order, SMALL / MEDIUM / LARGE rows, labels, Zone + SizeClass attributes, preview samples visual
+only (IsPreviewSample, no scripts / prompts / emitters / sounds, not reachable by players), docs/asset_preview_index.md
++ .json, the "every new asset goes in the preview" rule added to prop_inventory, HANDOFF and DESIGN. Map instances get
+only the tag and attributes, nothing else.

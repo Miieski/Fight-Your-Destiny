@@ -462,6 +462,25 @@ local function nestRaven(m: Model, raven: { any })
 	bird.Parent = m
 end
 
+-- the skull emblem (round 2): the swamp_skull_knocker MapProp nested at today's door skull (today's skull is the knocker
+-- kit at scale cranium / 2.6 = 1.9: its sockets, eyes, nose, teeth line and ring bars match the knocker's x 1.9), so the
+-- emblem is the new 04 skull with its iron frame and ring; tagged so the sync keeps it current; nothing of it collides
+local function nestSkull(parent: Instance, cranium: any)
+	local MD = require(ServerStorage.DevTools.PropsSwampMagicData:Clone()) :: any
+	local kitCr = MD.rows("Skull_Knocker_Door", "Cranium")[1]
+	local t = ServerStorage.MapProps:FindFirstChild("swamp_skull_knocker")
+	assert(t and kitCr, "PropsSwampGates: ServerStorage.MapProps.swamp_skull_knocker missing")
+	local s = cranium.size.X / kitCr.size.X
+	local skull = t:Clone()
+	skull.Name = "Skull"
+	skull:ScaleTo(s)
+	skull:PivotTo(cranium.cf * CFrame.new(-kitCr.cf.Position * s))
+	skull:AddTag("MapProp")
+	skull:SetAttribute("MapPropId", "swamp_skull_knocker")
+	skull:SetAttribute("MapPropVersion", tostring(t:GetAttribute("MapPropVersion") or "?") .. "|")
+	skull.Parent = parent
+end
+
 -- boards over a door plank row (in its frame; the face at local -Z): n boards with gaps, crooked a little, ragged
 -- tops, 3 tones; a crack now and then. inPlace: the boards take the row's own depth (nothing in front of it moves)
 local function doorBoards(list: { BasePart }, rng: Random, r: any, n: number, color: Color3, face: number, inPlace: boolean?)
@@ -645,8 +664,9 @@ end
 -- 8-sided points, iron bands with rivets across each palisade at 2 heights, rope lashings, moss and mud at the feet;
 -- today's lintel as a rotten log with iron bands, cracks, hanging moss and vines; today's PriceSign kept exactly in a
 -- rotten frame, today's 2 sign ropes as ropes; the 2 lanterns: cores + lights kept, iron frames on today's brackets;
--- the 2 dead trees: today's meshes kept as the trunks (and as their own Hull colliders), with roots spreading into the
--- mud, bark shelves, extra twisted bare branches, hanging moss and vines; today's mushroom meshes kept, the raven nested. THE
+-- the 2 dead trees (round 2: the face tree's DEAD-TREE RECIPE): tapered bark trunks with ridges and knuckles, finer
+-- limbs with twigs spreading into today's crown, roots spreading into the mud, bark shelves, moss and hanging moss
+-- (today's meshes only collide now, as their own Hull colliders); today's mushroom meshes kept, the raven nested. THE
 -- DOOR (under today's Barrier, the PrimaryPart, colliding): today's 6 planks as 3 crooked boards each (front) and 2
 -- (back), today's 2 cross beams as rotten timbers with rivets, the centre split, thick iron straps with rivets across
 -- both leaves, strap hinges, today's 2 handles as iron plates with ring handles.
@@ -716,67 +736,51 @@ function SG.swamp_tree_gate(): Model
 			end
 		end
 	end
-	-- the dead trees: today's meshes as the visible trunks; roots, branches, moss, vines on their surfaces
+	-- the dead trees (round 2: THE DEAD-TREE RECIPE of the face tree, PropsSwampTrees.deadTrunk / fineBranch): a tapered
+	-- bark trunk with ridges and knuckles inside today's tree mesh (the mesh only collides now: its Hull copy, invisible),
+	-- finer limbs with twigs spreading into today's crown (measured on the mesh: the crown leans to the mesh's +Z
+	-- diagonals), roots spreading into the mud, bark shelves, moss, hanging moss
+	local ST = require(ServerStorage.DevTools.PropsSwampTrees:Clone()) :: any
 	for ti, r in ipairs(rows(kit, "Tree")) do
-		local vis = rowPart(r)
-		vis.Name = "DeadTree"
-		vis.Color = r.color
-		vis.Material = Enum.Material.SmoothPlastic
-		vis.CanCollide = false
-		vis.CanQuery = false
-		vis.CanTouch = false
-		vis.Parent = m
-		-- probe the trunk surface from outside at a few heights (towards the tree's axis)
-		local probe = rowPart(r)
-		probe.CFrame = CFrame.new(0, 30000, 0) * r.cf
-		probe.Transparency = 1
-		probe.CanQuery = true
-		probe.Parent = workspace
-		local params = RaycastParams.new()
-		params.FilterType = Enum.RaycastFilterType.Include
-		params.FilterDescendantsInstances = { probe }
-		local function surface(y: number, ang: number): (Vector3?, Vector3?)
-			local axis = Vector3.new(r.cf.X, y, r.cf.Z)
-			local dir = Vector3.new(math.cos(ang), 0, math.sin(ang))
-			local o = CFrame.new(0, 30000, 0) * (axis + dir * 12)
-			local hit = workspace:Raycast(o, -dir * 12, params)
-			if hit then
-				return (CFrame.new(0, -30000, 0) * hit.Position), dir
-			end
-			return nil, nil
+		local Hh = r.size.Y
+		local foot = Vector3.new(r.cf.X, 0, r.cf.Z)
+		local s = Hh / 36
+		local function L(x: number, y: number, z: number): Vector3
+			local v = r.cf:VectorToWorldSpace(Vector3.new(x, 0, z))
+			return foot + Vector3.new(v.X, y * s, v.Z)
 		end
-		local outward = if r.cf.X > 0 then 0 else math.pi
+		local P = { L(0, -0.3, 0), L(0.2, 10, 0.1), L(-0.2, 19, 0.3), L(0.1, 28, 0.2) }
+		local Rr = { 3.4, 2.8, 2.1, 1.1 }
+		ST.deadTrunk(U.Logs, U.Wood, rng, P, Rr, r.color, 3)
+		local function R(y: number): number
+			local t = math.clamp(y / (28 * s), 0, 1)
+			return 3.4 + (1.1 - 3.4) * t
+		end
+		-- the limbs (mesh space: from the trunk to the crown)
+		for k, br in ipairs({ { 17, 4.5, 26, 4.5, 0.62 }, { 19, -4.8, 27, 4.2, 0.6 }, { 22, 3.8, 31, -1.5, 0.5 }, { 24, -3.2, 33, -1.2, 0.48 }, { 15, -4.0, 21, -2.0, 0.55 } }) do
+			local a = L(0, br[1], 0)
+			local b = L(br[2], br[3], br[4])
+			ST.fineBranch(U.Branches, U.Branches, rng, a, b, br[5], r.color, nil)
+			if k <= 3 then
+				SH.hangingMoss(U.Hang, rng, a:Lerp(b, 0.6) - Vector3.new(0, 0.3, 0), rng:NextNumber(1.2, 2.2))
+			end
+		end
 		-- roots at the foot
-		for k = 0, 4 do
-			local ang = outward + rad(-45 + k * 22.5)
-			local p, dir = surface(1.2, ang)
-			if p and dir then
-				logAB(U.Branches, p - dir * 0.3, p + dir * rng:NextNumber(2.0, 2.8) + Vector3.new(0, -1.3, 0), 0.55, r.color, 0.3)
-			end
+		for k = 0, 5 do
+			local ang = k * math.pi / 3 + 0.3 + ti
+			local dir = Vector3.new(math.cos(ang), 0, math.sin(ang))
+			local p = foot + dir * (R(1.2) - 0.4) + Vector3.new(0, 1.2, 0)
+			logAB(U.Branches, p, p + dir * rng:NextNumber(2.0, 2.8) + Vector3.new(0, -1.5, 0), 0.6, r.color, 0.35)
 		end
-		mud(U, rng, Vector3.new(r.cf.X, 0, r.cf.Z), 4.0, 3.4)
+		mud(U, rng, foot, 4.0, 3.4)
 		-- bark shelves (fungus, not glowing) and moss on the trunk
 		for k, y in ipairs({ 7, 12, 17 }) do
-			local p, dir = surface(y, outward + rad(if k % 2 == 0 then 60 else -40) + (if r.cf.X > 0 then math.pi else 0) * 0)
-			if p and dir then
-				table.insert(U.Mush, frustumN(8, 0.7, 0.35, 0, 0.22, CFrame.new(p + dir * 0.4), { rgb(122, 104, 78), rgb(104, 88, 66) }))
-				SH.mossPatch(U.Moss, rng, CFrame.fromMatrix(p + dir * 0.05 + Vector3.new(0, 0.8, 0), UP:Cross(dir).Unit, dir), 1.4, 1.0, 0.5)
-			end
+			local ang = k * 2.2 + ti
+			local dir = Vector3.new(math.cos(ang), 0, math.sin(ang))
+			local p = foot + Vector3.new(0, y * s, 0) + dir * R(y * s)
+			table.insert(U.Mush, frustumN(8, 0.7, 0.35, 0, 0.22, CFrame.new(p + dir * 0.3), { rgb(122, 104, 78), rgb(104, 88, 66) }))
+			SH.mossPatch(U.Moss, rng, CFrame.fromMatrix(p + dir * 0.05 + Vector3.new(0, 0.8, 0), UP:Cross(dir).Unit, dir), 1.4, 1.0, 0.5)
 		end
-		-- extra twisted bare branches high up, with hanging moss and a vine
-		for k = 1, 3 do
-			local y = 20 + k * 3.5 + (if ti == 2 then 1 else 0)
-			local ang = outward + rad(rng:NextNumber(-35, 35))
-			local p, dir = surface(y, ang)
-			if p and dir then
-				local q = p + dir * rng:NextNumber(2.5, 3.5) + Vector3.new(0, rng:NextNumber(1.5, 3), 0)
-				local s = q + (dir + Vector3.new(0, 0.8, rng:NextNumber(-0.3, 0.3))).Unit * rng:NextNumber(1.2, 1.8)
-				logAB(U.Branches, p - dir * 0.3, q, 0.42, r.color, 0.7)
-				logAB(U.Branches, q, s, 0.3, r.color, 0.3)
-				SH.hangingMoss(U.Hang, rng, p:Lerp(q, 0.7) - Vector3.new(0, 0.25, 0), rng:NextNumber(1.2, 2.2))
-			end
-		end
-		probe:Destroy()
 	end
 	-- the ghost mushrooms exactly; the raven (the nested swamp_raven at today's pose)
 	for _, name in ipairs({ "Caps", "Stems" }) do
@@ -844,10 +848,11 @@ end
 -- 03 ROCK BARRICADE (kit MapAssets.Gates.Gate_Swamp_3 -> Zones.Swamp.Swamp_3.Gate, attr SubZoneId; 52 parts)
 ---------------------------------------------------------------------
 -- The boulders with the jungle rock recipe: each of today's 4 rock meshes as one faceted convex rock built on its
--- measured hull (today's colours, lit tops lighter, undersides darker), today's 2 moss meshes as thick moss caps that
--- follow the rock facets (swamp moss, lighter on top) with soft mats and hanging moss at their rims; today's 4 frame
+-- measured hull (today's colours, lit tops lighter, undersides darker) with layered stone (round 2: 2 dark strata lines
+-- and a lighter ledge round each rock), today's 2 moss meshes as soft moss (round 2: a crown cushion and 9 soft pads on
+-- the upper facets instead of a cut cap) with hanging moss; today's 4 frame
 -- sticks and 2 root beams as dark rotten logs with rope lashings; today's PriceSign kept exactly in a dark frame; the
--- mushroom mesh kept (glow) and pale mushrooms by it; mud at the feet. THE BARRICADE (under today's invisible Barrier,
+-- mushroom mesh kept (glow) and pale mushrooms by it, 2 small clusters of glowing mushrooms (round 2); mud at the feet. THE BARRICADE (under today's invisible Barrier,
 -- the PrimaryPart): today's dark backing, today's 10 branches as thick crossed 8-sided branches with rope lashings
 -- where they cross, today's 18 thorns as small bones (a shaft and 2 knobs), today's 5 magenta orbs kept exactly
 -- (Neon) in dark iron rings. Colliders: today's rock meshes (Hull), sticks and beams (invisible), the PriceSign and the
@@ -858,11 +863,45 @@ function SG.swamp_rock_gate(): Model
 	m.Name = "swamp_rock_gate"
 	local rng = Random.new(20261033)
 	H.setBevelSelf(true)
-	local U: any = { Rock = {}, MossCap = {}, Logs = {}, Wood = {}, Iron = {}, Rope = {}, Moss = {}, Hang = {}, Mud = {}, Mush = {} }
+	local U: any = { Rock = {}, MossCap = {}, Logs = {}, Wood = {}, Iron = {}, Rope = {}, Moss = {}, Hang = {}, Mud = {}, Mush = {}, Glow = {} }
 	local mossRows = rows(kit, "Moss")
+	-- the surface point of a convex rock (planes) from `from` along the horizontal `dir`
+	local function rockEdge(planes: { any }, from: Vector3, dir: Vector3): Vector3?
+		local t = math.huge
+		for _, pl in ipairs(planes) do
+			local nd = pl.n:Dot(dir)
+			if nd > 1e-6 then
+				t = math.min(t, (pl.d - pl.n:Dot(from)) / nd)
+			end
+		end
+		return if t < 60 then from + dir * t else nil
+	end
 	for _, r in ipairs(rows(kit, "Rock")) do
 		local planes = hullPlanes(r, 44, 31)
 		hullRock(U.Rock, r, planes)
+		-- layered stone (round 2): 2 dark strata lines and a lighter ledge round the rock at 3 heights
+		do
+			local rTop = topOf(planes, r.cf.Position)
+			local base = r.cf.Y - r.size.Y / 2
+			for li, f in ipairs({ 0.22, 0.42, 0.6 }) do
+				local y = base + (rTop - base) * f
+				local from = Vector3.new(r.cf.X, y, r.cf.Z)
+				local prev, first = nil, nil
+				for k = 0, 16 do
+					local a = (k % 16) * math.pi / 8 + li * 0.2
+					local p = rockEdge(planes, from, Vector3.new(math.cos(a), 0, math.sin(a)))
+					if p then
+						p += Vector3.new(math.cos(a), 0, math.sin(a)) * 0.04 + Vector3.new(0, rng:NextNumber(-0.25, 0.25), 0)
+						if prev then
+							table.insert(U.Wood, H.bar(prev, p, if li == 2 then 0.32 else 0.16, if li == 2 then scaled(r.color, 1.12) else scaled(r.color, 0.55)))
+						end
+						prev = p
+					else
+						prev = nil
+					end
+				end
+			end
+		end
 		-- a moss cap where today's moss mesh sits: the rock's facets 0.3 out, cut a quarter of the height down
 		local hasMoss = false
 		for _, mr in ipairs(mossRows) do
@@ -878,16 +917,22 @@ function SG.swamp_rock_gate(): Model
 				table.insert(capPlanes, { n = pl.n, d = pl.d + 0.3 })
 			end
 			table.insert(capPlanes, { n = -UP, d = -(top - capH) })
-			local lo = Vector3.new(r.cf.X - r.size.X, top - capH - 1, r.cf.Z - r.size.Z)
-			local hi = Vector3.new(r.cf.X + r.size.X, top + 1, r.cf.Z + r.size.Z)
-			TB.solidOf(U.MossCap, CFrame.identity, lo, hi, capPlanes, function(n: Vector3): Color3
-				if n.Y > 0.55 then
-					return MOSS_TOP
-				elseif n.Y > -0.3 then
-					return MOSS
+			-- the moss (round 2: soft patches, not a cut cap): a crown cushion on top and 9 soft pads round the upper
+			-- facets, each sitting on the rock's surface
+			local mossTone = function(n: Vector3): Color3
+				return if n.Y > 0.5 then MOSS_TOP elseif n.Y > -0.2 then MOSS else scaled(MOSS, 0.8)
+			end
+			lump(U.MossCap, rng, CFrame.new(r.cf.X, top - 0.55, r.cf.Z), r.size.X * 0.16, 0.75, r.size.Z * 0.16, mossTone)
+			for k = 0, 8 do
+				local a = k * 2 * math.pi / 9 + rng:NextNumber(-0.2, 0.2)
+				local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+				local y = top - capH * rng:NextNumber(0.25, 1.15)
+				local p = rockEdge(planes, Vector3.new(r.cf.X, y, r.cf.Z), dir)
+				if p then
+					local s = rng:NextNumber(0.8, 1.3)
+					lump(U.MossCap, rng, CFrame.lookAt(p - dir * 0.3, p + dir) * CFrame.Angles(rad(-45), 0, 0), 1.6 * s, 0.4, 1.2 * s, mossTone)
 				end
-				return scaled(MOSS, 0.78)
-			end)
+			end
 			-- hanging moss from the cap's rim on the gate side and the front
 			for k = 1, 5 do
 				local ang = rad(k * 72 + rng:NextNumber(-15, 15))
@@ -929,6 +974,15 @@ function SG.swamp_rock_gate(): Model
 		end
 	end
 	SH.mushrooms(U.Mush, rng, Vector3.new(14.2, 0.15, -6.8), 3, 0.55)
+	-- 2 small clusters of glowing mushrooms at the rocks' feet (round 2)
+	for _, gp in ipairs({ Vector3.new(-12.5, 0, -6.2), Vector3.new(9.5, 0, -6.6) }) do
+		for k = 0, 2 do
+			local p = gp + Vector3.new(k * 0.55 - 0.5, 0, (k % 2) * 0.4)
+			local h = 0.45 + 0.18 * k
+			table.insert(U.Mush, frustumN(5, 0.09, 0.07, 0, h, CFrame.new(p), { rgb(230, 225, 205) }))
+			table.insert(U.Glow, frustumN(6, 0.3, 0.06, h - 0.04, h + 0.22, CFrame.new(p), { rgb(191, 245, 240) }))
+		end
+	end
 	mud(U, rng, Vector3.new(0, 0, -3.2), 7.5, 2.0)
 
 	-- THE BARRICADE under today's invisible Barrier
@@ -986,7 +1040,7 @@ function SG.swamp_rock_gate(): Model
 	under(barrier, "BarricadeBones", D.Bone)
 	under(barrier, "BarricadeIron", D.Iron)
 
-	TB.finishTB(m, "swamp_rock_gate", U, "Rock", {})
+	TB.finishTB(m, "swamp_rock_gate", U, "Rock", { Glow = { material = Enum.Material.Neon, shadow = false } })
 	setPrimary(m, barrier)
 	for _, r in ipairs(rows(kit)) do
 		if r.collide and r.parent == "" and r.name ~= "Barrier" and r.name ~= "PriceSign" then
@@ -1005,9 +1059,10 @@ end
 -- 2 roots as slanted support beams with rope and iron foot plates; today's PriceSign kept exactly in a rotten frame;
 -- the 2 lanterns (cores + lights kept) in iron frames on today's brackets; today's 4 Neon shelf mushrooms kept with a
 -- dark gill underside. THE DOOR (under today's Barrier, the PrimaryPart, colliding): today's 6 planks as crooked
--- boards, today's 2 bands as iron bands with rivets, the skull: today's cranium and jaw as rounded bone (carved depth:
--- cheekbones, a brow ridge, teeth), today's sockets, nose, mouth and Neon eyes kept exactly, today's ring as a round
--- iron ring, today's 4 Neon rune crosses kept exactly.
+-- boards, today's 2 bands as iron bands with rivets, the skull (round 2): the new 04 skull, the swamp_skull_knocker
+-- MapProp nested at x 1.9 (today's door skull is that kit x 1.9: its sockets, Neon eyes, nose, teeth line and ring bars
+-- land exactly where today's were), with its iron frame and ring; today's 4 Neon rune crosses kept exactly. Round 2
+-- also: the wall planks in 2 different widths per trunk, with grain lines.
 function SG.swamp_skull_gate(): Model
 	local kit = "Gate_Swamp_4"
 	local m = Instance.new("Model")
@@ -1015,15 +1070,25 @@ function SG.swamp_skull_gate(): Model
 	local rng = Random.new(20261034)
 	H.setBevelSelf(true)
 	local U: any = { Planks = {}, Wood = {}, Iron = {}, Rope = {}, Moss = {}, Hang = {}, Mud = {}, Mush = {} }
-	-- the trunks: 2 crooked planks each with pointed tops
+	-- the trunks: 2 crooked planks each (round 2: different widths, 45 / 55 %) with pointed tops and grain lines (their
+	-- own random stream r2, so the rest of the gate is drawn exactly as before)
+	local r2 = Random.new(20261044)
 	for _, r in ipairs(rows(kit, "Trunk")) do
 		local s, cf = r.size, r.cf
+		local split = r2:NextNumber(0.42, 0.58)
 		for k, sx in ipairs({ -1, 1 }) do
-			local w = s.X / 2 - 0.08
+			local frac = if k == 1 then split else 1 - split
+			local w = s.X * frac - 0.08
+			local x0 = if k == 1 then -s.X / 2 + s.X * frac / 2 else s.X / 2 - s.X * frac / 2
 			local h = s.Y - (if k == 1 then 0 else rng:NextNumber(0.8, 2.2))
 			local c = tone(rng, r.color)
-			local pcf = cf * CFrame.new(sx * s.X / 4, -s.Y / 2 + h / 2, 0) * CFrame.Angles(0, 0, rad(rng:NextNumber(-1.5, 1.5)))
+			local pcf = cf * CFrame.new(x0, -s.Y / 2 + h / 2, 0) * CFrame.Angles(0, 0, rad(rng:NextNumber(-1.5, 1.5)))
 			table.insert(U.Planks, chamfered(Vector3.new(w, h, s.Z), pcf, c, { "vertical" }, 0.18))
+			-- 2 grain lines down the plank's front
+			for _, gx in ipairs({ -w * 0.22, w * 0.18 }) do
+				local g0 = r2:NextNumber(0.5, 3)
+				table.insert(U.Wood, piece("Part", Vector3.new(0.09, h - g0 - 1.2, 0.06), pcf * CFrame.new(gx, -g0 / 2 - 0.4, -s.Z / 2 - 0.02), scaled(c, 0.72)))
+			end
 			local tip = pcf * CFrame.new(0, h / 2, 0)
 			table.insert(U.Planks, chamfered(Vector3.new(w, 1.4, s.Z), tip * CFrame.new(0, 0.7, 0), scaled(c, 1.05), { "topSides" }, w / 2 - 0.06))
 			for _, y in ipairs({ 5.5, 19.0 }) do
@@ -1103,48 +1168,15 @@ function SG.swamp_skull_gate(): Model
 				H.rivet(D.Iron, (r.cf * CFrame.new(x, 0, -0.32)).Position, 0.16)
 			end
 		elseif r.name == "Cranium" then
-			lump(D.Bone, rng, r.cf * CFrame.new(0, 0.1, 0), r.size.X / 2, r.size.Y / 2 + 0.1, r.size.Z / 2, function(n: Vector3): Color3
-				return if n.Y > 0.4 then scaled(r.color, 1.05) else r.color
-			end)
-			-- a brow ridge and 2 cheekbones (carved depth)
-			table.insert(D.Bone, chamfered(Vector3.new(r.size.X * 0.82, 0.32, 0.4), r.cf * CFrame.new(0, 0.95, -r.size.Z / 2 - 0.1), scaled(r.color, 1.06), { "frontFace" }, 0.1))
-			for _, sx in ipairs({ -1, 1 }) do
-				table.insert(D.Bone, chamfered(Vector3.new(0.7, 0.6, 0.45), r.cf * CFrame.new(sx * 1.55, -0.85, -r.size.Z / 2 - 0.05), scaled(r.color, 0.96), { "frontFace" }, 0.12))
-			end
-		elseif r.name == "Jaw" then
-			lump(D.Bone, rng, r.cf, r.size.X / 2, r.size.Y / 2, r.size.Z / 2, function(): Color3
-				return r.color
-			end)
-			for k = -2, 2 do
-				table.insert(D.Bone, chamfered(Vector3.new(0.42, 0.5, 0.2), r.cf * CFrame.new(k * 0.55, r.size.Y / 2 - 0.05, -r.size.Z / 2 - 0.12), BONE, { "frontFace" }, 0.06))
-			end
-		elseif r.name == "Ring" then
-			-- the round ring is drawn once (below); today's 3 bars give its size
-		elseif r.name == "Socket" or r.name == "Eye" or r.name == "Rune" or (r.name == "Part" and r.color:ToHex() == "1e1613") then
+			-- the emblem: the new 04 skull (swamp_skull_knocker, nested at x 1.9) with its sockets, eyes, nose, teeth
+			-- line, iron frame and ring (today's Socket / Eye / nose / teeth / Ring rows, exactly where they were)
+			nestSkull(barrier, r)
+		elseif r.name == "Rune" then
 			exactRow(barrier, r)
-		end
-	end
-	-- the ring: a round iron ring through today's ring bars (centre, radius) hanging from the jaw
-	do
-		local ringRows = {}
-		for _, r in ipairs(rows(kit, "Ring")) do
-			table.insert(ringRows, r)
-		end
-		local lo, hi = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
-		for _, r in ipairs(ringRows) do
-			lo = lo:Min(r.cf.Position - r.size / 2)
-			hi = hi:Max(r.cf.Position + r.size / 2)
-		end
-		local c = (lo + hi) / 2
-		local R = math.min(hi.X - lo.X, hi.Y - lo.Y) / 2 - 0.28
-		for k = 0, 15 do
-			local a = k * math.pi / 8
-			table.insert(D.Iron, piece("Part", Vector3.new(0.5, 2 * math.pi * R / 16 + 0.08, 0.5), CFrame.new(c + Vector3.new(math.cos(a) * R, math.sin(a) * R, 0)) * CFrame.Angles(0, 0, a), if k % 2 == 0 then IRON else IRON_LIGHT))
 		end
 	end
 	under(barrier, "DoorBoards", D.Boards)
 	under(barrier, "DoorIron", D.Iron)
-	under(barrier, "DoorSkull", D.Bone)
 
 	TB.finishTB(m, "swamp_skull_gate", U, "Planks", {})
 	setPrimary(m, barrier)

@@ -2,7 +2,7 @@
 	PropsSwampReuseData (dev tool data) - the 4 cursed swamp kits of the owner's "CURSED SWAMP PROP IMPROVEMENT - Objects
 	reused from other biomes" (2026-10-25) as they were before the remake, read from the kits in
 	ServerStorage.MapAssets.Swamp. Every copy is its kit at a Model scale. 4 Potion_Barrel copies have a purple Liquid
-	(#AA50FF, Variant Purple). Rowboat_Sunk carries the model attribute SinkDepth = 1 (kept on the copies). Generated in
+	(#AA50FF, Variant Purple). Rowboat_Sunk carries the model attribute SinkDepth = 1 (kept on the copies). Broom_A (round 2) is the witch's broom. Generated in
 	Studio from the live parts. One row per part: { name, class, shape, sx, sy, sz, the 12 CFrame components (pivot
 	space), hex, collide, transparency, material, query, parent ("" = the model, else the parent part's name), meshId,
 	collision fidelity }. Source of truth: tools/PropsSwampReuseData.luau.
@@ -52,6 +52,12 @@ Data.LilyPad_Swamp_A = {
 	{ "Pad", "Part", "Cylinder", 0.25, 5.19999981, 5.19999981, 0, 0.129999995, 0, -4.37113883e-08, -1, 0, 1, -4.37113883e-08, 0, 0, 0, 1, "385a2e", false, 0, "SmoothPlastic", false, "", "", "" },
 	{ "Pad", "Part", "Cylinder", 0.25, 3.20000005, 3.20000005, 3.4000001, 0.109999999, 1.79999995, -4.37113883e-08, -1, 0, 1, -4.37113883e-08, 0, 0, 0, 1, "5c823a", false, 0, "SmoothPlastic", false, "", "", "" },
 	{ "Bloom", "Part", "Block", 1.29999995, 0.899999976, 1.29999995, 0.600000024, 0.649999976, -0.5, 0.707106769, 0, 0.707106769, 0, 1, 0, -0.707106769, 0, 0.707106769, "ded6be", false, 0, "SmoothPlastic", false, "", "", "" },
+}
+
+Data.Broom_A = { -- (added in round 2)
+	{ "Part", "Part", "Block", 0.300000012, 0.300000012, 5.55717516, 0.400000006, 4.30000019, 0.150000006, -0.351123452, -0.924824536, -0.146327868, 0, 0.156278238, -0.987713039, 0.936329186, -0.346809208, -0.0548729524, "684c34", false, 0, "SmoothPlastic", false, "", "", "" },
+	{ "Part", "Part", "Block", 1.39999998, 1.79999995, 0.899999976, -0.119999997, 0.899999976, -0.0500000007, 0.990268052, -0.139173105, 0, 0.139173105, 0.990268052, 0, 0, 0, 1, "80783e", false, 0, "SmoothPlastic", false, "", "", "" },
+	{ "Part", "Part", "Block", 1, 0.300000012, 0.699999988, 0, 1.85000002, 0, 0.990268052, -0.139173105, 0, 0.139173105, 0.990268052, 0, 0, 0, 1, "c4a068", false, 0, "SmoothPlastic", false, "", "", "" },
 }
 
 -- a row as { name, class, shape, size, cf, color, collide, transparency, material, query, parent, meshId, fidelity }

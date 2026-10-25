@@ -28,7 +28,7 @@ local piece, chamfered = H.piece, H.chamfered
 local scaled, graded = H.scaled, H.graded
 local frustumN = M.frustumN
 local C = SH.COLORS
-local blob, leaf = ST.blob, ST.leaf
+local blob, leaf, leafTone = ST.blob, ST.leaf, ST.leafTone
 
 local SR = {}
 
@@ -735,9 +735,107 @@ function SR.swamp_lily_pads(): Model
 end
 
 ---------------------------------------------------------------------
+-- 05 WITCH'S BROOM (round 2, the owner's "02 hanging lantern" screenshot: kit MapAssets.Swamp.Broom_A: a handle 0.3 x
+-- 0.3 x 5.56 #684C34 rising from 1.56 to 7.04 (8 degrees off upright), a bristle block 1.4 x 1.8 x 0.9 #80783E and a
+-- band #C4A068, both turned 8 degrees; nothing collides or is queried; 5 copies: test, kit, Swamp_3 x3; no light, no
+-- script; the owner chose a good witch's broom over a lantern)
+---------------------------------------------------------------------
+-- A crooked faceted handle (5 six-sided segments along today's handle, bending a little, 2 knots, a knob on top);
+-- today's bristle block as a bundle of 18 twigs splaying from the binding to an oval foot round a thin core; today's
+-- band as a rope binding (2 turns, a knot, a loose end); a little moss on the bundle and the handle. Today's colours.
+-- Nothing collides (as today). Parts: Handle (PrimaryPart), Bristles, Binding, Moss
+function SR.swamp_broom(): Model
+	local kit = "Broom_A"
+	local m = Instance.new("Model")
+	m.Name = "swamp_broom"
+	local rng = Random.new(20261505)
+	H.setBevelSelf(true)
+	local U: any = { Handle = {}, Bristles = {}, Binding = {}, Moss = {} }
+	local handle, bristle, band = nil, nil, nil
+	for _, r in ipairs(rows(kit, "Part")) do
+		if r.size.Z > 3 then
+			handle = r
+		elseif r.size.Y > 1 then
+			bristle = r
+		else
+			band = r
+		end
+	end
+	-- the crooked handle
+	local look = handle.cf.LookVector
+	local a = handle.cf.Position - look * handle.size.Z / 2
+	local b = handle.cf.Position + look * handle.size.Z / 2
+	if a.Y > b.Y then
+		a, b = b, a
+	end
+	local axis = (b - a).Unit
+	local s1 = axis:Cross(Vector3.xAxis).Unit
+	local s2 = axis:Cross(s1).Unit
+	local WOOD = handle.color
+	local pts = {}
+	local n = 5
+	for k = 0, n do
+		local t = k / n
+		local bend = if k == 0 or k == n then Vector3.zero else s1 * math.sin(t * math.pi * 1.5 + 0.3) * 0.12 + s2 * math.sin(t * math.pi * 2.2) * 0.08
+		table.insert(pts, a:Lerp(b, t) + bend)
+	end
+	for k = 1, n do
+		local p, q = pts[k], pts[k + 1]
+		local r0 = 0.16 - 0.035 * (k - 1) / (n - 1)
+		table.insert(U.Handle, frustumN(6, r0, r0 - 0.008, -0.03, (q - p).Magnitude + 0.03, H.frameY(p, q - p) * CFrame.Angles(0, k * 0.5, 0), { WOOD, scaled(WOOD, 1.12), scaled(WOOD, 0.88) }))
+	end
+	for _, k in ipairs({ 3, 5 }) do
+		blob(U.Handle, rng, CFrame.new(pts[k] + s1 * 0.08), 0.12, 0.1, 0.12, function(nn: Vector3): Color3
+			return scaled(WOOD, 0.9 + 0.15 * math.max(nn.Y, 0))
+		end)
+	end
+	blob(U.Handle, rng, CFrame.new(b), 0.2, 0.16, 0.2, function(nn: Vector3): Color3
+		return scaled(WOOD, 0.92 + 0.15 * math.max(nn.Y, 0))
+	end)
+	-- the bristles: 18 twigs from the binding to an oval foot, a thin core
+	local bf = bristle.cf
+	local hb = bristle.size.Y / 2
+	local ax, az = bristle.size.X / 2, bristle.size.Z / 2
+	local BR = bristle.color
+	table.insert(U.Bristles, frustumN(8, 0.36, 0.22, -hb + 0.1, hb - 0.05, bf, { scaled(BR, 0.8), scaled(BR, 0.72) }))
+	for k = 1, 18 do
+		local ang = k * 2 * math.pi / 18 + rng:NextNumber(-0.12, 0.12)
+		local rr = rng:NextNumber(0.75, 1.0)
+		local top = (bf * CFrame.new(math.cos(ang) * 0.22, hb - 0.1, math.sin(ang) * 0.15)).Position
+		local foot = (bf * CFrame.new(math.cos(ang) * (ax - 0.06) * rr, -hb + rng:NextNumber(0, 0.1), math.sin(ang) * (az - 0.06) * rr)).Position
+		table.insert(U.Bristles, H.bar(top, foot, rng:NextNumber(0.09, 0.12), scaled(BR, rng:NextNumber(0.85, 1.12))))
+	end
+	-- the binding: 2 turns of rope at today's band, a knot and a loose end
+	local bandF = band.cf
+	for _, dy in ipairs({ -0.08, 0.1 }) do
+		table.insert(U.Binding, frustumN(10, 0.31, 0.3, dy - 0.07, dy + 0.07, bandF, { band.color, scaled(band.color, 0.88) }))
+	end
+	local knot = (bandF * CFrame.new(0.26, 0, -0.18)).Position
+	blob(U.Binding, rng, CFrame.new(knot), 0.1, 0.09, 0.09, function(): Color3
+		return scaled(band.color, 0.95)
+	end)
+	table.insert(U.Binding, H.bar(knot, knot + Vector3.new(0.12, -0.42, -0.06), 0.06, scaled(band.color, 0.92)))
+	-- a little moss: a cushion on the bundle's shoulder, a patch on the handle
+	blob(U.Moss, rng, bf * CFrame.new(-0.25, hb - 0.35, -0.3), 0.3, 0.16, 0.18, leafTone(MOSS))
+	blob(U.Moss, rng, CFrame.new(pts[3] - s1 * 0.12), 0.14, 0.22, 0.12, leafTone(MOSS_MID))
+	for k, v in pairs(U) do
+		if #v == 0 then
+			U[k] = nil
+		end
+	end
+	M.finish(m, "swamp_broom", U, "Handle")
+	for _, p in ipairs(m:GetChildren()) do
+		if p:IsA("BasePart") then
+			p.CanCollide, p.CanQuery, p.CanTouch = false, false, false
+		end
+	end
+	return m
+end
+
+---------------------------------------------------------------------
 -- registration: the builders go into the same PropsBatch2 table; its install() builds them
 ---------------------------------------------------------------------
-SR.BUILDERS = { swamp_barrel = true, swamp_scarecrow = true, swamp_rowboat = true, swamp_lily_pads = true }
+SR.BUILDERS = { swamp_barrel = true, swamp_scarecrow = true, swamp_rowboat = true, swamp_lily_pads = true, swamp_broom = true }
 for id in pairs(SR.BUILDERS) do
 	B2[id] = (SR :: any)[id]
 	B2.BUILDERS[id] = true

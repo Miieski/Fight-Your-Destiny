@@ -653,6 +653,9 @@ SyncMapProps.RULES = {
 	{ propId = "swamp_scarecrow", names = { "Scarecrow_Swamp" } },
 	{ propId = "swamp_rowboat", names = { "Rowboat_Sunk" } },
 	{ propId = "swamp_lily_pads", names = { "LilyPad_Swamp_A" } },
+	-- CURSED SWAMP ROUND 2 (owner, 2026-10-25): the witch's broom = Broom_A (the owner's "hanging lantern" screenshot;
+	-- the owner chose a good broom over a lantern)
+	{ propId = "swamp_broom", names = { "Broom_A" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

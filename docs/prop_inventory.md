@@ -1184,6 +1184,36 @@ biome; the owner asked to DUPLICATE that finished version and only adjust it.
 
 Totals: 120 copies replaced (4 templates).
 
+### Swamp round 2 (owner, "CURSED SWAMP - ROUND 2", 2026-10-25): status (Agent B)
+
+Screenshots of the owner's complaints: `docs/Swamp_Fixes_Round2/`. Every redo builds on the existing builder (low poly
+kept); the key words were rounded (faceted convex solids, not boxes) and integrated (carvings follow the surface).
+
+- **New shared pieces:** `SM.ellipsoidSolid` (a faceted rounded solid with flat bottom / front cuts),
+  `SM.skullBone` (the new skull), `ST.deadTrunk` and `ST.fineBranch` (the dead-tree recipe), `SR.swamp_broom`.
+- **Part A 02:** the owner's "hanging lantern" was the kit Broom_A (a stick and an olive block); the owner chose a
+  witch's broom: new propId `swamp_broom` (rule names Broom_A), 5 copies, nothing collides, no light.
+- **Nested:** the skull gate's emblem is the swamp_skull_knocker template x 1.9 (today's door skull is that kit x 1.9:
+  its sockets, eyes, nose, teeth line and ring rows land within 0.0004).
+- **Collisions:** unchanged everywhere (template Collision parts, KeptCollision per copy for the altar / totem, the
+  stump's and the tree gate's meshes as Hull colliders). Corners worst 0.00000, ray grids 0 differences.
+- **Sync:** run 2 = 0. Full dry run: 175 templates / 2249 copies, 0 to replace.
+- **Shots:** `docs/screenshots/swamp_round2/`.
+
+| # | object | MapProps id | replaced | triangles per copy | notes |
+|---|---|---|---|---|---|
+| A01 | rowboat | `swamp_rowboat` | 4 / 4 | 3,400 + meshes | the reuse task |
+| A02 | broom (the owner's "hanging lantern") | `swamp_broom` | 5 / 5 | 1,300 | crooked 6-sided handle with knots and a knob, 18 twig bristles round a core, rope binding with a knot, moss; 1.77 x 7.28 x 1.05 (kit 1.94 x 7.16 x 0.99) |
+| A03 | lily pads | `swamp_lily_pads` | 92 / 92 | 1,000 | the reuse task |
+| 04 | skull on frame | `swamp_skull_knocker` | 3 / 3 (+ 3 nested) | 2,500 | rounded cranium, brow arcs, cheekbones, nose rim, 6 upper and 5 lower teeth, cracks; magenta eyes kept |
+| 05 | frog statue altar (pilot) | `swamp_frog_altar` | 3 / 3 | 9,100 | chunky rounded frog: open grin round the kept mouth bar, bulging eyes on mounds, pale throat, webbed hands over the plinth edge, haunches, warts, cracks; lily-pad relief and ripples on the plinth |
+| 06 | frog totem | `swamp_frog_totem` | 6 / 6 | 7,700 | 3 rounded heads: sleepy, grinning, surprised; webbed hands holding the frog below; necks with iron bands, rope; carved leaves on the base |
+| 07 | hollow magic stump | `swamp_magic_stump` | 4 / 4 | 8,800 | 22-stave faceted bark trunk with buttress flare; the 5 Sap runes carved in channels between bark ridges with Neon ticks; glowing liquid top with swirls and mist; glowing toadstools by the pool |
+| 08 | dead tree with a face | `swamp_face_tree` | 34 / 34 | 6,300 | dead-tree recipe trunk; deep sockets, rounded brows, knot nose, lips with 3 teeth, bark folds, moss beard, root toes |
+| 09 | skull palisade gate | `swamp_skull_gate` | 3 / 3 | 15,000 | the new skull nested as the emblem; planks in 2 widths with grain lines |
+| 10 | rock barricade gate | `swamp_rock_gate` | 3 / 3 | 27,900 | strata lines and a ledge on each boulder; soft moss pads instead of the cut cap; glowing mushrooms |
+| 11 | wooden gate with dead trees | `swamp_tree_gate` | 3 / 3 | 26,200 | the 2 dead trees on the dead-tree recipe (trunk, 5 limbs into the crown, roots, shelves, moss) |
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

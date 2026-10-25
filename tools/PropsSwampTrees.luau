@@ -621,21 +621,89 @@ local function gnarledBranch(list: { BasePart }, twigs: { BasePart }, rng: Rando
 end
 ST.gnarledBranch = gnarledBranch
 
--- From today's parts: the 3 trunk blocks as one bark trunk (8-sided; the lowest block untwisted with a flat front so the
--- face sits on it; the 2 upper ones twisted 17 degrees a segment with winding grooves, a knuckle at each bend, a knot);
--- today's 5 branches as gnarled 6-sided limbs with forked twigs; THE FACE: today's 2 eye sockets, 2 Neon pupils (the
--- glow) and the 2 crooked mouth blocks kept exactly, carved round with depth: heavy bark brows over the eyes, cheek knobs
--- under them, a knotted nose, upper and lower lips, a dark recess behind the eyes; 2 short roots flaring left and right
--- and 2 small root flares at the back (the depth stays 5.3), mud collars; moss cushions on the branch forks and 4 hanging
--- moss strands. Colliders: today's 8 blocks (invisible). Parts: Trunk (PrimaryPart), Bark, Branches, Twigs, FaceCarve,
--- Roots, Mud, Moss, Eye x2, Pupil x2, Mouth x2, Collision x8
+-- THE DEAD-TREE RECIPE (round 2, shared by the face tree and the wooden gate's 2 dead trees): a tapered trunk along the
+-- control points P (radius R[i] at each), each span in `sub` 8-sided segments with a slight wobble and a twist,
+-- raised bark ridges (6 a segment, lighter) and dark grooves between them following the twist (`skip(dir, y)`: leave a
+-- sector bare, e.g. for a face), a knuckle at each inner control point. Returns the segment points.
+local function deadTrunk(list: { BasePart }, ridges: { BasePart }, rng: Random, P: { Vector3 }, Rr: { number }, color: Color3, sub: number, skip: ((Vector3, number) -> boolean)?): { Vector3 }
+	local pts, rad0 = {}, {}
+	for i = 1, #P - 1 do
+		for s = 0, sub - 1 do
+			local t = s / sub
+			local p = P[i]:Lerp(P[i + 1], t)
+			local inner = not (i == 1 and s == 0)
+			if inner and s > 0 then
+				p += Vector3.new(rng:NextNumber(-0.12, 0.12), 0, rng:NextNumber(-0.1, 0.1))
+			end
+			table.insert(pts, p)
+			table.insert(rad0, Rr[i] + (Rr[i + 1] - Rr[i]) * t)
+		end
+	end
+	table.insert(pts, P[#P])
+	table.insert(rad0, Rr[#Rr])
+	for k = 1, #pts - 1 do
+		local p, q = pts[k], pts[k + 1]
+		local r0, r1 = rad0[k], rad0[k + 1]
+		local frame = H.frameY(p, q - p) * CFrame.Angles(0, k * 0.3, 0)
+		local c = tone(rng, color)
+		table.insert(list, frustumN(8, r0, r1, -0.06, (q - p).Magnitude + 0.06, frame, { c, scaled(c, 1.08), scaled(c, 0.9) }))
+		for j = 0, 5 do
+			local f = frame * CFrame.Angles(0, j * math.pi / 3 + 0.2, 0)
+			local d0 = f.XVector
+			local y = (p.Y + q.Y) / 2
+			if skip and skip(d0, y) then
+				continue
+			end
+			local isRidge = j % 2 == 0
+			local a = p + d0 * (r0 + (if isRidge then 0.04 else 0.01))
+			local b = q + d0 * (r1 + (if isRidge then 0.04 else 0.01))
+			table.insert(ridges, stemBar(a, b, if isRidge then math.max(0.12, r0 * 0.14) else 0.1, if isRidge then scaled(c, 1.18) else BARK_LINE))
+		end
+	end
+	for i = 2, #P - 1 do
+		local c = tone(rng, color)
+		blob(list, rng, CFrame.new(P[i]), Rr[i] * 1.08, Rr[i] * 0.5, Rr[i] * 1.06, function(n: Vector3): Color3
+			return scaled(c, 0.9 + 0.15 * math.max(n.Y, 0))
+		end)
+	end
+	return pts
+end
+ST.deadTrunk = deadTrunk
+
+-- a finer dead branch (round 2): a gnarled limb at 70 % of today's thickness with its forked twigs, and 2 more small
+-- twigs along it
+local function fineBranch(list: { BasePart }, twigs: { BasePart }, rng: Random, a: Vector3, b: Vector3, r: number, color: Color3, maxX: number?)
+	gnarledBranch(list, twigs, rng, a, b, r * 0.7, color, maxX)
+	local d = (b - a).Unit
+	local side = Vector3.new(-d.Y, d.X, 0)
+	side = if side.Magnitude > 1e-3 then side.Unit else Vector3.xAxis
+	for k, t in ipairs({ 0.35, 0.7 }) do
+		local from = a:Lerp(b, t)
+		local dir = (d * 0.6 + side * (if k == 1 then 1 else -1) * 0.7 + UP * 0.5).Unit
+		local len = rng:NextNumber(0.8, 1.3)
+		if maxX and math.abs(dir.X) > 1e-3 and math.abs(from.X + dir.X * len) > maxX then
+			len = math.max(0.3, (math.sign(dir.X) * maxX - from.X) / dir.X)
+		end
+		table.insert(twigs, frustumN(4, math.max(0.1, r * 0.25), 0.03, -0.05, len, H.frameY(from, dir) * CFrame.Angles(0, rad(45), 0), { scaled(color, 1.05), scaled(color, 0.88) }))
+	end
+end
+ST.fineBranch = fineBranch
+
+-- Round 2 (the owner: "a carved face integrated in the trunk ... more spooky-cute than ugly"): the 3 trunk blocks as
+-- one tapered bark trunk (THE DEAD-TREE RECIPE: 8-sided segments, ridges and grooves, knuckles; the face's sector left
+-- bare on a flat bark face plate); today's 5 branches as finer gnarled limbs with more twigs, moss cushions and hanging
+-- moss; THE FACE: today's 2 eye sockets, 2 Neon pupils (the glow) and the 2 crooked mouth blocks kept exactly, carved
+-- round: deep sockets (a dark recess and a shadow ring), heavy rounded brow ridges, cheek knobs, a round knot nose, lips
+-- with 3 pale teeth, bark folds framing the face, a moss beard under the chin; 2 roots flaring left and right, 2 at the
+-- back and 2 short root toes in front, mud collars. Colliders: today's 8 blocks (invisible). Parts: Trunk (PrimaryPart),
+-- Bark, Branches, Twigs, FaceCarve, Teeth, Roots, Mud, Moss, Eye x2, Pupil x2, Mouth x2, Collision x8
 function ST.swamp_face_tree(): Model
 	local kit = "TwistedTree_A"
 	local m = Instance.new("Model")
 	m.Name = "swamp_face_tree"
 	local rng = Random.new(20261104)
 	H.setBevelSelf(true)
-	local U: any = { Trunk = {}, Bark = {}, Branches = {}, Twigs = {}, FaceCarve = {}, Roots = {}, Mud = {}, Moss = {} }
+	local U: any = { Trunk = {}, Bark = {}, Branches = {}, Twigs = {}, FaceCarve = {}, Teeth = {}, Roots = {}, Mud = {}, Moss = {} }
 	local trunks, branches = {}, {}
 	for _, r in ipairs(rows(kit, "Part")) do
 		local _, _, _, thick = ends(r)
@@ -648,31 +716,40 @@ function ST.swamp_face_tree(): Model
 	for i, r in ipairs(trunks) do
 		local a, b, _, thick = ends(r)
 		axis[i] = { a, b, thick }
-		local r0 = thick / 2 * 0.98
-		if i == 1 then
-			twistedLog(U.Trunk, nil, rng, a, b, r0, r0 * 0.97, r.color, rad(22.5), 0)
-		else
-			twistedLog(U.Trunk, U.Bark, rng, a, b, r0, r0 * 0.9, r.color, i * 0.7)
-			local pa = axis[i - 1]
-			local j = (pa[2] + a) / 2
-			local c = tone(rng, r.color)
-			table.insert(U.Trunk, frustumN(8, thick * 0.52, thick * 0.5, -thick * 0.45, thick * 0.45, H.frameY(j, (b - pa[1]).Unit) * CFrame.Angles(0, rad(11), 0), { c, scaled(c, 1.06), scaled(c, 0.92) }))
+	end
+	local wood = trunks[1].color
+	local eyes = rows(kit, "Eye")
+	local mouth = rows(kit, "Mouth")
+	local faceTop = eyes[1].cf.Y + 1.9
+	local faceBot = mouth[1].cf.Y - 1.4
+	-- the tapered trunk through today's 3 blocks
+	local P = {
+		Vector3.new(axis[1][1].X, -0.3, axis[1][1].Z),
+		(axis[1][2] + axis[2][1]) / 2,
+		(axis[2][2] + axis[3][1]) / 2,
+		axis[3][2],
+	}
+	local Rr = { axis[1][3] / 2 * 0.95, axis[2][3] / 2 * 1.02, axis[3][3] / 2 * 1.02, axis[3][3] / 2 * 0.55 }
+	deadTrunk(U.Trunk, U.Bark, rng, P, Rr, wood, 3, function(d: Vector3, y: number): boolean
+		return d.Z < -0.55 and y > faceBot - 0.5 and y < faceTop + 0.3
+	end)
+	-- the face plate: a flat bark face over the front of the lowest block
+	local fz = eyes[1].cf.Z - 0.05 -- the face plate's front: today's sockets stand 0.25 proud of it
+	table.insert(U.FaceCarve, H.chamfered(Vector3.new(axis[1][3] * 0.86, faceTop - faceBot, 0.6), CFrame.new(0.25, (faceTop + faceBot) / 2, fz + 0.3), scaled(wood, 1.04), { "vertical", "topFrontBack", "bottomFrontBack" }, 0.25))
+	-- bark folds framing the face
+	for _, sx in ipairs({ -1, 1 }) do
+		local pts = {}
+		for k = 0, 4 do
+			local t = k / 4
+			local y = faceTop - 0.2 - t * (faceTop - faceBot - 0.4)
+			local x = 0.25 + sx * (axis[1][3] * 0.43 + 0.25 * math.sin(t * math.pi))
+			table.insert(pts, Vector3.new(x, y, fz + 0.08 - 0.15 * math.sin(t * math.pi)))
+		end
+		for i = 1, #pts - 1 do
+			table.insert(U.FaceCarve, stemBar(pts[i], pts[i + 1], 0.32, scaled(wood, 1.16)))
 		end
 	end
-	-- grooves on the back and sides of the face block only (the front stays smooth for the face)
-	do
-		local a, b, thick = axis[1][1], axis[1][2], axis[1][3]
-		for _, x in ipairs({ -thick * 0.5, thick * 0.5 }) do
-			for k = 0, 1 do
-				local z = -0.6 + k * 1.3
-				table.insert(U.Bark, H.bar(Vector3.new(a.X + x, a.Y + 1.2, z), Vector3.new(b.X + x, b.Y - 0.6, z + 0.25), 0.14, BARK_LINE))
-			end
-		end
-		for k = -1, 1 do
-			table.insert(U.Bark, H.bar(Vector3.new(a.X + k * 1.1, a.Y + 1.2, thick * 0.5), Vector3.new(b.X + k * 1.1 + 0.2, b.Y - 0.6, thick * 0.5), 0.14, BARK_LINE))
-		end
-	end
-	-- the branches: gnarled limbs with twigs (clipped at today's width); moss on 2 forks, hanging strands
+	-- the branches: finer gnarled limbs with more twigs; moss cushions, hanging moss
 	local maxX = 0
 	for _, r in ipairs(rows(kit, "Part")) do
 		local a, b = ends(r)
@@ -681,60 +758,74 @@ function ST.swamp_face_tree(): Model
 	maxX += 0.6
 	for i, r in ipairs(branches) do
 		local a, b, _, thick = ends(r)
-		gnarledBranch(U.Branches, U.Twigs, rng, a, b, thick / 2 * 0.98, r.color, maxX)
-		if i <= 2 then
-			mossCushion(U.Moss, rng, H.frameY(a + (b - a) * 0.12 + UP * thick * 0.45, UP), 1.2)
-			mossStrand(U.Moss, rng, a + (b - a) * 0.55 - UP * thick * 0.4, rng:NextNumber(1.6, 2.4))
-			mossStrand(U.Moss, rng, a + (b - a) * 0.4 - UP * thick * 0.4 + Vector3.new(0, 0, 0.2), rng:NextNumber(1.0, 1.5))
+		fineBranch(U.Branches, U.Twigs, rng, a, b, thick / 2 * 0.98, r.color, maxX)
+		if i <= 3 then
+			mossCushion(U.Moss, rng, H.frameY(a + (b - a) * 0.12 + UP * thick * 0.35, UP), 1.0)
+			mossStrand(U.Moss, rng, a + (b - a) * 0.55 - UP * thick * 0.3, rng:NextNumber(1.6, 2.6))
 		end
 	end
 	-- THE FACE: today's parts exactly, and the carving round them
-	local eyes = rows(kit, "Eye")
 	for _, r in ipairs(eyes) do
 		exactRow(m, r)
 		local x, y = r.cf.X, r.cf.Y
 		local inward = if x < 0.35 then 1 else -1
-		-- a dark recess a little larger than the socket, behind it
-		table.insert(U.FaceCarve, piece("Part", Vector3.new(1.45, 1.6, 0.12), CFrame.new(x, y, -2.16) * CFrame.Angles(0, 0, rad(-inward * 22)), rgb(22, 16, 13)))
-		-- the heavy brow: a bevelled bark ridge over the eye, its inner end lower
-		table.insert(U.FaceCarve, H.chamfered(Vector3.new(1.6, 0.42, 0.5), CFrame.new(x + inward * 0.05, y + 0.92, -2.33) * CFrame.Angles(0, 0, rad(-inward * 14)), scaled(trunks[1].color, 1.1), { "topFrontBack", "frontFace" }, 0.12))
-	end
-	-- cheek knobs under the eyes
-	for _, r in ipairs(eyes) do
-		local x, y = r.cf.X, r.cf.Y
-		blob(U.FaceCarve, rng, CFrame.new(x, y - 1.0, -2.18), 0.5, 0.32, 0.22, function(n: Vector3): Color3
-			return scaled(trunks[1].color, 0.95 + 0.15 * math.max(n.Y, 0))
+		-- the deep socket: a dark recess larger than today's socket and a shadow ring round it
+		table.insert(U.FaceCarve, piece("Part", Vector3.new(1.6, 1.8, 0.12), CFrame.new(x, y, fz - 0.02) * CFrame.Angles(0, 0, rad(-inward * 22)), rgb(18, 13, 11)))
+		table.insert(U.FaceCarve, frustumN(8, 1.1, 1.05, -0.05, 0.08, H.frameY(Vector3.new(x, y, fz - 0.04), -Vector3.zAxis), { scaled(wood, 0.62) }))
+		-- the heavy rounded brow: an arc of 4 bark lumps over the socket
+		for k = 0, 3 do
+			local a = rad(150 - k * 40)
+			local p = Vector3.new(x + math.cos(a) * 0.85, y + 0.55 + math.sin(a) * 0.45, fz - 0.28)
+			blob(U.FaceCarve, rng, CFrame.new(p), 0.36, 0.26, 0.26, function(n: Vector3): Color3
+				return scaled(wood, 1.05 + 0.15 * math.max(n.Y, 0))
+			end)
+		end
+		-- a cheek knob under the eye
+		blob(U.FaceCarve, rng, CFrame.new(x, y - 1.05, fz - 0.2), 0.5, 0.34, 0.26, function(n: Vector3): Color3
+			return scaled(wood, 0.98 + 0.15 * math.max(n.Y, 0))
 		end)
 	end
 	for _, r in ipairs(rows(kit, "Pupil")) do
 		exactRow(m, r)
 	end
-	local mouth = rows(kit, "Mouth")
 	for _, r in ipairs(mouth) do
 		exactRow(m, r)
 	end
 	do
 		local mm = mouth[1]
-		local cf = CFrame.new(mm.cf.X, mm.cf.Y, -2.2) * (mm.cf - mm.cf.Position)
-		local lipC = scaled(trunks[1].color, 1.08)
+		local cf = CFrame.new(mm.cf.X, mm.cf.Y, fz - 0.05) * (mm.cf - mm.cf.Position)
+		local lipC = scaled(wood, 1.08)
 		table.insert(U.FaceCarve, H.chamfered(Vector3.new(mm.size.X + 0.3, 0.26, 0.4), cf * CFrame.new(0.1, mm.size.Y / 2 + 0.12, -0.12), lipC, { "topFrontBack" }, 0.08))
 		table.insert(U.FaceCarve, H.chamfered(Vector3.new(mm.size.X - 0.2, 0.3, 0.42), cf * CFrame.new(0.15, -mm.size.Y / 2 - 0.14, -0.12), scaled(lipC, 0.95), { "bottomFrontBack" }, 0.08))
-		-- the knotted nose between the eyes and the mouth
+		-- 3 pale teeth hanging from the upper lip (a crooked grin)
+		for k, tx in ipairs({ -0.75, 0.05, 0.7 }) do
+			local tcf = cf * CFrame.new(tx, mm.size.Y / 2 - 0.12, -0.33) * CFrame.Angles(0, 0, rad((k - 2) * 8))
+			table.insert(U.Teeth, piece("WedgePart", Vector3.new(0.26, 0.34, 0.14), tcf * CFrame.Angles(rad(180), 0, 0), rgb(214, 196, 150)))
+		end
+		-- the round knot nose between the eyes and the mouth
 		local nx = (eyes[1].cf.X + eyes[2].cf.X) / 2 + 0.05
-		local ny = (eyes[1].cf.Y + mm.cf.Y) / 2 + 0.15
-		table.insert(U.FaceCarve, frustumN(5, 0.32, 0.14, 0, 0.55, H.frameY(Vector3.new(nx, ny, -2.15), Vector3.new(0.1, -0.35, -1).Unit), { scaled(trunks[1].color, 1.12), trunks[1].color }))
+		local ny = (eyes[1].cf.Y + mm.cf.Y) / 2 + 0.1
+		blob(U.FaceCarve, rng, CFrame.new(nx, ny, fz - 0.35), 0.42, 0.38, 0.36, function(n: Vector3): Color3
+			return scaled(wood, 1.02 + 0.18 * math.max(n.Y, 0))
+		end)
+		table.insert(U.FaceCarve, frustumN(6, 0.14, 0.1, 0.3, 0.42, H.frameY(Vector3.new(nx, ny - 0.05, fz - 0.35), Vector3.new(0, -0.3, -1).Unit), { BARK_LINE }))
+		-- the moss beard under the chin
+		for k = 0, 4 do
+			local bx = mm.cf.X - 1.0 + k * 0.5
+			mossStrand(U.Moss, rng, Vector3.new(bx, mm.cf.Y - mm.size.Y / 2 - 0.3, fz - 0.3), rng:NextNumber(0.8, 1.5), MOSS_MID)
+		end
 	end
-	-- roots: 2 flaring left and right, 2 small flares at the back; mud collars
+	-- roots: 2 flaring left and right, 2 small flares at the back, 2 short root toes in front; mud collars
 	do
 		local a, thick = axis[1][1], axis[1][3]
 		local base = Vector3.new(a.X, 0, a.Z)
-		for _, e in ipairs({ { Vector3.new(-1, 0, 0.15), 4.6, 1.0 }, { Vector3.new(1, 0, -0.1), 4.4, 0.95 }, { Vector3.new(-0.45, 0, 1), 2.55, 0.6 }, { Vector3.new(0.5, 0, 1), 2.5, 0.55 } }) do
+		for _, e in ipairs({ { Vector3.new(-1, 0, 0.15), 4.6, 1.0 }, { Vector3.new(1, 0, -0.1), 4.4, 0.95 }, { Vector3.new(-0.45, 0, 1), 2.55, 0.6 }, { Vector3.new(0.5, 0, 1), 2.5, 0.55 }, { Vector3.new(-0.55, 0, -1), 2.75, 0.5 }, { Vector3.new(0.6, 0, -1), 2.7, 0.45 } }) do
 			local d = e[1].Unit
-			local top = base + d * thick * 0.3 + UP * 2.0
-			local foot = base + Vector3.new(d.X * e[2], -0.5, math.clamp(d.Z * e[2], -2.55, 2.55))
-			local ctrl = archRoot(U.Roots, rng, top, foot, e[3] * 0.62, 0.7, trunks[1].color)
+			local top = base + d * thick * 0.3 + UP * (if d.Z < -0.5 then 1.2 else 2.0)
+			local foot = base + Vector3.new(d.X * e[2], -0.5, math.clamp(d.Z * e[2], -2.9, 2.55))
+			local ctrl = archRoot(U.Roots, rng, top, foot, e[3] * 0.62, 0.7, wood)
 			local g = archAt(top, ctrl, foot, 0.3)
-			mudCollar(U.Mud, rng, Vector3.new(g.X, 0.12, math.clamp(g.Z, -2.3, 2.3)), e[3] * 0.55)
+			mudCollar(U.Mud, rng, Vector3.new(g.X, 0.12, math.clamp(g.Z, -2.6, 2.3)), e[3] * 0.55)
 		end
 	end
 	for k, v in pairs(U) do
@@ -989,155 +1080,129 @@ local function meshProbe(r: any): ((number, number) -> (Vector3?, Vector3?), (nu
 	return surfaceAt, topAt
 end
 
--- From today's parts: today's trunk mesh kept as the visible stump (not colliding; its Hull copy collides, invisible);
--- dark bark grooves and 3 knots placed on its measured surface; THE HOLLOW TOP: a rough bark rim of lumps round the edge
--- of today's top cap, a dark liquid inside it, and a faint pale mist over it (translucent); THE RUNES: today's 5 Neon
--- Sap strips and the SapPool kept exactly, each strip set in a dark carved groove with 2 short rune ticks branching off
--- it (Neon, the same colour); today's 2 Neon crystals kept exactly with small crystal shards round them (Neon, the same
--- colour); today's 4 roots as arching rim roots with mud collars, today's 2 branches as crooked limbs with twigs; moss
--- cushions on the roots and the rim, a moss strand, ghost mushrooms at the foot. Colliders: today's Trunk (mesh, Hull),
--- 4 roots and 2 branches (invisible). Parts: Roots (PrimaryPart), TrunkMesh, Bark, Rim, Liquid, Mist, Runes, Grooves,
--- Crystals, Branches, Twigs, Mud, Moss, Mush, Sap x5, SapPool, Part x2 (crystals), Collision x7
+-- Round 2 (the owner: "currently a plain dark cylinder"): the stump is now a faceted bark trunk of 22 vertical staves
+-- (ridges and grooves, every other stave proud) on a radius profile flaring into buttresses at the foot and tapering to
+-- the top, a dark core inside; today's trunk mesh only collides (its Hull copy, invisible). THE RUNES: today's 5 Neon
+-- Sap strips kept exactly, each now CARVED into the bark: set in a dark channel between 2 raised bark ridges that follow
+-- the strip's own lean, with 2 short Neon rune ticks cut into the ridges; the SapPool kept exactly with small glowing
+-- toadstools round it (a lantern-like glow at the foot). THE HOLLOW TOP: a rough rim of bark lumps, a glowing toxic
+-- liquid (Neon, the sap's colour) with dark swirl arcs, a faint pale mist over it. Today's 2 crystals kept exactly with
+-- shards; today's 4 roots as arching buttress roots with mud collars; today's 2 branches as curved dead limbs with twigs;
+-- 3 knots, moss, ghost mushrooms at the foot. Colliders: today's Trunk (mesh, Hull), 4 roots and 2 branches
+-- (invisible). Parts: Roots (PrimaryPart), Bark, Rim, Liquid, Swirl, Mist, Runes, Grooves, Crystals, Branches, Twigs,
+-- Mud, Moss, Mush, Glow, Sap x5, SapPool, Part x2 (crystals), Collision x7
 function ST.swamp_magic_stump(): Model
 	local kit = "Rotten_Trunk_Glow"
 	local m = Instance.new("Model")
 	m.Name = "swamp_magic_stump"
 	local rng = Random.new(20261107)
 	H.setBevelSelf(true)
-	local U: any = { Roots = {}, Bark = {}, Rim = {}, Liquid = {}, Mist = {}, Runes = {}, Grooves = {}, Crystals = {}, Branches = {}, Twigs = {}, Mud = {}, Moss = {}, Mush = {} }
+	local U: any = { Roots = {}, Bark = {}, Rim = {}, Liquid = {}, Swirl = {}, Mist = {}, Runes = {}, Grooves = {}, Crystals = {}, Branches = {}, Twigs = {}, Mud = {}, Moss = {}, Mush = {}, Glow = {} }
 	local trunk = rows(kit, "Trunk")[1]
 	local wood = trunk.color
-	-- today's mesh as the visible stump
-	local vis = rowPart(trunk)
-	vis.Name = "TrunkMesh"
-	vis.Color = wood
-	vis.Material = Enum.Material.SmoothPlastic
-	vis.CanCollide = false
-	vis.CanQuery = false
-	vis.CanTouch = false
-	vis.Parent = m
-	local surfaceAt, topAt = meshProbe(trunk)
-	-- bark grooves (between the sap strips) and knots on the measured surface
-	local saps = rows(kit, "Sap")
-	local sapAng = {}
-	for _, r in ipairs(saps) do
-		table.insert(sapAng, math.atan2(r.cf.Z, r.cf.X))
-	end
-	for k = 0, 11 do
-		local a = k * math.pi / 6 + 0.13
-		local near = false
-		for _, sa in ipairs(sapAng) do
-			local d = math.abs((a - sa + math.pi) % (2 * math.pi) - math.pi)
-			if d < 0.32 then
-				near = true
-			end
+	local TOP = trunk.cf.Y + trunk.size.X / 2 - 0.3
+	-- the radius profile: buttress flare at the foot, a gentle taper to the top
+	local function R(y: number): number
+		if y <= 2.6 then
+			local t = math.clamp(y / 2.6, 0, 1)
+			return 7.4 + (5.95 - 7.4) * (1 - (1 - t) * (1 - t))
+		elseif y <= 11 then
+			return 5.95 + (5.55 - 5.95) * (y - 2.6) / 8.4
 		end
-		if not near then
-			local y0 = 2 + (k % 3) * 1.2
-			local prev = nil
-			for _, y in ipairs({ y0, y0 + 4.5, y0 + 9, y0 + 13 }) do
-				local p, n = surfaceAt(a + (y - y0) * 0.012, y)
-				if p and n then
-					local q = p + n * 0.04
-					if prev then
-						table.insert(U.Bark, stemBar(prev, q, 0.2, BARK_LINE))
-					end
-					prev = q
-				else
-					prev = nil
-				end
-			end
-		end
+		return 5.55 + (5.05 - 5.55) * (y - 11) / (TOP - 11)
 	end
-	for k = 1, 3 do
-		local p, n = surfaceAt(k * 2.1 + 0.4, 4 + k * 4)
-		if p and n then
-			table.insert(U.Bark, frustumN(6, 0.45, 0.28, -0.1, 0.22, H.frameY(p, n), { KNOT, scaled(KNOT, 1.1), scaled(KNOT, 0.9) }))
-			table.insert(U.Bark, frustumN(6, 0.18, 0.12, 0.2, 0.26, H.frameY(p, n), { BARK_LINE }))
-		end
-	end
-	-- THE HOLLOW TOP: today's cap edge (24 directions), a rim of bark lumps on it, the liquid and the mist inside
-	local cx, cz, n = 0, 0, 0
-	for xi = -16, 16 do
-		for zi = -16, 16 do
-			local h = topAt(xi * 0.5, zi * 0.5)
-			if h and h > 17.5 then
-				cx += xi * 0.5
-				cz += zi * 0.5
-				n += 1
-			end
-		end
-	end
-	cx, cz = cx / math.max(n, 1), cz / math.max(n, 1)
-	local rimR, rimY, cnt, rimMin = 0, 0, 0, math.huge
-	local rim = {}
-	for k = 0, 23 do
-		local a = k * math.pi / 12
+	-- the bark: 22 staves in 6 segments each, every other one proud (a ridge), 3 tones; a dark core
+	local N = 22
+	local ys = { 0, 1.2, 2.6, 6.5, 11, 15, TOP }
+	local prevTone = nil
+	for i = 0, N - 1 do
+		local a = (i + 0.5) * 2 * math.pi / N
 		local d = Vector3.new(math.cos(a), 0, math.sin(a))
-		-- walk out from the centre until the cap ends
-		local last = nil
-		for s = 0, 40 do
-			local x, z = cx + d.X * s * 0.25, cz + d.Z * s * 0.25
-			local h = topAt(x, z)
-			if h and h > 17.5 then
-				last = Vector3.new(x, h, z)
-			else
-				break
+		local ridge = if i % 2 == 0 then 0.22 else 0
+		local ti = H.toneIndex(rng, prevTone)
+		prevTone = ti
+		local base = scaled(wood, ({ 1.06, 0.96, 0.88 })[ti] * (if ridge > 0 then 1.06 else 0.9))
+		for k = 1, #ys - 1 do
+			local y0, y1 = ys[k], ys[k + 1]
+			local p0 = d * (R(y0) + ridge - 0.35) + Vector3.new(0, y0, 0)
+			local p1 = d * (R(y1) + ridge - 0.35) + Vector3.new(0, y1, 0)
+			local up = (p1 - p0).Unit
+			local out = (d - up * d:Dot(up)).Unit
+			local x = up:Cross(out)
+			local w = 2 * (R((y0 + y1) / 2) + ridge) * math.tan(math.pi / N) + 0.08
+			table.insert(U.Bark, piece("Part", Vector3.new(w, (p1 - p0).Magnitude + 0.04, 0.7), CFrame.fromMatrix((p0 + p1) / 2, x, up), scaled(base, 0.96 + 0.08 * k / #ys)))
+		end
+	end
+	table.insert(U.Bark, frustumN(12, R(11) - 0.5, R(TOP) - 0.6, 0.2, TOP - 0.2, CFrame.new(), { BARK_LINE }))
+	-- 3 knots on the bark
+	for k = 1, 3 do
+		local a = k * 2.1 + 0.4
+		local y = 4 + k * 4
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		local p = d * (R(y) + 0.2) + Vector3.new(0, y, 0)
+		table.insert(U.Bark, frustumN(6, 0.45, 0.28, -0.1, 0.24, H.frameY(p, d), { KNOT, scaled(KNOT, 1.1), scaled(KNOT, 0.9) }))
+		table.insert(U.Bark, frustumN(6, 0.18, 0.12, 0.22, 0.28, H.frameY(p, d), { BARK_LINE }))
+	end
+	-- THE HOLLOW TOP: a rim of bark lumps, the glowing toxic liquid with dark swirls, the mist
+	local rimR = R(TOP) - 0.35
+	for k = 0, 11 do
+		local a = k * math.pi / 6 + rng:NextNumber(-0.08, 0.08)
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		local p = d * rimR + Vector3.new(0, TOP + 0.15, 0)
+		local c = tone(rng, scaled(wood, 1.08))
+		blob(U.Rim, rng, CFrame.lookAt(p, p + d) * CFrame.Angles(rad(rng:NextNumber(-8, 8)), 0, 0), 1.0, 0.6, 0.7, function(nrm: Vector3): Color3
+			return scaled(c, 0.85 + 0.25 * math.max(nrm.Y, 0))
+		end, 0.3)
+	end
+	local sap = rows(kit, "Sap")[1].color
+	local liqR = rimR - 0.75
+	table.insert(U.Liquid, frustumN(14, liqR, liqR, TOP - 0.4, TOP + 0.05, CFrame.new(), { sap }))
+	for arm = 0, 2 do
+		local prev = nil
+		for k = 0, 5 do
+			local t = k / 5
+			local a = arm * 2.09 + t * 2.4
+			local rr = liqR * (0.15 + 0.7 * t)
+			local q = Vector3.new(math.cos(a) * rr, TOP + 0.08, math.sin(a) * rr)
+			if prev then
+				table.insert(U.Swirl, H.bar(prev, q, 0.16 - 0.06 * t, rgb(46, 92, 34)))
 			end
-		end
-		if last then
-			table.insert(rim, { last, d })
-			local dist = (Vector3.new(last.X, 0, last.Z) - Vector3.new(cx, 0, cz)).Magnitude
-			rimR += dist
-			rimMin = math.min(rimMin, dist)
-			rimY += last.Y
-			cnt += 1
+			prev = q
 		end
 	end
-	rimR, rimY = rimR / math.max(cnt, 1), rimY / math.max(cnt, 1)
-	for i, e in ipairs(rim) do
-		if i % 2 == 1 then
-			local p, d = e[1], e[2]
-			local c = tone(rng, scaled(wood, 1.08))
-			blob(U.Rim, rng, CFrame.lookAt(p - d * 0.45 + UP * 0.35, p - d * 0.45 + UP * 0.35 + d) * CFrame.Angles(rad(rng:NextNumber(-8, 8)), 0, 0), 1.1, 0.65, 0.75, function(nrm: Vector3): Color3
-				return scaled(c, 0.85 + 0.25 * math.max(nrm.Y, 0))
-			end, 0.3)
-		end
-	end
-	local LIQ = rgb(22, 33, 28) -- #16211C dark swamp liquid
-	local liqR = math.min(rimR * 0.8, rimMin * 0.92)
-	table.insert(U.Liquid, frustumN(12, liqR, liqR * 0.97, rimY - 0.3, rimY + 0.32, CFrame.new(cx, 0, cz), { LIQ, scaled(LIQ, 1.1), scaled(LIQ, 0.92) }))
-	table.insert(U.Liquid, frustumN(8, 0.45, 0.4, rimY + 0.3, rimY + 0.36, CFrame.new(cx + liqR * 0.35, 0, cz - liqR * 0.25), { scaled(LIQ, 1.6) }))
 	local MIST = rgb(200, 240, 220) -- #C8F0DC
 	for k = 1, 3 do
 		local a = k * 2.1
-		blob(U.Mist, rng, CFrame.new(cx + math.cos(a) * rimR * 0.35, rimY + 0.75 + k * 0.28, cz + math.sin(a) * rimR * 0.35), rimR * 0.42, 0.22, rimR * 0.32, function(): Color3
+		blob(U.Mist, rng, CFrame.new(math.cos(a) * rimR * 0.35, TOP + 0.75 + k * 0.28, math.sin(a) * rimR * 0.35), rimR * 0.42, 0.22, rimR * 0.32, function(): Color3
 			return MIST
 		end)
 	end
-	-- moss on 2 rim lumps
-	for _, i in ipairs({ 3, 15 }) do
-		local e = rim[i]
-		if e then
-			mossCushion(U.Moss, rng, H.frameY(e[1] - e[2] * 0.3 + UP * 0.6, UP), 1.2)
-		end
-	end
-	-- THE RUNES: today's Sap strips and pool exactly, a carved groove behind each strip, 2 rune ticks off it
-	for _, r in ipairs(saps) do
+	mossCushion(U.Moss, rng, H.frameY(Vector3.new(rimR * 0.9, TOP + 0.55, rimR * 0.3), UP), 1.2)
+	mossCushion(U.Moss, rng, H.frameY(Vector3.new(-rimR * 0.5, TOP + 0.55, -rimR * 0.8), UP), 1.1)
+	-- THE RUNES: today's Sap strips exactly, each carved into the bark: a dark channel behind it between 2 raised
+	-- bark ridges following its lean (its local X points out of the trunk), 2 rune ticks cut into the ridges
+	for _, r in ipairs(rows(kit, "Sap")) do
 		exactRow(m, r)
-		local out = Vector3.new(r.cf.X, 0, r.cf.Z).Unit
-		local inl = r.cf:VectorToObjectSpace(-out) -- inward, in the strip's own frame
-		table.insert(U.Grooves, piece("Part", Vector3.new(r.size.X + 0.4, r.size.Y + 0.4, 0.4), r.cf * CFrame.new(inl * 0.18), rgb(27, 20, 16)))
-		for j = 1, 2 do
-			local along = (j == 1 and 1 or -1) * r.size.Y * 0.2
-			local sx = if j == 1 then 1 else -1
-			local tick = r.cf * CFrame.new(sx * (r.size.X / 2 + 0.25), along, 0) * CFrame.Angles(0, 0, rad(sx * 40))
-			table.insert(U.Runes, piece("Part", Vector3.new(0.22, 0.85, r.size.Z * 0.9), tick, r.color))
-			table.insert(U.Grooves, piece("Part", Vector3.new(0.5, 1.1, 0.4), tick * CFrame.new(inl * 0.18), rgb(27, 20, 16)))
+		local L = r.size.Y
+		table.insert(U.Grooves, piece("Part", Vector3.new(0.5, L + 0.3, r.size.Z + 0.3), r.cf * CFrame.new(-0.3, 0, 0), rgb(27, 20, 16)))
+		for _, sz in ipairs({ -1, 1 }) do
+			local rc = scaled(wood, 1.12)
+			table.insert(U.Bark, H.chamfered(Vector3.new(1.0, L + 0.1, 0.55), r.cf * CFrame.new(-0.45, 0, sz * (r.size.Z / 2 + 0.45)), rc, { "vertical" }, 0.1))
+			local tick = r.cf * CFrame.new(0.06, sz * L * 0.18, sz * (r.size.Z / 2 + 0.38)) * CFrame.Angles(rad(sz * 40), 0, 0)
+			table.insert(U.Runes, piece("Part", Vector3.new(0.2, 0.8, 0.2), tick, r.color))
 		end
 	end
+	-- the SapPool exactly, small glowing toadstools round it (the glow at the foot)
 	for _, r in ipairs(rows(kit, "SapPool")) do
 		exactRow(m, r)
+		local c = r.cf.Position
+		for k = 0, 2 do
+			local a = k * 2.2 + 0.6
+			local p = Vector3.new(c.X + math.cos(a) * (r.size.Y / 2 + 0.5), 0, c.Z + math.sin(a) * (r.size.Y / 2 + 0.5))
+			local h = 0.5 + 0.2 * k
+			table.insert(U.Mush, frustumN(5, 0.09, 0.07, 0, h, CFrame.new(p), { rgb(230, 225, 205) }))
+			table.insert(U.Glow, frustumN(6, 0.32, 0.06, h - 0.04, h + 0.24, CFrame.new(p), { r.color }))
+		end
 	end
 	-- the crystals: today's 2 exactly, small shards round them
 	for _, r in ipairs(rows(kit, "Part")) do
@@ -1154,7 +1219,7 @@ function ST.swamp_magic_stump(): Model
 			end
 		end
 	end
-	-- the roots: arching rim roots, mud collars, moss on 2
+	-- the roots: arching buttress roots, mud collars, moss on 2
 	for i, r in ipairs(rows(kit, "Root")) do
 		local foot, top, _, thick = ends(r)
 		local ctrl = archRoot(U.Roots, rng, top, foot, thick / 2, 1.2, r.color)
@@ -1164,7 +1229,7 @@ function ST.swamp_magic_stump(): Model
 			mossCushion(U.Moss, rng, H.frameY(bez(top, ctrl, foot, 0.4) + UP * thick * 0.4, UP), 1.3)
 		end
 	end
-	-- the 2 branches: crooked limbs with twigs, a moss strand
+	-- the 2 branches: curved dead limbs with twigs, a moss strand
 	for i, r in ipairs(rows(kit, "Part")) do
 		if r.collide then
 			local a, b, _, thick = ends(r)
@@ -1174,12 +1239,16 @@ function ST.swamp_magic_stump(): Model
 			end
 		end
 	end
-	-- ghost mushrooms at the foot
+	-- moss at the foot between the roots, ghost mushrooms
+	for k = 0, 3 do
+		local a = k * math.pi / 2 + math.pi / 4 + 0.35
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		mossCushion(U.Moss, rng, H.frameY(d * (R(0.3) - 0.2) + Vector3.new(0, 0.35, 0), UP), 1.4)
+	end
 	for k = 1, 2 do
-		local p = surfaceAt(k * 2.6 + 1.0, 1.0)
-		if p then
-			ghostMushrooms(U.Mush, rng, Vector3.new(p.X, 0.1, p.Z) + Vector3.new(p.X, 0, p.Z).Unit * 0.6, 3, 0.75)
-		end
+		local a = k * 2.6 + 1.0
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		ghostMushrooms(U.Mush, rng, d * (R(0) + 0.6) + Vector3.new(0, 0.1, 0), 3, 0.75)
 	end
 	for k, v in pairs(U) do
 		if #v == 0 then
@@ -1191,6 +1260,8 @@ function ST.swamp_magic_stump(): Model
 		Mist = { transparency = 0.55, shadow = false },
 		Runes = { material = Enum.Material.Neon },
 		Crystals = { material = Enum.Material.Neon },
+		Liquid = { material = Enum.Material.Neon },
+		Glow = { material = Enum.Material.Neon },
 	})
 	return m
 end

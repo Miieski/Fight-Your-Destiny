@@ -3294,6 +3294,23 @@ them.
 - **Glass:** Glass material mirrors the sky (blue). For a wet sheen use a translucent SmoothPlastic film with
   Reflectance 0.2.
 
+### F8. Round 2: rounder, integrated (owner task 2026-10-25)
+
+- **Rounded solids:** `SM.ellipsoidSolid(list, frame, radii, toneOf, nAz, elevations, { bottom, front })`: the tangent
+  planes of an ellipsoid, the rings staggered, a flat bottom (sits on its support) and an optional flat front (a face
+  that keeps kept bars proud). Frog bodies and heads, totem heads, the skull. About 150-300 triangles each.
+- **Faces:** keep the kit's glowing / dark parts exactly and build the expression round them: an open crescent under a
+  kept mouth bar reads as a grin; lid caps cut from an ellipsoid make sleepy eyes; a small dark oval reads as surprise.
+- **Carved into, not floating:** a strip that must glow (runes) sits in a dark channel between 2 raised bark ridges
+  that follow its own lean, so it reads as carved.
+- **Dead-tree recipe:** `ST.deadTrunk` (tapered 8-sided segments, wobble and twist, raised ridges and dark grooves,
+  knuckles; a skip sector for a face) and `ST.fineBranch` (70 % limbs, more twigs). Shared by the face tree and the
+  wooden gate's trees.
+- **Nesting:** an emblem that is another prop is that prop's template nested at the measured scale (the gate skull is
+  the knocker x 1.9), so both stay in sync.
+- **Random streams:** additions get their own `Random` so the rest of a builder (mud, moss) is drawn exactly as before
+  and the bounding box does not grow.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
