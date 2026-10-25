@@ -3544,6 +3544,13 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   2 charred dead trees, lava mine cart); 577 copies tagged + 1162 attributes; check 0; compare 11613 -> 11613, 0
   changed; full dry run 0 (352 templates / 8450 copies); tag / build again 0. Not assets: 26 loose-part folders.
   Shot 06_Volcano.jpg.
+- 07 Hell DONE: 42 assets (S 4 / M 11 / L 27), 596 copies, ALL new (42 hell_* templates: 2 tiled platforms, guard
+  tower, 2 spiked buildings, spiked fence, small throne, 3 sub-zone gates, boss gate, arena door, entry arch, gothic
+  arch, rib arch, landmarks burning tower / demon throne (arena) / horned castle / skull rock, brazier, street lamp, wall
+  torch, dead bush, hanging chain, drawbridge, execution block, hanging cage, lava crack, cliff, 3 rocks, obsidian
+  island, small skull rock, spike row, demon banner, hub sign, demon statue, face pillar, kennel bones, 2 bone trees);
+  596 copies tagged + 1192 attributes; check 0; compare 11784 -> 11784, 0 changed; full dry run 0 (394 / 9092); tag /
+  build again 0. Not assets: 27 loose-part folders. Shot 07_Hell.jpg (the horned castle hides part of the back line).
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
