@@ -1063,6 +1063,78 @@ Images: `docs/Swamp_Images/04_Trees_and_Nature/`. Today's kit parts are kept as 
 
 Totals: 228 copies replaced (7 templates).
 
+### Swamp magic (owner, "CURSED SWAMP PROP IMPROVEMENT - Magic props and decor", 2026-10-25): inventory before the remake (read from Studio)
+
+Images: `docs/Swamp_Images/05_Magic_Props_and_Decor/`. Today's kit parts are kept as rows in
+`tools/PropsSwampMagicData.luau` (`DevTools.PropsSwampMagicData`). The spellbook kit stands at Model scale 1.6, so its
+rows are stored at scale 1.
+
+- **Copies:** every copy is its kit at a Model scale (0.85 to 2.88). The kit copy lives in `MapAssets.Swamp`, the
+  test copy in `Workspace._Staging.AssetPreview.Swamp`.
+- **Rules:** no earlier rule claimed these kits; 9 rules were added. Crow_A is limited to the swamp (`filter`): the 10
+  Realm of the Dead crows (another biome's prop, own colour) stay as they are. Potion_Bottle_A has a Variant Purple
+  (its 12 purple-liquid copies).
+- **Functions:** no script, prompt, click detector or touch handler on any of the 9 kits; src/ never names them.
+  - Hanging_Lantern has the attribute Height = 5. 36 of its 46 copies carry a PointLight under the Lantern
+    (#FFC460, range 20, brightness 1); 3 have the attribute MapFixMoved.
+  - Cauldron_Small has a SteamPoint Attachment under the Liquid; 3 copies carry a PointLight under the Liquid.
+  - One BossArenas Toad_Shrine carries a light under its head.
+- **Colliders:** the cauldron's colliders differ by up to 0.04 per copy and the shelves were part-resized (some 0.1
+  deeper), so 01, 02, 07 and 08 keep each copy's own colliders.
+- **Ravens on the gates:** swamp_vine_arch and swamp_tree_gate each carried today's raven as 8 loose parts (Crow_A at
+  scale 1.3). They become a nested swamp_raven at the same pose.
+- **Backups:** `BackUP_Files/old_props_2026-10-25_pre_swamp_magic/<propId>.rbxm` (9 files, plus swamp_vine_arch and
+  swamp_tree_gate).
+
+| # | owner's object | kit | copies | parts today | colliding | glow | size |
+|---|---|---|---|---|---|---|---|
+| 01 | frog statue altar | `Toad_Shrine` | 3: test, kit, BossArenas x1 | 17 (2 Eye, 2 BowlGlow) | 11 | Eye, BowlGlow #8CFF5A | 14 x 10.85 x 12 |
+| 02 | frog totem | `Toad_Totem` | 6: test, kit, BossArenas x4 | 25 (3 toads, Mouth, Eye, Pupil x3) | 10 | 6 Pupil #8CFF5A | 6.8 x 16 x 6.4 |
+| 03 | skull on a frame | `Skull_Knocker_Door` | 3: test, kit, BossArenas x1 | 11 (2 Socket, 2 Eye) | 0 | 2 Eye #AA50FF | 2.6 x 4.7 x 1.6 |
+| 04 | spellbook | `Spellbook_Floating` | 26: test, kit, Swamp_3 x6, Swamp_4 x10, BossArenas x8 | 5 (Covers, Rune) | 0 | Rune #AA50FF | 3.26 x 0.83 x 2.3 (at scale 1) |
+| 05 | potion bottle | `Potion_Bottle_A` | 26: test, kit, Swamp_3 x6, Swamp_4 x10, BossArenas x8 | 3 (Liquid ball, neck, cork) | 0 | Liquid #8CFF5A (12 copies #AA50FF) | 1.3 x 1.97 x 1.3 |
+| 06 | hanging lantern | `Hanging_Lantern` | 46: test, kit, Swamp_1 x7, Swamp_2 x1, Swamp_3 x19, Swamp_4 x9, BossArenas x8 | 4 (Chain, 2 caps, Lantern) | 0 | Lantern #FFC460 + PointLight (36 copies) | 1.5 x 5 x 1.5 |
+| 07 | cauldron | `Cauldron_Small` | 8: test, kit, Swamp_3 x4, Swamp_4 x2 | 8 (Pot ball, Rim, Liquid, 3 legs, 2 logs) | 7 | Liquid #8CFF5A (3 copies with a PointLight) | 5.16 x 5.32 x 5.16 |
+| 08 | potion bookshelf | `Potion_Shelf` | 8: test, kit, Swamp_3 x4, Swamp_4 x2 | 12 (2 posts, back, 3 shelves, 6 Bottle) | 6 | 3 Bottle Neon #8CFF5A, #78FFD2, #622CA0 | 6 x 7.25 x 1.6 |
+| 09 | raven | `Crow_A` | 17: test, kit, Swamp_1 x4, Swamp_2 x10, Swamp_3 x1 (+ 1 in each swamp_vine_arch / swamp_tree_gate) | 8 (body, head, beak, tail, 2 wings, 2 legs) | 0 | - | 1.4 x 2.55 x 4.09 |
+
+### Swamp magic remake status (Agent B, 2026-10-25)
+
+- **Builder:** `tools/PropsSwampMagic.luau` (`DevTools.PropsSwampMagic`, on DevTools.PropsSwampHuts' TB / B2 / H / M and
+  PropsSwampTrees' blob / leaf). The gate ravens: `nestRaven` in `tools/PropsSwampGates.luau`.
+- **Rules:** 9 in tools/SyncMapProps.luau (helpers `swampPotionPurple`, `deadCrow`).
+- **Collisions:**
+  - 01, 02, 07 and 08 keep each copy's own colliding parts as invisible "Collision" parts in a KeptCollision folder
+    (MapPropKeep; `SM.prepColliders`).
+  - 03-06 and 09 never collided and still do not.
+  - Check: every copy against its before-stash, collider corners worst 0.00000. Ray grids on and off the lattice
+    (altar, totem, cauldron, shelf, both gates): 0 differences.
+- **Kept exactly:** every glow part (the altar eyes / bowl glow / mouth, the totem mouths / eyes / pupils, the skull
+  sockets / eyes, the rune, the liquids, the lantern cores, the 6 shelf bottles); the cauldron SteamPoint; the lantern
+  Height and MapFixMoved attributes.
+  - Lights: 36 lantern lights, 3 cauldron lights and the BossArenas altar light sit on invisible `KeptLight_<part>`
+    parts (MapPropKeep; `SM.prepLights`).
+- **Gates:** the 6 gate ravens are the nested swamp_raven at today's pose. All 8 old parts are matched (worst 0.0004).
+  The gate colliders, Barrier, SubZoneId / ZoneId, BarrierDecorIsChildOfBarrier, GUIs and lights are unchanged.
+- **Sync:** run 2 = 0 for all. Full dry run: 170 templates / 2115 copies, 0 to replace. Every template rebuilds from the
+  final source with the same fingerprint.
+- **Shots:** `docs/screenshots/swamp_magic/`. 01-03 have test shots only, because their other copies are in
+  ServerStorage.BossArenas.
+
+| # | object | MapProps id | replaced | triangles per copy | size (kit) | notes |
+|---|---|---|---|---|---|---|
+| 01 | frog statue altar (pilot) | `swamp_frog_altar` | 3 / 3 | 6,500 | about the kit (14 x 10.85 x 12) | stepped stone blocks with joints, a carved frog-glyph frieze; a rounded stone frog (domed head, wide curved grin, pale throat pouch, round legs with webbed toes, haunches, warts); eyes, bowls, glow and light kept; moss, vines, mushrooms |
+| 02 | frog totem | `swamp_frog_totem` | 6 / 6 | 7,700 | about the kit (6.8 x 16 x 6.4) | 3 rounded frog faces with wide mouths, brows, warts, lips and webbed feet; rope and iron bands; moss; a stone block base |
+| 03 | skull on a frame | `swamp_skull_knocker` | 3 / 3 | 1,600 | 2.6 x 5.04 x 1.6 (2.6 x 4.7 x 1.6) | carved skull round the kept sockets and magenta eyes; an iron frame with a ring and a hook; bones and feathers |
+| 04 | spellbook | `swamp_spellbook` | 26 / 26 | 630 | within +10 % | thick purple cover, gold corners, page block with lines and a curl, a red ribbon; the rune kept |
+| 05 | potion bottle | `swamp_potion_bottle` | 26 / 26 | 550 | about the kit (1.3 x 1.97 x 1.3) | round glass flask round the kept glowing liquid, neck and lip, a corded cork, a label; Variant Purple (12) |
+| 06 | hanging lantern | `swamp_hanging_lantern` | 46 / 46 | 900 | 1.5 x 5.18 x 1.5 (1.5 x 5 x 1.5) | iron frame with posts and pane bars, glass panes over the kept core, a 4-sided roof with a finial and a ring, 5 chain links and a ceiling plate; lights kept per copy |
+| 07 | cauldron | `swamp_cauldron` | 8 / 8 | 3,100 | 5.17 x 5.54 x 5.17 (5.16 x 5.32 x 5.16) | cast iron belly (5 bands) with a riveted band, a lip ring, ring handles, claw legs; the kept liquid with bubbles and its SteamPoint; crossed bark logs with pale ends; Neon embers and coals (no light, no script) |
+| 08 | potion bookshelf | `swamp_potion_shelf` | 8 / 8 | 2,200 | 6.12 x 7.71 x 1.70 (6 x 7.25 x 1.6) | capped posts, a plank back with joints, double-board shelves with lips and brackets; the 6 kept bottles with necks, corks and labels; 5 books with gold bands; thin cobwebs |
+| 09 | raven | `swamp_raven` | 17 / 17 + 6 nested | 830 | 1.28 x 2.68 x 4.19 (1.4 x 2.55 x 4.09) | blue-black faceted body with a sheen, a crest, a pointed beak, eyes with a white glint, 3 layered feathers per wing, a 4-feather tail fan, legs with toes; nothing collides |
+
+Totals: 143 copies replaced (9 templates), plus the 2 gate templates re-synced.
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

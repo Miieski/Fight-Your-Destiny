@@ -13,8 +13,8 @@
 	of today's rock mesh: PropsJungleNature.supportPlanes) for the boulders; the swamp moss, mushrooms and hanging moss
 	of DevTools.PropsSwampHuts.
 
-	Kept exactly (the owner / the main agent): the ravens (today's 8 parts each, untouched, for the later magic props
-	prompt), the ghost mushroom meshes and their Neon glow, the lanterns (Neon cores and PointLights), the magenta glows
+	Kept (the owner / the main agent): the ravens (since the magic props prompt: the nested swamp_raven MapProp at today's
+	raven pose, scale 1.3), the ghost mushroom meshes and their Neon glow, the lanterns (Neon cores and PointLights), the magenta glows
 	(the barricade's orbs, the skull's eyes, the rune crosses), the shelf mushrooms, the NameSign / PriceSign (their GUIs
 	move onto them) and the Barriers.
 
@@ -432,6 +432,36 @@ local function ravenOf(kit: string): ({ any }, (any) -> boolean)
 	return list, isRaven
 end
 
+-- the raven: the swamp_raven MapProp nested at today's raven (its 8 parts are Crow_A at scale 1.3; the body row gives the
+-- pose: pivot = body * (the kit's body place x 1.3)^-1), tagged so the sync keeps it current; nothing of it collides
+local function nestRaven(m: Model, raven: { any })
+	local body = nil
+	for _, r in ipairs(raven) do
+		if math.abs(r.size.X - 1.3) < 0.02 and math.abs(r.size.Z - 2.86) < 0.02 then
+			body = r
+		end
+	end
+	assert(body, "PropsSwampGates: the raven's body row missing")
+	local MD = require(ServerStorage.DevTools.PropsSwampMagicData:Clone()) :: any
+	local kitBody = nil
+	for _, r in ipairs(MD.rows("Crow_A", "Part")) do
+		if math.abs(r.size.Z - 2.2) < 0.01 then
+			kitBody = r
+		end
+	end
+	local t = ServerStorage.MapProps:FindFirstChild("swamp_raven")
+	assert(t and kitBody, "PropsSwampGates: ServerStorage.MapProps.swamp_raven missing")
+	local s = body.size.Z / kitBody.size.Z
+	local bird = t:Clone()
+	bird.Name = "Raven"
+	bird:ScaleTo(s)
+	bird:PivotTo(body.cf * (CFrame.new(kitBody.cf.Position * s) * kitBody.cf.Rotation):Inverse())
+	bird:AddTag("MapProp")
+	bird:SetAttribute("MapPropId", "swamp_raven")
+	bird:SetAttribute("MapPropVersion", tostring(t:GetAttribute("MapPropVersion") or "?") .. "|")
+	bird.Parent = m
+end
+
 -- boards over a door plank row (in its frame; the face at local -Z): n boards with gaps, crooked a little, ragged
 -- tops, 3 tones; a crack now and then. inPlace: the boards take the row's own depth (nothing in front of it moves)
 local function doorBoards(list: { BasePart }, rng: Random, r: any, n: number, color: Color3, face: number, inPlace: boolean?)
@@ -480,7 +510,7 @@ end
 -- 2 sign posts as timbers with rope; today's vine bar and 10 vine strips as a mossy rod and curtains of vines with
 -- leaves (their colours, places and lengths); the 2 lanterns: today's Neon cores and PointLights kept, today's plates
 -- as an iron frame with rods, a pyramid cap and today's chain as links; today's ghost mushroom meshes kept (glow), small
--- pale mushrooms next to them; today's raven kept exactly. Colliders: today's posts, roots, beams, sign posts
+-- pale mushrooms next to them; today's raven as the nested swamp_raven. Colliders: today's posts, roots, beams, sign posts
 -- (invisible), the NameSign itself.
 function SG.swamp_vine_arch(): Model
 	local kit = "EntryArch_Swamp"
@@ -581,7 +611,7 @@ function SG.swamp_vine_arch(): Model
 			end
 		end
 	end
-	-- the ghost mushrooms (today's meshes, exact) and small pale ones next to them; the raven exactly
+	-- the ghost mushrooms (today's meshes, exact) and small pale ones next to them; the raven (nested swamp_raven)
 	for _, name in ipairs({ "Caps", "Stems" }) do
 		for _, r in ipairs(rows(kit, name)) do
 			exactRow(m, r)
@@ -590,9 +620,7 @@ function SG.swamp_vine_arch(): Model
 	for _, sx in ipairs({ -1, 1 }) do
 		SH.mushrooms(U.Mush, rng, Vector3.new(sx * 15.4, 0.15, -3.6), 3, 0.5)
 	end
-	for _, r in ipairs(raven) do
-		exactRow(m, r)
-	end
+	nestRaven(m, raven)
 
 	TB.finishTB(m, "swamp_vine_arch", U, "Logs", {})
 	-- colliders: today's colliding parts (the NameSign is itself); the left beam: the game copy's, and the kit's for
@@ -618,7 +646,7 @@ end
 -- today's lintel as a rotten log with iron bands, cracks, hanging moss and vines; today's PriceSign kept exactly in a
 -- rotten frame, today's 2 sign ropes as ropes; the 2 lanterns: cores + lights kept, iron frames on today's brackets;
 -- the 2 dead trees: today's meshes kept as the trunks (and as their own Hull colliders), with roots spreading into the
--- mud, bark shelves, extra twisted bare branches, hanging moss and vines; today's raven and mushroom meshes kept. THE
+-- mud, bark shelves, extra twisted bare branches, hanging moss and vines; today's mushroom meshes kept, the raven nested. THE
 -- DOOR (under today's Barrier, the PrimaryPart, colliding): today's 6 planks as 3 crooked boards each (front) and 2
 -- (back), today's 2 cross beams as rotten timbers with rivets, the centre split, thick iron straps with rivets across
 -- both leaves, strap hinges, today's 2 handles as iron plates with ring handles.
@@ -750,15 +778,13 @@ function SG.swamp_tree_gate(): Model
 		end
 		probe:Destroy()
 	end
-	-- the ghost mushrooms and the raven, exactly
+	-- the ghost mushrooms exactly; the raven (the nested swamp_raven at today's pose)
 	for _, name in ipairs({ "Caps", "Stems" }) do
 		for _, r in ipairs(rows(kit, name)) do
 			exactRow(m, r)
 		end
 	end
-	for _, r in ipairs(raven) do
-		exactRow(m, r)
-	end
+	nestRaven(m, raven)
 
 	-- THE DOOR under today's Barrier
 	local barrier = barrierOf(m, kit)

@@ -3256,6 +3256,28 @@ budget per copy decides the recipe.
 - **Far copies:** a far-away form gets its own propId and a low-detail template. Copies whose colliders differ from each
   other by float noise keep their own colliders in a MapPropKeep folder.
 
+### F6. Magic props and decor (owner task 2026-10-25)
+
+`tools/PropsSwampMagic.luau`. Small props in many copies: each one keeps its glowing parts exactly and is carved round
+them.
+
+| Piece | Recipe | About |
+|---|---|---|
+| Rounded stone body / head | `roundSolid`: the kit box with a flat bottom, back and front (the kept eye and mouth bars stay put); top and sides cut by an ellipsoid's tangent planes (12 azimuths x 4 elevations) | 150-250 |
+| Frog grin | `grin`: an upper and a lower lip of 9 bevelled segments on a shallow arc, the end ones wrapping round the cheeks; dark curled corners extend the kept mouth bar | 200 |
+| Frog leg | `roundLeg`: an 8-sided column, a shoulder blob, a flat web leaf and 3 splayed toe bars with round tips | 250 |
+| Iron | #373A41, light #545862; rivets as 6-sided studs; ring handles as bar rings (6-10 segments) | 24 a rivet |
+| Glass | Glass material, transparency 0.4-0.6, pale #C7D3C0 (bottles) or warm #FFE2A0 (lantern panes) | - |
+| Cauldron belly | 5 stacked 12-sided frustum bands: a round bottom, a straight middle, a neck under the rim lip | 600 |
+| Raven | 18-plane blobs toned blue-black #1B1D26 to a sheen #343E54 on the lit faces; feathers are folded convex leaves (3 per wing, 4 in the tail) | 830 a bird |
+
+- **Kept per copy:** colliders that drift between copies (a KeptCollision folder, `SM.prepColliders`) and lights (an
+  invisible `KeptLight_<part>` holding today's light, `SM.prepLights`). Both are MapPropKeep and are taken from the
+  untagged before-stash before the sync.
+- **Nested props:** a prop that sits on another prop's template (the raven on the 2 swamp gates) is the tagged
+  template itself, scaled and placed at the old pose. The sync's later pass keeps it current.
+- **Budget:** the many-copy kits stay under 1,000 triangles (lantern 900, raven 830, bottle 550, spellbook 630).
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

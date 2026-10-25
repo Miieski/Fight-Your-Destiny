@@ -3288,3 +3288,47 @@ curtain (sway only if it sways now), 06 hollow magic stump (keep the rune glow a
   agent's ray grids show 0 differences); no game errors (the same 203785492 warning). 161 templates / 1970 copies up to
   date; disk == Studio (221 scripts, 0 written); backup after_swamp_trees.
 
+
+# Cursed Swamp magic props and decor - 2026-10-25 (owner prompt "CURSED SWAMP PROP IMPROVEMENT - Magic props and decor")
+
+Objects: 01 frog statue altar (keep interaction + light), 02 frog totem (BASE jungle totems), 03 skull on frame, 04
+spellbook, 05 potion bottle, 06 hanging lantern (keep the light on / off logic), 07 cauldron, 08 potion bookshelf, 09
+raven (keep its perches on the gates / arch and any animation; the swamp gates kept the raven parts exact for this).
+Keep every glow.
+
+## Status (newest first)
+
+- 17:24 Started. Sync.check 161 templates, 0 out of date. Backup before_swamp_magic.
+- 18:22 PAUSED: 01-05 synced and verified with shots (frog altar 3/3 after a rounded-frog fix requested by the
+  main agent, frog totem 6/6, skull knocker 3/3, spellbook 26/26, potion bottle 26/26 incl. 12 Purple). 06-09 templates
+  built (lantern, cauldron, shelf, raven) and the gate ravens nested as swamp_raven in the 2 gate templates, but NOT
+  synced: Studio stopped rendering (RenderStepped 0 frames, screen_capture times out; a single mouse nudge did not
+  help), so the before shots cannot be taken. Waiting for the owner to bring Studio forward / wake the display.
+- 19:26 Studio renders again; the agent resumes 06-09 (before shots first). Backup before_swamp_reuse taken
+  (it also covers the next owner prompt).
+- 19:45 Agent B: DONE. Builder tools/PropsSwampMagic.luau; data tools/PropsSwampMagicData.luau; the gate ravens in
+  tools/PropsSwampGates.luau.
+  - Replaced: swamp_frog_altar 3 / 3, swamp_frog_totem 6 / 6, swamp_skull_knocker 3 / 3, swamp_spellbook 26 / 26,
+    swamp_potion_bottle 26 / 26 (12 Purple), swamp_hanging_lantern 46 / 46, swamp_cauldron 8 / 8, swamp_potion_shelf
+    8 / 8, swamp_raven 17 / 17 + 6 nested in the gates; swamp_vine_arch 3 / 3 and swamp_tree_gate 3 / 3 re-synced.
+    Run 2 = 0 for all.
+  - Triangles per copy: altar 6.5k, totem 7.7k, skull 1.6k, spellbook 630, bottle 550, lantern 900, cauldron 3.1k,
+    shelf 2.2k, raven 830.
+  - Colliders exact: each copy against its before-stash, collider corners worst 0.00000; ray grids on and off the
+    lattice 0 differences (altar, totem, cauldron, shelf, both gates). 01 / 02 / 07 / 08 keep their own colliders
+    (KeptCollision).
+  - Kept exactly: every glow (eyes, bowl glow, pupils, skull eyes, rune, liquids, lantern cores, the 6 shelf bottles),
+    the cauldron SteamPoint, the lantern Height / MapFixMoved attributes, 36 lantern lights + 3 cauldron lights + the
+    BossArenas altar light (KeptLight_*). The gate ravens are the nested swamp_raven at today's pose (8 / 8 parts
+    matched, worst 0.0004); the gate contracts (Barrier, SubZoneId / ZoneId, BarrierDecorIsChildOfBarrier, 2 GUIs, 2
+    lights) are unchanged. No scripts, prompts or animations existed, so none were added.
+  - Checks: dry run 170 templates / 2115 copies, 0 to replace; every template rebuilds with the same fingerprint; the
+    stashes were deleted.
+  - Disk == Studio (223 scripts, 0 written). Backups old_props_2026-10-25_pre_swamp_magic (11). Shots
+    docs/screenshots/swamp_magic/ (01-03 test only). Play check left to the main agent.
+
+# Cursed Swamp objects reused from other biomes - 2026-10-25 (owner prompt "CURSED SWAMP PROP IMPROVEMENT - Objects reused from other biomes")
+
+Objects, each DUPLICATED from its finished base: 01 barrel with a glowing top (plains barrel; all swamp instances), 02
+scarecrow with a top hat (plains scarecrow), 03 rowboat (plains rowboat), 04 lily pads with the white cube (jungle lily
+pads; find what the cube is and keep it). Runs right after the magic props 06-09 are finished.

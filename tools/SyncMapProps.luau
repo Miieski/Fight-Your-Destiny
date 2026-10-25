@@ -175,6 +175,15 @@ local function swampGate4Kit(m: Instance): string?
 	end
 	return nil
 end
+-- swamp magic props (2026-10-25): the potion bottles with the purple liquid (#AA50FF) are Variant "Purple"; the crows of
+-- the Realm of the Dead (Dead zone, its EntryArch_Dead and Crow_Perch, #181820) are not the swamp raven
+local function swampPotionPurple(m: Instance): string?
+	local liquid = m:FindFirstChild("Liquid", true)
+	return if liquid and liquid:IsA("BasePart") and liquid.Color:ToHex() == "aa50ff" then "Purple" else nil
+end
+local function deadCrow(m: Instance): boolean
+	return m:FindFirstAncestor("Dead") ~= nil or m:FindFirstAncestor("EntryArch_Dead") ~= nil or m:FindFirstAncestor("Crow_Perch") ~= nil
+end
 -- swamp trees (2026-10-25): the 40 far mangroves of Swamp_1.Decor.Backdrop (canopy + trunk only, greyed colours) are
 -- their own prop, swamp_mangrove_a_far
 local function swampBackdrop(m: Instance): boolean
@@ -616,6 +625,24 @@ SyncMapProps.RULES = {
 	{ propId = "swamp_hollow_tree", names = { "TwistedTree_C" } },
 	{ propId = "swamp_vine_curtain", names = { "Hanging_Moss_A" } },
 	{ propId = "swamp_magic_stump", names = { "Rotten_Trunk_Glow" } },
+	-- cursed swamp magic props and decor (owner "CURSED SWAMP PROP IMPROVEMENT - Magic props and decor", 2026-10-25):
+	-- 01 the frog statue altar = Toad_Shrine, 02 the frog totem = Toad_Totem, 03 the skull on the frame =
+	-- Skull_Knocker_Door (BossArenas.Swamp.Door), 04 the spellbook = Spellbook_Floating, 05 the potion bottle =
+	-- Potion_Bottle_A (Variant Purple), 06 the hanging lantern = Hanging_Lantern (attribute Height kept; each copy's own
+	-- light, or none, on a kept part), 07 the cauldron = Cauldron_Small, 08 the potion bookshelf = Potion_Shelf, 09 the
+	-- raven = Crow_A in the swamp (the 6 gate ravens are nested swamp_raven props of swamp_vine_arch / swamp_tree_gate).
+	-- Every copy is Model-scaled. 01 / 02 / 07 / 08: each copy keeps its own colliders (KeptCollision, MapPropKeep)
+	{ propId = "swamp_frog_altar", names = { "Toad_Shrine" } },
+	{ propId = "swamp_frog_totem", names = { "Toad_Totem" } },
+	{ propId = "swamp_skull_knocker", names = { "Skull_Knocker_Door" } },
+	{ propId = "swamp_spellbook", names = { "Spellbook_Floating" } },
+	{ propId = "swamp_potion_bottle", names = { "Potion_Bottle_A" }, variant = swampPotionPurple },
+	{ propId = "swamp_hanging_lantern", names = { "Hanging_Lantern" } },
+	{ propId = "swamp_cauldron", names = { "Cauldron_Small" } },
+	{ propId = "swamp_potion_shelf", names = { "Potion_Shelf" } },
+	{ propId = "swamp_raven", names = { "Crow_A" }, filter = function(m)
+		return not deadCrow(m)
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
