@@ -13,7 +13,7 @@ local AssetPreview = {
 
 	-- layout of workspace._Staging.AssetPreview.ByZone (one block per zone, Hub first, then Config/Zones order)
 	ORIGIN = Vector3.new(-4400, 0, 0), -- front-left corner of the first block; rows run toward -X, blocks toward +Z
-	ROW_MAX = 1400, -- a row wraps onto a new line after this length (studs)
+	ROW_MAX = 700, -- a row wraps onto a new line after this length (studs; keeps the blocks easy to frame)
 	BLOCK_GAP = 120, -- empty strip between two zone blocks (studs)
 }
 

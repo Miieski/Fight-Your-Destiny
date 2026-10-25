@@ -1,5 +1,6 @@
 # NIGHT RUN DECISIONS (round 4, owner asleep, 2026-10-25/26) - newest first
 
+- Round 4 layout tweak: Config ROW_MAX = 700 studs (a 1400-stud row could not be framed in one screenshot).
 - Round 4 quality states: templates made before round 4 = "improved" (the earlier batches); templates captured by
   BuildAssetPreview = "old" (the map object as it is); "to redo" = B.QUALITY overrides (none yet).
 - Round 4 layout: a NEW area workspace._Staging.AssetPreview.ByZone (x -4400 toward -5800, blocks toward +Z, Hub first);
@@ -3499,6 +3500,13 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   compare 6099 -> 6099 instances, 0 changed; full dry run 0 (the lamp post sample's nested lantern was synced inside
   the preview only); tag / build again = 0 changes. Not assets: Hub loose parts (8 folders: ground, beach, sea, north
   hill, islets rock, plaza floor, portals), Bounds, Portals, VFX. Shot docs/screenshots/asset_preview/00_Hub.jpg.
+- 01 Plains DONE: 86 assets (S 22 / M 36 / L 28), 1957 copies; 23 new templates (plains_*: rail section, field border,
+  boss gate, arena door, landmarks ancient_tree + crystal_gate (host: its 4 crystal clusters tagged first), tall grass,
+  fallen log, mine support, 2 spider webs (map / arena variant), stump, boulder cliff, crystal cluster, 2 rocks, 2 ore
+  clusters, stalactite, 2 stalagmites, cave pillar, hunter camp (host)); 1792 copies tagged + 3914 attributes (boss
+  arena copies included); 63 assets reuse Hub / older templates. Block 01_Plains 86 samples; check 0; compare 16258 ->
+  16258, 0 changed (Hub still 0); dry run 0; tag / build again 0. Layout tweak: ROW_MAX 1400 -> 700 (blocks easier to
+  frame) and a 5-stud shift bug in the block push fixed (rebuilding the Hub no longer moves Plains). Shot 01_Plains.jpg.
 
 - Main agent: zone 00 Hub PLAY CHECK OK: _Staging is in ServerStorage on the server and absent on the client (preview
   unreachable), 0 preview samples in the live workspace, 462 Hub MapProps, 22 Hub lights on, 144 fps, 0 errors.

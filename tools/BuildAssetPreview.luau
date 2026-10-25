@@ -1129,7 +1129,7 @@ function B.build(zoneId: string, plan: any?): string
 		end
 	end
 	if nextBlock then
-		local need = (zEnd + 5 + Settings.BLOCK_GAP) - (nextBlock:GetAttribute("BlockStartZ") :: number)
+		local need = (zEnd + 5 + Settings.BLOCK_GAP) - ((nextBlock:GetAttribute("BlockStartZ") :: number) + 5) -- (front z of the next block)
 		if math.abs(need) > 0.01 then
 			shift = need
 			for _, other in ipairs(zones) do
