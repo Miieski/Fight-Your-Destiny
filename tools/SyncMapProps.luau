@@ -18,6 +18,7 @@
 		print(Sync.run({ only = { "crate" } }))     -- some props only
 		print(Sync.run({ dryRun = true }))          -- report, change nothing
 		print(Sync.capture("crate", someInstance))  -- that instance becomes the template, then run (reverse direction)
+		print(Sync.capture("x", inst, { noRun = true }))  -- the template only (no instance replaced; BuildAssetPreview)
 		print(Sync.undoCapture("crate"))            -- the previous template comes back, then run
 		print(Sync.check())                         -- counts, duplicates, out-of-date, waiting (no template yet)
 		print(Sync.tagAll())                        -- tag every known instance (inventory rules), idempotent
@@ -1018,6 +1019,24 @@ local function versionOf(template: Model, variant: string?): string
 	return (template:GetAttribute("MapPropVersion") or "?") .. "|" .. (variant or "")
 end
 
+SyncMapProps.versionOf = versionOf
+
+-- asset-preview samples are visual only (owner, round 4): anchored, no collisions / touches, no scripts, prompts,
+-- click detectors or sounds, emitters off (lights stay: they are part of the look)
+function SyncMapProps.sanitizeSample(model: Instance)
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+			d.CanCollide = false
+			d.CanTouch = false
+		elseif d:IsA("LuaSourceContainer") or d:IsA("ProximityPrompt") or d:IsA("ClickDetector") or d:IsA("Sound") then
+			d:Destroy()
+		elseif d:IsA("ParticleEmitter") or d:IsA("Beam") or d:IsA("Trail") or d:IsA("Fire") or d:IsA("Smoke") or d:IsA("Sparkles") then
+			(d :: any).Enabled = false
+		end
+	end
+end
+
 local function templates(only: { string }?): { [string]: Model }
 	local folder = templateFolder(false)
 	local list = {}
@@ -1070,6 +1089,13 @@ local function replace(old: Model, template: Model): (Model?, string?)
 	local scale = old:GetScale()
 	-- a copy never synced before whose parts were resized one by one keeps Model scale 1: a rule's bakedScale(old)
 	-- measures its real scale from today's parts, and the new model gets that size
+	-- a copy tagged by tools/BuildAssetPreview whose parts were resized one by one (Model scale 1) carries its real
+	-- size as attribute MapPropScale (factor to the template): the new model gets that size and drops the attribute
+	-- (its Model scale then holds it)
+	local bakedAttr = old:GetAttribute("MapPropScale")
+	if type(bakedAttr) == "number" and bakedAttr > 0 then
+		scale *= bakedAttr
+	end
 	if old:GetAttribute("MapPropVersion") == nil then
 		for _, rule in ipairs(SyncMapProps.RULES) do
 			if rule.propId == template.Name and rule.bakedScale then
@@ -1105,6 +1131,7 @@ local function replace(old: Model, template: Model): (Model?, string?)
 	end
 	new:SetAttribute("MapPropId", template.Name)
 	new:SetAttribute("MapPropVersion", versionOf(template, if type(variant) == "string" then variant else nil))
+	new:SetAttribute("MapPropScale", nil)
 	for _, tag in ipairs(new:GetTags()) do
 		new:RemoveTag(tag)
 	end
@@ -1149,6 +1176,52 @@ local function replace(old: Model, template: Model): (Model?, string?)
 			end
 		end
 	end
+	-- lights (the owner's SYNC rule, round 4): a light that lives inside a template part keeps the map copy's own
+	-- settings: for every light of the old model (outside the kept custom children, which moved whole) whose path of
+	-- names exists in the new model with a light of the same class, Enabled, Brightness, Range, Color, Shadows (and
+	-- Angle / Face for spot and surface lights) are copied from the old light
+	local lights = 0
+	for _, l in ipairs(old:GetDescendants()) do
+		if l:IsA("Light") then
+			local path = {}
+			local p: Instance? = l
+			while p and p ~= old do
+				table.insert(path, 1, p.Name)
+				p = p.Parent
+			end
+			local target: Instance? = new
+			for _, name in ipairs(path) do
+				target = if target then target:FindFirstChild(name) else nil
+			end
+			if target and target.ClassName == l.ClassName then
+				local nl = target :: any
+				local ol = l :: any
+				nl.Enabled = ol.Enabled
+				nl.Brightness = ol.Brightness
+				nl.Color = ol.Color
+				nl.Shadows = ol.Shadows
+				if l:IsA("PointLight") or l:IsA("SpotLight") then
+					nl.Range = ol.Range
+				end
+				if l:IsA("SpotLight") or l:IsA("SurfaceLight") then
+					nl.Range = ol.Range
+					nl.Angle = ol.Angle
+					nl.Face = ol.Face
+				end
+				lights += 1
+			end
+		end
+	end
+	-- an asset-preview sample (IsPreviewSample on it or on a host above it) stays visual only after a sync
+	local anc: Instance? = parent
+	local sample = old:GetAttribute("IsPreviewSample") == true
+	while anc and not sample do
+		sample = anc:GetAttribute("IsPreviewSample") == true
+		anc = anc.Parent
+	end
+	if sample then
+		SyncMapProps.sanitizeSample(new)
+	end
 	new.Parent = parent
 	old:Destroy()
 	local notes = {}
@@ -1157,6 +1230,9 @@ local function replace(old: Model, template: Model): (Model?, string?)
 	end
 	if guis > 0 then
 		table.insert(notes, `moved {guis} sign GUI(s)`)
+	end
+	if lights > 0 then
+		table.insert(notes, `kept {lights} light setting(s)`)
 	end
 	return new, if #notes > 0 then table.concat(notes, ", ") else nil
 end
@@ -1365,6 +1441,9 @@ function SyncMapProps.capture(propId: string, instance: Instance, opts: any?): s
 	copy:PivotTo(CFrame.identity)
 	copy.Name = propId
 	copy:SetAttribute("MapPropId", propId)
+	for key, value in pairs(opts and opts.attributes or {}) do
+		copy:SetAttribute(key, value) -- (template-only metadata, e.g. BuildAssetPreview's MapPropSignature)
+	end
 	local old = folder:FindFirstChild(propId)
 	if old then
 		local oldVariants = old:FindFirstChild(VARIANTS)
@@ -1381,6 +1460,12 @@ function SyncMapProps.capture(propId: string, instance: Instance, opts: any?): s
 		old.Parent = previous
 	end
 	copy.Parent = folder
+	if opts and opts.noRun then
+		-- (BuildAssetPreview) the template only: no instance is replaced; the caller stamps the copies it checked
+		copy:SetAttribute("MapPropVersion", fingerprint(copy))
+		return `captured {shortPath(instance)} as ServerStorage.{FOLDER}.{propId} (no run)`
+			.. (if nested > 0 then ` (with {nested} nested prop(s))` else "") .. (if #warnings > 0 then "\n" .. table.concat(warnings, "\n") else "")
+	end
 	local source = shortPath(instance) -- (before the run: the run replaces the captured instance too)
 	local report = SyncMapProps.run({ only = { propId } })
 	return (if #warnings > 0 then table.concat(warnings, "\n") .. "\n" else "") .. `captured {source} as ServerStorage.{FOLDER}.{propId}`

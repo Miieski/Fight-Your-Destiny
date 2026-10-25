@@ -1,5 +1,30 @@
 # NIGHT RUN DECISIONS (round 4, owner asleep, 2026-10-25/26) - newest first
 
+- Round 4 quality states: templates made before round 4 = "improved" (the earlier batches); templates captured by
+  BuildAssetPreview = "old" (the map object as it is); "to redo" = B.QUALITY overrides (none yet).
+- Round 4 layout: a NEW area workspace._Staging.AssetPreview.ByZone (x -4400 toward -5800, blocks toward +Z, Hub first);
+  the existing test rows (ModelsA, Desert ... Void, the 3 swamp landmark samples) stay where they are, untouched. Each
+  sample is at the median real size of its zone's copies; a sample per zone block for an asset used in several zones.
+- Round 4 "not reachable": ServerScriptService.GameSystem.Main moves workspace._Staging into ServerStorage at server
+  start (never replicated or streamed in a live game, no player can reach it, client PropFX never sees the samples).
+- Round 4 scope: a zone = workspace.Hub / workspace.Zones.<Id> + its boss arena ServerStorage.BossArenas.<Id> (visible in
+  the game); loose parts (terrain, ground, water, dunes, mountains, floors, shells, MapFix) are map geometry, not
+  assets, and are listed per folder in docs/asset_preview_index.json; folders Spawns / Bounds / VFX / MapFix / Portals /
+  NoClimb and models holding a Humanoid are skipped.
+- Round 4 grouping (main's 1d rule): same name (Landmark = LandmarkName, Gate = SubZoneId) + part count + mesh ids, and a
+  size that matches after ONE uniform factor within 1 % (Model scale, or parts resized one by one) = one asset; a
+  non-uniform spread up to 10 % is the same asset (a "size variant"); above it = a separate asset _v2, _v3. Colours are
+  NOT in the signature (the owner's rule): copies with their own tint are one asset, counted as "ownTint" in the index
+  (a later template edit gives them the template colours).
+- Round 4 map instances: new templates via SyncMapProps.capture(id, rep, { noRun = true }) (template only, no instance
+  replaced); the copies get only the tag MapProp + MapPropId, MapPropVersion (sync stamp: run() leaves them as they
+  are), Zone, SizeClass, and MapPropScale on copies whose parts were resized one by one (replace() then keeps their
+  size and drops the attribute). Never moved, never replaced.
+- Round 4 SYNC rule check (SyncMapProps.replace): scripts, prompts, click detectors, GUIs (moved onto the same-named
+  part), sounds, humanoids, attributes and tags were already kept; LIGHT SETTINGS were not (a light inside a template
+  part came back with the template's values): fixed, the copy's Enabled / Brightness / Range / Color / Shadows (+ Angle
+  / Face) are now kept; dry-tested on swamp_witch_tower (forced sync, sample's changed light kept, map light kept,
+  run 2 = 0). Preview samples are re-sanitized after a sync (IsPreviewSample).
 - Order: finish swamp ROUND 2 (sync / verify / push) -> ROUND 3 parts 1 + 2 (witch tower, giant horror tree, fallen
   hollow log: templates + preview samples + remake) -> ROUND 4 (every visible asset in the asset preview, by zone);
   round 3 part 3 is replaced by round 4, as the owner said.
@@ -3457,6 +3482,26 @@ needed). Part 2: remake the 3 to the same quality (keep entrance / path / lights
 audit EVERY unique asset of EVERY map, add the missing ones to the preview by biome with labels, write
 docs/asset_preview_index.md (propId, biome, in preview, instances, quality state). The 3 screenshots were saved from
 the chat into docs/Swamp_Big_Props_Round3/.
+
+# ROUND 4 - every visible asset in the asset preview, by zone (night run 2026-10-26, unattended)
+
+Tool `tools/BuildAssetPreview.luau` (DevTools.BuildAssetPreview; audit / tag / build / check / snapshot / compare /
+index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, tolerances, layout). Decisions: see the top.
+
+- Step 1 DONE: SyncMapProps light fix + dry test (run 2 = 0, full dry run 178 templates / 2279 copies, 0 to replace);
+  SyncMapProps capture noRun / attributes, versionOf, sanitizeSample, MapPropScale (disk == Studio 82051 / 72b8008246d491a1);
+  BuildAssetPreview written (audit before any change: 713 zone assets, 630 distinct, 508 new templates to capture;
+  Hub 65, Plains 86, Desert 56, Jungle 63, Tundra 49, Swamp 54, Volcano 48, Hell 42, Heaven 47, Dead 49, Abyss 58,
+  Mechanical 46, Void 50); Main.server moves _Staging out at start.
+- 00 Hub DONE: 65 assets (S 18 / M 31 / L 16), 31 new templates (hub_* : bench, campfire, bushes, flowers, grass,
+  mushrooms, driftwood, log, starfish, 6 rocks, 8 trees, cart, 2 planters with their nested plants), 34 improved
+  templates already there; 339 copies tagged + 924 attributes; block 00_Hub (65 samples, 893 parts); check 0 problems;
+  compare 6099 -> 6099 instances, 0 changed; full dry run 0 (the lamp post sample's nested lantern was synced inside
+  the preview only); tag / build again = 0 changes. Not assets: Hub loose parts (8 folders: ground, beach, sea, north
+  hill, islets rock, plaza floor, portals), Bounds, Portals, VFX. Shot docs/screenshots/asset_preview/00_Hub.jpg.
+
+- Main agent: zone 00 Hub PLAY CHECK OK: _Staging is in ServerStorage on the server and absent on the client (preview
+  unreachable), 0 preview samples in the live workspace, 462 Hub MapProps, 22 Hub lights on, 144 fps, 0 errors.
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
 

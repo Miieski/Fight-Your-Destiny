@@ -1,5 +1,13 @@
 --!strict
 -- Server loader: requires every module in Services, then runs Init and Start by Priority.
+
+-- the dev staging area (workspace._Staging: the asset preview, test rows, bench work) is for Studio Edit mode only:
+-- out of the live world at server start (never replicated or streamed, no player can reach it, no load)
+local staging = workspace:FindFirstChild("_Staging")
+if staging then
+	staging.Parent = game:GetService("ServerStorage")
+end
+
 local services = {}
 for _, module in ipairs(script.Parent.Services:GetChildren()) do
 	if module:IsA("ModuleScript") then
