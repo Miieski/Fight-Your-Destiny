@@ -3551,6 +3551,14 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   island, small skull rock, spike row, demon banner, hub sign, demon statue, face pillar, kennel bones, 2 bone trees);
   596 copies tagged + 1192 attributes; check 0; compare 11784 -> 11784, 0 changed; full dry run 0 (394 / 9092); tag /
   build again 0. Not assets: 27 loose-part folders. Shot 07_Hell.jpg (the horned castle hides part of the back line).
+- 08 Heaven DONE: 47 assets (S 5 / M 17 / L 25), 913 copies; 44 new templates (heaven_*: cloud / light bridges, marble
+  stairs, golden armor stand, gold weapon rack, 3 sub-zone gates, boss gate, arena door, entry arch, golden gate post,
+  marble arch, landmarks luminous throne (arena) / tree of light / golden arch / golden castle, floating lantern, bush,
+  2 glow flowers, griffin nest, halo, stained glass window, 3 cloud blocks, crystal floor tile, 2 floating rocks, 2 pit
+  cloud and 2 storm cloud variants, sky island rock, waterfall edge rock, banner, angel statue, marble fountain, marble
+  column + broken column, 3 golden trees); the 2 grass tufts + 1 more reuse Hub / older templates (all 47 old); 913
+  copies tagged + 1826 attributes; check 0; compare 8521 -> 8521, 0 changed; full dry run 0 (438 / 10060); tag /
+  build again 0. Not assets: 25 loose-part folders. Shot 08_Heaven.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
