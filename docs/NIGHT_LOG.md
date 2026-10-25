@@ -1,5 +1,7 @@
 # NIGHT RUN DECISIONS (round 4, owner asleep, 2026-10-25/26) - newest first
 
+- Round 4: the Volcano zone's "Volcano" Landmark (the 400-stud mountain) is kept as an asset: it is a separate model
+  (owner: big distinct rock formations that are separate models count); the floors / mountains made of loose parts do not.
 - Round 4 layout tweak: Config ROW_MAX = 700 studs (a 1400-stud row could not be framed in one screenshot).
 - Round 4 quality states: templates made before round 4 = "improved" (the earlier batches); templates captured by
   BuildAssetPreview = "old" (the map object as it is); "to redo" = B.QUALITY overrides (none yet).
@@ -3534,6 +3536,14 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   rounds reused (witch tower, horror tree, hollow log, huts, gates, docks, magic props ...); 643 copies tagged + 2276
   attributes; check 0; compare 10409 -> 10409, 0 changed; full dry run 0 (311 templates / 7810 copies); tag / build
   again 0. Not assets: 29 loose-part folders (ground, water, mud, mountains, paths, MapFix). Shot 05_Swamp.jpg.
+- 06 Volcano DONE: 48 assets (S 4 / M 26 / L 18), 581 copies; 41 new templates (volcano_*: basalt bridge, rail
+  section, arena safe platform, dwarf forge, miner tent, anvil, bellows, ore crate, pickaxe rack, 3 sub-zone gates
+  (volcano_gate_2/3/4), boss gate, arena door, entry arch, landmarks mine elevator / volcano / lava fall / stone titan
+  (arena), iron brazier, iron lantern, chain post, lava crack, lava pool rim, mine support, ash mound, 2 basalt column
+  clusters, 3 basalt rocks, floating rock, 2 obsidian pillars, 2 obsidian shards, red crystal cluster, volcanic cliff,
+  2 charred dead trees, lava mine cart); 577 copies tagged + 1162 attributes; check 0; compare 11613 -> 11613, 0
+  changed; full dry run 0 (352 templates / 8450 copies); tag / build again 0. Not assets: 26 loose-part folders.
+  Shot 06_Volcano.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
