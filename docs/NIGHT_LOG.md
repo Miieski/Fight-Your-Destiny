@@ -3256,3 +3256,35 @@ prompts, collisions, the magenta glows). Keep each gate's position, size, collis
   2.4-2.5 ms; no game errors (the same 203785492 warning). 154 templates / 1742 copies up to date; disk == Studio (219
   scripts, 0 written); backup after_swamp_gates.
 
+
+# Cursed Swamp trees and nature - 2026-10-25 (owner prompt "CURSED SWAMP PROP IMPROVEMENT - Trees and nature")
+
+Objects: 01 / 02 mangrove trees (all instances, small rotation / scale variations only), 03 dead tree with a face (keep
+the eye glow and any script: NPC / spawner / trigger?), 04 twisted dead tree (keep the hollow), 05 hanging vines
+curtain (sway only if it sways now), 06 hollow magic stump (keep the rune glow and any prompt / script).
+
+## Status (newest first)
+
+- 15:40 Agent B: DONE. Builder tools/PropsSwampTrees.luau; data tools/PropsSwampTreesData.luau.
+  - Replaced: swamp_mangrove_a 40 / 40, swamp_mangrove_a_far 40 / 40, swamp_mangrove_b 27 / 27, swamp_face_tree
+    34 / 34, swamp_hollow_tree 47 / 47, swamp_vine_curtain 36 / 36, swamp_magic_stump 4 / 4. Run 2 = 0 for all.
+  - Triangles per copy: A 4.5k, far 1.15k, B 5.2k, face 3.35k, hollow 2.4k, curtain 0.95k, stump 4.1k + mesh.
+  - Colliders exact: every copy checked against the before-stash or backup, ray grids on and off the lattice, 0
+    differences.
+    - The 40 far mangroves keep their own trunk blocks (TrunkCollision, MapPropKeep), because their scaled trunks
+      differ by up to 0.001.
+    - The BossArenas stump keeps its PointLight on a kept SapLight part.
+  - Kept exactly: the face eyes / pupils / mouth, the hollow Knot, the stump runes / pool / crystals, the curtain's
+    Height attribute. No scripts, prompts or sway existed (PropFX has none), so none were added.
+  - Checks: dry run 161 templates / 1966 copies, 0 to replace; 0 untagged leftovers; the stashes were deleted.
+  - Disk == Studio (221 scripts, 0 written). Backups old_props_2026-10-25_pre_swamp_trees (7). Shots
+    docs/screenshots/swamp_trees/. Play check left to the main agent.
+- 14:40 Waiting: the place was not open in Studio; the owner opened it.
+- 14:50 Started. Sync.check 154 templates, 0 out of date. Backup before_swamp_trees.
+- 15:50 MAIN AGENT VERIFIED + PUSHED. Looked at the after shots (the mangrove A pilot sent to the owner). PLAY CHECK
+  (phone emulator): Swamp_1 (80 mangroves) 144 fps / render CPU 3.5 ms, Swamp_2 144 / 3.3, Swamp_3 144 / 3.1; the
+  mangrove A / B and face-tree trunks block the player; the face tree's 2 Neon pupils glow; the hollow tree's trunk
+  collider is in place (the walk test aimed at the bounding-box centre, which its branches shift off the trunk; the
+  agent's ray grids show 0 differences); no game errors (the same 203785492 warning). 161 templates / 1970 copies up to
+  date; disk == Studio (221 scripts, 0 written); backup after_swamp_trees.
+

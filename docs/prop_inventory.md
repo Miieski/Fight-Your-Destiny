@@ -999,6 +999,70 @@ test copies differ from the game copy.
 
 Totals: 12 copies replaced (4 templates).
 
+### Swamp trees (owner, "CURSED SWAMP PROP IMPROVEMENT - Trees and nature", 2026-10-25): inventory before the remake (read from Studio)
+
+Images: `docs/Swamp_Images/04_Trees_and_Nature/`. Today's kit parts are kept as rows in
+`tools/PropsSwampTreesData.luau` (`DevTools.PropsSwampTreesData`), and the far form is read from its first copy.
+
+- **Copies:** every copy is its kit at a Model scale (0.6 to 2.5). Their colliders equal the kit rows x scale exactly,
+  except the 40 far mangroves, whose trunk blocks differ by up to 0.001 per copy.
+- **Rules:** no earlier rule claimed these kits; 7 rules were added. SwampTree_A is split into near (`filter`) and far
+  (`match`: `Swamp_1.Decor.Backdrop`).
+- **Functions:** none. No script, prompt or touch handler; src/ never names these kits. PropFX has no Sway entry, so
+  the vine curtain is static today and stays static.
+  - Hanging_Moss_A has the attribute Height = 8 (kept).
+  - One BossArenas Rotten_Trunk_Glow (scale 1.25) has a PointLight under its SapPool (#8CFF5A, range 30, brightness
+    1.2, no shadows); the kit has none.
+- **Odd copy:** one vine curtain (Swamp_4 Dressing at 10008.4, 25, 808) has one strand 0.3 thick and 0.025 higher. It
+  is visual only and takes the template.
+- **Ground:** at local y 0 to 0.5 under the near trees; the far trees sit 6.5 deep in the mud bed.
+- **Backups:** `BackUP_Files/old_props_2026-10-25_pre_swamp_trees/<propId>.rbxm` (7 files); the main agent's full
+  backup `..._before_swamp_trees`.
+
+| # | owner's object | kit | copies | parts today | colliding | glow | size |
+|---|---|---|---|---|---|---|---|
+| 01 | mangrove tree A | `SwampTree_A` | 40: test, kit, Swamp_1 x25, Swamp_3 x13 | 12 (2 canopy meshes, 3 moss strips) | 7 (5 roots, 2 trunk) | - | 26 x 35.53 x 26 |
+| 01 far | the same, far | `SwampTree_A` in `Swamp_1.Decor.Backdrop` | 40 (scale 1.5-2.4) | 4 (canopy + trunk, greyed colours) | 2 | - | 26 x 28 x 26 |
+| 02 | mangrove tree B | `SwampTree_B` | 27: test, kit, Swamp_1 x16, Swamp_3 x9 | 16 (3 canopies, 4 strips) | 9 (6 roots, 3 trunk) | - | 35 x 42.13 x 30 |
+| 03 | dead tree with a face | `TwistedTree_A` | 34: test, kit, Swamp_1 x2, Swamp_2 x20, Swamp_3 x10 | 14 (2 Eye, 2 Pupil, 2 Mouth) | 8 | 2 Neon Pupils #FFE860 | 18.68 x 28.16 x 5.28 |
+| 04 | twisted dead tree, hollow | `TwistedTree_C` | 47: test, kit, Swamp_1 x8, Swamp_2 x29, Swamp_3 x7, BossArenas x1 | 9 (Knot = the hollow, 1 MossStrip) | 7 | - | 17.55 x 22.07 x 5.27 |
+| 05 | hanging vines curtain | `Hanging_Moss_A` | 36: test, kit, Swamp_1-4 x25, BossArenas x9 | 6 (a bar, 5 strips) | 0 | - | 6.5 x 8.15 x 0.8 |
+| 06 | hollow magic stump | `Rotten_Trunk_Glow` | 4: test, kit, BossArenas.Swamp x2 | 15 (Trunk mesh, 4 Root, 2 branches, 5 Sap, SapPool, 2 crystals) | 7 (mesh Hull, 4 roots, 2 branches) | 5 Sap + SapPool #8CFF5A, 2 crystals #78FFD2 (Neon) | 18.59 x 25.25 x 18.59 |
+
+### Swamp trees remake status (Agent B, 2026-10-25)
+
+- **Builder:** `tools/PropsSwampTrees.luau` (`DevTools.PropsSwampTrees`, built on DevTools.PropsSwampHuts' TB / B2 / H /
+  M). Every piece is cheap: 8-, 6- and 5-sided logs, 18-plane faceted blobs, folded convex leaves and part vines. Each
+  tree is a few unions, all under 100 pieces.
+- **Rules:** 7 in tools/SyncMapProps.luau (helper `swampBackdrop`).
+- **Collisions:** today's colliding parts are invisible "Collision" copies (the stump's trunk keeps its mesh and Hull);
+  the visible pieces never collide.
+  - Far mangroves: the template has no colliders. Each copy keeps its own 2 trunk blocks in a `TrunkCollision` folder
+    (MapPropKeep; `ST.prepFarColliders()`), because their scaled trunks differ by up to 0.001 per copy.
+  - Check: every copy against its before-stash or deserialized backup, collider corners worst 0.00000. Ray grids on
+    and off the 0.5 lattice on 57 copies: 0 differences.
+- **Kept exactly:**
+  - the 03 eyes, Neon pupils and mouth (204 checks, worst 0.00000);
+  - the 04 Knot;
+  - the 06 Sap strips, SapPool and 2 crystals;
+  - the vine curtain's Height attribute (36 / 36);
+  - the BossArenas stump's PointLight, on an invisible `SapLight` part (MapPropKeep; `ST.prepStumpLight()`).
+- **Sync:** run 2 = 0 for all 7. Full dry run: 161 templates / 1966 copies, 0 to replace. Every template rebuilds from
+  the final source with the same union hashes.
+- **Shots:** `docs/screenshots/swamp_trees/`. 06 has test shots only: its other copies are in ServerStorage.BossArenas.
+
+| # | object | MapProps id | replaced | triangles per copy | size (kit) | notes |
+|---|---|---|---|---|---|---|
+| 01 | mangrove tree A (pilot) | `swamp_mangrove_a` | 40 / 40 | 4,500 | 25.87 x 35.17 x 26.02 (26 x 35.53 x 26) | twisted 8-sided bark trunk with winding grooves, knots, moss; 5 arching prop roots of different thicknesses with mud collars; 2 layers of faceted leaf clusters (lit tops, dark wet teal undersides) with drooping leaf tips; 3 leafy vines; ferns and ghost mushrooms |
+| 01 far | mangrove A, far backdrop | `swamp_mangrove_a_far` | 40 / 40 | 1,150 | 24.86 x 28.00 x 25.37 (26 x 28 x 26) | the same trunk and canopy at low detail, today's greyed colours; own colliders per copy |
+| 02 | mangrove tree B | `swamp_mangrove_b` | 27 / 27 | 5,200 | 33.86 x 42.16 x 31.39 (35 x 42.13 x 30) | as 01 with 3 trunk blocks and 3 canopy layers (6 roots, 4 vines); leaf tips on the widest layer, 1 fern |
+| 03 | dead tree with a face | `swamp_face_tree` | 34 / 34 | 3,350 | 19.12 x 29.46 x 5.44 (18.68 x 28.16 x 5.28) | flat-fronted lower trunk; face kept exactly and carved round: brows, cheek knobs, knotted nose, lips, dark recesses; gnarled 6-sided branches with forked twigs (clipped at today's width); short roots; moss cushions and strands |
+| 04 | twisted dead tree, hollow | `swamp_hollow_tree` | 47 / 47 | 2,400 | 18.44 x 23.33 x 5.27 (17.55 x 22.07 x 5.27) | today's Knot kept with a black shadow and a bevelled bark lip (the hollow with depth); gnarled branches with twigs; a leafy vine; roots and mud collars; moss |
+| 05 | hanging vines curtain | `swamp_vine_curtain` | 36 / 36 | 950 | 6.51 x 8.41 x 0.78 (6.5 x 8.15 x 0.8) | bowed bark branch with 2 moss pads and 2 rope ties; 3 flat leafy vines and 2 moss strands in today's places, lengths and tones; static, nothing collides |
+| 06 | hollow magic stump | `swamp_magic_stump` | 4 / 4 | 4,100 + today's mesh | 18.59 x 26.44 x 18.59 (18.59 x 25.25 x 18.59) | today's mesh kept as the stump with bark grooves and knots on its measured surface; a bark rim, dark liquid and faint mist on top; the 5 rune strips set in carved grooves with Neon rune ticks; crystal shards; arching rim roots, crooked branches with twigs; moss and ghost mushrooms |
+
+Totals: 228 copies replaced (7 templates).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

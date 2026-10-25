@@ -175,6 +175,13 @@ local function swampGate4Kit(m: Instance): string?
 	end
 	return nil
 end
+-- swamp trees (2026-10-25): the 40 far mangroves of Swamp_1.Decor.Backdrop (canopy + trunk only, greyed colours) are
+-- their own prop, swamp_mangrove_a_far
+local function swampBackdrop(m: Instance): boolean
+	local p = m.Parent
+	return p ~= nil and p.Name == "Backdrop" and p.Parent ~= nil and p.Parent.Name == "Decor" and p.Parent.Parent ~= nil
+		and p.Parent.Parent.Name == "Swamp_1"
+end
 
 -- top-level models, matched by name inside the search roots (filter: an optional model -> boolean that limits a rule;
 -- match: an optional model -> boolean that adds models with other names, e.g. renamed hub copies)
@@ -593,6 +600,22 @@ SyncMapProps.RULES = {
 	{ propId = "swamp_skull_gate", names = { "Gate_Swamp_4" }, match = function(m)
 		return m.Name == "Gate" and m.Parent ~= nil and m.Parent.Name == "Swamp_4"
 	end, variant = swampGate4Kit },
+	-- cursed swamp trees and nature (owner "CURSED SWAMP PROP IMPROVEMENT - Trees and nature", 2026-10-25): 01 the
+	-- mangrove tree A = SwampTree_A (test, kit, Swamp_1 / Swamp_3), its far copies in Swamp_1.Decor.Backdrop = the
+	-- separate swamp_mangrove_a_far; 02 the mangrove tree B = SwampTree_B; 03 the dead tree with the face = TwistedTree_A;
+	-- 04 the twisted dead tree with the hollow = TwistedTree_C; 05 the hanging vine curtain = Hanging_Moss_A (attribute
+	-- Height kept); 06 the hollow magic stump = Rotten_Trunk_Glow (BossArenas.Swamp x2). Every copy is Model-scaled
+	{ propId = "swamp_mangrove_a", names = { "SwampTree_A" }, filter = function(m)
+		return not swampBackdrop(m)
+	end },
+	{ propId = "swamp_mangrove_a_far", names = {}, match = function(m)
+		return m.Name == "SwampTree_A" and swampBackdrop(m)
+	end },
+	{ propId = "swamp_mangrove_b", names = { "SwampTree_B" } },
+	{ propId = "swamp_face_tree", names = { "TwistedTree_A" } },
+	{ propId = "swamp_hollow_tree", names = { "TwistedTree_C" } },
+	{ propId = "swamp_vine_curtain", names = { "Hanging_Moss_A" } },
+	{ propId = "swamp_magic_stump", names = { "Rotten_Trunk_Glow" } },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")

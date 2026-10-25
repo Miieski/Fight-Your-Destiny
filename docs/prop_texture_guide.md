@@ -3233,6 +3233,29 @@ run with the swamp style.
   grazing rays), give the kit its own colliders and switch them with a Variant. Check with an off-lattice ray grid
   against the deserialized backup.
 
+### F5. Trees and nature (owner task 2026-10-25)
+
+`tools/PropsSwampTrees.luau`. These kits are scattered by the dozen (36-80 copies), so every piece is cheap and the
+budget per copy decides the recipe.
+
+| Piece | Recipe | About |
+|---|---|---|
+| Trunk | 8-sided log segments about 3.6 long, each turned 17 degrees further, a tone step each; 2 dark bark grooves per segment winding with it; a knuckle at each bend | 30-50 tris a segment |
+| Prop root / rim root | a quadratic arch from today's top to today's foot, 3 tapering 5-sided segments; a 7-sided mud collar where it meets the ground | 100 a root |
+| Leaf cluster | an 18-plane faceted blob, faces toned by their normal: lit top x1.12, dark underside x0.62 leaning to the wet teal #1E4A4F | 45-60 |
+| Canopy | per canopy disc of today: a centre cluster and a ring of 5-9 flatter clusters tipped down 14 degrees; 2 drooping leaf tips under each ring cluster | 600-1300 |
+| Leaf | a folded convex rhombus: a mid-rib ridge, lighter and darker halves, a dark back | 12 |
+| Vine | non-overlapping square stem segments 1.2-1.5 long, a leaf at every joint on alternating sides, a tip leaf; flat mode for a thin curtain | 100-150 |
+| Moss | one 18-plane cushion (#3F7A2C, top #5B852D); strands of 4 bars with a wet drip | 45 / 70 |
+| Mushroom | a 5-sided bone stem and a 6-sided ghost cap #BFF5F0 (no Cylinder: about 200 triangles in a union) | 30 |
+
+- **Costs:** TB.lump (26 planes) is about 90 triangles. Overlapping pieces in one union add the cost of their
+  intersection, so stems and strands are built end to end.
+- **Glows:** faces, runes, pools and crystals are kept part for part; the carving goes round them (brows, lips,
+  grooves, rims).
+- **Far copies:** a far-away form gets its own propId and a low-detail template. Copies whose colliders differ from each
+  other by float noise keep their own colliders in a MapPropKeep folder.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
