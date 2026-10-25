@@ -3402,6 +3402,21 @@ were not in the project: saved from the chat into docs/Swamp_Fixes_Round2/.
   the hold prompt opens them, decor under the barrier hides (3/3, 9/9, 15/15), walked through; 144 fps on desktop and on
   the iPhone 17 Pro emulator (landscape) in Swamp_1-4, render 2.2-2.9 ms; 0 game errors. Backup after_swamp_round2.
 
+# Cursed Swamp ROUND 3 - the 3 big landmarks (owner prompt "CURSED SWAMP - ROUND 3", parts 1 and 2; unattended night run)
+
+## Decisions and status (newest last)
+
+- 23:58 Part 1 decision: the 3 objects are the map stand-ins `Decor.Landmark` with LandmarkName WitchTower (Swamp_3),
+  SwingTree (Swamp_2 = the giant horror tree) and SunkenTrunk (Swamp_1 = the fallen hollow log). New propIds
+  swamp_witch_tower, swamp_horror_tree, swamp_hollow_log; rules match `Landmark` + LandmarkName (the windmill pattern).
+- 23:58 Part 1 decision: capture() took each map instance as it is (the nested lanterns, ravens and moss stay nested,
+  the SwingTree's NoClimb walls are part of the template); the map instances were re-placed by the identical template
+  (every part matched within 0.001, same pivot, LandmarkName kept) and only gained the tag and attributes.
+- 23:58 Part 1 decision: the preview's swamp area got a second ground strip (Ground_Row2, z 3675 .. 3805, same look,
+  the first row untouched) with the 3 samples at real scale (log x -3108, tree x -2990, tower x -2875) and a label
+  board in front of each (Labels_Row2). PART 1 DONE: shots docs/screenshots/swamp_round3/ (3 map before shots, the
+  preview row).
+
 # Cursed Swamp ROUND 3 - QUEUED (owner prompt "CURSED SWAMP - ROUND 3 (DO THIS LAST ...)", received 2026-10-25)
 
 To run only after round 2 is finished and verified. Part 1: the witch tower, giant horror tree and fallen hollow log

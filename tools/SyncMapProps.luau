@@ -656,6 +656,17 @@ SyncMapProps.RULES = {
 	-- CURSED SWAMP ROUND 2 (owner, 2026-10-25): the witch's broom = Broom_A (the owner's "hanging lantern" screenshot;
 	-- the owner chose a good broom over a lantern)
 	{ propId = "swamp_broom", names = { "Broom_A" } },
+	-- CURSED SWAMP ROUND 3 (owner, 2026-10-25): the 3 big swamp landmarks, captured from the map (Swamp_3 / 2 / 1
+	-- Decor.Landmark, attribute LandmarkName) with a sample each in the asset preview's swamp row 2
+	{ propId = "swamp_witch_tower", names = { "WitchTower" }, match = function(m)
+		return m.Name == "Landmark" and m:GetAttribute("LandmarkName") == "WitchTower"
+	end },
+	{ propId = "swamp_horror_tree", names = { "SwingTree" }, match = function(m)
+		return m.Name == "Landmark" and m:GetAttribute("LandmarkName") == "SwingTree"
+	end },
+	{ propId = "swamp_hollow_log", names = { "SunkenTrunk" }, match = function(m)
+		return m.Name == "Landmark" and m:GetAttribute("LandmarkName") == "SunkenTrunk"
+	end },
 	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
 		local zones = workspace:FindFirstChild("Zones")
 		local plains = zones and zones:FindFirstChild("Plains")
