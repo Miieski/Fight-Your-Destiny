@@ -3559,6 +3559,14 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   column + broken column, 3 golden trees); the 2 grass tufts + 1 more reuse Hub / older templates (all 47 old); 913
   copies tagged + 1826 attributes; check 0; compare 8521 -> 8521, 0 changed; full dry run 0 (438 / 10060); tag /
   build again 0. Not assets: 25 loose-part folders. Shot 08_Heaven.jpg.
+- 09 Dead DONE: 49 assets (S 7 / M 24 / L 18), 1349 copies; 48 new templates (dead_*: royal carpet, chapel, small
+  crypt, cemetery wall, 3 iron fence variants, armor stand, coffin niche, 2 pews, stone coffin, 3 sub-zone gates, boss
+  gate, catacomb arch, arena door, entry arch, iron gate arch, landmarks cathedral / great crypt / royal sarcophagus
+  (arena) / ossuary, bone chandelier, candle cluster, floating candle, grave lantern, organ pipes, dead grass, cobweb,
+  crow perch, hanging cage, standing mirror, cliff, cross stone, rubble pile, war banner, green-flame pillar, bone
+  pile, arena LoS pillar, open grave, skull wall panel, 3 tombstones, 2 grave trees); 1349 copies tagged + 2698
+  attributes; check 0; compare 13659 -> 13659, 0 changed; full dry run 0 (486 / 11459); tag / build again 0; no sample
+  footprint overlaps in any block (checked all 10 blocks). Not assets: 21 loose-part folders. Shot 09_Dead.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
