@@ -1,5 +1,24 @@
 # ROUND 6 DECISIONS (owner prompt "TWO TASKS IN ONE RUN: (A) KNIGHT STATUE ARMS ... (B) BRICK TEXTURE ...", 2026-10-26) - newest first
 
+- Round 6 Task A (Studio agent): the reference is my own before shot of the preview sample (docs/screenshots/round6/
+  A_ice_knight_before_front|side.jpg). The pilot keeps the round-4 build of the ice knight (PropsTundraMonuments) and
+  rebuilds only the arms and the sword in tools/PropsRound6.luau. After main's review the crossguard went up to chest
+  height (y 8.4, above the sash), the lower fist sits on it (gap 0.03), the grip shows only a short gold collar under the
+  pommel, and the fists are wider darker steel so they do not read as part of the sword. The round-4 pauldrons stuck
+  0.3 out through the side glass; they are now 0.3 further in and a little smaller (armour ends at x +-3.51, the
+  pane's inner face is at 3.52).
+- Round 6 Task A audit (every statue-like template in the preview, map copies use the same templates): FIXED (a
+  weapon stood beside the hands) = tundra_ice_knight (pilot), heaven_statue_angel_statue (gold sword in front, arms out
+  to the sides), hell_statue_demon_statue (dark sword in front, arms hanging), void_statue_voyager_statue (staff beside
+  the one arm), abyss_statue_trident_statue (trident beside the right arm; the left arm holds nothing and stays).
+  CHECKED, already holding = jungle_palisade_gate (the 2 tribal guards hold their torch poles, round 5). CHECKED, hold
+  nothing (left alone) = anubis_statue (seated, hands on knees), golden_guardian (sphinx), golem_statue, volcano_landmark
+  _stone_titan, jungle_landmark_golden_idol (hands on knees), jungle_totem_figure, jungle_tall_totem, pharaoh_throne
+  (empty throne), void_statue_reaper_altar (an altar with a scythe, no figure), desert_landmark_sarcophagus (guardian
+  figure, no weapon). The 4 old templates keep their old look; only the arms, hands and weapon were redone in the
+  improved recipe (frustum limbs, closed fists, a planted bevelled sword), so their quality labels stay "old".
+- Round 6 Task A phone emulator: the Studio device emulator cannot be driven from Edit-mode MCP and Play is the owner's;
+  not glanced - the statues add 4-6 unions each (no meshes, no lights, no scripts), nothing that differs on mobile.
 - Prompt saved as docs/Round6_Knights_Bricks/PROMPT_ROUND6.txt. The "attached screenshot" of the ice knight was not in the
   message; the Studio agent shoots the current ice_knight_in_glass_case in the asset preview as the before shot instead.
 - Backup before_round6_knights_bricks first. Task A (Studio agent) first; meanwhile the main agent prepares Task B's
@@ -3877,3 +3896,41 @@ only the tag and attributes, nothing else.
   fight started: the 13 door parts all collide and the player is held inside. Desert: entered, after the lobby the 24
   door parts collide, the Leave prompt is off, both mini-bosses spawn; 144 fps, also on the iPhone 17 Pro emulator
   (render 2.4 ms). 0 game errors. Backup after_round5.
+
+# ROUND 6 - knight statue arms holding the sword (Task A), brick textures (Task B) (2026-10-26)
+
+- Task A pilot ICE KNIGHT DONE: tundra_ice_knight (P.iceKnight): both arms bend at the elbows, the forearms come forward
+  and in (rerebrace, elbow cop with a fan plate, vambrace band, flared cuff); the two fists close round the grip, left
+  over right, the lower one on the crossguard (rounded steel fist the grip runs through, knuckle ridge, finger grooves,
+  back plate, thumb). The sword is planted 0.9 into the plinth (dark cut + ice crack), crossguard at y 8.4 (chest),
+  bevelled icy blade with a centre ridge, gold crossguard with quillons, gold grip with a spiral wrap, pommel. Case,
+  plinth and gems, crystals, visor / plume glow, sash, colours and size (11.9 x 15.4 x 8.0) kept; collision 2 / 2
+  identical. Replaced 15 / 15 (preview sample, test copy, kit, Tundra_4 x4, Tundra_4 BossGate x2 (+2 nested in the
+  preview boss gate), BossArenas.Tundra x4). Glass / lid clearance by bounds and from 3 angles. Shots
+  docs/screenshots/round6/A_ice_knight_before_front|side.jpg, A_ice_knight_after_front|side|hands_close|back34.jpg.
+- Task A ANGEL DONE: heaven_statue_angel_statue (P.angelStatue): the gold sword planted on the front step (point 0.5
+  into the lower plinth, crack), crossguard at chest height (y 9.9), marble arms bent forward, marble fists round the
+  grip one over the other; the old Arm / Blade / Guard / Hilt (non-colliding) removed. Collision 8 / 8; 17.7 x 18.2 x
+  7.5 (was 7.0 deep). Replaced 14 / 14. Shots A_angel_statue_before|after.jpg.
+- Task A DEMON DONE: hell_statue_demon_statue (P.demonStatue): the dark sword planted in the plinth top (crack),
+  crossguard at chest height (y 12.0), clawed fists round the grip (bone claw tips); the old arms and sword parts
+  (colliding) stay as invisible collision. Collision 20 / 20; size unchanged. Replaced 19 / 19. (B.build Hell reports
+  the 07_Hell block reaching 27 studs into the gap before 08_Heaven: the block size did not change with this remake
+  (same statue size), nothing moved.) Shots A_demon_statue_before|after.jpg.
+- Task A VOYAGER DONE: void_statue_voyager_statue (P.voyagerStatue): its one arm now bends to a fist round the staff;
+  a purple socket ring where the staff meets the plinth. No part collides (as before, 0 / 0). Replaced 8 / 8. Shots
+  A_voyager_statue_before|after.jpg.
+- Task A TRIDENT DONE: abyss_statue_trident_statue (P.tridentStatue): the right arm bends to a fist round the trident
+  shaft; a gold ring at the shaft foot; the old right arm stays as invisible collision. Collision 16 / 16; size
+  unchanged. Replaced 12 / 12. Shots A_trident_statue_before|after.jpg.
+- Task A audit shots: docs/screenshots/round6/A_audit_*.jpg (anubis, golden guardian, golem, reaper altar, stone titan,
+  pharaoh throne).
+- Task A END CHECKS: ground compare 0 differences on the 13 grounds; layout: only the remade samples moved (the angel
+  and the knight re-centred on their slots); B.tag Tundra / Heaven / Hell / Void / Abyss: 0 attributes to change;
+  B.check all 13 zones 0 problems, checkCharacters 176 / 0 problems; full dry run 626 templates / 14475 copies, 0
+  replaced; export 231 scripts, pull_scripts twice: 0 written (tools/PropsRound6.luau 29482 / 90a51bd62d25870d, disk ==
+  Studio); graphify update done. Docs: prop_inventory.md "Round 6 Task A", prop_texture_guide.md F11.
+  TASK A DONE. Task B not started (waiting for main's texture ids and room scope).
+- Main agent: ROUND 6 TASK A PLAY CHECK OK on the iPhone 17 Pro emulator (landscape): Tundra, Heaven, Hell, Abyss and
+  Void reached by portal next to a fixed statue (6 / 11 / 10 / 10 / 7 statues streamed), 144 fps, render 2.4-2.8 ms,
+  0 game errors. Pushed; Task B starts.

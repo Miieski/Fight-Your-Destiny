@@ -3391,6 +3391,24 @@ Settings:
   a wall already has a separate frieze / base-band part, that part gets the strip colours instead.
 - Part Material stays SmoothPlastic so no Roblox material pattern fights the bricks.
 
+### F11. Statues holding a weapon (owner task 2026-10-26, round 6 Task A)
+
+`tools/PropsRound6.luau`: `P.plantedSword`, `P.gripArm`, `P.gauntlet`, `P.blade`.
+
+- **Pose:** the figure rests on the weapon. Each arm runs shoulder -> elbow (down, out, a little forward) -> wrist
+  (forward and in) as 8-sided frustums, with an elbow cop and a flared cuff; the fists close round a vertical grip,
+  one over the other.
+- **Fist:** a rounded chamfered block (about 1.15 x 0.85 x 0.95 per fist) that the grip runs through, a light knuckle
+  ridge on the front, 2 dark finger grooves, a plate on the back of the hand and a thumb over the top. It is wider and
+  darker than the grip so it never reads as part of the sword.
+- **Sword:** a convex blade with a diamond cross-section (the centre ridge) and a tapered point, planted 0.5-0.9 into
+  the floor with a dark cut and a 5-line crack. The crossguard sits at chest height (clearly above the belt or sash),
+  the lower fist sits on it (gap <= 0.1). The grip is only 2 fists long plus a 0.2 collar, with a spiral wrap in a
+  lighter tone of the grip colour, then the pommel.
+- **Cases and lids:** check the bounds of every new union against the inner face of the glass and the lid underside;
+  shoulder plates are the usual offenders.
+- **Collision:** colliding arms / weapon parts of today become invisible `Collision` parts; the new limbs never collide.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

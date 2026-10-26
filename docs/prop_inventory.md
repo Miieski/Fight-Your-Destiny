@@ -1272,6 +1272,22 @@ Notes: the 3 arena doors (06, 12, 20) are faded and unblocked as a whole by Boss
 Backups: `BackUP_Files/round5_before_*` (carts, sarcophagus, jungle_guards, ice_throne, task3, task3b, task3c).
 Shots: `docs/screenshots/round5/` (before / after, preview + one map or arena placement each).
 
+### Round 6 Task A (owner, "KNIGHT STATUE ARMS HOLDING THE SWORD", 2026-10-26)
+
+Builders in `tools/PropsRound6.luau` (`DevTools.PropsRound6`). Hands closed round the weapon; collisions identical.
+
+| MapProps id | builder | weapon | collision | replaced | notes |
+|---|---|---|---|---|---|
+| `tundra_ice_knight` | `iceKnight` | icy sword, planted, guard at chest | 2 / 2 | 15 / 15 | pilot; round-4 build kept, arms + sword new; pauldrons pulled inside the glass |
+| `heaven_statue_angel_statue` | `angelStatue` | gold sword, planted on the front step | 8 / 8 | 14 / 14 | old template, arms / sword parts replaced |
+| `hell_statue_demon_statue` | `demonStatue` | dark sword, planted | 20 / 20 | 19 / 19 | old arms and sword stay as invisible collision |
+| `void_statue_voyager_statue` | `voyagerStatue` | staff (kept) | 0 / 0 | 8 / 8 | one arm, fist round the staff |
+| `abyss_statue_trident_statue` | `tridentStatue` | trident (kept) | 16 / 16 | 12 / 12 | right arm only; old arm = invisible collision |
+
+Checked, no change: jungle_palisade_gate guards (hold their torches), anubis_statue, golden_guardian, golem_statue,
+volcano_landmark_stone_titan, jungle_landmark_golden_idol, jungle_totem_figure, jungle_tall_totem, pharaoh_throne,
+void_statue_reaper_altar, desert_landmark_sarcophagus (no weapon held).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).
