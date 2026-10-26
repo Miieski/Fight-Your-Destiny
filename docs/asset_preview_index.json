@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T13:48:31Z",
+ "generated": "2026-10-26T14:57:51Z",
  "zones": [
   {
    "characters": [
@@ -5023,6 +5023,57 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "jungle_moss_patch_large",
+     "instances": 25,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 25,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_moss_patch_medium",
+     "instances": 36,
+     "largest": 9.7,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 36,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_moss_patch_small",
+     "instances": 2,
+     "largest": 4.6,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 2,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "jungle_plant_fern_a",
      "instances": 506,
      "largest": 8,
@@ -5674,7 +5725,7 @@
     },
     {
      "folder": "Jungle.BossArena.Decor.FloorDecor",
-     "parts": 67
+     "parts": 55
     },
     {
      "folder": "Jungle.BossArena.Decor.Props",
@@ -5682,7 +5733,7 @@
     },
     {
      "folder": "Jungle.BossArena.Decor.Shell",
-     "parts": 115
+     "parts": 105
     },
     {
      "folder": "Jungle.BossArena.PlayerSpawns",
@@ -5790,11 +5841,11 @@
     },
     {
      "folder": "Jungle.Jungle_3.Decor.Plaza",
-     "parts": 38
+     "parts": 24
     },
     {
      "folder": "Jungle.Jungle_3.Decor.Ruins",
-     "parts": 9
+     "parts": 8
     },
     {
      "folder": "Jungle.Jungle_4",
@@ -5810,7 +5861,7 @@
     },
     {
      "folder": "Jungle.Jungle_4.Decor.FloorDecor",
-     "parts": 21
+     "parts": 3
     },
     {
      "folder": "Jungle.Jungle_4.Decor.Hills_E",
@@ -5826,7 +5877,7 @@
     },
     {
      "folder": "Jungle.Jungle_4.Decor.Props",
-     "parts": 66
+     "parts": 58
     },
     {
      "folder": "Jungle.Jungle_4.Decor.Shell",

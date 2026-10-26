@@ -1470,6 +1470,25 @@ Notes: the stoneBox helper's side faces were turned the right way round during 0
 collision). BuildAssetPreview: the 18 ids are "improved" in B.QUALITY; preview samples may now keep a template Variant
 (only the version part of MapPropVersion is compared), so the campfire and hub sign samples show their zone's look.
 
+### Round 7 Part 2 (owner, "JUNGLE MOSS PLATES", 2026-10-26)
+
+Builder `tools/PropsRound7.luau` (R7.mossTemplates / R7.mossPlates / R7.placeMoss). Today's flat moss plates (plain
+SmoothPlastic Parts, 0.1-0.6 thick, coplanar with the floor or wall: they z-fought and vanished with distance) -> 3
+MapProps templates, each copy scaled to its plate (footprint at most +10 %), turned along the plate's long side with a
+random +-12..15 degrees (and a random half turn on floors), lifted about 0.13 off the surface (pads' underside), never on a
+glowing pad (shrunk / moved 1-5 studs where needed). Decor only: anchored, CanCollide / CanQuery / CanTouch false,
+CastShadow false, no scripts. Wall copies use Variant "Wall" (hanging strands shown).
+
+| id | pads footprint | visible triangles | copies |
+|---|---|---|---|
+| jungle_moss_patch_small | 5.0 x 3.5 | about 650 | 2 + 1 preview sample |
+| jungle_moss_patch_medium | 7.6 x 4.9 | about 750 | 36 + 1 |
+| jungle_moss_patch_large | 9.6 x 7.1 | about 980 | 25 + 1 |
+
+Plates replaced (63): Jungle_4 FloorDecor.MossPatch x18 and Props.WallMoss x8; BossArenas.Jungle FloorDecor.MossPatch
+x12 and Shell.WallMoss x10; Jungle_3 Plaza.MossPatch x14 and Ruins.PlatformMoss x1. Not a plate (kept): Jungle_4
+Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps templates or the preview.
+
 ### crate - `Crate_A` (base variant, 30 copies identical; Abyss "Sunken" = same geometry, other colours)
 - bbox 4.00 x 4.00 x 4.00, centre (0, 2, 0). No PrimaryPart. 9 Parts (Block), SmoothPlastic, all CanCollide/CanQuery/CastShadow on.
 - Body 3.7 cube (214,150,92); bottom and top slabs 4 x 0.5 x 4 (168,98,56); 4 corner posts 0.5 x 3 x 0.5 at (+-1.75, 2, +-1.75) (168,98,56); 2 diagonal braces 0.5 x 4.1 x 0.15 at z +-1.9, roll +-45 (168,98,56).

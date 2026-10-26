@@ -1,6 +1,12 @@
 # ROUND 7 DECISIONS (owner prompt "ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR +
 # DESERT PYRAMID BRICKS", 2026-10-26) - newest first
 
+- P2 (Studio agent): the "flat dark-green moss plates" are plain Parts named MossPatch / WallMoss / PlatformMoss
+  (0.1-0.6 thick, coplanar). All 63 replaced, Jungle_3's 15 outdoor ones included ("anywhere else"); RoofMoss (the
+  colliding roof slab of Jungle_4) is not a plate and stays. Each patch is scaled to its plate (a uniform scale, so
+  long thin plates get a patch as long as the plate and a bit wider than 1.1 x its width only where the template's
+  aspect is wider); 8 floor patches were shrunk / moved 1-5 studs off a glowing pad. Shot pairs taken in the same
+  lighting state (the before view rebuilt temporarily from the logged plate data, deleted after).
 - Prompt saved as docs/Round7_Textures_And_Exteriors/PROMPT_ROUND7.txt. 7 of the 11 images came with it, saved as 04..10
   (named after what they show); 01-03 (the desert / jungle rooms before Part 1) and 11 (report example) were not attached.
 - PART 1 is word for word the "SMALL FIX" already done, checked in Play and pushed (6dc3780, sheets docs/before_after/R1..R4):
@@ -4153,3 +4159,13 @@ only the tag and attributes, nothing else.
   + Cave Troll spawn, 145 fps. Swamp boss gate: prompt present, light and 13 glow parts on; the boss room is still
   "coming soon" (Bosses.PLAYABLE_ZONES = 4, no swamp boss rig) exactly as before, and its 19 colliders are identical to
   the old template (the ring centre was already open). 0 game errors. Backup after_round6_assets.
+
+# ROUND 7 PROGRESS (2026-10-26)
+
+- P2 JUNGLE MOSS DONE (tools/PropsRound7.luau): plates found and replaced, name x count: Jungle_4.Decor.FloorDecor.
+  MossPatch x18, Jungle_4.Decor.Props.WallMoss x8, BossArenas.Jungle.Decor.FloorDecor.MossPatch x12,
+  BossArenas.Jungle.Decor.Shell.WallMoss x10, Jungle_3.Decor.Plaza.MossPatch x14, Jungle_3.Decor.Ruins.PlatformMoss x1
+  (63; none in templates / preview). Templates jungle_moss_patch_small / _medium / _large (Variant Wall); copies small 2,
+  medium 36, large 25; sync 63/63 (+3 samples), jungle preview check 0 problems. Checks: 0 plates left, jungle scripts
+  0 -> 0, ground compare 0 (OwnerLocked 13/13), dry run 629 / 14541 0, index regenerated, export 233 / pull x2 0
+  written. Shots docs/screenshots/round7/P2-01_moss_{floor,wall}_{before,after}.jpg.

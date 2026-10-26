@@ -3478,6 +3478,14 @@ Rules the tool follows:
 - **Swamp rot (13 - 18):** rot() = saturation x0.72, value x0.66, lerp 22 % to #3A3E28; moss #3F7A2C / top #60963A,
   mud #3A2A1C, slime #78B034, rope #96805A, rusty iron #60544A; swamp gate stone #766896 / #5C527A, glow #AA50FF.
 
+### G4. Round 7 jungle moss patches (tools/PropsRound7.luau)
+
+- Pads: flattened faceted blobs (18 planes), base #2E6B2E on the sides, top #4C9A3C x1.12 (x0.94 .. x1.1 per pad),
+  undersides #265826; light spots #7ED957 (sides x0.85); leaf tufts in the three tones; small ferns (PropsSwampTrees
+  fern). Wall strands: PropsSwampTrees mossStrand in #2E6B2E / #4C9A3C. SmoothPlastic, no Neon, no shadow.
+- Lift: the pads' underside 0.14 x scale off the surface (0.1 - 0.22 in the game), top about 0.38 x scale, tufts to
+  0.45 x scale: never coplanar with the stone, so no z-fighting and visible from 10-20 studs.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
