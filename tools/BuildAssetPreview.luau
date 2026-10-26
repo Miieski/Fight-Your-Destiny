@@ -109,6 +109,8 @@ B.QUALITY = {
 	swamp_statue_bone_pile = "improved", -- 16
 	swamp_gate_boss_gate = "improved", -- 17
 	swamp_gate_door = "improved", -- 18
+	-- round 7 part 4 (DevTools.PropsRound7): the swamp side rocks rebuilt in the improved boulder look
+	swamp_rock_cliff_a = "improved",
 }
 
 ---------------------------------------------------------------------
