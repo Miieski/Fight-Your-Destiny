@@ -173,11 +173,12 @@ def marble(path_name, seed, n=4, size=512):
 	img.save(os.path.join(OUT, path_name))
 
 
-def flagstones(path_name, seed, size=512, rows=4):
+def flagstones(path_name, seed, size=512, rows=4, palette=None, joint=None, tufts=None):
 	"""Irregular-rectangle flagstones, tileable: rows of equal height, each row cut into slabs of random width
 	(wrapping round the tile edge), 4 px dark joints, bevels, chips, a crack now and then, moss in some joints."""
 	rng = random.Random(seed)
-	img = Image.new("RGB", (size, size), FLAG_JOINT)
+	palette, joint, tufts = palette or FLAG, joint or FLAG_JOINT, tufts or MOSS
+	img = Image.new("RGB", (size, size), joint)
 	draw = ImageDraw.Draw(img)
 	rh = size // rows
 	moss_spots = []
@@ -193,7 +194,7 @@ def flagstones(path_name, seed, size=512, rows=4):
 			total += w
 		x = start
 		for w in widths:
-			base = shade(rng.choice(FLAG), 0.95 + rng.random() * 0.1)
+			base = shade(rng.choice(palette), 0.95 + rng.random() * 0.1)
 			for shift in (-size, 0):  # wrap at the right edge
 				xa, xb = x + shift + 2, x + shift + w - 3
 				if xb < 0 or xa >= size:
@@ -202,7 +203,7 @@ def flagstones(path_name, seed, size=512, rows=4):
 				if rng.random() < 0.35:  # chip
 					cx, cy = (xa, y0) if rng.random() < 0.5 else (xb, y1)
 					d = rng.randint(6, 11) * (1 if cx == xa else -1)
-					draw.polygon([(cx, cy), (cx + d, cy), (cx, cy + d)], fill=FLAG_JOINT)
+					draw.polygon([(cx, cy), (cx + d, cy), (cx, cy + d)], fill=joint)
 				if rng.random() < 0.2:  # crack
 					px, py = rng.randint(xa + 10, max(xa + 11, xb - 10)), y0 + 6
 					pts = [(px, py)]
@@ -217,7 +218,7 @@ def flagstones(path_name, seed, size=512, rows=4):
 			x += w
 	for (mx, my) in rng.sample(moss_spots, max(1, len(moss_spots) // 2)):  # moss tufts in joints / corners
 		my += rng.choice((0, rh - 4))
-		col = mix(rng.choice(MOSS), FLAG_JOINT, 0.25)
+		col = mix(rng.choice(tufts), joint, 0.25)
 		for k in range(rng.randint(5, 9)):
 			ox, oy = mx + rng.randint(-14, 14), my + rng.randint(-6, 6)
 			r = rng.randint(3, 7)
@@ -231,6 +232,47 @@ def flagstones(path_name, seed, size=512, rows=4):
 # and inside; the interior walls take a darker Color3.
 ICE = [hexrgb(h) for h in ("#4D93D5", "#4889C6", "#539EE5", "#4D93D5", "#4788C5", "#427EB7")]
 ICE_JOINT = hexrgb("#2860AA")
+
+
+# ---- Cursed Swamp sub-zone 4 + boss room (round 7 Part 5): walls = mossy dark stone blocks from the room rocks
+# (#4D4A4E, #596864, facets #444E41..#727B74) with the gates' moss (#3C752A, #3D5A25, #60963A) creeping on the top
+# edges and mud (#423020 / #463422) staining the lower course; floor = darker muddy flagstones, mud joints.
+SWAMP_STONE = [hexrgb(h) for h in ("#555A52", "#4D524B", "#5C625A", "#4A4A4C", "#596864", "#51574F")]
+SWAMP_JOINT = hexrgb("#262A24")
+SWAMP_MOSS = [hexrgb("#3C752A"), hexrgb("#3D5A25"), hexrgb("#4E7F33")]
+SWAMP_MUD = [hexrgb("#423020"), hexrgb("#463422")]
+SWAMP_FLOOR = [hexrgb(h) for h in ("#45473F", "#4B4C42", "#41433B", "#504F44", "#474A42")]
+SWAMP_FLOOR_JOINT = hexrgb("#2A2017")
+
+
+def swamp_wall(path_name, seed):
+	"""The brick tile in swamp stone, then moss creeping over some block tops (drips hanging down) and mud washes
+	on some lower edges. Wrapped horizontally so the tile stays seamless."""
+	img = bricks(path_name, SWAMP_STONE, SWAMP_JOINT, seed, cracks=True)
+	rng = random.Random(seed + 1)
+	draw = ImageDraw.Draw(img)
+	W = img.size[0]
+	for row in range(ROWS):
+		off = (BW // 2) if row % 2 else 0
+		for col in range(PER_ROW + 1):
+			x0 = col * BW + off + JOINT // 2
+			y0 = row * BH + JOINT // 2
+			r = rng.random()
+			for sx in (-W, 0, W):
+				xs = x0 + sx
+				if r < 0.4:  # moss along the top edge, with a few drips
+					c = rng.choice(SWAMP_MOSS)
+					a, b = xs + rng.randint(0, 30), xs + rng.randint(60, BW - 8)
+					draw.rectangle([a, y0, b, y0 + rng.randint(5, 9)], fill=c)
+					for _ in range(rng.randint(1, 3)):
+						dx = rng.randint(a, b)
+						draw.rectangle([dx, y0, dx + 4, y0 + rng.randint(12, 26)], fill=shade(c, 0.9))
+				elif r < 0.6:  # a mud wash rising from the bottom edge
+					c = rng.choice(SWAMP_MUD)
+					a = xs + rng.randint(4, 50)
+					h = rng.randint(10, 22)
+					draw.polygon([(a, y0 + BH - JOINT - 2), (a + rng.randint(40, 70), y0 + BH - JOINT - 2), (a + rng.randint(15, 35), y0 + BH - JOINT - h)], fill=mix(c, SWAMP_STONE[0], 0.35))
+	img.save(os.path.join(OUT, path_name))
 
 
 def main():
@@ -250,6 +292,8 @@ def main():
 	marble("desert_marble_floor.png", 31)
 	flagstones("jungle_flagstone_floor.png", 41)
 	bricks("tundra_ice_brick.png", ICE, ICE_JOINT, 51, cracks=False)  # ice: chips only, no dark cracks
+	swamp_wall("swamp_wall_stone.png", 61)
+	flagstones("swamp_floor_mud_stone.png", 71, palette=SWAMP_FLOOR, joint=SWAMP_FLOOR_JOINT, tufts=SWAMP_MUD)
 	print("written to", OUT)
 
 

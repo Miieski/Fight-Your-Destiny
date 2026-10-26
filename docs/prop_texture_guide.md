@@ -3521,6 +3521,21 @@ floors and the V panels stay plain.
   Wood, Grain, Rope, Iron, Moss, Splinters / Water, Mud); thin pieces (vines, leaves, mushrooms, strands, cracks) cast
   no shadow.
 
+### G7. Swamp boss room (round 7 Part 5: Swamp_4 interior + BossArenas.Swamp)
+
+One family, "mossy dark stone", matching the swamp gates and doors (colours read 2026-10-26 by part volume from
+swamp_skull_gate, swamp_gate_boss_gate, swamp_gate_door and the room rocks).
+- **Walls:** `swamp_wall_stone` (rbxassetid://134953143438411), 256 px = 8 x 8 studs, 4 x 2 stud blocks in running
+  bond. Blocks #555A52, #4D524B, #5C625A, #4A4A4C, #596864, #51574F (the room rocks #4D4A4E / #596864 and facets
+  #444E41..#727B74); joints #262A24; moss creeping over some block tops with short drips (#3C752A from the skull gate,
+  #3D5A25 from the arena door, #4E7F33); small mud washes on lower edges (#423020 / #463422, the gates' mud); a few
+  cracks. Color3 white.
+- **Floor:** `swamp_floor_mud_stone` (rbxassetid://91459519881550), 512 px = 24 x 24 studs, irregular flagstones
+  #45473F, #4B4C42, #41433B, #504F44, #474A42 (a step darker than the walls), mud joints #2A2017, mud clumps in some
+  joints. The loose floor slabs on top take the same id a little lighter (Color3 about #E0E0E0).
+- **Ceilings:** plain, darker. The magenta (#AA50FF / #AE53FF) and yellow-green (#8CFF5A) glows stay untouched and
+  read clearly on the dark stone.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
