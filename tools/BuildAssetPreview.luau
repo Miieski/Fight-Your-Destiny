@@ -75,6 +75,13 @@ B.QUALITY = {
 	-- round 5 (owner prompt "ROUND 5", Task 2 / Task 3): templates captured as "old" in round 4 and remade since
 	desert_landmark_sarcophagus = "improved",
 	tundra_landmark_ice_throne = "improved",
+	plains_landmark_ancient_tree = "improved", -- 03
+	desert_landmark_stone_bridge = "improved", -- 04
+	desert_landmark_rock_arch = "improved", -- 05
+	desert_gate_door = "improved", -- 06
+	desert_gate_boss_gate = "improved", -- 08
+	desert_landmark_oasis_well = "improved", -- 09
+	desert_prop_spear = "improved", -- 10
 }
 
 ---------------------------------------------------------------------

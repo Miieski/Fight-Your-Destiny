@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T07:51:48Z",
+ "generated": "2026-10-26T08:34:33Z",
  "zones": [
   {
    "characters": [
@@ -1786,14 +1786,14 @@
      "resizedParts": 0,
      "propId": "plains_landmark_ancient_tree",
      "instances": 1,
-     "largest": 130.8,
+     "largest": 149.2,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3515,7 +3515,7 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3525,14 +3525,14 @@
      "resizedParts": 0,
      "propId": "desert_gate_door",
      "instances": 1,
-     "largest": 52,
+     "largest": 71.7,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3593,14 +3593,14 @@
      "resizedParts": 0,
      "propId": "desert_landmark_oasis_well",
      "instances": 1,
-     "largest": 40.4,
+     "largest": 68.6,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3610,14 +3610,14 @@
      "resizedParts": 0,
      "propId": "desert_landmark_rock_arch",
      "instances": 1,
-     "largest": 101.6,
+     "largest": 159.5,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3644,14 +3644,14 @@
      "resizedParts": 0,
      "propId": "desert_landmark_stone_bridge",
      "instances": 1,
-     "largest": 152.5,
+     "largest": 210.4,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3829,14 +3829,14 @@
      "resizedParts": 0,
      "propId": "desert_prop_spear",
      "instances": 8,
-     "largest": 15.6,
+     "largest": 22.3,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "prop",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 8,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [

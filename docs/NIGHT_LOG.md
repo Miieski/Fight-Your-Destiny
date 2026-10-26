@@ -1,5 +1,23 @@
 # ROUND 5 DECISIONS (owner prompt "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26) - newest first
 
+- Round 5 labels (main's correction): every asset remade in round 5 is "improved" on its floor label and in the index
+  md / json - B.QUALITY now lists the Task 2 remakes (desert_landmark_sarcophagus, tundra_landmark_ice_throne; the
+  improved cart and jungle_palisade_gate were already "improved") and every Task 3 id as it is finished (03-10 so far);
+  Plains / Desert / Tundra rebuilt (labels refresh text + colour only, nothing moves), index regenerated.
+- Round 5 Task 3 image picks (labels unreadable, picked by look and place in the Desert block): 04 "large sandstone
+  gateway" = desert_landmark_stone_bridge (partly readable label, the long coursed sandstone span); 05 "red rock stack" =
+  desert_landmark_rock_arch (the stacked red slabs by the Desert / Jungle edge; a first try on the 3 desert_rock_hoodoo
+  was the wrong pick and was undone before anything synced - they are already improved faceted stacks); 06 "gate frame"
+  = desert_gate_door (the Desert boss ARENA door: yellow lintel, brown pylons, blue band, yellow door panel, the only
+  copy is ServerStorage.BossArenas.Desert.Door); 08 "blue / gold door" = desert_gate_boss_gate (the Desert_4 boss gate
+  with the two cyan squares and the gold-and-cyan emblem on top).
+- Round 5 06 arena door: BossService.setDoor toggles CanCollide / Transparency on EVERY part of the arena Door model, so
+  the new visual parts also block while the door is closed (they hug the old shapes: the pylon plinths / capitals reach
+  0.6 stud past the old pylons) and fade to 0.6 when it opens; the old parts stay invisible (BaseTransparency 1). The
+  template's collidable set is identical (19 / 19).
+- Round 5 10 spear: the 8 spears of the Desert boss arena (Decor.Spear, 2 racks of 4) lean back into the arena wall,
+  so their upper shafts are hidden and only the blades show - this is the old placement (same in the before shot), not
+  changed (no map edit asked).
 - Round 5 D ice throne: no frost pillars / braziers added - in the Tundra boss arena the frozen knight statues (x +-24,
   z -12), the blue torches and the ice spikes (x +-24, z +14) already stand exactly where they would go (they would
   overlap); the enlarged finished throne carries its own crystals, so steps over the old footstool and a snow drift
@@ -3718,3 +3736,49 @@ only the tag and attributes, nothing else.
   Tundra + preview sample); template in _Previous; backup round5_before_ice_throne. PropsRound5 19324 / 50c1a8668fda1085
   (P.iceThrone), BuildAssetPreview 69693 / 3d1a05edb7738624. Shots docs/screenshots/round5/D_ice_throne_before|after_
   preview|arena.jpg. TASK 2 DONE: full dry run 0 (626 templates / 14475 copies).
+- Task 3 03 ANCIENT TREE DONE: plains_landmark_ancient_tree in the swamp / jungle tree recipe (PropsSwampTrees): a twisted
+  8-sided trunk (r 12.6 -> 9.4) with bark grooves, 8 flared roots over the kept root wedges (invisible collision), gnarled
+  branches into each of the 6 canopy layers, each layer a faceted leaf crown (centre fill, ring of 6, outer ring at 0.37 W,
+  3 top tufts, lit top / dark underside), hanging vines, moss cushions, stones and ferns at the root feet. NoClimb walls /
+  roof and TrunkCollision unchanged: collidable set identical (25 / 25). 125.5 x 121.7 x 130.0 (was 142.2 x 122.3 x 139.2:
+  the old flat canopy discs were wider than the leaf crowns). Replaced 2 / 2 (Plains map + preview sample). Backup
+  round5_before_task3. Shots docs/screenshots/round5/03_ancient_tree_before|after_preview|map.jpg.
+- Task 3 04 STONE BRIDGE DONE (image 04, see the pick at the top): desert_landmark_stone_bridge in the desert gate recipe:
+  coursed sandstone piers / deck / parapets / towers (running bond, chamfered blocks), red bands with gold diamonds,
+  carved glyph panels (lapis + gold), a cornice, merlons, gold-capped posts; the ArchHaunch stays visible. Collidable set
+  identical (31 / 31); 152.5 x 61.6 x 34.5 (was 152.5 x 60.0 x 34.5: merlons). Replaced 2 / 2. Shots
+  docs/screenshots/round5/04_stone_bridge_before|after_preview|map.jpg.
+- Task 3 05 RED ROCK STACK DONE (image 05): desert_landmark_rock_arch: each of its Strata slabs is now a faceted strata
+  slab (convex solid, jittered bevels on every edge, lit top / dark underside, every third slab proud or set back), dark
+  cracks, sand piles and red scree at both feet; the old slabs stay as invisible collision (27 / 27 identical);
+  104.4 x 75.0 x 51.7 (was 101.6 x 75.0 x 51.7). Replaced 2 / 2. Backup round5_before_task3b. Shots
+  docs/screenshots/round5/05_rock_arch_before|after_preview|map.jpg.
+- Task 3 06 DESERT ARENA DOOR DONE: desert_gate_door in the desert gate recipe (P.desertArenaDoor): coursed pylons on
+  dark plinths with carved grooves, flared capitals with a gold rim, the gold / lapis bands chamfered with lapis squares /
+  gold diamonds, a coursed lintel with gold rules, a two-tier gold cornice, a gold ring round the sun disc; the door
+  panel kept with a gold frame round each leaf and 2 columns of gold studs (both faces). Glyphs, inlays, seam and the sun
+  disc glow unchanged. Collidable set identical (19 / 19); 52.6 x 43.0 x 7.4 (was 52.0 x 43.0 x 6.5). Replaced 2 / 2
+  (ServerStorage.BossArenas.Desert.Door + preview sample). Shots docs/screenshots/round5/06_desert_gate_door_before|
+  after_preview|map.jpg (map = a temporary workspace copy of the Desert arena, deleted after the shot).
+- Task 3 08 DESERT BOSS GATE DONE: desert_gate_boss_gate, same recipe (P.desertBossGate) + gold bezels round the 2 cyan
+  squares (glow kept), the gold ring round the sun disc, 3 feather layers (gold / lapis) under each wing; the seal
+  emblem, gems, glyphs and the 2 jackal statues kept; the map copy kept its Interact ProximityPrompt (custom child).
+  Collidable set identical (92 / 92); 88.0 x 43.0 x 19.8 (was 88.0 x 43.0 x 19.4). Replaced 2 / 2 (Desert_4.BossGate +
+  preview sample). Shots docs/screenshots/round5/08_desert_boss_gate_before|after_preview|map.jpg.
+- Task 3 09 OASIS WELL DONE: desert_landmark_oasis_well (P.oasisWell) - BASE the improved plains well: its 10 meshes
+  (stones, rim stones, mortar, timber posts / winch, iron, rope coil, bucket, roof, rippled water) duplicated over the
+  old well (x / z 1.5, y 1.2: rim 14.4 across, top 17.1) and recoloured to sandstone, the roof in the old red awning
+  colour, its moss as sand drifts; the fountain's rippled water in the (dry until now) basin and the bowl; the broken
+  columns kept (drum joints, a broken top on the short one, chamfered bases / capitals / lintels, rubble chunks); the
+  upper paving = a mortar bed under 24 cut sandstone tiles. Old well / water / roof / rubble / bases stay as invisible
+  collision (36 / 36 identical); 40.4 x 22.6 x 28.0 (same). Replaced 2 / 2 (Desert_2 landmark + preview sample). Shots
+  docs/screenshots/round5/09_oasis_well_before|after_preview|map.jpg.
+- Task 3 10 SPEAR DONE: desert_prop_spear (P.spear): a leaf-shaped gold blade (one convex solid: flared base, widest a
+  third up, long taper, both faces bevelled to thin edges, the ridge thinning to the point), a gold socket, a blue
+  binding (core + 4 raised wraps), a cloth tassel (3 strips, gold knot), a round wooden shaft with grain lines and 2
+  rings, a small gold butt cap; the old shaft / tip / band stay as invisible collision (4 / 4 identical);
+  0.9 x 16.0 x 1.8 (was 0.8 x 15.6 x 1.8). Replaced 9 / 9 (8 in the Desert boss arena + preview sample). Shots
+  docs/screenshots/round5/10_spear_before|after_preview|map.jpg.
+- Task 3 03-10 labels: B.QUALITY += the 7 Task 3 ids (sarcophagus / ice throne were already in); Plains, Desert, Tundra
+  rebuilt (0 created / 0 moved), all 9 labels read "improved"; docs/asset_preview_index.md / .json regenerated.
+  Tools: PropsRound5 65729 / 4cd0eedbb43d4d1a, BuildAssetPreview 70102 / af6ad1e6c247104c (disk == Studio).
