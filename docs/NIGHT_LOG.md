@@ -4169,3 +4169,4 @@ only the tag and attributes, nothing else.
   medium 36, large 25; sync 63/63 (+3 samples), jungle preview check 0 problems. Checks: 0 plates left, jungle scripts
   0 -> 0, ground compare 0 (OwnerLocked 13/13), dry run 629 / 14541 0, index regenerated, export 233 / pull x2 0
   written. Shots docs/screenshots/round7/P2-01_moss_{floor,wall}_{before,after}.jpg.
+- Owner correction (chat, 2026-10-26): P3-02 cave - remove the boulder from the cave mouth, put rocks only in the side gaps where the out-of-map shows (sent to the Studio agent as P3-02b).
