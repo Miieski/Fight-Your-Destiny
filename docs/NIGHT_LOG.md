@@ -1,3 +1,16 @@
+# ROUND 5 DECISIONS (owner prompt "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26) - newest first
+
+- The prompt is saved as docs/Round5_Asset_Fixes/PROMPT_ROUND5.txt; the 20 chat images as docs/Round5_Asset_Fixes/01..20
+  (named after what they show). Backup before_round5 first.
+- Order: ground snapshot + OwnerLocked guard in BuildAssetPreview (before ANY rebuild) -> Task 1 (NPCs / enemies,
+  pushed per zone group) -> Task 2 A carts, B sarcophagus, C jungle guards, D ice throne -> Task 3 in the image order
+  (03..20) -> verify, Play check by the main agent. One Studio agent; the Blender agent only if a shape needs facets.
+- Images 04, 05, 06 and 08 have unreadable labels: the Studio agent identifies them in the preview by look and position
+  (04 = the large sandstone gateway with the bridge top, 05 = the red rock stack, 06 = the yellow / brown / blue gate
+  frame, 08 = the blue / gold double door with cyan squares) and logs the propId it picked.
+- Enemies are spawned at run time, so their preview samples come from the ServerStorage templates the spawner clones;
+  the live spawns and the placed NPCs are never touched.
+
 # NIGHT RUN DECISIONS (round 4, owner asleep, 2026-10-25/26) - newest first
 
 - Round 4: the Void boss arena FloorSections (Section1..8) are the arena floor = zone floor, NOT assets (excluded; the
