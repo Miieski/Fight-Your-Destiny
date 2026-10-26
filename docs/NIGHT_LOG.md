@@ -1,3 +1,17 @@
+# ROUND 7 DECISIONS (owner prompt "ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR +
+# DESERT PYRAMID BRICKS", 2026-10-26) - newest first
+
+- Prompt saved as docs/Round7_Textures_And_Exteriors/PROMPT_ROUND7.txt. 7 of the 11 images came with it, saved as 04..10
+  (named after what they show); 01-03 (the desert / jungle rooms before Part 1) and 11 (report example) were not attached.
+- PART 1 is word for word the "SMALL FIX" already done, checked in Play and pushed (6dc3780, sheets docs/before_after/R1..R4):
+  lighter desert walls, Egyptian marble desert floors, jungle flagstone floors, jungle walls unchanged. Not redone. The
+  ROUND 6 asset prompt (18 assets) is also finished and pushed (9ac81d9). So the work starts at PART 2.
+- Parts 2-6 in order, one Studio agent; one before / after sheet per asset / room / area, sent to the owner right away
+  (docs/before_after/, numbered P2-01, P3-01, ...). Textures (bricks, swamp wall / floor) are drawn by the main agent with
+  tools/textures/make_brick_textures.py and uploaded, ids in Config/PropTextures.luau, colours read from the named assets.
+- Geometry is allowed only where the owner allows it: Part 2 moss patches (new, raised), Part 3 entrance blocker fix and
+  cave rock, Part 4 swamp exterior rebuild. Parts 3 (bricks), 5 and 6 are texture only.
+
 # ROUND 6 FIX + ROUND 6 ASSETS DECISIONS (owner prompts "SMALL FIX ... TEXTURES OF SUB-ZONE 4 AND BOSS ROOM" and
 # "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS", 2026-10-26) - newest first
 

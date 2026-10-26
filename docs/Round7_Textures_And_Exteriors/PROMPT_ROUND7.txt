@@ -1,0 +1,62 @@
+ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR + DESERT PYRAMID BRICKS
+
+The 11 screenshots are in docs/Round7_Textures_And_Exteriors/ (01..11, 11 is only the example of the report format). Do not ask for them again.
+
+ORDER OF WORK
+1. PART 1 first (small fix of the desert and jungle boss rooms).
+2. Then, if it is not finished yet, do the ROUND 6 prompt (docs/Round6_Asset_Fixes/PROMPT_Round6_Asset_Fixes.txt).
+3. Then PARTS 2 to 6 below, in order.
+
+COMMON RULES (all parts)
+- Backup first in BackUP_Files/ (dated .rbxl, never overwrite). If the owner is not around, do not stop to ask: take the most reasonable reading and log it at the top of docs/NIGHT_LOG.md. Max 2 sub-agents at once (one Studio, one Blender). If a step fails twice, log it and move on. Push to https://github.com/Miieski/Fight-Your-Destiny after each part. Never put secrets in files.
+- Do NOT touch the ground of the asset preview (the owner's zone colors, sizes and positions stay exactly; OwnerLocked parts are never overwritten).
+- Keep every collision, spawn, enemy path, door, script and glow working. Textures are TEXTURE/MATERIAL ONLY unless a part says otherwise (no changes to shapes, sizes, positions). Style: low-mid poly, tileable low-poly-style textures (128-256 px, 512 max for floors), soft bevel, thin darker joints, slight per-brick variation, a few chips and cracks, no PBR/photo noise. Correct scale (about 3-4 studs per brick, no stretching, check corners, no z-fighting). Share textures per zone (tinted copies) to keep memory low. Recipes and hex colors in docs/prop_texture_guide.md, texture ids in Config/PropTextures.luau. If a surface is a MapProps template (tag MapProp), edit the template so the asset preview and the map stay identical.
+- PHOTO REPORT AFTER EACH CHANGE: after every asset, room or area you change, send me ONE comparison image like image 11 (title "NN - Name"; 2x2 grid: "AVANT - Zone de test" / "APRÈS - Zone de test" on top, "AVANT - Dans le jeu" / "APRÈS - Dans le jeu" below; same camera angle for before and after; orange labels for AVANT, green for APRÈS). Save it in docs/before_after/NN_name.png and show it right away, before moving on.
+- Verify at the end of each part: script check (parts changed, 0 changes in Size, CFrame, CanCollide, scripts and attributes except where stated), play mode through the touched places, smooth in the phone emulator, no Output errors. Short final report: OK / not OK per item.
+
+==================================================
+PART 1 - DESERT AND JUNGLE SUB-ZONE 4 AND BOSS ROOM: TEXTURE CORRECTIONS (images 01, 02, 03)
+Same scope as the earlier brick texture task (sub-zone 4 and boss room of each zone, same parts). Corrections:
+DESERT
+- WALLS: make the bricks LIGHTER. Read the exact colors from the entrance door/gate of desert sub-zone 4 (sandstone pillars and frame): light sandy beige-gold bricks, less orange-red and less saturated than now (image 01 is too orange), thin darker joints, soft bevel. Keep the blue/gold accent bricks on the top frieze if they exist.
+- FLOOR: stop using the brick texture. Use an EGYPTIAN MARBLE floor: large polished slabs (6-8 studs) in warm ivory/cream marble with soft beige-gold veins, thin gold-bronze inlay lines between slabs, a few darker sand-brown slabs for variation, and optionally a subtle lapis-blue and gold line border around the edges and the arena center (no hieroglyph images). Slight gloss (SmoothPlastic or a Marble-like material, low reflectance). Darker/different from the walls but light enough to read enemies and boss telegraphs.
+- CEILING (if any): follows the lighter wall color, a bit darker than the walls.
+JUNGLE
+- WALLS: DO NOT CHANGE (the owner likes them).
+- FLOOR: replace the brick floor with large gray-green STONE FLAGSTONES (about 5-7 studs, irregular rectangles, beveled edges, visible dark joints, chips, cracks, light moss in some joints), same gray-green family as the jungle gate and temple stone. Keep the glowing cyan floor pads and any floor marking exactly as they are (same positions, glow and look). Keep contrast with enemies and boss telegraphs. Ceiling unchanged.
+
+==================================================
+PART 2 - JUNGLE MOSS PLATES (images 04, 05)
+Problem: in the jungle zone (sub-zone 4 and boss room walls and floors, and anywhere else) there are flat dark green rectangular plates that look like moss. They are hard-edged, very dark, and only appear when the player gets close (probably coplanar with the surface/z-fighting or hidden by distance).
+1. Find ALL of them (all jungle sub-zones, boss rooms, assets and asset preview templates); list name and count in docs/NIGHT_LOG.md.
+2. Replace each with a better moss patch, not too elaborate: irregular rounded outline (no straight rectangle edges), 2-4 overlapping thin low-poly pads at slightly different heights, moss tones (base #2E6B2E, mid #4C9A3C, light spots #7ED957), a few tiny leaf tufts or fern blades at the edges; on walls add a few short hanging moss strands. Matte material (Grass or SmoothPlastic), no Neon.
+3. RAISE them: lift about 0.1-0.25 studs off the surface (center thicker than the edges, tufts up to 0.3-0.4) so they never z-fight and are visible from far away (check from 10-20 studs). Brighten slightly so they read against the dark stone, still natural.
+4. Keep positions and footprints (+10%). CanCollide, CanQuery and CanTouch false, anchored, never covering the glowing floor pads, no effect on collisions or enemy paths.
+5. Cheap for mobile: 3-4 reusable mesh/template variants (jungle_moss_patch_small/medium/large) with random rotation, no scripts, no particles, CastShadow false, a few thousand triangles in total. Register them in the asset preview (jungle block).
+
+==================================================
+PART 3 - ICE CASTLE (tundra), INSIDE, OUTSIDE, BOSS ROOM AND THE EMPTY CAVE (images 06, 07, 08)
+1. EXTERIOR (image 06): the large flat light-blue walls and towers of the castle are plain. Put a BRICK texture on them like the one on the castle entrance gate (blue stone-block bricks): read the blue family from the gate parts (do not guess hex values). Apply to the outer walls and the tower/keep walls. Keep crystals, the ice-glass panels with the "V" marks, roofs/crenellation tops, snow and the sign as they are.
+2. INTERIOR (image 07): same bricks on the inner WALLS only where needed (large flat blue wall surfaces: entrance hall back wall, side walls, pillar and corridor walls), a bit darker than the exterior. NO bricks on the interior ROOF/ceiling (leave it as it is). Keep the faceted crystal-like side surfaces, the carpet, icicles, torches, glass door and statue cases untouched.
+3. FIX THE BAR THAT BLOCKS THE ENTRANCE: in image 07 a dark-blue horizontal bar/ledge runs across the full width at floor level in front of the entrance corridor, and in image 06 a thin light-blue vertical line is visible in front of the gate (maybe a leftover invisible part or a selection outline). Find which part really blocks or looks wrong (test by walking in with a character; inspect parts with CanCollide near the entrance, including transparent ones). Remove it, or lower/flatten it (a clean ramp or step of at most 1 stud is fine) so the player walks in freely. Report what it was. This is the only geometry change allowed in this part.
+4. BOSS ROOM of the ice castle: same as 1-3: bricks on the walls where needed, none on the ceiling, nothing blocking the arena entrance. Keep the arena floor, pillars, glows and telegraph readability.
+5. THE EMPTY CAVE (image 08): the tundra cave leads to an empty hollow. Camouflage it by placing a big ice-blue/gray ROCK at the side (or across the mouth, leaving no way in), made like the improved tundra boulders (faceted low-mid poly, layered tones, snow cap, a few ice crystals and icicles). No player can enter the empty cave and no empty space is visible (add an invisible blocking collision matching the rock if needed). Keep the trees, crystals and snow around. Register the rock in the asset preview (tundra block, large row) as a MapProps template.
+
+==================================================
+PART 4 - CURSED SWAMP: EXTERIORS BEFORE SUB-ZONE 4 (image 09)
+Image 09 shows the approach to the swamp sub-zone 4 gate (skull palisade gate, "31.25M Gold" sign). It looks unfinished: a huge flat gray-blue wall with a thin green strip on top, big dark beams sticking out at random angles, flat boxy rocks at the sides, and a tall thin light-blue frame in the middle (check if it is a leftover or invisible part and clean it if so). Improve the whole exterior in front of and around the sub-zone 4 entrance, in the usual style:
+1. The back wall becomes a believable swamp cliff/rampart: layered faceted rock with strata, cracks, moss patches, hanging vines and roots, wet stains at the base, ledges with dead trees or mushrooms, an irregular rim on top.
+2. The dark beams become rotten broken timber posts and crossbeams planted into the cliff with rope lashings, iron brackets and moss, at believable angles (like a collapsed palisade/watchtower).
+3. The side rocks use the improved swamp/jungle boulder look (facets, layered tones, moss caps, ferns).
+4. Around the gate: mud, puddles with lily pads, ghost mushrooms (keep their glow), crooked fence pieces, hanging lanterns (keep the lights), bones and rope. Reuse the improved swamp props (fence, sign, crate, bone pile, lanterns). Keep the gate itself, its sign and its prompts as they are.
+5. Check the whole path from the zone to the gate: any remaining plain box or flat wall visible from the approach gets the same treatment. Keep the walkable path and collisions, +10% max for existing objects. Cheap for mobile (reuse templates, no scripts).
+6. Register every new reusable piece (cliff wall, rotten timber post, boulders) as a MapProps template and in the asset preview (swamp block).
+Also send one screenshot from the player's point of view approaching the gate.
+
+==================================================
+PART 5 - CURSED SWAMP: INTERIOR OF SUB-ZONE 4 AND BOSS ROOM
+Put a wall texture of your choice (the owner leaves it to you) on the interior walls of swamp sub-zone 4 and its boss room: an old, wet, slightly creepy look, for example mossy dark stone blocks with green-gray tones and mud stains, or dark rotten planks with iron straps; pick one family and keep it consistent, matching the swamp door and gate assets. Give the floor a different, darker texture (muddy stone slabs); the ceiling stays a plain darker tone unless it clearly needs the same texture. Keep contrast so enemies, the boss and telegraphed attacks stay readable (the magenta and yellow-green glows stay visible). Texture/material only. Recipe and hex colors in docs/prop_texture_guide.md ("Swamp boss room" section).
+
+==================================================
+PART 6 - DESERT PYRAMID BRICKS (image 10)
+The big stepped pyramid of the desert (behind the temple gate with the two Anubis statues) is a stack of plain smooth sandstone boxes with a golden cap. Make it more realistic with a BRICK / cut-stone texture: sandstone blocks laid in courses on every tier, taking the color family from the temple gate pillars and the lighter desert wall bricks of Part 1 (read the real colors, do not guess), slightly varied per course, thin darker joints, soft bevel, a few chips; a slightly darker band at the base of each tier and a lighter edge on the top of each tier; the golden capstone keeps its color (a little more shine is fine). Brick scale proportional to the pyramid (about 3-5 studs per brick on the big lower tiers, bigger blocks are fine as long as they are not stretched), correct on all four faces and on the tier tops and edges (steps). Texture only: do not change the pyramid's shape, steps, collisions or the gate, statues, banners and lamps at its base. If the pyramid is a single huge mesh/part, use SurfaceAppearance/Texture per face with the right StudsPerTile; keep memory low.
