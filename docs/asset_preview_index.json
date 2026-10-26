@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T07:22:21Z",
+ "generated": "2026-10-26T07:51:48Z",
  "zones": [
   {
    "characters": [
@@ -1218,16 +1218,16 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "hub_vehicle_cart_a",
+     "propId": "cart",
      "instances": 1,
-     "largest": 12.7,
+     "largest": 12.6,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "vehicle",
      "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 5,
-     "quality": "old"
+     "newTemplate": false,
+     "totalInstances": 6,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -1784,12 +1784,29 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "plains_landmark_ancient_tree",
+     "instances": 1,
+     "largest": 130.8,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "plains_landmark_crystal_gate",
      "instances": 1,
      "largest": 141.5,
      "ownTint": 0,
      "sizeClass": "large",
-     "category": "gate",
+     "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
@@ -2881,40 +2898,6 @@
     },
     {
      "zones": [
-      "Plains"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "plains_landmark_ancient_tree",
-     "instances": 1,
-     "largest": 130.8,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "tree",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Plains"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "cart",
-     "instances": 1,
-     "largest": 12.6,
-     "ownTint": 0,
-     "sizeClass": "medium",
-     "category": "vehicle",
-     "inPreview": true,
-     "newTemplate": false,
-     "totalInstances": 1,
-     "quality": "improved"
-    },
-    {
-     "zones": [
       "Desert",
       "Hub",
       "Plains",
@@ -2922,16 +2905,16 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "hub_vehicle_cart_a",
-     "instances": 1,
-     "largest": 12.7,
+     "propId": "cart",
+     "instances": 2,
+     "largest": 12.6,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "vehicle",
      "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 5,
-     "quality": "old"
+     "newTemplate": false,
+     "totalInstances": 6,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3312,23 +3295,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "desert_landmark_stone_bridge",
-     "instances": 1,
-     "largest": 152.5,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "bridge",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Desert"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "adobe_house_a",
      "instances": 5,
      "largest": 28.3,
@@ -3373,23 +3339,6 @@
      "newTemplate": false,
      "totalInstances": 1,
      "quality": "improved"
-    },
-    {
-     "zones": [
-      "Desert"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "desert_landmark_oasis_well",
-     "instances": 1,
-     "largest": 40.4,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
     },
     {
      "zones": [
@@ -3591,23 +3540,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "desert_landmark_rock_arch",
-     "instances": 1,
-     "largest": 101.6,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "gate",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Desert"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "egyptian_arch",
      "instances": 1,
      "largest": 54.5,
@@ -3652,6 +3584,74 @@
      "newTemplate": false,
      "totalInstances": 1,
      "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_landmark_oasis_well",
+     "instances": 1,
+     "largest": 40.4,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_landmark_rock_arch",
+     "instances": 1,
+     "largest": 101.6,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_landmark_sarcophagus",
+     "instances": 1,
+     "largest": 41.8,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_landmark_stone_bridge",
+     "instances": 1,
+     "largest": 152.5,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
     },
     {
      "zones": [
@@ -4174,23 +4174,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "desert_landmark_sarcophagus",
-     "instances": 1,
-     "largest": 40,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "statue",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Desert"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "fallen_columns",
      "instances": 3,
      "largest": 22.7,
@@ -4280,16 +4263,16 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "hub_vehicle_cart_a",
+     "propId": "cart",
      "instances": 2,
-     "largest": 12.7,
+     "largest": 12.6,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "vehicle",
      "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 5,
-     "quality": "old"
+     "newTemplate": false,
+     "totalInstances": 6,
+     "quality": "improved"
     }
    ],
    "name": "Desert",
@@ -4821,6 +4804,74 @@
     },
     {
      "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_landmark_giant_tree",
+     "instances": 1,
+     "largest": 127,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_landmark_golden_idol",
+     "instances": 1,
+     "largest": 49.3,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_landmark_step_pyramid",
+     "instances": 1,
+     "largest": 142.3,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_landmark_waterfall_cliff",
+     "instances": 1,
+     "largest": 158.8,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
       "Desert",
       "Hub",
       "Jungle",
@@ -5181,23 +5232,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "jungle_landmark_step_pyramid",
-     "instances": 1,
-     "largest": 142.3,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "prop",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Jungle"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "jungle_ruin_block",
      "instances": 6,
      "largest": 29.1,
@@ -5278,23 +5312,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 18,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Jungle"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "jungle_landmark_waterfall_cliff",
-     "instances": 1,
-     "largest": 158.8,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "rock",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -5515,23 +5532,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "jungle_landmark_golden_idol",
-     "instances": 1,
-     "largest": 49.3,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "statue",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Jungle"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "jungle_skull_pole",
      "instances": 12,
      "largest": 8,
@@ -5613,23 +5613,6 @@
      "newTemplate": false,
      "totalInstances": 28,
      "quality": "improved"
-    },
-    {
-     "zones": [
-      "Jungle"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "jungle_landmark_giant_tree",
-     "instances": 1,
-     "largest": 127,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "tree",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
     },
     {
      "zones": [
@@ -6111,23 +6094,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "tundra_landmark_ice_throne",
-     "instances": 1,
-     "largest": 52.6,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "furniture",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Tundra"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "tundra_gate_boss_gate",
      "instances": 1,
      "largest": 89.7,
@@ -6221,6 +6187,74 @@
      "category": "gate",
      "inPreview": true,
      "newTemplate": false,
+     "totalInstances": 1,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_landmark_frozen_ship",
+     "instances": 1,
+     "largest": 165.5,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_landmark_frozen_tree",
+     "instances": 1,
+     "largest": 77,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_landmark_ice_cave_peak",
+     "instances": 1,
+     "largest": 132.3,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_landmark_ice_throne",
+     "instances": 1,
+     "largest": 69.4,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
      "totalInstances": 1,
      "quality": "improved"
     },
@@ -6510,23 +6544,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "tundra_landmark_ice_cave_peak",
-     "instances": 1,
-     "largest": 132.3,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "rock",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Tundra"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "tundra_rock_ice_chunk_l",
      "instances": 4,
      "largest": 23.1,
@@ -6748,23 +6765,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "tundra_landmark_frozen_tree",
-     "instances": 1,
-     "largest": 77,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "tree",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Tundra"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "tundra_tree_dead_tree_ice_a",
      "instances": 21,
      "largest": 9.1,
@@ -6845,23 +6845,6 @@
      "newTemplate": false,
      "totalInstances": 3,
      "quality": "improved"
-    },
-    {
-     "zones": [
-      "Tundra"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "tundra_landmark_frozen_ship",
-     "instances": 1,
-     "largest": 165.5,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "vehicle",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
     }
    ],
    "name": "Tundra",
@@ -7309,23 +7292,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "swamp_landmark_giant_cauldron",
-     "instances": 1,
-     "largest": 59,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "furniture",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Swamp"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "swamp_potion_shelf",
      "instances": 6,
      "largest": 10.6,
@@ -7421,6 +7387,23 @@
      "newTemplate": false,
      "totalInstances": 1,
      "quality": "improved"
+    },
+    {
+     "zones": [
+      "Swamp"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "swamp_landmark_giant_cauldron",
+     "instances": 1,
+     "largest": 59,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
     },
     {
      "zones": [
@@ -8422,23 +8405,6 @@
     },
     {
      "zones": [
-      "Volcano"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "volcano_landmark_mine_elevator",
-     "instances": 1,
-     "largest": 88,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
       "Desert",
       "Hub",
       "Plains",
@@ -8630,6 +8596,74 @@
     },
     {
      "zones": [
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "volcano_landmark_lava_fall",
+     "instances": 1,
+     "largest": 128.7,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "volcano_landmark_mine_elevator",
+     "instances": 1,
+     "largest": 88,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "volcano_landmark_stone_titan",
+     "instances": 1,
+     "largest": 74.7,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "volcano_landmark_volcano",
+     "instances": 1,
+     "largest": 401.9,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
       "Desert",
       "Hub",
       "Jungle",
@@ -8682,40 +8716,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 8,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Volcano"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "volcano_landmark_lava_fall",
-     "instances": 1,
-     "largest": 128.7,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "prop",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Volcano"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "volcano_landmark_volcano",
-     "instances": 1,
-     "largest": 401.9,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "prop",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -8802,23 +8802,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 70,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Volcano"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "volcano_landmark_stone_titan",
-     "instances": 1,
-     "largest": 74.7,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "rock",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -9146,16 +9129,16 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "hub_vehicle_cart_a",
+     "propId": "cart",
      "instances": 1,
-     "largest": 12.7,
+     "largest": 12.6,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "vehicle",
      "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 5,
-     "quality": "old"
+     "newTemplate": false,
+     "totalInstances": 6,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -9539,40 +9522,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "hell_landmark_burning_tower",
-     "instances": 1,
-     "largest": 114,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Hell"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "hell_landmark_horned_castle",
-     "instances": 1,
-     "largest": 234,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Hell"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "hell_fence_iron_fence_spiked",
      "instances": 32,
      "largest": 12,
@@ -9599,23 +9548,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 2,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Hell"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "hell_landmark_demon_throne",
-     "instances": 1,
-     "largest": 79.1,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "furniture",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -9752,6 +9684,74 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 2,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Hell"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hell_landmark_burning_tower",
+     "instances": 1,
+     "largest": 114,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Hell"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hell_landmark_demon_throne",
+     "instances": 1,
+     "largest": 79.1,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Hell"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hell_landmark_horned_castle",
+     "instances": 1,
+     "largest": 234,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Hell"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hell_landmark_skull_rock",
+     "instances": 1,
+     "largest": 85,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -9905,23 +9905,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 8,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Hell"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "hell_landmark_skull_rock",
-     "instances": 1,
-     "largest": 85,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "rock",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -10497,23 +10480,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "heaven_landmark_golden_castle",
-     "instances": 1,
-     "largest": 243,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Heaven"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "heaven_furniture_golden_armor_stand",
      "instances": 8,
      "largest": 10.3,
@@ -10540,23 +10506,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 4,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Heaven"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "heaven_landmark_luminous_throne",
-     "instances": 1,
-     "largest": 64.5,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "furniture",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -10706,7 +10655,58 @@
      "largest": 141.6,
      "ownTint": 0,
      "sizeClass": "large",
-     "category": "gate",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Heaven"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "heaven_landmark_golden_castle",
+     "instances": 1,
+     "largest": 243,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Heaven"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "heaven_landmark_luminous_throne",
+     "instances": 1,
+     "largest": 64.5,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Heaven"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "heaven_landmark_tree_of_light",
+     "instances": 1,
+     "largest": 128,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
@@ -11185,23 +11185,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "heaven_landmark_tree_of_light",
-     "instances": 1,
-     "largest": 128,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "tree",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Heaven"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "heaven_tree_golden_tree_a",
      "instances": 26,
      "largest": 13.3,
@@ -11570,57 +11553,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "dead_landmark_cathedral",
-     "instances": 1,
-     "largest": 238,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Dead"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "dead_landmark_great_crypt",
-     "instances": 1,
-     "largest": 75.5,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Dead"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "dead_landmark_ossuary",
-     "instances": 1,
-     "largest": 100.7,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Dead"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "dead_fence_cemetery_wall",
      "instances": 1,
      "largest": 296.5,
@@ -11910,6 +11842,74 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "dead_landmark_cathedral",
+     "instances": 1,
+     "largest": 238,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Dead"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "dead_landmark_great_crypt",
+     "instances": 1,
+     "largest": 75.5,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Dead"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "dead_landmark_ossuary",
+     "instances": 1,
+     "largest": 100.7,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Dead"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "dead_landmark_royal_sarcophagus",
+     "instances": 1,
+     "largest": 50,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Dead"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "dead_light_bone_chandelier",
      "instances": 5,
      "largest": 22.3,
@@ -12159,23 +12159,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 3,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Dead"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "dead_landmark_royal_sarcophagus",
-     "instances": 1,
-     "largest": 50,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "statue",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -12659,40 +12642,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "abyss_landmark_broken_dome",
-     "instances": 1,
-     "largest": 174.5,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Abyss"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "abyss_landmark_sunken_palace_dome",
-     "instances": 1,
-     "largest": 146.9,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Abyss"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "abyss_furniture_barrel_sunken",
      "instances": 17,
      "largest": 5.3,
@@ -12883,12 +12832,80 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "abyss_landmark_broken_dome",
+     "instances": 1,
+     "largest": 174.5,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "abyss_landmark_coral_arch",
      "instances": 1,
      "largest": 131.7,
      "ownTint": 0,
      "sizeClass": "large",
-     "category": "gate",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "abyss_landmark_sea_monster_skeleton",
+     "instances": 1,
+     "largest": 227.6,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "abyss_landmark_sunken_galleon",
+     "instances": 1,
+     "largest": 184.1,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "abyss_landmark_sunken_palace_dome",
+     "instances": 1,
+     "largest": 146.9,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
@@ -13130,23 +13147,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 446,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Abyss"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "abyss_landmark_sea_monster_skeleton",
-     "instances": 1,
-     "largest": 227.6,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "prop",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -13514,23 +13514,6 @@
      "newTemplate": false,
      "totalInstances": 28,
      "quality": "improved"
-    },
-    {
-     "zones": [
-      "Abyss"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "abyss_landmark_sunken_galleon",
-     "instances": 1,
-     "largest": 184.1,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "vehicle",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
     },
     {
      "zones": [
@@ -14204,6 +14187,74 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "mechanical_landmark_assembly_machine",
+     "instances": 1,
+     "largest": 127,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Mechanical"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "mechanical_landmark_hologram_map",
+     "instances": 1,
+     "largest": 32,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Mechanical"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "mechanical_landmark_pipe_junction",
+     "instances": 1,
+     "largest": 60.5,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Mechanical"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "mechanical_landmark_reactor_core",
+     "instances": 1,
+     "largest": 64.8,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Mechanical"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "mechanical_light_lamp_industrial",
      "instances": 11,
      "largest": 20.2,
@@ -14264,74 +14315,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 6,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Mechanical"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "mechanical_landmark_assembly_machine",
-     "instances": 1,
-     "largest": 127,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "machine",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Mechanical"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "mechanical_landmark_hologram_map",
-     "instances": 1,
-     "largest": 32,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "machine",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Mechanical"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "mechanical_landmark_pipe_junction",
-     "instances": 1,
-     "largest": 60.5,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "machine",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Mechanical"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "mechanical_landmark_reactor_core",
-     "instances": 1,
-     "largest": 64.8,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "machine",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -14979,23 +14962,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "void_landmark_floating_tower",
-     "instances": 1,
-     "largest": 227.9,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "building",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Void"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "void_fence_ruin_wall",
      "instances": 7,
      "largest": 20.4,
@@ -15132,6 +15098,74 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "void_landmark_crystal_pillar",
+     "instances": 1,
+     "largest": 158,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Void"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "void_landmark_crystal_tree",
+     "instances": 1,
+     "largest": 121,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Void"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "void_landmark_dragon_altar",
+     "instances": 1,
+     "largest": 40.6,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Void"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "void_landmark_floating_tower",
+     "instances": 1,
+     "largest": 227.9,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "landmark",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 1,
+     "quality": "old"
+    },
+    {
+     "zones": [
+      "Void"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "void_light_lantern_post",
      "instances": 14,
      "largest": 17.3,
@@ -15158,23 +15192,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 199,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Void"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "void_landmark_crystal_pillar",
-     "instances": 1,
-     "largest": 158,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "rock",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {
@@ -15529,23 +15546,6 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
-     "propId": "void_landmark_dragon_altar",
-     "instances": 1,
-     "largest": 40.6,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "statue",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Void"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
      "propId": "void_statue_reaper_altar",
      "instances": 1,
      "largest": 23.8,
@@ -15572,23 +15572,6 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 7,
-     "quality": "old"
-    },
-    {
-     "zones": [
-      "Void"
-     ],
-     "sizeVariants": 0,
-     "resizedParts": 0,
-     "propId": "void_landmark_crystal_tree",
-     "instances": 1,
-     "largest": 121,
-     "ownTint": 0,
-     "sizeClass": "large",
-     "category": "tree",
-     "inPreview": true,
-     "newTemplate": true,
-     "totalInstances": 1,
      "quality": "old"
     },
     {

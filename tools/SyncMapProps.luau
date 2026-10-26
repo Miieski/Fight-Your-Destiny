@@ -668,14 +668,9 @@ SyncMapProps.RULES = {
 	{ propId = "swamp_hollow_log", names = { "SunkenTrunk" }, match = function(m)
 		return m.Name == "Landmark" and m:GetAttribute("LandmarkName") == "SunkenTrunk"
 	end },
-	{ propId = "cart", names = { "Cart_A" }, filter = function(m)
-		local zones = workspace:FindFirstChild("Zones")
-		local plains = zones and zones:FindFirstChild("Plains")
-		local plains1 = plains and plains:FindFirstChild("Plains_1")
-		local staging = workspace:FindFirstChild("_Staging")
-		local kit = ServerStorage:FindFirstChild("MapAssets")
-		return (plains1 ~= nil and m:IsDescendantOf(plains1)) or (staging ~= nil and m:IsDescendantOf(staging)) or (kit ~= nil and m:IsDescendantOf(kit))
-	end },
+	-- round 5 (owner, image 02): EVERY Cart_A is the improved cart now (the 5 old ones of the hub harbour, Desert_2,
+	-- Desert_3, Plains_4 and Volcano_1 were hub_vehicle_cart_a until then)
+	{ propId = "cart", names = { "Cart_A" } },
 }
 
 -- Embedded props (loose parts inside a bigger model). tagAll() wraps each group, in place, into a child Model

@@ -1,5 +1,19 @@
 # ROUND 5 DECISIONS (owner prompt "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26) - newest first
 
+- Round 5 D ice throne: no frost pillars / braziers added - in the Tundra boss arena the frozen knight statues (x +-24,
+  z -12), the blue torches and the ice spikes (x +-24, z +14) already stand exactly where they would go (they would
+  overlap); the enlarged finished throne carries its own crystals, so steps over the old footstool and a snow drift
+  each side are the only additions, all inside the old footprint (49.8 x 52.6 x 33.5, was 49.8 x 52.6 x 32.9).
+- Round 5 preview fix (Studio agent): round 4 placed samples with the CFrame / Size of union parts, which is not a
+  union's real box (Model:GetBoundingBox / BasePart.ExtentsCFrame are): 170 samples floated (up to 27.6 studs, e.g.
+  the hub houses) or sat a little low. B.settle() put each one back on its block floor by moving it ONLY up / down;
+  its place on the floor, slot and label did not change (ground snapshot compare: grounds 0 differences, samples moved
+  in x / z 0 except the remade sarcophagus, which is re-centred on its own slot). The placement now uses the real
+  boxes, and an existing sample is moved again only when its template changes (attribute PlacedVersion).
+- Round 5 B sarcophagus: the golden guardian scaled x3.27 (33 long, the old lid) stands on today's plinth; the 4 posts
+  are the finished desert_column (scaled to the 3 x 14 x 3 post, PRIORITY RULE: an improved model first) with the
+  cyan PostGem kept as it was; the old box / lid / stripes / effigy / eyes / posts stay as invisible collision, so the
+  collidable shape is identical (25 / 25 parts, same positions and sizes).
 - Round 5 ground lock (Studio agent): docs/preview_ground_snapshot.json = the 13 owner-coloured ByZone ground parts (path,
   Color, Material, Size, CFrame at %.9g) + the place of every sample / label / sign (1462 items) to prove nothing moves.
   BuildAssetPreview never recreates, resizes, moves or recolours an existing "Ground" (OwnerLocked = true on all 13);
@@ -3671,3 +3685,36 @@ only the tag and attributes, nothing else.
   chars_08_Heaven / 09_Dead / 10_Abyss / 11_Mechanical / 12_Void.jpg (priming the Scriptable camera 4 s before the
   capture avoids the double shot). TASK 1 DONE: 176 character samples (8 NPCs + 168 enemies), all inert, all in the
   index.
+- Task 2 A CARTS DONE: the 5 old carts (hub harbour, Desert_2 village, Desert_3 camp, Plains_4 mine, Volcano_1 camp)
+  retagged "cart" and synced: replaced 5 / 5 (pivot, yaw, scale 1 kept: same footprint 6.8 x 12.7 vs 6.8 x 12.6, both
+  pivots at the wheel base, so no rescale); 12 cart copies all on the current version, 0 hub_vehicle_cart_a left, 0
+  stray Cart_A anywhere (map, kit, arenas). SyncMapProps rule "cart" now takes every Cart_A (81782 / abd29ce8e9655ca9);
+  the old template stays in MapProps with ReplacedBy = "cart" (BuildAssetPreview: a new copy of the old shape becomes a
+  "cart" left out of date, so the next run replaces it; 67198 / 65832e7aaabc2f92). Preview: the cart took the old
+  cart's slot in Hub / Desert / Volcano (B.SLOT_ALIAS), Plains keeps its cart and loses the old sample; the 4 old
+  samples + labels are the only layout items gone (intended); checks 0, dry run 0 (626 / 14475). Backup
+  BackUP_Files/round5_before_carts/. Shots docs/screenshots/round5/A_carts_before|after_preview|map_hub.jpg.
+- Task 2 B SARCOPHAGUS DONE: desert_landmark_sarcophagus = a bigger golden guardian (x3.27) on the kept stone plinth +
+  4 desert columns as the carved pillars, cyan glowing tips kept; collisions identical (25 / 25); replaced 2 / 2 (boss
+  arena Desert + preview sample; old template in MapProps._Previous); 24.1 tall (was 24), 26.4 x 40.4 (was 26 x 40).
+  Tools: tools/PropsRound5.luau (6858 / c8cb6c0f59e95254, P.sarcophagus), BuildAssetPreview 69651 / 13c71c71877b4764
+  (QUALITY improved, block front from the owner's ground). Backup round5_before_sarcophagus. Shots
+  docs/screenshots/round5/B_sarcophagus_before|after_preview|arena.jpg (the arena shot = a temporary workspace copy of
+  ServerStorage.BossArenas.Desert, deleted after the shot).
+- Preview settle: 170 samples set back on their block floor (vertical move only, see the decision at the top).
+- Task 2 C JUNGLE GUARDS DONE: jungle_palisade_gate, only the 2 guards changed: each a low-mid poly tribal warrior
+  (octagonal limbs, cloth skirt with hem and flap, belt + gold buckle, chest paint, necklace, two-layer shoulder pads,
+  rounded head with face paint, brows, nose, headband with a teal stripe and a feather) on the old spot, the inner
+  arm holding the torch pole; each torch got an iron cup with a gold rim and a 4-layer Neon flame around the kept Ember
+  (FirePoint kept). The old totem cubes + wing stay as invisible collision (38 / 38 collidable parts identical); their
+  eyes and beaks removed. Replaced 4 / 4 (Jungle_2 gate, kit, old test row, preview sample); the map copy kept
+  SubZoneId, PrimaryPart Barrier, the 2 PriceSign GUIs and both FirePoints. Old template in _Previous; backup
+  round5_before_jungle_guards. PropsRound5 15973 / 0d927411a8601593 (P.jungleGuards). Shots
+  docs/screenshots/round5/C_jungle_guards_before|after_preview|map_jungle2.jpg.
+- Task 2 D ICE THRONE DONE: tundra_landmark_ice_throne = the finished tundra_ice_throne enlarged x2.70 (top 50, as the
+  landmark's back crystals), same spot and facing, ice steps with snow lips over the old footstool, 2 snow drifts; the old
+  landmark parts stay as invisible collision (16 / 16 collidable parts identical; no seat, prompt or script: the boss
+  spawn is a separate arena part); old gem removed (the big throne has its own glowing gem). Replaced 2 / 2 (boss arena
+  Tundra + preview sample); template in _Previous; backup round5_before_ice_throne. PropsRound5 19324 / 50c1a8668fda1085
+  (P.iceThrone), BuildAssetPreview 69693 / 3d1a05edb7738624. Shots docs/screenshots/round5/D_ice_throne_before|after_
+  preview|arena.jpg. TASK 2 DONE: full dry run 0 (626 templates / 14475 copies).

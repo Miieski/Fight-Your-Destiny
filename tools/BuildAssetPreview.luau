@@ -71,7 +71,11 @@ B.SLOT_ALIAS = { cart = "hub_vehicle_cart_a" }
 
 -- quality of the templates made before round 4 that are NOT finished (docs/prop_inventory.md); every other older
 -- template is "improved", every template made by this tool is "old" (captured as it is in the map)
-B.QUALITY = {}
+B.QUALITY = {
+	-- round 5 (owner prompt "ROUND 5", Task 2 / Task 3): templates captured as "old" in round 4 and remade since
+	desert_landmark_sarcophagus = "improved",
+	tundra_landmark_ice_throne = "improved",
+}
 
 ---------------------------------------------------------------------
 -- zones (Hub first, then the Config/Zones order)
@@ -143,6 +147,7 @@ B.snake = snake
 
 -- (checked in this order; a name token equal to a keyword, or starting with a prefix keyword ending in "*")
 local CATEGORIES = {
+	{ "landmark", { "landmark" } }, -- (the <zone>_landmark_<name> ids of the round 4 templates)
 	{ "light", { "lamp", "lantern", "torch", "brazier", "candle", "candles", "sconce", "chandelier", "campfire", "fire", "fireplace" } },
 	{ "tree", { "tree", "palm", "pine", "oak", "willow", "mangrove", "trunk" } },
 	{ "gate", { "gate", "arch", "door", "entry", "portal", "torii", "doorway" } },
@@ -416,9 +421,12 @@ function B.plan(): any
 			taken[t.Name] = true
 			local sig = t:GetAttribute("MapPropSignature")
 			local size = attrVec(t:GetAttribute("MapPropRefSize"))
+			-- a template replaced by another asset (attribute ReplacedBy, round 5: hub_vehicle_cart_a -> cart): a new copy
+			-- of the old object becomes a copy of the replacement, left out of date so the next Sync.run() replaces it
+			local by = t:GetAttribute("ReplacedBy")
 			if type(sig) == "string" and size then
 				refs[sig] = refs[sig] or {}
-				table.insert(refs[sig], { propId = t.Name, nsize = size })
+				table.insert(refs[sig], { propId = if type(by) == "string" then by else t.Name, nsize = size, replaced = type(by) == "string" })
 			end
 		end
 	end
@@ -492,7 +500,7 @@ function B.plan(): any
 		for _, r in ipairs(refs[p.info.sig] or {}) do
 			local f, kind = fit(r.nsize, p.info.nsize)
 			if f then
-				addMember(asset(r.propId), p.inst, p.zone, p.info, { factor = f, kind = kind, nested = p.nested })
+				addMember(asset(r.propId), p.inst, p.zone, p.info, { factor = if r.replaced then 1 else f, kind = if r.replaced then "replaced" else kind, nested = p.nested })
 				return true
 			end
 		end
@@ -773,7 +781,9 @@ function B.tag(zoneId: string, opts: any?): string
 		if not inst:HasTag(TAG) then
 			inst:AddTag(TAG)
 			inst:SetAttribute("MapPropId", a.id)
-			inst:SetAttribute("MapPropVersion", Sync.versionOf(template, nil))
+			if m.kind ~= "replaced" then
+				inst:SetAttribute("MapPropVersion", Sync.versionOf(template, nil))
+			end
 			if math.abs((m.factor or 1) - 1) > 0.002 then
 				inst:SetAttribute("MapPropScale", math.floor(m.factor * 10000 + 0.5) / 10000)
 			end
@@ -931,8 +941,9 @@ local function templateBounds(template: Model, rot: CFrame): (Vector3, Vector3)
 	local x0, y0, z0, x1, y1, z1 = math.huge, math.huge, math.huge, -math.huge, -math.huge, -math.huge
 	for _, d in ipairs(template:GetDescendants()) do
 		if d:IsA("BasePart") then
-			local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = (rot * inv * d.CFrame):GetComponents()
-			local hx, hy, hz = d.Size.X / 2, d.Size.Y / 2, d.Size.Z / 2
+			-- (ExtentsCFrame / ExtentsSize: the real box of a union or mesh; a union's CFrame is not its center)
+			local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = (rot * inv * d.ExtentsCFrame):GetComponents()
+			local hx, hy, hz = d.ExtentsSize.X / 2, d.ExtentsSize.Y / 2, d.ExtentsSize.Z / 2
 			local ex = math.abs(r00) * hx + math.abs(r01) * hy + math.abs(r02) * hz
 			local ey = math.abs(r10) * hx + math.abs(r11) * hy + math.abs(r12) * hz
 			local ez = math.abs(r20) * hx + math.abs(r21) * hy + math.abs(r22) * hz
@@ -991,7 +1002,9 @@ function B.build(zoneId: string, plan: any?): string
 	local samples = child(block, "Samples", "Folder")
 	local labels = child(block, "Labels", "Folder")
 	local signs = child(block, "Signs", "Folder")
-	local z0 = blockStart(root, z, zones)
+	-- (an existing block keeps its front: round 5, nothing moves; the start comes from the owner's ground)
+	local ownGround = block:FindFirstChild("Ground")
+	local z0 = if ownGround and ownGround:IsA("BasePart") then ownGround.Position.Z - ownGround.Size.Z / 2 + 5 else blockStart(root, z, zones)
 	local x0 = Settings.ORIGIN.X
 	local lines = { `BuildAssetPreview.build {zoneId} (block {block.Name}, front z {z0})` }
 	local placed, moved, created, missing = 0, 0, 0, {}
@@ -1074,6 +1087,7 @@ function B.build(zoneId: string, plan: any?): string
 				s:SetAttribute("MapPropId", a.id)
 				s:SetAttribute("MapPropVersion", want)
 				s:SetAttribute("IsPreviewSample", true)
+				s:SetAttribute("PlacedVersion", want)
 				s:AddTag(TAG)
 				s.Name = a.id
 				if math.abs(k - 1) > 1e-4 then
@@ -1085,12 +1099,17 @@ function B.build(zoneId: string, plan: any?): string
 				sample = s
 				created += 1
 			else
-				if math.abs(sample:GetScale() - k) > 1e-4 then
-					sample:ScaleTo(k)
-					moved += 1
-				end
-				if not sample:GetPivot():FuzzyEq(pivot, 0.001) then
+				-- an existing sample stays where it is (owner round 5) until its template changes (a Sync.run() replaced
+				-- it in place): then it is centred again on its slot with the new shape
+				local placedVersion = sample:GetAttribute("PlacedVersion")
+				if placedVersion == nil then
+					sample:SetAttribute("PlacedVersion", want)
+				elseif placedVersion ~= want then
+					if math.abs(sample:GetScale() - k) > 1e-4 then
+						sample:ScaleTo(k)
+					end
 					sample:PivotTo(pivot)
+					sample:SetAttribute("PlacedVersion", want)
 					moved += 1
 				end
 			end
@@ -1322,8 +1341,8 @@ local function worldBounds(model: Instance): (Vector3, Vector3)
 	local x0, y0, z0, x1, y1, z1 = math.huge, math.huge, math.huge, -math.huge, -math.huge, -math.huge
 	for _, d in ipairs(model:GetDescendants()) do
 		if d:IsA("BasePart") then
-			local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = d.CFrame:GetComponents()
-			local hx, hy, hz = d.Size.X / 2, d.Size.Y / 2, d.Size.Z / 2
+			local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = d.ExtentsCFrame:GetComponents()
+			local hx, hy, hz = d.ExtentsSize.X / 2, d.ExtentsSize.Y / 2, d.ExtentsSize.Z / 2
 			local ex = math.abs(r00) * hx + math.abs(r01) * hy + math.abs(r02) * hz
 			local ey = math.abs(r10) * hx + math.abs(r11) * hy + math.abs(r12) * hz
 			local ez = math.abs(r20) * hx + math.abs(r21) * hy + math.abs(r22) * hz
@@ -1490,6 +1509,39 @@ function B.buildCharacters(zoneId: string): string
 	end
 	table.insert(lines, `{created} created, {replaced} replaced, {kept} kept, {removed} stale removed; area x {xRight}..{maxLeft}, z {z0 + CHAR_AREA.frontGap}..{zEnd}{note}`)
 	return table.concat(lines, "\n")
+end
+
+-- samples placed before round 5 used the CFrame / Size of union parts, which are not their real box: 145 of them
+-- floated or sank. settle() puts each sample's visible bottom back on the block floor (y = 0), moving it ONLY up or
+-- down (its place on the floor, its slot and its label do not change)
+function B.settle(zoneId: string?): string
+	local root = previewRoot()
+	local fixed, worst, list = 0, 0, {}
+	for _, block in ipairs(root:GetChildren()) do
+		if zoneId and block:GetAttribute("Zone") ~= zoneId then
+			continue
+		end
+		local samples = block:FindFirstChild("Samples")
+		for _, s in ipairs(if samples then samples:GetChildren() else {}) do
+			local lo = math.huge
+			for _, d in ipairs(s:GetDescendants()) do
+				if d:IsA("BasePart") and d.Transparency < 1 then
+					local _, y, _, _, _, _, r10, r11, r12 = d.ExtentsCFrame:GetComponents()
+					local e = d.ExtentsSize
+					lo = math.min(lo, y - (math.abs(r10) * e.X + math.abs(r11) * e.Y + math.abs(r12) * e.Z) / 2)
+				end
+			end
+			if lo < math.huge and math.abs(lo) > 0.05 then
+				(s :: any):PivotTo((s :: any):GetPivot() - Vector3.new(0, lo, 0))
+				fixed += 1
+				worst = math.max(worst, math.abs(lo))
+				if #list < 12 then
+					table.insert(list, string.format("%s.%s %+.1f", block.Name, s.Name, -lo))
+				end
+			end
+		end
+	end
+	return string.format("BuildAssetPreview.settle: %d samples put back on the floor (largest move %.1f studs)%s", fixed, worst, if #list > 0 then ": " .. table.concat(list, "; ") else "")
 end
 
 -- inert check of the character samples of a zone (or of every zone)
