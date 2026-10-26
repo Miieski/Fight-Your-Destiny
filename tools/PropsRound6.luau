@@ -9,6 +9,11 @@
 		print(P.demonStatue())        -- hell_statue_demon_statue: clawed fists round the planted dark sword
 		print(P.voyagerStatue())      -- void_statue_voyager_statue: the hand round the staff
 		print(P.tridentStatue())      -- abyss_statue_trident_statue: the hand round the trident shaft
+		print(P.plainsBossGate())     -- R6 01: plains_gate_boss_gate, cut blue stone, carved lintel / door
+		print(P.campfire())           -- R6 02: hub_light_campfire_a + biome Variants
+		print(P.campfireVariants())   -- R6 02: Variant attribute on every campfire copy by zone
+		print(P.cottageShutters("cottage_two_windows"))  -- R6 03: the shutters in front of the beams (and cottage_one_window, 04)
+		print(P.compareExceptShutters(id))  -- R6 03 / 04: every other part unchanged against _Previous
 		then Sync.run({ only = { id } }) syncs the copies (map, arena, preview samples).
 	Every builder installs its model with P.install(): the old template goes to ServerStorage.MapProps._Previous.
 ]]
@@ -511,6 +516,357 @@ function P.tridentStatue(): string
 	gripArm(U, Vector3.new(2.3, 10.0, -0.1), Vector3.new(2.8, 8.1, 0.05), gp, -1, 0.5, 0.85, 1.05, armColor, H.scaled(armColor, 0.92), H.scaled(armColor, 1.08))
 	table.insert(U.Gold, lib().M.frustumN(8, 0.42, 0.34, 2.5, 2.8, CFrame.new(3.4, 0, -1.4), { rgb(214, 160, 50) }))
 	return finish(m, id, U)
+end
+
+---------------------------------------------------------------------
+-- ROUND 6 ASSETS (owner prompt "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS"). Shared helpers for this part.
+---------------------------------------------------------------------
+-- cut stone blocks (running bond, bevelled, 3 tones and a gradient) on the listed faces of a box part: "front" -Z,
+-- "back" +Z, "left" -X, "right" +X; y0 .. y1 world heights; ch = course height
+local function stoneBox(list: { BasePart }, rng: Random, p: BasePart, faces: { string }, y0: number, y1: number, ch: number, color: Color3, Ht: number)
+	local TG = lib().TG
+	local c, s = p.Position, p.Size
+	local frames = {
+		front = { CFrame.new(c.X, 0, c.Z - s.Z / 2), s.X },
+		back = { CFrame.new(c.X, 0, c.Z + s.Z / 2) * CFrame.Angles(0, math.pi, 0), s.X },
+		left = { CFrame.new(c.X - s.X / 2, 0, c.Z) * CFrame.Angles(0, math.rad(-90), 0), s.Z },
+		right = { CFrame.new(c.X + s.X / 2, 0, c.Z) * CFrame.Angles(0, math.rad(90), 0), s.Z },
+	}
+	for _, f in ipairs(faces) do
+		local fr = frames[f]
+		-- (set 0.55 into the part, so the blocks' faces sit at the old face and today's glyphs stay in front)
+		TG.iceFace(list, rng, fr[1] * CFrame.new(0, 0, 0.55), -fr[2] / 2, fr[2] / 2, y0, y1, ch, color, Ht)
+	end
+end
+P.stoneBox = stoneBox
+
+-- a frame of 4 bars round a square glow turned 45 degrees (cf = the glow's CFrame, s = its side)
+local function diamondFrame(list: { BasePart }, cf: CFrame, s: number, w: number, depth: number, color: Color3)
+	local H = lib().H
+	for _, e in ipairs({ { 0, s / 2 + w / 2, s + 2 * w, w }, { 0, -s / 2 - w / 2, s + 2 * w, w }, { s / 2 + w / 2, 0, w, s }, { -s / 2 - w / 2, 0, w, s } }) do
+		table.insert(list, H.piece("Part", Vector3.new(e[3], e[4], depth), cf * CFrame.new(e[1], e[2], 0), color))
+	end
+end
+P.diamondFrame = diamondFrame
+
+local function children(m: Model, name: string): { BasePart }
+	local t = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and c.Name == name then
+			table.insert(t, c)
+		end
+	end
+	return t
+end
+
+local function finishR6(m: Model, id: string, U: any, opts: any?): string
+	for k, v in pairs(U) do
+		if #v == 0 then
+			U[k] = nil
+		end
+	end
+	mergeAll(m, U, opts)
+	P.install(id, m)
+	local _, size = m:GetBoundingBox()
+	return string.format("%s: %.1f x %.1f x %.1f", id, size.X, size.Y, size.Z)
+end
+
+---------------------------------------------------------------------
+-- 01 PLAINS BOSS GATE (plains_gate_boss_gate, Plains_4): the improved plains / tundra gate recipe in the blue stone of
+-- today: the 2 pillars as cut stone blocks (front and sides) on a bevelled plinth with a capital under the lintel,
+-- the lintel in 2 courses of cut stone with carved frames round the 5 glowing diamonds, a bevelled cornice with
+-- dentils, the double door kept with stone frames, a carved ring round the glowing face and studs, the threshold as
+-- jointed steps (its glowing edge strips kept). Every rune, glow, light and the map copy's prompt are kept; today's
+-- pillars, bases, lintel, cap and threshold stay as invisible collision; the doors stay as they are (they block).
+---------------------------------------------------------------------
+function P.plainsBossGate(): string
+	local id = "plains_gate_boss_gate"
+	local L = lib()
+	local H, M = L.H, L.M
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60101)
+	H.setBevelSelf(true)
+	local STONE, DARK, LIGHT = rgb(104, 110, 124), rgb(62, 60, 78), rgb(150, 156, 168)
+	local U: any = { Stone = {}, Stone2 = {}, Carving = {}, Trim = {}, DoorTrim = {} }
+	local Ht = 48
+	for _, name in ipairs({ "PillarL", "PillarR" }) do
+		local p = m:FindFirstChild(name) :: BasePart
+		local c, s = p.Position, p.Size
+		toCollision(p)
+		table.insert(U.Carving, H.piece("Part", s - Vector3.new(0.4, 0.2, 0.4), p.CFrame, DARK))
+		stoneBox(if name == "PillarL" then U.Stone else U.Stone2, rng, p, { "front", if name == "PillarL" then "left" else "right", if name == "PillarL" then "right" else "left" }, c.Y - s.Y / 2 + 3, 16.6, 2.6, STONE, Ht)
+		-- capital under the lintel, a band at mid height
+		table.insert(U.Trim, H.chamfered(Vector3.new(s.X + 1.0, 1.4, s.Z + 1.0), CFrame.new(c.X, 17.3, c.Z), H.scaled(DARK, 1.15), { "vertical", "bottomFrontBack", "bottomSides" }, 0.3))
+		table.insert(U.Trim, H.chamfered(Vector3.new(s.X + 0.5, 0.8, s.Z + 0.5), CFrame.new(c.X, -0.2, c.Z), H.scaled(DARK, 1.15), { "vertical", "topFrontBack", "topSides" }, 0.2))
+	end
+	for _, name in ipairs({ "BaseL", "BaseR" }) do
+		local p = m:FindFirstChild(name) :: BasePart
+		toCollision(p)
+		table.insert(U.Trim, H.chamfered(p.Size, p.CFrame, DARK, { "vertical", "topFrontBack", "topSides" }, 0.45))
+		table.insert(U.Trim, H.chamfered(Vector3.new(p.Size.X - 1.6, 0.6, p.Size.Z - 1.6), p.CFrame * CFrame.new(0, p.Size.Y / 2 + 0.3, 0), H.scaled(DARK, 1.12), { "vertical", "topFrontBack", "topSides" }, 0.2))
+	end
+	-- the lintel: a dark core, 2 courses of cut stone on the front, carved frames round the 5 diamonds
+	local li = m:FindFirstChild("Lintel") :: BasePart
+	toCollision(li)
+	table.insert(U.Carving, H.piece("Part", li.Size - Vector3.new(0.4, 0.2, 0.4), li.CFrame, DARK))
+	stoneBox(U.Stone, rng, li, { "front", "left", "right" }, li.Position.Y - li.Size.Y / 2, li.Position.Y + li.Size.Y / 2, 4.5, STONE, Ht)
+	for _, r in ipairs(children(m, "Rune")) do
+		if math.abs(r.Position.Y - 22.5) < 0.1 then
+			diamondFrame(U.DoorTrim, r.CFrame * CFrame.new(0, 0, 0.05), r.Size.X, 0.5, 0.4, H.scaled(DARK, 1.2))
+		end
+	end
+	-- the cornice: a bevelled cap with a row of dentils under its front edge
+	local cap = m:FindFirstChild("LintelCap") :: BasePart
+	toCollision(cap)
+	table.insert(U.Trim, H.chamfered(cap.Size, cap.CFrame, DARK, { "vertical", "topFrontBack", "topSides", "bottomFrontBack", "bottomSides" }, 0.4))
+	for k = 0, 24 do
+		local x = cap.Position.X - cap.Size.X / 2 + 1.4 + k * (cap.Size.X - 2.8) / 24
+		table.insert(U.Trim, H.piece("Part", Vector3.new(0.9, 0.6, 0.5), CFrame.new(x, cap.Position.Y - cap.Size.Y / 2 - 0.3, cap.Position.Z - cap.Size.Z / 2 + 0.6), H.scaled(DARK, 1.1)))
+	end
+	-- the door leaves: a stone frame round each leaf and studs; a carved ring round the glowing face
+	for _, name in ipairs({ "DoorL", "DoorR" }) do
+		local d = m:FindFirstChild(name) :: BasePart
+		local c, s = d.Position, d.Size
+		local zf = c.Z - s.Z / 2 - 0.12
+		for _, e in ipairs({ { 0, s.Y / 2 - 0.5, s.X, 1.0 }, { 0, -s.Y / 2 + 0.5, s.X, 1.0 }, { -s.X / 2 + 0.5, 0, 1.0, s.Y - 2 }, { s.X / 2 - 0.5, 0, 1.0, s.Y - 2 } }) do
+			table.insert(U.DoorTrim, H.chamfered(Vector3.new(e[3], e[4], 0.3), CFrame.new(c.X + e[1], c.Y + e[2], zf), H.scaled(STONE, 1.05), { "frontFace" }, 0.12))
+		end
+		for _, sy in ipairs({ -1, 1 }) do
+			for k = -2, 2 do
+				table.insert(U.DoorTrim, H.chamfered(Vector3.new(0.5, 0.5, 0.25), CFrame.new(c.X + k * 2.6, c.Y + sy * (s.Y / 2 - 0.5), zf - 0.2), DARK, { "frontFace" }, 0.1))
+			end
+		end
+	end
+	local fc = Vector3.new(7.5, 5.0, -1.62)
+	for k = 0, 15 do
+		local a = k * math.pi / 8
+		local r0 = 9.2 -- (outside the rune octagon, r 8)
+		local p = fc + Vector3.new(math.cos(a) * r0, math.sin(a) * r0, 0)
+		table.insert(U.DoorTrim, H.piece("Part", Vector3.new(2 * r0 * math.sin(math.pi / 16) + 0.1, 0.7, 0.2), CFrame.new(p) * CFrame.Angles(0, 0, a + math.pi / 2), H.scaled(STONE, 0.9)))
+	end
+	-- the threshold: jointed steps (its glowing edge strips stay)
+	local th = m:FindFirstChild("Threshold") :: BasePart
+	toCollision(th)
+	local n = 5
+	for k = 0, n - 1 do
+		local w = th.Size.X / n
+		table.insert(U.Trim, H.chamfered(Vector3.new(w - 0.12, th.Size.Y, th.Size.Z), th.CFrame * CFrame.new(-th.Size.X / 2 + (k + 0.5) * w, 0, 0), H.scaled(DARK, ({ 1.0, 1.08, 0.94 })[k % 3 + 1]), { "vertical", "topFrontBack", "topSides" }, 0.1))
+	end
+	return finishR6(m, id, U)
+end
+
+---------------------------------------------------------------------
+-- 02 CAMPFIRE (hub_light_campfire_a; the hub AFK corner and every zone's camps): a ring of 9 faceted stones in 2
+-- tones, 3 crossed 8-sided logs with bark facets and light cut ends, a bed of ash with glowing coal chips, a layered
+-- stylized flame (3 nested Neon cones and 2 side tongues). Today's Embers disc (PointLight, FirePoint for the fire VFX)
+-- is kept exactly; today's stones and logs stay as invisible collision. Biome looks are template Variants (attribute
+-- Variant on each copy): Desert (sandy stones, sandy ash), Jungle (mossy stones, moss tufts), Tundra (blue-grey stones,
+-- a snow ring), Volcano (basalt stones, dark ash); the hub and the plains keep the default grey stones.
+---------------------------------------------------------------------
+function P.campfire(): string
+	local id = "hub_light_campfire_a"
+	local L = lib()
+	local H, M, TB = L.H, L.M, L.TB
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60202)
+	H.setBevelSelf(true)
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") and (c.Name == "Stone" or c.Name == "Log") then
+			toCollision(c)
+		end
+	end
+	local U: any = { StonesA = {}, StonesB = {}, Logs = {}, LogEnds = {}, Ash = {}, Coals = {}, FlameOuter = {}, FlameMid = {}, FlameCore = {}, Snow = {}, Moss = {} }
+	local GREY, GREY2 = rgb(150, 156, 168), rgb(104, 110, 124)
+	-- the stone ring
+	local n = 9
+	for k = 0, n - 1 do
+		local a = k * 2 * math.pi / n + rng:NextNumber(-0.08, 0.08)
+		local r = 2.6 + rng:NextNumber(-0.1, 0.12)
+		local p = Vector3.new(math.cos(a) * r, 0.42, math.sin(a) * r)
+		local f = CFrame.new(p) * CFrame.Angles(0, -a + rng:NextNumber(-0.3, 0.3), rng:NextNumber(-0.12, 0.12))
+		TB.lump(if k % 2 == 0 then U.StonesA else U.StonesB, rng, f, rng:NextNumber(0.62, 0.8), rng:NextNumber(0.42, 0.52), rng:NextNumber(0.55, 0.7), function(): Color3
+			return GREY
+		end, 0.4)
+		-- moss tufts (jungle) and snow (tundra) on the outer side of the stones
+		TB.lump(U.Moss, rng, CFrame.new(p + Vector3.new(0, 0.42, 0)) * CFrame.Angles(0, -a, 0), 0.42, 0.12, 0.36, function(): Color3
+			return rgb(88, 150, 66)
+		end, 0.05)
+		TB.lump(U.Snow, rng, CFrame.new(Vector3.new(math.cos(a + 0.35) * 2.95, 0.12, math.sin(a + 0.35) * 2.95)) * CFrame.Angles(0, -a, 0), 0.6, 0.22, 0.5, function(): Color3
+			return rgb(236, 242, 250)
+		end, 0.12)
+	end
+	-- ash bed and coals
+	table.insert(U.Ash, M.frustumN(10, 1.9, 1.7, 0.0, 0.14, CFrame.identity, { rgb(78, 74, 72) }))
+	for k = 1, 10 do
+		local a = rng:NextNumber(0, 6.28)
+		local r = rng:NextNumber(0.4, 1.6)
+		table.insert(U.Coals, H.chamfered(Vector3.new(rng:NextNumber(0.25, 0.45), 0.16, rng:NextNumber(0.2, 0.35)), CFrame.new(math.cos(a) * r, 0.2, math.sin(a) * r) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), if k % 3 == 0 then rgb(255, 200, 80) else rgb(255, 120, 40), { "vertical" }, 0.05))
+	end
+	-- 3 crossed logs (today's places: yaw 0 / 60 / 120, a 12 degree tilt, stacked)
+	local BARK = rgb(112, 70, 42)
+	for i, yaw in ipairs({ 0, 60, 120 }) do
+		local cf = CFrame.new(0, 0.5 + (i - 1) * 0.25, 0) * CFrame.Angles(0, math.rad(yaw), math.rad(12))
+		local a, b = cf * Vector3.new(-1.8, 0, 0), cf * Vector3.new(1.8, 0, 0)
+		TB.log(U.Logs, U.LogEnds, a, b, 0.4, H.scaled(BARK, ({ 1.0, 0.92, 1.08 })[i]), { "a", "b" })
+	end
+	-- the layered flame: an outer orange cone, a yellow-orange one, a pale core, 2 side tongues
+	local f0 = CFrame.new(0, 0.6, 0)
+	table.insert(U.FlameOuter, M.frustumN(6, 0.95, 0.05, 0, 2.5, f0 * CFrame.Angles(0, 0.3, 0), { rgb(255, 110, 30) }))
+	table.insert(U.FlameMid, M.frustumN(6, 0.66, 0.04, 0.1, 2.0, f0 * CFrame.Angles(0, 0.8, 0), { rgb(255, 170, 50) }))
+	table.insert(U.FlameCore, M.frustumN(6, 0.36, 0.03, 0.15, 1.3, f0 * CFrame.Angles(0, 0.2, 0), { rgb(255, 236, 150) }))
+	for _, s in ipairs({ -1, 1 }) do
+		local base = Vector3.new(s * 0.55, 0.65, s * 0.2)
+		table.insert(U.FlameOuter, M.frustumN(5, 0.42, 0.03, 0, 1.35, H.frameY(base, Vector3.new(s * 0.25, 1, 0.1).Unit), { rgb(255, 120, 35) }))
+	end
+	for k, v in pairs(U) do
+		if #v == 0 then
+			U[k] = nil
+		end
+	end
+	local NEON = { material = Enum.Material.Neon, shadow = false }
+	mergeAll(m, U, {
+		StonesA = { single = GREY }, StonesB = { single = GREY2 }, Ash = { single = rgb(78, 74, 72) },
+		Coals = NEON, FlameOuter = { material = Enum.Material.Neon, shadow = false, transparency = 0.15 }, FlameMid = { material = Enum.Material.Neon, shadow = false, transparency = 0.1 }, FlameCore = NEON,
+		Snow = { single = rgb(236, 242, 250), transparency = 1 }, Moss = { single = rgb(88, 150, 66), transparency = 1 },
+	})
+	for _, name in ipairs({ "Snow", "Moss", "Coals", "FlameOuter", "FlameMid", "FlameCore", "Ash", "Logs", "LogEnds", "StonesA", "StonesB" }) do
+		local u = m:FindFirstChild(name) :: BasePart
+		if u then
+			u.CanCollide, u.CanQuery, u.CanTouch = false, false, false
+		end
+	end
+	-- the biome variants
+	local vf = m:FindFirstChild("_Variants") or Instance.new("Folder")
+	vf.Name = "_Variants"
+	vf.Parent = m
+	local function variant(name: string, attrs: { [string]: any })
+		local c = vf:FindFirstChild(name) or Instance.new("Configuration")
+		c.Name = name
+		for k, v in pairs(attrs) do
+			c:SetAttribute(k, v)
+		end
+		c.Parent = vf
+	end
+	variant("Desert", { Color_StonesA = rgb(213, 179, 124), Color_StonesB = rgb(184, 146, 98), Color_Ash = rgb(160, 140, 108) })
+	variant("Jungle", { Color_StonesA = rgb(122, 130, 114), Color_StonesB = rgb(92, 100, 92), Transparency_Moss = 0 })
+	variant("Tundra", { Color_StonesA = rgb(176, 186, 204), Color_StonesB = rgb(130, 140, 160), Transparency_Snow = 0 })
+	variant("Volcano", { Color_StonesA = rgb(84, 74, 76), Color_StonesB = rgb(56, 48, 50), Color_Ash = rgb(46, 40, 42) })
+	variant("Swamp", { Color_StonesA = rgb(92, 96, 80), Color_StonesB = rgb(70, 72, 60), Color_Logs = rgb(70, 52, 38), Color_Ash = rgb(64, 58, 46), Transparency_Moss = 0 })
+	P.install(id, m)
+	local _, size = m:GetBoundingBox()
+	return string.format("%s: %.1f x %.1f x %.1f", id, size.X, size.Y, size.Z)
+end
+
+-- the Variant of each campfire copy by its zone (the hub and plains: default)
+function P.campfireVariants(): string
+	local lines = {}
+	local counts = {}
+	for _, root in ipairs({ workspace.Zones, workspace.Hub, game.ServerStorage.BossArenas, workspace._Staging.AssetPreview.ByZone }) do
+		for _, d in ipairs(root:GetDescendants()) do
+			if d:IsA("Model") and d:GetAttribute("MapPropId") == "hub_light_campfire_a" then
+				local path = d:GetFullName()
+				local v = nil
+				for _, z in ipairs({ "Desert", "Jungle", "Tundra", "Volcano", "Swamp" }) do
+					if path:find("%." .. z .. "[%._]") or path:find("_" .. z .. "%.") then
+						v = z
+					end
+				end
+				d:SetAttribute("Variant", v)
+				local key = (v or "default") .. " " .. (if root == workspace._Staging.AssetPreview.ByZone then "preview" else "map")
+				counts[key] = (counts[key] or 0) + 1
+				table.insert(lines, path .. " -> " .. tostring(v or "default"))
+			end
+		end
+	end
+	local c = {}
+	for k, v in pairs(counts) do
+		table.insert(c, k .. " " .. v)
+	end
+	table.sort(c)
+	table.sort(lines)
+	return table.concat(c, ", ") .. "\n" .. table.concat(lines, "\n")
+end
+
+---------------------------------------------------------------------
+-- 03 / 04 COTTAGE SHUTTERS (cottage_two_windows, cottage_one_window): the shutters only. The batch-4 builder
+-- (DevTools.PropsBatch4, deterministic) is run from a copy whose windowUnit sets the shutters (planks, battens, the Z
+-- brace) 0.5 stud further out - in front of the half-timbering beams, which stand up to 0.53 proud of the plaster - and
+-- adds an iron hinge strap per batten on the window side; only its "Shutters" union (with the flower boxes, which do
+-- not move) replaces the template's. Every other part of the template is untouched (checked: 0 changes).
+---------------------------------------------------------------------
+local SHUTTER_OUT = 0.5
+local function shutterBuilder(): any
+	local src = ServerStorage.DevTools.PropsBatch4.Source
+	local function rep(a: string, b: string)
+		local i, j = string.find(src, a, 1, true)
+		assert(i, "PropsBatch4 anchor missing: " .. a)
+		src = string.sub(src, 1, i - 1) .. b .. string.sub(src, j + 1)
+	end
+	local o = tostring(SHUTTER_OUT)
+	rep("face * CFrame.new(px, 0, 0.09)", "face * CFrame.new(px, 0, 0.09 + " .. o .. ")")
+	rep("Vector3.new(sw - 0.1, 0.3, 0.08), face * CFrame.new(x, y, 0.21)", "Vector3.new(sw - 0.1, 0.3, 0.08), face * CFrame.new(x, y, 0.21 + " .. o .. ")")
+	rep("-h * 0.3, 0.21), face * Vector3.new(x + sx * (sw / 2 - 0.25), h * 0.3, 0.21)", "-h * 0.3, 0.21 + " .. o .. "), face * Vector3.new(x + sx * (sw / 2 - 0.25), h * 0.3, 0.21 + " .. o .. ")")
+	rep("face * CFrame.new(sx * (w / 2 + 0.55), y, 0.2), P.Iron))", "face * CFrame.new(sx * (w / 2 + 0.55), y, 0.2), P.Iron))\n\t\t\t\ttable.insert(U.Shutters, piece(\"Part\", Vector3.new(0.5, 0.18, 0.1), face * CFrame.new(sx * (w / 2 + 0.6), y, 0.26 + " .. o .. "), P.Iron))")
+	local tmp = Instance.new("ModuleScript")
+	tmp.Name = "PropsBatch4_shutters"
+	tmp.Source = src
+	tmp.Parent = ServerStorage.DevTools
+	local B4 = require(tmp:Clone())
+	tmp:Destroy()
+	return B4
+end
+
+function P.cottageShutters(id: string): string
+	local B4 = shutterBuilder()
+	local fresh = (B4 :: any)[id]() :: Model
+	local m = folder():FindFirstChild(id):Clone() :: Model
+	-- the rest of the fresh build must match the template exactly (same recipe, same seed)
+	for _, n in ipairs({ "Timber", "Plaster", "Stone", "Roof" }) do
+		local a, b = fresh:FindFirstChild(n) :: BasePart, m:FindFirstChild(n) :: BasePart
+		assert(a and b and (a.ExtentsCFrame.Position - b.ExtentsCFrame.Position).Magnitude < 1e-3 and (a.ExtentsSize - b.ExtentsSize).Magnitude < 1e-3, "fresh build differs from the template: " .. n)
+	end
+	local oldS = m:FindFirstChild("Shutters") :: BasePart
+	local newS = fresh:FindFirstChild("Shutters") :: BasePart
+	newS.Parent = m
+	oldS:Destroy()
+	fresh:Destroy()
+	P.install(id, m)
+	local _, size = m:GetBoundingBox()
+	return string.format("%s: shutters moved out %.2f, %.1f x %.1f x %.1f", id, SHUTTER_OUT, size.X, size.Y, size.Z)
+end
+
+-- every part but the shutters identical between 2 versions of a template (old in _Previous)
+function P.compareExceptShutters(id: string): string
+	local a, b = folder()._Previous:FindFirstChild(id) :: Model, folder():FindFirstChild(id) :: Model
+	local function list(m: Model): { [string]: number }
+		local t = {}
+		for _, d in ipairs(m:GetDescendants()) do
+			if d:IsA("BasePart") and d.Name ~= "Shutters" then
+				local c, s = d.CFrame, d.Size
+				local k = string.format("%s|%.3f,%.3f,%.3f|%.3f,%.3f,%.3f|%s|%s", d.Name, c.X, c.Y, c.Z, s.X, s.Y, s.Z, tostring(d.CanCollide), d.Color:ToHex())
+				t[k] = (t[k] or 0) + 1
+			end
+		end
+		return t
+	end
+	local la, lb = list(a), list(b)
+	local diff, n = 0, 0
+	for k, v in pairs(la) do
+		n += v
+		if lb[k] ~= v then
+			diff += 1
+		end
+	end
+	for k, v in pairs(lb) do
+		if la[k] ~= v then
+			diff += 1
+		end
+	end
+	return string.format("%s: %d parts compared (all but Shutters), %d differences", id, n, diff)
 end
 
 return P
