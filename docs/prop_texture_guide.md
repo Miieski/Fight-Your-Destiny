@@ -3536,6 +3536,16 @@ swamp_skull_gate, swamp_gate_boss_gate, swamp_gate_door and the room rocks).
 - **Ceilings:** plain, darker. The magenta (#AA50FF / #AE53FF) and yellow-green (#8CFF5A) glows stay untouched and
   read clearly on the dark stone.
 
+### G8. Desert pyramid cut stone (round 7 Part 6: Desert_4.Decor.PyramidShell)
+
+`desert_pyramid_tier` (rbxassetid://97978285376143), 512 x 256 px = 20 x 10 studs = one tier face height: 3 courses of
+3.33 studs, blocks 5 studs long in running bond. Blocks #D9BC88, #D2B47F, #DCC190, #CDAE78, #D6B985, #C9AA76 (the
+pyramid's own #E2BE84 / #D5B37C pulled toward the light desert bricks G2 and the temple gate stone #9D7C53 / #B58E59 so
+the blocks read), joints #9A7E58, chips and a few cracks; the top course x1.08 (sunlit edge), the bottom course x0.86
+(the darker band at each tier's foot), +-3 % per course. Vertical faces: StudsPerTileU 20, V 10, OffsetStudsV snapped
+so each tile's top is the tier top; Color3 white on the #E2BE84 tiers, about #F2EDE4 on the #D5B37C tiers. Tier tops:
+`desert_brick_light` as paving, StudsPerTile 10, Color3 about #EAEAEA. Capstone: colour kept, Reflectance 0.15.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

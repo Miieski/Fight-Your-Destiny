@@ -123,6 +123,7 @@ BOSS_ROOM_BRICK = [
     "\t\ttundra_ice_brick = \"rbxassetid://81297179264826\", -- round 7: ice castle walls, 8 x 8 studs (blocks 4 x 2)",
     "\t\tswamp_wall_stone = \"rbxassetid://134953143438411\", -- round 7: swamp sub-zone 4 / boss room walls, 8 x 8 studs",
     "\t\tswamp_floor_mud_stone = \"rbxassetid://91459519881550\", -- round 7: swamp floors, 512 px = 24 x 24 studs",
+    "\t\tdesert_pyramid_tier = \"rbxassetid://97978285376143\", -- round 7: one pyramid tier face, 20 x 10 studs (3 courses)",
     "\t},",
 ]
 

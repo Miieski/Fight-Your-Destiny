@@ -275,6 +275,36 @@ def swamp_wall(path_name, seed):
 	img.save(os.path.join(OUT, path_name))
 
 
+# ---- Desert pyramid (round 7 Part 6): one tile per tier face, 512 x 256 px = 20 x 10 studs = 3 courses of 3.33 studs,
+# blocks 5 studs long in running bond. Colours: the pyramid's own sandstone (#E2BE84 / #D5B37C) pulled toward the light
+# desert bricks of G2 and the temple gate stone (#9D7C53 / #B58E59) so the blocks show; joints #9A7E58. The top course
+# is lighter (the tier's sunlit edge), the bottom course darker (the band at the tier's foot).
+PYRAMID = [hexrgb(h) for h in ("#D9BC88", "#D2B47F", "#DCC190", "#CDAE78", "#D6B985", "#C9AA76")]
+PYRAMID_JOINT = hexrgb("#9A7E58")
+
+
+def pyramid_tier(path_name, seed, W=512, H=256, courses=3, per_course=4):
+	rng = random.Random(seed)
+	img = Image.new("RGB", (W, H), PYRAMID_JOINT)
+	draw = ImageDraw.Draw(img)
+	ch = H // courses
+	bw = W // per_course
+	tone = {0: 1.08, courses - 1: 0.86}  # top course lighter, bottom course darker
+	for row in range(courses):
+		y0 = row * ch + 2
+		off = (bw // 2) if row % 2 else 0
+		course_tint = 0.97 + rng.random() * 0.06  # slight variation per course
+		for col in range(-1, per_course + 1):
+			c = shade(rng.choice(PYRAMID), tone.get(row, 1.0) * course_tint * (0.95 + rng.random() * 0.1))
+			x0 = col * bw + off + 2
+			for sx in (-W, 0, W):
+				xs = x0 + sx
+				if xs + bw - 4 < 0 or xs >= W:
+					continue
+				brick(draw, xs, y0, bw - 4, ch - 4, c, random.Random(rng.random()), True)
+	img.save(os.path.join(OUT, path_name))
+
+
 def main():
 	os.makedirs(OUT, exist_ok=True)
 	bricks("desert_brick.png", DESERT, DESERT_JOINT, 11)
@@ -293,6 +323,7 @@ def main():
 	flagstones("jungle_flagstone_floor.png", 41)
 	bricks("tundra_ice_brick.png", ICE, ICE_JOINT, 51, cracks=False)  # ice: chips only, no dark cracks
 	swamp_wall("swamp_wall_stone.png", 61)
+	pyramid_tier("desert_pyramid_tier.png", 81)
 	flagstones("swamp_floor_mud_stone.png", 71, palette=SWAMP_FLOOR, joint=SWAMP_FLOOR_JOINT, tufts=SWAMP_MUD)
 	print("written to", OUT)
 
