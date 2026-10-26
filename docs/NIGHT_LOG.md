@@ -1,3 +1,15 @@
+# ROUND 6 DECISIONS (owner prompt "TWO TASKS IN ONE RUN: (A) KNIGHT STATUE ARMS ... (B) BRICK TEXTURE ...", 2026-10-26) - newest first
+
+- Prompt saved as docs/Round6_Knights_Bricks/PROMPT_ROUND6.txt. The "attached screenshot" of the ice knight was not in the
+  message; the Studio agent shoots the current ice_knight_in_glass_case in the asset preview as the before shot instead.
+- Backup before_round6_knights_bricks first. Task A (Studio agent) first; meanwhile the main agent prepares Task B's
+  textures only (no Studio writes): reads the door colours, draws one tileable 256 px brick PNG per zone with Python
+  (procedural, low-poly bevels, no photo noise) and uploads it with the MCP upload_image (same route as the earlier
+  icon / emissive-mask uploads). Applying them to the rooms waits until Task A is pushed.
+- Task B tinting: one grey-scale-friendly brick image per zone; walls use it as is, floor and ceiling reuse the same id
+  with Texture.Color3 darker (no extra uploads). The blue / gold frieze (desert) and moss bricks (jungle) are separate
+  small strip textures only if one image cannot carry them; logged when decided.
+
 # ROUND 5 DECISIONS (owner prompt "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26) - newest first
 
 - Round 5 Task 3 11-20 (Studio agent): images 15 (jungle gate guards) and 18 (ice throne) are Task 2 C / D (done).

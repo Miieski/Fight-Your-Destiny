@@ -13,6 +13,16 @@ local PropTextures = {
 		plank_lines = "rbxassetid://135049600507492",
 		water_lines = "rbxassetid://92684887585956",
 	},
+	-- boss-room bricks (tools/textures/make_brick_textures.py, docs/prop_texture_guide.md "Boss room brick"):
+	-- full-colour tiles 8 x 8 studs; the strips are 8 x 32 studs with one painted row (second Texture on the face)
+	BossRoomBrick = {
+		StudsPerTile = 8,
+		StripStudsV = 32,
+		desert_brick = "rbxassetid://103191534263698",
+		desert_frieze_strip = "rbxassetid://97451078325225",
+		jungle_brick = "rbxassetid://96625564941177",
+		jungle_moss_strip = "rbxassetid://81114154147595",
+	},
 }
 
 return PropTextures

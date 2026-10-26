@@ -3360,6 +3360,37 @@ them.
 - **Hidden backing:** a big flat collider that shows behind new detail (the waterfall cliff's CliffCore) stays the
   collider with Transparency 1.
 
+## G. Boss room brick (owner task 2026-10-26, round 6 Task B: Desert / Jungle sub-zone 4 + boss arenas)
+
+Texture only: a `Texture` per inner face of the existing walls, floor and ceiling parts (no new geometry, no change
+to Size, CFrame, collisions, scripts or attributes). Images drawn by `tools/textures/make_brick_textures.py`
+(procedural, deterministic): flat bevelled bricks (2-step light top / left, dark bottom / right bevel, soft vertical
+gradient), 4 px darker joints, per-brick colour pick plus a +-6 % jitter, a few thin cracks and chipped corners, no
+photo or PBR noise. Ids in `Config/PropTextures.luau` -> `BossRoomBrick`.
+
+| image | size | covers | id |
+|---|---|---|---|
+| desert_brick | 256 x 256 | 8 x 8 studs, 4 rows of 4 x 2 stud bricks, running bond | rbxassetid://103191534263698 |
+| desert_frieze_strip | 256 x 1024, alpha | 8 x 32 studs, ONE row of alternating blue / gold bricks (row 2 from the top) | rbxassetid://97451078325225 |
+| jungle_brick | 256 x 256 | 8 x 8 studs, same layout | rbxassetid://96625564941177 |
+| jungle_moss_strip | 256 x 1024, alpha | 8 x 32 studs, ONE row of moss-tinted stone (row 15 of 16) | rbxassetid://81114154147595 |
+
+Colours read from the door / gate templates (`DevTools` histogram by part volume, 2026-10-26):
+- **Desert** (pylon_temple_gate, desert_gate_door, desert_gate_boss_gate): sandstone bricks #9D7C53, #9A7A52,
+  #8E714B, #A6845A, #B58E59; joints #6A4A2E (the gate's dark trim #703E26, softened); frieze blue #2C5CC8 and gold
+  #FFC93C (the door panels and inlays).
+- **Jungle** (face_temple_gate, jungle_gate_boss_gate, jungle_gate_door): stone #5C645C, #606960, #686D62, #71766A,
+  #6A7266; joints #3E453E (darker green-grey); moss #5B9C44 / #579441 mixed 35-65 % into the stone for the moss row.
+
+Settings:
+- Walls: brick Texture, StudsPerTileU = V = 8, Color3 white (the colours are in the image).
+- Floor: the same image, Color3 about #D0D0D0 (slightly darker than the walls); ceiling Color3 about #B8B8B8.
+- Frieze (desert) / moss row (jungle): a second Texture on the same wall face with the strip image,
+  StudsPerTileU = 8, StudsPerTileV = 32, and OffsetStudsV chosen per face so the row lands near the top (frieze) or the
+  bottom (moss) on a brick row of the base texture. Faces taller than 32 studs get one extra row every 32 studs; where
+  a wall already has a separate frieze / base-band part, that part gets the strip colours instead.
+- Part Material stays SmoothPlastic so no Roblox material pattern fights the bricks.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

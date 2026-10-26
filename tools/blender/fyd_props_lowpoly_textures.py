@@ -104,6 +104,22 @@ def save_info(info):
         json.dump(info, f, indent=1)
 
 
+# Boss-room bricks (round 6): drawn by tools/textures/make_brick_textures.py, uploaded once; kept verbatim here so a
+# re-run of this generator does not drop them.
+BOSS_ROOM_BRICK = [
+    "\t-- boss-room bricks (tools/textures/make_brick_textures.py, docs/prop_texture_guide.md \"Boss room brick\"):",
+    "\t-- full-colour tiles 8 x 8 studs; the strips are 8 x 32 studs with one painted row (second Texture on the face)",
+    "\tBossRoomBrick = {",
+    "\t\tStudsPerTile = 8,",
+    "\t\tStripStudsV = 32,",
+    "\t\tdesert_brick = \"rbxassetid://103191534263698\",",
+    "\t\tdesert_frieze_strip = \"rbxassetid://97451078325225\",",
+    "\t\tjungle_brick = \"rbxassetid://96625564941177\",",
+    "\t\tjungle_moss_strip = \"rbxassetid://81114154147595\",",
+    "\t},",
+]
+
+
 def write_luau(info):
     """src/ReplicatedStorage/GameSystem/Config/PropTextures.luau: the overlay ids by name."""
     ids = info.get("assetIds", {})
@@ -121,7 +137,7 @@ def write_luau(info):
     for name in TEXTURES:
         v = ids.get(name)
         lines.append("\t\t%s = %s," % (name, json.dumps("rbxassetid://%s" % v) if v else "nil"))
-    lines += ["\t},", "}", "", "return PropTextures", ""]
+    lines += ["\t},"] + BOSS_ROOM_BRICK + ["}", "", "return PropTextures", ""]
     with open(LUAU, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines))
 

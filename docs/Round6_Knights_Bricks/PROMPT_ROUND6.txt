@@ -1,0 +1,34 @@
+TWO TASKS IN ONE RUN: (A) KNIGHT STATUE ARMS HOLDING THE SWORD, (B) BRICK TEXTURE IN THE DESERT AND JUNGLE SUB-ZONE 4 + BOSS ROOMS
+
+COMMON RULES (for both tasks)
+- Backup first in BackUP_Files/ (dated .rbxl, never overwrite). If the owner is not around, do not stop to ask: take the most reasonable reading and log it at the top of docs/NIGHT_LOG.md. If a step fails twice, log it and move on. Sub-agents max 2 at once (one Studio, one Blender). Push to https://github.com/Miieski/Fight-Your-Destiny after each task. Never put secrets in files.
+- Same quality as everything already improved (fountain, well, desert, jungle, tundra): low-mid poly, beveled shapes with visible joints, soft gradients, no PBR/photo textures.
+- Never touch the ground of the asset preview (the owner's colors and sizes stay). Do not change scripts, ProximityPrompts, lights, tags or collisions on map instances.
+- Do Task A first, then Task B.
+
+==================================================
+TASK A - ARMOR KNIGHT STATUES: ARMS MUST HOLD THE SWORD HANDLE
+The attached screenshot (ask me for nothing, it is in the conversation / docs) shows the current ice knight statue ("ice_knight_in_glass_case", tundra) in the asset preview. The arms hang next to the body and the sword just stands in front of the knight. The knight's arms and hands must GRIP the sword handle.
+
+1. Pose: the knight rests on his sword, held upright in front of him. Both forearms come forward and bend at the elbows, and the two gloved hands wrap around the hilt (one hand over the other, on the grip just under the crossguard), with chunky finger blocks or a rounded gauntlet closing around the handle. The hands must really touch the grip: no gap, no floating hand, no sword passing through the arms. Keep the armor plates on shoulders, upper arms, elbows and vambraces, moving naturally with the new pose.
+2. Sword: a bit smaller and/or planted deeper so it is realistic. The point goes into the plinth/ground inside the case (a few studs deep, with a small cut in the floor plate or a tiny ice crack), the crossguard sits at about chest height, the handle at a comfortable height for the hands. Keep the icy blue blade and the yellow-gold grip and crossguard, with a wrapped grip, a pommel and a bevelled blade with a center ridge. The sword must not poke through the glass case or the white lid.
+3. Keep: the glass case with ice-blue frames and white lid, the blue plinth with the gold gem, the crystals at the feet, the cyan glowing visor and plume (keep the glow), the green sash, the colors, the overall size (within +10%), position, collisions and any interaction.
+4. OTHER STATUES: check the asset preview and the maps for any other armored knight or warrior statue (other tundra, desert or jungle statues, Anubis, golden guardian, etc.) that carries a weapon or staff. If a weapon stands next to the hands instead of being held, give it the same fix (hands closed around the handle, weapon smaller or planted deeper). Do not change statues that hold nothing. List what you changed in docs/NIGHT_LOG.md.
+5. SYNC: edit the model in the asset preview (MapProps template); SyncMapProps updates every instance in the maps. Report "replaced n / total".
+6. Verify: pilot first, with before/after screenshots from the front and from the side (hands on the hilt clearly visible), then the other statues. Check from 3 angles that nothing clips through the glass or the lid. Smooth in the phone emulator.
+
+==================================================
+TASK B - BRICK TEXTURE FOR THE INTERIOR OF SUB-ZONE 4 AND THE BOSS ROOM (DESERT + JUNGLE)
+Scope: the 4th sub-zone of the DESERT zone and of the JUNGLE zone (workspace.Zones.<ZoneId>.<ZoneId>_4) AND their BOSS ROOM / boss arena. If the sub-zone and the boss room are two different places, do both; if they are the same place, do it once per zone. Apply to the interior surfaces: inner WALLS, arena FLOOR and CEILING/ROOF (if any). Walls made of several pieces (columns, arches, steps, blocks) get the bricks too. Do not change anything outside these interiors.
+
+1. TEXTURE ONLY: no change to shapes, sizes, positions, collisions, spawn points, enemy paths, triggers, doors or scripts. No new geometry or meshes. For a mesh surface, use a SurfaceAppearance or Texture on the existing part.
+2. Texture: a tileable low-poly-style BRICK / stone-block texture (128 or 256 px, 512 max for the floor), with soft bevel shading, thin darker joints, slight color variation per brick, a few cracks and chips, NO photo or PBR noise. Set the tile size so bricks look correctly scaled (about 3-4 studs per brick, not stretched; use StudsPerTile or Texture settings per face, and check corners and the ceiling).
+3. COLORS: read them from the door assets of each zone (do not guess):
+   - DESERT: the sandstone beige-brown of the desert gate and door assets, darker brown joints, and a few bricks in the same blue and gold as the doors on a frieze row near the top of the walls.
+   - JUNGLE: the mossy gray-green stone of the jungle gate and temple door assets, darker green-gray joints, a few moss-tinted bricks near the bottom of the walls.
+   Floor slightly darker than the walls, ceiling a bit darker than the walls to keep the arena readable. Keep good contrast with the enemies and bosses.
+4. Write the recipe in docs/prop_texture_guide.md ("Boss room brick" section: hex colors read from the doors, tile size, material) and keep texture ids in Config/PropTextures.luau. Share one brick texture per zone across walls, floor and ceiling (tinted versions for floor and ceiling) to keep memory low.
+5. If any surface is a MapProps template (tag MapProp), edit the template so the asset preview and the map stay identical; otherwise edit the parts directly.
+6. Verify: before/after screenshots of each interior (walls, floor, ceiling) for desert sub-zone 4, desert boss room, jungle sub-zone 4 and jungle boss room. Script check: list the parts changed per room and confirm 0 changes in Size, CFrame, CanCollide, scripts and attributes. Play mode once in each room: spawns, enemies, boss fight area and doors still work, bricks sharp on mobile (phone emulator), no stretching or z-fighting, smooth performance.
+
+FINAL REPORT: per statue and per room OK / not OK, and anything I must do by hand (only if truly unavoidable).
