@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T07:00:51Z",
+ "generated": "2026-10-26T07:22:21Z",
  "zones": [
   {
    "characters": [
@@ -5875,7 +5875,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "White Wolf",
      "subZone": 1,
@@ -5885,7 +5885,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Arctic Fox",
      "subZone": 1,
@@ -5895,7 +5895,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Cursed Snowman",
      "subZone": 1,
@@ -5905,7 +5905,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Ice Spirit",
      "subZone": 2,
@@ -5915,7 +5915,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Polar Bear",
      "subZone": 2,
@@ -5925,7 +5925,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Swordfish",
      "subZone": 2,
@@ -5935,7 +5935,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Yeti",
      "subZone": 3,
@@ -5945,7 +5945,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Furious Ibex",
      "subZone": 3,
@@ -5955,7 +5955,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Ice Eagle",
      "subZone": 3,
@@ -5965,7 +5965,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Ice Knight",
      "subZone": 4,
@@ -5975,7 +5975,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Frost Golem",
      "subZone": 4,
@@ -5985,7 +5985,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Frost Wolf Alpha",
      "subZone": 4,
@@ -5995,7 +5995,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Ice Knight Captain",
      "subZone": 4,
@@ -6005,7 +6005,7 @@
      "quality": "old"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Frost King",
      "subZone": 4,
@@ -6992,7 +6992,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Giant Frog",
      "subZone": 1,
@@ -7002,7 +7002,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Leech",
      "subZone": 1,
@@ -7012,7 +7012,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Giant Mosquito",
      "subZone": 1,
@@ -7022,7 +7022,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Living Tree",
      "subZone": 2,
@@ -7032,7 +7032,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Will-o'-Wisp",
      "subZone": 2,
@@ -7042,7 +7042,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Crow",
      "subZone": 2,
@@ -7052,7 +7052,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Witch Apprentice",
      "subZone": 3,
@@ -7062,7 +7062,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Black Cat",
      "subZone": 3,
@@ -7072,7 +7072,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Scarecrow",
      "subZone": 3,
@@ -7082,7 +7082,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Sorcerer Toad",
      "subZone": 4,
@@ -7092,7 +7092,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Mud Golem",
      "subZone": 4,
@@ -7102,7 +7102,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Giant Toad Shaman",
      "subZone": 4,
@@ -7112,7 +7112,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Rotting Treant",
      "subZone": 4,
@@ -7122,7 +7122,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Swamp Witch",
      "subZone": 4,
@@ -8194,7 +8194,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Ash Lizard",
      "subZone": 1,
@@ -8204,7 +8204,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Fire Bat",
      "subZone": 1,
@@ -8214,7 +8214,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Charred Miner",
      "subZone": 1,
@@ -8224,7 +8224,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Magma Dwarf",
      "subZone": 2,
@@ -8234,7 +8234,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Basalt Golem",
      "subZone": 2,
@@ -8244,7 +8244,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Rock Worm",
      "subZone": 2,
@@ -8254,7 +8254,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Salamander",
      "subZone": 3,
@@ -8264,7 +8264,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Flame Spirit",
      "subZone": 3,
@@ -8274,7 +8274,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Lava Crab",
      "subZone": 3,
@@ -8284,7 +8284,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Fire Elemental",
      "subZone": 4,
@@ -8294,7 +8294,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Obsidian Guardian",
      "subZone": 4,
@@ -8304,7 +8304,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Magma Brute",
      "subZone": 4,
@@ -8314,7 +8314,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Lava Serpent",
      "subZone": 4,
@@ -8324,7 +8324,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Magma Titan",
      "subZone": 4,
@@ -9307,7 +9307,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Imp",
      "subZone": 1,
@@ -9317,7 +9317,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Hellhound",
      "subZone": 1,
@@ -9327,7 +9327,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Scorched Zombie",
      "subZone": 1,
@@ -9337,7 +9337,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Demon Guard",
      "subZone": 2,
@@ -9347,7 +9347,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Succubus",
      "subZone": 2,
@@ -9357,7 +9357,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Burning Skeleton",
      "subZone": 2,
@@ -9367,7 +9367,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Infernal Knight",
      "subZone": 3,
@@ -9377,7 +9377,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Gargoyle",
      "subZone": 3,
@@ -9387,7 +9387,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Demon Archer",
      "subZone": 3,
@@ -9397,7 +9397,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Elite Infernal Guard",
      "subZone": 4,
@@ -9407,7 +9407,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Demonic Mage",
      "subZone": 4,
@@ -9417,7 +9417,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Hellhound Alpha",
      "subZone": 4,
@@ -9427,7 +9427,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Infernal Executioner",
      "subZone": 4,
@@ -9437,7 +9437,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Supreme Demon",
      "subZone": 4,
@@ -10299,7 +10299,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Glowing Bird",
      "subZone": 1,
@@ -10309,7 +10309,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Wind Spirit",
      "subZone": 1,
@@ -10319,7 +10319,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Celestial Deer",
      "subZone": 1,
@@ -10329,7 +10329,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Storm Cloud",
      "subZone": 2,
@@ -10339,7 +10339,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Guardian Cherub",
      "subZone": 2,
@@ -10349,7 +10349,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Griffin",
      "subZone": 2,
@@ -10359,7 +10359,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Celestial Soldier",
      "subZone": 3,
@@ -10369,7 +10369,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Winged Archer",
      "subZone": 3,
@@ -10379,7 +10379,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Sacred Statue",
      "subZone": 3,
@@ -10389,7 +10389,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Celestial Paladin",
      "subZone": 4,
@@ -10399,7 +10399,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Light Priest",
      "subZone": 4,
@@ -10409,7 +10409,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Seraph Knight",
      "subZone": 4,
@@ -10419,7 +10419,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Storm Griffin Lord",
      "subZone": 4,
@@ -10429,7 +10429,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Supreme Angel",
      "subZone": 4,
@@ -11372,7 +11372,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Zombie",
      "subZone": 1,
@@ -11382,7 +11382,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Ghost",
      "subZone": 1,
@@ -11392,7 +11392,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Ghoul",
      "subZone": 1,
@@ -11402,7 +11402,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Skeleton Warrior",
      "subZone": 2,
@@ -11412,7 +11412,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Bone Rat",
      "subZone": 2,
@@ -11422,7 +11422,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Novice Necromancer",
      "subZone": 2,
@@ -11432,7 +11432,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Haunted Monk",
      "subZone": 3,
@@ -11442,7 +11442,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Wailing Spectre",
      "subZone": 3,
@@ -11452,7 +11452,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Cursed Gargoyle",
      "subZone": 3,
@@ -11462,7 +11462,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Undead Knight",
      "subZone": 4,
@@ -11472,7 +11472,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Royal Skeleton Guard",
      "subZone": 4,
@@ -11482,7 +11482,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Skeleton General",
      "subZone": 4,
@@ -11492,7 +11492,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Banshee Queen",
      "subZone": 4,
@@ -11502,7 +11502,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Lich King",
      "subZone": 4,
@@ -12461,7 +12461,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Jellyfish",
      "subZone": 1,
@@ -12471,7 +12471,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Reef Shark",
      "subZone": 1,
@@ -12481,7 +12481,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Moray Eel",
      "subZone": 1,
@@ -12491,7 +12491,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Drowned Pirate",
      "subZone": 2,
@@ -12501,7 +12501,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Octopus",
      "subZone": 2,
@@ -12511,7 +12511,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Armor Crab",
      "subZone": 2,
@@ -12521,7 +12521,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Lanternfish",
      "subZone": 3,
@@ -12531,7 +12531,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Giant Squid",
      "subZone": 3,
@@ -12541,7 +12541,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Electric Eel",
      "subZone": 3,
@@ -12551,7 +12551,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Triton Guard",
      "subZone": 4,
@@ -12561,7 +12561,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Corrupted Siren",
      "subZone": 4,
@@ -12571,7 +12571,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Kraken Spawn",
      "subZone": 4,
@@ -12581,7 +12581,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Triton Captain",
      "subZone": 4,
@@ -12591,7 +12591,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Leviathan",
      "subZone": 4,
@@ -13717,7 +13717,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Drone",
      "subZone": 1,
@@ -13727,7 +13727,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Assembly Robot",
      "subZone": 1,
@@ -13737,7 +13737,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Mechanical Rat",
      "subZone": 1,
@@ -13747,7 +13747,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Cleaner Robot",
      "subZone": 2,
@@ -13757,7 +13757,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Mechanical Spider",
      "subZone": 2,
@@ -13767,7 +13767,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Toxic Slime",
      "subZone": 2,
@@ -13777,7 +13777,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Laser Turret",
      "subZone": 3,
@@ -13787,7 +13787,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Guardian Robot",
      "subZone": 3,
@@ -13797,7 +13797,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Combat Drone",
      "subZone": 3,
@@ -13807,7 +13807,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Soldier Robot",
      "subZone": 4,
@@ -13817,7 +13817,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Steel Golem",
      "subZone": 4,
@@ -13827,7 +13827,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "War Mech",
      "subZone": 4,
@@ -13837,7 +13837,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Sentinel Prime",
      "subZone": 4,
@@ -13847,7 +13847,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Colossal Robot",
      "subZone": 4,
@@ -14781,7 +14781,7 @@
   {
    "characters": [
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Wandering Shadow",
      "subZone": 1,
@@ -14791,7 +14791,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Void Stalker",
      "subZone": 1,
@@ -14801,7 +14801,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Obsidian Sentinel",
      "subZone": 1,
@@ -14811,7 +14811,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Crystal Golem",
      "subZone": 2,
@@ -14821,7 +14821,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Spectral Butterfly",
      "subZone": 2,
@@ -14831,7 +14831,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Void Spirit",
      "subZone": 2,
@@ -14841,7 +14841,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Lost Voyager",
      "subZone": 3,
@@ -14851,7 +14851,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Phantom Archer",
      "subZone": 3,
@@ -14861,7 +14861,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Fallen Guardian",
      "subZone": 3,
@@ -14871,7 +14871,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Void Knight",
      "subZone": 4,
@@ -14881,7 +14881,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Normal",
      "name": "Void Mage",
      "subZone": 4,
@@ -14891,7 +14891,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Void Reaper",
      "subZone": 4,
@@ -14901,7 +14901,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "MiniBoss",
      "name": "Crystal Warden",
      "subZone": 4,
@@ -14911,7 +14911,7 @@
      "quality": "to redo"
     },
     {
-     "inPreview": false,
+     "inPreview": true,
      "role": "Boss",
      "name": "Void Dragon",
      "subZone": 4,

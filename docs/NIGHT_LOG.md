@@ -3661,3 +3661,9 @@ only the tag and attributes, nothing else.
   collisions / touches, IsPreviewSample: checkCharacters 50 samples 0 problems; ground / layout compare 0
   differences; build again = all kept. Shots docs/screenshots/asset_preview/chars_00_Hub / 01_Plains / 02_Desert /
   03_Jungle.jpg. Index md / json: an NPC / enemy table per zone.
+- Task 1, zones 04-07 DONE: Tundra (14 rigs with their zone looks, old), Swamp / Volcano / Hell (14 each: zones 5-12
+  have no look in Config/Enemies yet, so the game shows the generic grey placeholder biped for every enemy: samples =
+  exactly that, quality "to redo", next action "design + Blender model"); zones 08-12 built too (176 character samples,
+  checkCharacters 0 problems, ground / layout compare 0). Shots chars_04_Tundra / 05_Swamp / 06_Volcano / 07_Hell.jpg
+  (screen_capture times out every second call and a new SurfaceGui text shows only on the second render: each shot
+  is taken twice).
