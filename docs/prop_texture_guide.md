@@ -3486,6 +3486,16 @@ Rules the tool follows:
 - Lift: the pads' underside 0.14 x scale off the surface (0.1 - 0.22 in the game), top about 0.38 x scale, tufts to
   0.45 x scale: never coplanar with the stone, so no z-fighting and visible from 10-20 studs.
 
+### G5. Ice castle bricks (round 7 Part 3)
+
+`tundra_ice_brick` (rbxassetid://81297179264826), 256 x 256 px = 8 x 8 studs, 4 rows of 4 x 2 stud blocks in running
+bond (the castle gate's blocks are about 2.4 x 3.1-4.8). Colours read from the castle gate kit as built
+(PropsTundraGatesData "Gate4": Tower / Wall #54A0E8 x1.06 x tone 1 / 0.93 / 0.86 x the height gradient): blocks
+#4D93D5, #4889C6, #539EE5, #4788C5, #427EB7; joints #2860AA (the gate's deep core); 2-step bevel, chipped corners, no
+dark cracks (ice). Exterior walls and towers: StudsPerTile 8, Color3 white. Interior walls and the boss room walls: the
+same id, Color3 about #D2D2D2 (a bit darker). Ceilings, trims (#3468B4), crenels / spires (#96D6FA), crystal facets,
+floors and the V panels stay plain.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

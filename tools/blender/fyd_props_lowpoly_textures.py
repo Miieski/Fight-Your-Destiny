@@ -120,6 +120,7 @@ BOSS_ROOM_BRICK = [
     "\t\tdesert_frieze_strip_light = \"rbxassetid://136050815206922\",",
     "\t\tdesert_marble_floor = \"rbxassetid://79394360532493\", -- 512 px = 28 x 28 studs (4 x 4 slabs of 7 studs)",
     "\t\tjungle_flagstone_floor = \"rbxassetid://75902858063767\", -- 512 px = 24 x 24 studs (rows of 6 studs)",
+    "\t\ttundra_ice_brick = \"rbxassetid://81297179264826\", -- round 7: ice castle walls, 8 x 8 studs (blocks 4 x 2)",
     "\t},",
 ]
 

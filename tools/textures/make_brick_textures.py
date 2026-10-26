@@ -69,7 +69,7 @@ def brick(draw, x0, y0, w, h, base, rng, cracks=True):
 		draw.polygon([(cx, cy), (cx + dx, cy), (cx, cy + dy)], fill=dark)
 
 
-def bricks(path_name, palette, joint, seed, row_filter=None, size=(TILE, TILE), alpha=False, row_colour=None):
+def bricks(path_name, palette, joint, seed, row_filter=None, size=(TILE, TILE), alpha=False, row_colour=None, cracks=True):
 	"""Running bond. palette = list of brick colours (picked per brick with a little extra jitter).
 	row_filter(row) -> paint this row? (None = all rows). row_colour(row, col, rng) overrides the colour."""
 	rng = random.Random(seed)
@@ -93,7 +93,7 @@ def bricks(path_name, palette, joint, seed, row_filter=None, size=(TILE, TILE), 
 				xs = x0 + shift
 				if xs + BW - JOINT < 0 or xs >= W:
 					continue
-				brick(draw, xs, y0 + JOINT // 2, BW - JOINT, BH - JOINT, c, random.Random(rng.random()))
+				brick(draw, xs, y0 + JOINT // 2, BW - JOINT, BH - JOINT, c, random.Random(rng.random()), cracks)
 	os.makedirs(OUT, exist_ok=True)
 	img.save(os.path.join(OUT, path_name))
 	return img
@@ -226,6 +226,13 @@ def flagstones(path_name, seed, size=512, rows=4):
 	img.save(os.path.join(OUT, path_name))
 
 
+# ---- Tundra ice castle (round 7): the castle gate's ice blocks as built (PropsTundraGatesData "Gate4": Tower / Wall
+# #54A0E8 x1.06 x tone 1 / 0.93 / 0.86 x height gradient), joints = the gate's deep core #2860AA. One tile for outside
+# and inside; the interior walls take a darker Color3.
+ICE = [hexrgb(h) for h in ("#4D93D5", "#4889C6", "#539EE5", "#4D93D5", "#4788C5", "#427EB7")]
+ICE_JOINT = hexrgb("#2860AA")
+
+
 def main():
 	os.makedirs(OUT, exist_ok=True)
 	bricks("desert_brick.png", DESERT, DESERT_JOINT, 11)
@@ -242,6 +249,7 @@ def main():
 		size=(TILE, 1024), alpha=True, row_colour=lambda r, c, rng: FRIEZE[c % 2])
 	marble("desert_marble_floor.png", 31)
 	flagstones("jungle_flagstone_floor.png", 41)
+	bricks("tundra_ice_brick.png", ICE, ICE_JOINT, 51, cracks=False)  # ice: chips only, no dark cracks
 	print("written to", OUT)
 
 
