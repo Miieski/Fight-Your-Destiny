@@ -1,5 +1,17 @@
 # ROUND 5 DECISIONS (owner prompt "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26) - newest first
 
+- Round 5 ground lock (Studio agent): docs/preview_ground_snapshot.json = the 13 owner-coloured ByZone ground parts (path,
+  Color, Material, Size, CFrame at %.9g) + the place of every sample / label / sign (1462 items) to prove nothing moves.
+  BuildAssetPreview never recreates, resizes, moves or recolours an existing "Ground" (OwnerLocked = true on all 13);
+  blocks are never shifted any more (a block that grows is only reported); plates (title, row headers, labels) are
+  placed once and later builds refresh only text and colour; each asset keeps its slot (label attributes SlotX /
+  SlotFront), and B.SLOT_ALIAS lets an asset take over the slot of the one it replaces (cart <- hub_vehicle_cart_a).
+  Proof: build Hub, then all 13 blocks: 0 differences against the snapshot.
+- Round 5 Task 1 sources (Studio agent): ServerStorage.Enemies / Bosses hold no imported model (only _Placeholder),
+  so every enemy, mini-boss and boss of the game is the part-built rig EnemyService clones today
+  (Lib/EnemyRigs.build(def), Config/Enemies); hub NPCs = ServerStorage.NPCs.<id> when imported (blacksmith, gem
+  merchant, trophy merchant) else the same placeholder rig NPCService builds (Config/NPCs). No zone has placed NPCs
+  (0 Humanoid / AnimationController in Hub, Zones, BossArenas); the guard figures of the jungle gate are gate props.
 - The prompt is saved as docs/Round5_Asset_Fixes/PROMPT_ROUND5.txt; the 20 chat images as docs/Round5_Asset_Fixes/01..20
   (named after what they show). Backup before_round5 first.
 - Order: ground snapshot + OwnerLocked guard in BuildAssetPreview (before ANY rebuild) -> Task 1 (NPCs / enemies,
@@ -3634,3 +3646,9 @@ block per zone in game order, SMALL / MEDIUM / LARGE rows, labels, Zone + SizeCl
 only (IsPreviewSample, no scripts / prompts / emitters / sounds, not reachable by players), docs/asset_preview_index.md
 + .json, the "every new asset goes in the preview" rule added to prop_inventory, HANDOFF and DESIGN. Map instances get
 only the tag and attributes, nothing else.
+
+# ROUND 5 - asset preview NPCs / enemies, special fixes, image fixes (2026-10-26)
+
+- Step 0 DONE: ground snapshot docs/preview_ground_snapshot.json (13 grounds, 1462 placed items); BuildAssetPreview
+  ground / block / plate / slot lock (tools/BuildAssetPreview.luau 53460 / 8ee37f91ad5a78c0); build Hub then all
+  blocks: 0 differences; OwnerLocked on 13 grounds.

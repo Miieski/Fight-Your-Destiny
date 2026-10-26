@@ -65,6 +65,10 @@ local SKIP_FOLDERS = {
 	FloorSections = "arena floor sections (zone floor)", -- the Void boss arena floor (Section1..8)
 }
 
+-- an asset that replaces another one in the map takes over its preview slot (round 5: the improved cart in the place of
+-- the old hub cart samples)
+B.SLOT_ALIAS = { cart = "hub_vehicle_cart_a" }
+
 -- quality of the templates made before round 4 that are NOT finished (docs/prop_inventory.md); every other older
 -- template is "improved", every template made by this tool is "old" (captured as it is in the map)
 B.QUALITY = {}
@@ -876,13 +880,14 @@ end
 
 local function plate(parent: Instance, name: string, size: Vector3, cf: CFrame, color: Color3, text: string, textSize: number?): Part
 	local p = parent:FindFirstChild(name) :: Part?
+	local fresh = false
 	if not p or not p:IsA("Part") then
 		if p then
 			p:Destroy()
 		end
 		p = Instance.new("Part")
 		p.Name = name
-		p.Parent = parent
+		fresh = true
 	end
 	local part = p :: Part
 	part.Anchored = true
@@ -891,8 +896,13 @@ local function plate(parent: Instance, name: string, size: Vector3, cf: CFrame, 
 	part.CastShadow = false
 	part.Material = Enum.Material.SmoothPlastic
 	part.Color = color
-	part.Size = size
-	part.CFrame = cf
+	if fresh then
+		-- (placed once: owner round 5, the existing blocks, labels and signs keep their positions; later builds only
+		-- refresh the text and the colour)
+		part.Size = size
+		part.CFrame = cf
+		part.Parent = parent
+	end
 	local gui = child(part, "Text", "SurfaceGui") :: SurfaceGui
 	gui.Face = Enum.NormalId.Front
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
@@ -1024,10 +1034,17 @@ function B.build(zoneId: string, plan: any?): string
 				lineDepth = 0
 			end
 			local cx = cursor - slotW / 2
+			local front = rowFront
 			cursor -= slotW + gap
 			minX = math.min(minX, cursor)
 			lineDepth = math.max(lineDepth, d)
-			local cz = rowFront + d / 2
+			-- an asset keeps its slot (its label's place), or takes over the slot of the asset it replaces
+			local held = labels:FindFirstChild(a.id) or (B.SLOT_ALIAS[a.id] and labels:FindFirstChild(B.SLOT_ALIAS[a.id]))
+			if held and held:IsA("BasePart") then
+				cx = held:GetAttribute("SlotX") or held.Position.X
+				front = held:GetAttribute("SlotFront") or (held.Position.Z + 2.5)
+			end
+			local cz = front + d / 2
 			local center = Vector3.new((mn.X + mx.X) / 2, mn.Y, (mn.Z + mx.Z) / 2) * k
 			local pivot = CFrame.new(cx - center.X, -center.Y, cz - center.Z) * rot
 			wanted[a.id] = true
@@ -1087,7 +1104,9 @@ function B.build(zoneId: string, plan: any?): string
 			local copies = a.zones[zoneId] or 0
 			local lw = math.clamp(slotW, 7, 26)
 			local text = `<b>{a.id}</b>\nx{copies} in zone - {a.quality}`
-			plate(labels, a.id, Vector3.new(lw, 2.4, 0.3), CFrame.new(cx, 1.4, rowFront - 2.5) * CFrame.Angles(math.rad(25), 0, 0), QUALITY_COLOR[a.quality] or QUALITY_COLOR.old, text)
+			local label = plate(labels, a.id, Vector3.new(lw, 2.4, 0.3), CFrame.new(cx, 1.4, front - 2.5) * CFrame.Angles(math.rad(25), 0, 0), QUALITY_COLOR[a.quality] or QUALITY_COLOR.old, text)
+			label:SetAttribute("SlotX", cx)
+			label:SetAttribute("SlotFront", front)
 		end
 		rowFront += lineDepth + 22
 	end
@@ -1140,15 +1159,24 @@ function B.build(zoneId: string, plan: any?): string
 	-- title sign + ground
 	local title = `<b>{string.upper(z.name)}</b>\n{z.biome}\n{placed} assets - {oldCount} still old`
 	plate(signs, "Title", Vector3.new(110, 30, 1), CFrame.new(x0 + 75, 16, z0 + 8), Color3.fromRGB(28, 32, 44), title)
-	local ground = child(block, "Ground", "Part") :: Part
-	ground.Anchored = true
-	ground.CanTouch = false
-	ground.CanCollide = true
-	ground.Material = Enum.Material.SmoothPlastic
-	ground.Color = if z.order % 2 == 0 then Color3.fromRGB(92, 96, 104) else Color3.fromRGB(104, 100, 94)
+	-- the ground is the owner's (round 5: he recoloured each block to match its zone, snapshot
+	-- docs/preview_ground_snapshot.json): an existing ground part is never recreated, resized, moved or recoloured
 	local gx0, gx1 = minX - 10, x0 + 140
-	ground.Size = Vector3.new(gx1 - gx0, 1, zEnd - z0 + 10)
-	ground.CFrame = CFrame.new((gx0 + gx1) / 2, -0.5, (z0 - 5 + zEnd + 5) / 2)
+	local ground = block:FindFirstChild("Ground")
+	if not (ground and ground:IsA("BasePart")) then
+		local g = Instance.new("Part")
+		g.Name = "Ground"
+		g.Anchored = true
+		g.CanTouch = false
+		g.CanCollide = true
+		g.Material = Enum.Material.SmoothPlastic
+		g.Color = if z.order % 2 == 0 then Color3.fromRGB(92, 96, 104) else Color3.fromRGB(104, 100, 94)
+		g.Size = Vector3.new(gx1 - gx0, 1, zEnd - z0 + 10)
+		g.CFrame = CFrame.new((gx0 + gx1) / 2, -0.5, (z0 - 5 + zEnd + 5) / 2)
+		g.Parent = block
+		ground = g
+	end
+	;(ground :: Instance):SetAttribute("OwnerLocked", true)
 	block:SetAttribute("BlockStartZ", z0 - 5)
 	block:SetAttribute("BlockEndZ", zEnd + 5)
 	block:SetAttribute("Zone", zoneId)
@@ -1160,30 +1188,12 @@ function B.build(zoneId: string, plan: any?): string
 			nextBlock = root:FindFirstChild(blockName(other))
 		end
 	end
+	-- (round 5: blocks are never moved any more; a block that grew into the next one is only reported)
 	if nextBlock then
 		local need = (zEnd + 5 + Settings.BLOCK_GAP) - ((nextBlock:GetAttribute("BlockStartZ") :: number) + 5) -- (front z of the next block)
-		if math.abs(need) > 0.01 then
+		if need > 0.01 then
 			shift = need
-			for _, other in ipairs(zones) do
-				local b = if other.order > z.order then root:FindFirstChild(blockName(other)) else nil
-				if b then
-					for _, d in ipairs(b:GetDescendants()) do
-						if d.Parent and (d.Parent.Name == "Samples" or d.Parent.Name == "Labels" or d.Parent.Name == "Signs") then
-							if d:IsA("Model") then
-								d:PivotTo(d:GetPivot() + Vector3.new(0, 0, shift))
-							elseif d:IsA("BasePart") then
-								d.CFrame += Vector3.new(0, 0, shift)
-							end
-						end
-					end
-					local g = b:FindFirstChild("Ground") :: BasePart?
-					if g then
-						g.CFrame += Vector3.new(0, 0, shift)
-					end
-					b:SetAttribute("BlockStartZ", (b:GetAttribute("BlockStartZ") :: number) + shift)
-					b:SetAttribute("BlockEndZ", (b:GetAttribute("BlockEndZ") :: number) + shift)
-				end
-			end
+			table.insert(lines, `  WARNING: this block now reaches {need} studs into the gap before {nextBlock.Name} (nothing moved)`)
 		end
 	end
 	local parts = 0
@@ -1192,7 +1202,7 @@ function B.build(zoneId: string, plan: any?): string
 			parts += 1
 		end
 	end
-	table.insert(lines, `{placed} samples ({created} created, {moved} moved / rescaled, {removed} stale removed), {parts} sample parts, block z {z0 - 5}..{zEnd + 5}, x {gx0}..{gx1}` .. (if shift ~= 0 then `; later blocks shifted {shift}` else ""))
+	table.insert(lines, `{placed} samples ({created} created, {moved} moved / rescaled, {removed} stale removed), {parts} sample parts, block z {z0 - 5}..{zEnd + 5}, x {gx0}..{gx1}` .. (if shift ~= 0 then `; overlap {shift}` else ""))
 	if #missing > 0 then
 		table.insert(lines, "  no template (no sample): " .. table.concat(missing, ", "))
 	end
