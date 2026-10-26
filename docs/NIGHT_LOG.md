@@ -1,5 +1,9 @@
 # NIGHT RUN DECISIONS (round 4, owner asleep, 2026-10-25/26) - newest first
 
+- Round 4: the Void boss arena FloorSections (Section1..8) are the arena floor = zone floor, NOT assets (excluded; the
+  8 templates made by mistake removed, the floor copies restored to their exact attributes).
+- Round 4: a sample stands like its zone's copies: when most copies lie on a tilted pivot (Void distant islands, hub
+  planters), the sample takes the first tilted copy's rotation, else it stands upright.
 - Round 4: the Volcano zone's "Volcano" Landmark (the 400-stud mountain) is kept as an asset: it is a separate model
   (owner: big distinct rock formations that are separate models count); the floors / mountains made of loose parts do not.
 - Round 4 layout tweak: Config ROW_MAX = 700 studs (a 1400-stud row could not be framed in one screenshot).
@@ -3585,6 +3589,19 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   sludge channel, hub sign, screen wall, warning sign, energy pillar); 353 copies tagged + 706 attributes; check 0;
   compare 6106 -> 6106, 0 changed; full dry run 0 (585 / 13655); tag / build again 0. Not assets: 29 loose-part
   folders. Shot 11_Mechanical.jpg.
+- 12 Void DONE: 42 assets (S 1 / M 16 / L 25), 772 copies; 41 new templates (void_*: floating bridge, stairs to nowhere,
+  broken voyager tower, ruin wall, 3 sub-zone gates, boss gate, arena door, entry arch, ruin arch, landmarks crystal
+  pillar / crystal tree / dragon altar (arena) / floating tower, lantern post, glow plant, crystal cage (arena), crystal
+  cluster, arena crystal pillar, floating crystal shard, large crystal spire, 2 floating rocks, island rock, obsidian
+  block cluster, tall obsidian pillar, 3 pale stone rocks, rubble pile, rune stone, reaper altar (arena), voyager statue,
+  3 crystal trees, 4 distant island variants (hosts)); 772 copies tagged; check 0; compare 14501 -> 14501, 0 changed;
+  full dry run 0 (626 templates / 14476 copies); tag / build again 0. FIX: the 8 arena floor sections
+  (BossArenas.Void.FloorSections.Section1..8, the arena floor) had been captured as void_prop_section_1..8: excluded
+  (folder FloorSections = zone floor), their tag + the 4 added attributes removed (their own EndAngle / InnerRadius /
+  OuterRadius / StartAngle kept), the 8 templates and samples deleted. Tilted samples: an asset whose zone copies mostly
+  lie on a tilted pivot (Void distant islands, hub planters) now gets the copy's rotation (all 13 blocks rebuilt, 14
+  samples turned, rebuild again 0). Not assets: 22 loose-part folders. Shot 12_Void.jpg.
+- ALL ZONES: 705 zone assets, 622 distinct; audit after the run: 0 untagged copies in every zone.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone

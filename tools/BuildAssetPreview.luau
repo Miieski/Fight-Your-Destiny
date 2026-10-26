@@ -19,7 +19,8 @@
 	1. Walks each zone: workspace.Hub, workspace.Zones.<Id> (sub-zone folders) and the zone's boss arena
 	   (ServerStorage.BossArenas.<Id>). Candidates are the Models found through folders (and the outermost models inside
 	   an untagged candidate, which become nested props when they match an asset). Skipped: folders Spawns, Bounds,
-	   VFX, MapFix, Portals, NoClimb (spawn points, invisible walls, emitters, map fixes, triggers), characters
+	   VFX, MapFix, Portals, NoClimb, FloorSections (spawn points, invisible walls, emitters, map fixes, triggers, the
+	   Void arena floor), characters
 	   (a Humanoid inside), invisible / collision-only models; loose parts (terrain, ground, water, mountains, floors)
 	   are map geometry, listed per folder in the report, never assets.
 	2. Groups identical objects into one asset: MapPropId when tagged, otherwise the signature name (Landmark: its
@@ -61,6 +62,7 @@ local SKIP_FOLDERS = {
 	MapFix = "map fixes (hole closures, foot skirts)",
 	Portals = "portal triggers",
 	NoClimb = "collision shells",
+	FloorSections = "arena floor sections (zone floor)", -- the Void boss arena floor (Section1..8)
 }
 
 -- quality of the templates made before round 4 that are NOT finished (docs/prop_inventory.md); every other older
@@ -912,11 +914,40 @@ local function plate(parent: Instance, name: string, size: Vector3, cf: CFrame, 
 	return part
 end
 
--- template bounds in its own (pivot = identity) space
-local function templateBounds(template: Model): (Vector3, Vector3)
-	local info = measure(template)
+-- template bounds (pivot = identity) once turned by rot, at Model scale 1
+local function templateBounds(template: Model, rot: CFrame): (Vector3, Vector3)
 	local s = template:GetScale()
-	return info.min / s, info.max / s
+	local inv = template:GetPivot():Inverse()
+	local x0, y0, z0, x1, y1, z1 = math.huge, math.huge, math.huge, -math.huge, -math.huge, -math.huge
+	for _, d in ipairs(template:GetDescendants()) do
+		if d:IsA("BasePart") then
+			local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = (rot * inv * d.CFrame):GetComponents()
+			local hx, hy, hz = d.Size.X / 2, d.Size.Y / 2, d.Size.Z / 2
+			local ex = math.abs(r00) * hx + math.abs(r01) * hy + math.abs(r02) * hz
+			local ey = math.abs(r10) * hx + math.abs(r11) * hy + math.abs(r12) * hz
+			local ez = math.abs(r20) * hx + math.abs(r21) * hy + math.abs(r22) * hz
+			x0, y0, z0 = math.min(x0, x - ex), math.min(y0, y - ey), math.min(z0, z - ez)
+			x1, y1, z1 = math.max(x1, x + ex), math.max(y1, y + ey), math.max(z1, z + ez)
+		end
+	end
+	return Vector3.new(x0, y0, z0) / s, Vector3.new(x1, y1, z1) / s
+end
+
+-- the sample stands like the zone's copies: when most of them are tilted (a pivot lying on its side, e.g. the Void
+-- distant islands or the hub planters), the sample takes the rotation of the first tilted copy; otherwise upright
+local function sampleRotation(a: any, zoneId: string): CFrame
+	local n, tilted, first = 0, 0, nil
+	for _, m in ipairs(a.members) do
+		if m.zone == zoneId then
+			n += 1
+			local pivot = (m.inst :: any):GetPivot()
+			if pivot.UpVector.Y < 0.9 then
+				tilted += 1
+				first = first or pivot.Rotation
+			end
+		end
+	end
+	return if first and tilted * 2 > n then first else CFrame.identity
 end
 
 local function blockStart(root: Folder, z: any, zones: { any }): number
@@ -982,7 +1013,8 @@ function B.build(zoneId: string, plan: any?): string
 		for _, it in ipairs(items) do
 			local a, template = it.a, it.template
 			local k = zoneScale(a, zoneId)
-			local mn, mx = templateBounds(template)
+			local rot = sampleRotation(a, zoneId)
+			local mn, mx = templateBounds(template, rot)
 			local w, d = (mx.X - mn.X) * k, (mx.Z - mn.Z) * k
 			local gap = math.clamp(0.3 * math.max(w, d), 4, 40)
 			local slotW = math.max(w, 7)
@@ -997,7 +1029,7 @@ function B.build(zoneId: string, plan: any?): string
 			lineDepth = math.max(lineDepth, d)
 			local cz = rowFront + d / 2
 			local center = Vector3.new((mn.X + mx.X) / 2, mn.Y, (mn.Z + mx.Z) / 2) * k
-			local pivot = CFrame.new(cx - center.X, -center.Y, cz - center.Z)
+			local pivot = CFrame.new(cx - center.X, -center.Y, cz - center.Z) * rot
 			wanted[a.id] = true
 			local want = Sync.versionOf(template, nil)
 			local sample = nil
@@ -1040,7 +1072,7 @@ function B.build(zoneId: string, plan: any?): string
 					sample:ScaleTo(k)
 					moved += 1
 				end
-				if (sample:GetPivot().Position - pivot.Position).Magnitude > 0.01 then
+				if not sample:GetPivot():FuzzyEq(pivot, 0.001) then
 					sample:PivotTo(pivot)
 					moved += 1
 				end
