@@ -3667,3 +3667,7 @@ only the tag and attributes, nothing else.
   checkCharacters 0 problems, ground / layout compare 0). Shots chars_04_Tundra / 05_Swamp / 06_Volcano / 07_Hell.jpg
   (screen_capture times out every second call and a new SurfaceGui text shows only on the second render: each shot
   is taken twice).
+- Task 1, zones 08-12 DONE (Heaven, Dead, Abyss, Mechanical, Void: 14 generic placeholder rigs each, "to redo"). Shots
+  chars_08_Heaven / 09_Dead / 10_Abyss / 11_Mechanical / 12_Void.jpg (priming the Scriptable camera 4 s before the
+  capture avoids the double shot). TASK 1 DONE: 176 character samples (8 NPCs + 168 enemies), all inert, all in the
+  index.
