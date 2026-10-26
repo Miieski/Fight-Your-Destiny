@@ -1437,6 +1437,39 @@ Owner fix (same day): desert walls / ceilings / frieze on the light ids, desert 
 floors flagstones (24-stud tile), jungle walls unchanged; textures only, except the owner-approved +0.04 raise of 23
 Desert_4 floor strips and 3 desert arena centre discs (prop_texture_guide G2). Per-room compare: 0 changes otherwise.
 
+### Round 6 Assets (owner, "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS", 2026-10-26)
+
+Builders in `tools/PropsRound6.luau` (DevTools.PropsRound6, section "Round 6 assets"); each one installs its template
+(old one in MapProps._Previous) and `SyncMapProps.run` replaced every copy. Collision: every part that collided before
+stays (invisible "Collision", same class, size and place), compared against _Previous; the visible pieces never
+collide. Before / after shots (preview sample + one map placement, same camera): `docs/screenshots/round6_assets/`.
+Final dry run: 626 templates, 14475 copies, 0 to replace.
+
+| # | id | base / recipe | parts (colliding) | size | version | replaced | collision vs today |
+|---|---|---|---|---|---|---|---|
+| 01 | plains_gate_boss_gate | P.plainsBossGate: cut blue stone (stoneBox), carved lintel, cornice, door frames | 68 (15) | 58.0 x 48.1 x 27.0 | 12014fc1 | 2 / 2 | 15 / 15, 0 diff |
+| 02 | hub_light_campfire_a | P.campfire: faceted stones, bark logs, layered flame; Variants Desert / Jungle / Tundra / Volcano / Swamp | 22 (10) | 7.0 x 3.4 x 7.1 | 5a9624b7 | 16 / 16 | 10 / 10, 0 diff |
+| 03 | cottage_two_windows | P.cottageShutters: shutters only, 0.5 out over the beams, hinge straps | 53 (41) | 26.0 x 27.5 x 24.0 | c893e7b2 | 6 / 6 | 0 structural changes (52 other parts) |
+| 04 | cottage_one_window | same | 56 (43) | 32.0 x 30.5 x 28.0 | 8c889379 | 4 / 4 | 0 structural changes (55 other parts) |
+| 05 | plains_gate_door | P.plainsArenaDoor: blue stone frame, carved double door on both faces | 22 (10) | 46.0 x 42.0 x 19.5 | 5412159e | 2 / 2 | 10 / 10, 0 diff |
+| 06 | plains_prop_mine_support | P.mineSupport: timber frame, fish plates, brackets, lantern hook | 19 (10) | 28.6 x 19.4 x 3.8 | 53faeeb8 | 9 / 9 | 10 / 10, 0 diff |
+| 07 | jungle_bridge_rope_bridge_section | P.ropeBridge: PropsDocks boards / round posts, sagging rope rails, vines | 20 (9) | 16.2 x 5.6 x 20.2 | a416184e | 3 / 3 | 9 / 9, 0 diff |
+| 08 | jungle_bridge_floating_dock_a | P.floatingDock: boards, banded barrel floats, rope rail | 18 (5) | 12.0 x 6.9 x 16.0 | 5a1c5158 | 2 / 2 | 5 / 5, 0 diff |
+| 09 | jungle_landmark_giant_tree | P.giantTree: PropsSwampTrees recipe at landmark scale, mask kept (visible, owner) | 73 (44) | 97.1 x 127.0 x 96.5 | 3c7b133a | 2 / 2 | 44 / 44, 0 diff; PivotPart replaces the canopy PrimaryPart |
+| 10 | tundra_light_blue_torch_wall | P.tundraTorch: B4.wall_torch in tundra colours ("/" bar, cup on top) | 9 (3) | 1.2 x 4.3 x 2.3 | 4d3eaae5 | 23 / 23 | 3 / 3, 0 diff |
+| 11 | tundra_landmark_frozen_tree | P.frozenTree: twisted trunk, gnarled branches, 38 faceted icicles, crystals | 43 (32) | 47.8 x 77.0 x 48.3 | c8cc426c | 2 / 2 | 32 / 32, 0 diff; PivotPart replaces the ice shell PrimaryPart |
+| 12 | swamp_landmark_giant_cauldron | P.giantCauldron: swamp_cauldron recipe at landmark scale | 55 (24) | 59.0 x 35.0 x 52.0 | fa2ae991 | 2 / 2 | 24 / 24, 0 diff |
+| 13 | swamp_furniture_crate | P.swampCrate: the improved crate in rotten wood, moss, mud | 50 (9) | 4.5 x 4.2 x 4.5 | 6cdd4c90 | 3 / 3 | 9 / 9, 0 diff |
+| 14 | swamp_fence_fence | P.swampFence: B4.fence_section in rotten wood, bent posts, moss, mud | 9 (4) | 8.7 x 4.3 x 1.6 | f4a0f015 | 9 / 9 | 4 / 4, 0 diff (joins every 8) |
+| 15 | swamp_sign_hub_sign | P.swampSign: the sign board recipe in rotten wood; GUI carrier Board; Variants Heaven / Dead | 12 (4) | 6.0 x 6.8 x 2.0 | 74ea9c24 | 6 / 6 | 3 kept + the board collider every copy had (3 -> 4) |
+| 16 | swamp_statue_bone_pile | P.swampBonePile: the improved skull_bones meshes in dirty bone, moss, slime | 6 (0) | 6.4 x 2.9 x 6.0 | 0b212c0d | 2 / 2 | 0 / 0 (never collided) |
+| 17 | swamp_gate_boss_gate | P.swampBossGate: purple stone ring, woven branch frame, magenta swirl, carved posts | 45 (19) | 46.5 x 52.5 x 12.0 | 34cb0eb0 | 2 / 2 | 19 / 19, 0 diff; Interact prompt kept |
+| 18 | swamp_gate_door | P.swampArenaDoor: plank door on both faces, twisted posts, rotten lintel | 27 (6) | 41.1 x 25.2 x 7.6 | b46f8bd2 | 2 / 2 | 6 / 6, 0 diff; Panel collider first (Leave prompt) |
+
+Notes: the stoneBox helper's side faces were turned the right way round during 05 (01 rebuilt with it, unchanged
+collision). BuildAssetPreview: the 18 ids are "improved" in B.QUALITY; preview samples may now keep a template Variant
+(only the version part of MapPropVersion is compared), so the campfire and hub sign samples show their zone's look.
+
 ### crate - `Crate_A` (base variant, 30 copies identical; Abyss "Sunken" = same geometry, other colours)
 - bbox 4.00 x 4.00 x 4.00, centre (0, 2, 0). No PrimaryPart. 9 Parts (Block), SmoothPlastic, all CanCollide/CanQuery/CastShadow on.
 - Body 3.7 cube (214,150,92); bottom and top slabs 4 x 0.5 x 4 (168,98,56); 4 corner posts 0.5 x 3 x 0.5 at (+-1.75, 2, +-1.75) (168,98,56); 2 diagonal braces 0.5 x 4.1 x 0.15 at z +-1.9, roll +-45 (168,98,56).

@@ -1,6 +1,23 @@
 # ROUND 6 FIX + ROUND 6 ASSETS DECISIONS (owner prompts "SMALL FIX ... TEXTURES OF SUB-ZONE 4 AND BOSS ROOM" and
 # "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS", 2026-10-26) - newest first
 
+- Round 6 assets (Studio agent): BuildAssetPreview samples may now keep a template Variant (MapPropVersion
+  "<version>|<variant>": only the version part is compared), otherwise every B.build reset the campfire and hub sign
+  samples to the default look. B.QUALITY: the 18 ids "improved".
+- 15 swamp_sign_hub_sign: every map copy carried its own colliding Board (not in the template); the new template has
+  that board collider (3 -> 4 colliders, same box), the visible Board is an invisible GUI carrier (as sign_board). The
+  sync's same-name rule dropped each copy's Back-face SurfaceGui: re-added from the Front one on the 3 map copies.
+  Heaven / Dead copies keep today's colours (Variants).
+- 16 swamp_statue_bone_pile: today's pile never collided; the improved skull_bones meshes come without its skull
+  collider (0 colliders, as today).
+- 09 jungle_landmark_giant_tree: the OWNER keeps the whole tribal mask visible (it was hidden in a trunk corner today);
+  bark lightened to today's trunk browns (main's request). 09 / 11: today's PrimaryPart was a non-colliding canopy /
+  ice-shell mesh that is rebuilt: an invisible PivotPart keeps the pivot (the sync skips a template without one).
+- 05: the stoneBox helper's side faces pointed inward (blocks 0.05 - 0.55 off the side, bevels inside); fixed and 01
+  rebuilt with it (collision 15 / 15, size unchanged).
+- 03 / 04 cottages: the shutters only (0.5 stud out, over the beams, hinge straps); the batch-4 builder is deterministic
+  so its Timber / Plaster / Stone / Roof were checked equal to the template before the swap; 0 structural changes.
+
 - Round 6 fix R1 (Studio agent): OWNER APPROVED in chat (relayed by main) raising the thin decorative floor strips of
   Desert_4 so the floor texture stops drawing over them from about 30 studs (they sat 0.05 above the floor top; parts
   0.07+ above were fine). Raised +0.04 studs, CanCollide false on all (none skipped), nothing else changed:
@@ -4097,3 +4114,28 @@ only the tag and attributes, nothing else.
   16 swamp_statue_bone_pile (P.swampBonePile): the improved skull_bones meshes in dirty bone, moss, green slime drips
      and a pool; no collider as today (0 / 0); replaced 2/2; footprint 6.44 x 5.76 -> 6.4 x 6.0.
   Shots round6_assets/13_swamp_crate_*, 14_swamp_fence_*, 15_swamp_sign_*, 16_swamp_bone_pile_*.
+- ASSET 17 swamp_gate_boss_gate DONE (P.swampBossGate): 14 bevelled purple stone blocks with joints and moss, a woven
+  frame of 12 twisted branches with rope lashings and small bones, 8 gnarled spiral branches, a swirl of 5 glowing
+  magenta arms on the dark centre round today's rune (kept exactly, PointLight too), 4 tall rotten posts with carved
+  tops (collar + pointed cap inside today's length) and rope, ghost mushrooms and mud at the feet. Colliding 19 / 19
+  (stone ring, door disc, side roots), 0 differences; the gate stays the teleport gate: Interact + ProximityPrompt kept
+  on the map copy by the sync; replaced 2/2; 45.7 x 52.5 x 12 -> 46.5 x 52.5 x 12. Shots round6_assets/17_*.
+- ASSET 18 swamp_gate_door DONE (P.swampArenaDoor): plank door on both faces (rotten tones, cracks, 2 riveted straps,
+  hinges, ring handles on the back), 4 twisted rotten posts with moss rings and mud, a rotten lintel beam with cracks,
+  moss and hanging moss, rope lashings, iron frames round the 2 lanterns (Neon + PointLights kept), the skull knocker
+  kept, ghost mushrooms. Colliding 6 / 6, 0 differences; the Panel collider stays the first part (Leave prompt);
+  BossService fades / un-collides every part of the Door when open; replaced 2/2 (arena + preview; the third was the
+  temporary arena copy for the shot, deleted); 41.1 x 25.2 x 7.25 -> 41.1 x 25.2 x 7.6. Shots round6_assets/18_*.
+- ROUND 6 ASSETS END CHECKS: 18 / 18 done (shots docs/screenshots/round6_assets/01..18_*). Preview zones Hub, Plains,
+  Desert, Jungle, Tundra, Volcano, Swamp, Heaven, Dead re-built and tagged: B.check 0 problems each, 0 created / moved
+  on the last pass; ground compare 0 differences on the 13 grounds (OwnerLocked 13 / 13); dry run 626 templates /
+  14475 copies, 0 to replace; no temporary module left (PropsBatch4_* 0), temporary arena copies deleted; index
+  regenerated (docs/asset_preview_index.json / .md: the 18 ids "improved"); export 232 scripts, pull x2: 0 written
+  (disk == Studio: PropsRound6.luau, BuildAssetPreview.luau); graphify update done. Docs: prop_inventory.md "Round 6
+  Assets", prop_texture_guide.md G3. Play check: main.
+- Main agent: ROUND 6 FIX + 18 ASSETS PLAY CHECK OK on the iPhone 17 Pro emulator (landscape). Hub 144 fps; Plains,
+  Jungle, Tundra and Swamp 145 fps with the touched props streamed; Desert_4 (14 marble floor textures) and Jungle_4 (5
+  flagstone textures) 144 fps; Plains boss gate "Enter solo" -> arena, door locks (22 parts), Crystal Spider Matriarch
+  + Cave Troll spawn, 145 fps. Swamp boss gate: prompt present, light and 13 glow parts on; the boss room is still
+  "coming soon" (Bosses.PLAYABLE_ZONES = 4, no swamp boss rig) exactly as before, and its 19 colliders are identical to
+  the old template (the ring centre was already open). 0 game errors. Backup after_round6_assets.

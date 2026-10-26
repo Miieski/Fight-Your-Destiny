@@ -3465,6 +3465,19 @@ Rules the tool follows:
   flickers under it from about 30 studs (the texture wins the depth test). Desert_4 Runner, TileLine x20 and RunnerEdge
   x2 and the desert arena's FloorRing / FloorDisc / FloorSun were raised +0.04 (non-colliding, owner-approved).
 
+### G3. Round 6 assets (2026-10-26): colours used (tools/PropsRound6.luau)
+
+- **Blue stone family (01, 05):** stone #686E7C, dark core / joints #3E3C4E, light #969CA8, glows kept #5AE6FF.
+- **Campfire (02):** stones #969CA8 / #686E7C (Desert #D5B37C / #B89262, Jungle #7A8272 + moss #589642, Tundra
+  #B0BACC / #828CA0 + snow, Volcano #544A4C / #383032, Swamp #5C6050 / #46483C), bark #70462A, flame #FF6E1E / #FFAA32
+  / #FFECA0 (Neon).
+- **Jungle wood (07, 08):** boards #AA643A / #D0925A, posts #70462A, rope #C4A068, moss #589642, vine #3E7630.
+- **Bark (09, 11):** giant tree today's trunk browns #68442C x1.14 / 1.27 / 1.4 up the trunk, grooves 0.78 of the
+  section; frozen tree #503A2E with snow #F4F8FF and glass icicles / crystals.
+- **Tundra torch (10):** iron #344268, bar #96ACC4, wrap #405078, flame #3CAAFF / #6ED2FF / #C8F0FF, Ember #60BEFF.
+- **Swamp rot (13 - 18):** rot() = saturation x0.72, value x0.66, lerp 22 % to #3A3E28; moss #3F7A2C / top #60963A,
+  mud #3A2A1C, slime #78B034, rope #96805A, rusty iron #60544A; swamp gate stone #766896 / #5C527A, glow #AA50FF.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

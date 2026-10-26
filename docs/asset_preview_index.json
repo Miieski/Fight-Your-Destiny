@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T09:14:29Z",
+ "generated": "2026-10-26T13:48:31Z",
  "zones": [
   {
    "characters": [
@@ -439,14 +439,14 @@
      "resizedParts": 0,
      "propId": "hub_light_campfire_a",
      "instances": 1,
-     "largest": 6.8,
+     "largest": 9.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -1489,7 +1489,7 @@
      "resizedParts": 0,
      "propId": "cottage_one_window",
      "instances": 1,
-     "largest": 55.3,
+     "largest": 55.9,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "building",
@@ -1752,14 +1752,14 @@
      "resizedParts": 0,
      "propId": "plains_gate_boss_gate",
      "instances": 1,
-     "largest": 58,
+     "largest": 80,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -1769,14 +1769,14 @@
      "resizedParts": 0,
      "propId": "plains_gate_door",
      "instances": 1,
-     "largest": 46,
+     "largest": 81.4,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -1825,14 +1825,14 @@
      "resizedParts": 0,
      "propId": "hub_light_campfire_a",
      "instances": 2,
-     "largest": 6.8,
+     "largest": 9.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -2264,14 +2264,14 @@
      "resizedParts": 0,
      "propId": "plains_prop_mine_support",
      "instances": 5,
-     "largest": 28.6,
+     "largest": 42.2,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "prop",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 7,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3683,14 +3683,14 @@
      "resizedParts": 0,
      "propId": "hub_light_campfire_a",
      "instances": 4,
-     "largest": 6.8,
+     "largest": 9.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -3915,14 +3915,14 @@
      "resizedParts": 0,
      "propId": "plains_prop_mine_support",
      "instances": 2,
-     "largest": 28.6,
+     "largest": 42.2,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "prop",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 7,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4572,14 +4572,14 @@
      "resizedParts": 0,
      "propId": "jungle_bridge_floating_dock_a",
      "instances": 1,
-     "largest": 16,
+     "largest": 30,
      "ownTint": 0,
-     "sizeClass": "medium",
+     "sizeClass": "large",
      "category": "bridge",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4589,14 +4589,14 @@
      "resizedParts": 0,
      "propId": "jungle_bridge_rope_bridge_section",
      "instances": 2,
-     "largest": 20,
+     "largest": 38.8,
      "ownTint": 0,
-     "sizeClass": "medium",
+     "sizeClass": "large",
      "category": "bridge",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 2,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4810,14 +4810,14 @@
      "resizedParts": 0,
      "propId": "jungle_landmark_giant_tree",
      "instances": 1,
-     "largest": 127,
+     "largest": 171.4,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4883,14 +4883,14 @@
      "resizedParts": 0,
      "propId": "hub_light_campfire_a",
      "instances": 1,
-     "largest": 6.8,
+     "largest": 9.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -6096,7 +6096,7 @@
      "resizedParts": 0,
      "propId": "tundra_gate_boss_gate",
      "instances": 1,
-     "largest": 89.7,
+     "largest": 89,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
@@ -6215,14 +6215,14 @@
      "resizedParts": 0,
      "propId": "tundra_landmark_frozen_tree",
      "instances": 1,
-     "largest": 77,
+     "largest": 111.3,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -6271,14 +6271,14 @@
      "resizedParts": 0,
      "propId": "hub_light_campfire_a",
      "instances": 1,
-     "largest": 6.8,
+     "largest": 9.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -6322,14 +6322,14 @@
      "resizedParts": 0,
      "propId": "tundra_light_blue_torch_wall",
      "instances": 22,
-     "largest": 5.8,
+     "largest": 8.3,
      "ownTint": 0,
-     "sizeClass": "small",
+     "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
-     "newTemplate": true,
+     "newTemplate": false,
      "totalInstances": 22,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7226,14 +7226,14 @@
      "resizedParts": 0,
      "propId": "swamp_fence_fence",
      "instances": 8,
-     "largest": 8,
+     "largest": 11.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "fence",
      "inPreview": true,
-     "newTemplate": true,
+     "newTemplate": false,
      "totalInstances": 8,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7277,14 +7277,14 @@
      "resizedParts": 0,
      "propId": "swamp_furniture_crate",
      "instances": 2,
-     "largest": 4,
+     "largest": 6.1,
      "ownTint": 0,
-     "sizeClass": "small",
+     "sizeClass": "medium",
      "category": "furniture",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 2,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7311,14 +7311,14 @@
      "resizedParts": 0,
      "propId": "swamp_gate_boss_gate",
      "instances": 1,
-     "largest": 52.5,
+     "largest": 76.7,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7328,14 +7328,14 @@
      "resizedParts": 0,
      "propId": "swamp_gate_door",
      "instances": 1,
-     "largest": 41.1,
+     "largest": 55.6,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7396,14 +7396,14 @@
      "resizedParts": 0,
      "propId": "swamp_landmark_giant_cauldron",
      "instances": 1,
-     "largest": 59,
+     "largest": 75.1,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7806,14 +7806,14 @@
      "resizedParts": 0,
      "propId": "swamp_sign_hub_sign",
      "instances": 1,
-     "largest": 6.6,
+     "largest": 9.8,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "sign",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 3,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7881,7 +7881,7 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -8675,14 +8675,14 @@
      "resizedParts": 0,
      "propId": "hub_light_campfire_a",
      "instances": 1,
-     "largest": 6.8,
+     "largest": 9.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "light",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -11102,14 +11102,14 @@
      "resizedParts": 0,
      "propId": "swamp_sign_hub_sign",
      "instances": 1,
-     "largest": 6.6,
+     "largest": 9.8,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "sign",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 3,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -12152,14 +12152,14 @@
      "resizedParts": 0,
      "propId": "swamp_sign_hub_sign",
      "instances": 1,
-     "largest": 6.6,
+     "largest": 9.8,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "sign",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 3,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [

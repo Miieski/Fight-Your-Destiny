@@ -90,6 +90,25 @@ B.QUALITY = {
 	jungle_statue_ruin_pillar_a = "improved", -- 17
 	tundra_gate_boss_gate = "improved", -- 19
 	tundra_gate_door = "improved", -- 20
+	-- round 6 (owner prompt "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS", DevTools.PropsRound6)
+	plains_gate_boss_gate = "improved", -- 01
+	hub_light_campfire_a = "improved", -- 02
+	cottage_two_windows = "improved", -- 03
+	cottage_one_window = "improved", -- 04
+	plains_gate_door = "improved", -- 05
+	plains_prop_mine_support = "improved", -- 06
+	jungle_bridge_rope_bridge_section = "improved", -- 07
+	jungle_bridge_floating_dock_a = "improved", -- 08
+	jungle_landmark_giant_tree = "improved", -- 09
+	tundra_light_blue_torch_wall = "improved", -- 10
+	tundra_landmark_frozen_tree = "improved", -- 11
+	swamp_landmark_giant_cauldron = "improved", -- 12
+	swamp_furniture_crate = "improved", -- 13
+	swamp_fence_fence = "improved", -- 14
+	swamp_sign_hub_sign = "improved", -- 15
+	swamp_statue_bone_pile = "improved", -- 16
+	swamp_gate_boss_gate = "improved", -- 17
+	swamp_gate_door = "improved", -- 18
 }
 
 ---------------------------------------------------------------------
@@ -1080,7 +1099,9 @@ function B.build(zoneId: string, plan: any?): string
 			local sample = nil
 			for _, s in ipairs(samples:GetChildren()) do
 				if s:GetAttribute("MapPropId") == a.id then
-					if sample or s:GetAttribute("MapPropVersion") ~= want then
+					-- (a sample may carry a template Variant, "<version>|<variant>": only the version part counts, round 6)
+					local sv = s:GetAttribute("MapPropVersion")
+					if sample or type(sv) ~= "string" or string.match(sv, "^[^|]*") .. "|" ~= want then
 						s:Destroy() -- (a duplicate, or out of date: rebuilt below)
 					else
 						sample = s

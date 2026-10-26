@@ -22,6 +22,7 @@
 		print(P.frozenTree())         -- R6 11: tundra_landmark_frozen_tree, dead tree in ice
 		print(P.giantCauldron())      -- R6 12: swamp_landmark_giant_cauldron, the swamp cauldron recipe at landmark scale
 		print(P.swampCrate(), P.swampFence(), P.swampSign(), P.swampSignVariants(), P.swampBonePile()) -- R6 13-16: swamp recolours of improved bases
+		print(P.swampBossGate(), P.swampArenaDoor()) -- R6 17 / 18: swamp boss gate (ring portal) and the swamp arena door
 		then Sync.run({ only = { id } }) syncs the copies (map, arena, preview samples).
 	Every builder installs its model with P.install(): the old template goes to ServerStorage.MapProps._Previous.
 ]]
@@ -2172,6 +2173,235 @@ function P.swampSignVariants(): string
 		end
 	end
 	return table.concat(lines, "\n")
+end
+
+---------------------------------------------------------------------
+-- 17 SWAMP BOSS GATE (swamp_gate_boss_gate, Swamp_4.BossGate) and 18 SWAMP ARENA DOOR (swamp_gate_door, the swamp
+-- arena's Door): the improved swamp gates' look (DevTools.PropsSwampGates: rotten 8-sided logs, rope lashings, iron
+-- straps with rivets, moss, mud, ghost mushrooms; the jungle barricade's crossed branches).
+-- 17: today's 14 stone ring blocks as bevelled purple stone blocks with joints and moss caps; today's 12 frame roots
+-- as a woven frame of thick twisted branches with rope lashings where they cross and small bones tied on; today's 8
+-- spiral roots as gnarled branches; a swirl of glowing magenta arms on the dark centre round today's rune (kept exactly,
+-- its PointLight too); today's 4 side roots as tall rotten posts with carved tops (a collar and a pointed cap) and rope;
+-- ghost mushrooms and mud at the post feet. 18: today's panel as a plank door on both faces (boards in rotten tones,
+-- cracks, 2 iron straps with rivets, hinges, ring handles), today's 4 trunks as twisted rotten posts with moss rings,
+-- today's lintel as a rotten beam with moss and hanging moss, rope lashings where it meets the posts, iron frames round
+-- today's 2 lanterns (Neon and PointLights kept), the skull knocker kept, mud and mushrooms at the feet.
+-- Both: every part that collides today stays (invisible "Collision", same place and size); the boss gate stays a
+-- teleport gate (its Interact prompt lives on the map copy and is kept by the sync); the arena door keeps its Panel as
+-- the first part (the Leave prompt) and BossService fades every part of it when it opens, the new ones too.
+---------------------------------------------------------------------
+local SWG = { stone = rgb(118, 104, 150), stone2 = rgb(92, 82, 122), wood = rgb(78, 58, 44), wood2 = rgb(64, 48, 36), rope = rgb(150, 128, 90), bone = rgb(214, 204, 176), iron = rgb(72, 70, 76), glow = rgb(170, 80, 255), mud = rgb(58, 42, 28) }
+
+local function rowsOf(m: Model): { any }
+	local rows = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			table.insert(rows, { inst = c, name = c.Name, cf = c.CFrame, size = c.Size, color = c.Color, collide = c.CanCollide })
+		end
+	end
+	return rows
+end
+
+-- a small bone (a bar with 2 knobs) from a to b
+local function smallBone(list: { BasePart }, rng: Random, a: Vector3, b: Vector3, t: number)
+	local H = lib().H
+	local ST = swampTrees()
+	table.insert(list, H.bar(a, b, t, SWG.bone))
+	for _, e in ipairs({ a, b }) do
+		ST.blob(list, rng, CFrame.new(e), t * 0.75, t * 0.65, t * 0.65, function(): Color3
+			return H.scaled(SWG.bone, 0.95)
+		end)
+	end
+end
+
+-- a mud mound with moss at a foot
+local function footMud(U: any, rng: Random, p: Vector3, a: number)
+	local TB = lib().TB
+	TB.lump(U.Mud, rng, CFrame.new(p.X, p.Y + 0.06, p.Z) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), a, 0.35, a * 0.8, function(n: Vector3): Color3
+		return if n.Y > 0.5 then rgb(70, 52, 34) else SWG.mud
+	end, 0.08)
+	TB.lump(U.Moss, rng, CFrame.new(p.X + rng:NextNumber(-0.3, 0.3) * a, p.Y + 0.3, p.Z + rng:NextNumber(-0.3, 0.3) * a), a * 0.6, 0.16, a * 0.5, mossTone, 0.04)
+end
+
+function P.swampBossGate(): string
+	local id = "swamp_gate_boss_gate"
+	local L = lib()
+	local H, M, TB = L.H, L.M, L.TB
+	local ST = swampTrees()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(61717)
+	H.setBevelSelf(true)
+	local U: any = { Stone = {}, Stone2 = {}, Moss = {}, Frame = {}, Bark = {}, Twigs = {}, Rope = {}, Bones = {}, Posts = {}, Carving = {}, Swirl = {}, Mush = {}, Mud = {} }
+	local rows = rowsOf(m)
+	local C = Vector3.new(0, 13, 0)
+	local nStone = 0
+	for _, r in ipairs(rows) do
+		local c, s = r.cf.Position, r.size
+		if r.collide then
+			toCollision(r.inst)
+		elseif r.name == "RootFrame" or r.name == "RootSpiral" then
+			r.inst:Destroy()
+		end
+		if r.name == "StoneRing" then
+			-- a bevelled purple stone block with joints; moss on the blocks of the upper half
+			nStone += 1
+			local i = nStone % 2
+			table.insert(if i == 0 then U.Stone else U.Stone2, H.chamfered(s - Vector3.new(0.25, 0.25, 0), r.cf, H.scaled(if i == 0 then SWG.stone else SWG.stone2, rng:NextNumber(0.94, 1.06)), { "frontFace", "vertical", "topFrontBack", "bottomFrontBack" }, 0.35))
+			if c.Y > C.Y + 6 then
+				local up = (c - C).Unit
+				TB.lump(U.Moss, rng, H.frameY(c + up * (s.Y / 2 - 0.1) - Vector3.new(0, 0, s.Z / 2 - 0.6), up), rng:NextNumber(1.6, 2.4), 0.3, 0.9, mossTone, 0.08)
+			end
+		elseif r.name == "RootFrame" then
+			-- a thick twisted branch of the woven frame, rope lashings at both ends, sometimes a small bone tied on
+			local a, b = c - r.cf.LookVector * s.Z / 2, c + r.cf.LookVector * s.Z / 2
+			ST.twistedLog(U.Frame, U.Bark, rng, a, b, s.X * 0.45, s.X * 0.38, H.scaled(r.color, rng:NextNumber(1.0, 1.15)))
+			for _, e in ipairs({ a:Lerp(b, 0.12), a:Lerp(b, 0.88) }) do
+				TB.lashing(U.Rope, e, b - a, s.X * 0.45, 3, rng)
+			end
+			if rng:NextNumber() < 0.5 then
+				local mid = a:Lerp(b, 0.5) + (a:Lerp(b, 0.5) - Vector3.new(C.X, C.Y, a.Z)).Unit * (s.X * 0.45) - Vector3.new(0, 0, 0.6)
+				smallBone(U.Bones, rng, mid - Vector3.new(0.6, 0.3, 0), mid + Vector3.new(0.6, 0.3, 0), 0.28)
+			end
+		elseif r.name == "RootSpiral" then
+			local a, b = c - r.cf.LookVector * s.Z / 2, c + r.cf.LookVector * s.Z / 2
+			ST.gnarledBranch(U.Frame, U.Twigs, rng, a, b, s.X * 0.5, H.scaled(r.color, 1.1))
+		elseif r.name == "SideRoot" then
+			-- a tall rotten post (along today's root axis, bottom to top) with a carved top: a collar and a pointed cap
+			local a, b = c - r.cf.LookVector * s.Z / 2, c + r.cf.LookVector * s.Z / 2
+			if a.Y > b.Y then
+				a, b = b, a
+			end
+			local rr = s.X * 0.48
+			local up = (b - a).Unit
+			-- (the carved top stays inside today's root length: the gate keeps its height)
+			local top = b - up * rr * 1.7
+			ST.twistedLog(U.Posts, U.Bark, rng, a, top + up * 0.1, rr, rr * 0.82, H.scaled(r.color, rng:NextNumber(1.05, 1.2)), rng:NextNumber(0, 1), math.rad(10))
+			table.insert(U.Carving, M.frustumN(8, rr * 1.1, rr * 1.1, -0.35, 0.35, H.frameY(top - up * 1.2, up) * CFrame.Angles(0, math.rad(22.5), 0), { SWG.wood2, H.scaled(SWG.wood2, 1.15) }))
+			table.insert(U.Carving, M.frustumN(8, rr * 0.86, 0.12, 0, rr * 1.7, H.frameY(top, up) * CFrame.Angles(0, math.rad(22.5), 0), { H.scaled(r.color, 1.2), r.color }))
+			TB.lashing(U.Rope, a:Lerp(b, 0.62), up, rr * 0.92, 3, rng)
+			if a.Y < 4 then
+				footMud(U, rng, a, 2.4)
+				ST.ghostMushrooms(U.Mush, rng, a + Vector3.new(math.sign(a.X) * 2.2, 0, -1.5), 3, 1.3)
+			end
+		end
+	end
+	-- the swirl: 5 glowing magenta arms spiralling in on the dark centre (between it and today's runes)
+	for k = 0, 4 do
+		local a0 = k * 2 * math.pi / 5
+		local prev = nil
+		for j = 0, 9 do
+			local t = j / 9
+			local rad0 = 8.0 - t * 5.2
+			local a = a0 + t * 2.4
+			local p = Vector3.new(C.X + math.cos(a) * rad0, C.Y + math.sin(a) * rad0, -1.5)
+			if prev then
+				table.insert(U.Swirl, H.bar(prev, p, 0.55 - 0.3 * t, SWG.glow:Lerp(rgb(255, 150, 255), t * 0.5)))
+			end
+			prev = p
+		end
+	end
+	return finishR6(m, id, U, { Swirl = { material = Enum.Material.Neon, shadow = false, transparency = 0.25 }, Mush = { shadow = false } })
+end
+
+function P.swampArenaDoor(): string
+	local id = "swamp_gate_door"
+	local L = lib()
+	local H, M, TB = L.H, L.M, L.TB
+	local ST = swampTrees()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(61818)
+	H.setBevelSelf(true)
+	local U: any = { Boards = {}, Cracks = {}, Iron = {}, Posts = {}, Bark = {}, Beam = {}, Rope = {}, Moss = {}, Mud = {}, Mush = {} }
+	local rows = rowsOf(m)
+	local WOODS = { rgb(104, 76, 52), rgb(129, 106, 82), rgb(88, 65, 47) }
+	for _, r in ipairs(rows) do
+		local c, s = r.cf.Position, r.size
+		if r.collide then
+			toCollision(r.inst)
+		elseif r.name == "Plank" or r.name == "Band" then
+			r.inst:Destroy()
+		end
+		if r.name == "Panel" then
+			-- 6 boards on each face, cracks, 2 iron straps with rivets, hinges on the posts' side, ring handles
+			for _, f in ipairs({ 1, -1 }) do
+				local n = 6
+				local bw = s.X / n
+				for i = 0, n - 1 do
+					local x = -s.X / 2 + (i + 0.5) * bw
+					local h = s.Y - rng:NextNumber(0, 0.4)
+					local col = H.scaled(WOODS[(i % 3) + 1], rng:NextNumber(0.92, 1.05))
+					local bcf = r.cf * CFrame.new(x, -s.Y / 2 + h / 2, f * (s.Z / 2 + 0.15)) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-1.2, 1.2)))
+					table.insert(U.Boards, H.chamfered(Vector3.new(bw - 0.1, h, 0.3), bcf, col, { "vertical" }, 0.06))
+					for _ = 1, 2 do
+						table.insert(U.Cracks, H.piece("Part", Vector3.new(0.08, rng:NextNumber(1.5, 4), 0.04), bcf * CFrame.new(rng:NextNumber(-bw * 0.3, bw * 0.3), rng:NextNumber(-h * 0.35, h * 0.35), f * 0.16), rgb(40, 28, 20)))
+					end
+				end
+				for _, y in ipairs({ -5.4, 5.4 }) do
+					local z = f * (s.Z / 2 + 0.35)
+					table.insert(U.Iron, H.chamfered(Vector3.new(s.X - 0.4, 0.8, 0.14), r.cf * CFrame.new(0, y, z), SWG.iron, { "frontFace" }, 0.05))
+					for k = 0, 9 do
+						H.rivet(U.Iron, (r.cf * CFrame.new(-s.X / 2 + 1.2 + k * (s.X - 2.4) / 9, y, z + f * 0.08)).Position, 0.22)
+					end
+					for _, sx in ipairs({ -1, 1 }) do
+						table.insert(U.Iron, M.frustumN(8, 0.35, 0.35, -0.6, 0.6, CFrame.new((r.cf * Vector3.new(sx * (s.X / 2 + 0.1), y, z)) ), { SWG.iron, H.scaled(SWG.iron, 1.2) }))
+					end
+				end
+				if f < 0 then
+					-- ring handles on the face without the skull knocker
+					for _, sx in ipairs({ -1, 1 }) do
+						local hc = r.cf * CFrame.new(sx * 2.2, -1.5, f * (s.Z / 2 + 0.4))
+						table.insert(U.Iron, M.frustumN(8, 0.45, 0.45, -0.06, 0.06, H.frameY(hc.Position, Vector3.new(0, 0, f)), { SWG.iron }))
+						for k = 0, 9 do
+							local a = k * math.pi / 5
+							table.insert(U.Iron, H.piece("Part", Vector3.new(0.36, 0.14, 0.14), hc * CFrame.new(math.cos(a) * 0.6, -0.6 + math.sin(a) * 0.6, f * 0.1) * CFrame.Angles(0, 0, a + math.pi / 2), H.scaled(SWG.iron, 1.2)))
+						end
+					end
+				end
+			end
+		elseif r.name == "Trunk" then
+			local up = r.cf.UpVector
+			local a, b = c - up * s.Y / 2, c + up * s.Y / 2
+			local rr = math.min(s.X, s.Z) * 0.5
+			ST.twistedLog(U.Posts, U.Bark, rng, a, b, rr, rr * 0.86, H.scaled(r.color, rng:NextNumber(1.1, 1.25)), rng:NextNumber(0, 1), math.rad(9))
+			-- (the arena floor is 9 under the door's centre, the preview ground 10.1)
+			table.insert(U.Moss, M.frustumN(8, rr + 0.1, rr + 0.04, -9.2, -8.2, CFrame.new(a.X, 0, a.Z) * CFrame.Angles(0, math.rad(22.5), 0), { SWG.mud:Lerp(rgb(63, 122, 44), 0.6), rgb(63, 122, 44) }))
+			footMud(U, rng, Vector3.new(a.X, -9.3, a.Z), 2.6)
+		elseif r.name == "Lintel" then
+			-- a rotten beam: a chamfered timber with cracks, moss on top, hanging moss, rope at the posts
+			table.insert(U.Beam, H.chamfered(s - Vector3.new(0, 0.1, 0.1), r.cf, H.scaled(SWG.wood2, 1.1), { "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, 0.4))
+			for k = 1, 7 do
+				local x = -s.X / 2 + 2 + (k - 0.5) * (s.X - 4) / 7
+				for _, f in ipairs({ 1, -1 }) do
+					table.insert(U.Cracks, H.piece("Part", Vector3.new(rng:NextNumber(2, 4), 0.08, 0.04), r.cf * CFrame.new(x, rng:NextNumber(-1.2, 1.2), f * (s.Z / 2 - 0.02)), rgb(40, 28, 20)))
+				end
+				TB.lump(U.Moss, rng, r.cf * CFrame.new(x, s.Y / 2 - 0.05, rng:NextNumber(-1.5, 1.5)), rng:NextNumber(1.4, 2.2), 0.35, rng:NextNumber(1.0, 1.6), mossTone, 0.08)
+				if k % 2 == 0 then
+					ST.mossStrand(U.Moss, rng, (r.cf * CFrame.new(x, -s.Y / 2, 1.9)).Position, rng:NextNumber(1.6, 2.6), rgb(63, 122, 44))
+				end
+			end
+			for _, sx in ipairs({ -1, 1 }) do
+				TB.lashing(U.Rope, (r.cf * CFrame.new(sx * 14.3, -s.Y / 2 + 0.6, 0)).Position, Vector3.yAxis, 2.6, 3, rng)
+			end
+		elseif r.name == "Lantern" then
+			-- an iron frame round today's lantern (4 posts, a base and a pyramid cap)
+			local y0, y1 = c.Y - s.Y / 2 - 0.15, c.Y + s.Y / 2 + 0.1
+			table.insert(U.Iron, H.chamfered(Vector3.new(s.X + 0.5, 0.2, s.Z + 0.5), CFrame.new(c.X, y0, c.Z), SWG.iron, { "vertical" }, 0.06))
+			for _, d in ipairs({ { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } }) do
+				table.insert(U.Iron, H.piece("Part", Vector3.new(0.14, y1 - y0, 0.14), CFrame.new(c.X + d[1] * (s.X / 2 + 0.1), (y0 + y1) / 2, c.Z + d[2] * (s.Z / 2 + 0.1)), SWG.iron))
+			end
+			table.insert(U.Iron, M.frustumN(4, s.X * 0.75, 0.1, y1, y1 + 0.6, CFrame.new(c.X, 0, c.Z) * CFrame.Angles(0, math.rad(45), 0), { SWG.iron, H.scaled(SWG.iron, 1.2) }))
+			table.insert(U.Iron, H.bar(Vector3.new(c.X, y0 - 0.1, c.Z), Vector3.new(c.X, y0 - 0.1, c.Z - 1.3), 0.2, SWG.iron))
+		end
+	end
+	for _, x in ipairs({ -11.5, 11.5 }) do
+		ST.ghostMushrooms(U.Mush, rng, Vector3.new(x, -9.5, 3.6), 3, 1.1)
+	end
+	return finishR6(m, id, U, { Mush = { shadow = false } })
 end
 
 return P
