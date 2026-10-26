@@ -23,7 +23,7 @@ local HttpService = game:GetService("HttpService")
 local R = {}
 
 local rgb = Color3.fromRGB
-local TAG_NAMES = { BrickTex = true, FriezeTex = true, MossTex = true }
+local TAG_NAMES = { BrickTex = true, FriezeTex = true, MossTex = true, FloorTex = true }
 
 local function ids(): any
 	local mod = ReplicatedStorage.GameSystem.Config:FindFirstChild("PropTextures")
@@ -85,7 +85,7 @@ local KIND = {
 	Beam = "beam",
 	BaseBand = "band", WallBand = "band", WallBase = "band", LintelTrim = "band",
 	Frieze = "frieze",
-	ColBase = "free", Dais = "free", DaisStep = "free", ThronePlatform = "free", ThroneStep = "free",
+	ColBase = "free", Dais = "step", DaisStep = "step", ThronePlatform = "step", ThroneStep = "step",
 	Pillar = "free", PillarBase = "free", PillarBand = "free", PillarCapital = "free",
 }
 R.KIND = KIND
@@ -254,7 +254,7 @@ local function newTexture(p: BasePart, face: Enum.NormalId, name: string, tex: s
 	t.StudsPerTileV = v
 	t.Color3 = color
 	t.OffsetStudsV = offV or 0
-	t.ZIndex = if name == "BrickTex" then 1 else 2 -- (a strip always draws over the bricks of its face)
+	t.ZIndex = if name == "BrickTex" or name == "FloorTex" then 1 else 2 -- (a strip always draws over the bricks of its face)
 	-- the top face of an unturned part: bricks on the world grid (U runs from the +X edge toward -X, V from the +Z
 	-- edge toward -Z, checked with a probe part), so floor pieces that touch or overlap line up and never flicker
 	if face == Enum.NormalId.Top and p.CFrame.Rotation:FuzzyEq(CFrame.identity, 1e-4) then
@@ -282,8 +282,29 @@ function R.apply(roomName: string, opts: any?): string
 	assert(room, "unknown room " .. tostring(roomName))
 	local I = ids()
 	local isDesert = room.zone == "desert"
-	local brick = if isDesert then I.desert_brick else I.jungle_brick
+	-- the owner fix (prop_texture_guide G2): lighter desert bricks and frieze, a marble floor in the desert and
+	-- flagstones in the jungle; the jungle walls keep their bricks
+	local brick = if isDesert then I.desert_brick_light else I.jungle_brick
+	local friezeStrip = I.desert_frieze_strip_light
+	local floorTex = if isDesert then I.desert_marble_floor else I.jungle_flagstone_floor
+	local floorTile = if isDesert then 28 else 24
+	local floorColor = if isDesert then rgb(230, 230, 230) else WALL
 	local ref = REF[room.zone]
+	local function floorTint(p: BasePart): Color3
+		if p.Name == "Aisle" then
+			return tintOf(p.Color, ref, 0.82)
+		elseif p.Name == "TrapTile" or KIND[p.Name] == "step" then
+			-- (a floor tile or a step keeps its tone against the desert floor's sand colour)
+			local base = rgb(226, 190, 132)
+			local k = Color3.new(math.clamp(p.Color.R / base.R, 0.5, 1), math.clamp(p.Color.G / base.G, 0.5, 1), math.clamp(p.Color.B / base.B, 0.5, 1))
+			return Color3.new(floorColor.R * k.R, floorColor.G * k.G, floorColor.B * k.B)
+		end
+		return floorColor
+	end
+	local function isFloorFace(p: BasePart, face: Enum.NormalId): boolean
+		local kind = KIND[p.Name]
+		return kind == "floor" or kind == "floortint" or (kind == "step" and face == Enum.NormalId.Top)
+	end
 	local parts = candidates(room)
 	-- the frieze height (desert: the existing Frieze parts; the row on plain walls continues them) and the moss row
 	local friezeY, nf = 0, 0
@@ -311,12 +332,18 @@ function R.apply(roomName: string, opts: any?): string
 		nParts += 1
 		local faceNames = {}
 		for _, face in ipairs(faces) do
+			if opts.floorsOnly and not isFloorFace(p, face) then
+				continue
+			end
 			table.insert(faceNames, face.Name)
 			if opts.dry then
 				continue
 			end
 			local _, c, fh, topY = faceInfo(p, face)
-			if kind == "wall" then
+			if isFloorFace(p, face) then
+				newTexture(p, face, "FloorTex", floorTex, floorTile, floorTile, floorTint(p))
+				nTex += 1
+			elseif kind == "wall" then
 				newTexture(p, face, "BrickTex", brick, 8, 8, WALL)
 				nTex += 1
 				-- desert: the blue / gold row on plain walls tall enough to reach the frieze line (no Frieze part in front)
@@ -328,7 +355,7 @@ function R.apply(roomName: string, opts: any?): string
 						end
 					end
 					if not covered then
-						newTexture(p, face, "FriezeTex", I.desert_frieze_strip, 8, 32, WALL, stripOffset(topY, friezeRow0, 2, R.SIGN))
+						newTexture(p, face, "FriezeTex", friezeStrip, 8, 32, WALL, stripOffset(topY, friezeRow0, 2, R.SIGN))
 						nTex += 1
 					end
 				end
@@ -337,28 +364,26 @@ function R.apply(roomName: string, opts: any?): string
 					newTexture(p, face, "MossTex", I.jungle_moss_strip, 8, 32, WALL, stripOffset(topY, 4, 28, R.SIGN))
 					nTex += 1
 				end
-			elseif kind == "floor" then
-				newTexture(p, face, "BrickTex", brick, 8, 8, if p.Name == "Aisle" then tintOf(p.Color, ref, 0.82) else FLOOR)
-				nTex += 1
-			elseif kind == "floortint" then
-				newTexture(p, face, "BrickTex", brick, 8, 8, tintOf(p.Color, ref, 0.82))
-				nTex += 1
 			elseif kind == "ceiling" or kind == "beam" then
 				newTexture(p, face, "BrickTex", brick, 8, 8, CEIL)
 				nTex += 1
-			elseif kind == "band" or kind == "free" then
+			elseif kind == "band" or kind == "free" or kind == "step" then
 				newTexture(p, face, "BrickTex", brick, 8, 8, tintOf(p.Color, ref))
 				nTex += 1
 			elseif kind == "frieze" then
 				-- the blue / gold strip scaled so its painted row (2 of 32 studs) fills the band's height exactly; the
 				-- gold band of a stacked pair shifted half a brick (running bond with the blue band above it)
 				local k = p.Size.Y / 2
-				local t = newTexture(p, face, "FriezeTex", I.desert_frieze_strip, 8, 32 * k, WALL, (2 * k) % (32 * k))
+				local t = newTexture(p, face, "FriezeTex", friezeStrip, 8, 32 * k, WALL, (2 * k) % (32 * k))
 				if p.Color.R > 0.8 then
 					t.OffsetStudsU = 2
 				end
 				nTex += 1
 			end
+		end
+		if #faceNames == 0 then
+			nParts -= 1
+			continue
 		end
 		table.insert(lines, string.format("  %s %s: %s", p:GetFullName():gsub("^Workspace%.Zones%.", ""):gsub("^ServerStorage%.", ""), kind, table.concat(faceNames, ",")))
 	end
@@ -366,12 +391,13 @@ function R.apply(roomName: string, opts: any?): string
 	return string.format("BrickRooms.apply %s%s: %d parts, %d textures (frieze row y %d)\n", roomName, if opts.dry then " (DRY)" else "", nParts, nTex, friezeRow0) .. table.concat(lines, "\n")
 end
 
--- removes this tool's textures from a room
-function R.clear(roomName: string): string
+-- removes this tool's textures from a room (opts.floorsOnly: only the floor faces' textures)
+function R.clear(roomName: string, opts: any?): string
 	local room = rooms()[roomName]
 	local n = 0
 	for _, d in ipairs(room.root:GetDescendants()) do
-		if d:IsA("Texture") and TAG_NAMES[d.Name] then
+		local onFloor = d:IsA("Texture") and d.Parent:IsA("BasePart") and d.Face == Enum.NormalId.Top and (KIND[d.Parent.Name] == "floor" or KIND[d.Parent.Name] == "floortint" or KIND[d.Parent.Name] == "step")
+		if d:IsA("Texture") and TAG_NAMES[d.Name] and (not (opts and opts.floorsOnly) or onFloor) then
 			d:Destroy()
 			n += 1
 		end

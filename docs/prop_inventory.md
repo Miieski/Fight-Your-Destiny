@@ -1433,6 +1433,10 @@ Texture only (`tools/BrickRooms.luau`); not MapProps (the room parts are plain m
 | Jungle_4 | 67 of 2215 | 230 | 0 | 0 -> 0 |
 | BossArenas.Jungle | 112 of 696 | 282 | 0 | 0 -> 0 |
 
+Owner fix (same day): desert walls / ceilings / frieze on the light ids, desert floors marble (28-stud tile), jungle
+floors flagstones (24-stud tile), jungle walls unchanged; textures only, except the owner-approved +0.04 raise of 23
+Desert_4 floor strips and 3 desert arena centre discs (prop_texture_guide G2). Per-room compare: 0 changes otherwise.
+
 ### crate - `Crate_A` (base variant, 30 copies identical; Abyss "Sunken" = same geometry, other colours)
 - bbox 4.00 x 4.00 x 4.00, centre (0, 2, 0). No PrimaryPart. 9 Parts (Block), SmoothPlastic, all CanCollide/CanQuery/CastShadow on.
 - Body 3.7 cube (214,150,92); bottom and top slabs 4 x 0.5 x 4 (168,98,56); 4 corner posts 0.5 x 3 x 0.5 at (+-1.75, 2, +-1.75) (168,98,56); 2 diagonal braces 0.5 x 4.1 x 0.15 at z +-1.9, roll +-45 (168,98,56).

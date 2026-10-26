@@ -1,6 +1,21 @@
 # ROUND 6 FIX + ROUND 6 ASSETS DECISIONS (owner prompts "SMALL FIX ... TEXTURES OF SUB-ZONE 4 AND BOSS ROOM" and
 # "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS", 2026-10-26) - newest first
 
+- Round 6 fix R1 (Studio agent): OWNER APPROVED in chat (relayed by main) raising the thin decorative floor strips of
+  Desert_4 so the floor texture stops drawing over them from about 30 studs (they sat 0.05 above the floor top; parts
+  0.07+ above were fine). Raised +0.04 studs, CanCollide false on all (none skipped), nothing else changed:
+  FloorInlay.Runner y 0.000 -> 0.040; the 20 FloorInlay.TileLine y -0.005 -> 0.035 (12 along X at z 800 / 820 / 840 /
+  860 / 880 / 900 / 920 on both sides, 6 along Z at x 3930 / 3950 / 3970 / 4030 / 4050 / 4070); the 2 RunnerEdge
+  y 0.010 -> 0.050 (included: once the runner was raised its gold edges flickered against it; same kind of strip).
+  TrapTile / TrapGlyph untouched (no flicker).
+- Round 6 fix R2 (same approval, "any equally thin decorative floor strip in R2 that shows the same flicker"): the 3
+  arena-centre discs of ServerStorage.BossArenas.Desert.Decor flickered against the floor texture (the brick shot shows
+  the gold ring and the blue disc cut into wedges): FloorRing (0.06 thick) y 0.000 -> 0.040, FloorDisc (0.10) y 0.000 ->
+  0.040, FloorSun (0.14) y 0.000 -> 0.040, all CanCollide false; their stacking order is kept. MiniDais (top 0.15)
+  untouched. The arena floor textures: Floor, ApseFloor, AlcoveFloor x2 marble #E6E6E6; the tops of Dais, DaisStep,
+  ThronePlatform and ThroneStep x3 marble tinted from their part colours (step colour / floor sand), their sides keep
+  the (light) bricks.
+
 - Prompts saved: docs/Round6_Knights_Bricks/PROMPT_ROUND6_FIX_TEXTURES.txt, docs/Round6_Asset_Fixes/PROMPT_ROUND6_ASSETS.txt;
   the 18 images as docs/Round6_Asset_Fixes/01..18. Backup before_round6_fix_and_assets first. The fix runs first.
 - Owner photo rule (2026-10-26): after EVERY changed asset or room, one before / after sheet docs/before_after/NN_name.png
@@ -3978,3 +3993,23 @@ only the tag and attributes, nothing else.
   entered, 282 textures, door locks (19 parts), Tribal Warlord + Elder Jaguar spawn, 145 fps. Bricks sharp on the phone
   (shots B_desert_arena_play_phone.jpg, B_jungle_arena_play_phone.jpg), no stretching or flicker seen, 0 game errors.
   Backup after_round6. ROUND 6 DONE.
+
+# ROUND 6 FIX + ROUND 6 ASSETS (2026-10-26)
+
+- FIX R1 Desert_4 DONE: 101 BrickTex + 12 FriezeTex on desert_brick_light / desert_frieze_strip_light, 14 FloorTex
+  desert_marble_floor (Floor, CorridorFloor, TrapTile x12); Runner / TileLine x20 / RunnerEdge x2 raised +0.04 (owner
+  approval). Shots docs/screenshots/round6_fix/R1_desert4_walls|floor_before|after.jpg.
+- FIX R2 desert arena DONE: 114 BrickTex + 38 FriezeTex light, 10 FloorTex marble; FloorRing / FloorDisc / FloorSun
+  raised +0.04 (approval). Shots R2_desert_arena_walls|floor_before|after.jpg.
+- FIX R3 Jungle_4 DONE: 5 FloorTex jungle_flagstone_floor (Floor x2, Aisle x3); walls unchanged (216 BrickTex + 9 MossTex,
+  same ids). Shots R3_jungle4_walls|floor_before|after.jpg.
+- FIX R4 jungle arena DONE: 3 FloorTex flagstones (Floor, AlcoveGround x2); walls unchanged. Shots
+  R4_jungle_arena_walls|floor_before|after.jpg (floor camera (6012, 28, -652) -> (6000, 0, -592): the planned one sat
+  inside a pillar).
+- FIX checks: snapshot compare 0 changes in Size / CFrame / collision / Material / Color / Transparency / attributes /
+  scripts in all 4 rooms apart from the 26 approved raises (CFrame only); ground compare 0; dry run 626 / 14475, 0.
+  BrickRooms.luau 20244 / 96ba9b14da2607eb (disk == Studio). Before shots: the round 6 Task B textures re-applied
+  temporarily by script for the shot, then the fix re-applied (same camera, same lighting state).
+- Main agent: texture fix R1-R4 pushed with the owner's before / after sheets (docs/before_after/R1..R4). The Play check
+  of the 4 rooms is folded into the end-of-round Play check (a Play session now would cut the Studio agent's Edit work
+  on the 18 assets).

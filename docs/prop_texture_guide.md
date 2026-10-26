@@ -3455,6 +3455,15 @@ Rules the tool follows:
   then, moss tufts (#5B9C44 / #579441 darkened) in a third to a half of the joints. StudsPerTileU = V = 24, Color3
   white. The glowing pads and floor markings are separate parts and keep their look.
 - **Jungle walls and ceiling:** unchanged (the owner likes them).
+- **Applied (2026-10-26, tools/BrickRooms.luau, FloorTex textures):** R1 Desert_4: 101 BrickTex + 12 FriezeTex on the
+  light ids, marble on Floor, CorridorFloor and the 12 TrapTile tops (tinted from each tile's colour against the sand
+  #E2BE84); R2 desert arena: 114 BrickTex + 38 FriezeTex light, marble on Floor, ApseFloor, AlcoveFloor x2 and the tops
+  of Dais, DaisStep, ThronePlatform, ThroneStep x3 (part tint; their sides keep the light bricks); R3 Jungle_4:
+  flagstones on Floor x2 and Aisle x3 (aisles tinted from their colour); R4 jungle arena: flagstones on Floor and
+  AlcoveGround x2. Floor tops sit on the world grid. Reflectance left at 0, Material unchanged (SmoothPlastic).
+- **Thin floor strips (owner exception):** a decorative strip less than about 0.07 stud above a textured floor top
+  flickers under it from about 30 studs (the texture wins the depth test). Desert_4 Runner, TileLine x20 and RunnerEdge
+  x2 and the desert arena's FloorRing / FloorDisc / FloorSun were raised +0.04 (non-colliding, owner-approved).
 
 ## 1. Which colours: the real Part colours, not the photo pixels
 
