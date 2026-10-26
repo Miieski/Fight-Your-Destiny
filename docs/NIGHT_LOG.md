@@ -4049,3 +4049,33 @@ only the tag and attributes, nothing else.
   wraps, a sagging rope rail with a vine, a rope coil, moss. Colliding (Deck, 2 Floats, 2 Posts) 5 / 5, 0 differences;
   replaced 2/2; 12 x 7 x 16 -> 12 x 6.9 x 16. In the map the floats sit just under the water line (as today).
   Shots round6_assets/08_floating_dock_* (map camera from the water side).
+- ASSET 09 jungle_landmark_giant_tree DONE (P.giantTree, the swamp tree recipe PropsSwampTrees at landmark scale):
+  3 twisted bark trunk sections, 7 buttress roots (flaring web + root log inside today's root wedges), 5 twisted limbs,
+  7 canopy discs as layered faceted leaf clusters with drooping leaf tips, 8 + 4 leafy vines, moss, ferns. The tribal
+  mask kept (small parts as they are; board / brow / chin bevelled with a carved border, horns as bone horns, rope ring):
+  today it was buried in the corner of the 45-degree trunk block (only the horns / brow ends showed, the owner's "2
+  hanging objects"); on the round trunk the whole mask now shows. Today's PrimaryPart was a canopy MeshPart: an
+  invisible plain "PivotPart" in its place keeps the pivot (sync skipped the template until then). Colliding 44 / 44,
+  0 differences, NoClimb kept; replaced 2/2; 100.3 x 127 x 109.6 -> 97.1 x 127 x 96.5 (canopy meshes' corners).
+  Shots round6_assets/09_giant_tree_*.
+- ASSET 10 tundra_light_blue_torch_wall DONE (P.tundraTorch): the improved wall_torch builder (B4.wall_torch, the "/"
+  bar with the cup on its top end) run from a temporary copy with the tundra colours (dark blue iron, frosted wood bar,
+  cold blue wrap, cold cyan layered flame and Ember, snow on the back plate and the cup rim); the temp module is
+  destroyed after the build. Head (invisible, FirePoint) + 3 colliders as the wall torch: 3 / 3, 0 differences;
+  replaced 23/23 (Tundra_4 x14, tundra arena x8, preview 1); 1.1 x 3.9 x 2.14 -> 1.18 x 4.3 x 2.26 (the cup and flame,
+  as wall_torch). No light / fire objects in the copies (the fire VFX use the FirePoint, kept). Shots
+  round6_assets/10_tundra_torch_*.
+- ASSET 11 tundra_landmark_frozen_tree DONE (P.frozenTree): 3 twisted bark trunk sections on today's tilted axes, 2
+  forks as twisted limbs with snow, 18 gnarled branches with forked twigs, 15 soft snow caps, 38 faceted glass icicles
+  (today's places / lengths: the amount kept), 5 buttress roots with snow drifts, 4 faceted glass crystals + shards, a
+  glassy ice collar. Colliding (trunk, roots, crystal meshes) 32 / 32 with NoClimb, 0 differences; PrimaryPart (the
+  ice shell MeshPart) -> invisible PivotPart; replaced 2/2; 45.9 x 77 x 46.7 -> 47.8 x 77 x 48.3 (twig tips). Shots
+  round6_assets/11_frozen_tree_*.
+- ASSET 12 swamp_landmark_giant_cauldron DONE (P.giantCauldron, the swamp_cauldron recipe at landmark scale): a
+  rounded 16-sided cast iron body inside today's cylinders, 2 riveted bands (24 rivets each), a lip ring of 16
+  segments, lugs + heavy ring handles, 3 tapered claw legs, 8 bark logs with grooves / cut ends, embers and coals, a
+  stack of firewood and bones; the liquid, 7 drips and 8 rune pairs kept exactly (runes in carved dark panels), 9
+  glowing bubbles. Colliding 24 / 24, 0 differences; no script / prompt / light on it; replaced 2/2 (arena + preview;
+  the third "found" was the temporary arena copy for the shot, deleted); 59 x 33.9 x 52 -> 59 x 35 x 52 (bubbles).
+  Shots round6_assets/12_giant_cauldron_* (map = a temporary workspace copy of the swamp arena).
+- Owner chose (chat, 2026-10-26): 09 giant tree keeps the whole tribal mask visible. Main agent asked the Studio agent to bring the 09 trunk back to today's browns (it read almost black).

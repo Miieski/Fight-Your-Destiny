@@ -17,6 +17,10 @@
 		print(P.plainsArenaDoor())     -- R6 05: plains_gate_door, blue stone frame, carved double door on both faces
 		print(P.mineSupport())        -- R6 06: plains_prop_mine_support, timber frame, iron fish plates, lantern
 		print(P.ropeBridge(), P.floatingDock()) -- R6 07 / 08: jungle rope bridge section, floating dock (docks recipe)
+		print(P.giantTree())          -- R6 09: jungle_landmark_giant_tree, swamp tree recipe at landmark scale
+		print(P.tundraTorch())        -- R6 10: tundra_light_blue_torch_wall = the improved wall_torch in tundra colours
+		print(P.frozenTree())         -- R6 11: tundra_landmark_frozen_tree, dead tree in ice
+		print(P.giantCauldron())      -- R6 12: swamp_landmark_giant_cauldron, the swamp cauldron recipe at landmark scale
 		then Sync.run({ only = { id } }) syncs the copies (map, arena, preview samples).
 	Every builder installs its model with P.install(): the old template goes to ServerStorage.MapProps._Previous.
 ]]
@@ -1341,6 +1345,527 @@ function P.floatingDock(): string
 		table.insert(U.Stain, H.piece("Part", Vector3.new(rng:NextNumber(0.6, 1.0), 0.02, rng:NextNumber(0.7, 1.5)), CFrame.new(x, 2.716, rng:NextNumber(-6.5, 6.5)) * CFrame.Angles(0, rng:NextNumber(-0.3, 0.3), 0), H.scaled(JUNGLE.moss, rng:NextNumber(0.85, 1.0))))
 	end
 	return finishR6(m, id, U)
+end
+
+---------------------------------------------------------------------
+-- 09 GIANT TREE (jungle_landmark_giant_tree, the Jungle_1 landmark): the swamp tree recipe (DevTools.PropsSwampTrees:
+-- twisted 8-sided bark logs with winding grooves, faceted leaf clusters lit on top and dark under, folded leaves,
+-- leafy vines, moss cushions, ferns) at landmark scale in jungle greens. The trunk as 3 twisted sections tapering from
+-- today's base to the canopy; the 7 roots as buttress roots (a flaring web under a thick root log, inside today's root
+-- wedges); today's 5 branches as twisted limbs; today's 7 canopy discs as layered leaf clusters (a centre cluster and a
+-- ring, drooping leaf tips at the rims); today's 8 vines as leafy vines and 4 more from the canopy; moss on the roots
+-- and the trunk, ferns between the roots. The tribal mask on the trunk (the 2 "hanging objects" between the roots) is
+-- kept: its small parts (eyes, pupils, nose, mouth, teeth, stripes, feathers) as they are, the board, brow and chin
+-- bevelled with a carved border, the horns as pointed bone horns, the rope band as a rope ring. Today's colliding parts
+-- (trunk, roots, rope band, mask board / brow / chin / horns) stay as invisible collision; the NoClimb walls stay.
+---------------------------------------------------------------------
+local STM = nil
+local function swampTrees(): any
+	if not STM then
+		STM = require(ServerStorage.DevTools.PropsSwampTrees:Clone())
+	end
+	return STM
+end
+
+function P.giantTree(): string
+	local id = "jungle_landmark_giant_tree"
+	local L = lib()
+	local H, M = L.H, L.M
+	local ST = swampTrees()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60909)
+	H.setBevelSelf(true)
+	local BARK, ROOT, ROPE, BONE, VINE = rgb(104, 68, 44), rgb(86, 56, 38), rgb(196, 160, 104), rgb(232, 226, 208), rgb(70, 150, 60)
+	local U: any = { Trunk = {}, Bark = {}, Roots = {}, RootWeb = {}, Branches = {}, Leaves = {}, LeafTips = {}, Vines = {}, VineLeaves = {}, Moss = {}, Fern = {}, Rope = {}, Mask = {}, MaskTrim = {} }
+	local rows = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			table.insert(rows, { name = c.Name, cf = c.CFrame, size = c.Size, color = c.Color })
+			if c.CanCollide then
+				toCollision(c)
+			elseif c.Name == "Canopy" or c.Name == "Branch" or c.Name == "Vine" then
+				if c == m.PrimaryPart then
+					-- (today's PrimaryPart, the big canopy disc: an invisible plain part in its place keeps the pivot)
+					local a = Instance.new("Part")
+					a.Name = "PivotPart"
+					a.Size, a.CFrame, a.PivotOffset = c.Size, c.CFrame, c.PivotOffset
+					a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch, a.CastShadow = true, false, false, false, false
+					a.Transparency = 1
+					a.Parent = m
+					m.PrimaryPart = a
+				end
+				c:Destroy()
+			end
+		end
+	end
+	-- the trunk: 3 twisted sections, one twist running through
+	local secs = { { 0, 34, 13.3, 12.6 }, { 34, 67, 12.6, 10.2 }, { 67, 92, 10.2, 8.2 } }
+	for k, s in ipairs(secs) do
+		ST.twistedLog(U.Trunk, U.Bark, rng, Vector3.new(0, s[1] - (if k > 1 then 0.3 else 0), 0), Vector3.new(0, s[2], 0), s[3], s[4], H.scaled(BARK, ({ 1.0, 0.95, 1.04 })[k]), k * 1.3, math.rad(9))
+	end
+	-- the buttress roots: per root wedge a concave flaring web (stepped boxes and wedges under the curve) and a thick root
+	-- log along its top, from the trunk down to the wedge's foot
+	for _, r in ipairs(rows) do
+		if r.name == "Root" then
+			local c, s = r.cf.Position, r.size
+			local rc = Vector3.new(c.X, 0, c.Z).Magnitude
+			local y0, y1 = c.Y - s.Y / 2, c.Y + s.Y / 2
+			local ui, uo = rc - s.Z / 2 + 0.5, rc + s.Z / 2 - 0.3
+			local function at(u: number, y: number): CFrame
+				return r.cf * CFrame.new(0, y - c.Y, -(u - rc))
+			end
+			local function curve(t: number): (number, number)
+				local cu, cy = ui + (uo - ui) * 0.2, y0 + (y1 - y0) * 0.18
+				local a, b = (1 - t) * (1 - t), 2 * (1 - t) * t
+				return a * ui + b * cu + t * t * uo, a * (y1 - 0.6) + b * cy + t * t * (y0 + 0.4)
+			end
+			local n = 6
+			local pu, py = curve(0)
+			local prevP = at(pu, py).Position
+			local col = H.scaled(ROOT, rng:NextNumber(0.94, 1.06))
+			for k = 1, n do
+				local u, y = curve(k / n)
+				local T = 3.2 - 1.6 * k / n
+				local mid = (pu + u) / 2
+				if y - y0 > 0.2 then
+					table.insert(U.RootWeb, H.piece("Part", Vector3.new(T, y - y0, u - pu + 0.05), at(mid, (y0 + y) / 2), H.scaled(col, 0.92)))
+				end
+				if py - y > 0.05 then
+					table.insert(U.RootWeb, H.piece("WedgePart", Vector3.new(T, py - y, u - pu + 0.05), at(mid, (py + y) / 2), H.scaled(col, 0.92)))
+				end
+				local q = at(u, y).Position
+				local ra, rb = 3.0 - 1.9 * (k - 1) / n, 3.0 - 1.9 * k / n
+				table.insert(U.Roots, M.frustumN(6, ra, rb, -0.15, (q - prevP).Magnitude + 0.15, H.frameY(prevP, q - prevP) * CFrame.Angles(0, rng:NextNumber(0, 1), 0), { col, H.scaled(col, 1.08), H.scaled(col, 0.9) }))
+				if k == 2 then
+					ST.mossCushion(U.Moss, rng, CFrame.new(q + Vector3.new(0, rb * 0.8, 0)), 4.2)
+				end
+				pu, py, prevP = u, y, q
+			end
+		end
+	end
+	-- ferns between the roots
+	for k = 0, 6 do
+		local a = k * 2 * math.pi / 7 + 0.45
+		ST.fern(U.Fern, rng, Vector3.new(math.cos(a) * 16.5, 0.2, math.sin(a) * 16.5), 6, 5.5)
+	end
+	-- moss cushions up the trunk
+	for k = 1, 6 do
+		local a = rng:NextNumber(0, 6.28)
+		local y = rng:NextNumber(38, 85)
+		local r = 12.6 - (y - 34) * 0.07
+		local nrm = Vector3.new(math.cos(a), 0, math.sin(a))
+		ST.mossCushion(U.Moss, rng, CFrame.fromMatrix(nrm * (r - 0.6) + Vector3.new(0, y, 0), nrm:Cross(Vector3.yAxis), nrm), 6)
+	end
+	for _, r in ipairs(rows) do
+		local c, s = r.cf.Position, r.size
+		if r.name == "Branch" then
+			-- the limb from its trunk end out to the canopy
+			local a, b = (r.cf * CFrame.new(0, 0, -s.Z / 2)).Position, (r.cf * CFrame.new(0, 0, s.Z / 2)).Position
+			if Vector3.new(a.X, 0, a.Z).Magnitude > Vector3.new(b.X, 0, b.Z).Magnitude then
+				a, b = b, a
+			end
+			ST.twistedLog(U.Branches, U.Bark, rng, a, b, 3.4, 2.0, H.scaled(BARK, 0.92))
+		elseif r.name == "Canopy" then
+			-- a centre cluster, a ring of clusters, drooping leaf tips at the rim
+			local big = s.X > 50
+			local yaw = rng:NextNumber(0, 6.28)
+			local f = CFrame.new(c) * CFrame.Angles(0, yaw, 0)
+			ST.blob(U.Leaves, rng, f, s.X * 0.3, s.Y * 0.36, s.Z * 0.3, ST.leafTone(r.color))
+			local nr = if big then 8 else 6
+			for k = 1, nr do
+				local a = k * 2 * math.pi / nr + rng:NextNumber(-0.2, 0.2)
+				local d = Vector3.new(math.cos(a), 0, math.sin(a))
+				local p = f * (d * s.X * rng:NextNumber(0.31, 0.35) + Vector3.new(0, s.Y * rng:NextNumber(-0.16, 0.08), 0))
+				ST.blob(U.Leaves, rng, CFrame.new(p) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), s.X * rng:NextNumber(0.19, 0.23), s.Y * rng:NextNumber(0.24, 0.3), s.Z * rng:NextNumber(0.19, 0.23), ST.leafTone(H.scaled(r.color, rng:NextNumber(0.9, 1.1))))
+			end
+			for k = 1, 6 do
+				local a = k * 2 * math.pi / 6 + rng:NextNumber(-0.3, 0.3)
+				local d = (f - f.Position) * Vector3.new(math.cos(a), 0, math.sin(a))
+				local p = c + d * s.X * 0.46 - Vector3.new(0, s.Y * 0.12, 0)
+				ST.leaf(U.LeafTips, p, (d - Vector3.new(0, 0.7, 0)).Unit, 5.5, 3.2, H.scaled(r.color, rng:NextNumber(0.9, 1.08)), d + Vector3.new(0, 1, 0))
+			end
+		elseif r.name == "Vine" then
+			ST.leafyVine(U.Vines, U.VineLeaves, rng, c + Vector3.new(0, s.Y / 2, 0), s.Y, 0.75, H.scaled(r.color, 0.85))
+		elseif r.name == "RopeBand" and math.abs(select(2, r.cf:ToEulerAnglesYXZ())) < 0.01 then
+			-- the rope band as a rope ring with 2 thinner turns
+			for k, dy in ipairs({ -0.45, 0.1, 0.55 }) do
+				local rr = 13.15 + (if k == 2 then 0.25 else 0)
+				table.insert(U.Rope, M.frustumN(8, rr, rr, dy - 0.3, dy + 0.3, CFrame.new(0, c.Y, 0) * CFrame.Angles(math.rad(rng:NextNumber(-1.5, 1.5)), math.rad(22.5 + k * 7), 0), { ROPE, H.scaled(ROPE, 0.88) }))
+			end
+		elseif r.name == "MaskBoard" or r.name == "MaskBrow" or r.name == "MaskChin" then
+			table.insert(U.Mask, H.chamfered(s, r.cf, r.color, { "frontFace" }, if r.name == "MaskBoard" then 0.45 else 0.3))
+			if r.name == "MaskBoard" then
+				local zf = -s.Z / 2 - 0.12
+				for _, e in ipairs({ { 0, s.Y / 2 - 0.3, s.X, 0.6 }, { 0, -s.Y / 2 + 0.3, s.X, 0.6 }, { -s.X / 2 + 0.3, 0, 0.6, s.Y - 1.2 }, { s.X / 2 - 0.3, 0, 0.6, s.Y - 1.2 } }) do
+					table.insert(U.MaskTrim, H.chamfered(Vector3.new(e[3], e[4], 0.25), r.cf * CFrame.new(e[1], e[2], zf), rgb(74, 48, 34), { "frontFace" }, 0.08))
+				end
+			end
+		elseif r.name == "MaskHorn" then
+			local base = (r.cf * CFrame.new(0, -s.Y / 2, 0)).Position
+			table.insert(U.Mask, M.frustumN(6, s.X * 0.55, 0.12, 0, s.Y, H.frameY(base, r.cf.UpVector), { BONE, H.scaled(BONE, 0.9) }))
+		end
+	end
+	-- 4 more leafy vines from the canopy rims
+	for k = 1, 4 do
+		local a = k * math.pi / 2 + 0.6
+		local top = Vector3.new(math.cos(a) * 30, 92, math.sin(a) * 30)
+		ST.leafyVine(U.Vines, U.VineLeaves, rng, top, rng:NextNumber(14, 22), 0.75, H.scaled(VINE, rng:NextNumber(0.85, 1.0)))
+	end
+	return finishR6(m, id, U)
+end
+
+---------------------------------------------------------------------
+-- 10 TUNDRA WALL TORCH (tundra_light_blue_torch_wall, Tundra_4 x14 + the tundra arena x8): the improved wall_torch
+-- (DevTools.PropsBatch4 B4.wall_torch, deterministic: the "/" bar with the cup on its top end) run from a copy with
+-- the tundra colours: dark blue iron, a frosted wooden bar with a cold blue wrap, a cold cyan layered flame and Ember,
+-- a little snow on the back plate and the cup rim. Today's Head (invisible, FirePoint kept) and the 3 colliders exactly
+-- as the wall torch has them (today's Bracket, Stick and Head boxes).
+---------------------------------------------------------------------
+function P.tundraTorch(): string
+	local id = "tundra_light_blue_torch_wall"
+	local src = ServerStorage.DevTools.PropsBatch4.Source
+	local i0 = string.find(src, "function B4.wall_torch(): Model", 1, true)
+	assert(i0, "B4.wall_torch missing")
+	local i1 = string.find(src, "\n---", i0, true)
+	local body = string.sub(src, i0, i1)
+	local function sub(a: string, b: string)
+		local n
+		body, n = string.gsub(body, a, b)
+		assert(n > 0, "wall_torch anchor missing: " .. a)
+	end
+	sub("function B4%.wall_torch%(%): Model", "function B4.tundra_torch_r6(): Model")
+	sub("P%.Iron", "TI")
+	sub("st%.color", "TW")
+	sub("br%.color", "TI")
+	sub("LEATHER", "TL")
+	sub("layeredFlame%(", "coldFlame(")
+	sub("local U: any = { Wood = {}, Iron = {} }", "local U: any = { Wood = {}, Iron = {}, Snow = {} }")
+	sub("\tU%.Glow = {}\n", "\ttable.insert(U.Snow, chamfered(Vector3.new(br.size.X + 0.06, 0.16, br.size.Z + 0.1), br.cf * CFrame.new(0, br.size.Y / 2 + 0.06, -0.03), SNOW, { \"topFrontBack\", \"topSides\" }, 0.05))\n\tfor k = 0, 2 do\n\t\tlocal a = k * 2.1 + 0.4\n\t\ttable.insert(U.Snow, chamfered(Vector3.new(0.26, 0.1, 0.18), rim * CFrame.new(math.cos(a) * 0.5, 0.07, math.sin(a) * 0.5) * CFrame.Angles(0, -a, 0), SNOW, { \"topFrontBack\", \"topSides\" }, 0.03))\n\tend\n\tU.Glow = {}\n")
+	local defs = "local TI, TW, TL, SNOW = rgb(52, 66, 104), rgb(150, 172, 196), rgb(64, 80, 120), rgb(240, 246, 252)\n"
+		.. "local function coldFlame(list: { BasePart }, cf: CFrame, s: number)\n"
+		.. "\ttable.insert(list, H.flame(cf, 0.36 * s, 0.32 * s, 1.0 * s, rgb(60, 170, 255), Vector3.new(0.04, 0, 0.03) * s))\n"
+		.. "\ttable.insert(list, H.flame(cf * CFrame.new(0, 0.08 * s, 0) * CFrame.Angles(0, rad(30), 0), 0.26 * s, 0.3 * s, 0.82 * s, rgb(110, 210, 255), Vector3.new(-0.03, 0, 0.02) * s))\n"
+		.. "\ttable.insert(list, H.flame(cf * CFrame.new(0, 0.14 * s, 0), 0.15 * s, 0.22 * s, 0.58 * s, rgb(200, 240, 255)))\n"
+		.. "end\n"
+	local k = string.find(src, "\nreturn B4", 1, true)
+	assert(k, "return B4 missing")
+	local tmp = Instance.new("ModuleScript")
+	tmp.Name = "PropsBatch4_tundraTorch"
+	tmp.Source = string.sub(src, 1, k) .. defs .. body .. string.sub(src, k)
+	tmp.Parent = ServerStorage.DevTools
+	local ok, B4 = pcall(require, tmp:Clone())
+	tmp:Destroy()
+	assert(ok, tostring(B4))
+	local m = (B4 :: any).tundra_torch_r6() :: Model
+	local ember = m:FindFirstChild("Ember") :: BasePart
+	ember.Color = rgb(96, 190, 255)
+	P.install(id, m)
+	local _, size = m:GetBoundingBox()
+	return string.format("%s: %.2f x %.2f x %.2f, pivot %s", id, size.X, size.Y, size.Z, tostring(m:GetPivot().Position))
+end
+
+---------------------------------------------------------------------
+-- 11 FROZEN TREE (tundra_landmark_frozen_tree, the Tundra_1 landmark): a big dead tree in ice. Today's 3 trunk blocks
+-- as twisted bark sections with winding grooves along their own (tilted) axes, the 2 forks as twisted limbs with a snow
+-- cap, today's 18 branches as gnarled limbs with forked twigs (the swamp dead tree recipe), today's 15 branch snow
+-- strips as soft snow caps, today's 38 icicles as faceted glass icicles at the same places and lengths (the tundra
+-- icicle), today's 5 root wedges as buttress roots with snow drifts, today's 4 crystals as faceted glass crystals with
+-- small shards, today's ice shell as a glassy ice collar round the trunk foot. Colliding parts (trunk, roots, crystals)
+-- stay as invisible collision, the NoClimb walls stay; the PrimaryPart (the ice shell) becomes an invisible PivotPart.
+---------------------------------------------------------------------
+-- a buttress root inside a root wedge row r (tall side +Z towards the trunk): a flaring web under a tapering root log
+local function buttressRoot(U: any, rng: Random, r: any, col: Color3, logR: number, webT: number)
+	local L = lib()
+	local H, M = L.H, L.M
+	local c, s = r.cf.Position, r.size
+	local rc = Vector3.new(c.X, 0, c.Z).Magnitude
+	local y0, y1 = c.Y - s.Y / 2, c.Y + s.Y / 2
+	local ui, uo = rc - s.Z / 2 + 0.3, rc + s.Z / 2 - 0.2
+	local function at(u: number, y: number): CFrame
+		return r.cf * CFrame.new(0, y - c.Y, -(u - rc))
+	end
+	local function curve(t: number): (number, number)
+		local cu, cy = ui + (uo - ui) * 0.2, y0 + (y1 - y0) * 0.18
+		local a, b = (1 - t) * (1 - t), 2 * (1 - t) * t
+		return a * ui + b * cu + t * t * uo, a * (y1 - 0.3) + b * cy + t * t * (y0 + 0.2)
+	end
+	local n = 5
+	local pu, py = curve(0)
+	local prevP = at(pu, py).Position
+	for k = 1, n do
+		local u, y = curve(k / n)
+		local T = webT * (1 - 0.5 * k / n)
+		local mid = (pu + u) / 2
+		if y - y0 > 0.1 then
+			table.insert(U.RootWeb, H.piece("Part", Vector3.new(T, y - y0, u - pu + 0.04), at(mid, (y0 + y) / 2), H.scaled(col, 0.92)))
+		end
+		if py - y > 0.03 then
+			table.insert(U.RootWeb, H.piece("WedgePart", Vector3.new(T, py - y, u - pu + 0.04), at(mid, (py + y) / 2), H.scaled(col, 0.92)))
+		end
+		local q = at(u, y).Position
+		local ra, rb = logR * (1 - 0.6 * (k - 1) / n), logR * (1 - 0.6 * k / n)
+		table.insert(U.Roots, M.frustumN(6, ra, rb, -0.1, (q - prevP).Magnitude + 0.1, H.frameY(prevP, q - prevP) * CFrame.Angles(0, rng:NextNumber(0, 1), 0), { col, H.scaled(col, 1.08), H.scaled(col, 0.9) }))
+		pu, py, prevP = u, y, q
+	end
+end
+
+function P.frozenTree(): string
+	local id = "tundra_landmark_frozen_tree"
+	local L = lib()
+	local H, M, TB = L.H, L.M, L.TB
+	local ST = swampTrees()
+	assert(TB.facetIcicle and TB.lump, "TB.facetIcicle / TB.lump missing")
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(61111)
+	H.setBevelSelf(true)
+	local BARK, SNOW, ICE = rgb(80, 58, 46), rgb(244, 248, 255), rgb(150, 214, 250)
+	local U: any = { Trunk = {}, Bark = {}, Roots = {}, RootWeb = {}, Branches = {}, Twigs = {}, Snow = {}, Icicles = {}, Crystals = {}, IceCollar = {} }
+	local function snowTone(n: Vector3): Color3
+		return if n.Y > 0.5 then SNOW else H.scaled(SNOW, 0.9):Lerp(ICE, 0.15)
+	end
+	local rows = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			table.insert(rows, { name = c.Name, cf = c.CFrame, size = c.Size, color = c.Color })
+			if c == m.PrimaryPart then
+				local a = Instance.new("Part")
+				a.Name = "PivotPart"
+				a.Size, a.CFrame, a.PivotOffset = c.Size, c.CFrame, c.PivotOffset
+				a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch, a.CastShadow = true, false, false, false, false
+				a.Transparency = 1
+				a.Parent = m
+				m.PrimaryPart = a
+			end
+			if c.CanCollide then
+				toCollision(c)
+			else
+				c:Destroy()
+			end
+		end
+	end
+	for _, r in ipairs(rows) do
+		local c, s = r.cf.Position, r.size
+		if r.name == "Trunk" and math.abs(r.cf.LookVector:Dot(Vector3.zAxis)) > 0.9 then
+			-- a twisted bark section along today's block axis (the unrotated block of each pair)
+			local up = r.cf.UpVector
+			local a, b = c - up * (s.Y / 2 + (if c.Y > 15 then 0.6 else 0)), c + up * (s.Y / 2 + 0.3)
+			local r0 = s.X * 0.5
+			ST.twistedLog(U.Trunk, U.Bark, rng, a, b, r0, r0 * 0.78, H.scaled(BARK, rng:NextNumber(0.95, 1.05)), rng:NextNumber(0, 1), math.rad(11))
+		elseif r.name == "Fork" then
+			local up = r.cf.UpVector
+			local a, b = c - up * (s.Y / 2 + 0.4), c + up * (s.Y / 2)
+			ST.twistedLog(U.Branches, U.Bark, rng, a, b, s.X * 0.5, s.X * 0.28, H.scaled(BARK, 0.95), rng:NextNumber(0, 1), math.rad(13))
+		elseif r.name == "ForkSnow" then
+			TB.lump(U.Snow, rng, r.cf * CFrame.new(0, -0.1, 0), s.X * 0.5, 0.45, s.Z * 0.5, snowTone, 0.2)
+		elseif r.name == "Branch" then
+			local a, b = r.cf * Vector3.new(-s.X / 2, 0, 0), r.cf * Vector3.new(s.X / 2, 0, 0)
+			if Vector3.new(a.X, 0, a.Z).Magnitude > Vector3.new(b.X, 0, b.Z).Magnitude then
+				a, b = b, a
+			end
+			ST.gnarledBranch(U.Branches, U.Twigs, rng, a - (b - a).Unit * 0.6, b, s.Y * 0.5, H.scaled(BARK, rng:NextNumber(0.92, 1.08)))
+		elseif r.name == "BranchSnow" then
+			-- a soft snow cap along the branch: a bevelled strip and 2-3 lumps
+			table.insert(U.Snow, H.chamfered(Vector3.new(s.X * 0.92, s.Y, s.Z * 0.8), r.cf * CFrame.new(0, -0.08, 0), SNOW, { "topFrontBack", "topSides" }, 0.22))
+			for k = 1, math.max(2, math.floor(s.X / 7)) do
+				local x = (k / (math.floor(s.X / 7) + 1) - 0.5) * s.X * 0.85
+				TB.lump(U.Snow, rng, r.cf * CFrame.new(x, 0.12, 0), rng:NextNumber(0.9, 1.4), 0.3, s.Z * 0.4, snowTone, 0.12)
+			end
+		elseif r.name == "Icicle" then
+			-- the tundra faceted icicle, today's place, length and width
+			TB.facetIcicle(U, "Icicles", c + Vector3.new(0, s.Y / 2 - 0.1, 0), s.Y / 3, s.X / 0.9, rng:NextNumber(0, 6.28))
+		elseif r.name == "Root" then
+			buttressRoot(U, rng, r, H.scaled(BARK, rng:NextNumber(0.95, 1.08)), 1.7, 2.2)
+		elseif r.name == "RootSnow" then
+			TB.lump(U.Snow, rng, r.cf * CFrame.new(0, 0.1, 0), s.X * 0.5, 0.55, s.Z * 0.42, snowTone, 0.2)
+		elseif r.name == "Crystal" then
+			-- a faceted glass crystal (6-sided prism, pointed tip) along today's crystal, 2 small shards at its foot
+			local up = r.cf.UpVector
+			local base = c - up * (s.Y / 2)
+			local f = H.frameY(base, up) * CFrame.Angles(0, rng:NextNumber(0, 1), 0)
+			local rr = math.min(s.X, s.Z) * 0.48
+			table.insert(U.Crystals, M.frustumN(6, rr, rr * 0.86, 0, s.Y * 0.72, f, { r.color, H.scaled(r.color, 1.12), H.scaled(r.color, 0.9) }))
+			table.insert(U.Crystals, M.frustumN(6, rr * 0.86, 0.06, s.Y * 0.72, s.Y, f, { H.scaled(r.color, 1.15), r.color }))
+			for k = 1, 2 do
+				local a = rng:NextNumber(0, 6.28)
+				local p = Vector3.new(c.X + math.cos(a) * rr * 1.6, 0, c.Z + math.sin(a) * rr * 1.6)
+				local tilt = (Vector3.new(math.cos(a), 0, math.sin(a)) * 0.45 + Vector3.yAxis).Unit
+				local h = s.Y * rng:NextNumber(0.22, 0.32)
+				local sf = H.frameY(p, tilt)
+				table.insert(U.Crystals, M.frustumN(6, rr * 0.35, rr * 0.3, -0.2, h * 0.7, sf, { r.color, H.scaled(r.color, 1.12) }))
+				table.insert(U.Crystals, M.frustumN(6, rr * 0.3, 0.04, h * 0.7, h, sf, { H.scaled(r.color, 1.15), r.color }))
+			end
+		elseif r.name == "IceShell" then
+			-- a glassy ice collar round the trunk foot, a snow drift ring round it
+			table.insert(U.IceCollar, M.frustumN(10, 6.6, 5.4, 0, 4.2, CFrame.new(c.X, 0, c.Z) * CFrame.Angles(0, rng:NextNumber(0, 1), 0), { ICE, H.scaled(ICE, 1.1), H.scaled(ICE, 0.9) }))
+			for k = 1, 6 do
+				local a = k * math.pi / 3 + rng:NextNumber(-0.3, 0.3)
+				TB.lump(U.Snow, rng, CFrame.new(c.X + math.cos(a) * 7.2, 0.2, c.Z + math.sin(a) * 7.2) * CFrame.Angles(0, -a, 0), rng:NextNumber(1.4, 2.2), 0.7, rng:NextNumber(1.0, 1.5), snowTone, 0.2)
+			end
+		end
+	end
+	return finishR6(m, id, U, { Icicles = TB.ICICLE_OPTS, Crystals = { material = Enum.Material.Glass, transparency = 0.15, shadow = false }, IceCollar = { material = Enum.Material.Glass, transparency = 0.35, shadow = false } })
+end
+
+---------------------------------------------------------------------
+-- 12 GIANT CAULDRON (swamp_landmark_giant_cauldron, the swamp boss arena): the improved swamp cauldron recipe
+-- (DevTools.PropsSwampMagic swamp_cauldron) at landmark scale: today's stacked pot cylinders as one rounded cast iron
+-- body (16-sided bands from the base over the belly to the neck, inside today's cylinders), today's 2 bands as riveted
+-- iron bands, today's rim as a thick lip ring of 16 segments, today's 2 handle brackets as lugs with heavy ring handles,
+-- today's 3 legs as tapered iron claw legs, today's 8 logs as bark logs with grooves and pale cut ends, embers and coals
+-- under the pot, a small stack of wood and bones at the foot. Today's glowing liquid, its drips and the 8 magenta
+-- runes stay exactly (the runes in carved dark panels), with glowing bubbles on the liquid. Every colliding part stays
+-- as invisible collision; no script, prompt or light on it.
+---------------------------------------------------------------------
+function P.giantCauldron(): string
+	local id = "swamp_landmark_giant_cauldron"
+	local L = lib()
+	local H, M = L.H, L.M
+	local ST = swampTrees()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(61212)
+	H.setBevelSelf(true)
+	local IRON, IRON_L, BONE = rgb(80, 86, 96), rgb(112, 118, 130), rgb(226, 218, 196)
+	local U: any = { Pot = {}, Iron = {}, Bubbles = {}, Logs = {}, Embers = {}, Carving = {}, Bones = {} }
+	local rows = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			table.insert(rows, { name = c.Name, cf = c.CFrame, size = c.Size, color = c.Color })
+			if c.CanCollide then
+				toCollision(c)
+			end
+		end
+	end
+	local F0 = CFrame.identity
+	-- the body: base -> belly -> shoulder -> neck (radii inside today's cylinders)
+	local bands = { { 3.0, 5.6, 15.2, 18.6 }, { 5.6, 8.2, 18.6, 23.2 }, { 8.2, 15.0, 23.2, 24.9 }, { 15.0, 21.8, 24.9, 24.5 }, { 21.8, 25.2, 24.5, 21.8 }, { 25.2, 28.2, 21.8, 20.0 }, { 28.2, 30.3, 20.0, 19.9 } }
+	for i, b in ipairs(bands) do
+		local c = H.scaled(IRON, 0.9 + 0.035 * i)
+		table.insert(U.Pot, M.frustumN(16, b[3], b[4], b[1] - (if i > 1 then 0.03 else 0), b[2], F0 * CFrame.Angles(0, math.rad(i * 5), 0), { c, H.scaled(c, 1.1), H.scaled(c, 0.9) }))
+	end
+	-- the 2 riveted bands
+	for _, y in ipairs({ 12, 19 }) do
+		table.insert(U.Iron, M.frustumN(16, 25.6, 25.6, y - 0.78, y + 0.78, F0 * CFrame.Angles(0, math.rad(11.25), 0), { IRON_L, H.scaled(IRON_L, 0.88) }))
+		for k = 0, 23 do
+			local a = k * math.pi / 12 + math.rad(7.5)
+			local d = Vector3.new(math.cos(a), 0, math.sin(a))
+			table.insert(U.Iron, H.chamfered(Vector3.new(0.7, 0.7, 0.35), CFrame.lookAt(d * 25.7 + Vector3.new(0, y, 0), d * 30 + Vector3.new(0, y, 0)), H.scaled(IRON_L, 1.15), { "frontFace" }, 0.1))
+		end
+	end
+	-- the rim: a lip ring and 16 bevelled lip segments round the liquid (radius 21)
+	table.insert(U.Pot, M.frustumN(16, 23.5, 23.9, 30.0, 32.6, F0, { IRON_L, H.scaled(IRON_L, 1.08), H.scaled(IRON_L, 0.92) }))
+	for k = 0, 15 do
+		local a = k * math.pi / 8
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		local p = d * 22.45 + Vector3.new(0, 32.75, 0)
+		table.insert(U.Pot, H.chamfered(Vector3.new(3.2, 0.5, 2 * 24.1 * math.tan(math.pi / 16)), CFrame.lookAt(p, p + d) * CFrame.Angles(0, math.rad(90), 0), H.scaled(IRON_L, if k % 2 == 0 then 1.12 else 1.02), { "topFrontBack" }, 0.2))
+	end
+	for _, r in ipairs(rows) do
+		local c, s = r.cf.Position, r.size
+		if r.name == "Leg" then
+			-- a tapered iron leg with 3 claws
+			table.insert(U.Iron, M.frustumN(6, s.X * 0.4, s.X * 0.55, c.Y - s.Y / 2, c.Y + s.Y / 2 + 0.4, CFrame.new(c.X, 0, c.Z) * CFrame.Angles(0, rng:NextNumber(0, 1), 0), { IRON, H.scaled(IRON, 1.12), H.scaled(IRON, 0.9) }))
+			local out = Vector3.new(c.X, 0, c.Z).Unit
+			for t = -1, 1 do
+				local d = (out + Vector3.new(-out.Z, 0, out.X) * t * 0.6).Unit
+				table.insert(U.Iron, M.frustumN(4, 0.8, 0.15, 0, 2.0, H.frameY(Vector3.new(c.X, c.Y - s.Y / 2 + 0.7, c.Z) + d * s.X * 0.35, (d - Vector3.new(0, 0.3, 0)).Unit), { IRON_L, IRON }))
+			end
+		elseif r.name == "Log" then
+			-- a bark log with grooves and pale cut ends
+			local axis = r.cf.LookVector
+			local a, b = c - axis * s.Z / 2, c + axis * s.Z / 2
+			local lr = s.X / 2
+			local cf = H.frameY(a, b - a) * CFrame.Angles(0, rng:NextNumber(0, 1), 0)
+			table.insert(U.Logs, M.frustumN(8, lr, lr * 0.94, 0, s.Z, cf, { r.color, H.scaled(r.color, 1.1), H.scaled(r.color, 0.88) }))
+			for _, e in ipairs({ 0, 1 }) do
+				table.insert(U.Logs, M.frustumN(8, lr * 0.8, lr * 0.8, -0.03, 0.03, H.frameY(a:Lerp(b, e), b - a), { rgb(170, 132, 92) }))
+			end
+			for k = 0, 2 do
+				local off = (cf * CFrame.Angles(0, k * 2.1 + 0.4, 0)).XVector * lr
+				table.insert(U.Logs, H.bar(a + off + axis * 0.8, b + off - axis * rng:NextNumber(0.8, 1.6), 0.14, H.scaled(r.color, 0.6)))
+			end
+		elseif r.name == "Rune" and s.Y > 4 then
+			-- the carved dark panel behind each rune pair (the runes stay as they are)
+			local zs = if r.cf.LookVector:Dot(Vector3.new(c.X, 0, c.Z).Unit) > 0 then 1 else -1
+			local back = r.cf * CFrame.new(0, 0.2, 0.3 * zs) * CFrame.Angles(0, if zs > 0 then 0 else math.pi, 0)
+			table.insert(U.Carving, H.chamfered(Vector3.new(4.8, 6.6, 0.4), back, rgb(40, 34, 48), { "frontFace" }, 0.2))
+			table.insert(U.Carving, H.chamfered(Vector3.new(5.6, 7.4, 0.3), back * CFrame.new(0, 0, 0.12), H.scaled(IRON_L, 0.95), { "frontFace" }, 0.15))
+		elseif r.name == "Handle" and s.Y > 5 then
+			-- lugs on the belly and a heavy ring handle (in today's bracket)
+			local sx = math.sign(c.X)
+			for _, y in ipairs({ 18, 26 }) do
+				table.insert(U.Iron, H.chamfered(Vector3.new(4.0, 2.2, 2.8), CFrame.new(sx * 25.0, y, 0), H.scaled(IRON, 1.08), { "vertical", "topFrontBack", "bottomFrontBack" }, 0.3))
+			end
+			local rc = Vector3.new(sx * 26.6, 22, 0)
+			local rr = 4.0
+			for k = 0, 11 do
+				local a0, a1 = k * math.pi / 6, (k + 1) * math.pi / 6
+				local p0 = rc + Vector3.new(math.cos(a0) * rr * 0.55, math.sin(a0) * rr, 0)
+				local p1 = rc + Vector3.new(math.cos(a1) * rr * 0.55, math.sin(a1) * rr, 0)
+				table.insert(U.Iron, H.bar(p0, p1, 1.3, H.scaled(IRON_L, if k % 2 == 0 then 1.0 else 0.92)))
+			end
+		end
+	end
+	-- glowing bubbles on the liquid (its glow colour)
+	local liquidRow
+	for _, r in ipairs(rows) do
+		if r.name == "Liquid" then
+			liquidRow = r
+		end
+	end
+	local ly = liquidRow.cf.Position.Y + liquidRow.size.X / 2
+	for k = 1, 9 do
+		local a = k * 2.4
+		local rr = 3 + k * 1.8
+		local s = rng:NextNumber(0.9, 2.0)
+		table.insert(U.Bubbles, M.frustumN(8, s, s * 0.3, ly - 0.1, ly + s * 0.35, CFrame.new(math.cos(a) * rr, 0, math.sin(a) * rr), { liquidRow.color, H.scaled(liquidRow.color, 1.1) }))
+	end
+	-- embers and coals among the logs under the pot
+	for k = 1, 14 do
+		local a = k * 0.45
+		local rr = rng:NextNumber(5, 15)
+		local p = Vector3.new(math.cos(a) * rr, 0.35, math.sin(a) * rr)
+		if k % 3 == 0 then
+			ST.blob(U.Logs, rng, CFrame.new(p), 1.0, 0.5, 0.8, function(): Color3
+				return rgb(34, 30, 30)
+			end, 0.3)
+		else
+			table.insert(U.Embers, M.frustumN(5, rng:NextNumber(0.4, 0.7), 0.15, 0, rng:NextNumber(0.5, 0.9), CFrame.new(p) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), { if k % 2 == 0 then rgb(255, 122, 46) else rgb(255, 170, 60) }))
+		end
+	end
+	-- a small stack of firewood and bones at the foot (between 2 logs)
+	local base = CFrame.new(-15.5, 0, -15.5) * CFrame.Angles(0, math.rad(45), 0)
+	for k, l in ipairs({ { -1.0, 0.7 }, { 1.0, 0.7 }, { 0, 2.0 } }) do
+		local cf = base * CFrame.new(l[1], l[2], 0)
+		local a, b = (cf * CFrame.new(0, 0, -2.6)).Position, (cf * CFrame.new(0, 0, 2.6)).Position
+		table.insert(U.Logs, M.frustumN(8, 0.7, 0.66, 0, 5.2, H.frameY(a, b - a) * CFrame.Angles(0, k, 0), { rgb(78, 58, 44), rgb(96, 70, 50), rgb(64, 48, 36) }))
+		table.insert(U.Logs, M.frustumN(8, 0.56, 0.56, -0.03, 0.03, H.frameY(b, b - a), { rgb(170, 132, 92) }))
+	end
+	for k, t in ipairs({ { 2.6, 0.35, 1.2, 0.5 }, { 3.0, 0.35, -1.4, -0.3 } }) do
+		local cf = base * CFrame.new(t[1], t[2], t[3]) * CFrame.Angles(0, t[4], 0)
+		local a, b = (cf * CFrame.new(-1.3, 0, 0)).Position, (cf * CFrame.new(1.3, 0, 0)).Position
+		table.insert(U.Bones, H.bar(a, b, 0.42, BONE))
+		for _, e in ipairs({ a, b }) do
+			for _, sz in ipairs({ -0.22, 0.22 }) do
+				ST.blob(U.Bones, rng, cf - cf.Position + e + (cf - cf.Position) * Vector3.new(0, 0, sz), 0.3, 0.26, 0.26, function(): Color3
+					return BONE
+				end)
+			end
+		end
+	end
+	local sk = base * CFrame.new(1.4, 0.75, 0.2) * CFrame.Angles(0, math.rad(-30), 0)
+	ST.blob(U.Bones, rng, sk, 0.8, 0.7, 0.85, function(n: Vector3): Color3
+		return if n.Y > 0 then BONE else H.scaled(BONE, 0.9)
+	end, 0.5)
+	for _, ex in ipairs({ -0.32, 0.32 }) do
+		table.insert(U.Carving, H.piece("Part", Vector3.new(0.34, 0.3, 0.1), sk * CFrame.new(ex, 0.1, -0.82), rgb(40, 34, 48)))
+	end
+	return finishR6(m, id, U, { Bubbles = { material = Enum.Material.Neon, shadow = false }, Embers = { material = Enum.Material.Neon, shadow = false } })
 end
 
 return P
