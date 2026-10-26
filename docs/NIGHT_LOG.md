@@ -3576,6 +3576,15 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   trident statue, giant anchor, broken mast); 1680 copies tagged + 3406 attributes; check 0; compare 14862 -> 14862, 0
   changed; full dry run 0 (539 / 13238); tag / build again 0; every sample stands on its block floor (checked all
   blocks). Not assets: 21 loose-part folders. Shot 10_Abyss.jpg.
+- 11 Mechanical DONE: 46 assets (S 4 / M 26 / L 16), 353 copies, ALL new (46 mechanical_* templates: catwalk ring /
+  catwalk / metal walkway, charging station (arena), glass partition, sewer grate, warning barrier, toxic barrel,
+  console desk, metal crate, hangar weapon rack (arena), hologram table, server rack, 3 sub-zone gates, boss gate,
+  arena door, entry arch, security door frame, landmarks hologram map / reactor core (arena) / assembly machine (host) /
+  pipe junction (host), 2 industrial lamp variants, wall lamp, wall sconce, big pipe wall, 2 broken machines, hanging
+  cable, conveyor belt, gear stack, giant gear, laser grid, pipe cluster / elbow / straight, robot arm, valve wheel,
+  sludge channel, hub sign, screen wall, warning sign, energy pillar); 353 copies tagged + 706 attributes; check 0;
+  compare 6106 -> 6106, 0 changed; full dry run 0 (585 / 13655); tag / build again 0. Not assets: 29 loose-part
+  folders. Shot 11_Mechanical.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
