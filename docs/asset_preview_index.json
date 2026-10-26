@@ -1,7 +1,81 @@
 {
- "generated": "2026-10-26T00:03:11Z",
+ "generated": "2026-10-26T07:00:51Z",
  "zones": [
   {
+   "characters": [
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Guide",
+     "id": "npc_guide",
+     "nextAction": "import Blender_Exports/NPC/Hub/npc_guide.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Blacksmith",
+     "id": "npc_blacksmith",
+     "nextAction": "none (imported Blender model)",
+     "source": "imported",
+     "quality": "improved"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Trainer",
+     "id": "npc_trainer",
+     "nextAction": "import Blender_Exports/NPC/Hub/npc_trainer.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Egg Keeper",
+     "id": "npc_egg_keeper",
+     "nextAction": "import Blender_Exports/NPC/Hub/npc_egg_keeper.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Trophy Merchant",
+     "id": "npc_trophy_merchant",
+     "nextAction": "none (imported Blender model)",
+     "source": "imported",
+     "quality": "improved"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Priest",
+     "id": "npc_priest",
+     "nextAction": "import Blender_Exports/NPC/Hub/npc_priest.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Gem Merchant",
+     "id": "npc_gem_merchant",
+     "nextAction": "none (imported Blender model)",
+     "source": "imported",
+     "quality": "improved"
+    },
+    {
+     "inPreview": true,
+     "role": "NPC",
+     "name": "Quartermaster",
+     "id": "npc_quartermaster",
+     "nextAction": "import Blender_Exports/NPC/Hub/npc_quartermaster.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -1229,6 +1303,148 @@
    "biome": "Spawn island: village, plaza, harbour, beach"
   },
   {
+   "characters": [
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Boar",
+     "subZone": 1,
+     "id": "plains_boar",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_boar.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Wild Wolf",
+     "subZone": 1,
+     "id": "plains_wild_wolf",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_wild_wolf.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Field Bandit",
+     "subZone": 1,
+     "id": "plains_field_bandit",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_field_bandit.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Giant Crab",
+     "subZone": 2,
+     "id": "plains_giant_crab",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_giant_crab.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Shipwrecked Pirate",
+     "subZone": 2,
+     "id": "plains_shipwrecked_pirate",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_shipwrecked_pirate.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Aggressive Seagull",
+     "subZone": 2,
+     "id": "plains_aggressive_seagull",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_aggressive_seagull.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Brown Bear",
+     "subZone": 3,
+     "id": "plains_brown_bear",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_brown_bear.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Forest Archer",
+     "subZone": 3,
+     "id": "plains_forest_archer",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_forest_archer.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Giant Spider",
+     "subZone": 3,
+     "id": "plains_giant_spider",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_giant_spider.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Bat",
+     "subZone": 4,
+     "id": "plains_bat",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_bat.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Miner Skeleton",
+     "subZone": 4,
+     "id": "plains_miner_skeleton",
+     "nextAction": "import Blender_Exports/Mobs/01_Plains/plains_miner_skeleton.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "MiniBoss",
+     "name": "Cave Troll",
+     "subZone": 4,
+     "id": "plains_cave_troll",
+     "nextAction": "import Blender_Exports/MiniBosses/01_Plains/plains_cave_troll.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "MiniBoss",
+     "name": "Crystal Spider Matriarch",
+     "subZone": 4,
+     "id": "plains_crystal_spider_matriarch",
+     "nextAction": "import Blender_Exports/MiniBosses/01_Plains/plains_crystal_spider_matriarch.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Boss",
+     "name": "Golem",
+     "subZone": 4,
+     "id": "plains_golem",
+     "nextAction": "import Blender_Exports/Bosses/01_Plains/plains_golem.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -2947,6 +3163,148 @@
    "biome": "Nature biome: Plains, Beach, Forest, Cave"
   },
   {
+   "characters": [
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Scorpion",
+     "subZone": 1,
+     "id": "desert_scorpion",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_scorpion.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Sand Snake",
+     "subZone": 1,
+     "id": "desert_sand_snake",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_sand_snake.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Vulture",
+     "subZone": 1,
+     "id": "desert_vulture",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_vulture.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Jackal",
+     "subZone": 2,
+     "id": "desert_jackal",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_jackal.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Desert Crocodile",
+     "subZone": 2,
+     "id": "desert_crocodile",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_crocodile.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Nomad Bandit",
+     "subZone": 2,
+     "id": "desert_nomad_bandit",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_nomad_bandit.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Sandstone Golem",
+     "subZone": 3,
+     "id": "desert_sandstone_golem",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_sandstone_golem.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Royal Eagle",
+     "subZone": 3,
+     "id": "desert_royal_eagle",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_royal_eagle.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Cliff Bandit",
+     "subZone": 3,
+     "id": "desert_cliff_bandit",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_cliff_bandit.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Mummy",
+     "subZone": 4,
+     "id": "desert_mummy",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_mummy.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Giant Scarab",
+     "subZone": 4,
+     "id": "desert_giant_scarab",
+     "nextAction": "import Blender_Exports/Mobs/02_Desert/desert_giant_scarab.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "MiniBoss",
+     "name": "Anubis Guard",
+     "subZone": 4,
+     "id": "desert_anubis_guard",
+     "nextAction": "import Blender_Exports/MiniBosses/02_Desert/desert_anubis_guard.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "MiniBoss",
+     "name": "Sandstorm Djinn",
+     "subZone": 4,
+     "id": "desert_sandstorm_djinn",
+     "nextAction": "import Blender_Exports/MiniBosses/02_Desert/desert_sandstorm_djinn.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Boss",
+     "name": "Cursed Pharaoh",
+     "subZone": 4,
+     "id": "desert_cursed_pharaoh",
+     "nextAction": "import Blender_Exports/Bosses/02_Desert/desert_cursed_pharaoh.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -4080,6 +4438,148 @@
    "biome": "Sand biome: Dunes, Oasis, Canyon, Pyramid"
   },
   {
+   "characters": [
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Monkey",
+     "subZone": 1,
+     "id": "jungle_monkey",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_monkey.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Green Snake",
+     "subZone": 1,
+     "id": "jungle_green_snake",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_green_snake.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Venomous Spider",
+     "subZone": 1,
+     "id": "jungle_venomous_spider",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_venomous_spider.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Piranha",
+     "subZone": 2,
+     "id": "jungle_piranha",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_piranha.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Toxic Frog",
+     "subZone": 2,
+     "id": "jungle_toxic_frog",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_toxic_frog.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Tribal Warrior",
+     "subZone": 2,
+     "id": "jungle_tribal_warrior",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_tribal_warrior.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Jaguar",
+     "subZone": 3,
+     "id": "jungle_jaguar",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_jaguar.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Animated Statue",
+     "subZone": 3,
+     "id": "jungle_animated_statue",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_animated_statue.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Tribal Archer",
+     "subZone": 3,
+     "id": "jungle_tribal_archer",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_tribal_archer.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Shaman",
+     "subZone": 4,
+     "id": "jungle_shaman",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_shaman.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Normal",
+     "name": "Temple Guard",
+     "subZone": 4,
+     "id": "jungle_temple_guard",
+     "nextAction": "import Blender_Exports/Mobs/03_Jungle/jungle_temple_guard.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "MiniBoss",
+     "name": "Elder Jaguar",
+     "subZone": 4,
+     "id": "jungle_elder_jaguar",
+     "nextAction": "import Blender_Exports/MiniBosses/03_Jungle/jungle_elder_jaguar.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "MiniBoss",
+     "name": "Tribal Warlord",
+     "subZone": 4,
+     "id": "jungle_tribal_warlord",
+     "nextAction": "import Blender_Exports/MiniBosses/03_Jungle/jungle_tribal_warlord.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": true,
+     "role": "Boss",
+     "name": "Ancestral Gorilla",
+     "subZone": 4,
+     "id": "jungle_ancestral_gorilla",
+     "nextAction": "import Blender_Exports/Bosses/03_Jungle/jungle_ancestral_gorilla.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -5373,6 +5873,148 @@
    "biome": "Poison biome: Jungle Edge, River, Lost Temple, Temple Heart"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "White Wolf",
+     "subZone": 1,
+     "id": "tundra_white_wolf",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_white_wolf.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Arctic Fox",
+     "subZone": 1,
+     "id": "tundra_arctic_fox",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_arctic_fox.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Cursed Snowman",
+     "subZone": 1,
+     "id": "tundra_cursed_snowman",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_cursed_snowman.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Ice Spirit",
+     "subZone": 2,
+     "id": "tundra_ice_spirit",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_ice_spirit.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Polar Bear",
+     "subZone": 2,
+     "id": "tundra_polar_bear",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_polar_bear.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Swordfish",
+     "subZone": 2,
+     "id": "tundra_swordfish",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_swordfish.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Yeti",
+     "subZone": 3,
+     "id": "tundra_yeti",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_yeti.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Furious Ibex",
+     "subZone": 3,
+     "id": "tundra_furious_ibex",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_furious_ibex.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Ice Eagle",
+     "subZone": 3,
+     "id": "tundra_ice_eagle",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_ice_eagle.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Ice Knight",
+     "subZone": 4,
+     "id": "tundra_ice_knight",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_ice_knight.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Frost Golem",
+     "subZone": 4,
+     "id": "tundra_frost_golem",
+     "nextAction": "import Blender_Exports/Mobs/04_Tundra/tundra_frost_golem.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Frost Wolf Alpha",
+     "subZone": 4,
+     "id": "tundra_frost_wolf_alpha",
+     "nextAction": "import Blender_Exports/MiniBosses/04_Tundra/tundra_frost_wolf_alpha.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Ice Knight Captain",
+     "subZone": 4,
+     "id": "tundra_ice_knight_captain",
+     "nextAction": "import Blender_Exports/MiniBosses/04_Tundra/tundra_ice_knight_captain.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Frost King",
+     "subZone": 4,
+     "id": "tundra_frost_king",
+     "nextAction": "import Blender_Exports/Bosses/04_Tundra/tundra_frost_king.fbx (EnemyModels.fromImport)",
+     "source": "placeholder",
+     "quality": "old"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -6348,6 +6990,148 @@
    "biome": "Frost biome: Snowy Plains, Frozen Lake, Mountain, Ice Citadel"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Giant Frog",
+     "subZone": 1,
+     "id": "swamp_giant_frog",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Leech",
+     "subZone": 1,
+     "id": "swamp_leech",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Giant Mosquito",
+     "subZone": 1,
+     "id": "swamp_giant_mosquito",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Living Tree",
+     "subZone": 2,
+     "id": "swamp_living_tree",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Will-o'-Wisp",
+     "subZone": 2,
+     "id": "swamp_will_o_wisp",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Crow",
+     "subZone": 2,
+     "id": "swamp_crow",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Witch Apprentice",
+     "subZone": 3,
+     "id": "swamp_witch_apprentice",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Black Cat",
+     "subZone": 3,
+     "id": "swamp_black_cat",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Scarecrow",
+     "subZone": 3,
+     "id": "swamp_scarecrow",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Sorcerer Toad",
+     "subZone": 4,
+     "id": "swamp_sorcerer_toad",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Mud Golem",
+     "subZone": 4,
+     "id": "swamp_mud_golem",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Giant Toad Shaman",
+     "subZone": 4,
+     "id": "swamp_giant_toad_shaman",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Rotting Treant",
+     "subZone": 4,
+     "id": "swamp_rotting_treant",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Swamp Witch",
+     "subZone": 4,
+     "id": "swamp_witch",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -7408,6 +8192,148 @@
    "biome": "Curse biome: Marsh, Dead Forest, Witch Village, Giant Cauldron"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Ash Lizard",
+     "subZone": 1,
+     "id": "volcano_ash_lizard",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Fire Bat",
+     "subZone": 1,
+     "id": "volcano_fire_bat",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Charred Miner",
+     "subZone": 1,
+     "id": "volcano_charred_miner",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Magma Dwarf",
+     "subZone": 2,
+     "id": "volcano_magma_dwarf",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Basalt Golem",
+     "subZone": 2,
+     "id": "volcano_basalt_golem",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Rock Worm",
+     "subZone": 2,
+     "id": "volcano_rock_worm",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Salamander",
+     "subZone": 3,
+     "id": "volcano_salamander",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Flame Spirit",
+     "subZone": 3,
+     "id": "volcano_flame_spirit",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Lava Crab",
+     "subZone": 3,
+     "id": "volcano_lava_crab",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Fire Elemental",
+     "subZone": 4,
+     "id": "volcano_fire_elemental",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Obsidian Guardian",
+     "subZone": 4,
+     "id": "volcano_obsidian_guardian",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Magma Brute",
+     "subZone": 4,
+     "id": "volcano_magma_brute",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Lava Serpent",
+     "subZone": 4,
+     "id": "volcano_lava_serpent",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Magma Titan",
+     "subZone": 4,
+     "id": "volcano_magma_titan",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -8379,6 +9305,148 @@
    "biome": "Burn biome: Volcano Foot, Magma Mine, Lava River, Crater"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Imp",
+     "subZone": 1,
+     "id": "hell_imp",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Hellhound",
+     "subZone": 1,
+     "id": "hell_hellhound",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Scorched Zombie",
+     "subZone": 1,
+     "id": "hell_scorched_zombie",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Demon Guard",
+     "subZone": 2,
+     "id": "hell_demon_guard",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Succubus",
+     "subZone": 2,
+     "id": "hell_succubus",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Burning Skeleton",
+     "subZone": 2,
+     "id": "hell_burning_skeleton",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Infernal Knight",
+     "subZone": 3,
+     "id": "hell_infernal_knight",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Gargoyle",
+     "subZone": 3,
+     "id": "hell_gargoyle",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Demon Archer",
+     "subZone": 3,
+     "id": "hell_demon_archer",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Elite Infernal Guard",
+     "subZone": 4,
+     "id": "hell_elite_infernal_guard",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Demonic Mage",
+     "subZone": 4,
+     "id": "hell_demonic_mage",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Hellhound Alpha",
+     "subZone": 4,
+     "id": "hell_hellhound_alpha",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Infernal Executioner",
+     "subZone": 4,
+     "id": "hell_infernal_executioner",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Supreme Demon",
+     "subZone": 4,
+     "id": "hell_supreme_demon",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -9229,6 +10297,148 @@
    "biome": "Hellfire biome: Hellish Plains, Hell City, Castle Entrance, Throne Room"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Glowing Bird",
+     "subZone": 1,
+     "id": "heaven_glowing_bird",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Wind Spirit",
+     "subZone": 1,
+     "id": "heaven_wind_spirit",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Celestial Deer",
+     "subZone": 1,
+     "id": "heaven_celestial_deer",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Storm Cloud",
+     "subZone": 2,
+     "id": "heaven_storm_cloud",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Guardian Cherub",
+     "subZone": 2,
+     "id": "heaven_guardian_cherub",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Griffin",
+     "subZone": 2,
+     "id": "heaven_griffin",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Celestial Soldier",
+     "subZone": 3,
+     "id": "heaven_celestial_soldier",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Winged Archer",
+     "subZone": 3,
+     "id": "heaven_winged_archer",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Sacred Statue",
+     "subZone": 3,
+     "id": "heaven_sacred_statue",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Celestial Paladin",
+     "subZone": 4,
+     "id": "heaven_celestial_paladin",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Light Priest",
+     "subZone": 4,
+     "id": "heaven_light_priest",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Seraph Knight",
+     "subZone": 4,
+     "id": "heaven_seraph_knight",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Storm Griffin Lord",
+     "subZone": 4,
+     "id": "heaven_storm_griffin_lord",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Supreme Angel",
+     "subZone": 4,
+     "id": "heaven_supreme_angel",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -10160,6 +11370,148 @@
    "biome": "Holy biome: Sky Island, Cloud Bridge, Castle Entrance, Throne Room"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Zombie",
+     "subZone": 1,
+     "id": "dead_zombie",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Ghost",
+     "subZone": 1,
+     "id": "dead_ghost",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Ghoul",
+     "subZone": 1,
+     "id": "dead_ghoul",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Skeleton Warrior",
+     "subZone": 2,
+     "id": "dead_skeleton_warrior",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Bone Rat",
+     "subZone": 2,
+     "id": "dead_bone_rat",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Novice Necromancer",
+     "subZone": 2,
+     "id": "dead_novice_necromancer",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Haunted Monk",
+     "subZone": 3,
+     "id": "dead_haunted_monk",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Wailing Spectre",
+     "subZone": 3,
+     "id": "dead_wailing_spectre",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Cursed Gargoyle",
+     "subZone": 3,
+     "id": "dead_cursed_gargoyle",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Undead Knight",
+     "subZone": 4,
+     "id": "dead_undead_knight",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Royal Skeleton Guard",
+     "subZone": 4,
+     "id": "dead_royal_skeleton_guard",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Skeleton General",
+     "subZone": 4,
+     "id": "dead_skeleton_general",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Banshee Queen",
+     "subZone": 4,
+     "id": "dead_banshee_queen",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Lich King",
+     "subZone": 4,
+     "id": "dead_lich_king",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -11107,6 +12459,148 @@
    "biome": "Soul Drain biome: Graveyard, Catacombs, Haunted Cathedral, Royal Sarcophagus Room"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Jellyfish",
+     "subZone": 1,
+     "id": "abyss_jellyfish",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Reef Shark",
+     "subZone": 1,
+     "id": "abyss_reef_shark",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Moray Eel",
+     "subZone": 1,
+     "id": "abyss_moray_eel",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Drowned Pirate",
+     "subZone": 2,
+     "id": "abyss_drowned_pirate",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Octopus",
+     "subZone": 2,
+     "id": "abyss_octopus",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Armor Crab",
+     "subZone": 2,
+     "id": "abyss_armor_crab",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Lanternfish",
+     "subZone": 3,
+     "id": "abyss_lanternfish",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Giant Squid",
+     "subZone": 3,
+     "id": "abyss_giant_squid",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Electric Eel",
+     "subZone": 3,
+     "id": "abyss_electric_eel",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Triton Guard",
+     "subZone": 4,
+     "id": "abyss_triton_guard",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Corrupted Siren",
+     "subZone": 4,
+     "id": "abyss_corrupted_siren",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Kraken Spawn",
+     "subZone": 4,
+     "id": "abyss_kraken_spawn",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Triton Captain",
+     "subZone": 4,
+     "id": "abyss_triton_captain",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Leviathan",
+     "subZone": 4,
+     "id": "abyss_leviathan",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -12221,6 +13715,148 @@
    "biome": "Tidal biome: Coral Reef, Shipwreck, Abyssal Trench, Sunken Palace"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Drone",
+     "subZone": 1,
+     "id": "mechanical_drone",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Assembly Robot",
+     "subZone": 1,
+     "id": "mechanical_assembly_robot",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Mechanical Rat",
+     "subZone": 1,
+     "id": "mechanical_rat",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Cleaner Robot",
+     "subZone": 2,
+     "id": "mechanical_cleaner_robot",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Mechanical Spider",
+     "subZone": 2,
+     "id": "mechanical_spider",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Toxic Slime",
+     "subZone": 2,
+     "id": "mechanical_toxic_slime",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Laser Turret",
+     "subZone": 3,
+     "id": "mechanical_laser_turret",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Guardian Robot",
+     "subZone": 3,
+     "id": "mechanical_guardian_robot",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Combat Drone",
+     "subZone": 3,
+     "id": "mechanical_combat_drone",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Soldier Robot",
+     "subZone": 4,
+     "id": "mechanical_soldier_robot",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Steel Golem",
+     "subZone": 4,
+     "id": "mechanical_steel_golem",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "War Mech",
+     "subZone": 4,
+     "id": "mechanical_war_mech",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Sentinel Prime",
+     "subZone": 4,
+     "id": "mechanical_sentinel_prime",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Colossal Robot",
+     "subZone": 4,
+     "id": "mechanical_colossal_robot",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [
@@ -13143,6 +14779,148 @@
    "biome": "Shock biome: Abandoned Factory, Industrial Sewers, Control Center, Reactor Core"
   },
   {
+   "characters": [
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Wandering Shadow",
+     "subZone": 1,
+     "id": "void_wandering_shadow",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Void Stalker",
+     "subZone": 1,
+     "id": "void_stalker",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Obsidian Sentinel",
+     "subZone": 1,
+     "id": "void_obsidian_sentinel",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Crystal Golem",
+     "subZone": 2,
+     "id": "void_crystal_golem",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Spectral Butterfly",
+     "subZone": 2,
+     "id": "void_spectral_butterfly",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Void Spirit",
+     "subZone": 2,
+     "id": "void_spirit",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Lost Voyager",
+     "subZone": 3,
+     "id": "void_lost_voyager",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Phantom Archer",
+     "subZone": 3,
+     "id": "void_phantom_archer",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Fallen Guardian",
+     "subZone": 3,
+     "id": "void_fallen_guardian",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Void Knight",
+     "subZone": 4,
+     "id": "void_knight",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Normal",
+     "name": "Void Mage",
+     "subZone": 4,
+     "id": "void_mage",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Void Reaper",
+     "subZone": 4,
+     "id": "void_reaper",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "MiniBoss",
+     "name": "Crystal Warden",
+     "subZone": 4,
+     "id": "void_crystal_warden",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    },
+    {
+     "inPreview": false,
+     "role": "Boss",
+     "name": "Void Dragon",
+     "subZone": 4,
+     "id": "void_dragon",
+     "nextAction": "design + Blender model (zone not playable yet: generic placeholder rig)",
+     "source": "placeholder",
+     "quality": "to redo"
+    }
+   ],
    "assets": [
     {
      "zones": [

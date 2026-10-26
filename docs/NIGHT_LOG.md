@@ -3652,3 +3652,12 @@ only the tag and attributes, nothing else.
 - Step 0 DONE: ground snapshot docs/preview_ground_snapshot.json (13 grounds, 1462 placed items); BuildAssetPreview
   ground / block / plate / slot lock (tools/BuildAssetPreview.luau 53460 / 8ee37f91ad5a78c0); build Hub then all
   blocks: 0 differences; OwnerLocked on 13 grounds.
+- Task 1, zones 00-03 DONE: B.buildCharacters / B.checkCharacters / index characters added (BuildAssetPreview 66758 /
+  5348e4d1ef328bdf). Area: block x0+24 .. x0+136 (the strip left of the rows, on the owner's ground), from 70 studs
+  behind the block front (seen over the 30-stud title), groups NPCs / ENEMIES / MINI-BOSSES + BOSS (bigger spacing),
+  labels name + role + quality, slots kept like the assets. Hub 8 NPCs (3 imported = improved, 5 placeholder rigs =
+  old), Plains / Desert / Jungle 14 each (11 enemies, 2 mini-bosses, boss; part-built rigs = old, Blender FBX waiting
+  for import). Inert: scripts, prompts, humanoids, animators, joints, sounds, emitters removed, anchored, no
+  collisions / touches, IsPreviewSample: checkCharacters 50 samples 0 problems; ground / layout compare 0
+  differences; build again = all kept. Shots docs/screenshots/asset_preview/chars_00_Hub / 01_Plains / 02_Desert /
+  03_Jungle.jpg. Index md / json: an NPC / enemy table per zone.

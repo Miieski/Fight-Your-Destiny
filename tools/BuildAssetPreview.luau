@@ -1210,6 +1210,327 @@ function B.build(zoneId: string, plan: any?): string
 end
 
 ---------------------------------------------------------------------
+-- characters (owner round 5): the zone's NPCs and enemies (normal, mini-bosses, boss) in an area on the LEFT of the
+-- block, BEHIND the title sign. Models = what the game clones today: ServerStorage.NPCs / Enemies / Bosses.<id> when
+-- imported, else the part-built rig of Lib/EnemyRigs (the NPCService / EnemyService fallbacks). Samples are inert.
+---------------------------------------------------------------------
+local CHAR_AREA = { left = 136, right = 24, frontGap = 70 } -- studs from the block origin x0 (+X = the viewer's left;
+-- frontGap: far enough behind the 30-stud title sign to be seen over it from the front)
+
+local function characterList(zoneId: string): { any }
+	local list = {}
+	local ok, EnemyRigs = pcall(function()
+		return require(game:GetService("ServerScriptService").GameSystem.Lib.EnemyRigs) :: any
+	end)
+	assert(ok, "Lib/EnemyRigs not found")
+	local function imported(folders: { string }, id: string): Model?
+		for _, name in ipairs(folders) do
+			local folder = ServerStorage:FindFirstChild(name)
+			local model = folder and folder:FindFirstChild(id)
+			if model and model:IsA("Model") and model.PrimaryPart then
+				return model
+			end
+		end
+		return nil
+	end
+	if zoneId == "Hub" then
+		local NPCs = require(ReplicatedStorage.GameSystem.Config.NPCs) :: any
+		for _, npc in ipairs(NPCs.List) do
+			local model = imported({ "NPCs" }, npc.Id)
+			table.insert(list, {
+				id = npc.Id, name = npc.Name, role = "NPC", group = "npc",
+				source = if model then "imported" else "placeholder",
+				quality = if model then "improved" else "old",
+				nextAction = if model then "none (imported Blender model)" else `import Blender_Exports/NPC/Hub/{npc.Id}.fbx (EnemyModels.fromImport)`,
+				make = function(): Model
+					if model then
+						return model:Clone()
+					end
+					return EnemyRigs.build({
+						Id = npc.Id, Rig = "Biped", Height = NPCs.HEIGHT, Color = npc.Color, Accent = npc.Accent,
+						Eyes = Color3.fromRGB(20, 18, 24), Tier = "normal", AttackType = "melee",
+					})
+				end,
+			})
+		end
+		return list
+	end
+	local Enemies = require(ReplicatedStorage.GameSystem.Config.Enemies) :: any
+	local Zones = require(ReplicatedStorage.GameSystem.Config.Zones) :: any
+	local zone = Zones.ById[zoneId]
+	local defs = {}
+	for n = 1, Zones.SUBZONE_COUNT do
+		for _, def in ipairs(Enemies.BySubZone[Zones.subZoneId(zoneId, n)] or {}) do
+			table.insert(defs, { def = def, group = "enemy" })
+		end
+	end
+	local room = Enemies.BossRoom[zoneId]
+	if room then
+		table.insert(defs, { def = room.Mini1, group = "boss" })
+		table.insert(defs, { def = room.Mini2, group = "boss" })
+		table.insert(defs, { def = room.Boss, group = "boss" })
+	end
+	local kindFolder = { normal = "Mobs", mini = "MiniBosses", boss = "Bosses" }
+	for _, entry in ipairs(defs) do
+		local def = entry.def
+		local model = imported({ "Enemies", "Bosses" }, def.Id)
+		local quality, nextAction
+		if model then
+			quality, nextAction = "improved", "none (imported Blender model)"
+		elseif def.Rig then
+			quality = "old"
+			nextAction = string.format("import Blender_Exports/%s/%02d_%s/%s.fbx (EnemyModels.fromImport)", kindFolder[def.Tier], zone.Index, zoneId, def.Id)
+		else
+			quality, nextAction = "to redo", "design + Blender model (zone not playable yet: generic placeholder rig)"
+		end
+		table.insert(list, {
+			id = def.Id, name = def.Name, role = def.Role, group = entry.group, subZone = def.SubZone,
+			source = if model then "imported" else "placeholder", quality = quality, nextAction = nextAction,
+			make = function(): Model
+				if model then
+					return model:Clone()
+				end
+				return EnemyRigs.build(def)
+			end,
+		})
+	end
+	return list
+end
+B.characterList = characterList
+
+-- visual only: no script, prompt, click detector, humanoid, animator / animation controller, joint, sound or emitter;
+-- every part anchored, no collisions, no touches
+local function sanitizeCharacter(model: Instance)
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("LuaSourceContainer") or d:IsA("ProximityPrompt") or d:IsA("ClickDetector") or d:IsA("Humanoid")
+			or d:IsA("AnimationController") or d:IsA("Animator") or d:IsA("JointInstance") or d:IsA("Sound")
+			or d:IsA("ParticleEmitter") or d:IsA("Beam") or d:IsA("Trail") or d:IsA("Fire") or d:IsA("Smoke")
+			or d:IsA("Sparkles") or d:IsA("Constraint") or d:IsA("AlignPosition") or d:IsA("AlignOrientation") then
+			d:Destroy()
+		end
+	end
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+			d.CanCollide = false
+			d.CanTouch = false
+		end
+	end
+end
+
+local function worldBounds(model: Instance): (Vector3, Vector3)
+	local x0, y0, z0, x1, y1, z1 = math.huge, math.huge, math.huge, -math.huge, -math.huge, -math.huge
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") then
+			local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = d.CFrame:GetComponents()
+			local hx, hy, hz = d.Size.X / 2, d.Size.Y / 2, d.Size.Z / 2
+			local ex = math.abs(r00) * hx + math.abs(r01) * hy + math.abs(r02) * hz
+			local ey = math.abs(r10) * hx + math.abs(r11) * hy + math.abs(r12) * hz
+			local ez = math.abs(r20) * hx + math.abs(r21) * hy + math.abs(r22) * hz
+			x0, y0, z0 = math.min(x0, x - ex), math.min(y0, y - ey), math.min(z0, z - ez)
+			x1, y1, z1 = math.max(x1, x + ex), math.max(y1, y + ey), math.max(z1, z + ez)
+		end
+	end
+	return Vector3.new(x0, y0, z0), Vector3.new(x1, y1, z1)
+end
+
+local ROLE_TEXT = { NPC = "NPC", Normal = "enemy", MiniBoss = "mini-boss", Boss = "BOSS" }
+
+function B.buildCharacters(zoneId: string): string
+	local z = nil
+	for _, other in ipairs(B.zones()) do
+		if other.id == zoneId then
+			z = other
+		end
+	end
+	assert(z, "unknown zone " .. tostring(zoneId))
+	local root = previewRoot()
+	local block = root:FindFirstChild(blockName(z))
+	assert(block, `build the {zoneId} block first`)
+	local z0 = (block:GetAttribute("BlockStartZ") :: number) + 5
+	local zEndBlock = block:GetAttribute("BlockEndZ") :: number
+	local x0 = Settings.ORIGIN.X
+	local area = child(block, "Characters", "Folder")
+	local samples = child(area, "Samples", "Folder")
+	local labels = child(area, "Labels", "Folder")
+	local signs = child(area, "Signs", "Folder")
+	local list = characterList(zoneId)
+	local lines = { `BuildAssetPreview.buildCharacters {zoneId}: {#list} characters` }
+	local created, replaced, kept = 0, 0, 0
+	local wanted = {}
+	local xLeft, xRight = x0 + CHAR_AREA.left, x0 + CHAR_AREA.right
+	local front = z0 + CHAR_AREA.frontGap
+	local maxLeft = xLeft
+	local groupNames = { npc = "NPCs", enemy = "ENEMIES", boss = "MINI-BOSSES + BOSS" }
+	local lastGroup = nil
+	local cursor, lineDepth = xLeft, 0
+	for _, c in ipairs(list) do
+		wanted[c.id] = true
+		-- measure a fresh model (the sample itself when it is kept)
+		local existing = samples:FindFirstChild(c.id)
+		if existing and existing:GetAttribute("CharacterSource") ~= c.source then
+			existing:Destroy()
+			existing = nil
+			replaced += 1
+		end
+		local model = existing or c.make()
+		if not existing then
+			sanitizeCharacter(model)
+			local m0: any = model
+			m0:PivotTo(CFrame.new())
+		end
+		local mn, mx = worldBounds(model)
+		if existing then
+			-- (size from the kept sample)
+			local p = (existing :: any):GetPivot()
+			mn, mx = mn - p.Position, mx - p.Position
+		end
+		local w, d = mx.X - mn.X, mx.Z - mn.Z
+		local boss = c.group == "boss"
+		local gap = if boss then math.max(8, 0.6 * math.max(w, d)) else math.clamp(0.4 * math.max(w, d), 3, 10)
+		local slotW = math.max(w, 5)
+		if c.group ~= lastGroup then
+			if lastGroup ~= nil then
+				front += lineDepth + 14
+			end
+			cursor, lineDepth = xLeft, 0
+			lastGroup = c.group
+			local count = 0
+			for _, o in ipairs(list) do
+				if o.group == c.group then
+					count += 1
+				end
+			end
+			plate(signs, "Group_" .. c.group, Vector3.new(16, 3.4, 0.4), CFrame.new(xLeft - 8, 2, front - 2) * CFrame.Angles(math.rad(20), 0, 0), Color3.fromRGB(40, 44, 56), `{groupNames[c.group]} ({count})`)
+			front += 6
+		elseif cursor - slotW < xRight and cursor < xLeft then
+			front += lineDepth + 12
+			cursor, lineDepth = xLeft, 0
+		end
+		local cx = cursor - slotW / 2
+		local rowFront = front
+		cursor -= slotW + gap
+		lineDepth = math.max(lineDepth, d)
+		local label = labels:FindFirstChild(c.id)
+		if label and label:IsA("BasePart") then
+			cx = label:GetAttribute("SlotX") or label.Position.X
+			rowFront = label:GetAttribute("SlotFront") or (label.Position.Z + 2.5)
+		end
+		local target = Vector3.new(cx - (mn.X + mx.X) / 2, -mn.Y, rowFront + d / 2 - (mn.Z + mx.Z) / 2)
+		if existing then
+			kept += 1
+			local p = (existing :: any):GetPivot()
+			if (p.Position - target).Magnitude > 0.01 then
+				local e0: any = existing
+				e0:PivotTo(CFrame.new(target) * p.Rotation)
+			end
+		else
+			local m1: any = model
+			m1:PivotTo(CFrame.new(target))
+			model.Name = c.id
+			for key in pairs(model:GetAttributes()) do
+				model:SetAttribute(key, nil)
+			end
+			model:SetAttribute("CharacterId", c.id)
+			model:SetAttribute("Role", c.role)
+			model:SetAttribute("CharacterSource", c.source)
+			model:SetAttribute("Zone", zoneId)
+			model:SetAttribute("IsPreviewSample", true)
+			model.Parent = samples
+			created += 1
+		end
+		local lw = math.clamp(slotW, 6, 16)
+		local text = `<b>{c.name}</b>\n{ROLE_TEXT[c.role] or c.role} - {c.quality}`
+		local l = plate(labels, c.id, Vector3.new(lw, 2.2, 0.3), CFrame.new(cx, 1.3, rowFront - 2.5) * CFrame.Angles(math.rad(25), 0, 0), QUALITY_COLOR[c.quality] or QUALITY_COLOR.old, text)
+		l:SetAttribute("SlotX", cx)
+		l:SetAttribute("SlotFront", rowFront)
+		maxLeft = math.max(maxLeft, cx + slotW / 2)
+	end
+	local zEnd = front + lineDepth + 6
+	-- stale ones
+	local removed = 0
+	for _, s in ipairs(samples:GetChildren()) do
+		if not wanted[s.Name] then
+			s:Destroy()
+			removed += 1
+		end
+	end
+	for _, l in ipairs(labels:GetChildren()) do
+		if not wanted[l.Name] then
+			l:Destroy()
+		end
+	end
+	-- more ground only when the area leaves the owner's ground: a NEW part in the block's colour (never resizing his)
+	local ground = block:FindFirstChild("Ground") :: BasePart?
+	local note = ""
+	if ground then
+		local gMaxZ = ground.Position.Z + ground.Size.Z / 2
+		local gMaxX = ground.Position.X + ground.Size.X / 2
+		if zEnd > gMaxZ - 2 or maxLeft > gMaxX - 2 then
+			local extra = area:FindFirstChild("GroundExtra") :: BasePart?
+			if not extra then
+				local e = Instance.new("Part")
+				e.Name = "GroundExtra"
+				e.Anchored = true
+				e.CanTouch = false
+				e.Color = ground.Color
+				e.Material = ground.Material
+				e.Parent = area
+				extra = e
+			end
+			local ex0, ex1 = xRight - 4, math.max(maxLeft + 6, gMaxX)
+			local ez0, ez1 = z0 - 5, math.max(zEnd + 6, gMaxZ)
+			;(extra :: BasePart).Size = Vector3.new(ex1 - ex0, 1, ez1 - ez0)
+			;(extra :: BasePart).CFrame = CFrame.new((ex0 + ex1) / 2, -0.52, (ez0 + ez1) / 2)
+			note = " (extra ground added in the block colour)"
+		end
+	end
+	if zEnd > zEndBlock then
+		table.insert(lines, `  WARNING: the character area ends at z {zEnd}, past the block end {zEndBlock}`)
+	end
+	table.insert(lines, `{created} created, {replaced} replaced, {kept} kept, {removed} stale removed; area x {xRight}..{maxLeft}, z {z0 + CHAR_AREA.frontGap}..{zEnd}{note}`)
+	return table.concat(lines, "\n")
+end
+
+-- inert check of the character samples of a zone (or of every zone)
+function B.checkCharacters(zoneId: string?): string
+	local root = previewRoot()
+	local problems, count = {}, 0
+	for _, block in ipairs(root:GetChildren()) do
+		if zoneId and block:GetAttribute("Zone") ~= zoneId then
+			continue
+		end
+		local area = block:FindFirstChild("Characters")
+		local samples = area and area:FindFirstChild("Samples")
+		for _, s in ipairs(if samples then samples:GetChildren() else {}) do
+			count += 1
+			if s:GetAttribute("IsPreviewSample") ~= true then
+				table.insert(problems, `{block.Name}.{s.Name}: IsPreviewSample missing`)
+			end
+			for _, d in ipairs(s:GetDescendants()) do
+				if d:IsA("LuaSourceContainer") or d:IsA("ProximityPrompt") or d:IsA("ClickDetector") or d:IsA("Humanoid")
+					or d:IsA("AnimationController") or d:IsA("Animator") or d:IsA("Sound") or d:IsA("ParticleEmitter")
+					or d:IsA("JointInstance") or d:IsA("Constraint") then
+					table.insert(problems, `{block.Name}.{s.Name}: {d.ClassName} left`)
+					break
+				elseif d:IsA("BasePart") and (not d.Anchored or d.CanCollide or d.CanTouch) then
+					table.insert(problems, `{block.Name}.{s.Name}: {d.Name} not inert`)
+					break
+				end
+			end
+		end
+	end
+	local lines = { `BuildAssetPreview.checkCharacters: {count} character samples, {#problems} problem(s)` }
+	for i, p in ipairs(problems) do
+		if i > 30 then
+			break
+		end
+		table.insert(lines, "  " .. p)
+	end
+	return table.concat(lines, "\n")
+end
+
+---------------------------------------------------------------------
 -- check: every visible asset of the zone has a template and a sample; copies tagged with the zone attributes
 ---------------------------------------------------------------------
 function B.check(zoneId: string, plan: any?): string
@@ -1461,6 +1782,18 @@ function B.index(plan: any?): string
 		table.sort(entry.loose, function(x, y)
 			return x.folder < y.folder
 		end)
+		entry.characters = {}
+		local okList, chars = pcall(characterList, z.id)
+		local cblock = root:FindFirstChild(blockName(z))
+		local carea = cblock and cblock:FindFirstChild("Characters")
+		local csamples = carea and carea:FindFirstChild("Samples")
+		for _, c in ipairs(if okList then chars else {}) do
+			table.insert(entry.characters, {
+				id = c.id, name = c.name, role = c.role, subZone = c.subZone, source = c.source,
+				inPreview = csamples ~= nil and csamples:FindFirstChild(c.id) ~= nil,
+				quality = c.quality, nextAction = c.nextAction,
+			})
+		end
 		table.insert(data.zones, entry)
 	end
 	local json = HttpService:JSONEncode(data)
