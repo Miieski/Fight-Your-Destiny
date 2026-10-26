@@ -1,6 +1,15 @@
 # ROUND 7 DECISIONS (owner prompt "ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR +
 # DESERT PYRAMID BRICKS", 2026-10-26) - newest first
 
+- P6 (Studio agent): the pyramid is 44 plain Step boxes (10-stud tiers; T0-T5 hollow rings round the temple, T6-T14
+  solid) + 4 gold CornerWedges, not a mesh -> one Texture per visible face. Capstone Reflectance 0.05 instead of the
+  0.15 asked (0.15 turned the gold pale beige in the shot; the owner wants the colour kept). The dark slit at the T5 /
+  T6 step (the open top of the hollow ring, also in image 10) is geometry: left as it is, reported.
+- P5 (Studio agent): walls / floors found by face probes against the room volumes (Swamp_4: x 9909.5-10090.5, z
+  795-945 + the passage; the arena: radius 79 round (10000, -600) + the 2 alcoves); faces 90 % covered skipped. The
+  RockFacets lean 5-9 degrees, so a wall face may be up to about 17 degrees off vertical. The loose floor slabs take
+  the floor texture at #E0E0E0 (main's option; they read as lighter worn slabs). Ceilings plain (darker than the
+  walls). Arena shots on a temporary workspace copy (deleted), before / after in the same lighting state.
 - P4 (Studio agent): the image 09 "tall thin light-blue frame" = Studio's selection outline of Swamp_4.Bounds.GateLid
   (an invisible 24 x 84 colliding blocker over the gate that stops players jumping over it) -> kept, nothing removed.
   The flat light rocks round the gate (Shell side Rocks 16 x 40 and the canopy Rock 62 x 12) are the passage walls ->
@@ -4200,3 +4209,18 @@ only the tag and attributes, nothing else.
   samples created, check 0 problems; swamp_rock_cliff_a quality "improved" (BuildAssetPreview B.QUALITY). Checks:
   ground compare 0 (13/13), dry run 633 / 14600 0, index regenerated, export 233 / pull 0 written. Shots
   docs/screenshots/round7/P4-01 cliff, P4-02 timbers, P4-03 boulders, P4-04 dressing, P4-05 player POV.
+- P5 SWAMP TEXTURES DONE (R7.swampTextures): 80 wall faces (swamp_wall_stone 8 x 8) and 93 floor faces
+  (swamp_floor_mud_stone 24 x 24; slabs #E0E0E0) in Swamp_4 and BossArenas.Swamp; 1752 parts compared: 0 changes in
+  Size / CFrame / collisions / colour / material / transparency / reflectance. Shots docs/screenshots/round7/P5-01
+  (sub-zone 4) and P5-02 (boss room), rows Murs / Sol.
+- P6 PYRAMID DONE (R7.pyramidTextures): 89 side faces desert_pyramid_tier (20 x 10, tile tops on the tier tops), 36
+  tops desert_brick_light paving (10, #EAEAEA), capstone Reflectance 0.05; Desert_4 parts compared: only the 4
+  capstone reflectances changed. Shots P6-01 (overview / detail), P6-02 capstone.
+- ROUND 7 END CHECKS (Studio agent): ground compare 0 (OwnerLocked 13/13), dry run 633 templates / 14600 copies 0 to
+  replace, no temporary model left (_R7tmp, _R7ArenaShot deleted), export 233 scripts / pull x2: 0 written (disk ==
+  Studio: tools/PropsRound7.luau 64727 / 2cdac761617712ef, BuildAssetPreview.luau 71675 / 3a21e10de0a74ab2), graphify
+  update. Play check: main.
+- Main agent: ROUND 7 PLAY CHECK OK on the iPhone 17 Pro emulator (landscape). Jungle_4 41 moss patches streamed, 145 fps;
+  Tundra_4 62 ice brick textures, 144 fps, a character walks the castle entrance corridor from z 700 to z 825 (nothing
+  blocks); Swamp_3 approach 144 fps and a character walks the path up to 3.6 studs from the sub-zone 4 gate; Swamp_4
+  99 swamp textures, 144 fps; Desert_4 89 pyramid textures, 144 fps; 0 game errors. Backup after_round7. ROUND 7 DONE.

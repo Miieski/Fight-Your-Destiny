@@ -3535,6 +3535,14 @@ swamp_skull_gate, swamp_gate_boss_gate, swamp_gate_door and the room rocks).
   joints. The loose floor slabs on top take the same id a little lighter (Color3 about #E0E0E0).
 - **Ceilings:** plain, darker. The magenta (#AA50FF / #AE53FF) and yellow-green (#8CFF5A) glows stay untouched and
   read clearly on the dark stone.
+- **Applied (2026-10-26, tools/PropsRound7.luau R7.swampTextures, Textures "SwampWallTex" / "SwampFloorTex", ZIndex 1,
+  Material unchanged):** walls 80 faces: Swamp_4 RockFacet x22 room fronts (they lean 5-9 degrees: faces up to about
+  17 degrees off vertical count as walls), Shell.Rock inner faces (side walls, front wall, passage sides; the back wall
+  and the rock over the passage are 90 % behind facets / ceiling slopes and stay plain; never the outer cliff face of
+  Part 4); BossArenas.Swamp RockSlab x22 fronts, AlcoveWall x6, AlcoveLintel x2, the Rock over the door. Rows on the
+  world grid (OffsetStudsV = -top % 8, columns from the face's low X / Z edge). Floors 93 faces: Ground.Floor, the
+  arena Floor (a Cylinder: the texture on its upward end cap renders correctly), AlcoveFloor x2 (Color3 white), the
+  loose FloorStone x37 / PathStone x17 / FloorTile x36 at #E0E0E0. Ceilings plain (they read darker than the walls).
 
 ### G8. Desert pyramid cut stone (round 7 Part 6: Desert_4.Decor.PyramidShell)
 
@@ -3544,7 +3552,12 @@ pyramid's own #E2BE84 / #D5B37C pulled toward the light desert bricks G2 and the
 the blocks read), joints #9A7E58, chips and a few cracks; the top course x1.08 (sunlit edge), the bottom course x0.86
 (the darker band at each tier's foot), +-3 % per course. Vertical faces: StudsPerTileU 20, V 10, OffsetStudsV snapped
 so each tile's top is the tier top; Color3 white on the #E2BE84 tiers, about #F2EDE4 on the #D5B37C tiers. Tier tops:
-`desert_brick_light` as paving, StudsPerTile 10, Color3 about #EAEAEA. Capstone: colour kept, Reflectance 0.15.
+`desert_brick_light` as paving, StudsPerTile 10, Color3 about #EAEAEA. Capstone: colour kept, Reflectance 0.05 (0.15 was tried: it washed the gold out to a pale beige against the sky).
+- **Applied (2026-10-26, tools/PropsRound7.luau R7.pyramidTextures, Textures "PyramidTex" / "PyramidTopTex", ZIndex 1,
+  Material unchanged):** 89 side faces (every outer tier face, the lintel front, the T2 jambs above the temple corridor;
+  the T0 / T1 jambs are behind the corridor walls and the ring faces toward the hollow are inside the temple: skipped),
+  columns on the world grid (OffsetStudsU = -(low edge) % 20); 36 tops (OffsetStudsU / V from the +X / +Z edge % 10).
+  Porch, PorchCornice, gate, statues, banners and lamps plain.
 
 ## 1. Which colours: the real Part colours, not the photo pixels
 
