@@ -21,8 +21,8 @@
 - Round 4 grouping (main's 1d rule): same name (Landmark = LandmarkName, Gate = SubZoneId) + part count + mesh ids, and a
   size that matches after ONE uniform factor within 1 % (Model scale, or parts resized one by one) = one asset; a
   non-uniform spread up to 10 % is the same asset (a "size variant"); above it = a separate asset _v2, _v3. Colours are
-  NOT in the signature (the owner's rule): copies with their own tint are one asset, counted as "ownTint" in the index
-  (a later template edit gives them the template colours).
+  NOT in the signature (the owner's rule): copies with their own tint are one asset (not counted one by one: the index field ownTint
+  only works before tagging); a later template edit gives them the template colours (note in the index).
 - Round 4 map instances: new templates via SyncMapProps.capture(id, rep, { noRun = true }) (template only, no instance
   replaced); the copies get only the tag MapProp + MapPropId, MapPropVersion (sync stamp: run() leaves them as they
   are), Zone, SizeClass, and MapPropScale on copies whose parts were resized one by one (replace() then keeps their
@@ -3602,7 +3602,17 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   lie on a tilted pivot (Void distant islands, hub planters) now gets the copy's rotation (all 13 blocks rebuilt, 14
   samples turned, rebuild again 0). Not assets: 22 loose-part folders. Shot 12_Void.jpg.
 - ALL ZONES: 705 zone assets, 622 distinct; audit after the run: 0 untagged copies in every zone.
+- ROUND 4 FINISHED: docs/asset_preview_index.md + .json (622 distinct assets, 705 zone assets, 174 improved, 448 old,
+  recommended redesign order = copies x size, old only: snow pine B, jungle trees C / A, snow pine C, hub pine B, jungle
+  fern ...); every asset of every zone has a template and a sample in its block (check 0 problems in all 13 zones, 0
+  untagged copies); full dry run 626 templates / 14476 copies, 0 to replace, Sync.check 0 warnings; export 229 scripts,
+  pull 0 written twice; graphify update done. Rule line in docs/prop_inventory.md, HANDOFF.md 3b.5 and DESIGN.md 14.
+  Owed: nothing (all 13 shots taken). Before the first edit of an old template, check its copies (own tints, MapPropScale).
 
+
+- Main agent: ROUND 4 FINAL PLAY CHECK OK: _Staging absent on the client, 0 preview samples streamed; Hub, Volcano_1
+  and Heaven_1 reached by portal, walking works, 144 fps (render 2.2-2.5 ms), 0 game errors. Backup
+  after_round4_asset_preview. ROUND 4 DONE.
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
 
