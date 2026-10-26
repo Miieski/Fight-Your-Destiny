@@ -3331,6 +3331,35 @@ them.
 - **Nested props:** rebuild from their templates at the recorded poses and scales; a nested lantern that carried its
   own light gets a `KeptLight_Lantern` part (MapPropKeep) with that light.
 
+### F10. Round 5 recipes (owner task 2026-10-26, "ROUND 5" Task 2 / Task 3)
+
+`tools/PropsRound5.luau`. Each builder clones today's template, turns today's visible colliding parts into invisible
+`Collision` parts of the same shape, adds the new visuals (CanCollide false) and merges them into one union per name.
+
+- **Reuse first (PRIORITY RULE):** an improved template is duplicated and fitted (`P.fitInto`: a union clone scaled
+  into a box via ExtentsCFrame / ExtentsSize; or the template's MeshParts scaled per axis, recoloured): the oasis well
+  is the plains well in sandstone (x / z 1.5, y 1.2); the waterfall cliff stacks 3-5 jungle_rock_large boulders per
+  rock (half-turned, tapering, the boulder's moss cap on the top one); water is the fountain's rippled LowerWater /
+  UpperWater mesh resized.
+- **Egyptian gate recipe (desert):** coursed pylons (H.course, 3-stud courses, running bond) on dark plinths with
+  2 carved grooves per face, flared capital + gold rim, chamfered gold / lapis bands with lapis squares / gold
+  diamonds, a 2-course lintel with gold rules, a 2-tier gold cornice, gold leaf frames with 2 stud columns per leaf,
+  gold bezels round gems, a 12-segment gold ring round a sun disc, feather layers under wings.
+- **Strata slab (red rock):** `P.strataSlab` = a convex solid (TB.solidOf) of the slab's box with jittered bevel
+  planes on every edge, tone by face (top x1.12, underside x0.72); every third slab proud / set back.
+- **Jungle stone (gates, idol base, pyramid, door):** `PropsJungleBuildings.stoneFace` on each exposed face (for
+  X-facing faces build it as a front face and turn the pieces by +-90 degrees about Y), the part itself darkened to
+  STONE_DARK as the mortar core; mossPatch / mossFacet / vineFacets / vine for moss and vines; frustumN for fangs,
+  drums, bowls and octagonal columns (turn 22.5 degrees to put a flat face under a front glyph).
+- **Seated idol:** chamfered blocks with large chamfers (2.4-3.0) read as rounded gold; limbs as octagonal frustums
+  along a segment (H.frameY); faceted 4-sided feathers / spikes; gems as non-neon teal diamonds (the eyes stay the
+  only glow).
+- **Ice castle door (tundra):** `PropsTundraGates.iceFace` blocks over a deep blue core; per leaf face an icy Glass
+  frame (T 0.1), frosted Glass panels (T 0.15) with a slim frost lattice and rime triangles in the corners; faceted
+  gold spikes as 4-plane pyramids (TB.solidOf) so a crown emblem has depth; today's gems kept proud of the new band.
+- **Hidden backing:** a big flat collider that shows behind new detail (the waterfall cliff's CliffCore) stays the
+  collider with Transparency 1.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

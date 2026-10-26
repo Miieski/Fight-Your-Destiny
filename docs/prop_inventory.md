@@ -1239,6 +1239,39 @@ MapProps template, tagged it and placed a sample in the asset preview; part 2 re
 
 Totals: 6 copies replaced (3 templates, 1 map copy + 1 preview sample each).
 
+### Round 5 remakes (owner, "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26)
+
+Builders in `tools/PropsRound5.luau` (`DevTools.PropsRound5`, one `P.<builder>()` per asset; the old template goes to
+`MapProps._Previous`). Rule for every row: today's colliding parts stay (as they are, or as invisible `Collision`
+copies), so the collidable set of each template is identical (checked part by part); glows, prompts, scripts and
+nested props are kept. All are "improved" in `BuildAssetPreview.QUALITY` and in the asset preview index.
+
+| image | MapProps id | where | builder | base (PRIORITY RULE) | collision | replaced |
+|---|---|---|---|---|---|---|
+| 02 | `cart` (old `hub_vehicle_cart_a` copies) | Hub, Plains, Desert, Volcano | (Sync rule) | the improved cart | - | 5 / 5 (0 old carts left) |
+| 07 | `desert_landmark_sarcophagus` | Desert boss arena | `sarcophagus` | golden_guardian x3.27 + desert_column | 25 / 25 | 2 / 2 |
+| 15 | `jungle_palisade_gate` (the 2 guards) | Jungle_2 | `jungleGuards` | new tribal guards | 38 / 38 | 4 / 4 |
+| 18 | `tundra_landmark_ice_throne` | Tundra boss arena | `iceThrone` | tundra_ice_throne x2.70 | 16 / 16 | 2 / 2 |
+| 03 | `plains_landmark_ancient_tree` | Plains | `ancientTree` | swamp / jungle tree recipe | 25 / 25 | 2 / 2 |
+| 04 | `desert_landmark_stone_bridge` | Desert | `stoneBridge` | desert gate recipe | 31 / 31 | 2 / 2 |
+| 05 | `desert_landmark_rock_arch` | Desert | `rockArch` | mesa strata recipe | 27 / 27 | 2 / 2 |
+| 06 | `desert_gate_door` | Desert boss arena Door | `desertArenaDoor` | Egyptian arch / temple gate recipe | 19 / 19 | 2 / 2 |
+| 08 | `desert_gate_boss_gate` | Desert_4 | `desertBossGate` | same + studded leaves | 92 / 92 | 2 / 2 |
+| 09 | `desert_landmark_oasis_well` | Desert_2 | `oasisWell` | the improved plains `well` (meshes) + fountain water | 36 / 36 | 2 / 2 |
+| 10 | `desert_prop_spear` | Desert boss arena (x8) | `spear` | new (leaf blade solid) | 4 / 4 | 9 / 9 |
+| 11 | `jungle_gate_boss_gate` | Jungle_4 | `jungleBossGate` | face_temple_gate stone recipe | 23 / 23 | 2 / 2 |
+| 12 | `jungle_gate_door` | Jungle boss arena Door | `jungleArenaDoor` | jungle stone door recipe | 5 / 5 | 2 / 2 |
+| 13 | `jungle_landmark_waterfall_cliff` | Jungle_2 | `waterfallCliff` | jungle_rock_large stacked + fountain water | 12 / 12 | 2 / 2 |
+| 14 | `jungle_landmark_golden_idol` | Jungle boss arena | `goldenIdol` | golden guardian / totem recipe | 23 / 23 | 2 / 2 |
+| 16 | `jungle_landmark_step_pyramid` | Jungle_3 | `stepPyramid` | jungle temple stone + jungle_flower_bush | 18 / 18 | 2 / 2 |
+| 17 | `jungle_statue_ruin_pillar_a` | Jungle_3 (x10) | `ruinPillar` | jungle broken pillar recipe | 5 / 5 | 11 / 11 |
+| 19 | `tundra_gate_boss_gate` | Tundra_4 | `tundraBossGate` | tundra_ice_castle_gate recipe | 16 / 16 | 2 / 2 |
+| 20 | `tundra_gate_door` | Tundra boss arena Door | `tundraArenaDoor` | ice castle door recipe | 4 / 4 | 2 / 2 |
+
+Notes: the 3 arena doors (06, 12, 20) are faded and unblocked as a whole by BossService.setDoor, new parts included.
+Backups: `BackUP_Files/round5_before_*` (carts, sarcophagus, jungle_guards, ice_throne, task3, task3b, task3c).
+Shots: `docs/screenshots/round5/` (before / after, preview + one map or arena placement each).
+
 ---
 
 Written by Agent B (Studio builder and sync) on 2026-10-18 from the live place (Studio, Edit mode).

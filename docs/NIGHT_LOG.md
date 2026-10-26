@@ -3846,3 +3846,22 @@ only the tag and attributes, nothing else.
 - Task 3 11-20 labels: B.QUALITY += the 8 ids; Jungle + Tundra rebuilt (0 created / 0 moved), all 8 labels "improved";
   docs/asset_preview_index.md / .json regenerated (228 improved rows). TASK 3 DONE (03-14, 16, 17, 19, 20; 07 / 15 / 18
   = Task 2). Tools: PropsRound5 132681 / de94de87827fb67c, BuildAssetPreview 70465 / baec303e459dc5af (disk == Studio).
+- Fix (main, after 11-20 push): 13 waterfall cliff - the flat grey back slab (CliffCore, the PrimaryPart and a
+  collider) showed above / beside the boulders; it is now Transparency 1 (CastShadow off), still the collider: collision
+  12 / 12 identical, replaced 2 / 2 again (template restored from _Previous and rebuilt). PropsRound5 132860 /
+  75b066bde453648c. Shots 13_waterfall_cliff_after_preview|map.jpg re-shot.
+- ROUND 5 END CHECKS: ground compare = 0 differences on the 13 owner grounds (OwnerLocked 13 / 13); layout: 0 labels /
+  plates moved, 166 samples moved only vertically (the accepted settle), 14 samples re-centred in x / z = remade assets
+  only, 8 "missing" = the old hub_vehicle_cart_a items replaced by the improved cart. Inertness: B.check on all 13 zones
+  0 problems (after B.tag Desert / Jungle / Tundra refreshed 38 Zone / SizeClass attributes on copies whose size class
+  changed with the remake, nested jackals / stone heads / knights / torches included); checkCharacters 176 samples,
+  0 problems. Every copy of the 19 touched propIds is on its template's version (cart 12, spear 9, ruin pillar 11, the
+  rest 2 or 4); 0 old hub_vehicle_cart_a copies. Full dry run: 626 templates / 14475 copies, 0 replaced. Export 230
+  scripts, pull_scripts twice: 0 written. graphify update: 4218 nodes / 10540 edges. Docs: prop_inventory.md "Round 5
+  remakes" table, prop_texture_guide.md F10 (round 5 recipes), asset_preview_index md / json regenerated (228 improved).
+  ROUND 5 DONE.
+- Main agent: ROUND 5 PLAY CHECK OK. Hub 144 fps. Plains: 6 improved carts streamed, 0 old carts. Jungle and Tundra boss
+  gates: "Enter solo" works, the arena opens with the Leave prompt on (left the Jungle lobby by the prompt); Tundra
+  fight started: the 13 door parts all collide and the player is held inside. Desert: entered, after the lobby the 24
+  door parts collide, the Leave prompt is off, both mini-bosses spawn; 144 fps, also on the iPhone 17 Pro emulator
+  (render 2.4 ms). 0 game errors. Backup after_round5.

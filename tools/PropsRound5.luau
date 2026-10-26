@@ -1777,6 +1777,10 @@ function P.waterfallCliff(): string
 				c:Destroy()
 			elseif n == "WaterSheet" then
 				sheet = c
+			elseif n == "CliffCore" then
+				-- (the flat grey back slab showed above / beside the boulders: it stays the collider, unseen)
+				c.Transparency = 1
+				c.CastShadow = false
 			end
 		end
 	end
