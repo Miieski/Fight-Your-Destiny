@@ -3567,6 +3567,15 @@ index), settings `Config/AssetPreview.luau` (SMALL_MAX 6, MEDIUM_MAX 25, toleran
   pile, arena LoS pillar, open grave, skull wall panel, 3 tombstones, 2 grave trees); 1349 copies tagged + 2698
   attributes; check 0; compare 13659 -> 13659, 0 changed; full dry run 0 (486 / 11459); tag / build again 0; no sample
   footprint overlaps in any block (checked all 10 blocks). Not assets: 21 loose-part folders. Shot 09_Dead.jpg.
+- 10 Abyss DONE: 58 assets (S 9 / M 24 / L 25), 1703 copies; 53 new templates (abyss_*: high ledge (arena), small golden
+  dome, wreck hull, sunken barrel / chest, trident rack, 3 sub-zone gates, boss gate, arena door, entry arch, palace arch,
+  landmarks coral arch / sea monster skeleton / sunken palace dome / broken dome (arena) / sunken galleon (host: its corals
+  and kelp nested), pearl lamp, vent chimney, 2 biolum plants, brain coral, 3 branch corals, fan coral, tube corals, 2 tall
+  kelps, anemone, sea grass, rusted cannon, fish decor, giant shell, glow jelly, mosaic tile, hanging net, rope coil, big
+  starfish, reef cliff, 3 reef rocks, trench cliff, trench spire, giant rib bone, seabeast skull, palace column + broken,
+  trident statue, giant anchor, broken mast); 1680 copies tagged + 3406 attributes; check 0; compare 14862 -> 14862, 0
+  changed; full dry run 0 (539 / 13238); tag / build again 0; every sample stands on its block floor (checked all
+  blocks). Not assets: 21 loose-part folders. Shot 10_Abyss.jpg.
 
 
 # ROUND 4 (night run) - QUEUED: every visible asset in the asset preview, sorted by zone
