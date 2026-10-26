@@ -4013,3 +4013,39 @@ only the tag and attributes, nothing else.
 - Main agent: texture fix R1-R4 pushed with the owner's before / after sheets (docs/before_after/R1..R4). The Play check
   of the 4 rooms is folded into the end-of-round Play check (a Play session now would cut the Studio agent's Edit work
   on the 18 assets).
+- ASSET 01 plains_gate_boss_gate DONE (P.plainsBossGate): cut blue stone pillars / lintel (blocks set 0.55 in so the
+  runes stay in front), carved diamond frames, cornice with dentils, door frames and studs, carved ring, jointed
+  threshold; replaced 2/2, collision 15/15, size unchanged. Shots round6_assets/01_plains_boss_gate_*.
+- ASSET 02 hub_light_campfire_a DONE (P.campfire + P.campfireVariants): 9 faceted stones, 3 bark logs, ash and coals,
+  layered flame; Embers / light / FirePoint kept; Variants Desert x4, Jungle x1, Tundra x1, Volcano x1 on the map copies
+  (+6 preview samples), Swamp defined; replaced 16/16, collision 10/10, footprint +5% (snow ring tightened to r 2.95).
+  Shots round6_assets/02_campfire_*.
+- ASSET 03 cottage_two_windows DONE (P.cottageShutters): shutters only, 0.5 stud further out (in front of the beams,
+  which stand ~0.5 proud), an iron hinge strap per batten on the window side; the batch-4 builder re-run from a patched
+  copy (deterministic, Timber / Plaster / Stone / Roof checked equal); 52 other parts vs _Previous: 0 differences;
+  replaced 6/6, collision identical, size unchanged. Shots round6_assets/03_cottage_two_windows_*.
+- ASSET 04 cottage_one_window DONE: same recipe; 55 other parts: 0 differences; replaced 4/4, size unchanged. Shots
+  round6_assets/04_cottage_one_window_*. PropsRound6.luau 48889 / d408e61a9e88582e (disk == Studio).
+- ASSET 05 plains_gate_door DONE (P.plainsArenaDoor): blue stone pillars / lintel (cut blocks, plinths, capitals,
+  cornice, dentils, frames round the 3 diamonds), a carved double door on both faces (stone frames, 3 panels, iron
+  bands / studs / hinges, ring, small rune), the navy outer face as cut stone + jamb frame. Pillars / lintel / back fill
+  / bands as invisible collision (dark cores), the Slab kept first (Leave prompt); colliding 10 / 10, 0 differences;
+  replaced 2/2; 46 x 42 x 18.3 -> 46 x 42 x 19.5 (outer door relief). Shots round6_assets/05_plains_gate_door_* (+ outer
+  face). stoneBox fix: the left / right face frames pointed inward (blocks 0.05 - 0.55 off the side, bevels inside);
+  01 rebuilt from _Previous with the fix (collision 15 / 15, size unchanged, 2/2 synced).
+- ASSET 06 plains_prop_mine_support DONE (P.mineSupport): chamfered posts with grain / knots and bolster caps, the beam
+  in 3 lengths with scarf joints and riveted fish plates, the 2 bolts as iron plates with hex heads, braces as timbers
+  with iron straps and post plates, 3 nailed top boards, stone footings + loose stones, rope lashing, a small lantern
+  on an iron hook. 10 parts as invisible collision (10 / 10, 0 differences); replaced 9/9 (Plains_4 x5, Desert_3 x2,
+  2 preview samples); 28.56 x 19.2 x 3.8 -> 28.6 x 19.4 x 3.8. Shots round6_assets/06_mine_support_*.
+- ASSET 07 jungle_bridge_rope_bridge_section DONE (P.ropeBridge, the docks recipe PropsDocks.boards / roundPost): boards
+  ~0.95 wide in 3 warm tones (tops = today's plank tops, y 1.0), nails over 2 stringers, X braces under the deck, 4
+  round capped posts with rope wraps and moss rings, 2 sagging rope strands per side with rope ties / knots, vines and
+  leaves, moss on board ends. Colliding (Deck, 4 Posts, 4 Ropes) as invisible collision 9 / 9, 0 differences; today's
+  visual planks / ties removed (rebuilt); replaced 3/3; 16 x 5.6 x 20 -> 16.2 x 5.6 x 20.2 (post caps). Shots
+  round6_assets/07_rope_bridge_*.
+- ASSET 08 jungle_bridge_floating_dock_a DONE (P.floatingDock): boards (tops y 2.71 as today) over rim joists, 2 rows
+  of 3 iron-banded barrels as the floats (inside today's float collision), X braces, 2 round capped posts with rope
+  wraps, a sagging rope rail with a vine, a rope coil, moss. Colliding (Deck, 2 Floats, 2 Posts) 5 / 5, 0 differences;
+  replaced 2/2; 12 x 7 x 16 -> 12 x 6.9 x 16. In the map the floats sit just under the water line (as today).
+  Shots round6_assets/08_floating_dock_* (map camera from the water side).

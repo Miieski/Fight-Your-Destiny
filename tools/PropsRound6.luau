@@ -14,6 +14,9 @@
 		print(P.campfireVariants())   -- R6 02: Variant attribute on every campfire copy by zone
 		print(P.cottageShutters("cottage_two_windows"))  -- R6 03: the shutters in front of the beams (and cottage_one_window, 04)
 		print(P.compareExceptShutters(id))  -- R6 03 / 04: every other part unchanged against _Previous
+		print(P.plainsArenaDoor())     -- R6 05: plains_gate_door, blue stone frame, carved double door on both faces
+		print(P.mineSupport())        -- R6 06: plains_prop_mine_support, timber frame, iron fish plates, lantern
+		print(P.ropeBridge(), P.floatingDock()) -- R6 07 / 08: jungle rope bridge section, floating dock (docks recipe)
 		then Sync.run({ only = { id } }) syncs the copies (map, arena, preview samples).
 	Every builder installs its model with P.install(): the old template goes to ServerStorage.MapProps._Previous.
 ]]
@@ -529,8 +532,9 @@ local function stoneBox(list: { BasePart }, rng: Random, p: BasePart, faces: { s
 	local frames = {
 		front = { CFrame.new(c.X, 0, c.Z - s.Z / 2), s.X },
 		back = { CFrame.new(c.X, 0, c.Z + s.Z / 2) * CFrame.Angles(0, math.pi, 0), s.X },
-		left = { CFrame.new(c.X - s.X / 2, 0, c.Z) * CFrame.Angles(0, math.rad(-90), 0), s.Z },
-		right = { CFrame.new(c.X + s.X / 2, 0, c.Z) * CFrame.Angles(0, math.rad(90), 0), s.Z },
+		-- (the face frame's -Z points out of the part: +90 degrees for the -X face, -90 for the +X face)
+		left = { CFrame.new(c.X - s.X / 2, 0, c.Z) * CFrame.Angles(0, math.rad(90), 0), s.Z },
+		right = { CFrame.new(c.X + s.X / 2, 0, c.Z) * CFrame.Angles(0, math.rad(-90), 0), s.Z },
 	}
 	for _, f in ipairs(faces) do
 		local fr = frames[f]
@@ -867,6 +871,476 @@ function P.compareExceptShutters(id: string): string
 		end
 	end
 	return string.format("%s: %d parts compared (all but Shutters), %d differences", id, n, diff)
+end
+
+---------------------------------------------------------------------
+-- 05 PLAINS ARENA DOOR (plains_gate_door, the Plains boss arena's Door): the boss gate's blue stone family. The pillars
+-- and lintel as cut stone blocks with capitals, plinths, a cornice and dentils, carved frames round the 3 glowing
+-- diamonds; on both faces a double door: per leaf a stone frame, 3 carved panels, 2 iron bands with studs and hinge
+-- knuckles, an iron ring, a small glowing rune; the outer face (the plain navy back) as cut stone with a jamb frame.
+-- Every part of today stays where it is with its collision: the slab (it carries the Leave prompt) as the dark door
+-- reveal; the pillars, lintel and back fill as invisible collision round a dark core (the stone joints), the 5 bands as
+-- invisible collision under the new leaves. BossService fades the whole Door when it opens, the new parts too.
+---------------------------------------------------------------------
+-- a double door on a face frame F (local -Z = outward, origin = the face's centre), w x h
+local function doubleDoor(U: any, F: CFrame, w: number, h: number)
+	local H = lib().H
+	local STONE, DARK, LIGHT = rgb(104, 110, 124), rgb(62, 60, 78), rgb(150, 156, 168)
+	local IRON, RUNE = rgb(64, 68, 80), rgb(90, 230, 255)
+	local lw = w / 2
+	local fr = 1.3
+	table.insert(U.DoorTrim, H.piece("Part", Vector3.new(0.3, h - 0.3, 0.3), F * CFrame.new(0, 0, -0.2), DARK))
+	for _, sx in ipairs({ -1, 1 }) do
+		local cx = sx * lw / 2
+		table.insert(U.Leaf, H.chamfered(Vector3.new(lw - 0.3, h - 0.3, 0.3), F * CFrame.new(cx, 0, -0.15), H.scaled(LIGHT, if sx < 0 then 1 else 0.96), { "frontFace" }, 0.08))
+		-- the leaf frame: 2 stiles, 2 end rails, 2 middle rails
+		for _, ex in ipairs({ -1, 1 }) do
+			table.insert(U.DoorTrim, H.chamfered(Vector3.new(fr, h - 0.3, 0.4), F * CFrame.new(cx + ex * (lw / 2 - 0.15 - fr / 2), 0, -0.5), STONE, { "frontFace" }, 0.12))
+		end
+		local inner = lw - 0.3 - 2 * fr
+		local yEnd = h / 2 - 0.15 - fr / 2
+		for _, y in ipairs({ -yEnd, yEnd, -h / 6, h / 6 }) do
+			table.insert(U.DoorTrim, H.chamfered(Vector3.new(inner, fr, 0.4), F * CFrame.new(cx, y, -0.5), STONE, { "frontFace" }, 0.12))
+		end
+		-- 3 carved panels: a dark recess and a bevelled raised panel
+		local top0, top1 = h / 6 + fr / 2, yEnd - fr / 2
+		for _, r in ipairs({ { top0, top1 }, { -h / 6 + fr / 2, h / 6 - fr / 2 }, { -top1, -top0 } }) do
+			local ph, py = r[2] - r[1], (r[1] + r[2]) / 2
+			table.insert(U.Recess, H.piece("Part", Vector3.new(inner, ph, 0.1), F * CFrame.new(cx, py, -0.35), DARK))
+			table.insert(U.Leaf, H.chamfered(Vector3.new(inner - 1.0, ph - 1.0, 0.3), F * CFrame.new(cx, py, -0.45), H.scaled(LIGHT, 1.04), { "frontFace" }, 0.3))
+		end
+		-- the small glowing rune in a carved diamond on the middle panel
+		local rf = F * CFrame.new(cx, 0, -0.7) * CFrame.Angles(0, 0, math.rad(45))
+		table.insert(U.RuneSmall, H.piece("Part", Vector3.new(1.0, 1.0, 0.3), rf, RUNE))
+		diamondFrame(U.DoorTrim, rf * CFrame.new(0, 0, 0.05), 1.0, 0.35, 0.3, DARK)
+		-- 2 iron bands with studs, a hinge knuckle on the outer edge
+		for _, y in ipairs({ -h * 0.36, h * 0.36 }) do
+			table.insert(U.Iron, H.chamfered(Vector3.new(lw - 0.5, 0.9, 0.5), F * CFrame.new(cx, y, -0.7), IRON, { "frontFace" }, 0.1))
+			local n = math.max(3, math.floor((lw - 1.5) / 1.6))
+			for k = 0, n - 1 do
+				local x = cx - (lw - 1.5) / 2 + k * (lw - 1.5) / (n - 1)
+				table.insert(U.Iron, H.chamfered(Vector3.new(0.34, 0.34, 0.2), F * CFrame.new(x, y, -1.0), H.scaled(IRON, 1.2), { "frontFace" }, 0.08))
+			end
+			table.insert(U.Iron, H.chamfered(Vector3.new(0.6, 2.0, 0.6), F * CFrame.new(cx + sx * (lw / 2 - 0.35), y, -0.75), IRON, { "vertical" }, 0.15))
+		end
+		-- the iron ring by the centre seam
+		local hx, hy, rr = sx * 1.3, -1.2, 0.75
+		table.insert(U.Iron, H.chamfered(Vector3.new(0.8, 0.8, 0.2), F * CFrame.new(hx, hy + rr, -0.75), IRON, { "frontFace" }, 0.1))
+		for k = 0, 7 do
+			local a = k * math.pi / 4
+			table.insert(U.Iron, H.piece("Part", Vector3.new(2 * rr * math.sin(math.pi / 8) + 0.06, 0.2, 0.2), F * CFrame.new(hx + math.cos(a) * rr, hy + math.sin(a) * rr, -0.95) * CFrame.Angles(0, 0, a + math.pi / 2), H.scaled(IRON, 1.15)))
+		end
+	end
+end
+
+function P.plainsArenaDoor(): string
+	local id = "plains_gate_door"
+	local L = lib()
+	local H = L.H
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60505)
+	H.setBevelSelf(true)
+	local STONE, DARK = rgb(104, 110, 124), rgb(62, 60, 78)
+	local U: any = { Stone = {}, Stone2 = {}, Trim = {}, DoorTrim = {}, Leaf = {}, Recess = {}, Iron = {}, RuneSmall = {}, Carving = {} }
+	local Ht = 42
+	local slab = m:FindFirstChild("Slab") :: BasePart
+	local back = m:FindFirstChild("BackFill") :: BasePart
+	local li = m:FindFirstChild("Lintel") :: BasePart
+	slab.Color = DARK
+	for _, b in ipairs(children(m, "Band")) do
+		toCollision(b)
+	end
+	-- the pillars (arena face +Z = "back" in stoneBox terms): cut stone on the arena face and the outer side, a plinth
+	-- and a capital
+	for _, name in ipairs({ "PillarL", "PillarR" }) do
+		local p = m:FindFirstChild(name) :: BasePart
+		local c, s = p.Position, p.Size
+		toCollision(p)
+		table.insert(U.Carving, H.piece("Part", s - Vector3.new(0.4, 0.2, 0.4), p.CFrame, DARK))
+		stoneBox(if name == "PillarL" then U.Stone else U.Stone2, rng, p, { "back", if name == "PillarL" then "left" else "right" }, c.Y - s.Y / 2 + 1.2, li.Position.Y - li.Size.Y / 2 - 1.0, 2.6, STONE, Ht)
+		table.insert(U.Trim, H.chamfered(Vector3.new(s.X + 0.6, 1.0, s.Z + 0.6), CFrame.new(c.X, li.Position.Y - li.Size.Y / 2 - 0.5, c.Z), H.scaled(DARK, 1.15), { "vertical", "bottomFrontBack", "bottomSides" }, 0.25))
+		table.insert(U.Trim, H.chamfered(Vector3.new(s.X + 0.6, 1.2, s.Z + 0.6), CFrame.new(c.X, c.Y - s.Y / 2 + 0.6, c.Z), H.scaled(DARK, 1.15), { "vertical", "topFrontBack", "topSides" }, 0.25))
+	end
+	-- the lintel: cut stone on the arena face and the ends, carved frames round today's 3 diamonds, a cornice, dentils
+	toCollision(li)
+	table.insert(U.Carving, H.piece("Part", li.Size - Vector3.new(0.4, 0.2, 0.4), li.CFrame, DARK))
+	stoneBox(U.Stone, rng, li, { "back", "left", "right" }, li.Position.Y - li.Size.Y / 2, li.Position.Y + li.Size.Y / 2 - 0.8, 3.6, STONE, Ht)
+	for _, r in ipairs(children(m, "Rune")) do
+		diamondFrame(U.DoorTrim, r.CFrame * CFrame.new(0, 0, -0.15), r.Size.X, 0.5, 0.5, H.scaled(DARK, 1.2))
+	end
+	local lc, ls = li.Position, li.Size
+	table.insert(U.Trim, H.chamfered(Vector3.new(ls.X, 0.8, ls.Z + 0.3), CFrame.new(lc.X, lc.Y + ls.Y / 2 - 0.4, lc.Z + 0.15), DARK, { "topFrontBack", "topSides", "bottomFrontBack" }, 0.3))
+	for k = 0, 16 do
+		local x = -12.4 + k * 24.8 / 16
+		table.insert(U.Trim, H.piece("Part", Vector3.new(0.8, 0.5, 0.5), CFrame.new(x, lc.Y - ls.Y / 2 - 0.25, lc.Z + ls.Z / 2 - 0.3), H.scaled(DARK, 1.1)))
+	end
+	-- the arena face of the door
+	local sc, ss = slab.Position, slab.Size
+	doubleDoor(U, CFrame.new(sc.X, sc.Y, sc.Z + ss.Z / 2) * CFrame.Angles(0, math.pi, 0), ss.X, ss.Y)
+	-- the outer face (today a plain navy wall): cut stone, a jamb frame and the same double door
+	local bc, bs = back.Position, back.Size
+	toCollision(back)
+	table.insert(U.Carving, H.piece("Part", bs - Vector3.new(0.4, 0.2, 0.4), back.CFrame, DARK))
+	stoneBox(U.Stone2, rng, back, { "front", "left", "right" }, bc.Y - bs.Y / 2, bc.Y + bs.Y / 2, 2.8, STONE, Ht)
+	stoneBox(U.Stone2, rng, back, { "back" }, bc.Y - bs.Y / 2, bc.Y + bs.Y / 2, 2.8, STONE, Ht)
+	local zb = bc.Z - bs.Z / 2
+	local FB = CFrame.new(sc.X, sc.Y, zb)
+	for _, e in ipairs({ { -ss.X / 2 - 0.8, 0, 1.6, ss.Y }, { ss.X / 2 + 0.8, 0, 1.6, ss.Y }, { 0, ss.Y / 2 + 0.8, ss.X + 3.2, 1.6 } }) do
+		table.insert(U.Trim, H.chamfered(Vector3.new(e[3], e[4], 0.6), FB * CFrame.new(e[1], e[2], -0.3), H.scaled(DARK, 1.15), { "frontFace" }, 0.2))
+	end
+	table.insert(U.Recess, H.piece("Part", Vector3.new(ss.X, ss.Y, 0.1), FB * CFrame.new(0, 0, -0.05), DARK))
+	doubleDoor(U, FB * CFrame.new(0, 0, -0.1), ss.X, ss.Y)
+	return finishR6(m, id, U, { RuneSmall = { material = Enum.Material.Neon, shadow = false } })
+end
+
+---------------------------------------------------------------------
+-- 06 MINE SUPPORT (plains_prop_mine_support; the Plains_4 mine x5, the Desert_3 caves x2): a mine timber frame. Thick
+-- chamfered posts with grain and knots, bolster caps on top, the crossbeam in 3 lengths with scarf joints and riveted
+-- iron fish plates, today's 2 bolts as iron plates with hex heads, the braces as timbers with iron brackets and rivets,
+-- 3 nailed top boards, stone footings with a few loose stones, a rope lashing round a post and a small lantern on an
+-- iron hook under the beam. Today's 10 parts stay as invisible collision.
+---------------------------------------------------------------------
+function P.mineSupport(): string
+	local id = "plains_prop_mine_support"
+	local L = lib()
+	local H, M = L.H, L.M
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60606)
+	H.setBevelSelf(true)
+	local WOOD, DARKW, PLANK, STONE = rgb(168, 98, 56), rgb(112, 62, 38), rgb(214, 150, 92), rgb(104, 110, 124)
+	local IRON, ROPE = rgb(74, 78, 88), rgb(196, 160, 104)
+	local U: any = { Posts = {}, Beam = {}, Boards = {}, Braces = {}, Footings = {}, Iron = {}, Rope = {}, Lamp = {}, Grain = {} }
+	local parts = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			table.insert(parts, { name = c.Name, cf = c.CFrame, size = c.Size })
+			toCollision(c)
+		end
+	end
+	-- grain lines and a knot or two on a face (frame f: X along, Y up, -Z out; len x wid)
+	local function grain(f: CFrame, len: number, wid: number, color: Color3, vertical: boolean)
+		for k = 1, 3 do
+			local l = rng:NextNumber(0.3, 0.6) * len
+			local a = rng:NextNumber(-len / 2 + l / 2, len / 2 - l / 2)
+			local b = (k - 2) * wid * 0.28 + rng:NextNumber(-0.08, 0.08)
+			local size = if vertical then Vector3.new(0.07, l, 0.06) else Vector3.new(l, 0.07, 0.06)
+			local p = if vertical then Vector3.new(b, a, -0.01) else Vector3.new(a, b, -0.01)
+			table.insert(U.Grain, H.piece("Part", size, f * CFrame.new(p), H.scaled(color, 0.72)))
+		end
+		if rng:NextNumber() < 0.7 then
+			local a = rng:NextNumber(-len / 3, len / 3)
+			local p = if vertical then Vector3.new(rng:NextNumber(-wid / 4, wid / 4), a, -0.02) else Vector3.new(a, rng:NextNumber(-wid / 4, wid / 4), -0.02)
+			table.insert(U.Grain, H.piece("Part", Vector3.new(0.3, 0.3, 0.08), f * CFrame.new(p) * CFrame.Angles(0, 0, math.rad(45)), H.scaled(color, 0.62)))
+		end
+	end
+	local function bolt(f: CFrame, s: number)
+		table.insert(U.Iron, H.chamfered(Vector3.new(s, s, 0.25), f * CFrame.new(0, 0, -0.125), IRON, { "frontFace" }, 0.06))
+		table.insert(U.Iron, M.frustumN(6, s * 0.28, s * 0.24, 0, s * 0.4, H.frameY(f * Vector3.new(0, 0, -0.2), f.LookVector), { H.scaled(IRON, 1.2), IRON }))
+	end
+	for _, r in ipairs(parts) do
+		local c, s = r.cf.Position, r.size
+		if r.name == "Post" then
+			-- the post from the footing to the cap, a bolster cap under the beam
+			local y0, y1 = 1.2, 15.3
+			local pc = CFrame.new(c.X, (y0 + y1) / 2, c.Z)
+			table.insert(U.Posts, H.timber(Vector3.new(s.X, y1 - y0, s.Z), pc, H.scaled(WOOD, rng:NextNumber(0.94, 1.04)), 0.22))
+			for _, face in ipairs({ CFrame.new(c.X, (y0 + y1) / 2, c.Z - s.Z / 2), CFrame.new(c.X, (y0 + y1) / 2, c.Z + s.Z / 2) * CFrame.Angles(0, math.pi, 0) }) do
+				grain(face, y1 - y0, s.X, WOOD, true)
+			end
+			table.insert(U.Beam, H.chamfered(Vector3.new(s.X + 1.4, 0.7, s.Z + 0.4), CFrame.new(c.X, y1 + 0.35, c.Z), H.scaled(DARKW, 1.08), { "bottomFrontBack", "bottomSides" }, 0.25))
+			-- the stone footing and a few loose stones beside it
+		elseif r.name == "Footing" then
+			table.insert(U.Footings, H.chamfered(s, r.cf, H.scaled(STONE, rng:NextNumber(0.95, 1.05)), { "vertical", "topFrontBack", "topSides" }, 0.3))
+			for _, sx in ipairs({ -1, 1 }) do
+				local p = Vector3.new(c.X + sx * rng:NextNumber(2.0, 2.3), 0.2, c.Z + rng:NextNumber(-0.9, 0.9))
+				table.insert(U.Footings, H.chamfered(Vector3.new(rng:NextNumber(0.6, 0.85), 0.42, rng:NextNumber(0.5, 0.7)), CFrame.new(p) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), H.scaled(STONE, rng:NextNumber(0.85, 1.0)), { "vertical", "topFrontBack", "topSides" }, 0.12))
+			end
+		elseif r.name == "Beam" then
+			-- 3 lengths with scarf joints; riveted iron fish plates over the joints on both faces
+			local x0, x1 = c.X - s.X / 2, c.X + s.X / 2
+			local cuts = { x0, -7.5, 7.5, x1 }
+			for k = 1, 3 do
+				local a, b = cuts[k] + (if k > 1 then 0.06 else 0), cuts[k + 1] - (if k < 3 then 0.06 else 0)
+				table.insert(U.Beam, H.timber(Vector3.new(b - a, s.Y, s.Z), CFrame.new((a + b) / 2, c.Y, c.Z), H.scaled(DARKW, ({ 1.0, 1.06, 0.95 })[k]), 0.2))
+				for _, zs in ipairs({ -1, 1 }) do
+					grain(CFrame.new((a + b) / 2, c.Y, c.Z + zs * s.Z / 2) * CFrame.Angles(0, if zs > 0 then math.pi else 0, 0), b - a, s.Y, DARKW, false)
+				end
+			end
+			for _, x in ipairs({ -7.5, 7.5 }) do
+				table.insert(U.Grain, H.piece("Part", Vector3.new(0.14, s.Y - 0.2, s.Z - 0.2), CFrame.new(x, c.Y, c.Z), H.scaled(DARKW, 0.5)))
+				for _, zs in ipairs({ -1, 1 }) do
+					table.insert(U.Iron, H.chamfered(Vector3.new(1.7, 1.9, 0.12), CFrame.new(x, c.Y, c.Z + zs * (s.Z / 2 + 0.06)), IRON, { "vertical" }, 0.05))
+					for _, dx in ipairs({ -0.5, 0.5 }) do
+						for _, dy in ipairs({ -0.6, 0.6 }) do
+							H.rivet(U.Iron, Vector3.new(x + dx, c.Y + dy, c.Z + zs * (s.Z / 2 + 0.12)), 0.24)
+						end
+					end
+				end
+			end
+		elseif r.name == "Plank" then
+			-- 3 nailed boards along the top
+			local w = (s.Z - 0.16) / 3
+			for k = 0, 2 do
+				local z = c.Z - s.Z / 2 + 0.08 + w * (k + 0.5)
+				table.insert(U.Boards, H.timber(Vector3.new(s.X - rng:NextNumber(0, 0.4), s.Y, w - 0.08), CFrame.new(c.X + rng:NextNumber(-0.15, 0.15), c.Y + rng:NextNumber(-0.03, 0.03), z), H.scaled(PLANK, ({ 1.0, 0.93, 1.05 })[k + 1]), 0.1))
+				for _, x in ipairs({ -11.2, -6, 0, 6, 11.2 }) do
+					H.rivet(U.Iron, Vector3.new(x, c.Y + s.Y / 2, z), 0.18)
+				end
+			end
+		elseif r.name == "Brace" then
+			-- the brace as a timber: an iron strap with 2 rivets on each face of its top end (under the beam), an iron
+			-- plate with 4 rivets on the post's outer face where it goes in
+			table.insert(U.Braces, H.timber(Vector3.new(s.X + 0.1, s.Y, s.Z - 0.4), r.cf, H.scaled(DARKW, 1.04), 0.12))
+			for _, zs in ipairs({ -1, 1 }) do
+				local e = r.cf * CFrame.new(0, s.Y / 2 - 0.75, zs * ((s.Z - 0.4) / 2 + 0.05))
+				table.insert(U.Iron, H.piece("Part", Vector3.new(s.X + 0.3, 1.2, 0.1), e, IRON))
+				for _, dy in ipairs({ -0.3, 0.3 }) do
+					H.rivet(U.Iron, (e * CFrame.new(0, dy, zs * 0.06)).Position, 0.2)
+				end
+			end
+			local sg = if c.X < 0 then -1 else 1
+			local px = sg * (11.1 + 1.1 + 0.05)
+			table.insert(U.Iron, H.chamfered(Vector3.new(0.1, 1.5, 1.7), CFrame.new(px, 12.9, c.Z), IRON, {}, 0))
+			for _, dy in ipairs({ -0.45, 0.45 }) do
+				for _, dz in ipairs({ -0.55, 0.55 }) do
+					H.rivet(U.Iron, Vector3.new(px + sg * 0.06, 12.9 + dy, c.Z + dz), 0.22)
+				end
+			end
+		elseif r.name == "Bolt" then
+			-- today's bolts as iron plates with hex heads on the beam's face
+			bolt(CFrame.new(c.X, c.Y, c.Z + s.Z / 2 - 0.2), 1.2)
+		end
+	end
+	-- a rope lashing round the left post below the brace (2 turns)
+	for t = 0, 1 do
+		local y = 10.4 + t * 0.32
+		local px, ps = -11.1, 2.2 + 0.18
+		for _, e in ipairs({ { 0, -1, ps, 0.18 }, { 0, 1, ps, 0.18 }, { -1, 0, 0.18, ps }, { 1, 0, 0.18, ps } }) do
+			table.insert(U.Rope, H.piece("Part", Vector3.new(e[3], 0.2, e[4]), CFrame.new(px + e[1] * (ps / 2 - 0.09), y, e[2] * (ps / 2 - 0.09)) * CFrame.Angles(0, 0, math.rad(t * 4 - 2)), H.scaled(ROPE, 1 - t * 0.06)))
+		end
+	end
+	-- a small lantern on an iron hook under the beam, on its front side
+	local hx, hz = 2.2, -0.7
+	table.insert(U.Iron, H.piece("Part", Vector3.new(0.14, 0.9, 0.14), CFrame.new(hx, 15.55, hz), IRON))
+	table.insert(U.Iron, H.piece("Part", Vector3.new(0.5, 0.14, 0.14), CFrame.new(hx + 0.18, 15.1, hz), IRON))
+	table.insert(U.Iron, H.piece("Part", Vector3.new(0.14, 0.4, 0.14), CFrame.new(hx + 0.38, 15.25, hz), IRON))
+	local ly = 14.45
+	table.insert(U.Iron, M.frustumN(6, 0.42, 0.12, 0, 0.32, CFrame.new(hx, ly + 0.45, hz), { IRON, H.scaled(IRON, 1.15) }))
+	table.insert(U.Iron, H.chamfered(Vector3.new(0.84, 0.16, 0.84), CFrame.new(hx, ly - 0.42, hz), IRON, { "vertical" }, 0.1))
+	for _, d in ipairs({ { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } }) do
+		table.insert(U.Iron, H.piece("Part", Vector3.new(0.1, 0.8, 0.1), CFrame.new(hx + d[1] * 0.36, ly, hz + d[2] * 0.36), IRON))
+	end
+	table.insert(U.Lamp, H.piece("Part", Vector3.new(0.5, 0.62, 0.5), CFrame.new(hx, ly, hz), rgb(255, 196, 96)))
+	return finishR6(m, id, U, { Lamp = { material = Enum.Material.Neon, shadow = false, transparency = 0.1 } })
+end
+
+---------------------------------------------------------------------
+-- 07 ROPE BRIDGE SECTION (jungle_bridge_rope_bridge_section, Jungle_2 x2) and 08 FLOATING DOCK
+-- (jungle_bridge_floating_dock_a, Jungle_2): the docks recipe (DevTools.PropsDocks: boards ~0.95 wide in 3 tones over
+-- a dark core, butt joints, nails, cracks, knots, board tops = today's plank tops; round 8-sided posts with a capped
+-- top and a rope wrap) in warm jungle wood, with real rope handrails (2 strands per side, sagging between the posts,
+-- tied with rope ties and knots), moss rings at the post feet, hanging vines with leaves. 07: 2 stringers and X braces
+-- under the deck. 08: rim joists, 2 rows of 3 banded barrels as the floats, X braces between them, a sagging rope rail,
+-- a rope coil on the deck. Today's colliding parts stay as invisible collision (walk surfaces, rails and floats exactly
+-- as today); today's visual planks, ties, bands and rope go (rebuilt).
+---------------------------------------------------------------------
+local PDM = nil
+local function pd(): any
+	if not PDM then
+		PDM = require(ServerStorage.DevTools.PropsDocks:Clone())
+	end
+	return PDM
+end
+
+local JUNGLE = { rope = rgb(196, 160, 104), moss = rgb(88, 150, 66), vine = rgb(62, 118, 48), leaf = rgb(92, 170, 70), iron = rgb(84, 86, 92) }
+
+-- the colliding parts become invisible collision, the rest of today's parts go; returns today's rows
+local function strip(m: Model): { any }
+	local rows = {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			table.insert(rows, { name = c.Name, cf = c.CFrame, size = c.Size, color = c.Color })
+			if c.CanCollide then
+				toCollision(c)
+			else
+				c:Destroy()
+			end
+		end
+	end
+	return rows
+end
+
+-- a rope sagging from a to b (n segments, sag at the middle), alternating 2 tones
+local function sagRope(list: { BasePart }, a: Vector3, b: Vector3, sag: number, t: number, n: number)
+	local H = lib().H
+	local prev = a
+	for k = 1, n do
+		local f = k / n
+		local p = a:Lerp(b, f) - Vector3.new(0, sag * 4 * f * (1 - f), 0)
+		table.insert(list, H.bar(prev, p, t, H.scaled(JUNGLE.rope, if k % 2 == 0 then 0.9 else 1.0)))
+		prev = p
+	end
+end
+local function sagAt(a: Vector3, b: Vector3, sag: number, f: number): Vector3
+	return a:Lerp(b, f) - Vector3.new(0, sag * 4 * f * (1 - f), 0)
+end
+
+-- a vine hanging from p (3 wiggly segments, a leaf at each joint)
+local function vine(U: any, rng: Random, p: Vector3, len: number)
+	local H = lib().H
+	local prev = p
+	for k = 1, 3 do
+		local q = p + Vector3.new(rng:NextNumber(-0.15, 0.15), -len * k / 3, rng:NextNumber(-0.15, 0.15))
+		table.insert(U.Vines, H.bar(prev, q, 0.09, JUNGLE.vine))
+		table.insert(U.Leaves, H.piece("Part", Vector3.new(0.42, 0.05, 0.26), CFrame.new(q) * CFrame.Angles(rng:NextNumber(-0.6, 0.6), rng:NextNumber(0, 6.28), rng:NextNumber(0.3, 0.7)), H.scaled(JUNGLE.leaf, rng:NextNumber(0.88, 1.08))))
+		prev = q
+	end
+end
+
+-- a rope wrap (3 tilted rings) round a vertical round post (radius r) at p
+local function wrap(U: any, rng: Random, p: Vector3, r: number)
+	local L = lib()
+	for k = 1, 3 do
+		local cf = L.H.frameY(p + Vector3.new(0, (k - 2) * 0.14, 0), Vector3.yAxis) * CFrame.Angles(math.rad(8), rng:NextNumber(0, 6.28), 0)
+		table.insert(U.Rope, L.M.frustumN(8, r + 0.06, r + 0.06, -0.06, 0.06, cf, { JUNGLE.rope, L.H.scaled(JUNGLE.rope, 0.88) }))
+	end
+end
+
+-- a moss ring at a post's foot (deck level y)
+local function mossRing(U: any, x: number, y: number, z: number, r: number)
+	local L = lib()
+	table.insert(U.Moss, L.M.frustumN(8, r + 0.07, r + 0.03, y, y + 0.35, CFrame.new(x, 0, z) * CFrame.Angles(0, math.rad(22.5), 0), { JUNGLE.moss, L.H.scaled(JUNGLE.moss, 1.12) }))
+end
+
+local function newU(): any
+	return { Core = {}, Deck = {}, Nails = {}, Wear = {}, Stain = {}, Wood = {}, Iron = {}, Rope = {}, Moss = {}, Mud = {}, Grass = {}, Vines = {}, Leaves = {}, Frame = {}, Barrels = {}, Bands = {} }
+end
+
+function P.ropeBridge(): string
+	local id = "jungle_bridge_rope_bridge_section"
+	local L = lib()
+	local H = L.H
+	local PD = pd()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60707)
+	H.setBevelSelf(true)
+	local WOOD, POST = rgb(170, 100, 58), rgb(112, 70, 42)
+	local U = newU()
+	local rows = strip(m)
+	-- the boards (tops = today's plank tops, y 1.0), nailed over the 2 stringers
+	PD.boards(U, rng, { size = Vector3.new(15.6, 0.2, 19.7), cf = CFrame.new(0, 0.9, 0), color = WOOD }, { -6.5, 6.5 }, false)
+	-- 2 stringers and X braces under the deck
+	for _, x in ipairs({ -6.5, 6.5 }) do
+		table.insert(U.Frame, H.chamfered(Vector3.new(0.7, 0.45, 19.8), CFrame.new(x, 0.575, 0), H.scaled(POST, 1.05), { "topSides", "bottomSides" }, 0.1))
+	end
+	for _, b in ipairs({ { -9.2, -0.4 }, { 0.4, 9.2 } }) do
+		table.insert(U.Frame, H.bar(Vector3.new(-6.1, 0.5, b[1]), Vector3.new(6.1, 0.5, b[2]), 0.24, POST))
+		table.insert(U.Frame, H.bar(Vector3.new(6.1, 0.46, b[1]), Vector3.new(-6.1, 0.46, b[2]), 0.24, H.scaled(POST, 0.92)))
+	end
+	-- the 4 round posts (today's places), capped, with rope wraps where the handrails tie, moss at the foot
+	for _, r in ipairs(rows) do
+		if r.name == "Post" then
+			local c = r.cf.Position
+			PD.roundPost(U, rng, Vector3.new(c.X, 0.5, c.Z), Vector3.new(c.X, 5.6, c.Z), 0.5, H.scaled(POST, rng:NextNumber(0.95, 1.06)), { cap = true, ropeY = 5.2, iron = JUNGLE.iron })
+			wrap(U, rng, Vector3.new(c.X, 3.1, c.Z), 0.5)
+			mossRing(U, c.X, 0.95, c.Z, 0.5)
+		end
+	end
+	-- the handrails: 2 sagging rope strands per side, rope ties with knots at z -5 / 0 / 5, vines and leaves
+	for _, x in ipairs({ -7.5, 7.5 }) do
+		local a1, b1 = Vector3.new(x, 5.2, -9.5), Vector3.new(x, 5.2, 9.5)
+		local a2, b2 = Vector3.new(x, 3.1, -9.5), Vector3.new(x, 3.1, 9.5)
+		sagRope(U.Rope, a1, b1, 0.35, 0.26, 10)
+		sagRope(U.Rope, a2, b2, 0.25, 0.24, 10)
+		for _, z in ipairs({ -5, 0, 5 }) do
+			local f = (z + 9.5) / 19
+			local top, low = sagAt(a1, b1, 0.35, f), sagAt(a2, b2, 0.25, f)
+			table.insert(U.Rope, H.bar(low - Vector3.new(0, 0.25, 0), top, 0.15, H.scaled(JUNGLE.rope, 0.95)))
+			for _, p in ipairs({ top, low }) do
+				table.insert(U.Rope, H.chamfered(Vector3.new(0.34, 0.3, 0.34), CFrame.new(p) * CFrame.Angles(0, rng:NextNumber(0, 1.5), 0), H.scaled(JUNGLE.rope, 0.86), { "vertical" }, 0.08))
+			end
+		end
+		for _ = 1, 2 do
+			local f = rng:NextNumber(0.15, 0.85)
+			vine(U, rng, sagAt(a1, b1, 0.35, f) + Vector3.new(math.sign(x) * 0.12, 0, 0), rng:NextNumber(1.2, 2.0))
+		end
+		-- moss creeping onto the board ends
+		for _ = 1, 3 do
+			table.insert(U.Stain, H.piece("Part", Vector3.new(rng:NextNumber(0.5, 0.9), 0.02, rng:NextNumber(0.6, 1.4)), CFrame.new(x - math.sign(x) * rng:NextNumber(0.3, 0.6), 1.006, rng:NextNumber(-8, 8)) * CFrame.Angles(0, rng:NextNumber(-0.3, 0.3), 0), H.scaled(JUNGLE.moss, rng:NextNumber(0.85, 1.0))))
+		end
+	end
+	return finishR6(m, id, U)
+end
+
+function P.floatingDock(): string
+	local id = "jungle_bridge_floating_dock_a"
+	local L = lib()
+	local H, M = L.H, L.M
+	local PD = pd()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(60808)
+	H.setBevelSelf(true)
+	local WOOD, POST, BARREL = rgb(208, 146, 90), rgb(112, 70, 42), rgb(150, 96, 56)
+	local U = newU()
+	local rows = strip(m)
+	-- the boards (tops = today's plank tops, y 2.71), nailed over the rim joists and the middle
+	PD.boards(U, rng, { size = Vector3.new(11.6, 0.22, 15.75), cf = CFrame.new(0, 2.6, 0), color = WOOD }, { -5.4, 0, 5.4 }, false)
+	-- rim joists round the deck, under the boards
+	for _, x in ipairs({ -5.75, 5.75 }) do
+		table.insert(U.Frame, H.chamfered(Vector3.new(0.5, 0.45, 16), CFrame.new(x, 2.27, 0), H.scaled(POST, 1.05), { "topSides", "bottomSides" }, 0.08))
+	end
+	for _, z in ipairs({ -7.75, 7.75 }) do
+		table.insert(U.Frame, H.chamfered(Vector3.new(11, 0.45, 0.5), CFrame.new(0, 2.27, z), POST, { "topFrontBack", "bottomFrontBack" }, 0.08))
+	end
+	for _, r in ipairs(rows) do
+		local c = r.cf.Position
+		if r.name == "Float" then
+			-- 3 banded barrels lying along the float
+			for _, bx in ipairs({ -3.55, 0, 3.55 }) do
+				local len, re, rm = 3.3, 1.05, 1.28
+				local F = H.frameY(Vector3.new(bx, c.Y, c.Z), Vector3.xAxis) * CFrame.Angles(0, rng:NextNumber(0, 0.6), 0)
+				local col = H.scaled(BARREL, rng:NextNumber(0.92, 1.06))
+				table.insert(U.Barrels, M.frustumN(10, re, rm, -len / 2, 0, F, { col, H.scaled(col, 0.9) }))
+				table.insert(U.Barrels, M.frustumN(10, rm, re, 0, len / 2, F, { col, H.scaled(col, 0.9) }))
+				for _, e in ipairs({ -1, 1 }) do
+					table.insert(U.Barrels, M.frustumN(10, re - 0.12, re - 0.12, e * len / 2 - 0.04, e * len / 2 + 0.03, F, { H.scaled(col, 0.75) }))
+					for _, yy in ipairs({ 0.38, 0.12 }) do
+						local y = e * len * yy
+						local rr = re + (rm - re) * (1 - math.abs(y) / (len / 2)) + 0.04
+						table.insert(U.Bands, M.frustumN(10, rr, rr, y - 0.1, y + 0.1, F, { JUNGLE.iron, H.scaled(JUNGLE.iron, 0.85) }))
+					end
+				end
+			end
+		elseif r.name == "Post" then
+			PD.roundPost(U, rng, Vector3.new(c.X, 2.3, c.Z), Vector3.new(c.X, 6.2, c.Z), 0.4, H.scaled(POST, rng:NextNumber(0.95, 1.06)), { cap = true, ropeY = 5.9, iron = JUNGLE.iron })
+			mossRing(U, c.X, 2.66, c.Z, 0.4)
+		end
+	end
+	-- X braces between the 2 float rows on both sides
+	for _, x in ipairs({ -5.4, 5.4 }) do
+		table.insert(U.Frame, H.bar(Vector3.new(x, 0.9, -3.9), Vector3.new(x, 2.0, 3.9), 0.24, POST))
+		table.insert(U.Frame, H.bar(Vector3.new(x, 2.0, -3.9), Vector3.new(x, 0.9, 3.9), 0.24, H.scaled(POST, 0.92)))
+	end
+	-- the rope rail between the posts (sagging), a vine on it, a rope coil on the deck
+	local a, b = Vector3.new(-5.45, 5.9, 7.4), Vector3.new(5.45, 5.9, 7.4)
+	sagRope(U.Rope, a, b, 0.3, 0.26, 8)
+	vine(U, rng, sagAt(a, b, 0.3, 0.3) + Vector3.new(0, 0, 0.12), 1.4)
+	for k, r in ipairs({ 0.62, 0.5, 0.38 }) do
+		table.insert(U.Rope, M.frustumN(10, r, r, 2.71 + (k - 1) * 0.1, 2.71 + k * 0.1, CFrame.new(3.6, 0, -6.2), { JUNGLE.rope, H.scaled(JUNGLE.rope, 0.88) }))
+	end
+	for _ = 1, 4 do
+		local x = (if rng:NextNumber() < 0.5 then -1 else 1) * rng:NextNumber(4.6, 5.3)
+		table.insert(U.Stain, H.piece("Part", Vector3.new(rng:NextNumber(0.6, 1.0), 0.02, rng:NextNumber(0.7, 1.5)), CFrame.new(x, 2.716, rng:NextNumber(-6.5, 6.5)) * CFrame.Angles(0, rng:NextNumber(-0.3, 0.3), 0), H.scaled(JUNGLE.moss, rng:NextNumber(0.85, 1.0))))
+	end
+	return finishR6(m, id, U)
 end
 
 return P
