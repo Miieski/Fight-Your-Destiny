@@ -1,0 +1,24 @@
+SMALL FIX BEFORE THE NEXT TASK: TEXTURES OF SUB-ZONE 4 AND BOSS ROOM (DESERT + JUNGLE)
+
+Context: you already put a brick texture in the interior of sub-zone 4 and the boss room of the DESERT and JUNGLE zones. The owner's corrections follow. Same scope as before (sub-zone 4 and the boss room of each zone, same parts). TEXTURE/MATERIAL ONLY: do not change shapes, sizes, positions, collisions, spawns, enemy paths, doors, glowing floor pads or scripts. Backup first in BackUP_Files/ (dated .rbxl, never overwrite). If the owner is not around, do not stop to ask: take the most reasonable reading and log it at the top of docs/NIGHT_LOG.md. Push to https://github.com/Miieski/Fight-Your-Destiny when done.
+
+DESERT
+1. WALLS: make the bricks LIGHTER. Read the exact colors from the entrance door/gate of desert sub-zone 4 (the sandstone pillars and frame) and use them: light sandy beige-gold bricks, slightly lighter and less orange-red than now (the current wall in the screenshot is too saturated orange), with thin darker joints, slight per-brick variation, and keep the soft bevel look. Keep the blue/gold accent bricks on the top frieze, if they were added.
+2. FLOOR: stop using the brick texture on the floor. Use an EGYPTIAN MARBLE floor: large polished slabs (about 6-8 studs per slab) in warm ivory / cream marble with soft beige-gold veins, thin gold-bronze inlay lines between slabs, and a few darker sand-brown slabs for variation; optionally a simple decorative border or a lapis-blue and gold line pattern along the edges and around the arena center (keep it subtle, readable, and no image of hieroglyphs). Slight gloss (SmoothPlastic or Marble-like Material, low reflectance), no PBR noise. The floor must be clearly darker/different from the walls but light enough to read enemies and boss attacks (keep contrast with the boss telegraphs and effects). Tile size correct, no stretching, no z-fighting.
+3. CEILING (if any): follow the new lighter wall color, a bit darker than the walls.
+
+JUNGLE
+1. WALLS: DO NOT CHANGE. The owner likes them as they are.
+2. FLOOR: replace the brick floor by large STONE SLABS (flagstones): big irregular-rectangle gray-green stone slabs with beveled edges, visible dark joints, a few chips and cracks, light moss in some joints and corners, slightly varied tones per slab (keep the same gray-green family as the jungle gate and temple stone). Slab size about 5-7 studs, not stretched. Keep the glowing cyan floor pads and any floor markings exactly as they are (same positions, glow and look; only the surface around them changes). Keep contrast with the enemies and boss telegraphs.
+3. CEILING (if any): unchanged.
+
+RULES
+- Update the recipes in docs/prop_texture_guide.md ("Boss room" section: desert light brick colors with hex, desert marble floor recipe, jungle flagstone recipe) and the texture ids in Config/PropTextures.luau. Floor textures 256 px (512 max), shared per zone, tinted copies where useful, to keep memory low.
+- If these surfaces are MapProps templates (tag MapProp), edit the template so the asset preview and the map stay identical.
+- Do NOT touch the ground of the asset preview.
+
+VERIFY
+- Before/after screenshots: desert sub-zone 4 (walls + floor), desert boss room (walls + floor), jungle sub-zone 4 floor, jungle boss room floor, and one screenshot showing the jungle walls unchanged.
+- Script check: list the parts changed and confirm 0 changes in Size, CFrame, CanCollide, scripts and attributes.
+- Play mode once in each room: enemies, boss attacks and glowing pads stay readable, the phone emulator is smooth, no stretching or z-fighting.
+- Short final report: per room OK / not OK. Do this fix FIRST, then continue with the next task.

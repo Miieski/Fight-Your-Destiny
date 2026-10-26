@@ -3436,6 +3436,26 @@ Rules the tool follows:
   shoulder plates are the usual offenders.
 - **Collision:** colliding arms / weapon parts of today become invisible `Collision` parts; the new limbs never collide.
 
+### G2. Owner fix 2026-10-26: lighter desert walls, desert marble floor, jungle flagstones
+
+- **Desert walls:** `desert_brick_light` (rbxassetid://95750964449871) replaces `desert_brick` in Desert_4 and the
+  desert arena (walls, and the ceiling with its darker Color3). Bricks #CDB283, #C6AA79, #D4BA8C, #BFA372, #C9AE7E,
+  joints #8C7350: the Desert_4 entrance gate's stone #9D7C53 lifted toward its own carving #B58E59, barrier #E2BE84
+  and sand #F4D07C, and pulled toward yellow-beige (less orange-red under the warm arena lights). The frieze row uses
+  `desert_frieze_strip_light` (rbxassetid://136050815206922: the same blue #2C5CC8 / gold #FFC93C row, lighter joint).
+- **Desert floor (Egyptian marble):** `desert_marble_floor` (rbxassetid://79394360532493), 512 px = 28 x 28 studs =
+  4 x 4 polished slabs of 7 studs: ivory / cream #EDE3CC, #E8DCC1, #F1E8D4, #E4D6B8 with soft lighter clouds and
+  1-2 diagonal beige-gold veins (#CDB27E mixed 40 %), 2 sand-brown slabs per tile (#BFA27A, #B59873), 4 px gold-bronze
+  inlay lines #B08A3E between slabs, a 3 px bevel. StudsPerTileU = V = 28; Color3 about #E6E6E6 so the floor reads a
+  step under the light walls; Material stays SmoothPlastic (low gloss). No hieroglyph images; the optional lapis /
+  gold border was left out (kept subtle: the gold inlay grid already frames the slabs).
+- **Jungle floor (flagstones):** `jungle_flagstone_floor` (rbxassetid://75902858063767), 512 px = 24 x 24 studs: rows
+  of 6 studs cut into irregular slabs 5-8 studs wide (wrapping round the tile edge), stone #626A60, #686F65, #5D655C,
+  #70776B, #666E66 with a +-5 % tone per slab, 5 px bevels, 4 px dark joints #2F352F, chipped corners, a crack now and
+  then, moss tufts (#5B9C44 / #579441 darkened) in a third to a half of the joints. StudsPerTileU = V = 24, Color3
+  white. The glowing pads and floor markings are separate parts and keep their look.
+- **Jungle walls and ceiling:** unchanged (the owner likes them).
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

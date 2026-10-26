@@ -1,3 +1,17 @@
+# ROUND 6 FIX + ROUND 6 ASSETS DECISIONS (owner prompts "SMALL FIX ... TEXTURES OF SUB-ZONE 4 AND BOSS ROOM" and
+# "ROUND 6: ASSET PREVIEW - 18 MORE ASSETS", 2026-10-26) - newest first
+
+- Prompts saved: docs/Round6_Knights_Bricks/PROMPT_ROUND6_FIX_TEXTURES.txt, docs/Round6_Asset_Fixes/PROMPT_ROUND6_ASSETS.txt;
+  the 18 images as docs/Round6_Asset_Fixes/01..18. Backup before_round6_fix_and_assets first. The fix runs first.
+- Owner photo rule (2026-10-26): after EVERY changed asset or room, one before / after sheet docs/before_after/NN_name.png
+  (tools/make_before_after.py: title "NN - Name", 2 x 2, AVANT orange / APRES green, rows "Zone de test" / "Dans le jeu";
+  rooms: rows "Murs" / "Sol"), sent to the owner right away before the next asset. So the Studio agent reports after
+  each asset / room (not per batch) with the 4 shots, same camera before and after; the main agent builds and sends the
+  sheet. Fix rooms are numbered R1..R4 (desert sub-zone 4, desert arena, jungle sub-zone 4, jungle arena).
+- Fix textures made by the main agent (tools/textures/make_brick_textures.py, uploaded, ids in PropTextures.BossRoomBrick,
+  recipe prop_texture_guide G2): desert walls lighter (from the Desert_4 entrance gate's stone, carving, barrier and sand
+  colours), desert marble floor 7-stud slabs, jungle flagstones 5-8 studs. The optional lapis / gold border was left out.
+
 # ROUND 6 DECISIONS (owner prompt "TWO TASKS IN ONE RUN: (A) KNIGHT STATUE ARMS ... (B) BRICK TEXTURE ...", 2026-10-26) - newest first
 
 - Round 6 Task B (Studio agent): scope as main set it. Desert: Desert_4 Decor.Structure / Columns / FloorInlay (the

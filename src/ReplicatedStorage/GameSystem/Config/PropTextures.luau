@@ -22,6 +22,10 @@ local PropTextures = {
 		desert_frieze_strip = "rbxassetid://97451078325225",
 		jungle_brick = "rbxassetid://96625564941177",
 		jungle_moss_strip = "rbxassetid://81114154147595",
+		desert_brick_light = "rbxassetid://95750964449871", -- owner fix: lighter walls (replaces desert_brick in the rooms)
+		desert_frieze_strip_light = "rbxassetid://136050815206922",
+		desert_marble_floor = "rbxassetid://79394360532493", -- 512 px = 28 x 28 studs (4 x 4 slabs of 7 studs)
+		jungle_flagstone_floor = "rbxassetid://75902858063767", -- 512 px = 24 x 24 studs (rows of 6 studs)
 	},
 }
 
