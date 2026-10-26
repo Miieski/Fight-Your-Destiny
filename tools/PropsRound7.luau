@@ -9,6 +9,7 @@
 		print(R7.mossPlates())        -- P2: the list of today's flat moss plates (names, counts)
 		print(R7.placeMoss())         -- P2: each plate -> the best-fitting patch (raised, never on a glowing pad)
 		print(R7.caveBoulder(), R7.placeCaveBoulder()) -- P3 item 5: tundra_cave_boulder, nested in the cave landmark
+		print(R7.caveGaps())          -- P3 item 5 (owner correction): the mouth as before, gap rocks in the side holes
 		print(R7.castleBricks({ dry = true }), R7.castleBricks()) -- P3 items 1 / 2 / 4: ice castle bricks (texture only)
 		then Sync.run({ only = { ids } }) and BuildAssetPreview tag / build "Jungle".
 ]]
@@ -480,6 +481,43 @@ function R7.placeCaveBoulder(): string
 	b:PivotTo(CFrame.fromMatrix(Vector3.new(0, ground, 0) + (f * Vector3.new(0, 0, -7.5)) * Vector3.new(1, 0, 1), f.RightVector, Vector3.yAxis))
 	b.Parent = tpl
 	return "nested at " .. tostring(b:GetPivot().Position)
+end
+
+-- OWNER CORRECTION (2026-10-26): the cave mouth stays as it was (no boulder in it); the "holes on the sides" are the
+-- strip under the peaks north of the mouth (world x 8130-8160, z 655-690, y 0-6: rays from the lower terrace at player
+-- height reach about x 8360, out of the map). Smaller copies of tundra_cave_boulder (the reusable gap rock) close it,
+-- nested in the landmark template (so the preview sample shows them too). They stand behind the zone's East bound
+-- (x 8127): their scaled invisible Collision is kept but no player reaches it.
+R7.GAP_ROCKS = {
+	-- world position (the landmark copy's pivot is (8150, 0, 664), no turn), yaw (the rock's front, local -Z, faces the
+	-- terrace: west), scale
+	{ Vector3.new(8136, 0, 651), 95, 0.36 },
+	{ Vector3.new(8139, 0, 661), 90, 0.44 },
+	{ Vector3.new(8141, 0, 676), 75, 0.48 },
+	{ Vector3.new(8138, 0, 690), 105, 0.42 },
+	{ Vector3.new(8140, 0, 701), 115, 0.40 },
+}
+function R7.caveGaps(): string
+	local tpl = folder():FindFirstChild("tundra_landmark_ice_cave_peak") :: Model
+	assert(tpl, "cave landmark template missing")
+	local removed = 0
+	for _, c in ipairs(tpl:GetChildren()) do
+		if c.Name == "Cave_Boulder" or c.Name == "Gap_Rock" then
+			c:Destroy()
+			removed += 1
+		end
+	end
+	local base = Vector3.new(8150, 0, 664) -- (the map copy's pivot = the template's origin)
+	for i, g in ipairs(R7.GAP_ROCKS) do
+		local b = folder():FindFirstChild(R7.CAVE_ID):Clone()
+		b.Name = "Gap_Rock"
+		b:SetAttribute("MapPropId", R7.CAVE_ID)
+		CollectionService:AddTag(b, "MapProp")
+		b:ScaleTo(g[3])
+		b:PivotTo(CFrame.new(g[1] - base) * CFrame.Angles(0, math.rad(g[2]), 0))
+		b.Parent = tpl
+	end
+	return string.format("%d removed, %d gap rocks nested", removed, #R7.GAP_ROCKS)
 end
 
 ---------------------------------------------------------------------

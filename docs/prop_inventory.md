@@ -1489,6 +1489,19 @@ Plates replaced (63): Jungle_4 FloorDecor.MossPatch x18 and Props.WallMoss x8; B
 x12 and Shell.WallMoss x10; Jungle_3 Plaza.MossPatch x14 and Ruins.PlatformMoss x1. Not a plate (kept): Jungle_4
 Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps templates or the preview.
 
+### Round 7 Part 3 (owner, "ICE CASTLE", 2026-10-26)
+
+- Item 3, the entrance blocker: Tundra_4.Decor.Shell.Dado (180 x 4 x 1.2, #3468B4, CanCollide false, z 790.6) ran
+  across the 30-stud corridor opening -> split into 2 pieces (x 7910-7985 and 8015-8090), the only geometry change.
+  Walk check (character boxes z 700-820): only the gate Barrier collides. The light-blue line of image 06: a Studio
+  selection outline, no part. Boss room: entered by teleport, nothing blocks.
+- Item 5, the empty cave: `tundra_cave_boulder` (tools/PropsRound7.luau R7.caveBoulder): overlapping faceted lumps in
+  the light tundra rock family (#8FA3BF .. #B0C2DA, frosted tops #CEDEF6), snow cap and drifts, glass crystals,
+  icicles, one invisible Collision box; sample in the tundra block (large). Owner correction: the cave mouth stays as
+  it was; 5 scaled copies (0.36 - 0.48, "Gap_Rock") are nested in `tundra_landmark_ice_cave_peak` and close the
+  see-through strip under the peaks north of the mouth (x 8130-8160, z 650-705).
+- Items 1, 2, 4, bricks: texture only, see prop_texture_guide G5.
+
 ### crate - `Crate_A` (base variant, 30 copies identical; Abyss "Sunken" = same geometry, other colours)
 - bbox 4.00 x 4.00 x 4.00, centre (0, 2, 0). No PrimaryPart. 9 Parts (Block), SmoothPlastic, all CanCollide/CanQuery/CastShadow on.
 - Body 3.7 cube (214,150,92); bottom and top slabs 4 x 0.5 x 4 (168,98,56); 4 corner posts 0.5 x 3 x 0.5 at (+-1.75, 2, +-1.75) (168,98,56); 2 diagonal braces 0.5 x 4.1 x 0.15 at z +-1.9, roll +-45 (168,98,56).

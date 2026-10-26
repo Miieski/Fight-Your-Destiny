@@ -1,6 +1,13 @@
 # ROUND 7 DECISIONS (owner prompt "ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR +
 # DESERT PYRAMID BRICKS", 2026-10-26) - newest first
 
+- P3 (Studio agent): the "dark ledge" across the castle entrance = Shell.Dado, a non-colliding 4-stud skirting strip
+  that crossed the corridor opening -> split round the opening (only geometry change). The image 06 light-blue line is
+  a Studio selection outline (nothing in the place). The cave: first a boulder in the mouth (reworked once, main);
+  then the OWNER corrected in chat: mouth as before, rocks only where you can see out -> 5 gap rocks under the peaks
+  north of the mouth (found by ray scans from every reachable spot; one strip, no other). Bricks: inside, most of the
+  hall / arena wall area is behind the WallFacets crystal wedges (kept), so the bricks show on the corridor top wall,
+  the apse and the alcoves; ceilings untouched.
 - P2 (Studio agent): the "flat dark-green moss plates" are plain Parts named MossPatch / WallMoss / PlatformMoss
   (0.1-0.6 thick, coplanar). All 63 replaced, Jungle_3's 15 outdoor ones included ("anywhere else"); RoofMoss (the
   colliding roof slab of Jungle_4) is not a plate and stays. Each patch is scaled to its plate (a uniform scale, so
@@ -4170,3 +4177,8 @@ only the tag and attributes, nothing else.
   0 -> 0, ground compare 0 (OwnerLocked 13/13), dry run 629 / 14541 0, index regenerated, export 233 / pull x2 0
   written. Shots docs/screenshots/round7/P2-01_moss_{floor,wall}_{before,after}.jpg.
 - Owner correction (chat, 2026-10-26): P3-02 cave - remove the boulder from the cave mouth, put rocks only in the side gaps where the out-of-map shows (sent to the Studio agent as P3-02b).
+- P3 ICE CASTLE DONE: entrance Dado split (P3-01); cave: tundra_cave_boulder template + sample, mouth restored, 5 nested
+  Gap_Rock copies in tundra_landmark_ice_cave_peak (P3-02, P3-02b); bricks 144 faces (P3-03 exterior, P3-04 interior,
+  P3-05 boss room). Checks: castle + arena parts 3554 -> 3554, 0 differences in Size / CFrame / CanCollide / Material
+  / Colour / Transparency for the bricks (the Dado split logged above), tundra check 0, ground compare 0 (13/13), dry
+  run 630 / 14552 0, index regenerated, export 233 / pull x2 0 written. Shots docs/screenshots/round7/P3-*.

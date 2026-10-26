@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T14:57:51Z",
+ "generated": "2026-10-26T16:27:46Z",
  "zones": [
   {
    "characters": [
@@ -6544,6 +6544,23 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "tundra_cave_boulder",
+     "instances": 5,
+     "largest": 24.9,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "rock",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 5,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "tundra_ice_cave",
      "instances": 5,
      "largest": 35.9,
@@ -6994,7 +7011,7 @@
     },
     {
      "folder": "Tundra.Tundra_4.Decor.Shell",
-     "parts": 47
+     "parts": 48
     },
     {
      "folder": "Tundra.Tundra_4.Decor.WallFacets",

@@ -3496,6 +3496,19 @@ dark cracks (ice). Exterior walls and towers: StudsPerTile 8, Color3 white. Inte
 same id, Color3 about #D2D2D2 (a bit darker). Ceilings, trims (#3468B4), crenels / spires (#96D6FA), crystal facets,
 floors and the V panels stay plain.
 
+### G5. Round 7 ice castle bricks (tools/PropsRound7.luau R7.castleBricks)
+
+- Texture `tundra_ice_brick` (rbxassetid://81297179264826, PropTextures.BossRoomBrick): 8 x 8 studs = 4 rows of
+  4 x 2 blocks in running bond, the gate's built ice blocks #4D93D5 / #4889C6 / #539EE5 / #4788C5 / #427EB7, joints
+  #2860AA. The gate's blues by volume (kit Gate4): Tower #54A0E8 14400 + Wall #54A0E8 3872 (the block base), Spire /
+  Buttress / Crenel / Barrier #96D6FA, trims #3468B4 (TowerCap 1428, TowerBand 786, Cornice 513).
+- Applied as Textures "IceBrickTex" (ZIndex 1, StudsPerTile 8, Material unchanged): outer faces Color3 white
+  (Exterior FrontWallE / W, CornerTower x2, BackTower x2, KeepTower x2, GreatTower, Keep, the outer faces of Shell
+  ForeBlock / Wing), inner faces Color3 #D2D2D2 (hall faces of WallN / E / SE / SW / STop, ForeBlock corridor faces;
+  boss room Wall x24, ApseBack, ApseSide x2, AlcoveBack x2, AlcoveSide x4, only the faces looking into the arena):
+  144 faces (55 outer, 89 inner). Rows on the world grid (OffsetStudsV = -top % 8), columns from the face's low X / Z
+  edge. Never on ceilings, tops, trims, facets, crystals, floors; faces 90 % covered by another part skipped.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more
