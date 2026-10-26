@@ -3509,6 +3509,18 @@ floors and the V panels stay plain.
   144 faces (55 outer, 89 inner). Rows on the world grid (OffsetStudsV = -top % 8), columns from the face's low X / Z
   edge. Never on ceilings, tops, trims, facets, crystals, floors; faces 90 % covered by another part skipped.
 
+### G6. Round 7 swamp exterior (tools/PropsRound7.luau, palette R7.SW)
+
+- Rock strata #66736D / #707A73 / #56625C / #4B544E (one tone per row, tops x1.14, undersides x0.78, sides x0.96 +
+  0.06 x the normal X), wet foot #2C3430; the side boulders blend the same family 30 % toward their old mesh colours.
+- Moss #385A2E (sides) / #4E7434 (tops) / x0.8 (undersides): the sub-zone's own MossCap green, not the brighter
+  jungle moss. Wood #4E3A2C (grooves PropsSwampTrees bark line), end grain #68503A / #5C4632, sawn end #7A5C40, iron
+  #48464C, rope #C4A068 (TundraBuildings lashing), roots #463426, water #203E3C (SmoothPlastic, not Glass: Glass
+  mirrors the sky bright blue), mud #3A2A1C.
+- Everything SmoothPlastic, merged per name (Strata, Strata2, Wet, Moss, Cracks, Vines, Leaves, Roots, Mush, Strands /
+  Wood, Grain, Rope, Iron, Moss, Splinters / Water, Mud); thin pieces (vines, leaves, mushrooms, strands, cracks) cast
+  no shadow.
+
 ## 1. Which colours: the real Part colours, not the photo pixels
 
 The photos show today's parts after the hub's colour grading. The graded pixels are about +15 % brighter and more

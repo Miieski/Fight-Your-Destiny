@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T16:27:46Z",
+ "generated": "2026-10-26T17:29:25Z",
  "zones": [
   {
    "characters": [
@@ -7293,14 +7293,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_fence_fence",
-     "instances": 8,
+     "instances": 13,
      "largest": 11.9,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "fence",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 8,
+     "totalInstances": 13,
      "quality": "improved"
     },
     {
@@ -7344,14 +7344,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_furniture_crate",
-     "instances": 2,
+     "instances": 3,
      "largest": 6.1,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "furniture",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 2,
+     "totalInstances": 3,
      "quality": "improved"
     },
     {
@@ -7480,14 +7480,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_hanging_lantern",
-     "instances": 44,
+     "instances": 46,
      "largest": 4.5,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "light",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 44,
+     "totalInstances": 46,
      "quality": "improved"
     },
     {
@@ -7497,14 +7497,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_lily_pads",
-     "instances": 93,
-     "largest": 8.4,
+     "instances": 95,
+     "largest": 8.3,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "plant",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 93,
+     "totalInstances": 95,
      "quality": "improved"
     },
     {
@@ -7514,14 +7514,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_plant_glow_mushroom_a",
-     "instances": 88,
+     "instances": 90,
      "largest": 5.4,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 88,
+     "totalInstances": 90,
      "quality": "old"
     },
     {
@@ -7531,14 +7531,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_plant_glow_mushroom_b",
-     "instances": 36,
-     "largest": 6.9,
+     "instances": 38,
+     "largest": 6.7,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 36,
+     "totalInstances": 38,
      "quality": "old"
     },
     {
@@ -7683,6 +7683,23 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "swamp_puddle",
+     "instances": 2,
+     "largest": 10.4,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 2,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Swamp"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "swamp_raven",
      "instances": 21,
      "largest": 4.7,
@@ -7692,6 +7709,23 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 21,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Swamp"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "swamp_rotten_timber",
+     "instances": 12,
+     "largest": 63.3,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
      "quality": "improved"
     },
     {
@@ -7734,16 +7768,33 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "swamp_cliff_wall",
+     "instances": 14,
+     "largest": 80.3,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "rock",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 14,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Swamp"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "swamp_rock_cliff_a",
      "instances": 36,
-     "largest": 62.2,
+     "largest": 93,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "rock",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 36,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -7786,14 +7837,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_rock_mud_mound_a",
-     "instances": 16,
+     "instances": 17,
      "largest": 13.4,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "rock",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 16,
+     "totalInstances": 17,
      "quality": "old"
     },
     {
@@ -7941,14 +7992,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "swamp_statue_bone_pile",
-     "instances": 1,
-     "largest": 6.4,
+     "instances": 3,
+     "largest": 5.1,
      "ownTint": 0,
-     "sizeClass": "medium",
+     "sizeClass": "small",
      "category": "statue",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 1,
+     "totalInstances": 3,
      "quality": "improved"
     },
     {

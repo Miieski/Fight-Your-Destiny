@@ -1,6 +1,15 @@
 # ROUND 7 DECISIONS (owner prompt "ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR +
 # DESERT PYRAMID BRICKS", 2026-10-26) - newest first
 
+- P4 (Studio agent): the image 09 "tall thin light-blue frame" = Studio's selection outline of Swamp_4.Bounds.GateLid
+  (an invisible 24 x 84 colliding blocker over the gate that stops players jumping over it) -> kept, nothing removed.
+  The flat light rocks round the gate (Shell side Rocks 16 x 40 and the canopy Rock 62 x 12) are the passage walls ->
+  clad, not moved. All Shell rocks, GiantRoots (now Transparency 1, CastShadow off) and Bounds keep their collision;
+  every new visible piece is CanCollide / CanQuery / CanTouch off. swamp_rock_cliff_a is rebuilt in place (37 map
+  copies + sample re-synced): its 4 Toolbox meshes become the invisible Collision (4 / 4 identical). No sign added to
+  the dressing (the only swamp sign template carries the hub text); the lanterns are the existing light-less template.
+  The 2 long beams (61 / 63) become 2 timbers each, broken in the middle. Cliff copies vary in scale (0.95-1.08) and
+  height so the rim stays irregular and the template does not repeat in a row.
 - P3 (Studio agent): the "dark ledge" across the castle entrance = Shell.Dado, a non-colliding 4-stud skirting strip
   that crossed the corridor opening -> split round the opening (only geometry change). The image 06 light-blue line is
   a Studio selection outline (nothing in the place). The cave: first a boulder in the mouth (reworked once, main);
@@ -4182,3 +4191,12 @@ only the tag and attributes, nothing else.
   P3-05 boss room). Checks: castle + arena parts 3554 -> 3554, 0 differences in Size / CFrame / CanCollide / Material
   / Colour / Transparency for the bricks (the Dado split logged above), tundra check 0, ground compare 0 (13/13), dry
   run 630 / 14552 0, index regenerated, export 233 / pull x2 0 written. Shots docs/screenshots/round7/P3-*.
+- P4 SWAMP EXTERIOR DONE (tools/PropsRound7.luau R7.swampCliffWall / swampRottenTimber / swampPuddle / swampCliffRock /
+  swampExterior): new templates swamp_cliff_wall (10 parts, 34 x 62 x 14), swamp_rotten_timber (7 parts, 34 long),
+  swamp_puddle (3 parts); swamp_rock_cliff_a rebuilt (8 parts). Copies: 14 cliff panels (8 on the z 775 faces, 1 over
+  the passage, 5 as a low rampart on the gate frame) and 12 timbers in Swamp_4.Decor.Shell.R7_CliffDress; 19 dressing
+  copies in Swamp_3.Decor.R7_GateDressing (2 puddles + lily pads, 5 crooked fence pieces, 2 bone piles, crate, 4 ghost
+  mushrooms, mud mound, 2 lanterns), all off the 18-stud path (path box: 0 colliders). Swamp preview: 57 assets, 3
+  samples created, check 0 problems; swamp_rock_cliff_a quality "improved" (BuildAssetPreview B.QUALITY). Checks:
+  ground compare 0 (13/13), dry run 633 / 14600 0, index regenerated, export 233 / pull 0 written. Shots
+  docs/screenshots/round7/P4-01 cliff, P4-02 timbers, P4-03 boulders, P4-04 dressing, P4-05 player POV.

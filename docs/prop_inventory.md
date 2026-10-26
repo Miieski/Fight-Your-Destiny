@@ -1502,6 +1502,22 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
   see-through strip under the peaks north of the mouth (x 8130-8160, z 650-705).
 - Items 1, 2, 4, bricks: texture only, see prop_texture_guide G5.
 
+### Round 7 Part 4 (owner, "SWAMP EXTERIOR BEFORE SUB-ZONE 4", 2026-10-26)
+
+- `swamp_cliff_wall` (R7.swampCliffWall): a 30 x 58 cladding panel (+ a rim of crags and moss to about 62): rows 4-7
+  tall of flat-topped faceted slabs in banded tones (#66736D, #707A73, #56625C, #4B544E), a wet dark foot (#2C3430),
+  ledges every third row with moss (#385A2E / top #4E7434), ghost mushrooms or ferns and hanging moss, cracks
+  (#242826), 3 weathered boulders bulging out, 3 leafy vines and 2 crooked hanging roots (#463426). Front = local -Z,
+  pivot = bottom centre of the face it covers; decor only. Copies: Swamp_4.Decor.Shell.R7_CliffDress Cliff_1..14.
+- `swamp_rotten_timber` (R7.swampRottenTimber): 33.6 long on local Z, radius 2.7: twisted bark log (#4E3A2C) with
+  grooves, a splintered broken end (+Z) with end grain, a sawn end (-Z) with an 8-sided iron bracket (#48464C) and 6
+  rivets, 2 rope lashings, 2 moss pads. 12 copies over the 10 Shell GiantRoot beams (hidden, collision kept).
+- `swamp_puddle` (R7.swampPuddle): 2 overlapping pools (#203E3C, SmoothPlastic) ringed by flat wet mud lumps
+  (#3A2A1C). 2 copies at the gate with swamp_lily_pads.
+- `swamp_rock_cliff_a` rebuilt (R7.swampCliffRock): per Toolbox rock mesh a faceted mass (18 planes) + 2 strata ledges,
+  per moss mesh a draped moss cap, 5 ferns; the 4 colliding meshes stay as invisible Collision.
+- Gate dressing (Swamp_3.Decor.R7_GateDressing, data R7.SWAMP_DRESS): existing templates only, plus the puddles.
+
 ### crate - `Crate_A` (base variant, 30 copies identical; Abyss "Sunken" = same geometry, other colours)
 - bbox 4.00 x 4.00 x 4.00, centre (0, 2, 0). No PrimaryPart. 9 Parts (Block), SmoothPlastic, all CanCollide/CanQuery/CastShadow on.
 - Body 3.7 cube (214,150,92); bottom and top slabs 4 x 0.5 x 4 (168,98,56); 4 corner posts 0.5 x 3 x 0.5 at (+-1.75, 2, +-1.75) (168,98,56); 2 diagonal braces 0.5 x 4.1 x 0.15 at z +-1.9, roll +-45 (168,98,56).
