@@ -21,6 +21,7 @@
 		print(P.tundraTorch())        -- R6 10: tundra_light_blue_torch_wall = the improved wall_torch in tundra colours
 		print(P.frozenTree())         -- R6 11: tundra_landmark_frozen_tree, dead tree in ice
 		print(P.giantCauldron())      -- R6 12: swamp_landmark_giant_cauldron, the swamp cauldron recipe at landmark scale
+		print(P.swampCrate(), P.swampFence(), P.swampSign(), P.swampSignVariants(), P.swampBonePile()) -- R6 13-16: swamp recolours of improved bases
 		then Sync.run({ only = { id } }) syncs the copies (map, arena, preview samples).
 	Every builder installs its model with P.install(): the old template goes to ServerStorage.MapProps._Previous.
 ]]
@@ -1402,8 +1403,14 @@ function P.giantTree(): string
 	end
 	-- the trunk: 3 twisted sections, one twist running through
 	local secs = { { 0, 34, 13.3, 12.6 }, { 34, 67, 12.6, 10.2 }, { 67, 92, 10.2, 8.2 } }
+	-- (today's trunk browns, lighter towards the top; the bark grooves a darker shade of the same brown)
 	for k, s in ipairs(secs) do
-		ST.twistedLog(U.Trunk, U.Bark, rng, Vector3.new(0, s[1] - (if k > 1 then 0.3 else 0), 0), Vector3.new(0, s[2], 0), s[3], s[4], H.scaled(BARK, ({ 1.0, 0.95, 1.04 })[k]), k * 1.3, math.rad(9))
+		local n0 = #U.Bark
+		local col = H.scaled(BARK, ({ 1.14, 1.27, 1.4 })[k])
+		ST.twistedLog(U.Trunk, U.Bark, rng, Vector3.new(0, s[1] - (if k > 1 then 0.3 else 0), 0), Vector3.new(0, s[2], 0), s[3], s[4], col, k * 1.3, math.rad(9))
+		for j = n0 + 1, #U.Bark do
+			U.Bark[j].Color = H.scaled(col, 0.78)
+		end
 	end
 	-- the buttress roots: per root wedge a concave flaring web (stepped boxes and wedges under the curve) and a thick root
 	-- log along its top, from the trunk down to the wedge's foot
@@ -1424,7 +1431,7 @@ function P.giantTree(): string
 			local n = 6
 			local pu, py = curve(0)
 			local prevP = at(pu, py).Position
-			local col = H.scaled(ROOT, rng:NextNumber(0.94, 1.06))
+			local col = H.scaled(r.color, rng:NextNumber(1.15, 1.25))
 			for k = 1, n do
 				local u, y = curve(k / n)
 				local T = 3.2 - 1.6 * k / n
@@ -1466,7 +1473,11 @@ function P.giantTree(): string
 			if Vector3.new(a.X, 0, a.Z).Magnitude > Vector3.new(b.X, 0, b.Z).Magnitude then
 				a, b = b, a
 			end
-			ST.twistedLog(U.Branches, U.Bark, rng, a, b, 3.4, 2.0, H.scaled(BARK, 0.92))
+			local n0 = #U.Bark
+			ST.twistedLog(U.Branches, U.Bark, rng, a, b, 3.4, 2.0, H.scaled(BARK, 1.4))
+			for j = n0 + 1, #U.Bark do
+				U.Bark[j].Color = H.scaled(BARK, 1.09)
+			end
 		elseif r.name == "Canopy" then
 			-- a centre cluster, a ring of clusters, drooping leaf tips at the rim
 			local big = s.X > 50
@@ -1866,6 +1877,301 @@ function P.giantCauldron(): string
 		table.insert(U.Carving, H.piece("Part", Vector3.new(0.34, 0.3, 0.1), sk * CFrame.new(ex, 0.1, -0.82), rgb(40, 34, 48)))
 	end
 	return finishR6(m, id, U, { Bubbles = { material = Enum.Material.Neon, shadow = false }, Embers = { material = Enum.Material.Neon, shadow = false } })
+end
+
+---------------------------------------------------------------------
+-- 13 - 16 SWAMP RECOLOURS of improved bases (owner: "take the improved X and change the colours for the swamp"):
+-- 13 swamp_furniture_crate = the improved crate's parts in dark rotten wood with moss and mud; 14 swamp_fence_fence =
+-- the improved fence_section (B4.fence_section, run from a copy) in dark rotten wood, bent posts, moss, mud; 15
+-- swamp_sign_hub_sign = the improved sign board recipe (posts, 3 planks in a trimmed frame, iron corners, a stone
+-- footing, the invisible GUI carrier "Board") in rotten wood with moss and a rope wrap, with Heaven / Dead variants
+-- for the copies there; 16 swamp_statue_bone_pile = the improved skull_bones in dirty bone with moss and green slime.
+-- Each template keeps its own colliders exactly (invisible "Collision"); 15 adds the board's collider that every copy
+-- carries today on its own Board part.
+---------------------------------------------------------------------
+local SWAMP = { mud = rgb(58, 42, 28), moss = rgb(63, 122, 44), mossTop = rgb(96, 150, 58), slime = rgb(120, 176, 52), rope = rgb(150, 128, 90), rust = rgb(96, 84, 74) }
+
+-- a base colour in swamp rot: darker, greener, less saturated
+local function rot(c: Color3, k: number?): Color3
+	local h, s, v = c:ToHSV()
+	local d = Color3.fromHSV(h, s * 0.72, v * (k or 0.66))
+	return d:Lerp(rgb(58, 62, 40), 0.22)
+end
+P.swampRot = rot
+
+local function mossTone(n: Vector3): Color3
+	return if n.Y > 0.5 then SWAMP.mossTop else SWAMP.moss
+end
+
+local function plainVisual(p: BasePart)
+	p.CanCollide, p.CanQuery, p.CanTouch = false, false, false
+	p.Anchored = true
+end
+
+function P.swampCrate(): string
+	local id = "swamp_furniture_crate"
+	local L = lib()
+	local H, TB = L.H, L.TB
+	local old = folder():FindFirstChild(id) :: Model
+	local base = folder():FindFirstChild("crate") :: Model
+	assert(old and base, "templates missing")
+	local m = old:Clone()
+	local rng = Random.new(61313)
+	H.setBevelSelf(true)
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			toCollision(c)
+		end
+	end
+	-- the improved crate's parts (same footprint), visual only, in rotten wood (iron stays iron, a bit rusty)
+	for _, c in ipairs(base:GetChildren()) do
+		if c:IsA("BasePart") then
+			local p = c:Clone()
+			plainVisual(p)
+			p.Color = if c.Name == "Cap" or c.Name == "Nail" then c.Color:Lerp(SWAMP.rust, 0.4) else rot(c.Color, if c.Name == "Core" then 0.8 else 0.66)
+			p.Parent = m
+		end
+	end
+	local U: any = { Moss = {}, Mud = {} }
+	-- moss on the lid and down one corner, mud round the foot
+	for k = 1, 3 do
+		TB.lump(U.Moss, rng, CFrame.new(rng:NextNumber(-1.4, 1.2), 4.02, rng:NextNumber(-1.3, 1.3)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), rng:NextNumber(0.5, 0.8), 0.14, rng:NextNumber(0.4, 0.6), mossTone, 0.04)
+	end
+	for _, y in ipairs({ 3.2, 2.4, 1.6 }) do
+		TB.lump(U.Moss, rng, CFrame.new(1.9, y, -1.9) * CFrame.Angles(0, math.rad(45), 0), 0.24, 0.36, 0.12, mossTone, 0.05)
+	end
+	for k = 0, 7 do
+		local a = k * math.pi / 4 + rng:NextNumber(-0.2, 0.2)
+		local d = Vector3.new(math.cos(a), 0, math.sin(a))
+		local p = Vector3.new(d.X * 1.86, 0.08, d.Z * 1.86)
+		TB.lump(U.Mud, rng, CFrame.new(p) * CFrame.Angles(0, -a, 0), 0.4, 0.14, 0.22, function(n: Vector3): Color3
+			return if n.Y > 0.5 then H.scaled(SWAMP.mud, 1.15) else SWAMP.mud
+		end, 0.06)
+	end
+	return finishR6(m, id, U)
+end
+
+function P.swampBonePile(): string
+	local id = "swamp_statue_bone_pile"
+	local L = lib()
+	local H, TB = L.H, L.TB
+	local ST = swampTrees()
+	local old = folder():FindFirstChild(id) :: Model
+	local base = folder():FindFirstChild("skull_bones") :: Model
+	assert(old and base, "templates missing")
+	local m = old:Clone()
+	local rng = Random.new(61616)
+	H.setBevelSelf(true)
+	-- today's pile has no collider: its parts go, the improved skull_bones meshes come in (its skull collider not:
+	-- the swamp pile never collided)
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			c:Destroy()
+		end
+	end
+	for _, c in ipairs(base:GetChildren()) do
+		if c:IsA("BasePart") and not c.CanCollide then
+			local p = c:Clone()
+			plainVisual(p)
+			if c.Name == "Bones" then
+				p.Color = rgb(206, 194, 160)
+			elseif c.Name == "Aged" then
+				p.Color = rgb(170, 164, 120)
+			elseif c.Name == "Sockets" then
+				p.Color = rgb(40, 44, 34)
+			end
+			p.Parent = m
+			if c == base.PrimaryPart then
+				m.PrimaryPart = p
+			end
+		end
+	end
+	local U: any = { Moss = {}, Slime = {} }
+	-- moss on the pile, green slime dripping off the skull and pooling at the foot
+	for k = 1, 4 do
+		TB.lump(U.Moss, rng, CFrame.new(rng:NextNumber(-2.4, 1.8), rng:NextNumber(0.5, 0.9), rng:NextNumber(-1.8, 2.2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), rng:NextNumber(0.45, 0.7), 0.16, rng:NextNumber(0.35, 0.55), mossTone, 0.05)
+	end
+	for _, d in ipairs({ { 0.9, 2.55, -0.55 }, { -0.4, 2.7, 0.5 } }) do
+		ST.mossStrand(U.Slime, rng, Vector3.new(d[1], d[2], d[3]), 0.7, SWAMP.slime)
+	end
+	for k = 1, 3 do
+		TB.lump(U.Slime, rng, CFrame.new(rng:NextNumber(-2.6, 2.4), 0.04, rng:NextNumber(-2.2, 2.4)), rng:NextNumber(0.5, 0.8), 0.06, rng:NextNumber(0.4, 0.7), function(): Color3
+			return SWAMP.slime
+		end, 0.02)
+	end
+	return finishR6(m, id, U, { Slime = { material = Enum.Material.SmoothPlastic, shadow = false } })
+end
+
+-- 14: the improved fence builder from a copy of DevTools.PropsBatch4 with the swamp colours, bent posts, moss and mud
+function P.swampFence(): string
+	local id = "swamp_fence_fence"
+	local src = ServerStorage.DevTools.PropsBatch4.Source
+	local i0 = string.find(src, "function B4.fence_section(): Model", 1, true)
+	assert(i0, "B4.fence_section missing")
+	local i1 = string.find(src, "\n---", i0, true)
+	local body = string.sub(src, i0, i1)
+	local function sub(a: string, b: string)
+		local n
+		body, n = string.gsub(body, a, b)
+		assert(n > 0, "fence anchor missing: " .. a)
+	end
+	sub("function B4%.fence_section%(%): Model", "function B4.swamp_fence_r6(): Model")
+	sub("graded%(scaled%(r%.color, if i == 1 then 1 else 0%.93%), 2, 4%)", "graded(scaled(SW_POST, if i == 1 then 1 else 0.93), 2, 4)")
+	sub("r%.cf %* CFrame%.new%(0, %-0%.1, 0%)", "r.cf * CFrame.new(0, -0.1, 0) * CFrame.Angles(rad(if i == 1 then 2.5 else -2), 0, rad(if i == 1 then -2 else 2.5))")
+	sub("{ P%.WoodMid, scaled%(P%.WoodMid, 0%.9%) }", "{ SW_CAP, scaled(SW_CAP, 0.9) }")
+	sub("scaled%(r%.color, %({ 1, 0%.93, 0%.87, 0%.96 }%)", "scaled(SW_RAIL, ({ 1, 0.93, 0.87, 0.96 })")
+	sub("ROPE%)", "SW_ROPE)")
+	sub("local U: any = { Wood = {}, Iron = {}, Plants = {} }", "local U: any = { Wood = {}, Iron = {}, Plants = {}, Moss = {}, Mud = {} }")
+	sub("\tfinishB4%(m, \"fence_section\", U, \"Wood\", { Plants = { shadow = false } }%)", "\tswampExtras(U, rng)\n\tfinishB4(m, \"fence_section\", U, \"Wood\", { Plants = { shadow = false } })")
+	local defs = "local SW_POST, SW_RAIL, SW_CAP, SW_ROPE = rgb(56, 42, 34), rgb(92, 74, 56), rgb(70, 54, 42), rgb(150, 128, 90)\n"
+		.. "local function swampExtras(U: any, rng: Random)\n"
+		.. "\tlocal TB = (require(ServerStorage.DevTools.PropsTundraGates:Clone()) :: any).TB\n"
+		.. "\tlocal function mt(n: Vector3): Color3 return if n.Y > 0.5 then rgb(96, 150, 58) else rgb(63, 122, 44) end\n"
+		.. "\tfor _, x in ipairs({ -3.5, 3.5 }) do\n"
+		.. "\t\tTB.lump(U.Mud, rng, CFrame.new(x, 0.06, 0), 0.85, 0.18, 0.8, function(n: Vector3): Color3 return if n.Y > 0.5 then rgb(70, 52, 34) else rgb(58, 42, 28) end, 0.06)\n"
+		.. "\t\tTB.lump(U.Moss, rng, CFrame.new(x + rng:NextNumber(-0.1, 0.1), 3.95, 0), 0.42, 0.14, 0.42, mt, 0.04)\n"
+		.. "\tend\n"
+		.. "\tfor _, p in ipairs({ { -1.6, 3.38 }, { 2.2, 3.38 }, { 0.6, 1.78 } }) do\n"
+		.. "\t\tTB.lump(U.Moss, rng, CFrame.new(p[1], p[2], 0) * CFrame.Angles(0, rng:NextNumber(-0.2, 0.2), 0), rng:NextNumber(0.5, 0.8), 0.12, 0.22, mt, 0.03)\n"
+		.. "\tend\n"
+		.. "end\n"
+	local k = string.find(src, "\nreturn B4", 1, true)
+	assert(k, "return B4 missing")
+	local tmp = Instance.new("ModuleScript")
+	tmp.Name = "PropsBatch4_swampFence"
+	tmp.Source = string.sub(src, 1, k) .. defs .. body .. string.sub(src, k)
+	tmp.Parent = ServerStorage.DevTools
+	local ok, B4 = pcall(require, tmp:Clone())
+	tmp:Destroy()
+	assert(ok, tostring(B4))
+	local m = (B4 :: any).swamp_fence_r6() :: Model
+	-- today's colliders exactly (the swamp copies' posts sit up to 0.001 off the plains kit's)
+	for _, c in ipairs(m:GetChildren()) do
+		if c.Name == "Collision" then
+			c:Destroy()
+		end
+	end
+	for _, c in ipairs((folder():FindFirstChild(id) :: Model):GetChildren()) do
+		if c:IsA("BasePart") and c.CanCollide then
+			local p = c:Clone()
+			toCollision(p)
+			p.Parent = m
+		end
+	end
+	-- the grass tufts as swamp moss tufts
+	local plants = m:FindFirstChild("Plants") :: BasePart
+	if plants and plants:IsA("PartOperation") then
+		plants.UsePartColor = true
+		plants.Color = rgb(70, 112, 46)
+	end
+	P.install(id, m)
+	local _, size = m:GetBoundingBox()
+	return string.format("%s: %.2f x %.2f x %.2f", id, size.X, size.Y, size.Z)
+end
+
+-- 15: the improved sign board recipe in swamp wood; Post / Trim / Planks as single-colour unions so the Heaven and
+-- Dead copies keep their own colours (Variants), Moss hidden there
+function P.swampSign(): string
+	local id = "swamp_sign_hub_sign"
+	local L = lib()
+	local H, M, TB = L.H, L.M, L.TB
+	local ST = swampTrees()
+	local old = folder():FindFirstChild(id) :: Model
+	assert(old, "template " .. id .. " missing")
+	local m = old:Clone()
+	local rng = Random.new(61515)
+	H.setBevelSelf(true)
+	local POST, TRIM, BOARD, STONE = rgb(58, 44, 36), rgb(74, 56, 44), rgb(129, 106, 82), rgb(104, 106, 96)
+	local U: any = { Post = {}, Trim = {}, Planks = {}, Iron = {}, Stone = {}, Moss = {}, Rope = {} }
+	local post, trims = nil, {}
+	for _, c in ipairs(m:GetChildren()) do
+		if c:IsA("BasePart") then
+			if c.Name == "Post" then
+				post = { cf = c.CFrame, size = c.Size }
+			else
+				table.insert(trims, { cf = c.CFrame, size = c.Size })
+			end
+			toCollision(c)
+		end
+	end
+	-- the board: every copy carries a colliding Board today (5.5 x 2.6 x 0.4 at (0, 5, -0.6)): its collider, and the
+	-- invisible GUI carrier the sync moves the copies' texts onto
+	local bcf, bs = CFrame.new(0, 5, -0.6), Vector3.new(5.5, 2.6, 0.4)
+	local col = Instance.new("Part")
+	col.Size, col.CFrame = bs, bcf
+	col.Anchored = true
+	col.Parent = m
+	toCollision(col)
+	local carrier = H.piece("Part", bs, bcf * CFrame.new(0, 0, -0.02), BOARD)
+	carrier.Name = "Board"
+	carrier.Transparency = 1
+	carrier.CanCollide, carrier.CanQuery, carrier.CanTouch, carrier.CastShadow = false, false, false, false
+	carrier.Parent = m
+	-- the post, a little bent, with a pyramid cap and a rope wrap
+	table.insert(U.Post, H.chamfered(post.size - Vector3.new(0, 0.5, 0), post.cf * CFrame.new(0, 0.05, 0) * CFrame.Angles(math.rad(1.5), 0, math.rad(-2)), POST, { "vertical" }, 0.12))
+	table.insert(U.Post, M.frustumN(4, 0.6, 0.1, 6.24, 6.7, CFrame.new(0.1, 0, 0) * CFrame.Angles(0, math.rad(45), 0), { POST }))
+	for k = 0, 2 do
+		table.insert(U.Rope, M.frustumN(8, 0.47, 0.47, -0.06, 0.06, H.frameY(Vector3.new(-0.03, 2.1 + k * 0.14, 0), Vector3.yAxis) * CFrame.Angles(math.rad(8), rng:NextNumber(0, 6.28), 0), { SWAMP.rope, H.scaled(SWAMP.rope, 0.88) }))
+	end
+	-- 3 planks (front 0.04 behind the carrier's front), a back board, 4 trims
+	local bp = bcf.Position
+	for k = 0, 2 do
+		local h = bs.Y / 3
+		table.insert(U.Planks, H.chamfered(Vector3.new(bs.X, h - 0.06, bs.Z - 0.1), CFrame.new(bp.X, bp.Y - bs.Y / 2 + h * (k + 0.5), bp.Z - 0.03) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-1.2, 1.2))), BOARD, { "topFrontBack", "bottomFrontBack" }, 0.05))
+	end
+	table.insert(U.Planks, H.piece("Part", Vector3.new(bs.X - 0.2, bs.Y - 0.2, 0.06), CFrame.new(bp.X, bp.Y, bp.Z + bs.Z / 2 - 0.08), BOARD))
+	for i, r in ipairs(trims) do
+		table.insert(U.Trim, H.chamfered(r.size, r.cf * CFrame.Angles(0, 0, math.rad(if i == 1 then 1.0 else -0.8)), TRIM, { "topFrontBack", "bottomFrontBack", "topSides", "bottomSides" }, 0.08))
+	end
+	local front = bp.Z - bs.Z / 2
+	for _, sx in ipairs({ -1, 1 }) do
+		table.insert(U.Trim, H.chamfered(Vector3.new(0.4, bs.Y + 0.4, 0.5), CFrame.new(sx * (bs.X / 2 + 0.05), bp.Y, bp.Z), TRIM, { "vertical" }, 0.08))
+		for _, y in ipairs({ -1, 1 }) do
+			table.insert(U.Iron, H.piece("Part", Vector3.new(0.5, 0.12, 0.06), CFrame.new(sx * (bs.X / 2 - 0.05), bp.Y + y * (bs.Y / 2 + 0.05), front - 0.3), SWAMP.rust))
+			H.rivet(U.Iron, Vector3.new(sx * (bs.X / 2 + 0.05), bp.Y + y * (bs.Y / 2 - 0.35), front - 0.28), 0.12)
+		end
+	end
+	-- the stone footing, moss on the top trim, the cap and the footing, a hanging moss strand
+	for k = 0, 1 do
+		table.insert(U.Stone, H.chamfered(Vector3.new(0.78, 0.45, 1.5), CFrame.new(-0.4 + k * 0.8, 0.225, 0), H.scaled(STONE, ({ 1, 0.88 })[k + 1]), { "topFrontBack", "topSides" }, 0.12))
+	end
+	for _, p in ipairs({ { -1.9, 6.62, -0.6, 0.7 }, { 1.2, 6.62, -0.6, 0.55 }, { 0.15, 6.68, 0, 0.36 }, { 0.3, 0.47, 0.2, 0.5 } }) do
+		TB.lump(U.Moss, rng, CFrame.new(p[1], p[2], p[3]) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), p[4], 0.14, p[4] * 0.55, mossTone, 0.04)
+	end
+	ST.mossStrand(U.Moss, rng, Vector3.new(2.3, 3.4, -0.62), 0.9, SWAMP.moss)
+	local r = finishR6(m, id, U, { Post = { single = POST }, Trim = { single = TRIM }, Planks = { single = BOARD }, Moss = { single = SWAMP.moss } })
+	-- the variants: the Heaven and Dead hub signs keep today's colours there
+	local tpl = folder():FindFirstChild(id) :: Model
+	local vf = tpl:FindFirstChild("_Variants") or Instance.new("Folder")
+	vf.Name = "_Variants"
+	vf.Parent = tpl
+	local function variant(name: string, attrs: { [string]: any })
+		local c = vf:FindFirstChild(name) or Instance.new("Configuration")
+		c.Name = name
+		for k, v in pairs(attrs) do
+			c:SetAttribute(k, v)
+		end
+		c.Parent = vf
+	end
+	variant("Heaven", { Color_Post = Color3.fromHex("d6a032"), Color_Trim = Color3.fromHex("ffd054"), Color_Planks = Color3.fromHex("f2f0ea"), Transparency_Moss = 1 })
+	variant("Dead", { Color_Post = Color3.fromHex("403a3c"), Color_Trim = Color3.fromHex("403a3c"), Color_Planks = Color3.fromHex("e8e2ce"), Transparency_Moss = 1 })
+	return r
+end
+
+-- the Variant attribute on the sign copies by zone (Heaven / Dead; the swamp ones default)
+function P.swampSignVariants(): string
+	local lines = {}
+	for _, root in ipairs({ workspace.Zones, workspace._Staging.AssetPreview.ByZone }) do
+		for _, d in ipairs(root:GetDescendants()) do
+			if d:IsA("Model") and d:GetAttribute("MapPropId") == "swamp_sign_hub_sign" then
+				local path = d:GetFullName()
+				local v = if path:find("Heaven") then "Heaven" elseif path:find("Dead") then "Dead" else nil
+				d:SetAttribute("Variant", v)
+				table.insert(lines, path .. " -> " .. tostring(v or "default"))
+			end
+		end
+	end
+	return table.concat(lines, "\n")
 end
 
 return P

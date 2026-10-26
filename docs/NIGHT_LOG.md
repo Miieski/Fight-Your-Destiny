@@ -4079,3 +4079,21 @@ only the tag and attributes, nothing else.
   the third "found" was the temporary arena copy for the shot, deleted); 59 x 33.9 x 52 -> 59 x 35 x 52 (bubbles).
   Shots round6_assets/12_giant_cauldron_* (map = a temporary workspace copy of the swamp arena).
 - Owner chose (chat, 2026-10-26): 09 giant tree keeps the whole tribal mask visible. Main agent asked the Studio agent to bring the 09 trunk back to today's browns (it read almost black).
+- 09 FIX (main / owner): the mask stays visible (owner). Bark lightened to today's trunk browns (#68442C x 1.14 / 1.27
+  / 1.4 from the foot to the top section and the limbs, grooves 0.78 of the section brown instead of near-black #221812;
+  roots from today's root colours x 1.15-1.25); re-synced 2/2, collision 44 / 44, 0 differences; 09 after shots re-shot
+  (same cameras).
+- ASSETS 13 - 16 DONE (PropsRound6 swamp recolours of the improved bases):
+  13 swamp_furniture_crate (P.swampCrate): the improved crate's parts in rotten wood (rusty caps / nails), moss on the
+     lid and a corner, mud at the foot; 9 colliders 9 / 9, 0 differences; replaced 3/3; 4 x 4 x 4 -> 4.5 x 4.2 x 4.5.
+  14 swamp_fence_fence (P.swampFence): B4.fence_section run from a temporary copy (destroyed after) in dark rotten
+     wood, bent posts, moss tufts, moss on rails and caps, mud at the feet; today's 4 colliders cloned exactly (the
+     plains kit's posts were 0.001 off the swamp ones); 4 / 4, 0 differences; the 8-stud joins unchanged; replaced 9/9.
+  15 swamp_sign_hub_sign (P.swampSign + P.swampSignVariants): the improved sign board recipe in rotten wood (bent post,
+     rope wrap, moss, rusty corners, stone footing) with the invisible GUI carrier "Board"; the copies' "Hub"
+     SurfaceGuis kept (sync moved them onto the carrier; the Back-face GUI, dropped by the sync's same-name rule, was
+     re-added from the Front one on all 3 map copies); Variants Heaven / Dead keep today's gold / grey colours there,
+     moss hidden; colliders: today's 3 + the board collider every copy had on its own Board part (3 -> 4); replaced 6/6.
+  16 swamp_statue_bone_pile (P.swampBonePile): the improved skull_bones meshes in dirty bone, moss, green slime drips
+     and a pool; no collider as today (0 / 0); replaced 2/2; footprint 6.44 x 5.76 -> 6.4 x 6.0.
+  Shots round6_assets/13_swamp_crate_*, 14_swamp_fence_*, 15_swamp_sign_*, 16_swamp_bone_pile_*.
