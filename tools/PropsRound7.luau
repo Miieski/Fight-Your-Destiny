@@ -13,6 +13,7 @@
 		print(R7.castleBricks({ dry = true }), R7.castleBricks()) -- P3 items 1 / 2 / 4: ice castle bricks (texture only)
 		print(R7.swampCliffWall(), R7.swampRottenTimber(), R7.swampPuddle(), R7.swampCliffRock()) -- P4 templates
 		print(R7.swampExterior())       -- P4 placements: cliff panels, timbers (GiantRoots hidden), gate dressing
+		print(R7.swampTextures({ dry = true }), R7.swampTextures()) -- P5 swamp wall / floor textures (texture only)
 		then Sync.run({ only = { ids } }) and BuildAssetPreview tag / build "Jungle".
 ]]
 local ServerStorage = game:GetService("ServerStorage")
@@ -1128,6 +1129,183 @@ function R7.swampExteriorClear(keepRoots: boolean?): string
 		end
 	end
 	return "cleared"
+end
+
+---------------------------------------------------------------------
+-- PART 5: SWAMP SUB-ZONE 4 AND BOSS ROOM TEXTURES (texture only; ids PropTextures.BossRoomBrick.swamp_wall_stone,
+-- an 8 x 8 stud tile of mossy dark stone blocks, and swamp_floor_mud_stone, 24 x 24 studs of muddy flagstones).
+-- Walls ("SwampWallTex", Color3 white): the room-facing vertical faces of the sub-zone's RockFacets and Shell Rocks
+-- (above / between the facets, the passage sides; never the outer cliff face of Part 4) and of the boss room's
+-- RockSlabs, alcove walls / lintels and the Rock over the door. Floors ("SwampFloorTex"): the tops of the sub-zone's
+-- Ground.Floor and the arena Floor / AlcoveFloors (Color3 white); the stone slabs lying on them (FloorStone,
+-- PathStone, FloorTile) the same texture at Color3 #E0E0E0 (lighter slabs of the same family). Ceilings, pools, glow
+-- veins and roots stay as they are. Rows on the world grid (OffsetStudsV from the face's top edge, columns from the
+-- face's low edge along world X / Z for axis-aligned faces; floor tops from the +X / +Z edge).
+---------------------------------------------------------------------
+R7.SWAMP_WALL_TEX, R7.SWAMP_FLOOR_TEX = "SwampWallTex", "SwampFloorTex"
+local function swampIds(): (string, string)
+	local cfg = require(game:GetService("ReplicatedStorage").GameSystem.Config.PropTextures:Clone()) :: any
+	local b = cfg.BossRoomBrick or {}
+	assert(b.swamp_wall_stone and b.swamp_floor_mud_stone, "PropTextures swamp ids missing")
+	return b.swamp_wall_stone, b.swamp_floor_mud_stone
+end
+local function sbox(x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): any
+	return { lo = Vector3.new(x0, y0, z0), hi = Vector3.new(x1, y1, z1), c = Vector3.new((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) }
+end
+local function inSBox(b: any, p: Vector3): boolean
+	return p.X >= b.lo.X and p.X <= b.hi.X and p.Y >= b.lo.Y and p.Y <= b.hi.Y and p.Z >= b.lo.Z and p.Z <= b.hi.Z
+end
+-- the rooms: the interior volumes (boxes; the arena: a round room of radius 79 round its centre), the wall parts by
+-- folder and name, the floor parts
+local function swampRooms(): any
+	local S4 = workspace.Zones.Swamp.Swamp_4.Decor
+	local A = ServerStorage.BossArenas.Swamp
+	return {
+		{
+			name = "Swamp_4",
+			root = S4,
+			boxes = { sbox(9909.5, 10090.5, -0.5, 46, 795, 945), sbox(9985, 10015, -0.5, 24, 729, 795) },
+			walls = { { S4.Shell, { Rock = true } }, { S4.Facets, { RockFacet = true } } },
+			floors = { { S4.Ground, { Floor = 1 } }, { S4.Ground, { FloorStone = 0.88, PathStone = 0.88 } } },
+		},
+		{
+			name = "BossArenas.Swamp",
+			root = A,
+			centre = Vector3.new(10000, 0, -600),
+			radius = 79,
+			height = 64,
+			boxes = { sbox(9874, 9924, -0.5, 30, -620, -580), sbox(10076, 10126, -0.5, 30, -620, -580) },
+			walls = { { A.Walls, { RockSlab = true, AlcoveWall = true, AlcoveLintel = true, Rock = true } } },
+			floors = { { A, { Floor = 1 } }, { A.Walls, { AlcoveFloor = 1 } }, { A.Decor, { FloorTile = 0.88 } } },
+		},
+	}
+end
+-- the face's centre, normal and the 2 in-plane axes (world) with their half lengths
+local function faceFrame(p: BasePart, face: Enum.NormalId): (Vector3, Vector3, Vector3, number, Vector3, number)
+	local lv = Vector3.FromNormalId(face)
+	local n = p.CFrame:VectorToWorldSpace(lv)
+	local h = math.abs(lv.X) * p.Size.X / 2 + math.abs(lv.Y) * p.Size.Y / 2 + math.abs(lv.Z) * p.Size.Z / 2
+	local a1 = if math.abs(lv.X) > 0.5 then Vector3.yAxis else Vector3.xAxis
+	local a2 = lv:Cross(a1)
+	local h1 = math.abs(a1.X) * p.Size.X / 2 + math.abs(a1.Y) * p.Size.Y / 2 + math.abs(a1.Z) * p.Size.Z / 2
+	local h2 = math.abs(a2.X) * p.Size.X / 2 + math.abs(a2.Y) * p.Size.Y / 2 + math.abs(a2.Z) * p.Size.Z / 2
+	return p.Position + n * h, n, p.CFrame:VectorToWorldSpace(a1), h1, p.CFrame:VectorToWorldSpace(a2), h2
+end
+-- a room-facing face: one of 25 probes (0.5 stud out) lies in the room and the normal points toward the room's middle
+local function roomFace(room: any, p: BasePart, face: Enum.NormalId): boolean
+	local c, n, w1, h1, w2, h2 = faceFrame(p, face)
+	for i = -2, 2 do
+		for j = -2, 2 do
+			local q = c + w1 * h1 * (i * 0.45) + w2 * h2 * (j * 0.45) + n * 0.5
+			if room.centre then
+				local d = Vector3.new(q.X - room.centre.X, 0, q.Z - room.centre.Z)
+				if d.Magnitude < room.radius and q.Y > -0.5 and q.Y < room.height and n:Dot(-d) > 0 then
+					return true
+				end
+			end
+			for _, b in ipairs(room.boxes) do
+				if inSBox(b, q) and n:Dot(Vector3.new(b.c.X - c.X, 0, b.c.Z - c.Z)) > 0 then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+-- opts.dry: list only; returns the report
+function R7.swampTextures(opts: any?): string
+	local o = opts or {}
+	local wallId, floorId = swampIds()
+	local lines, nWall, nFloor = {}, 0, 0
+	for _, room in ipairs(swampRooms()) do
+		local blockers = blockersOf(room.root)
+		for _, set in ipairs(room.walls) do
+			for _, p in ipairs(set[1]:GetChildren()) do
+				if p:IsA("Part") and p.Shape == Enum.PartType.Block and set[2][p.Name] and p.Transparency < 1 then
+					local faces = {}
+					for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right }) do
+						local c, n = faceFrame(p, face)
+						-- (the facets lean 5-9 degrees: a face up to about 17 degrees off vertical is a wall face)
+						if math.abs(n.Y) > 0.3 or not roomFace(room, p, face) or covered(p, face, blockers) then
+							continue
+						end
+						table.insert(faces, face.Name)
+						nWall += 1
+						if not o.dry then
+							local t = Instance.new("Texture")
+							t.Name = R7.SWAMP_WALL_TEX
+							t.Texture = wallId
+							t.Face = face
+							t.StudsPerTileU, t.StudsPerTileV = 8, 8
+							t.Color3 = Color3.new(1, 1, 1)
+							t.ZIndex = 1
+							t.OffsetStudsV = (-(p.Position.Y + p.Size.Y / 2)) % 8
+							local u = n:Cross(Vector3.yAxis)
+							local hw = (if face == Enum.NormalId.Front or face == Enum.NormalId.Back then p.Size.X else p.Size.Z) / 2
+							if math.abs(u.X) > 0.99 then
+								t.OffsetStudsU = (-(c.X - hw)) % 8
+							elseif math.abs(u.Z) > 0.99 then
+								t.OffsetStudsU = (-(c.Z - hw)) % 8
+							end
+							t.Parent = p
+						end
+					end
+					if #faces > 0 then
+						table.insert(lines, string.format("  %s wall: %s", p:GetFullName():gsub("^Workspace%.Zones%.Swamp%.", ""):gsub("^ServerStorage%.", ""), table.concat(faces, ",")))
+					end
+				end
+			end
+		end
+		for _, set in ipairs(room.floors) do
+			for _, p in ipairs(set[1]:GetChildren()) do
+				local k = p:IsA("Part") and set[2][p.Name]
+				if k and p.Transparency < 1 then
+					-- the up face (a turned cylinder: its end cap)
+					local face = Enum.NormalId.Top
+					for _, f in ipairs({ Enum.NormalId.Top, Enum.NormalId.Right, Enum.NormalId.Left, Enum.NormalId.Front, Enum.NormalId.Back }) do
+						if p.CFrame:VectorToWorldSpace(Vector3.FromNormalId(f)).Y > 0.9 then
+							face = f
+						end
+					end
+					nFloor += 1
+					if not o.dry then
+						local t = Instance.new("Texture")
+						t.Name = R7.SWAMP_FLOOR_TEX
+						t.Texture = floorId
+						t.Face = face
+						t.StudsPerTileU, t.StudsPerTileV = 24, 24
+						t.Color3 = Color3.new(k, k, k)
+						t.ZIndex = 1
+						if face == Enum.NormalId.Top and p.CFrame.Rotation:FuzzyEq(CFrame.identity, 1e-4) then
+							t.OffsetStudsU = (-(p.Position.X + p.Size.X / 2)) % 24
+							t.OffsetStudsV = (-(p.Position.Z + p.Size.Z / 2)) % 24
+						end
+						t.Parent = p
+					end
+					if k == 1 then
+						table.insert(lines, string.format("  %s floor: %s", p:GetFullName():gsub("^Workspace%.Zones%.Swamp%.", ""):gsub("^ServerStorage%.", ""), face.Name))
+					end
+				end
+			end
+		end
+	end
+	table.sort(lines)
+	return string.format("%sswamp textures: %d wall faces, %d floor faces (slabs included)\n%s", if o.dry then "DRY " else "", nWall, nFloor, table.concat(lines, "\n"))
+end
+
+-- removes the swamp textures
+function R7.swampTexturesClear(): string
+	local n = 0
+	for _, root in ipairs({ workspace.Zones.Swamp.Swamp_4.Decor, ServerStorage.BossArenas.Swamp }) do
+		for _, d in ipairs(root:GetDescendants()) do
+			if d:IsA("Texture") and (d.Name == R7.SWAMP_WALL_TEX or d.Name == R7.SWAMP_FLOOR_TEX) then
+				d:Destroy()
+				n += 1
+			end
+		end
+	end
+	return n .. " removed"
 end
 
 return R7
