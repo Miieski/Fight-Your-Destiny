@@ -1,5 +1,20 @@
 # ROUND 6 DECISIONS (owner prompt "TWO TASKS IN ONE RUN: (A) KNIGHT STATUE ARMS ... (B) BRICK TEXTURE ...", 2026-10-26) - newest first
 
+- Round 6 Task B (Studio agent): scope as main set it. Desert: Desert_4 Decor.Structure / Columns / FloorInlay (the
+  PyramidShell steps are the outside of the pyramid; their inner faces sit behind the Structure walls, so nothing there
+  is visible from inside: not textured) + BossArenas.Desert Structure and its Floor. Jungle: Jungle_4 Decor.Shell /
+  FloorDecor + the 10 plain pillars in Decor.Props (wall pieces of the hall) + BossArenas.Jungle Decor Shell /
+  FloorDecor / the 8 Props pillars and its Floor. RoofMoss / RoofCanopy (the jungle roof outside) untouched.
+  Not textured on purpose: round parts (a Texture does not wrap a cylinder: column shafts and bands, the ceiling
+  boss), plaster capitals, the desert runner / edges / tile lines / trap glyphs, the jungle FloorRing x52 (rotated
+  overlapping segments would flicker at the joints), moss / roots / glyph plates, every MapProp model. 0 Material
+  changes (all parts were SmoothPlastic already). The existing desert Frieze parts get the strip scaled to their
+  height (two blue / gold courses in running bond); walls without a frieze part get the strip row at y 30-32 (Desert_4
+  N / S walls; the arena walls all have Frieze parts). Jungle moss row at y 4-6 on every wall reaching the floor; walls
+  taller than 32 studs show a second row 32 studs higher (y 36-38), as the recipe allows. Tile origin and the
+  OffsetStudsV direction checked with a probe part and on Desert_4 WallN first
+  (docs/screenshots/round6/B_desert4_wallN_alignment_test.jpg). Strip textures needed ZIndex 2 (with equal ZIndex the
+  opaque bricks drew over the jungle moss strip). Phone emulator: not available from Edit-mode MCP - main's Play check.
 - Round 6 Task A (Studio agent): the reference is my own before shot of the preview sample (docs/screenshots/round6/
   A_ice_knight_before_front|side.jpg). The pilot keeps the round-4 build of the ice knight (PropsTundraMonuments) and
   rebuilds only the arms and the sword in tools/PropsRound6.luau. After main's review the crossguard went up to chest
@@ -3934,3 +3949,18 @@ only the tag and attributes, nothing else.
 - Main agent: ROUND 6 TASK A PLAY CHECK OK on the iPhone 17 Pro emulator (landscape): Tundra, Heaven, Hell, Abyss and
   Void reached by portal next to a fixed statue (6 / 11 / 10 / 10 / 7 statues streamed), 144 fps, render 2.4-2.8 ms,
   0 game errors. Pushed; Task B starts.
+- Task B BRICKS DONE (tools/BrickRooms.luau 18730 / dd4b16e5610d3691, disk == Studio): Desert_4 55 parts / 127
+  textures, BossArenas.Desert 66 / 162, Jungle_4 67 / 230, BossArenas.Jungle 112 / 282. Script check (R.snapshot before,
+  R.compare after): 0 parts changed in Size, CFrame, CanCollide / CanQuery / CanTouch, Material, Color, Transparency,
+  attributes or non-texture children in all 4 rooms; scripts 0 -> 0 in each. Ground compare 0 differences on the 13
+  owner grounds; full dry run 626 templates / 14475 copies, 0 replaced (no MapProp touched); export 232 scripts, pull
+  twice: 0 written; graphify update done. Shots docs/screenshots/round6/B_desert4_nave|corridor_before|after.jpg,
+  B_desert_arena_before|after.jpg + B_desert_arena_frieze_close.jpg, B_jungle4_hall|corridor_before|after.jpg +
+  B_jungle4_moss_row_close.jpg, B_jungle_arena_before|after.jpg (arena shots from temporary workspace copies, deleted).
+  Docs: prop_texture_guide.md section G "Applied to", prop_inventory.md "Round 6 Task B". TASK B DONE (Play check: main).
+- Main agent: ROUND 6 TASK B PLAY CHECK OK on the iPhone 17 Pro emulator (landscape). Desert_4: 127 brick textures
+  streamed, walking fine, 144 fps; desert arena entered by the gate, 162 textures, the door locks (24 parts), Anubis
+  Guard + Sandstorm Djinn spawn, 144 fps. Jungle_4: 230 textures, the sub-zone's enemies around, 145 fps; jungle arena
+  entered, 282 textures, door locks (19 parts), Tribal Warlord + Elder Jaguar spawn, 145 fps. Bricks sharp on the phone
+  (shots B_desert_arena_play_phone.jpg, B_jungle_arena_play_phone.jpg), no stretching or flicker seen, 0 game errors.
+  Backup after_round6. ROUND 6 DONE.

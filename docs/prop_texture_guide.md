@@ -3391,6 +3391,33 @@ Settings:
   a wall already has a separate frieze / base-band part, that part gets the strip colours instead.
 - Part Material stays SmoothPlastic so no Roblox material pattern fights the bricks.
 
+Applied to (2026-10-26, `tools/BrickRooms.luau` = `DevTools.BrickRooms`; every Texture is named BrickTex, FriezeTex or
+MossTex, so `R.clear(room)` removes exactly this layer):
+
+| room | parts textured | textures | what |
+|---|---|---|---|
+| Desert_4 (pyramid interior) | 55 | 127 | Structure walls (WallN, WallS x3, WallE, WallW, CorridorWall x2, Clerestory x2) on their room faces incl. the door jambs; Floor, CorridorFloor (floor tint); NaveCeiling, AisleCeiling x2, CorridorCeiling (ceiling tint); Beam x6; BaseBand x5 and Columns.ColBase x12 (tint from the part colour); FloorInlay.TrapTile x12 (floor tint from the part colour); the 4 Frieze parts get the blue / gold strip; WallN / WallS get the strip row at y 30-32 (no Frieze part there) |
+| BossArenas.Desert | 66 | 162 | Wall x11, ApseWall x3, AlcoveWall x6 (room faces, jambs of the alcove openings); Floor, ApseFloor, AlcoveFloor x2; Ceiling x2, AlcoveCeiling x2; Beam x5; BaseBand x5, ColBase x8, Dais, DaisStep, ThronePlatform, ThroneStep x3 (part tint); the 14 Frieze parts (y 40 / 42.2) get the strip scaled to the band height, the gold band half a brick off the blue one |
+| Jungle_4 (temple interior) | 67 | 230 | Shell HallWall x6, CorridorWall x2 (moss row at y 4-6, repeating every 32 studs); Floor x2; Ceiling, CorridorCeiling; Beam x5; WallBand x5, WallBase x2 (part tint); FloorDecor.Aisle x3 (part tint); Props.Pillar / PillarBase / PillarBand / PillarCapital x10 each |
+| BossArenas.Jungle | 112 | 282 | Shell Wall x20 (incl. the reveals of the alcove openings), WallLintel x4, AlcoveBack x2, AlcoveSide x4 (moss row); Floor, FloorDecor.AlcoveGround x2; Ceiling, AlcoveCeiling x2; Beam x4; WallBand x20, WallBase x20 (part tint); Props.Pillar / PillarBase / PillarBand / PillarCapital x8 each |
+
+Rules the tool follows:
+- A face is textured when it looks into one of the room's interior boxes (a 5 x 5 grid of probes 0.5 stud out of the
+  face; walls must also face the box centre) and is not covered (90 % of the grid inside another part just in front
+  of it or 0.01 stud behind it: wall ends flush with another wall, beam tops under the ceiling).
+- Untouched on purpose: round parts (column shafts, column bands, the ceiling boss: a Texture does not wrap a
+  cylinder), the capitals (plaster), the desert Runner / RunnerEdge / TileLine / TrapGlyph (carpet and inlays), the
+  jungle FloorRing x52 (rotated, overlapping segments: textures would flicker at the joints; the dark ring stays a flat
+  inlay), MossPatch / WallMoss / WallRoot / glyphs, LintelTrim (covered), every MapProp model (props, statues, doors,
+  gates), spawns and invisible parts. AlcoveFloor (jungle arena) is covered by AlcoveGround, which carries the bricks.
+- Top faces of unturned parts are on the world grid (OffsetStudsU = -(x max) mod 8, OffsetStudsV = -(z max) mod 8:
+  U runs from the +X edge toward -X, V from the +Z edge toward -Z, checked with a probe part), so floor pieces that
+  touch or overlap line up. Vertical faces start at their top edge; strips use OffsetStudsV = (row top - distance of
+  the row below the face top) mod 32 (V_tile = V_face + offset, checked on a probe face) and ZIndex 2 over the bricks.
+- Part tint for bands, bases and steps: Color3 = part colour / brick average (desert #9D7C53, jungle #646A62), clamped
+  0.35 .. 1 (floor tiles 0.82), so dark bands stay darker than the walls.
+- No Material changed (every part was already SmoothPlastic).
+
 ### F11. Statues holding a weapon (owner task 2026-10-26, round 6 Task A)
 
 `tools/PropsRound6.luau`: `P.plantedSword`, `P.gripArm`, `P.gauntlet`, `P.blade`.

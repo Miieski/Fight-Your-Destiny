@@ -1421,6 +1421,18 @@ TEST, Plains_2 `Decor.Landmark`), the 3 `GoodsCrate` boxes on each Market_Awning
 
 Pivot of every kit model = bottom centre on the ground (Y 0), front = -Z, unless noted. "bbox centre" is in pivot space.
 
+### Round 6 Task B (owner, "BRICK TEXTURE FOR THE INTERIOR OF SUB-ZONE 4 AND THE BOSS ROOM", 2026-10-26)
+
+Texture only (`tools/BrickRooms.luau`); not MapProps (the room parts are plain map parts), so nothing to sync. Ids in
+`Config/PropTextures.luau` -> `BossRoomBrick`; recipe and the full part list in prop_texture_guide.md section G.
+
+| room | parts | textures | Size / CFrame / collision / Material / Color / Transparency / attributes / children changed | scripts |
+|---|---|---|---|---|
+| Desert_4 | 55 of 1615 | 127 | 0 | 0 -> 0 |
+| BossArenas.Desert | 66 of 1207 | 162 | 0 | 0 -> 0 |
+| Jungle_4 | 67 of 2215 | 230 | 0 | 0 -> 0 |
+| BossArenas.Jungle | 112 of 696 | 282 | 0 | 0 -> 0 |
+
 ### crate - `Crate_A` (base variant, 30 copies identical; Abyss "Sunken" = same geometry, other colours)
 - bbox 4.00 x 4.00 x 4.00, centre (0, 2, 0). No PrimaryPart. 9 Parts (Block), SmoothPlastic, all CanCollide/CanQuery/CastShadow on.
 - Body 3.7 cube (214,150,92); bottom and top slabs 4 x 0.5 x 4 (168,98,56); 4 corner posts 0.5 x 3 x 0.5 at (+-1.75, 2, +-1.75) (168,98,56); 2 diagonal braces 0.5 x 4.1 x 0.15 at z +-1.9, roll +-45 (168,98,56).
