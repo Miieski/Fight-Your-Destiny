@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T08:34:33Z",
+ "generated": "2026-10-26T09:09:17Z",
  "zones": [
   {
    "characters": [
@@ -4725,14 +4725,14 @@
      "resizedParts": 0,
      "propId": "jungle_gate_boss_gate",
      "instances": 1,
-     "largest": 84.1,
+     "largest": 89.4,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4742,14 +4742,14 @@
      "resizedParts": 0,
      "propId": "jungle_gate_door",
      "instances": 1,
-     "largest": 30,
+     "largest": 50.5,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4827,14 +4827,14 @@
      "resizedParts": 0,
      "propId": "jungle_landmark_golden_idol",
      "instances": 1,
-     "largest": 49.3,
+     "largest": 65.6,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4844,14 +4844,14 @@
      "resizedParts": 0,
      "propId": "jungle_landmark_step_pyramid",
      "instances": 1,
-     "largest": 142.3,
+     "largest": 181.9,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "landmark",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -4868,7 +4868,7 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -5551,14 +5551,14 @@
      "resizedParts": 0,
      "propId": "jungle_statue_ruin_pillar_a",
      "instances": 10,
-     "largest": 21.4,
+     "largest": 34.6,
      "ownTint": 0,
-     "sizeClass": "medium",
+     "sizeClass": "large",
      "category": "statue",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 10,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -6103,7 +6103,7 @@
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -6113,14 +6113,14 @@
      "resizedParts": 0,
      "propId": "tundra_gate_door",
      "instances": 1,
-     "largest": 33,
+     "largest": 56.9,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "gate",
      "inPreview": true,
      "newTemplate": true,
      "totalInstances": 1,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [

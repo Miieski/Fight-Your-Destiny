@@ -82,6 +82,14 @@ B.QUALITY = {
 	desert_gate_boss_gate = "improved", -- 08
 	desert_landmark_oasis_well = "improved", -- 09
 	desert_prop_spear = "improved", -- 10
+	jungle_gate_boss_gate = "improved", -- 11
+	jungle_gate_door = "improved", -- 12
+	jungle_landmark_waterfall_cliff = "improved", -- 13
+	jungle_landmark_golden_idol = "improved", -- 14
+	jungle_landmark_step_pyramid = "improved", -- 16
+	jungle_statue_ruin_pillar_a = "improved", -- 17
+	tundra_gate_boss_gate = "improved", -- 19
+	tundra_gate_door = "improved", -- 20
 }
 
 ---------------------------------------------------------------------

@@ -1,5 +1,18 @@
 # ROUND 5 DECISIONS (owner prompt "ROUND 5: ASSET PREVIEW - NPCs AND ENEMIES + SPECIAL FIXES", 2026-10-26) - newest first
 
+- Round 5 Task 3 11-20 (Studio agent): images 15 (jungle gate guards) and 18 (ice throne) are Task 2 C / D (done).
+  12 jungle_gate_door and 20 tundra_gate_door are the Jungle / Tundra boss ARENA doors: the preview shows their outer
+  (-Z) face, so the outer face got the full door recipe and the arena face got the same frames / ice or stone faces
+  (the arena-side glyphs / emblem kept); as for 06, BossService fades and unblocks every part of a Door, so their new
+  parts also block while the door is closed (they hug the old shapes). 13: a first try with faceted strata slabs read
+  as stacked bricks, so it was undone (template restored from _Previous before anything else) and redone by the
+  PRIORITY RULE with the improved jungle_rock_large boulder (its Stone and Moss unions) stacked 3-5 high in each cliff
+  rock's box. 14: the arms now bend down to hands resting on the knees (as asked); today's straight Arm / Fist colliders
+  stay as invisible collision beside the legs. 16: the passage walls (the inner faces of the two lowest tiers) stay
+  plain dark stone; the corner bushes are the improved jungle_flower_bush (non-colliding). 17: "the green top" = today's
+  green moss plate on the upper shaft, kept as a green moss drape + moss cap + vine. 19: today's CrownBand / 10
+  CrownPoint wedges were non-colliding visuals and were rebuilt (bevelled band, 5 faceted spikes) behind today's 3
+  glowing gems; today's crystal spire meshes, knights and torches stay.
 - Round 5 labels (main's correction): every asset remade in round 5 is "improved" on its floor label and in the index
   md / json - B.QUALITY now lists the Task 2 remakes (desert_landmark_sarcophagus, tundra_landmark_ice_throne; the
   improved cart and jungle_palisade_gate were already "improved") and every Task 3 id as it is finished (03-10 so far);
@@ -3782,3 +3795,54 @@ only the tag and attributes, nothing else.
 - Task 3 03-10 labels: B.QUALITY += the 7 Task 3 ids (sarcophagus / ice throne were already in); Plains, Desert, Tundra
   rebuilt (0 created / 0 moved), all 9 labels read "improved"; docs/asset_preview_index.md / .json regenerated.
   Tools: PropsRound5 65729 / 4cd0eedbb43d4d1a, BuildAssetPreview 70102 / af6ad1e6c247104c (disk == Studio).
+- Task 3 backup: BackUP_Files/round5_before_task3c/ (jungle_gate_boss_gate, jungle_gate_door,
+  jungle_landmark_waterfall_cliff, jungle_landmark_golden_idol, jungle_landmark_step_pyramid,
+  jungle_statue_ruin_pillar_a, tundra_gate_boss_gate, tundra_gate_door; collected).
+- Task 3 11 JUNGLE BOSS GATE DONE: jungle_gate_boss_gate (P.jungleBossGate): the jungle stone temple recipe - jambs and
+  lintel faced with cut stone (both faces), plinth and cap courses, moss on the lintel + drapes, vine strands down the
+  pillars; doors kept with gold leaf frames, raised panel mouldings and inner plates, rivet rows on the bands, gold
+  bezels round the glowing diamonds, ring handles; the fanged face carved (frame, angry brow halves, eye sockets,
+  cheeks, nose, lips, tapered fangs); crest = bevelled gold emblem on a stone plinth with a bezel round its gem;
+  braziers = stone drums with flared gold bowls (embers kept); step = jointed slabs. Collision 23 / 23 identical;
+  78.8 x 49.0 x 14.5 (was 78.8 x 48.5 x 13.7). Replaced 2 / 2 (Jungle_4.BossGate kept its Interact prompt + preview).
+  Shots docs/screenshots/round5/11_jungle_boss_gate_before|after_preview|map.jpg.
+- Task 3 12 JUNGLE ARENA DOOR DONE: jungle_gate_door (P.jungleArenaDoor): outer face = carved stone frame of quoins, 5
+  voussoirs with a small proud keystone (carved diamond), a double stone door (carved frame lines, diamond, 3 squares,
+  dark seam), moss at the foot / on top, drapes, vine hangings; arena face = cut stone over jambs and lintel, rivets on
+  the gold bands (gold panel + glowing glyphs kept). Collision 5 / 5; 30.0 x 26.5 x 10.6 (was 30.0 x 26.0 x 8.3: moss
+  and vines stand out from the outer face). Replaced 2 / 2. Shots 12_jungle_gate_door_*.jpg (map = temp arena copy).
+- Task 3 13 WATERFALL CLIFF DONE: jungle_landmark_waterfall_cliff (P.waterfallCliff): each cliff rock = 3-5 stacked
+  improved jungle_rock_large boulders (turned, tapering, moss cap on top); ledges / lips / wet rock = faceted strata
+  slabs with moss mounds and drapes; the 6 flat vine bars = leafy vines of the same length; waterfall in the fountain
+  water look (rippled top pool, flow strands, foam lip, foam at the foot, rippled plunge pool). No sound / particles
+  existed. Collision 12 / 12; 158.8 x 106.0 x 70.6 (was 158.8 x 104.7 x 70.6). Replaced 2 / 2. Shots
+  13_waterfall_cliff_*.jpg.
+- Task 3 14 GOLDEN IDOL DONE: jungle_landmark_golden_idol (P.goldenIdol): a rounded seated idol - torso, belly plate,
+  pectorals, jewelled collar, belt with a gem buckle, pauldrons with gems, octagonal arms to hands resting on the knees,
+  thighs with knee caps and feet, rounded head, carved brow with a gem, muzzle and nose, tapered fangs, eye sockets
+  round the cyan eyes (kept), ears with gold rings, jewelled crown band, tapered spikes and a fan of feathers; base =
+  cut jungle stone with a bevelled gold trim and studs, a frame round the glowing glyph (kept). Collision 23 / 23;
+  43.8 x 49.2 x 35.8 (was 43.8 x 49.2 x 35.2). Replaced 2 / 2 (Jungle arena + preview). Shots 14_golden_idol_*.jpg.
+- Task 3 16 STEP PYRAMID DONE: jungle_landmark_step_pyramid (P.stepPyramid): every tier / the shrine faced with cut
+  stone (front, back, outer sides; the tier = dark mortar core), bevelled caps on every step, a carved shrine doorway,
+  a carved roof comb with a gold finial and balls, the gold diamond in a bezel, stone frames round the glowing diamonds
+  (kept), moss mounds + drapes where the flat moss plates were, leafy vines for the vine bars, improved flower bushes
+  on the front corners of the 2 lowest steps; passage kept. Collision 18 / 18; 142.3 x 86.8 x 132.5 (was 142.3 x 86.1
+  x 132.5). Replaced 2 / 2. Shots 16_step_pyramid_*.jpg.
+- Task 3 17 RUIN PILLAR A DONE: jungle_statue_ruin_pillar_a (P.ruinPillar): stepped bevelled plinth, octagonal shaft of
+  3 drums with joints and cracks, carved octagonal band with rims and a recessed frame round the glowing glyph (kept),
+  flared capital, bevelled abacus, the green top as moss cap + drape + vine. Collision 5 / 5; 7.0 x 21.8 x 6.9 (was
+  6.4 x 21.4 x 6.4). Replaced 11 / 11 (all 10 in Jungle_3 Decor.Ruins + preview). Shots 17_ruin_pillar_*.jpg.
+- Task 3 19 TUNDRA BOSS GATE DONE: tundra_gate_boss_gate (P.tundraBossGate): the ice castle gate recipe - jambs and
+  lintel faced with bevelled ice blocks (PropsTundraGates.iceFace), ice cornice with dentils, icicles over the door,
+  frosted-glass leaf frames and panels with frost lines and corner frost (both faces), ice ring handles; the crown
+  emblem with depth (bevelled gold band, rims, 5 faceted gold spikes with ball tips, gold bezels round the 3 glowing
+  gems, kept); dais = jointed ice slabs. Collision 16 / 16; 86.9 x 52.7 x 13.6 (was 13.5 deep). Replaced 2 / 2
+  (Tundra_4.BossGate kept its custom children + preview). Shots 19_tundra_boss_gate_*.jpg.
+- Task 3 20 TUNDRA ARENA DOOR DONE: tundra_gate_door (P.tundraArenaDoor): ice blocks on jambs and lintel (both faces),
+  ice cornice, icicles both sides, both faces two leaves with frosted-glass frames and panels, a cyan gem handle on each
+  outer leaf, a faceted ice setting round the glowing emblem (kept, arena face). Collision 4 / 4; 30.8 x 33.7 x 6.1
+  (was 30.0 x 33.0 x 5.0). Replaced 2 / 2. Shots 20_tundra_gate_door_*.jpg.
+- Task 3 11-20 labels: B.QUALITY += the 8 ids; Jungle + Tundra rebuilt (0 created / 0 moved), all 8 labels "improved";
+  docs/asset_preview_index.md / .json regenerated (228 improved rows). TASK 3 DONE (03-14, 16, 17, 19, 20; 07 / 15 / 18
+  = Task 2). Tools: PropsRound5 132681 / de94de87827fb67c, BuildAssetPreview 70465 / baec303e459dc5af (disk == Studio).
