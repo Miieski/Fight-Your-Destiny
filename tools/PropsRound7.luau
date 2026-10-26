@@ -14,6 +14,7 @@
 		print(R7.swampCliffWall(), R7.swampRottenTimber(), R7.swampPuddle(), R7.swampCliffRock()) -- P4 templates
 		print(R7.swampExterior())       -- P4 placements: cliff panels, timbers (GiantRoots hidden), gate dressing
 		print(R7.swampTextures({ dry = true }), R7.swampTextures()) -- P5 swamp wall / floor textures (texture only)
+		print(R7.pyramidTextures({ dry = true }), R7.pyramidTextures()) -- P6 desert pyramid tier bricks (texture only)
 		then Sync.run({ only = { ids } }) and BuildAssetPreview tag / build "Jungle".
 ]]
 local ServerStorage = game:GetService("ServerStorage")
@@ -1303,6 +1304,125 @@ function R7.swampTexturesClear(): string
 				d:Destroy()
 				n += 1
 			end
+		end
+	end
+	return n .. " removed"
+end
+
+---------------------------------------------------------------------
+-- PART 6: DESERT PYRAMID BRICKS (texture only). Desert_4.Decor.PyramidShell is a stack of 10-stud tiers of plain
+-- Step boxes (T0-T5 hollow rings round the temple, T6-T14 solid squares) and 4 gold capstone wedges.
+-- "PyramidTex": desert_pyramid_tier (20 x 10 studs: 3 courses, a darker base course, a lighter top course) on every
+-- outer vertical face, the entrance jambs and the lintel front; rows snapped so each tile's top is the tier top
+-- (y = 10k), columns on the world grid; Color3 white on the #E2BE84 tiers and #F2EDE4 on the #D5B37C tiers.
+-- "PyramidTopTex": desert_brick_light as paving on the tier tops (StudsPerTile 10, world grid, Color3 #EAEAEA).
+-- Faces looking into the hollow (behind the temple's own walls) and faces covered by a neighbour are skipped. The
+-- capstone keeps its colour, Reflectance 0.05 (owner: a bit more shine is fine; 0.15 washed the gold out to a pale
+-- beige against the sky). Porch, cornice, gate, statues,
+-- banners and lamps stay as they are.
+---------------------------------------------------------------------
+R7.PYR_TEX, R7.PYR_TOP_TEX = "PyramidTex", "PyramidTopTex"
+-- the hollow inside the rings (the temple): x 3903-4097, z 783-947, up to y 60
+local PYR_HOLLOW = { lo = Vector3.new(3903, -2, 783), hi = Vector3.new(4097, 60, 947) }
+function R7.pyramidTextures(opts: any?): string
+	local o = opts or {}
+	local cfg = require(game:GetService("ReplicatedStorage").GameSystem.Config.PropTextures:Clone()) :: any
+	local b = cfg.BossRoomBrick or {}
+	local tierId, topId = b.desert_pyramid_tier, b.desert_brick_light
+	assert(tierId and topId, "PropTextures desert_pyramid_tier / desert_brick_light missing")
+	local D4 = workspace.Zones.Desert.Desert_4.Decor
+	local shell = D4.PyramidShell
+	local blockers = blockersOf(D4)
+	local light = Color3.fromRGB(226, 190, 132)
+	local nSide, nTop, lines = 0, 0, {}
+	for _, p in ipairs(shell:GetChildren()) do
+		if p:IsA("Part") and p.Name == "Step" then
+			local tint = if (p.Color.R - light.R) ^ 2 + (p.Color.G - light.G) ^ 2 < 0.001 then Color3.new(1, 1, 1) else Color3.fromRGB(242, 237, 228)
+			local faces = {}
+			for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right }) do
+				local c, n = faceFrame(p, face)
+				local q = c + n * 0.5
+				if inSBox(PYR_HOLLOW, q) or covered(p, face, blockers) then
+					continue
+				end
+				table.insert(faces, face.Name)
+				nSide += 1
+				if not o.dry then
+					local t = Instance.new("Texture")
+					t.Name = R7.PYR_TEX
+					t.Texture = tierId
+					t.Face = face
+					t.StudsPerTileU, t.StudsPerTileV = 20, 10
+					t.Color3 = tint
+					t.ZIndex = 1
+					t.OffsetStudsV = (-(p.Position.Y + p.Size.Y / 2)) % 10
+					local u = n:Cross(Vector3.yAxis)
+					local hw = (if face == Enum.NormalId.Front or face == Enum.NormalId.Back then p.Size.X else p.Size.Z) / 2
+					if math.abs(u.X) > 0.99 then
+						t.OffsetStudsU = (-(c.X - hw)) % 20
+					elseif math.abs(u.Z) > 0.99 then
+						t.OffsetStudsU = (-(c.Z - hw)) % 20
+					end
+					t.Parent = p
+				end
+			end
+			-- the top (paving), unless the tier above covers it all
+			local top = p.Position.Y + p.Size.Y / 2
+			local open = false
+			for i = -2, 2 do
+				for j = -2, 2 do
+					local s = Vector3.new(p.Position.X + p.Size.X / 2 * i * 0.45, top + 0.05, p.Position.Z + p.Size.Z / 2 * j * 0.45)
+					local hit = false
+					for _, q in ipairs(blockers) do
+						if q ~= p and inPart(q, s) then
+							hit = true
+							break
+						end
+					end
+					open = open or not hit
+				end
+			end
+			if open then
+				table.insert(faces, "Top")
+				nTop += 1
+				if not o.dry then
+					local t = Instance.new("Texture")
+					t.Name = R7.PYR_TOP_TEX
+					t.Texture = topId
+					t.Face = Enum.NormalId.Top
+					t.StudsPerTileU, t.StudsPerTileV = 10, 10
+					t.Color3 = Color3.fromRGB(234, 234, 234)
+					t.ZIndex = 1
+					t.OffsetStudsU = (-(p.Position.X + p.Size.X / 2)) % 10
+					t.OffsetStudsV = (-(p.Position.Z + p.Size.Z / 2)) % 10
+					t.Parent = p
+				end
+			end
+			table.insert(lines, string.format("  Step %.0fx%.0fx%.0f @(%.1f, %.0f, %.1f) %s: %s", p.Size.X, p.Size.Y, p.Size.Z, p.Position.X, p.Position.Y, p.Position.Z, p.Color:ToHex(), table.concat(faces, ",")))
+		end
+	end
+	local nCap = 0
+	for _, p in ipairs(shell:GetChildren()) do
+		if p:IsA("BasePart") and p.Name == "Capstone" then
+			nCap += 1
+			if not o.dry then
+				p.Reflectance = 0.05
+			end
+		end
+	end
+	table.sort(lines)
+	return string.format("%spyramid: %d side faces, %d tops, capstone x%d Reflectance 0.05\n%s", if o.dry then "DRY " else "", nSide, nTop, nCap, table.concat(lines, "\n"))
+end
+
+-- removes the pyramid textures (the capstone back to Reflectance 0)
+function R7.pyramidTexturesClear(): string
+	local n = 0
+	for _, d in ipairs(workspace.Zones.Desert.Desert_4.Decor.PyramidShell:GetDescendants()) do
+		if d:IsA("Texture") and (d.Name == R7.PYR_TEX or d.Name == R7.PYR_TOP_TEX) then
+			d:Destroy()
+			n += 1
+		elseif d:IsA("BasePart") and d.Name == "Capstone" then
+			d.Reflectance = 0
 		end
 	end
 	return n .. " removed"
