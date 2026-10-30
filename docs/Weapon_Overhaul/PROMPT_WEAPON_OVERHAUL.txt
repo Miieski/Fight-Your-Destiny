@@ -1,0 +1,65 @@
+WEAPON ANIMATIONS OVERHAUL: FLUID MELEE, 360-DEGREE BOW, FIRE STAFF WITH MANA AND HEAL, GAUNTLET REMOVAL
+
+GOAL
+Make combat much more fluid. Redo the animations and the attack logic of the melee weapons (sword, spear, daggers, hammer), give the bow and the staff 360-degree aiming, add a mana bar and a heal to the staff, and remove the Gauntlet category from "Fight Your Destiny". Inspiration: the Roblox game "Dueling Grounds" (katana, dual daggers, naginata, heavy weapons: light attack chains, heavy attack, finisher, parry and dodge, long reach and slow recovery on the polearm, fast long combos on daggers). Take the FEEL and the mechanics only: do not copy its assets, animations, names or UI. The owner's design answers are below and are final; if something is not covered, take the most reasonable reading, log it at the top of docs/NIGHT_LOG.md and carry on.
+
+COMMON RULES
+- Backup first in BackUP_Files/ (dated .rbxl, never overwrite). Max 2 sub-agents at once (one Studio, one Blender). If a step fails twice, log it in docs/NIGHT_LOG.md and move on. Push to https://github.com/Miieski/Fight-Your-Destiny after each step. Never put secrets in files. Do not touch the ground of the asset preview.
+- Server-authoritative gameplay through the single Net module: the server decides hits, damage, cooldowns, mana and healing. The client may play the animation immediately for responsiveness (prediction), but never decides damage. Validate everything (rate limits, impossible timings, fake targets, spam), no trust in client positions beyond a tolerance.
+- Mobile first: big simple buttons, smooth in the Studio phone emulator, light on memory and network (no per-frame remote spam, replicate compact attack states).
+- All numbers (damage multipliers, timings, ranges, costs, cooldowns, caps) live in Config files so they can be tuned later. Damage stays independent of the current zone (Zone Boost stays disabled).
+- Document everything in DESIGN.md (it wins over older docs), docs/weapon_system_document.txt and HANDOFF.md.
+
+STEP 0 - REMOVE THE GAUNTLET CATEGORY (do this first, then continue)
+The owner no longer wants gauntlets. The game is in test phase: no refunds, no compensation, no migration of value. Remove the whole category everywhere: weapon data (all gauntlet weapons), Config, shop and case-opening pools, drop tables and loot tables, rarity tables, UI tabs/icons/filters, skills, animations, models/templates/Blender files and exports (move them to a folder _removed/ outside the game, do not delete files), asset preview samples (if any), docs and briefs. Old saves that contain gauntlets must load without errors (the items are simply discarded, equipped gauntlets are unequipped and replaced by the default). Update counts everywhere (the weapon categories drop by one; recompute the weapon totals, for example 84 weapons / 7 categories becomes 72 / 6 if each category had 12). List what you removed in docs/NIGHT_LOG.md. Run a search proving no reference to "Gauntlet" or "Gauntlets" remains in code, config or docs.
+
+CONTROLS (mobile)
+- ONE attack button for all weapons: tap = combo / quick attack, hold = heavy attack or charged attack. 
+- One block button (melee: block and perfect parry; staff: heal channel, see below).
+- One dodge button: a short dash with brief invincibility (about 0.25 s of i-frames), movement cooldown about 1.2 s, tunable. Dodge can CANCEL the recovery (end) of an attack. No other cancels.
+- Skill button Z (and existing X/C) as now; see "Skills".
+- The player keeps full movement speed while attacking (no slowdown, no root), only the heavy/charged attacks may apply a small forward lunge. Melee attacks can be started in the air (jump attack = downward strike).
+- LOCK-ON: add a camera lock-on system for melee: a button toggles the lock on the nearest enemy in front of the camera (screen cone), the camera keeps the target in view, the character faces it, attacks aim at it, swipe or tap a small arrow to switch targets, auto release if the target dies, is further than about 60 studs or the player is hit by a boss attack that disables it. Without lock-on, melee attacks go in the camera direction. Make it feel smooth, no camera snapping. Lock-on must also work for the bow and staff (aim at the target).
+
+MELEE ANIMATIONS (sword, spear, daggers, hammer)
+Goals: no delay between press and hit, smooth transitions between hits, nothing that feels slow or jerky.
+- Start-up of a light attack: first damaging frame within about 0.08-0.12 s of the press (tunable per weapon). Blend the animations (0.05-0.1 s crossfades), combo buffering (a press during the last 30-40% of a swing queues the next hit), continuous flow from hit to hit, and a quick return to idle/run.
+- Combo: 4-5 hits + a FINISHER, then a short recovery. Suggested: dagger 5 + finisher, sword 4 + finisher, spear 4 + finisher, hammer 3-4 + finisher (slower, heavier). Heavy attack (hold) ends a combo harder; a finisher that lands after a guard break is a bigger hit. All timing windows in Config.
+- Hit zone per weapon (a hit can touch several enemies depending on the weapon): sword = wide arc, spear = long reach (thrusts and large sweeping arcs, naginata-style spins and slashes while it stays a SPEAR with its name and stats, strong against guards), daggers = short reach, one or two close targets, very fast, two-handed alternating hits and flurries, hammer = horizontal two-handed sweeps and a slow ground slam with a shockwave area (hold to charge: the longer the hold, the stronger the hit and the larger the shockwave, small super-armor feeling is allowed but no immunity).
+- Perfect parry: pressing block right before a hit (about 0.2 s window, tunable) parries, staggers the enemy and refunds the guard; holding block still blocks normally (weakening with each hit).
+- Hit feedback (no hitstop): weapon slash trails per weapon (color by weapon), impact sparks, small light screen shake on finishers, heavy hits and hammer slams, knockback of enemies (stronger on finishers and the hammer; bosses resist it).
+- Attack speed: the animation and the damage timing speed up with the player's Dexterity attribute AND with the weapon rarity, with a combined cap of +100% (2.0x), all in Config. Scale animation speed AND timing windows together so hits stay synchronized, and validate the speed server-side.
+- Rig and method: use the existing character rig. Create the animations as PROCEDURAL animations in Luau (Motor6D/CFrame poses with eased blending, sub-second keyframes, spring or tween smoothing) so no uploads are needed, OR any method that works with the available tools, but they MUST be visible to every other player in multiplayer: replicate a compact attack state (weapon id, attack id, start time, direction) and let each client play the animation locally for every player. Document the method in docs/animation_system.md. Add a clean AnimationController module with weapon definitions (data-driven), so adding a weapon later does not require new code.
+
+DOUBLE DAGGERS
+Every dagger model becomes a PAIR: one dagger in each hand (mirror the model for the left hand, same style, same name and stats, rarity and color), welded/attached to both hands. Update the 3D weapon icons in the UI so they show the pair (crossed daggers) with the same style as the other icons. Keep the shop, inventory and case-opening working with the pair as one item. Daggers animations: fast alternating cuts, spins, a flurry finisher.
+
+BOW (360 degrees)
+- Aiming: crosshair at the center of the screen; the arrow flies along the camera/crosshair direction, including straight up or down (360 degrees, vertical aim included); with lock-on active it aims at the target. Compute the aim point with a camera raycast from the crosshair, then fire from the character toward that point.
+- Tap = quick shot, hold = charged shot (stronger, faster arrow, can pierce 2-3 enemies). Straight and fast arrows (no gravity drop, tunable). Infinite arrows. Arrows stick into walls/ground with a small effect and disappear after a short time.
+- Animation: draw, aim and release animations that follow the aim pitch (upper body tilts up/down), smooth blending, no delay between tap and shot (about 0.1 s for quick shot).
+- Speed: draw/fire speed scales with Dexterity and weapon rarity (same cap rule).
+- Skill on Z: a basic bow skill (for example a piercing shot or a short volley of 3 arrows), cooldown in Config.
+
+FIRE STAFF (mana, fireball, heal)
+- Fireball: tap = quick fireball, hold = charged fireball (bigger, slower, more damage, more mana). Aim like the bow (crosshair, 360 degrees, lock-on). Explodes in an area on impact and applies a BURN (damage over time, a few seconds, tunable, no stacking beyond a cap). Fire/glow VFX with a light trail; a visible cast animation with the staff raised.
+- Cast speed scales with the INTELLIGENCE attribute (not Dexterity). Fire damage also scales with Intelligence.
+- MANA BAR: a blue bar under the health bar in the same fantasy-wood UI style, visible ONLY while the staff is equipped. Mana is server-side and saved. Max mana and regeneration scale with the MIND attribute (Esprit). Regeneration over time, faster out of combat. Fireball and heal consume mana; show a small flash when mana is insufficient (no cast, no cooldown wasted).
+- HEAL replaces the parry for the staff: HOLD the block button to channel; a light circle appears under the player; while channeling the player heals gradually and mana drains per second; stops when the button is released or mana runs out. Total of about 20% of max health per channel (tunable), scaled by the FAITH attribute (Foi). A short cooldown after a channel ends. The player can move at a reduced speed while channeling (about 50%, tunable) and the channel is interrupted if the player dodges. Nearby allies (multiplayer, within about 20 studs) also receive a part of the healing (about 50%, tunable). Server-side only, no stacking exploits.
+- If an attribute with the exact name Mind, Faith or Intelligence does not exist, use the closest existing attribute and write the mapping in DESIGN.md and docs/NIGHT_LOG.md.
+- Skill on Z: a basic staff skill (for example a flame nova or a meteor), uses mana, cooldown in Config.
+
+SKILLS (Z/X/C)
+Give every remaining weapon category one basic skill on Z with a matching animation (sword: dash slash, spear: spinning sweep, daggers: flurry, hammer: ground slam shockwave, bow and staff as above). Existing X/C skills keep their current form. All cooldowns, costs and damage multipliers in Config, balanced so no weapon is clearly stronger than the others.
+
+PROCESS
+1. Backup. 2. Step 0: remove the Gauntlet category (push). 3. Build the shared systems: input (attack/hold, block, dodge), lock-on, the AnimationController with data-driven weapon definitions, hit detection, attack speed scaling, hit feedback. 4. PILOT: finish the SWORD completely and show me before/after as a filmstrip image (a grid of 8-12 frames across the combo) saved in docs/before_after/, plus a short GIF if your tools allow it. Then continue WITHOUT stopping: daggers (with the pair models), spear, hammer, bow, staff (with the mana bar and heal). 5. Push after each weapon.
+
+VERIFY
+- For each weapon: filmstrip images of the full combo, heavy attack, finisher, parry/dodge (or heal/charge for bow and staff), saved in docs/before_after/ and shown to me.
+- Timing test: log the time between the press and the first damaging frame for each weapon (must meet the targets) and the frame time during a combo with 5 enemies on a phone emulator.
+- Multiplayer check: another player sees the animations correctly (two-client test if possible).
+- Exploit tests: spamming attacks, faking hits or targets, abnormal attack speed, dodging with no cooldown, mana or heal spam, all rejected by the server.
+- Save/load check: mana, equipped weapons and removed gauntlets handled; old saves load with no errors.
+- No Output errors; play mode through the hub and one zone with each weapon; docs updated.
+- Final short report: per weapon OK / not OK, the values chosen for the main tunables, the attribute mapping, and anything I must do by hand (only if truly unavoidable).

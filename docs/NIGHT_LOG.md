@@ -1,3 +1,10 @@
+# WEAPON OVERHAUL DECISIONS (owner prompt "WEAPON ANIMATIONS OVERHAUL", 2026-10-30) - newest first
+
+- Prompt: docs/Weapon_Overhaul/PROMPT_WEAPON_OVERHAUL.txt. Plan and every design decision: docs/Weapon_Overhaul/PLAN.md.
+- The existing combat stack is evolved, not rewritten. Hammer = Heavy, Bow = Ranged, Staff = Magic (ids kept).
+- Backup before_weapon_overhaul first. One Studio agent; the main agent composes the dagger pair icons, runs the Play
+  checks, commits and shows the filmstrips.
+
 # ROUND 7 DECISIONS (owner prompt "ROUND 7: BOSS ROOM TEXTURE FIX + JUNGLE MOSS + ICE CASTLE + SWAMP EXTERIORS/INTERIOR +
 # DESERT PYRAMID BRICKS", 2026-10-26) - newest first
 
