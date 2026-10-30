@@ -793,14 +793,14 @@ Clips.Heavy_Air = {
 }
 
 -- ------------------------------------------------------------------------------------------------
--- DAGGER: very fast, low stance, tiny lunges (5 steps, 0.4 s interval). The one dagger is in the right hand: the
--- steps alternate sides (forehand / backhand, right / cross-body stab) while the left hand counters.
+-- DAGGER: a pair, one in each hand (WeaponService adds the off-hand copy): very fast, low stance, alternating hands, a spin
+-- and a flurry finisher (5 steps + finisher, 0.22 s steps). LBlade = the direction of the left dagger.
 -- ------------------------------------------------------------------------------------------------
 local DAGGER_GUARD: Pose = {
 	Root = { 0, 15, 0 }, RootP = { 0, -0.38, 0 },
 	Waist = { -14, -5, 0 }, Neck = { 10, -10, 0 },
 	RHand = { -35, -0.65, 0.95 }, RBlade = { -10, 15 },
-	LHand = { 35, -0.45, 0.85 },
+	LHand = { 35, -0.5, 0.9 }, LBlade = { 12, 15 },
 	RFoot = { 0.15, 0, -0.45, -12 }, LFoot = { -0.15, 0, 0.45, 25 },
 }
 Clips.Dagger_Idle = stance(1.6, DAGGER_GUARD, with(DAGGER_GUARD, { RootP = { 0, -0.43, 0 }, Waist = { -15, -5, 0 },
@@ -808,7 +808,7 @@ Clips.Dagger_Idle = stance(1.6, DAGGER_GUARD, with(DAGGER_GUARD, { RootP = { 0, 
 
 local DAGGER_RUN: Pose = {
 	Waist = { -18, 0, 0 }, Neck = { 12, 0, 0 },
-	RHand = { -60, -0.75, 0.6 }, RBlade = { -170, -15 }, LHand = { 40, -0.5, 0.7 },
+	RHand = { -60, -0.75, 0.6 }, RBlade = { -170, -15 }, LHand = { 60, -0.75, 0.6 }, LBlade = { 170, -15 },
 }
 Clips.Dagger_Run = {
 	Length = 0.6, Loop = true, Legs = "Upper", FadeIn = 0.12, FadeOut = 0.12,
@@ -825,89 +825,135 @@ Clips.Dagger_Equip = {
 	},
 }
 
--- Attack 1, SlashR: forehand from the right across the front.
+-- Attack 1, CutR: the right dagger, forehand across the front.
 Clips.Dagger_Attack1 = {
-	Length = 0.36, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08 },
+	Length = 0.3, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08 },
 	Poses = {
-		P(0, nil, DAGGER_GUARD),
-		P(0.04, "o", DAGGER_GUARD, { Root = { 0, 0, 0 }, Waist = { -10, -25, 0 }, Neck = { 8, 15, 0 },
+		P(0, nil, DAGGER_GUARD, { Root = { 0, 0, 0 }, Waist = { -10, -25, 0 }, Neck = { 8, 15, 0 },
 			RHand = { -85, -0.3, 0.85 }, RBlade = { -120, 5 } }),
 		P(0.08, "i", DAGGER_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.42, -0.1 }, Waist = { -14, 10, 0 }, Neck = { 10, -25, 0 },
-			RHand = { -5, -0.4, 1.3 }, RBlade = { 50, -5 } }),
+			RHand = { -5, -0.4, 1.3 }, RBlade = { 50, -5 }, LHand = { 70, -0.5, 0.65 }, LBlade = { 60, 25 } }),
 		P(0.15, "O", DAGGER_GUARD, { Root = { 0, 30, 0 }, RootP = { 0, -0.42, -0.1 }, Waist = { -14, 22, 0 }, Neck = { 10, -35, 0 },
-			RHand = { 50, -0.5, 1.1 }, RBlade = { 110, -10 } }),
-		P(0.36, "s", DAGGER_GUARD),
+			RHand = { 50, -0.5, 1.1 }, RBlade = { 110, -10 }, LHand = { 85, -0.5, 0.6 }, LBlade = { 95, 25 } }),
+		P(0.3, "s", DAGGER_GUARD),
 	},
 }
 
--- Attack 2, SlashL: backhand from the left across the front.
+-- Attack 2, CutL: the left dagger answers, forehand the other way.
 Clips.Dagger_Attack2 = {
-	Length = 0.36, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08 },
+	Length = 0.3, Legs = "Stand", FadeIn = 0.04, FadeOut = 0.08, Markers = { Hit = 0.08 },
 	Poses = {
-		P(0, nil, DAGGER_GUARD),
-		P(0.04, "o", DAGGER_GUARD, { Root = { 0, 30, 0 }, Waist = { -10, 25, 0 }, Neck = { 8, -35, 0 },
-			RHand = { 45, -0.15, 0.7 }, RBlade = { 125, 15 } }),
-		P(0.08, "i", DAGGER_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.42, -0.1 }, Waist = { -14, -10, 0 }, Neck = { 10, 5, 0 },
-			RHand = { -5, -0.35, 1.3 }, RBlade = { -45, -5 } }),
-		P(0.15, "O", DAGGER_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.42, -0.1 }, Waist = { -14, -22, 0 }, Neck = { 10, 20, 0 },
-			RHand = { -80, -0.45, 1.1 }, RBlade = { -115, -5 } }),
-		P(0.36, "s", DAGGER_GUARD),
+		P(0, nil, DAGGER_GUARD, { Root = { 0, 30, 0 }, Waist = { -10, 25, 0 }, Neck = { 8, -20, 0 },
+			LHand = { 85, -0.3, 0.85 }, LBlade = { 120, 5 }, RHand = { -70, -0.5, 0.7 } }),
+		P(0.08, "i", DAGGER_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.42, -0.1 }, Waist = { -14, -12, 0 }, Neck = { 10, 10, 0 },
+			LHand = { 5, -0.4, 1.3 }, LBlade = { -50, -5 }, RHand = { -80, -0.55, 0.6 }, RBlade = { -60, 25 } }),
+		P(0.15, "O", DAGGER_GUARD, { Root = { 0, -8, 0 }, RootP = { 0, -0.42, -0.1 }, Waist = { -14, -24, 0 }, Neck = { 10, 22, 0 },
+			LHand = { -50, -0.5, 1.1 }, LBlade = { -110, -10 }, RHand = { -90, -0.55, 0.6 }, RBlade = { -95, 25 } }),
+		P(0.3, "s", DAGGER_GUARD),
 	},
 }
 
--- Attack 3, StabR: a straight stab on the right, the left hand pulled back.
+-- Attack 3, StabR: a straight stab on the right, the left dagger pulled back.
 Clips.Dagger_Attack3 = {
-	Length = 0.36, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08 },
+	Length = 0.3, Legs = "Stand", FadeIn = 0.04, FadeOut = 0.08, Markers = { Hit = 0.08 },
 	Poses = {
-		P(0, nil, DAGGER_GUARD),
-		P(0.04, "o", DAGGER_GUARD, { RootP = { 0, -0.4, 0.06 }, Waist = { -10, -12, 0 }, RHand = { -60, -0.55, 0.5 }, RBlade = { -15, 5 } }),
+		P(0, nil, DAGGER_GUARD, { RootP = { 0, -0.4, 0.06 }, Waist = { -10, -12, 0 }, RHand = { -60, -0.55, 0.5 }, RBlade = { -15, 5 } }),
 		P(0.08, "i", DAGGER_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.45, -0.15 }, Waist = { -18, 10, 0 }, Neck = { 14, -15, 0 },
-			RHand = { -50, -0.3, 1.35 }, RBlade = { -25, 0 }, LHand = { 60, -0.5, 0.5 }, RFoot = { 0.15, 0, -0.65, -12 } }),
+			RHand = { -50, -0.3, 1.35 }, RBlade = { -25, 0 }, LHand = { 60, -0.5, 0.5 }, LBlade = { 30, 20 }, RFoot = { 0.15, 0, -0.65, -12 } }),
 		P(0.16, "O", DAGGER_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.45, -0.15 }, Waist = { -18, 10, 0 }, Neck = { 14, -15, 0 },
-			RHand = { -50, -0.3, 1.37 }, RBlade = { -25, 0 }, LHand = { 62, -0.5, 0.5 }, RFoot = { 0.15, 0, -0.65, -12 } }),
-		P(0.36, "s", DAGGER_GUARD),
+			RHand = { -50, -0.3, 1.37 }, RBlade = { -25, 0 }, LHand = { 62, -0.5, 0.5 }, LBlade = { 30, 20 }, RFoot = { 0.15, 0, -0.65, -12 } }),
+		P(0.3, "s", DAGGER_GUARD),
 	},
 }
 
--- Attack 4, StabL: an overhand stab down on the left side, the body turned in, the left hand drawn back.
+-- Attack 4, StabL: the mirror stab with the left dagger, stepping through.
 Clips.Dagger_Attack4 = {
-	Length = 0.36, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08 },
+	Length = 0.3, Legs = "Stand", FadeIn = 0.04, FadeOut = 0.08, Markers = { Hit = 0.08 },
 	Poses = {
-		P(0, nil, DAGGER_GUARD),
-		P(0.04, "o", DAGGER_GUARD, { Root = { 0, 20, 0 }, Waist = { -4, 10, 0 },
-			RHand = { 10, 0.6, 0.55 }, RBlade = { 20, 30 }, LHand = { 40, -0.35, 1.0 } }),
-		P(0.08, "i", DAGGER_GUARD, { Root = { 0, 30, 0 }, RootP = { 0, -0.45, -0.15 }, Waist = { -20, 22, 0 }, Neck = { 16, -35, 0 },
-			RHand = { 30, -0.15, 1.3 }, RBlade = { 30, -40 }, LHand = { 90, -0.5, 0.45 } }),
-		P(0.16, "O", DAGGER_GUARD, { Root = { 0, 30, 0 }, RootP = { 0, -0.45, -0.15 }, Waist = { -20, 22, 0 }, Neck = { 16, -35, 0 },
-			RHand = { 31, -0.18, 1.3 }, RBlade = { 31, -42 }, LHand = { 92, -0.5, 0.45 } }),
-		P(0.36, "s", DAGGER_GUARD),
+		P(0, nil, DAGGER_GUARD, { RootP = { 0, -0.4, 0.06 }, Waist = { -10, 12, 0 }, LHand = { 60, -0.55, 0.5 }, LBlade = { 15, 5 } }),
+		P(0.08, "i", DAGGER_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.45, -0.15 }, Waist = { -18, -10, 0 }, Neck = { 14, 15, 0 },
+			LHand = { 50, -0.3, 1.35 }, LBlade = { 25, 0 }, RHand = { -60, -0.5, 0.5 }, RBlade = { -30, 20 }, LFoot = { -0.15, 0, -0.4, 10 }, RFoot = { 0.15, 0, 0.35, -12 } }),
+		P(0.16, "O", DAGGER_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.45, -0.15 }, Waist = { -18, -10, 0 }, Neck = { 14, 15, 0 },
+			LHand = { 50, -0.3, 1.37 }, LBlade = { 25, 0 }, RHand = { -62, -0.5, 0.5 }, RBlade = { -30, 20 }, LFoot = { -0.15, 0, -0.4, 10 }, RFoot = { 0.15, 0, 0.35, -12 } }),
+		P(0.3, "s", DAGGER_GUARD),
 	},
 }
 
--- Attack 5, DoubleSlash (finisher): an X - high right down to the left (Hit), high left down to the right (Hit2).
+-- Attack 5, SpinCut: a full turn with both blades straight out (a small circle around the player).
+local DAGGER_SPIN: Pose = {
+	Torso = true, RootP = { 0, -0.2, 0 }, Waist = { -8, 0, 0 }, Neck = { 0, 0, 0 },
+	RHand = { -90, -0.1, 1.35 }, RBlade = { -92, 0 }, LHand = { 90, -0.1, 1.35 }, LBlade = { 92, 0 },
+}
+local DAGGER_SPIN_END: Pose = with(DAGGER_GUARD, { Root = { 0, 375, 0 } })
 Clips.Dagger_Attack5 = {
-	Length = 0.38, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08, Hit2 = 0.2 },
+	Length = 0.4, Legs = "Own", FadeIn = 0.03, FadeOut = 0.08, Markers = { Hit = 0.08 },
 	Poses = {
-		P(0, nil, DAGGER_GUARD),
-		P(0.04, "o", DAGGER_GUARD, { Root = { 0, 0, 0 }, Waist = { -8, -20, 0 }, RHand = { -60, 0.45, 0.75 }, RBlade = { -60, 60 } }),
-		P(0.08, "i", DAGGER_GUARD, { Root = { 0, 20, 0 }, RootP = { 0, -0.45, -0.1 }, Waist = { -16, 15, 0 },
-			RHand = { 15, -0.4, 1.2 }, RBlade = { 40, -35 } }),
-		P(0.14, "o", DAGGER_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.4, -0.1 }, Waist = { -8, 20, 0 },
-			RHand = { 50, 0.4, 0.8 }, RBlade = { 70, 55 } }),
-		P(0.2, "i", DAGGER_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.48, -0.15 }, Waist = { -18, -12, 0 },
-			RHand = { -20, -0.45, 1.25 }, RBlade = { -45, -35 } }),
-		P(0.27, "O", DAGGER_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.48, -0.15 }, Waist = { -18, -20, 0 },
-			RHand = { -60, -0.55, 1.05 }, RBlade = { -90, -30 } }),
-		P(0.38, "s", DAGGER_GUARD),
+		P(0, nil, DAGGER_SPIN, { Root = { 0, -30, 0 }, RootP = { 0, -0.42, 0 } }),
+		P(0.08, "l", DAGGER_SPIN, { Root = { 0, 120, 0 } }),
+		P(0.16, "l", DAGGER_SPIN, { Root = { 0, 260, 0 } }),
+		P(0.24, "O", DAGGER_SPIN, { Root = { 0, 375, 0 }, RootP = { 0, -0.4, 0 } }),
+		P(0.4, "s", DAGGER_SPIN_END),
 	},
 }
 
--- Block: arms crossed in front of the face, the blade out to the left.
+-- Attack 6, Flurry (finisher): five cuts, hands in turn, ending on a big X. The Hits times = Config/WeaponMoves.
+local DAGGER_HIGH: Pose = with(DAGGER_GUARD, { RootP = { 0, -0.42, -0.08 }, Waist = { -12, 0, 0 }, Neck = { 10, 0, 0 },
+	RHand = { -45, 0.35, 0.8 }, RBlade = { -50, 50 }, LHand = { 45, 0.35, 0.8 }, LBlade = { 50, 50 } })
+Clips.Dagger_Attack6 = {
+	Length = 0.74, Legs = "Stand", FadeIn = 0.03, FadeOut = 0.1, Markers = { Hit = 0.08 },
+	Poses = {
+		P(0, nil, DAGGER_HIGH),
+		P(0.08, "i", DAGGER_HIGH, { Root = { 0, 22, 0 }, Waist = { -16, 12, 0 }, RHand = { 20, -0.4, 1.25 }, RBlade = { 60, -25 } }),
+		P(0.12, "o", DAGGER_HIGH, { Root = { 0, 12, 0 } }),
+		P(0.16, "i", DAGGER_HIGH, { Root = { 0, 4, 0 }, Waist = { -16, -12, 0 }, LHand = { -20, -0.4, 1.25 }, LBlade = { -60, -25 } }),
+		P(0.2, "o", DAGGER_HIGH, { Root = { 0, 12, 0 } }),
+		P(0.24, "i", DAGGER_HIGH, { Root = { 0, 24, 0 }, Waist = { -14, 14, 0 }, RHand = { 15, -0.1, 1.3 }, RBlade = { 70, 0 } }),
+		P(0.28, "o", DAGGER_HIGH, { Root = { 0, 12, 0 } }),
+		P(0.32, "i", DAGGER_HIGH, { Root = { 0, 2, 0 }, Waist = { -14, -14, 0 }, LHand = { -15, -0.1, 1.3 }, LBlade = { -70, 0 } }),
+		P(0.36, "o", DAGGER_HIGH, { RootP = { 0, -0.3, -0.05 }, RHand = { -55, 0.55, 0.75 }, RBlade = { -60, 65 }, LHand = { 55, 0.55, 0.75 }, LBlade = { 60, 65 } }),
+		P(0.4, "i", DAGGER_HIGH, { RootP = { 0, -0.6, -0.15 }, Waist = { -20, 0, 0 }, RHand = { 25, -0.5, 1.3 }, RBlade = { 70, -30 }, LHand = { -25, -0.5, 1.3 }, LBlade = { -70, -30 } }),
+		P(0.54, "s", DAGGER_HIGH, { RootP = { 0, -0.58, -0.15 }, Waist = { -18, 0, 0 }, RHand = { 22, -0.5, 1.25 }, RBlade = { 68, -28 }, LHand = { -22, -0.5, 1.25 }, LBlade = { -68, -28 } }),
+		P(0.74, "s", DAGGER_GUARD),
+	},
+}
+
+-- Heavy, CrossRend: both blades drawn far back (Charge), then a lunging stab with both, crossing in front.
+Clips.Dagger_Heavy = {
+	Length = 0.56, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.1, Markers = { Charge = 0.12, Hit = 0.18 },
+	Poses = {
+		P(0, nil, DAGGER_GUARD),
+		P(0.12, "o", DAGGER_GUARD, { Root = { 0, 15, 0 }, RootP = { 0, -0.55, 0.15 }, Waist = { -20, 0, 0 }, Neck = { 16, 0, 0 },
+			RHand = { -100, 0.15, 0.8 }, RBlade = { -150, 30 }, LHand = { 100, 0.15, 0.8 }, LBlade = { 150, 30 },
+			RFoot = { 0.2, 0, -0.5, -12 }, LFoot = { -0.2, 0, 0.6, 25 } }),
+		P(0.18, "i", DAGGER_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.5, -0.3 }, Waist = { -22, 0, 0 }, Neck = { 18, 0, 0 },
+			RHand = { -15, -0.1, 1.45 }, RBlade = { 12, -5 }, LHand = { 15, -0.1, 1.45 }, LBlade = { -12, -5 },
+			RFoot = { 0.2, 0, -0.95, -12 }, LFoot = { -0.2, 0, 0.7, 25 } }),
+		P(0.3, "O", DAGGER_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.52, -0.3 }, Waist = { -22, 0, 0 }, Neck = { 18, 0, 0 },
+			RHand = { 40, -0.4, 1.3 }, RBlade = { 70, -12 }, LHand = { -40, -0.4, 1.3 }, LBlade = { -70, -12 },
+			RFoot = { 0.2, 0, -0.95, -12 }, LFoot = { -0.2, 0, 0.7, 25 } }),
+		P(0.56, "s", DAGGER_GUARD),
+	},
+}
+
+-- Skill, BladeStorm (Z): two fast turns with both blades out, cutting all around. The Hits times = Config/WeaponMoves.
+Clips.Dagger_Skill = {
+	Length = 0.74, Legs = "Own", FadeIn = 0.03, FadeOut = 0.1, Markers = { Hit = 0.08 },
+	Poses = {
+		P(0, nil, DAGGER_SPIN, { Root = { 0, -30, 0 }, RootP = { 0, -0.45, 0 } }),
+		P(0.08, "l", DAGGER_SPIN, { Root = { 0, 90, 0 }, RootP = { 0, 0.1, 0 } }),
+		P(0.24, "l", DAGGER_SPIN, { Root = { 0, 360, 0 }, RootP = { 0, 0.3, 0 } }),
+		P(0.4, "l", DAGGER_SPIN, { Root = { 0, 630, 0 }, RootP = { 0, 0.05, 0 } }),
+		P(0.5, "O", DAGGER_SPIN, { Root = { 0, 735, 0 }, RootP = { 0, -0.4, 0 } }),
+		P(0.74, "s", with(DAGGER_GUARD, { Root = { 0, 735, 0 } })),
+	},
+}
+
+-- Block: arms crossed in front of the face, the two blades crossed.
 Clips.Dagger_Block = {
 	Length = 0.1, Hold = true, Legs = "Stand", FadeIn = 0.04, FadeOut = 0.1,
 	Poses = {
 		P(0, nil, DAGGER_GUARD),
-		P(0.1, "O", DAGGER_GUARD, { Waist = { -10, 0, 0 }, RHand = { 10, 0.35, 0.75 }, RBlade = { 80, 35 }, LHand = { -15, 0.25, 0.75 } }),
+		P(0.1, "O", DAGGER_GUARD, { Waist = { -10, 0, 0 }, RHand = { 15, 0.35, 0.75 }, RBlade = { 80, 35 }, LHand = { -15, 0.35, 0.75 }, LBlade = { -80, 35 } }),
 	},
 }
 Clips.Dagger_BlockHit = blockHitClip()
@@ -918,17 +964,17 @@ Clips.Dagger_BlockHit = blockHitClip()
 -- stay one turn ahead (-360) after the flip so nothing unwinds (the engine wraps the root).
 local DAGGER_AIR_UP: Pose = {
 	Root = { -350, 5, 0 }, RootP = { 0, 0.25, 0 }, Waist = { 6, 0, 0 }, Neck = { -4, 0, 0 },
-	RHand = { -40, 0.75, 0.45 }, RBlade = { -10, -75 }, LHand = { 40, 0.05, 0.8 },
+	RHand = { -40, 0.75, 0.45 }, RBlade = { -10, -75 }, LHand = { 40, 0.75, 0.45 }, LBlade = { 10, -75 },
 	RFoot = { 0.15, 1.05, -0.2, -12 }, LFoot = { -0.15, 0.95, 0.25, 25 },
 }
 local DAGGER_LAND: Pose = {
 	Root = { -375, 10, 0 }, RootP = { 0, -1.35, -0.1 }, Waist = { -25, -5, 0 }, Neck = { 25, 0, 0 },
-	RHand = { -75, -0.55, 1.05 }, RBlade = { -65, -80 }, LHand = { 70, -0.9, 0.95 },
+	RHand = { -75, -0.55, 1.05 }, RBlade = { -65, -80 }, LHand = { 70, -0.9, 0.95 }, LBlade = { 60, -80 },
 	RFoot = { 0.3, 0, -0.5, -15 }, LFoot = { -0.3, 0.05, 0.6, 25 },
 }
 local DAGGER_TUCK: Pose = {
 	RootP = { 0, 0.35, 0 }, Waist = { -30, 0, 0 }, Neck = { -20, 0, 0 },
-	RHand = { -30, -0.35, 0.55 }, RBlade = { -20, -60 }, LHand = { 30, -0.35, 0.55 },
+	RHand = { -30, -0.35, 0.55 }, RBlade = { -20, -60 }, LHand = { 30, -0.35, 0.55 }, LBlade = { 20, -60 },
 	RFoot = { 0.15, 1.2, -0.45, -12 }, LFoot = { -0.15, 1.2, -0.35, 25 },
 }
 Clips.Dagger_JumpAttack = {
@@ -975,7 +1021,7 @@ Clips.Dagger_DashAttack = {
 -- Airborne stance: arms out low and wide, the dagger trailing behind.
 local DAGGER_AIR: Pose = {
 	Waist = { 2, 0, 0 }, Neck = { -2, 0, 0 },
-	RHand = { -75, -0.2, 0.8 }, RBlade = { -125, -25 }, LHand = { 75, -0.05, 0.8 },
+	RHand = { -75, -0.2, 0.8 }, RBlade = { -125, -25 }, LHand = { 75, -0.2, 0.8 }, LBlade = { 125, -25 },
 }
 Clips.Dagger_Air = {
 	Length = 0.6, Loop = true, Legs = "Upper", FadeIn = 0.1, FadeOut = 0.1,

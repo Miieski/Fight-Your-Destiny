@@ -1,14 +1,16 @@
 --!strict
 -- The equipped weapon (docs/weapon_shop_brief.txt part 5). Net.request("EquipWeapon", uid) checks that the
 -- player owns that copy; the player then holds a clone of ReplicatedStorage.Assets.Weapons.<WeaponId> with
--- the attributes Uid and Rarity and a rarity tint (light from Uncommon, outline from Epic). The Tool is given
--- again after every respawn. No combat logic here.
+-- the attributes Uid and Rarity and a rarity tint (light from Uncommon, outline from Epic). A pair weapon (Config/WeaponMoves
+-- Pair: daggers) also gets an off-hand copy inside the Tool, welded to the left hand here so every player sees it: one item
+-- everywhere else. The Tool is given again after every respawn. No combat logic here.
 -- Net.request("SellWeapon", uid) sells one copy for Weapons.sellValue Gold (not the equipped one).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local DataService = require(script.Parent.DataService)
 
@@ -61,6 +63,37 @@ local function applyRarity(tool: Tool, tier: number)
 	end
 end
 
+-- The left-hand copy of a pair: the Handle, turned half a turn around the blade (a mesh cannot be mirrored, this puts the
+-- same side of the blade outward). Its attachments get their own names: the Tool's Tip / Base stay the right hand's.
+local function addOffHand(tool: Tool, character: Model)
+	local moves = WeaponMoves.Moves[tool:GetAttribute("Category")]
+	local handle = tool:FindFirstChild("Handle")
+	local hand = character:FindFirstChild("LeftHand")
+	local grip = hand and hand:FindFirstChild("LeftGripAttachment")
+	if not (moves and moves.Pair and handle and hand and grip and grip:IsA("Attachment")) then
+		return
+	end
+	local off = handle:Clone() :: BasePart
+	off.Name = "OffHand"
+	off.Massless = true
+	off.CanCollide = false
+	for _, child in ipairs(off:GetChildren()) do
+		if child.Name == "TipAttachment" or child.Name == "BaseAttachment" then
+			child.Name = "Off" .. child.Name
+		elseif child:IsA("PointLight") then
+			child:Destroy()
+		end
+	end
+	local weld = Instance.new("Weld")
+	weld.Name = "LeftGrip"
+	weld.Part0 = hand :: BasePart
+	weld.Part1 = off
+	weld.C0 = grip.CFrame
+	weld.C1 = tool.Grip * CFrame.Angles(0, math.pi, 0)
+	weld.Parent = off
+	off.Parent = tool
+end
+
 -- Gives the player a fresh copy of the equipped weapon (removes the old one).
 function WeaponService:Give(player: Player)
 	removeTools(player)
@@ -82,6 +115,7 @@ function WeaponService:Give(player: Player)
 	applyRarity(tool, item.rarity)
 	-- the Roblox backpack bar is hidden: the weapon goes straight into the hand
 	tool.Parent = character
+	addOffHand(tool, character)
 end
 
 -- Equips one owned copy (uid) or nothing (uid = nil). Returns ok, message.

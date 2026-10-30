@@ -609,10 +609,16 @@ CombatSfx.Categories = {
 				{ Set = "DaggerSlash", Pitch = 1.06 }, -- SlashL
 				{ Set = "DaggerSlash", Pitch = 0.96 }, -- StabR
 				{ Set = "DaggerSlash", Pitch = 1.1 }, -- StabL
+				{ Set = "DaggerSlash", Pitch = 0.9 }, -- SpinCut
+				{ Set = "DaggerSlash", Pitch = 0.94 }, -- Flurry (the finisher's sound plays)
 			},
-			-- DoubleSlash: one slash on each hit (Combos Dagger[5] Hits = { 0.2 })
-			Finisher = { Set = "DaggerSlash", Pitch = 0.94, Volume = 1.1,
-				Also = { { Set = "DaggerSlash", Hit = 0.2, Pitch = 1.04, Volume = 1.1 } } },
+			-- Flurry: one slash on each cut (WeaponMoves Dagger Flurry Hits)
+			Finisher = { Set = "DaggerSlash", Pitch = 0.94, Volume = 1.1, Also = {
+				{ Set = "DaggerSlash", Hit = 0.16, Pitch = 1.04, Volume = 0.9 },
+				{ Set = "DaggerSlash", Hit = 0.24, Pitch = 0.98, Volume = 0.9 },
+				{ Set = "DaggerSlash", Hit = 0.32, Pitch = 1.08, Volume = 0.9 },
+				{ Set = "DaggerSlash", Hit = 0.4, Pitch = 0.9, Volume = 1.15 },
+			} },
 			-- ShadowDrop (hang 0.06, landing 0.26): the tucked front flip whoosh (0-0.13), a light dive, the slash
 			Air = { Set = "AirDive", Lead = 0, Pitch = 1.15, Volume = 0.7, Also = {
 				{ Set = "AirRise", Hit = 0.07, Lead = 0, Pitch = 1.25, Volume = 0.8 },

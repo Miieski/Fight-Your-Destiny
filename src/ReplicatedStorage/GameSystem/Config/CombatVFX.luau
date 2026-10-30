@@ -109,8 +109,28 @@ CombatVFX.Arc = {
 	OuterLook = { LightEmission = 0.35, Brightness = 1.6, Transparency = { 0.45, 0.05 } },
 	CoreLook = { LightEmission = 1, Brightness = 1.5, Transparency = { 0.4, 0 } },
 }
--- per asset look overrides (Outer / Core like OuterLook / CoreLook, + LightInfluence): matte, lit like the ground
+-- READABILITY LIMIT (owner 2026-10-30): a finisher or heavy must never hide enemies or boss telegraphs. Any combat flash
+-- particle stays at most 7 studs (most under 5), at least 35-60 % transparent and at most 0.2 s; big arcs use the see-through
+-- looks below and a width of at most 1.8 studs. Measured with the washout check in docs/animation_system.md.
+-- per asset look overrides (Outer / Core like OuterLook / CoreLook, + LightInfluence): matte, lit like the ground; the big
+-- arcs see-through
 CombatVFX.ArcLook = {
+	Sword_SlashArc = {
+		Outer = { LightEmission = 0.35, Brightness = 1.5, Transparency = { 0.6, 0.25 } },
+		Core = { LightEmission = 0.9, Brightness = 1.4, Transparency = { 0.55, 0.15 } },
+	},
+	Sword_SpinArc = {
+		Outer = { LightEmission = 0.3, Brightness = 1.3, Transparency = { 0.7, 0.4 } },
+		Core = { LightEmission = 0.8, Brightness = 1.2, Transparency = { 0.7, 0.35 } },
+	},
+	Heavy_SmashArc = {
+		Outer = { LightEmission = 0.3, Brightness = 1.3, Transparency = { 0.7, 0.4 } },
+		Core = { LightEmission = 0.8, Brightness = 1.2, Transparency = { 0.7, 0.35 } },
+	},
+	Spear_SweepArc = {
+		Outer = { LightEmission = 0.3, Brightness = 1.3, Transparency = { 0.7, 0.4 } },
+		Core = { LightEmission = 0.8, Brightness = 1.2, Transparency = { 0.7, 0.35 } },
+	},
 	Shared_DustRing = {
 		Outer = { LightEmission = 0, Brightness = 1, LightInfluence = 1, Transparency = { 0.55, 0.3 } },
 		Core = { LightEmission = 0, Brightness = 1, LightInfluence = 1, Transparency = { 1, 1 } },
@@ -129,13 +149,24 @@ CombatVFX.ArcLook = {
 -- leaves the left hand). A melee category without an entry gets Default (trail only). A missing step uses step 1.
 -- Heavy attacks: same fields, per category; a category without an entry uses its finisher's.
 CombatVFX.HeavySwing = {
+	-- CrossRend: two crossing streaks ahead of the body
+	Dagger = { TrailOn = 0.2, TrailOff = 0.12, Effects = {
+		{ Asset = "Dagger_StabStreak", Shape = "Line", Yaw = 10, Offset = { 0.6, 0.3, 0 }, Start = 0.5, Length = 6, Width = 0.8, Reveal = 0.04, Hold = 0.03, Fade = 0.1, Grow = 0.2, Profile = "Spike", Core = 0.4 },
+		{ Asset = "Dagger_StabStreak", Shape = "Line", Yaw = -10, Offset = { -0.6, 0.3, 0 }, Start = 0.5, Length = 6, Width = 0.8, Reveal = 0.04, Hold = 0.03, Fade = 0.1, Grow = 0.2, Profile = "Spike", Core = 0.4 },
+	} },
 	-- HeavyCleave: one wide diagonal crescent, bigger than the light slashes, the trail on the whole cut
 	Sword = { TrailOn = 0.2, TrailOff = 0.16, Effects = {
-		{ Asset = "Sword_SlashArc", Radius = 6.2, Width = 2.4, Height = 0.4, From = -75, To = 105, Roll = 42, Reveal = 0.09, Profile = "Crescent" },
+		{ Asset = "Sword_SlashArc", Radius = 6.0, Width = 1.7, Height = 0.4, From = -75, To = 105, Roll = 42, Reveal = 0.08, Fade = 0.12, Profile = "Crescent" },
 	} },
 } :: { [string]: { [string]: any } }
 -- Z skills: a category without an entry uses its dash strike's effects.
-CombatVFX.SkillSwing = {} :: { [string]: { [string]: any } }
+CombatVFX.SkillSwing = {
+	-- BladeStorm: two thin rings around the player
+	Dagger = { TrailOn = 0.2, TrailOff = 0.42, Effects = {
+		{ Asset = "Dagger_SlashArc", Radius = 5, Width = 1.0, Height = 0.2, From = 90, To = -270, Roll = 0, Reveal = 0.16, Hold = 0.02, Fade = 0.1, Profile = "Ring" },
+		{ Asset = "Dagger_SlashArc", Hit = 3, Radius = 5.4, Width = 1.0, Height = 0.4, From = 90, To = -270, Roll = 0, Reveal = 0.16, Hold = 0.02, Fade = 0.1, Profile = "Ring" },
+	} },
+} :: { [string]: { [string]: any } }
 CombatVFX.Swing = {
 	Default = { TrailOn = 0.45, TrailOff = 0.12 },
 	Sword = {
@@ -157,7 +188,7 @@ CombatVFX.Swing = {
 		} },
 		-- SpinSlash finisher: a full circle around the player (380 degrees, turning left like the clip), bigger, brighter
 		{ TrailOn = 0.55, TrailOff = 0.22, Effects = {
-			{ Asset = "Sword_SpinArc", Radius = 6.4, Width = 2.4, Height = 0.2, From = 90, To = -290, Roll = 0, Reveal = 0.12, Hold = 0.07, Fade = 0.2, Core = 0.4, Profile = "Ring", Ground = true },
+			{ Asset = "Sword_SpinArc", Radius = 6.2, Width = 1.5, Height = 0.2, From = 90, To = -290, Roll = 0, Reveal = 0.12, Hold = 0.04, Fade = 0.12, Core = 0.4, Profile = "Ring", Ground = true },
 		} },
 	},
 	Spear = {
@@ -179,12 +210,12 @@ CombatVFX.Swing = {
 		-- Sweep (combat V3): the shaft swept flat and low from the far right through the front (Arc 180, radius 8.5): a
 		-- wide low crescent and dust kicked up under it
 		{ TrailOn = 0.5, TrailOff = 0.14, Effects = {
-			{ Asset = "Spear_SweepArc", Radius = 6.8, Width = 2.0, Height = -0.7, From = 105, To = -100, Roll = -4, Reveal = 0.08, Hold = 0.05, Fade = 0.2, Profile = "Crescent", Core = 0.36, Delay = -0.03, Ground = true },
+			{ Asset = "Spear_SweepArc", Radius = 6.8, Width = 1.5, Height = -0.7, From = 105, To = -100, Roll = -4, Reveal = 0.08, Hold = 0.05, Fade = 0.2, Profile = "Crescent", Core = 0.36, Delay = -0.03, Ground = true },
 		} },
 		-- PiercingLunge finisher (step 4 since combat V3): a longer, brighter streak, more lines, two pierce rings along
 		-- the reach (Line 14 studs)
 		{ TrailOn = 0.5, TrailOff = 0.18, Effects = {
-			{ Asset = "Spear_PierceStreak", Shape = "Line", Anchor = "Tip", Start = -3, Length = 12, Width = 1.7, Reveal = 0.07, Hold = 0.06, Fade = 0.2, Grow = 0.2, Profile = "Spike", Core = 0.45, Delay = -0.02 },
+			{ Asset = "Spear_PierceStreak", Shape = "Line", Anchor = "Tip", Start = -3, Length = 12, Width = 1.1, Reveal = 0.07, Hold = 0.06, Fade = 0.2, Grow = 0.2, Profile = "Spike", Core = 0.45, Delay = -0.02 },
 			{ Kind = "Lines", Asset = "Spear_ThrustLines", Anchor = "Tip", Count = 4, Spread = { 2.2, 1.7 }, Start = -2.5, Length = 10, Width = 0.22, Extend = 0.07, Hold = 0.04, Fade = 0.16, Jitter = 0.04 },
 			{ Asset = "Spear_PierceRing", Anchor = "Tip", Offset = { 0, 0, -1.5 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 1.0, Grow = 3, Width = 0.85, Reveal = 0, Hold = 0.03, Fade = 0.22, Core = 0.42 },
 			{ Asset = "Spear_PierceRing", Anchor = "Tip", Offset = { 0, 0, -6 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 1.2, Grow = 2.6, Width = 0.6, Reveal = 0, Hold = 0.03, Fade = 0.22, Core = 0.38, Delay = 0.04 },
@@ -194,45 +225,51 @@ CombatVFX.Swing = {
 		-- OverheadSlam: a vertical arc from over the head into the ground in front, then cracks, flying chunks and dust
 		-- where the head (ImpactAttachment) lands; the server's "Slam" burst adds the shockwave ring
 		{ TrailOn = 0.8, TrailOff = 0.1, Effects = {
-			{ Asset = "Heavy_SmashArc", Delay = -0.05, Radius = 4.2, Width = 2.4, Height = 1.2, Offset = { 0.4, 0, 0 }, From = 130, To = -58, Roll = 62, Reveal = 0.07, Hold = 0.06, Fade = 0.22, Profile = "Crescent", Core = 0.36 },
+			{ Asset = "Heavy_SmashArc", Delay = -0.05, Radius = 4.2, Width = 1.8, Height = 1.2, Offset = { 0.4, 0, 0 }, From = 130, To = -58, Roll = 62, Reveal = 0.07, Hold = 0.06, Fade = 0.22, Profile = "Crescent", Core = 0.36 },
 			{ Kind = "Ground", Asset = "Heavy_GroundCrack", Anchor = "Impact", Cracks = 6, CrackLength = { 3.5, 6 }, CrackWidth = 0.42, Grow = 0.1, Hold = 1.1, Fade = 0.6, CrackColor = rgb(45, 36, 30),
 				Chunks = 6, ChunkSize = { 0.35, 0.7 }, ChunkUp = { 14, 22 }, ChunkOut = { 4, 9 }, Gravity = 70, ChunkLife = 0.75 },
 		} },
 		-- WideSmash: a full flat sweep from far right across the front to the left, big and bright
 		{ TrailOn = 0.75, TrailOff = 0.18, Effects = {
-			{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.8, Width = 2.8, Height = 0.4, From = 150, To = -140, Roll = -6, Reveal = 0.1, Hold = 0.07, Fade = 0.26, Core = 0.4, Profile = "Crescent" },
+			{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.8, Width = 1.8, Height = 0.4, From = 150, To = -140, Roll = -6, Reveal = 0.1, Hold = 0.07, Fade = 0.26, Core = 0.4, Profile = "Crescent" },
 		} },
 		-- GroundBreaker finisher (combat V3): the jump with the weapon over the head, a two-handed slam straight down in
 		-- front: a vertical arc into the ground, cracks and chunks where the head lands (the server's "Slam" burst,
 		-- radius 9, adds the shockwave and the dust ring)
 		{ TrailOn = 0.7, TrailOff = 0.2, Effects = {
-			{ Asset = "Heavy_SmashArc", Delay = -0.07, Radius = 4.8, Width = 2.8, Height = 1.6, From = 150, To = -62, Roll = 90, Reveal = 0.08, Hold = 0.07, Fade = 0.26, Profile = "Crescent", Core = 0.4 },
+			{ Asset = "Heavy_SmashArc", Delay = -0.07, Radius = 4.8, Width = 1.8, Height = 1.6, From = 150, To = -62, Roll = 90, Reveal = 0.08, Hold = 0.07, Fade = 0.26, Profile = "Crescent", Core = 0.4 },
 			{ Kind = "Ground", Asset = "Heavy_GroundCrack", Anchor = "Impact", Cracks = 6, CrackLength = { 4.5, 8 }, CrackWidth = 0.5, Grow = 0.1, Hold = 0.9, Fade = 0.5, CrackColor = rgb(45, 36, 30),
 				Chunks = 6, ChunkSize = { 0.4, 0.8 }, ChunkUp = { 16, 26 }, ChunkOut = { 5, 10 }, Gravity = 70, ChunkLife = 0.75 },
 			{ Kind = "Flash", Asset = "Shared_LandFlash", Anchor = "Impact", Emit = 0.8 },
 		} },
 	},
 	Dagger = {
-		-- SlashR / SlashL: small fast arcs alternating sides
-		{ TrailOn = 0.5, TrailOff = 0.07, Effects = {
-			{ Asset = "Dagger_SlashArc", Radius = 3.6, Width = 1.4, Height = 0.5, From = 110, To = -70, Roll = 14, Reveal = 0.035, Hold = 0.02, Fade = 0.1, Profile = "Crescent" },
+		-- CutR / CutL: quick crescents, one way then the other
+		{ TrailOn = 0.3, TrailOff = 0.06, Effects = {
+			{ Asset = "Dagger_SlashArc", Radius = 3.6, Width = 1.2, Height = 0.5, From = 110, To = -70, Roll = 14, Reveal = 0.035, Hold = 0.02, Fade = 0.1, Profile = "Crescent" },
 		} },
-		{ TrailOn = 0.5, TrailOff = 0.07, Effects = {
-			{ Asset = "Dagger_SlashArc", Radius = 3.6, Width = 1.4, Height = 0.5, From = -110, To = 70, Roll = -14, Reveal = 0.035, Hold = 0.02, Fade = 0.1, Profile = "Crescent" },
+		{ TrailOn = 0.3, TrailOff = 0.06, Effects = {
+			{ Asset = "Dagger_SlashArc", Radius = 3.6, Width = 1.2, Height = 0.5, From = -110, To = 70, Roll = -14, Reveal = 0.035, Hold = 0.02, Fade = 0.1, Profile = "Crescent" },
 		} },
-		-- StabR: a straight stab on the right / StabL: overhand, down on the left
-		{ TrailOn = 0.5, TrailOff = 0.07, Effects = {
-			{ Asset = "Dagger_StabStreak", Shape = "Line", Anchor = "Tip", Start = -1, Length = 4, Width = 0.7, Reveal = 0.03, Hold = 0.02, Fade = 0.09, Grow = 0.25, Profile = "Spike", Core = 0.4 },
-			{ Asset = "Dagger_StabRing", Anchor = "Tip", Offset = { 0, 0, -0.6 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 0.6, Grow = 2.8, Width = 0.5, Reveal = 0, Hold = 0.02, Fade = 0.13, Core = 0.4 },
+		-- StabR / StabL: a short streak ahead of each hand (from the body: the left hand has no anchor)
+		{ TrailOn = 0.3, TrailOff = 0.05, Effects = {
+			{ Asset = "Dagger_StabStreak", Shape = "Line", Offset = { 0.8, 0.3, 0 }, Start = 1, Length = 4, Width = 0.6, Reveal = 0.03, Hold = 0.02, Fade = 0.09, Grow = 0.25, Profile = "Spike", Core = 0.4 },
 		} },
-		{ TrailOn = 0.5, TrailOff = 0.07, Effects = {
-			{ Asset = "Dagger_StabStreak", Shape = "Line", Anchor = "Tip", Yaw = 25, Pitch = -35, Start = -1, Length = 3.8, Width = 0.7, Reveal = 0.03, Hold = 0.02, Fade = 0.09, Grow = 0.25, Profile = "Spike", Core = 0.4 },
-			{ Asset = "Dagger_StabRing", Anchor = "Tip", Yaw = 25, Pitch = 55, Offset = { 0, 0, -0.5 }, Profile = "Full", From = 0, To = 360, Radius = 0.6, Grow = 2.8, Width = 0.5, Reveal = 0, Hold = 0.02, Fade = 0.13, Core = 0.4 },
+		{ TrailOn = 0.3, TrailOff = 0.05, Effects = {
+			{ Asset = "Dagger_StabStreak", Shape = "Line", Offset = { -0.8, 0.3, 0 }, Start = 1, Length = 4, Width = 0.6, Reveal = 0.03, Hold = 0.02, Fade = 0.09, Grow = 0.25, Profile = "Spike", Core = 0.4 },
 		} },
-		-- DoubleSlash finisher: an X, high right down to the left at the hit, high left down to the right at Hits[1]
-		{ TrailOn = 0.5, TrailOff = 0.19, Effects = {
-			{ Asset = "Dagger_SlashArc", Radius = 3.7, Width = 1.5, Height = 0.6, From = 115, To = -65, Roll = 42, Reveal = 0.035, Hold = 0.03, Fade = 0.12, Profile = "Crescent", Core = 0.42 },
-			{ Asset = "Dagger_SlashArc", Hit = 2, Radius = 3.7, Width = 1.5, Height = 0.6, From = -115, To = 65, Roll = -42, Reveal = 0.035, Hold = 0.03, Fade = 0.12, Profile = "Crescent", Core = 0.42 },
+		-- SpinCut: a thin ring around the player
+		{ TrailOn = 0.2, TrailOff = 0.14, Effects = {
+			{ Asset = "Dagger_SlashArc", Radius = 4.2, Width = 0.9, Height = 0.1, From = 90, To = -270, Roll = 0, Reveal = 0.14, Hold = 0.02, Fade = 0.1, Profile = "Ring" },
+		} },
+		-- Flurry: one crescent per cut, the angle changing, the last X the largest
+		{ TrailOn = 0.3, TrailOff = 0.34, Effects = {
+			{ Asset = "Dagger_SlashArc", Radius = 3.6, Width = 1.2, Height = 0.5, From = 110, To = -65, Roll = 34, Reveal = 0.03, Hold = 0.02, Fade = 0.08, Profile = "Crescent" },
+			{ Asset = "Dagger_SlashArc", Hit = 2, Radius = 3.6, Width = 1.2, Height = 0.5, From = -110, To = 65, Roll = -34, Reveal = 0.03, Hold = 0.02, Fade = 0.08, Profile = "Crescent" },
+			{ Asset = "Dagger_SlashArc", Hit = 3, Radius = 3.6, Width = 1.2, Height = 0.4, From = 100, To = -75, Roll = 6, Reveal = 0.03, Hold = 0.02, Fade = 0.08, Profile = "Crescent" },
+			{ Asset = "Dagger_SlashArc", Hit = 4, Radius = 3.6, Width = 1.2, Height = 0.4, From = -100, To = 75, Roll = -6, Reveal = 0.03, Hold = 0.02, Fade = 0.08, Profile = "Crescent" },
+			{ Asset = "Dagger_SlashArc", Hit = 5, Radius = 4, Width = 1.4, Height = 0.6, From = 115, To = -65, Roll = 42, Reveal = 0.03, Hold = 0.03, Fade = 0.1, Profile = "Crescent", Core = 0.42 },
+			{ Asset = "Dagger_SlashArc", Hit = 5, Radius = 4, Width = 1.4, Height = 0.6, From = -115, To = 65, Roll = -42, Reveal = 0.03, Hold = 0.03, Fade = 0.1, Profile = "Crescent", Core = 0.42 },
 		} },
 	},
 	Ranged = {
@@ -354,7 +391,7 @@ CombatVFX.DashSwing = {
 		{ Kind = "Flash", Hit = 0, Asset = "Shared_RollDust", Anchor = "Feet", Height = 0.2, Yaw = 180, Emit = 1.4 },
 		{ Kind = "Lines", Hit = 0, Asset = "Shared_DashLines", Height = -0.2, Count = 5, Spread = { 1.5, 1.6 }, Start = -1.5, Length = 7.5, Width = 0.26, Extend = 0.2, Hold = 0.04, Fade = 0.18, Jitter = 0.03 },
 		{ Hit = 0, Asset = "Shared_DashStreak", Shape = "Line", Height = -0.1, Start = -1.2, Length = 6.5, Width = 2.0, Reveal = 0.2, Hold = 0.02, Fade = 0.18, Grow = 0, Profile = "Spike", Core = 0.25 },
-		{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.4, Width = 2.6, Height = 0.6, From = 125, To = -45, Roll = -38, Reveal = 0.1, Hold = 0.06, Fade = 0.24, Profile = "Crescent", Core = 0.38 },
+		{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.4, Width = 1.8, Height = 0.6, From = 125, To = -45, Roll = -38, Reveal = 0.1, Hold = 0.06, Fade = 0.24, Profile = "Crescent", Core = 0.38 },
 	} },
 	-- ShadowStep (lunge 6 in 0.14 s, hits 0.10 + 0.18): a shadow puff where it vanishes, dark wake, forehand then
 	-- backhand slashes
@@ -444,9 +481,9 @@ CombatVFX.Impact = {
 	Crit = "Shared_CritBurst",
 	-- finisher hit (with Normal / Crit): a beam ring (an arc spec, see ARCS) expanding around the enemy, gold mixed
 	-- with the weapon element (Tint), + the asset's Center emitters
-	Finisher = { Asset = "Shared_FinisherRing", Radius = 1.2, Grow = 3.2, Width = 1.1, From = 0, To = 360, Roll = 0,
-		Reveal = 0, Hold = 0.04, Fade = 0.22, Core = 0.35, Profile = "Full", Color = rgb(255, 214, 110), Tint = 0.3 },
-	FinisherMax = 3, -- finisher rings at most within FinisherWindow s (a spin that hits 6 enemies would blow out to white)
+	Finisher = { Asset = "Shared_FinisherRing", Radius = 1.0, Grow = 2.4, Width = 0.5, From = 0, To = 360, Roll = 0,
+		Reveal = 0, Hold = 0.03, Fade = 0.14, Core = 0.35, Profile = "Full", Color = rgb(255, 214, 110), Tint = 0.3 },
+	FinisherMax = 2, -- finisher rings at most within FinisherWindow s (a spin that hits 6 enemies would blow out to white)
 	FinisherWindow = 0.1,
 	CategoryEmit = { Dagger = 0.7, Heavy = 1.5 }, -- normal sparks x this (Dagger hits 2.5 times a second)
 	CritEmit = { Dagger = 0.85 },
@@ -615,7 +652,7 @@ CombatVFX.Death = { Asset = "Shared_DeathDissolve", Delay = 0.45, MaxSize = 14 }
 CombatVFX.ZoneTiming = {
 	-- the attack clips the signature overlays are timed on (Config/CombatAnimations, seconds at x1): finisher clip
 	-- lengths (their Hit = the finisher's Impact), jump attack Dive markers and lengths (Hit = AirAttacks Impact)
-	FinisherLength = { Sword = 0.78, Spear = 0.95, Heavy = 1.9, Dagger = 0.38, Ranged = 0.78, Magic = 0.98 },
+	FinisherLength = { Sword = 0.78, Spear = 0.95, Heavy = 1.9, Dagger = 0.74, Ranged = 0.78, Magic = 0.98 },
 	JumpDive = { Sword = 0.2, Spear = 0.22, Heavy = 0.3, Dagger = 0.17 },
 	JumpLength = { Sword = 0.85, Spear = 0.95, Heavy = 1.3, Dagger = 0.62, Ranged = 0.8, Magic = 1.0 },
 	LateWindup = 0.15, -- s (Animations LATE_WINDUP)

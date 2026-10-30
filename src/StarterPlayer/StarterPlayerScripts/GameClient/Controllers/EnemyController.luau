@@ -69,6 +69,9 @@ local function updateBar(entry: Entry)
 	entry.hpLabel.Text = Format.number(math.max(0, math.ceil(hp)))
 end
 
+-- A hit tints the enemy lightly and briefly: fast combos must not hide its shape or its red telegraph.
+local HIT_FLASH = { Transparency = 0.72, Seconds = 0.07 }
+
 local function flash(entry: Entry, color: Color3, transparency: number, seconds: number)
 	local highlight = entry.flash
 	if not highlight then
@@ -201,7 +204,7 @@ local function add(model: Instance)
 		updateBar(entry)
 	end))
 	table.insert(entry.connections, model:GetAttributeChangedSignal("HitAt"):Connect(function()
-		flash(entry, Color3.new(1, 1, 1), 0.35, 0.1)
+		flash(entry, Color3.new(1, 1, 1), HIT_FLASH.Transparency, HIT_FLASH.Seconds)
 		local current = entry.anim:ActionName()
 		if not entry.deadAt and (current == nil or current == "Hit" or current == "Spawn") then
 			entry.anim:Action("Hit")

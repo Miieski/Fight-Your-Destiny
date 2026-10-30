@@ -759,6 +759,7 @@ local function measureTool(S: State)
 	S.handle = nil
 	S.liftEl, S.liftH, S.runEl, S.runH, S.clearT = 0, 0, 0, 0, 0 -- a new weapon starts from its style's own pose
 	S.blendEl, S.blendH = 0, 0
+	S.lArm.blade = HAND_BLADE
 	local arm = S.rArm
 	arm.blade = HAND_BLADE
 	arm.face = ZERO
@@ -768,6 +769,16 @@ local function measureTool(S: State)
 	local handle = tool and tool:FindFirstChild("Handle")
 	if not handle then
 		return
+	end
+	-- a pair's left copy (WeaponService): LBlade aims its axis
+	local off = (tool :: Tool):FindFirstChild("OffHand")
+	local leftGrip = off and off:FindFirstChild("LeftGrip")
+	local offTip = off and off:FindFirstChild("OffTipAttachment")
+	local offBase = off and off:FindFirstChild("OffBaseAttachment")
+	if leftGrip and leftGrip:IsA("Weld") and offTip and offBase and offTip:IsA("Attachment") and offBase:IsA("Attachment") then
+		S.lArm.blade = unit((leftGrip.C0 * leftGrip.C1:Inverse()):VectorToWorldSpace(offTip.Position - offBase.Position), HAND_BLADE)
+	elseif off then
+		S.toolDirty = true -- it replicates a moment after the Tool
 	end
 	local hand = character:FindFirstChild("RightHand")
 	local grip = hand and hand:FindFirstChild("RightGrip")
@@ -788,7 +799,7 @@ local function measureTool(S: State)
 			if part.CanCollide then
 				part.CanCollide = false
 			end
-			if part.Transparency < 1 then
+			if part.Transparency < 1 and part.Name ~= "OffHand" then
 				local rel = handleCF:ToObjectSpace(part.CFrame)
 				local s = part.Size * 0.5
 				for i = 0, 7 do

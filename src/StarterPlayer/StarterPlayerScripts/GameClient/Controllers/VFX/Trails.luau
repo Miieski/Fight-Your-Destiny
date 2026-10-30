@@ -26,9 +26,12 @@ local function seq(points: { { number } }): NumberSequence
 end
 
 local function off(rec: Rec)
-	local trail = rec.trail
+	local trail, second = rec.trail, rec.second
 	if trail then
 		trail.Enabled = false
+	end
+	if second then
+		second.Enabled = false
 	end
 end
 
@@ -39,11 +42,16 @@ local function on(rec: Rec): boolean
 	end
 	trail:Clear()
 	trail.Enabled = true
+	local second = rec.second
+	if second then
+		second:Clear()
+		second.Enabled = true
+	end
 	return true
 end
 
 local function setup(tool: Instance): Rec
-	local rec: Rec = Runner.track({ trail = false, palette = false, extended = false, done = off })
+	local rec: Rec = Runner.track({ trail = false, second = false, palette = false, done = off })
 	records[tool] = rec
 	local tip = tool:FindFirstChild("TipAttachment", true)
 	local base = tool:FindFirstChild("BaseAttachment", true)
@@ -66,6 +74,17 @@ local function setup(tool: Instance): Rec
 	trail.Enabled = false
 	trail.Parent = tip.Parent
 	rec.trail = trail
+	-- a pair: the left copy trails too
+	local offHand = tool:FindFirstChild("OffHand")
+	local offTip = offHand and offHand:FindFirstChild("OffTipAttachment")
+	local offBase = offHand and offHand:FindFirstChild("OffBaseAttachment")
+	if offTip and offBase then
+		local second = trail:Clone()
+		second.Attachment0 = offBase
+		second.Attachment1 = offTip
+		second.Parent = offHand
+		rec.second = second
+	end
 	return rec
 end
 
@@ -85,11 +104,13 @@ function Trails.swing(tool: Instance?, palette: any, onDelay: number, offDelay: 
 	if rec.palette ~= palette then
 		rec.palette = palette
 		trail.Color = palette.trail
+		if rec.second then
+			rec.second.Color = palette.trail
+		end
 	end
 	if rec.slot ~= 0 and rec.begun then
 		trail.Enabled = false
 	end
-	rec.extended = false
 	Runner.run(rec, onDelay, math.max(0.02, offDelay - math.max(0, onDelay)), on, nil)
 end
 

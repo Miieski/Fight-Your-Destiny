@@ -4,6 +4,7 @@
 -- its clips in Config/CombatAnimations; no new code.
 -- Moves[category] = {
 --   Class      "Melee" | "Bow" | "Staff" (input and server path)
+--   Pair       true: the weapon is one in each hand (WeaponService adds the off-hand copy)
 --   Speed      attribute that speeds the weapon up (Util/Stats, with the rarity; default Dexterity)
 --   Dps        Common damage per second in zone 1, in tens: Sword 1.0 = 10 / s. WeaponCategories derives the category's
 --              DamageMult from it, so tuning a timing never changes the DPS of a weapon
@@ -98,21 +99,24 @@ WeaponMoves.Moves = {
 			Shape = { Angle = 150, Radius = 7, SlamRadius = false } },
 	},
 	Dagger = {
-		Class = "Melee", Dps = 1.0,
-		Shape = { Kind = "Arc", Angle = 60, Radius = 4, MaxTargets = 1, BonusCrit = 0.20 },
+		Class = "Melee", Dps = 1.0, Pair = true,
+		Shape = { Kind = "Arc", Angle = 70, Radius = 4.5, MaxTargets = 2, BonusCrit = 0.20 },
 		Steps = {
-			{ Name = "SlashR", Impact = 0.08, Duration = 0.4, Damage = 0.9 },
-			{ Name = "SlashL", Impact = 0.08, Duration = 0.4, Damage = 0.9 },
-			{ Name = "StabR", Impact = 0.08, Duration = 0.4, Damage = 0.9 },
-			{ Name = "StabL", Impact = 0.08, Duration = 0.4, Damage = 0.9 },
-			{ Name = "DoubleSlash", Impact = 0.08, Hits = { 0.2 }, Duration = 0.4, Damage = 0.7, Finisher = true, Knockback = 5 },
+			{ Name = "CutR", Impact = 0.08, Duration = 0.22, Damage = 1.0 },
+			{ Name = "CutL", Impact = 0.08, Duration = 0.22, Damage = 1.0 },
+			{ Name = "StabR", Impact = 0.08, Duration = 0.22, Damage = 1.0 },
+			{ Name = "StabL", Impact = 0.08, Duration = 0.22, Damage = 1.0 },
+			{ Name = "SpinCut", Impact = 0.08, Duration = 0.3, Damage = 1.15, Shape = { Kind = "Circle", Radius = 5, MaxTargets = 3 } },
+			{ Name = "Flurry", Impact = 0.08, Hits = { 0.16, 0.24, 0.32, 0.4 }, Duration = 0.68, Damage = 0.8, Finisher = true, Knockback = 6 },
 		},
-		Heavy = { Name = "HeavyFlurry", Clip = "Dagger_Attack5", Impact = 0.1, Hits = { 0.2 }, Duration = 0.5, Damage = 1.2, Lunge = 2, MaxCharge = 0.4, ChargeDamage = 0.5,
-			Knockback = 5, Stagger = 0.25 },
-		Air = { Name = "ShadowDrop", Impact = 0.26, Duration = 0.62, Hang = 0.06, Damage = 1.5, Lunge = 2, Knockback = 4,
+		Heavy = { Name = "CrossRend", Impact = 0.1, Duration = 0.5, Damage = 3.4, Lunge = 2.5, MaxCharge = 0.45, ChargeDamage = 0.5,
+			Knockback = 6, Stagger = 0.3 },
+		Air = { Name = "ShadowDrop", Impact = 0.26, Duration = 0.62, Hang = 0.06, Damage = 3.0, Lunge = 2, Knockback = 4,
 			Shape = { Kind = "Circle", Radius = 5, MaxTargets = 3 } },
-		Dash = { Name = "ShadowStep", Impact = 0.1, Hits = { 0.18 }, Duration = 0.5, Damage = 0.9, Lunge = 6, LungeSeconds = 0.14, Knockback = 3,
+		Dash = { Name = "ShadowStep", Impact = 0.1, Hits = { 0.18 }, Duration = 0.45, Damage = 1.2, Lunge = 6, LungeSeconds = 0.14, Knockback = 3,
 			Shape = { Kind = "Line", Length = 7, Width = 3, MaxTargets = 2 } },
+		Skill = { Name = "BladeStorm", Impact = 0.08, Hits = { 0.16, 0.24, 0.32, 0.4 }, Duration = 0.62, Damage = 1.7, Knockback = 3,
+			Shape = { Kind = "Circle", Radius = 6, MaxTargets = 4 } },
 	},
 	Ranged = {
 		Class = "Bow", Dps = 0.96,
