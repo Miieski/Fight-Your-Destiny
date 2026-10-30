@@ -48,7 +48,7 @@ Settings.Definitions = {
 
 -- Mobile action buttons: position = center of the button as a fraction of the screen,
 -- Size in UI design units (the HUD scale applies on top).
-Settings.BUTTON_IDS = { "Attack", "Roll", "Block", "Skill1", "Skill2", "Skill3" }
+Settings.BUTTON_IDS = { "Attack", "Roll", "Block", "Skill1", "Skill2", "Skill3", "LockOn", "LockNext" }
 Settings.BUTTON_LAYOUT_DEFAULT = {
 	Attack = { X = 0.80, Y = 0.60, Size = 88 },
 	Roll = { X = 0.74, Y = 0.86, Size = 64 },
@@ -57,6 +57,8 @@ Settings.BUTTON_LAYOUT_DEFAULT = {
 	Skill1 = { X = 0.665, Y = 0.66, Size = 60 },
 	Skill2 = { X = 0.69, Y = 0.43, Size = 60 },
 	Skill3 = { X = 0.80, Y = 0.31, Size = 60 },
+	LockOn = { X = 0.93, Y = 0.72, Size = 56 },
+	LockNext = { X = 0.93, Y = 0.28, Size = 56 }, -- only while locked on
 }
 Settings.BUTTON_SIZE = { Min = 56, Max = 140, Step = 8 }
 Settings.BUTTON_POSITION_MARGIN = 0.03 -- keep button centers this far from the screen edges
@@ -72,6 +74,8 @@ Settings.KEY_ACTIONS = {
 	{ Id = "Block", Label = "Block (hold)", Group = "Combat", Default = "MouseButton2", Mouse = true },
 	{ Id = "Roll", Label = "Roll", Group = "Combat", Default = "Q", Mouse = true },
 	{ Id = "AutoAttack", Label = "Auto-Attack on / off", Group = "Combat", Default = "R" },
+	{ Id = "LockOn", Label = "Lock-on on / off", Group = "Combat", Default = "L", Mouse = true },
+	{ Id = "LockNext", Label = "Lock-on: next target", Group = "Combat", Default = "H", Mouse = true },
 	{ Id = "Skill1", Label = "Skill 1", Group = "Skills", Default = "Z" },
 	{ Id = "Skill2", Label = "Skill 2", Group = "Skills", Default = "X" },
 	{ Id = "Skill3", Label = "Skill 3", Group = "Skills", Default = "C" },

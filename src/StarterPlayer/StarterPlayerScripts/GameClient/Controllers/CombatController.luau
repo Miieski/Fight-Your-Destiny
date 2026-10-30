@@ -1,19 +1,21 @@
 --!strict
 -- Player combat on the client (docs/enemies_npcs_pets_brief.txt Part A, docs/weapons_combat_brief.txt 4A): inputs,
 -- aim, the hack & slash feel and the feedback. The server decides every hit and every damage (CombatService).
---   Melee weapons: hold Attack to chain the category's combo (Config/Combat Combos) at the weapon's rate; the combo
---   restarts after Combat.ComboReset s without attacking. Ranged and Magic: one press = one shot (holding repeats
---   only with the Auto-Attack pass). Aim: the mouse on PC; melee turns toward the nearest enemy within
---   Combat.Feel.AimAssistRange (on PC only within AimAssistAngle of the mouse); ranged on touch / gamepad: the
---   nearest enemy in reach. Each attack lunges forward (step Lunge).
---   Feel on a confirmed hit (Net "Hit"): hit-stop, camera shake, FOV pulse on finishers, combo counter.
---   Roll: 12-stud dash (i-frames on the server); cancels the attack recovery; no attack during the roll.
+--   Melee weapons (Config/WeaponMoves): a press starts the next combo step at once, a press in the last BufferWindow of
+--   a move queues the next one (holding never chains); the combo restarts after ComboReset s without attacking. Still
+--   down after HoldThreshold: the swing flows into the heavy's wind-up (after its impact), the release or the full
+--   charge fires it. Ranged and Magic: one press = one shot (holding repeats only with the Auto-Attack pass).
+--   Aim: the lock-on target (LockOnController), else the camera direction (melee); the body turns to it smoothly,
+--   movement never stops. Only heavy, jump and dash moves lunge (move Lunge).
+--   Feel on a confirmed hit (Net "Hit"): small shake and FOV pulse on finishers, heavies and slams, combo counter.
+--   Roll: 12-stud dash (i-frames on the server). It cancels the recovery of an attack, nothing else does: pressed during
+--   the start-up it waits for the impact. No attack during the roll.
 --   Jump attack (combat V3, Config/Combat AirAttacks): attacking in the air hangs a moment, then dives so the body
 --   lands exactly at the hit (melee: shockwave around the landing point; Ranged: a volley; Magic: a big blast).
 --   Dash strike (Config/Combat DashAttacks): an attack pressed during a roll or within DashAttack.Window after it.
---   Block: shield bubble, half speed, no attacks; cancels the attack recovery except after a finisher.
--- Hooks: Combat/Animations (animation sub-agent), VFX/VFX (VFX sub-agent), Sfx.combat (SFX sub-agent); contract in
--- docs/COMBAT_CONTRACTS.md. Other players' swings and hits come as Net "Swing" / "Impact".
+--   Block: shield bubble, half speed, no attacks; it starts when the running move is over.
+-- Every attack state goes through Combat/AnimationController, the local prediction and other players' Net "Swing" alike;
+-- hits come as Net "Hit" / "Impact". Contract: docs/COMBAT_CONTRACTS.md.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -25,14 +27,16 @@ local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
-local WeaponCategories = require(ReplicatedStorage.GameSystem.Config.WeaponCategories)
+local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
 local State = require(script.Parent.Parent.State)
 local Controls = require(script.Parent.ControlsController)
 local Fx = require(script.Parent.FxController)
+local LockOn = require(script.Parent.LockOnController)
 local Settings = require(script.Parent.SettingsController)
+local AnimationController = require(script.Parent.Combat.AnimationController)
 local Animations = require(script.Parent.Combat.Animations)
 local VFX = require(script.Parent.VFX.VFX)
 local Kit = script.Parent.Parent.UI.Kit
@@ -45,13 +49,15 @@ local CombatController = {}
 local player = Players.LocalPlayer
 local FEEL = Combat.Feel
 local AIR = Combat.AirAttack
+local INPUT = WeaponMoves.Input
+local toolInfo = AnimationController.tool
 -- zone (fighting style) of a weapon element: other players' impacts only carry the element
 local ZONE_OF_ELEMENT: { [string]: number } = {}
 for _, zone in ipairs(Zones.List) do
 	ZONE_OF_ELEMENT[zone.Element] = zone.Index
 end
 local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts" }
-local HIT_STOP_GAP = 0.05 -- several enemies hit by one swing give one hit-stop
+local SHAKE_GAP = 0.05 -- several enemies hit by one swing give one shake
 local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
 local AIR_AIM_AHEAD = 14 -- Ranged / Magic jump attacks without an enemy in front aim at the ground this far ahead
 local MAX_RISE = 24 -- studs / s: the upward speed a roll or a lunge may reach (bumping into an enemy at full dash speed
@@ -59,24 +65,29 @@ local MAX_RISE = 24 -- studs / s: the upward speed a roll or a lunge may reach (
 local COMBO_COUNTER = { Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromOffset(220, 46), PopScale = 1.25, PopSeconds = 0.12, FadeSeconds = 0.3 }
 
 local holding = false
+local pressAt = -math.huge
+local queued = false -- a press buffered for the next move
+local charging = false
+local chargeAt = 0
 local blocking = false
 local blockHeld = false
-local nextAttack = 0
+local blockLockedUntil = 0 -- the guard broke
+local nextAttack = 0 -- the running move's Duration ends
+local moveSpan = 0 -- that Duration, at this speed
+local impactAt = 0 -- the running move's first hit
+local rollQueued = false -- a dodge pressed during the start-up, for the impact
 local nextRoll = 0
 local rollingUntil = 0
 local rollStartedAt = -math.huge -- dash strikes: an attack within DashAttack.Window after the roll
 local plungeUntil = 0 -- a jump attack is under way (no roll, no other attack)
 local airUsed = false -- one jump attack per jump (reset on landing)
 local lastAir = -math.huge
-local finisherUntil = 0
 local comboStep = 0
 local comboAt = -math.huge
 local comboCategory: string? = nil
-local lastHitStop = 0
-local lastSent = -math.huge -- mirrors the server's booking of my last attack (CombatService rate check)
+local lastShake = 0
 local sentAt = 0
 local pendingAttacks = 0 -- attack requests not answered yet (Net "Combo")
-local RATE_MARGIN = 0.02
 local statsCache: { [string]: any }? = nil
 
 local comboLabel: TextLabel? = nil
@@ -101,20 +112,18 @@ local function stats(): { [string]: any }
 	return statsCache :: any
 end
 
--- The equipped weapon: category id, its shape, the inventory item and the weapon definition.
-local function weapon(): (string, any, any, any)
+-- The equipped weapon: category id and its Config/WeaponMoves entry.
+local function weapon(): (string, any)
 	local weapons = State.get("Weapons")
 	local uid = State.get("EquippedWeapon")
 	local item = typeof(weapons) == "table" and uid and weapons[uid]
 	local def = item and Weapons.ById[item.id]
-	local id = if def and Combat.Combos[def.Category] then def.Category else "Sword"
-	return id, Combat.Shapes[id] or Combat.Shapes.Sword, item, def
+	local id = if def and WeaponMoves.Moves[def.Category] then def.Category else "Sword"
+	return id, WeaponMoves.Moves[id]
 end
 
-local function interval(): number
-	local id = weapon()
-	local category = WeaponCategories.ById[id]
-	return 1 / ((if category then category.HitsPerSecond else 1) * (1 + (stats().AttackSpeed or 0)))
+local function attackSpeed(): number
+	return 1 + (stats().AttackSpeed or 0)
 end
 
 local function reach(shape: any): number
@@ -205,22 +214,25 @@ local function mousePoint(root: BasePart): Vector3?
 	return nil
 end
 
--- Attack direction and aim point. Melee: aim assist toward the nearest enemy within FEEL.AimAssistRange.
+-- Attack direction and aim point. forced = Auto-Attack's target; the lock-on target wins over the rest. Melee: the camera
+-- direction (FEEL.AimAssistRange > 0: the nearest enemy within it, in AimAssistAngle of that direction).
 local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vector3?, boolean)
-	local point = forced
-	local mouse = point == nil and usesMouse()
-	if not point and mouse then
-		point = mousePoint(root)
+	local point = forced or LockOn.point()
+	local locked = point ~= nil
+	if not point and isMelee(shape) then
+		local camera = workspace.CurrentCamera
+		local wanted = flat(if camera then camera.CFrame.LookVector else root.CFrame.LookVector)
+		if FEEL.AimAssistRange > 0 then
+			local _, position = nearestEnemy(root.Position, FEEL.AimAssistRange, wanted, math.cos(math.rad(FEEL.AimAssistAngle)))
+			if position then
+				return flat(position - root.Position), position, true
+			end
+		end
+		return wanted, nil, false
 	end
 	local assisted = false
-	if isMelee(shape) and not forced then
-		local wanted = if point then flat(point - root.Position) else flat(root.CFrame.LookVector)
-		local minDot = if mouse and point then math.cos(math.rad(FEEL.AimAssistAngle)) else nil
-		local _, position = nearestEnemy(root.Position, FEEL.AimAssistRange, wanted, minDot)
-		if position then
-			point = position
-			assisted = true
-		end
+	if not point and usesMouse() then
+		point = mousePoint(root)
 	elseif not point then
 		local _, position = nearestEnemy(root.Position, reach(shape) + Combat.AimAssistBonus, flat(root.CFrame.LookVector))
 		point = position
@@ -229,7 +241,7 @@ local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vect
 	if point then
 		local offset = point - root.Position
 		if Vector3.new(offset.X, 0, offset.Z).Magnitude > 0.5 then
-			return flat(offset), point, assisted or forced ~= nil
+			return flat(offset), point, assisted or locked
 		end
 	end
 	return flat(root.CFrame.LookVector), point, false
@@ -381,18 +393,6 @@ local function plunge(root: BasePart, humanoid: Humanoid, dir: Vector3, step: { 
 	end)
 end
 
--- The held weapon: Tool, rarity, element and zone (1..12: the zone fighting style, Config/CombatStyles).
-local function toolInfo(character: Model): (Tool?, number?, string?, number?)
-	local tool = character:FindFirstChildOfClass("Tool")
-	if not tool then
-		return nil, nil, nil, nil
-	end
-	local def = Weapons.ById[tool:GetAttribute("WeaponId") or ""]
-	local rarity = tool:GetAttribute("Rarity")
-	local zone = tool:GetAttribute("Zone")
-	return tool, if typeof(rarity) == "number" then rarity else nil, if def then def.Element else nil, if typeof(zone) == "number" then zone elseif def then def.Zone else nil
-end
-
 -- The landing of my jump attack: shockwave, sound, shake (the damage comes from the server's "Hit").
 local function landed(character: Model, categoryId: string, groundPoint: Vector3, radius: number)
 	local tool, rarity, element, zone = toolInfo(character)
@@ -405,46 +405,45 @@ local function landed(character: Model, categoryId: string, groundPoint: Vector3
 	Fx.fovPulse(FEEL.FovPulse.Degrees, FEEL.FovPulse.Seconds)
 end
 
--- One attack now if the weapon is ready. Returns true when it was sent.
-local function attackOnce(forced: Vector3?): boolean
+-- One attack now if the weapon is ready (heavy = the release of a charge). Returns true when it was sent.
+local function attackOnce(forced: Vector3?, heavy: boolean?): boolean
 	local root, humanoid = rootPart()
 	if not (root and humanoid) or blocking or player:GetAttribute("Spectating") then
 		return false
 	end
 	local now = os.clock()
-	if now < nextAttack or now < rollingUntil or now < plungeUntil then
+	if (now < nextAttack and not heavy) or now < rollingUntil or now < plungeUntil then
 		return false
 	end
-	local categoryId, shape = weapon()
-	local steps = Combat.Combos[categoryId]
-	local gap = interval()
-	if now - lastSent < gap * Combat.RateTolerance + RATE_MARGIN then
-		return false
-	end
-	-- dash strike / jump attack / the same combo step the server will pick (CombatService nextStep). The dash strike
-	-- wins: a roll can lift the body a moment (bumping into an enemy) and the press right after a roll means a dash.
+	local categoryId, moves = weapon()
+	local speed = attackSpeed()
+	-- heavy / dash strike / jump attack / the same combo step the server will pick (CombatService nextStep). The dash
+	-- strike wins: a roll can lift the body a moment (bumping into an enemy) and the press right after a roll means a dash.
 	local variant: string? = nil
-	if Combat.DashAttacks[categoryId] and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
+	if heavy then
+		variant = "Heavy"
+	elseif moves.Dash and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
 		variant = "Dash"
-	elseif Combat.AirAttacks[categoryId] and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then
+	elseif moves.Air and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then
 		variant = "Air"
 	end
 	local step: { [string]: any }, index: number
 	if variant then
-		step = if variant == "Air" then Combat.AirAttacks[categoryId] else Combat.DashAttacks[categoryId]
+		step = moves[variant]
 		index = 1
 		comboStep = 0 -- the combo restarts after it
 		rollStartedAt = -math.huge
 	else
-		if comboCategory ~= categoryId or now - comboAt > gap + Combat.ComboReset then
+		if comboCategory ~= categoryId or now - comboAt > moveSpan + INPUT.ComboReset then
 			comboStep = 0
 		end
-		comboStep = comboStep % #steps + 1
-		step = steps[comboStep]
+		comboStep = comboStep % #moves.Steps + 1
+		step = moves.Steps[comboStep]
 		index = comboStep
 	end
 	comboAt = now
 	comboCategory = categoryId
+	local shape = WeaponMoves.shape(categoryId, step)
 	local dir, point, assisted = aim(root, shape, forced)
 	if variant == "Air" and not isMelee(shape) and not forced then
 		-- shooting / casting down from the air: the nearest enemy in front, else the ground a little ahead
@@ -458,11 +457,11 @@ local function attackOnce(forced: Vector3?): boolean
 			point = if ground then ground.Position else ahead - Vector3.new(0, humanoid.HipHeight + root.Size.Y, 0)
 		end
 	end
-	nextAttack = now + gap
-	root.CFrame = CFrame.lookAt(root.Position, root.Position + dir)
+	moveSpan = step.Duration / speed
+	nextAttack = now + moveSpan
+	impactAt = now + step.Impact / speed
+	LockOn.face(dir, moveSpan)
 	local character = root.Parent :: Model
-	local speed = 1 + (stats().AttackSpeed or 0)
-	local finisher = step.Finisher == true or variant == "Air"
 	if variant == "Air" then
 		airUsed = true
 		lastAir = now
@@ -478,42 +477,51 @@ local function attackOnce(forced: Vector3?): boolean
 	else
 		lunge(root, dir, step.Lunge or 0, if assisted then point else nil, step.LungeSeconds)
 	end
-	local length = Animations.attack(character, categoryId, index, speed, if point then point - (root.Position + Vector3.new(0, 1.5, 0)) else nil, variant)
-	finisherUntil = if finisher then now + math.max(length, step.Impact / speed) else 0
-	local tool, rarity, element, zone = toolInfo(character)
-	local ctx = {
+	AnimationController.play({
 		Character = character,
-		Tool = tool,
 		Category = categoryId,
 		Step = index,
 		Variant = variant,
-		Finisher = finisher,
-		Direction = dir,
-		Rarity = rarity,
-		Element = element,
-		Zone = zone,
 		Speed = speed,
+		Aim = if point then point - (root.Position + Vector3.new(0, 1.5, 0)) else nil,
+		Direction = dir,
 		IsLocal = true,
-	}
-	VFX.swing(ctx)
-	Sfx.combat("Swing", ctx)
+	})
 	if now - sentAt > 1.5 then
 		pendingAttacks = 0 -- an answer lost (death, respawn): start counting again
 	end
 	pendingAttacks += 1
 	sentAt = now
-	lastSent = math.max(now, lastSent + gap)
 	Net.send("Attack", dir, point, variant)
 	return true
+end
+
+-- The hold flows into the heavy's wind-up.
+local function startCharge(categoryId: string)
+	local root = rootPart()
+	if root then
+		charging = true
+		chargeAt = os.clock()
+		Net.send("Charge", true)
+		AnimationController.play({ Character = root.Parent, Category = categoryId, Step = 1, Variant = "Charge", Speed = attackSpeed(), IsLocal = true })
+	end
+end
+
+local function releaseCharge()
+	charging = false
+	if not attackOnce(nil, true) then
+		Net.send("Charge", false)
+		local character = player.Character
+		if character then
+			Animations.cancel(character)
+		end
+	end
 end
 
 -- The server's answer to an attack request: the step it ran, or its current step when it refused (blocked, rolling,
 -- too fast). Once no other request is in flight the prediction follows the server again.
 local function onCombo(category: string, step: number, accepted: boolean)
 	pendingAttacks = math.max(0, pendingAttacks - 1)
-	if accepted ~= true then
-		finisherUntil = 0
-	end
 	if pendingAttacks == 0 and typeof(step) == "number" then
 		comboStep = step
 		if typeof(category) == "string" and category ~= "" then
@@ -563,7 +571,8 @@ local function makeComboCounter()
 	comboLabel, comboScale = label, scale
 end
 
--- A confirmed hit of mine: number, impact effects and sounds, hit-stop, shake, FOV pulse, combo counter.
+-- A confirmed hit of mine: number, impact effects and sounds, combo counter; a small shake and FOV pulse on finishers,
+-- heavies and slams only (no hit-stop: nothing ever slows the swing).
 local function onHit(position: Vector3, amount: number, crit: boolean, finisher: boolean?, category: string?)
 	if Settings.get("DamageNumbers") ~= false then
 		VFX.damageNumber(position, Format.number(amount) .. (if crit then "!" else ""), if crit then "crit" else "normal")
@@ -578,17 +587,9 @@ local function onHit(position: Vector3, amount: number, crit: boolean, finisher:
 	Sfx.combat("Impact", ctx)
 	countHit()
 	local now = os.clock()
-	if now - lastHitStop < HIT_STOP_GAP then
-		return
-	end
-	lastHitStop = now
-	local heavy = category == "Heavy"
-	local character = player.Character
-	if character then
-		Animations.hitStop(character, if finisher then FEEL.HitStop.Finisher elseif heavy then FEEL.HitStop.Heavy else FEEL.HitStop.Normal)
-	end
-	Fx.shake(if finisher then FEEL.Shake.Finisher elseif heavy then FEEL.Shake.Heavy else FEEL.Shake.Normal)
-	if finisher then
+	if finisher and now - lastShake >= SHAKE_GAP then
+		lastShake = now
+		Fx.shake(if category == "Heavy" then FEEL.Shake.Heavy else FEEL.Shake.Finisher)
 		Fx.fovPulse(FEEL.FovPulse.Degrees, FEEL.FovPulse.Seconds)
 	end
 end
@@ -596,31 +597,19 @@ end
 -- Another player's swing (Net "Swing"): animation, trail and whoosh only.
 local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number, aim: Vector3?, variant: string?)
 	local character = attacker.Character
-	if attacker == player or not character or typeof(category) ~= "string" or typeof(step) ~= "number" then
+	if attacker == player or not character or typeof(category) ~= "string" or typeof(step) ~= "number" or not WeaponMoves.Moves[category] then
 		return
 	end
-	local kind = if variant == "Air" or variant == "Dash" then variant else nil
-	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	Animations.attack(character, category, step, if typeof(speed) == "number" then speed else 1, if typeof(aim) == "Vector3" then aim else nil, kind)
-	local steps = Combat.Combos[category]
-	local tool, rarity, element, zone = toolInfo(character)
-	local ctx = {
+	AnimationController.play({
 		Character = character,
-		Tool = tool,
 		Category = category,
 		Step = step,
-		Variant = kind,
-		Zone = zone,
-		Finisher = kind == "Air" or (steps and steps[step] and steps[step].Finisher == true and kind == nil) or false,
-		Direction = if typeof(dir) == "Vector3" then dir else Vector3.new(0, 0, -1),
-		Rarity = rarity,
-		Element = element,
-		Speed = speed,
+		Variant = if typeof(variant) == "string" then variant else nil,
+		Speed = if typeof(speed) == "number" then speed else 1,
+		Aim = if typeof(aim) == "Vector3" then aim else nil,
+		Direction = if typeof(dir) == "Vector3" then dir else nil,
 		IsLocal = false,
-		Position = if root then root.Position else nil,
-	}
-	VFX.swing(ctx)
-	Sfx.combat("Swing", ctx)
+	})
 end
 
 local function onImpact(position: Vector3, category: string?, crit: boolean, finisher: boolean, element: string?)
@@ -682,7 +671,7 @@ local function onMotion(other: Player, kind: string, dir: Vector3?)
 		local ctx = { Character = character, Direction = d, IsLocal = false, Position = root.Position }
 		VFX.roll(ctx)
 		Sfx.combat("Roll", ctx)
-	elseif kind == "BlockHit" then
+	elseif kind == "BlockHit" or kind == "Parry" then
 		Animations.blockHit(character)
 		VFX.blockHit({ Character = character, Position = root.Position + Vector3.new(0, 3, 0) })
 		Sfx.combat("BlockHit", { Position = root.Position })
@@ -714,23 +703,12 @@ local function applyBlock(down: boolean)
 	end
 end
 
--- Block cancels the attack recovery, except a finisher's: then it starts when the finisher is over.
+-- Block never cancels a move: it starts when the running one is over (comboTick).
 local function setBlocking(down: boolean)
 	blockHeld = down
 	if not down then
 		applyBlock(false)
-		return
 	end
-	local wait = finisherUntil - os.clock()
-	if wait <= 0 then
-		applyBlock(true)
-		return
-	end
-	task.delay(wait, function()
-		if blockHeld then
-			applyBlock(true)
-		end
-	end)
 end
 
 local function dash(root: BasePart, dir: Vector3)
@@ -791,10 +769,16 @@ local function roll()
 	if now < nextRoll or now < plungeUntil then
 		return
 	end
-	nextRoll = now + (stats().RollCooldown or 1.5)
+	if now < impactAt then
+		rollQueued = true -- only the recovery can be cancelled: this dodge comes out at the impact
+		return
+	end
+	nextRoll = now + (stats().RollCooldown or 1.2)
 	rollingUntil = now + Combat.Roll.Duration
 	rollStartedAt = now
-	finisherUntil = 0
+	nextAttack = 0
+	queued = false
+	charging = false
 	local move = humanoid.MoveDirection
 	local dir = if move.Magnitude > 0.1 then flat(move) else flat(root.CFrame.LookVector)
 	Net.send("Roll", dir)
@@ -816,6 +800,17 @@ local function onHurt(amount: number, kind: string)
 	local at = root.Position + Vector3.new(0, 3, 0)
 	if kind == "dodge" then
 		VFX.damageNumber(at, "Dodge", "dodge")
+	elseif kind == "parry" then
+		Animations.blockHit(character)
+		VFX.blockHit({ Character = character, Position = at })
+		Sfx.combat("BlockHit", {})
+		VFX.damageNumber(at, "Parry!", "dodge")
+	elseif kind == "break" then
+		blockLockedUntil = os.clock() + Combat.Block.GuardBreakLock
+		applyBlock(false)
+		Animations.hurt(character)
+		Sfx.combat("BlockBreak", {})
+		VFX.damageNumber(at, "-" .. Format.number(amount), "hurt")
 	elseif kind == "block" then
 		Animations.blockHit(character)
 		VFX.blockHit({ Character = character, Position = at })
@@ -882,6 +877,35 @@ local function autoToggle()
 	paint()
 end
 
+-- Each frame: what a press queued. A buffered attack / dodge comes out on time, the hold flows into the charge and a
+-- full charge fires, the block waits for the end of the move.
+local function comboTick()
+	local now = os.clock()
+	if rollQueued and now >= impactAt then
+		rollQueued = false
+		roll()
+	end
+	if queued and now >= nextAttack and now >= rollingUntil and now >= plungeUntil then
+		queued = false
+		attackOnce()
+	end
+	if holding then
+		local categoryId, moves = weapon()
+		local heavy = moves.Heavy
+		if charging then
+			if heavy and (now - chargeAt) * attackSpeed() >= heavy.MaxCharge then
+				holding = false -- one heavy per press
+				releaseCharge()
+			end
+		elseif heavy and not queued and not blocking and now - pressAt >= INPUT.HoldThreshold and now >= impactAt and now >= rollingUntil and now >= plungeUntil then
+			startCharge(categoryId)
+		end
+	end
+	if blockHeld and not blocking and not charging and now >= nextAttack and now >= blockLockedUntil and now >= rollingUntil then
+		applyBlock(true)
+	end
+end
+
 function CombatController:Start()
 	Net.on("Hit", onHit)
 	Net.on("Combo", onCombo)
@@ -918,17 +942,10 @@ function CombatController:Start()
 	Controls.Attack:Connect(function(down: boolean)
 		if down and not holding then
 			holding = true
-			local untilRollEnd = rollingUntil - os.clock()
-			if untilRollEnd > 0 then
-				-- pressed during the roll: the dash strike comes out at the end of it, even after a quick tap
-				task.delay(untilRollEnd + 0.01, function()
-					if not holding then
-						attackOnce()
-					end
-				end)
-			end
-			local _, shape = weapon()
-			if not isMelee(shape) and not autoOn() then
+			local now = os.clock()
+			pressAt = now
+			local _, moves = weapon()
+			if moves.Class ~= "Melee" and not autoOn() then
 				-- one press = one shot, kept for a moment if the weapon is not ready yet
 				task.spawn(function()
 					local deadline = os.clock() + Combat.ShotBuffer
@@ -938,18 +955,21 @@ function CombatController:Start()
 				end)
 				return
 			end
-			task.spawn(function()
-				while holding do
-					attackOnce()
-					task.wait(math.max(0.03, math.max(nextAttack, rollingUntil) - os.clock()))
-				end
-			end)
+			if now < rollingUntil or now < plungeUntil then
+				queued = true -- the dash strike comes out at the end of the roll, even after a quick tap
+			elseif not attackOnce() and now >= nextAttack - moveSpan * INPUT.BufferWindow then
+				queued = true
+			end
 		elseif not down then
 			holding = false
+			if charging then
+				releaseCharge()
+			end
 		end
 	end)
 	Controls.Roll:Connect(roll)
 	Controls.Block:Connect(setBlocking)
+	RunService.Heartbeat:Connect(comboTick)
 
 	-- Auto-Attack: the nearest enemy in the weapon's reach
 	task.spawn(function()
@@ -958,8 +978,8 @@ function CombatController:Start()
 			if autoOn() and not holding and not blocking and os.clock() >= nextAttack then
 				local root = rootPart()
 				if root then
-					local _, shape = weapon()
-					local _, position = nearestEnemy(root.Position, reach(shape) + Combat.AutoAttackReachBonus, nil)
+					local _, moves = weapon()
+					local _, position = nearestEnemy(root.Position, reach(moves.Shape) + Combat.AutoAttackReachBonus, nil)
 					if position then
 						attackOnce(position)
 					end
@@ -1044,10 +1064,14 @@ function CombatController:Start()
 	end
 	player.CharacterAdded:Connect(function(character)
 		holding = false
+		queued = false
+		rollQueued = false
+		charging = false
 		blocking = false
 		blockHeld = false
 		comboStep = 0
-		finisherUntil = 0
+		nextAttack = 0
+		impactAt = 0
 		rollingUntil = 0
 		rollStartedAt = -math.huge
 		plungeUntil = 0

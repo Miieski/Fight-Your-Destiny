@@ -35,6 +35,7 @@ Attributes.PerPoint = {
 	EnduranceBlock = 0.01,
 	EnduranceSpeed = 0.008,
 	DexterityAttackSpeed = 0.005,
+	IntelligenceCastSpeed = 0.005,
 	IntelligenceProc = 0.008,
 	IntelligenceRadius = 0.01,
 	FaithPets = 0.03,
@@ -49,7 +50,7 @@ Attributes.PerPoint = {
 Attributes.Base = {
 	HP = 100,
 	RegenDelay = 5, -- seconds after the last damage
-	RollCooldown = 1.5,
+	RollCooldown = 1.2,
 	Block = 0.60,
 	CritChance = 0.05,
 	CritDamage = 2.0,
@@ -59,7 +60,7 @@ Attributes.Caps = {
 	RollCooldownFloor = 0.6,
 	Block = 0.85,
 	MoveSpeed = 0.40, -- attributes + pets together
-	AttackSpeed = 0.15,
+	AttackSpeed = 1.0, -- attribute + weapon rarity together (Config/WeaponMoves RaritySpeed): at most 2x
 	ElementProc = 0.16,
 	MagicRadius = 0.25,
 	CritChance = 0.60,
@@ -128,12 +129,13 @@ local function effectsOf(id: string): { string }
 	elseif id == "Strength" then
 		return { `Weapon damage: {damageList(id, 1)}` }
 	elseif id == "Dexterity" then
-		return { `Weapon damage: {damageList(id, 1)}`, `Attack speed +{pct(p.DexterityAttackSpeed)} (cap +{pct(caps.AttackSpeed)})` }
+		return { `Weapon damage: {damageList(id, 1)}`, `Attack speed +{pct(p.DexterityAttackSpeed)} (cap +{pct(caps.AttackSpeed)} with the weapon's rarity)` }
 	elseif id == "Intelligence" then
 		return {
 			`Weapon damage: {damageList(id, 1)}`,
 			`Element proc chance +{num(p.IntelligenceProc * 100)} pts (cap +{num(caps.ElementProc * 100)} pts)`,
 			`Magic area radius +{pct(p.IntelligenceRadius)} (cap +{pct(caps.MagicRadius)})`,
+			`Staff cast speed +{pct(p.IntelligenceCastSpeed)} (cap +{pct(caps.AttackSpeed)} with the weapon's rarity)`,
 		}
 	elseif id == "Faith" then
 		return { `Pet bonus effectiveness +{pct(p.FaithPets)}`, `Lifesteal and healing effects +{pct(p.FaithHealing)}` }

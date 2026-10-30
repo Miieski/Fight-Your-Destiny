@@ -51,6 +51,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
+local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local Config = require(ReplicatedStorage.GameSystem.Config.CombatVFX)
 local WeaponCategories = require(ReplicatedStorage.GameSystem.Config.WeaponCategories)
 
@@ -189,19 +190,19 @@ function VFX.swing(ctx: { [string]: any })
 	local character = ctx.Character
 	local root = rootOf(character)
 	local category = ctx.Category
-	local combo = Combat.Combos[category]
-	if root and combo and Runner.near(root.Position) then
+	local moves = WeaponMoves.Moves[category]
+	if root and moves and Runner.near(root.Position) then
 		local stepIndex = if typeof(ctx.Step) == "number" then ctx.Step else 1
-		local variant = if ctx.Variant == "Air" or ctx.Variant == "Dash" then ctx.Variant else nil
+		local variant = if ctx.Variant == "Air" or ctx.Variant == "Dash" or ctx.Variant == "Heavy" then ctx.Variant else nil
 		local steps = Config.Swing[category]
 		local info = WeaponCategories.ById[category]
-		local def: { [string]: any }? = nil
+		local def = WeaponMoves.move(category, stepIndex, variant) or moves.Steps[1]
 		local spec: { [string]: any }? = nil
-		if variant then
-			def = (if variant == "Air" then Combat.AirAttacks else Combat.DashAttacks)[category]
+		if variant == "Air" or variant == "Dash" then
 			spec = (if variant == "Air" then Config.AirSwing else Config.DashSwing)[category]
+		elseif variant == "Heavy" then
+			spec = Config.HeavySwing[category] or (steps and steps[#steps])
 		end
-		def = def or combo[stepIndex] or combo[1]
 		spec = spec or (if steps then steps[stepIndex] or steps[1] elseif info and info.Melee then Config.Swing.Default else nil)
 		if spec then
 			local speed = if typeof(ctx.Speed) == "number" and ctx.Speed > 0 then ctx.Speed else 1
@@ -385,10 +386,6 @@ function VFX.impact(ctx: { [string]: any })
 			end
 		else
 			playEffect(cfg.Normal, cf, tint, cfg.CategoryEmit[category] or 1)
-		end
-		if ctx.IsLocal then
-			local hitStop = Combat.Feel.HitStop
-			Trails.extend(player.Character, if ctx.Finisher then hitStop.Finisher elseif category == "Heavy" then hitStop.Heavy else hitStop.Normal)
 		end
 	end
 	Runner.measure(started)
@@ -750,7 +747,7 @@ local function test(command: string)
 	if what == "swing" then
 		local category = tool and tool:GetAttribute("Category") or "Sword"
 		local stepIndex = tonumber(args[2]) or 1
-		local combo = Combat.Combos[category]
+		local combo = WeaponMoves.Moves[category].Steps
 		local variant = if args[5] == "Air" or args[5] == "Dash" then args[5] else nil
 		VFX.swing({
 			Character = character, Tool = tool, Category = category, Step = if variant then 1 else stepIndex, Variant = variant,
@@ -760,7 +757,7 @@ local function test(command: string)
 		})
 	elseif what == "land" then
 		local category = if args[2] and args[2] ~= "" then args[2] else (tool and tool:GetAttribute("Category") or "Sword")
-		local air = Combat.AirAttacks[category]
+		local air = WeaponMoves.Moves[category].Air
 		local feet = Runner.ground(root.Position, 0.5, 8) or (root.Position - Vector3.new(0, 3, 0))
 		VFX.land({
 			Character = character, Tool = tool, Category = category, Position = feet,

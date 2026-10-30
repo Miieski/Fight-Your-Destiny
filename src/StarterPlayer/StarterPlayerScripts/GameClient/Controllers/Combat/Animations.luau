@@ -1,15 +1,16 @@
 --!strict
 -- Player combat animations (docs/weapons_combat_brief.txt 4B, contract in docs/COMBAT_CONTRACTS.md).
--- OWNER: the Animation sub-agent. CombatController calls only the functions below; keep their names and arguments.
+-- Combat/AnimationController is the single caller of the attack functions; keep their names and arguments.
 --   Animations.attack(character, category, step, speed, aim?, variant?) -> length
---                                                one combo step (Config/Combat Combos); the clip's "Hit" marker lands
---                                                at the step's Impact / speed; returns the clip length in seconds at
---                                                that speed. variant "Air" = the jump attack <Category>_JumpAttack
---                                                (Hit at Combat.AirAttacks Impact), "Dash" = the dash strike
---                                                <Category>_DashAttack (Combat.DashAttacks Impact); a missing clip
---                                                falls back to the step's clip (stretched to the variant's Impact)
---   Animations.cancel(character)                 stops the attack clip quickly (Roll / Block cancels)
---   Animations.hitStop(character, seconds)       plays the character's clips at Combat.Feel.HitStopSpeed
+--                                                one move of Config/WeaponMoves; the clip's "Hit" marker lands at the
+--                                                move's Impact / speed; returns the clip length in seconds at that
+--                                                speed. variant "Air" = <Category>_JumpAttack, "Dash" =
+--                                                <Category>_DashAttack, "Heavy" = <Category>_Heavy (the move's Clip
+--                                                wins); a missing clip falls back to the step's clip (stretched to
+--                                                the variant's Impact). After Animations.charge a "Heavy" attack
+--                                                releases the held wind-up instead of restarting it
+--   Animations.charge(character, category, speed)  plays the heavy clip and holds it at its Charge marker
+--   Animations.cancel(character)                 stops the attack clip quickly (the dodge cancels the recovery)
 --   Animations.block(character, on)              guard pose while Block is held
 --   Animations.blockHit(character)               a hit taken while blocking
 --   Animations.roll(character, direction)        the dash (world direction)
@@ -46,14 +47,13 @@
 -- Ground guard (2026-10-14): the held Tool's lowest corner (from last frame's pose) is kept above the ground in the idle /
 -- run stances (any zone) and at most ACTION_DEPTH x its reach under it in styled attacks, by lifting the blade elevation
 -- (or the hand when the pommel side is lowest); the lifts relax once the weapon is clear. No allocation per frame.
-local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
 local CombatStyles = require(ReplicatedStorage.GameSystem.Config.CombatStyles)
 local Data = require(ReplicatedStorage.GameSystem.Config.CombatAnimations)
+local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 
 local Animations = {}
@@ -62,7 +62,6 @@ local STYLES: { [string]: string } = Data.Styles or {}
 local RANGE = 150 -- studs from the camera
 local REF_HIP = 2 -- HipHeight the clip positions are authored for
 local REF_ARM = 1.14 -- shoulder -> wrist length the hand targets are authored for
-local HIT_STOP_SPEED = Combat.Feel.HitStopSpeed
 local CANCEL_FADE = 0.08
 local STAND_FADE, RUN_FADE, STANCE_FADE = 0.12, 0.18, 0.2
 local MOVE_SPEED = 1.5 -- studs / s: a character counts as moving above this (or with move input, local player)
@@ -91,10 +90,8 @@ local LIFT_EL_MAX, LIFT_H_MAX, LIFT_EL_STEP, LIFT_H_STEP, LIFT_EL_RELAX, LIFT_H_
 -- depth of the jump attack landings' ground stabs); deeper, the attack's own lift raises it (relaxes at ACTION_RELAX)
 local ACTION_DEPTH, ACTION_RELAX = 0.45, 1.5
 local BLADE_MIN = 1.2 -- studs past the hand: shorter weapons are lifted by the hand only
-local VARIANTS: { [string]: { suffix: string, steps: { [string]: { [string]: any } } } } = {
-	Air = { suffix = "_JumpAttack", steps = Combat.AirAttacks or {} },
-	Dash = { suffix = "_DashAttack", steps = Combat.DashAttacks or {} },
-}
+local VARIANTS: { [string]: string } = { Air = "_JumpAttack", Dash = "_DashAttack", Heavy = "_Heavy" } -- clip name suffix
+local CHARGE_POINT = 0.6 -- a heavy clip without a Charge marker holds at this fraction of its wind-up
 
 local PI, TAU = math.pi, math.pi * 2
 local ZERO = Vector3.zero
@@ -141,7 +138,7 @@ local LOWER_CH: { [number]: boolean } = { [1] = true, [C_ROOTP] = true, [C_RFOOT
 type Track = { times: { number }, values: { Vector3 }, eases: { number }, n: number }
 type Clip = {
 	name: string, length: number, loop: boolean, legs: number, additive: boolean, hold: boolean,
-	fadeIn: number, fadeOut: number, hit: number?, dive: number?, legIK: boolean, rArm: boolean, lArm: boolean, aimPitch: boolean,
+	fadeIn: number, fadeOut: number, hit: number?, dive: number?, charge: number?, legIK: boolean, rArm: boolean, lArm: boolean, aimPitch: boolean,
 	tracks: { Track | false },
 	-- zone styles: values at t = 0 (the swing size is scaled around them), the root turns a full spin / flip (no
 	-- root swing size), styled (not Shared_ / Style_), signature gain per category and LateOk (see LATE_WINDUP)
@@ -150,6 +147,7 @@ type Clip = {
 type Slot = {
 	clip: Clip?, t: number, w: number, fade: number, stopping: boolean, rate1: number, rate2: number, kind: string, dir: Vector3?,
 	frozen: boolean, sync: boolean, held: number,
+	holdAt: number?, -- a heavy's wind-up waits at this clip time until the release (Animations.attack "Heavy")
 	-- zone styles: phase 0 = unstyled, 1 = combo step / dash strike (time warp), 2 = jump attack (no wind-up warp: the
 	-- dive sync); fin = combo finisher; sig = signature overlay (gain sigW, late = played in the recovery)
 	phase: number, fin: boolean, sig: Clip?, sigW: number, late: boolean, started: number,
@@ -185,7 +183,7 @@ type State = {
 	clearT: number, -- seconds the stance weapon has been clear of the ground (see CLEAR_HOLD)
 	stanceW: number, standF: number, runF: number, airF: number, idleT: number, runT: number, airT: number,
 	act: Slot, prev: Slot, add: Slot,
-	hitStopUntil: number, blocking: boolean, dead: boolean, spawnUntil: number,
+	blocking: boolean, dead: boolean, spawnUntil: number,
 	moving: boolean, moveLockUntil: number,
 	conns: { RBXScriptConnection },
 }
@@ -260,6 +258,7 @@ local function compile(name: string, def: { [string]: any }): Clip
 		fadeOut = math.max(0.01, def.FadeOut or 0.15),
 		hit = def.Markers and def.Markers.Hit or nil,
 		dive = def.Markers and def.Markers.Dive or nil,
+		charge = def.Markers and def.Markers.Charge or nil,
 		legIK = not rawLegs,
 		rArm = tracks[C_RHAND] ~= false,
 		lArm = tracks[C_LHAND] ~= false or tracks[C_LGRIP] ~= false,
@@ -640,7 +639,7 @@ local sigJ: { Vector3 } = table.create(NJ, ZERO) -- signature joint offsets of t
 
 local function newSlot(): Slot
 	return {
-		clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false, sync = false, held = 0,
+		clip = nil, t = 0, w = 0, fade = 0.1, stopping = false, rate1 = 1, rate2 = 1, kind = "", dir = nil, frozen = false, sync = false, held = 0, holdAt = nil,
 		phase = 0, fin = false, sig = nil, sigW = 1, late = false, started = 0, lift = 0, liftH = 0,
 	}
 end
@@ -870,6 +869,7 @@ local function play(S: State, clip: Clip, rate1: number, rate2: number, kind: st
 	act.frozen = false
 	act.sync = false
 	act.held = 0
+	act.holdAt = nil
 	act.phase = 0
 	act.fin = false
 	act.sig = nil
@@ -1053,7 +1053,6 @@ local function add(character: Model, spawned: boolean)
 		act = newSlot(),
 		prev = newSlot(),
 		add = newSlot(),
-		hitStopUntil = 0,
 		blocking = false,
 		dead = false,
 		spawnUntil = if spawned then os.clock() + SPAWN_WINDOW else 0,
@@ -1136,7 +1135,7 @@ local GROUNDED: { [Enum.HumanoidStateType]: boolean } = {
 }
 
 -- air: 0 on the ground, 1 in the air and not diving, 2 diving (only computed for a synced jump attack)
-local function advance(slot: Slot, dt: number, sdt: number, air: number)
+local function advance(slot: Slot, dt: number, air: number)
 	local clip = slot.clip
 	if not clip then
 		return
@@ -1157,6 +1156,11 @@ local function advance(slot: Slot, dt: number, sdt: number, air: number)
 	end
 	local t = slot.t
 	local hit = clip.hit
+	local holdAt = slot.holdAt
+	if holdAt and t >= holdAt then
+		slot.t = holdAt
+		return
+	end
 	if hit and t < hit then
 		local rate = slot.rate1
 		local dive = clip.dive
@@ -1166,23 +1170,23 @@ local function advance(slot: Slot, dt: number, sdt: number, air: number)
 				if t >= 0.06 then
 					rate *= CATCH_UP -- landed (the first frames may still read the floor under the jump)
 				end
-				t += sdt * rate
+				t += dt * rate
 			else
 				local stop = if air == 1 then dive else hit - LAND_LEAD
-				t += sdt * rate
+				t += dt * rate
 				if slot.t <= stop and t > stop then
 					t = stop
 					slot.held += dt
 				end
 			end
 		else
-			t += sdt * rate
+			t += dt * rate
 		end
 		if t > hit then
 			t = hit + (t - hit) / rate * slot.rate2
 		end
 	else
-		t += sdt * slot.rate2
+		t += dt * slot.rate2
 	end
 	if clip.loop then
 		t %= clip.length
@@ -1487,17 +1491,15 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 	S.runF = approach(S.runF, if moving then 1 else 0, dt / RUN_FADE)
 	S.airF = approach(S.airF, if airborne then 1 else 0, dt / AIR_FADE)
 	S.stanceW = approach(S.stanceW, if S.stanceOn and allowed and not S.dead then 1 else 0, dt / STANCE_FADE)
-	-- clocks (hit-stop slows every clip of this character)
-	local sdt = if now < S.hitStopUntil then dt * HIT_STOP_SPEED else dt
 	local air = 0
 	if S.act.sync and floorAir then
 		air = if root.AssemblyLinearVelocity.Y < -DIVE_VY then 2 else 1
 	end
 	local act = S.act
 	local before, hitClip = act.t, act.clip
-	advance(act, dt, sdt, air)
-	advance(S.prev, dt, sdt, air)
-	advance(S.add, dt, sdt, 0)
+	advance(act, dt, air)
+	advance(S.prev, dt, air)
+	advance(S.add, dt, 0)
 	if hitClip and hitClip.hit and act.kind == "attack" and act.clip == hitClip and before < hitClip.hit and act.t >= hitClip.hit
 		and S.character:GetAttribute("AnimHitDebug") == true then
 		-- dev check (attribute AnimHitDebug = true): real seconds from the attack call to the frame the clip reached Hit,
@@ -1511,16 +1513,16 @@ local function step(S: State, dt: number, now: number, camPos: Vector3)
 		S.prev.clip = nil
 	end
 	local Z = S.zstyle
-	S.styleT = (S.styleT + sdt) % 3600
+	S.styleT = (S.styleT + dt) % 3600
 	local idle, run, airClip = S.idle, S.run, S.air
 	if idle then
-		S.idleT = (S.idleT + sdt * (if Z and idle.styled then Z.idleRate else 1)) % idle.length
+		S.idleT = (S.idleT + dt * (if Z and idle.styled then Z.idleRate else 1)) % idle.length
 	end
 	if run then
-		S.runT = (S.runT + sdt) % run.length
+		S.runT = (S.runT + dt) % run.length
 	end
 	if airClip then
-		S.airT = (S.airT + sdt) % airClip.length
+		S.airT = (S.airT + dt) % airClip.length
 	end
 	if (root.Position - camPos).Magnitude > RANGE then
 		return
@@ -1722,54 +1724,63 @@ Players.PlayerAdded:Connect(watchPlayer)
 -- ------------------------------------------------------------------------------------------------
 -- API (docs/COMBAT_CONTRACTS.md)
 -- ------------------------------------------------------------------------------------------------
--- The default Animate tool animation, for a category without clips yet.
-local function fallback(character: Model, category: string)
-	local tool = character:FindFirstChildOfClass("Tool")
-	if tool then
-		local shape = Combat.Shapes[category] or Combat.Shapes.Sword
-		local value = Instance.new("StringValue")
-		value.Name = "toolanim"
-		value.Value = shape.Anim or "Slash"
-		value.Parent = tool
-		Debris:AddItem(value, 0.5)
+-- The clip of a move: its own Clip, the variant's clip of the weapon style or category; own = false: the step's clip.
+local function moveClip(S: State?, category: string, step: number, variant: string?, def: { [string]: any }?): (Clip?, boolean)
+	local style = if S and S.category == category then S.style else nil
+	local suffix = if variant then VARIANTS[variant] else nil
+	local clip = if def and def.Clip then clips[def.Clip] else nil
+	if not clip and suffix and def then
+		clip = (if style then clips[style .. suffix] else nil) or clips[category .. suffix]
 	end
+	if clip then
+		return clip, true
+	end
+	return (if style then clips[`{style}_Attack{step}`] else nil) or clips[`{category}_Attack{step}`], false
 end
 
 function Animations.attack(character: Model, category: string, step: number, speed: number, aim: Vector3?, variant: string?): number
 	local S = states[character]
-	local style = if S and S.category == category then S.style else nil
-	-- jump attack / dash strike: its own clip and Impact; a category without that clip plays the step's clip
-	local kind = if typeof(variant) == "string" then VARIANTS[variant] else nil
-	local def = if kind then kind.steps[category] else nil
-	local clip = if kind and def
-		then (if style then clips[style .. kind.suffix] else nil) or clips[category .. kind.suffix]
-		else nil
-	local own = clip ~= nil
+	local known = if typeof(variant) == "string" and VARIANTS[variant] then variant else nil
+	local def = WeaponMoves.move(category, step, known)
+	local clip, own = moveClip(S, category, step, known, def)
 	if not clip then
-		clip = (if style then clips[`{style}_Attack{step}`] else nil) or clips[`{category}_Attack{step}`]
-	end
-	if not clip then
-		fallback(character, category)
 		return 0
 	end
 	local sp = if typeof(speed) == "number" and speed > 0 then speed else 1
 	if not def then
-		local combo = Combat.Combos[category]
-		def = combo and combo[step]
+		def = WeaponMoves.move(category, step)
 	end
 	local hit = clip.hit
 	local impact = (if def and typeof(def.Impact) == "number" then def.Impact else hit or 0) / sp
 	local rate1 = if hit and hit > 0 and impact > 0 then hit / impact else sp
 	local length = if hit then impact + (clip.length - hit) / sp else clip.length / sp
+	local act = if S then S.act else nil
+	if act and known == "Heavy" and act.clip == clip and act.holdAt and hit then
+		-- the release of a charged wind-up: what is left of it lands on the Impact
+		act.holdAt = nil
+		act.rate1 = if impact > 0 then math.max(0.01, hit - act.t) / impact else sp
+		return length
+	end
 	if S and S.ready and not S.dead then
 		local unit = if typeof(aim) == "Vector3" and aim.Magnitude > 1e-3 then aim.Unit else nil
 		S.aimPitch = if unit then clamp(asin(clamp(unit.Y, -1, 1)), -AIM_PITCH_MAX, AIM_PITCH_MAX) else 0
 		play(S, clip, rate1, sp, "attack")
 		S.act.sync = own and S.isLocal and variant == "Air" and clip.dive ~= nil
-		local air = kind ~= nil and variant == "Air"
-		styleSlot(S, S.act, category, air or (kind == nil and def ~= nil and def.Finisher == true), air)
+		local air = known == "Air"
+		styleSlot(S, S.act, category, air or known == "Heavy" or (known == nil and def ~= nil and def.Finisher == true), air)
 	end
 	return length
+end
+
+function Animations.charge(character: Model, category: string, speed: number)
+	local S = states[character]
+	local def = WeaponMoves.move(category, 1, "Heavy")
+	local clip = moveClip(S, category, 1, "Heavy", def)
+	if S and clip and S.ready and not S.dead then
+		local sp = if typeof(speed) == "number" and speed > 0 then speed else 1
+		play(S, clip, sp, sp, "attack")
+		S.act.holdAt = clip.charge or (clip.hit or clip.length) * CHARGE_POINT
+	end
 end
 
 function Animations.cancel(character: Model)
@@ -1777,13 +1788,6 @@ function Animations.cancel(character: Model)
 	if S then
 		stopKind(S.act, "attack", "equip", CANCEL_FADE)
 		stopKind(S.prev, "attack", "equip", CANCEL_FADE)
-	end
-end
-
-function Animations.hitStop(character: Model, seconds: number)
-	local S = states[character]
-	if S and typeof(seconds) == "number" then
-		S.hitStopUntil = math.max(S.hitStopUntil, os.clock() + seconds)
 	end
 end
 
@@ -1830,7 +1834,7 @@ function Animations.hurt(character: Model)
 	end
 end
 
--- Dev hooks (Play, Client command bar; local attributes on a character, never replicated):
+-- Filmstrip capture and other dev hooks (Play, Client command bar; local attributes on a character, never replicated):
 --   character:SetAttribute("AnimDebug", "Sword_Attack1@0.16")  holds that clip at that time ("" or nil releases);
 --                                                   "Ranged_Attack1@0.3@20" also pitches AimPitch clips by 20 deg
 --   character:SetAttribute("AnimProfile", os.clock())  -> attributes AnimCostMs (average update of ALL characters,
@@ -1859,10 +1863,10 @@ debugAttribute = function(S: State)
 		local rest = string.match(name, "^%a+_(%a+%d*)$") or ""
 		local stepIndex = tonumber(string.match(rest, "^Attack(%d+)$"))
 		local category = S.category
-		local combo = category and Combat.Combos[category]
-		local finisher = stepIndex ~= nil and combo ~= nil and combo[stepIndex] ~= nil and combo[stepIndex].Finisher == true
-		if category and (stepIndex or rest == "JumpAttack" or rest == "DashAttack") then
-			styleSlot(S, S.act, category, finisher or rest == "JumpAttack", rest == "JumpAttack")
+		local def = if category and stepIndex then WeaponMoves.move(category, stepIndex) else nil
+		local finisher = def ~= nil and def.Finisher == true
+		if category and (stepIndex or rest == "JumpAttack" or rest == "DashAttack" or rest == "Heavy") then
+			styleSlot(S, S.act, category, finisher or rest == "JumpAttack" or rest == "Heavy", rest == "JumpAttack")
 		end
 	elseif S.act.kind == "debug" then
 		S.act.clip = nil

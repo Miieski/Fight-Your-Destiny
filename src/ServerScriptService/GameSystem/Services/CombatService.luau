@@ -1,23 +1,28 @@
 --!strict
 -- Player combat (docs/enemies_npcs_pets_brief.txt Part A, DESIGN.md section 2). Server authoritative; the client
 -- only sends its inputs and shows the results.
---   Net.send("Attack", aimDir: Vector3, aimPoint: Vector3?, variant: string?)   rate = weapon HitsPerSecond x
---                                         (1 + attack speed); each attack is the next step of the category's combo
---                                         (Config/Combat Combos) chosen here; no attack while a roll is under way.
---                                         variant "Air" (jump attack, Combat.AirAttacks: checked airborne here) or
---                                         "Dash" (dash strike right after a roll, Combat.DashAttacks); refused variants
---                                         fall back to the combo
---   Net.send("Roll", dir: Vector3?)       cooldown = Stats RollCooldown, i-frames Config/Combat Roll.IFrames
---   Net.send("Block", holding: boolean)   damage x (1 - Stats Block), speed x Combat.Block.SpeedFactor, no attacks
---   CombatService:DamagePlayer(player, raw, source?) -> dealt   (enemies and bosses call this)
--- Events: "Swing" (attacker, category, step, dir, speed, aim, variant?) to the other players nearby so they see the
--- swing, "Hit" (position, damage, crit, finisher, category) to the attacker, "Impact" (position, category, crit,
--- finisher) to the others, "AirSlam" (attacker, category, position, radius, element) to the others when a jump attack
--- lands. Animations / VFX / SFX never decide damage.
--- Hits use the shapes of Config/Combat (with the combo step's overrides) at the step's impact moment.
+--   Net.send("Attack", aimDir: Vector3, aimPoint: Vector3?, variant: string?)   each attack is the next step of the
+--                                         category's combo (Config/WeaponMoves) chosen here; a move starts no sooner than
+--                                         the previous move's Duration / speed x Combat.RateTolerance; no attack during a
+--                                         roll or a block. variant "Air" (jump attack: checked airborne here), "Dash" (dash
+--                                         strike right after a roll), "Heavy" (release of a charge opened by "Charge");
+--                                         refused variants fall back to the combo
+--   Net.send("Charge", on: boolean)       the hold starts (after the running swing's impact): the server's own clock
+--                                         measures the charge, whatever the client claims
+--   Net.send("Roll", dir: Vector3?)       cooldown = Stats RollCooldown, i-frames Combat.Roll.IFrames; refused before
+--                                         the running attack's impact (a roll only cancels the recovery)
+--   Net.send("Block", holding: boolean)   damage x (1 - Stats Block x guard strength), speed x Combat.Block.SpeedFactor,
+--                                         no attacks; guard meter and perfect parry: Combat.Block
+--   CombatService:DamagePlayer(player, raw, source?) -> dealt   (enemies and bosses call this; source = the enemy state,
+--                                         a perfect parry staggers it)
+-- Events: "Swing" (attacker, category, step, dir, speed, aim, variant?) = the compact attack state, to the other players
+-- nearby: each client plays it; "Hit" (position, damage, crit, finisher, category) to the attacker, "Impact" (position,
+-- category, crit, finisher) to the others, "AirSlam" (attacker, category, position, radius, element) to the others when a
+-- jump attack lands. Animations / VFX / SFX never decide damage.
+-- Hits use the shapes of Config/WeaponMoves at the move's impact moment.
 -- Damage per hit = Stats.compute WeaponDamage (the weapon's OWN zone base x category x rarity x attributes x pets x
--- Rebirth Shop; NEVER the player's zone, rule 1B) x the step's Damage x crit (Stats CritChance, +20% with daggers;
--- x Stats CritDamage) x (1 + Boss Slayer) on bosses.
+-- Rebirth Shop; NEVER the player's zone, rule 1B) x the move's Damage x crit (Stats CritChance, +20% with daggers;
+-- x Stats CritDamage) x (1 + Boss Slayer) on bosses; finisher or heavy on a staggered enemy x GuardBreakMult.
 -- Starter weapon: a player who owns no weapon (new player, after a Rebirth wipe) gets a free Common sword of the
 -- zone they are in (Plains outside the zones).
 local HttpService = game:GetService("HttpService")
@@ -28,6 +33,7 @@ local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
 local WeaponCategories = require(ReplicatedStorage.GameSystem.Config.WeaponCategories)
+local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
@@ -38,6 +44,9 @@ local CombatService = { Priority = 5 }
 
 type PlayerState = {
 	lastAttack: number,
+	gap: number, -- the running move's Duration / speed
+	impactAt: number, -- when the running move's first hit lands
+	chargeAt: number?, -- the hold started (Net "Charge")
 	combo: number,
 	comboAt: number,
 	comboCategory: string?,
@@ -47,42 +56,25 @@ type PlayerState = {
 	rollEnd: number,
 	lastAir: number, -- the last jump attack
 	blocking: boolean,
+	blockAt: number, -- the last block press
+	parryUntil: number, -- a hit before this is a perfect parry
+	guard: number, -- meter, refilled lazily (guardAt)
+	guardAt: number,
+	blockLockUntil: number, -- the guard broke: no block before this
 	stats: { [string]: any }?,
 }
 
 local states: { [Player]: PlayerState } = {}
 local rng = Random.new()
 
--- SHAPES[category][step] = the category shape with the step's overrides (a `false` field removes a feature,
--- for example the Heavy slam on the finisher).
--- AIR_SHAPES / DASH_SHAPES[category] = the same for the jump attack and the dash strike.
-local function merged(categoryId: string, step: { [string]: any }): { [string]: any }
-	local shape = table.clone(Combat.Shapes[categoryId] or Combat.Shapes.Sword)
-	for key, value in pairs(step.Shape or {}) do
-		shape[key] = value
-	end
-	return shape
-end
-local SHAPES: { [string]: { { [string]: any } } } = {}
-for categoryId, steps in pairs(Combat.Combos) do
-	SHAPES[categoryId] = {}
-	for index, step in ipairs(steps) do
-		SHAPES[categoryId][index] = merged(categoryId, step)
-	end
-end
-local AIR_SHAPES: { [string]: { [string]: any } } = {}
-for categoryId, step in pairs(Combat.AirAttacks) do
-	AIR_SHAPES[categoryId] = merged(categoryId, step)
-end
-local DASH_SHAPES: { [string]: { [string]: any } } = {}
-for categoryId, step in pairs(Combat.DashAttacks) do
-	DASH_SHAPES[categoryId] = merged(categoryId, step)
-end
-
 local function stateOf(player: Player): PlayerState
 	local state = states[player]
 	if not state then
-		state = { lastAttack = -math.huge, combo = 0, comboAt = 0, comboCategory = nil, lastRoll = -math.huge, rollAt = -math.huge, rollUntil = 0, rollEnd = 0, lastAir = -math.huge, blocking = false, stats = nil }
+		state = {
+			lastAttack = -math.huge, gap = 0, impactAt = 0, chargeAt = nil, combo = 0, comboAt = 0, comboCategory = nil,
+			lastRoll = -math.huge, rollAt = -math.huge, rollUntil = 0, rollEnd = 0, lastAir = -math.huge,
+			blocking = false, blockAt = -math.huge, parryUntil = 0, guard = Combat.Block.GuardMax, guardAt = 0, blockLockUntil = 0, stats = nil,
+		}
 		states[player] = state
 	end
 	return state
@@ -160,7 +152,7 @@ local function visualTo(origin: Vector3): { Player }
 	return list
 end
 
-type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, knockback: any, stagger: number?, category: string, element: string? }
+type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, breaker: boolean, knockback: any, stagger: number?, category: string, element: string? }
 
 -- One hit on one enemy: crit roll, Boss Slayer, knockback, the "Hit" number for the attacker and the "Impact" for
 -- the players around.
@@ -169,6 +161,9 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 		return
 	end
 	local multiplier, bonusCrit = strike.multiplier, strike.bonusCrit
+	if strike.breaker and (enemy.staggerUntil or 0) > os.clock() then
+		multiplier *= WeaponMoves.Input.GuardBreakMult -- a finisher / heavy on a staggered enemy: the guard is broken
+	end
 	local critChance = math.min(1, (stats.CritChance or 0) + bonusCrit)
 	local crit = rng:NextNumber() < critChance
 	local damage = (if stats.WeaponDamage > 0 then stats.WeaponDamage else Combat.UnarmedDamage) * multiplier
@@ -261,9 +256,9 @@ local function firstOnRay(origin: Vector3, dir: Vector3, range: number): (any, n
 end
 
 -- The combo step of this attack: the next one, or the first after a pause / a weapon change.
-local function nextStep(state: PlayerState, categoryId: string, now: number, interval: number): number
-	local steps = Combat.Combos[categoryId] or Combat.Combos.Sword
-	if state.comboCategory ~= categoryId or now - state.comboAt > interval + Combat.ComboReset then
+local function nextStep(state: PlayerState, categoryId: string, now: number): number
+	local steps = WeaponMoves.Moves[categoryId].Steps
+	if state.comboCategory ~= categoryId or now - state.comboAt > state.gap + WeaponMoves.Input.ComboReset then
 		state.combo = 0
 	end
 	state.combo = state.combo % #steps + 1
@@ -305,50 +300,59 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	if not stats then
 		return refuse()
 	end
-	local id = if category and Combat.Combos[category.Id] then category.Id else "Sword"
+	local id = if category and WeaponMoves.Moves[category.Id] then category.Id else "Sword"
+	local moves = WeaponMoves.Moves[id]
 	local speed = 1 + (stats.AttackSpeed or 0)
-	local hitsPerSecond = (if category then category.HitsPerSecond else 1) * speed
 	local now = os.clock()
 	if now < state.rollEnd then
 		return refuse() -- attacks cannot start during a roll
 	end
-	if now - state.lastAttack < Combat.RateTolerance / hitsPerSecond then
+	local chargeAt = state.chargeAt
+	state.chargeAt = nil
+	local charged = variant == "Heavy" and moves.Heavy ~= nil and chargeAt ~= nil
+	if not charged and now - state.lastAttack < state.gap * Combat.RateTolerance then
 		return refuse() -- faster than the weapon allows
 	end
-	-- an early request (network jitter tolerance) is booked at its due time, so the long-run rate stays the weapon's
-	state.lastAttack = math.max(now, state.lastAttack + 1 / hitsPerSecond)
 	local dir = if finite(aimDir) and aimDir.Magnitude > 0.01 then flat(aimDir) else flat(root.CFrame.LookVector)
-	-- jump attack / dash strike, else the next combo step
+	-- heavy / jump attack / dash strike, else the next combo step
 	local kind: string? = nil
-	if variant == "Air" and Combat.AirAttacks[id] and now - state.lastAir >= Combat.AirAttack.MinGap and airborne(root, humanoid) then
+	if charged then
+		kind = "Heavy"
+	elseif variant == "Air" and moves.Air and now - state.lastAir >= Combat.AirAttack.MinGap and airborne(root, humanoid) then
 		kind = "Air"
-	elseif variant == "Dash" and Combat.DashAttacks[id] and now - state.rollAt <= Combat.Roll.Duration + Combat.DashAttack.Window + Combat.DashAttack.Tolerance then
+	elseif variant == "Dash" and moves.Dash and now - state.rollAt <= Combat.Roll.Duration + Combat.DashAttack.Window + Combat.DashAttack.Tolerance then
 		kind = "Dash"
 	end
-	local index: number, step: { [string]: any }, shape: { [string]: any }
+	local index: number, step: { [string]: any }
 	if kind then
 		-- the combo restarts after it
 		state.combo = 0
 		state.comboAt = now
 		state.comboCategory = id
 		index = 1
-		step = if kind == "Air" then Combat.AirAttacks[id] else Combat.DashAttacks[id]
-		shape = if kind == "Air" then AIR_SHAPES[id] else DASH_SHAPES[id]
+		step = moves[kind]
 		if kind == "Air" then
 			state.lastAir = now
 		end
 		Net.fire(player, "Combo", id, 0, true)
 	else
-		index = nextStep(state, id, now, 1 / hitsPerSecond)
-		step = Combat.Combos[id][index]
-		shape = SHAPES[id][index]
+		index = nextStep(state, id, now)
+		step = moves.Steps[index]
 		Net.fire(player, "Combo", id, index, true)
 	end
-	local impact = (step.Impact or shape.Impact) / speed
+	local shape = WeaponMoves.shape(id, step)
+	-- an early request (network jitter tolerance) is booked at its due time, so the long-run rate stays the weapon's
+	state.lastAttack = if charged then now else math.max(now, state.lastAttack + state.gap)
+	state.gap = step.Duration / speed
+	local impact = step.Impact / speed
+	state.impactAt = now + impact
+	-- the server's own measure of the hold: 0 (just started) .. 1 (full), whatever the client says
+	local charge = if charged then math.clamp((now - (chargeAt :: number)) * speed / step.MaxCharge, 0, 1) else 0
 	local strike: Strike = {
-		multiplier = step.Damage or 1,
+		multiplier = (step.Damage or 1) * (1 + (step.ChargeDamage or 0) * charge),
 		bonusCrit = shape.BonusCrit or 0,
-		finisher = step.Finisher == true or kind == "Air",
+		finisher = step.Finisher == true or kind == "Air" or kind == "Heavy",
+		breaker = step.Finisher == true or kind == "Heavy",
 		knockback = step.Knockback,
 		stagger = step.Stagger,
 		category = id,
@@ -475,12 +479,13 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 			end
 		end
 		if shape.SlamRadius then
-			-- Heavy: a small ground slam in front, with a short stagger
+			-- Heavy: a ground slam in front with a short stagger, wider the longer the hold
 			local center = from + dir * 3
+			local slamRadius = shape.SlamRadius * (1 + (step.ChargeRadius or 0) * charge)
 			for _, viewer in ipairs(visualTo(from)) do
-				Net.fire(viewer, "Burst", center, shape.SlamRadius, "Slam")
+				Net.fire(viewer, "Burst", center, slamRadius, "Slam")
 			end
-			for _, entry in ipairs(inCircle(center, shape.SlamRadius)) do
+			for _, entry in ipairs(inCircle(center, slamRadius)) do
 				local enemy = entry.enemy
 				if not hitSet[enemy] then
 					hitSet[enemy] = true
@@ -498,6 +503,28 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	end
 end
 
+-- The hold of a heavy starts (after the running swing's impact). Other players see the wind-up.
+local function charge(player: Player, on: any)
+	local state = stateOf(player)
+	state.chargeAt = nil
+	local root = rootOf(player)
+	local _, category = weaponOf(player)
+	local stats = CombatService:Stats(player)
+	local now = os.clock()
+	if on ~= true or not (root and stats and category) or state.blocking or now < state.rollEnd or now < state.impactAt - Combat.Roll.ImpactTolerance then
+		return
+	end
+	if not WeaponMoves.Moves[category.Id].Heavy then
+		return
+	end
+	state.chargeAt = now
+	for _, viewer in ipairs(visualTo(root.Position)) do
+		if viewer ~= player then
+			Net.fire(viewer, "Swing", player, category.Id, 1, flat(root.CFrame.LookVector), 1 + (stats.AttackSpeed or 0), nil, "Charge")
+		end
+	end
+end
+
 local function roll(player: Player, dir: any)
 	local root = rootOf(player)
 	local state = stateOf(player)
@@ -506,11 +533,13 @@ local function roll(player: Player, dir: any)
 		return
 	end
 	local now = os.clock()
-	local cooldown = stats.RollCooldown or 1.5
-	if now - state.lastRoll < cooldown * Combat.RateTolerance then
+	local cooldown = stats.RollCooldown or 1.2
+	if now - state.lastRoll < cooldown * Combat.RateTolerance or now < state.impactAt - Combat.Roll.ImpactTolerance then
 		return
 	end
+	state.chargeAt = nil
 	state.lastRoll = math.max(now, state.lastRoll + cooldown)
+	state.gap = 0 -- the dodge cancels the recovery: the next move may start after the roll
 	state.rollAt = now
 	state.rollUntil = now + Combat.Roll.IFrames
 	state.rollEnd = now + Combat.Roll.Duration * Combat.RateTolerance
@@ -522,15 +551,32 @@ local function roll(player: Player, dir: any)
 	end
 end
 
+-- The guard meter now: it refills while not blocking.
+local function guardOf(state: PlayerState, now: number): number
+	if not state.blocking then
+		state.guard = math.min(Combat.Block.GuardMax, state.guard + (now - state.guardAt) * Combat.Block.GuardRegen)
+	end
+	state.guardAt = now
+	return state.guard
+end
+
 local function setBlocking(player: Player, holding: any)
 	local state = stateOf(player)
 	local _, humanoid = rootOf(player)
 	local stats = CombatService:Stats(player)
 	local want = holding == true
-	if state.blocking == want then
+	local now = os.clock()
+	if state.blocking == want or (want and now < state.blockLockUntil) then
 		return
 	end
+	guardOf(state, now)
 	state.blocking = want
+	if want then
+		-- a perfect parry needs a real press: spamming the button never keeps the window open
+		state.parryUntil = if now - state.blockAt >= Combat.Block.ParryCooldown then now + Combat.Block.ParryWindow else 0
+		state.blockAt = now
+		state.chargeAt = nil
+	end
 	player:SetAttribute("Blocking", want)
 	if humanoid and stats then
 		humanoid.WalkSpeed = stats.WalkSpeed * (if want then Combat.Block.SpeedFactor else 1)
@@ -554,11 +600,43 @@ function CombatService:DamagePlayer(player: Player, raw: number, source: any?): 
 		return 0
 	end
 	local stats = CombatService:Stats(player)
+	local block = Combat.Block
+	local root = humanoid.Parent and humanoid.Parent:FindFirstChild("HumanoidRootPart")
+	local function motion(name: string)
+		if root and root:IsA("BasePart") then
+			for _, viewer in ipairs(visualTo(root.Position)) do
+				if viewer ~= player then
+					Net.fire(viewer, "Motion", player, name)
+				end
+			end
+		end
+	end
+	if state.blocking and now < state.parryUntil then
+		-- perfect parry: nothing goes through, the attacker staggers, the guard comes back
+		state.parryUntil = 0
+		state.guard = block.GuardMax
+		if source and source.def and EnemyService.Stagger then
+			EnemyService:Stagger(source, block.ParryStagger)
+		end
+		Net.fire(player, "Hurt", 0, "parry")
+		motion("Parry")
+		return 0
+	end
 	local amount = raw
 	local kind = "hit"
 	if state.blocking then
-		amount *= 1 - (if stats then stats.Block else 0.6)
+		-- each blocked hit wears the guard down: the block weakens, at 0 it breaks
+		local guard = guardOf(state, now)
+		local strength = block.MinStrength + (1 - block.MinStrength) * guard / block.GuardMax
+		amount *= 1 - (if stats then stats.Block else 0.6) * strength
 		kind = "block"
+		state.guard = guard - block.GuardPerHit
+		if state.guard <= 0 then
+			state.guard = 0
+			state.blockLockUntil = now + block.GuardBreakLock
+			setBlocking(player, false)
+			kind = "break"
+		end
 	end
 	if stats then
 		amount *= 1 - (stats.DamageReduction or 0)
@@ -566,13 +644,9 @@ function CombatService:DamagePlayer(player: Player, raw: number, source: any?): 
 	amount = math.max(1, math.floor(amount + 0.5))
 	humanoid:TakeDamage(amount)
 	Net.fire(player, "Hurt", amount, kind)
-	local root = humanoid.Parent and humanoid.Parent:FindFirstChild("HumanoidRootPart")
-	if root and root:IsA("BasePart") then
-		for _, viewer in ipairs(visualTo(root.Position)) do
-			if viewer ~= player then
-				Net.fire(viewer, "Motion", player, if kind == "block" then "BlockHit" else "Hurt")
-			end
-		end
+	motion(if kind == "hit" then "Hurt" else "BlockHit")
+	if source and source.def and source.def.Tier == "boss" and amount >= humanoid.MaxHealth * Combat.LockOn.BreakFraction then
+		Net.fire(player, "LockBreak")
 	end
 	return amount
 end
@@ -602,6 +676,7 @@ end
 
 function CombatService:Init()
 	Net.handle("Attack", attack, 0)
+	Net.handle("Charge", charge, 0.1)
 	Net.handle("Roll", roll, 0.2)
 	Net.handle("Block", setBlocking, 0)
 	-- stats change with the profile (weapon, attributes, pets, armor, upgrades, boosts)
@@ -629,6 +704,8 @@ function CombatService:Init()
 			if state then
 				state.blocking = false
 				state.rollUntil = 0
+				state.chargeAt = nil
+				state.guard = Combat.Block.GuardMax
 			end
 			player:SetAttribute("Blocking", false)
 		end)

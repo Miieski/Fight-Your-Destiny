@@ -14,9 +14,9 @@ local Net = {}
 Net.EVENTS = {
 	"Data", -- { [profileKey] = wholeValue }: patches of the player's own profile
 	"Notify", -- { Kind, Text, Icon?, Rarity? }: a toast (see GameClient/UI/Notifier)
-	"Hit", -- position, damage, isCrit, finisher, category: one of my hits landed (damage number, hit-stop, effects)
+	"Hit", -- position, damage, isCrit, finisher, category: one of my hits landed (damage number, effects)
 	"Combo", -- category, step, accepted: the server's answer to each of my attack requests (the step it ran, or its current step when it refused)
-	"Swing", -- attacker, category, step, dir, speed, aim?, variant?: another player swings (animation, trail, sound); aim = 3D aim direction; variant "Air" (jump attack) / "Dash" (dash strike)
+	"Swing", -- attacker, category, step, dir, speed, aim?, variant?: the compact attack state of another player (each client plays it: animation, trail, sound); aim = 3D aim direction; variant "Air" (jump attack) / "Dash" (dash strike) / "Charge" (hold wind-up starts) / "Heavy" (release)
 	"AirSlam", -- attacker, category, position, radius, element?: another player's jump attack hit the ground (landing shockwave)
 	"Impact", -- position, category, isCrit, finisher, element?: another player's hit landed (impact effects)
 	"OpenWindow", -- windowId, arg?: the server asks the client to open a window (hub portals -> Zones)
@@ -24,8 +24,9 @@ Net.EVENTS = {
 	"TeamInvite", -- { Id, From = userId, FromName, Seconds }: an invite to answer (TeamService)
 	"Projectile", -- origin, direction, speed, distance, style, shooter?: a shot to draw (CombatService: shooter = the player; EnemyService: nil)
 	"Burst", -- position, radius, style: an area effect to draw (Magic, slams)
-	"Motion", -- player, kind ("Roll" | "Hurt" | "BlockHit"), dir?: another player's roll / hit reaction (animation, effects, sound)
-	"Hurt", -- amount, kind ("hit" | "block" | "dodge"): damage taken by this player
+	"Motion", -- player, kind ("Roll" | "Hurt" | "BlockHit" | "Parry"), dir?: another player's roll / hit reaction (animation, effects, sound)
+	"Hurt", -- amount, kind ("hit" | "block" | "dodge" | "parry" | "break"): damage taken by this player; break = the guard broke
+	"LockBreak", -- a boss hit breaks this player's lock-on
 	"EnemyKilled", -- position, gold: this player got the kill reward (EnemyService)
 	"BossRoom", -- { Phase = "Lobby" | "Minis" | "Boss" | "Victory" | "Failed" | "Left", Seconds?, Name?, ZoneId } (BossService)
 	"BossRewards", -- { Boss, ZoneId, Items = { { Text, Icon, Rarity? } } }: this player's boss room rewards

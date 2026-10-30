@@ -10,7 +10,7 @@ local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
 local Audio = require(ReplicatedStorage.GameSystem.Config.Audio)
-local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
+local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local CombatSfx = require(ReplicatedStorage.GameSystem.Config.CombatSfx)
 local CombatStyles = require(ReplicatedStorage.GameSystem.Config.CombatStyles)
 local CombatVFX = require(ReplicatedStorage.GameSystem.Config.CombatVFX) -- read only: the zone styles' beat timing
@@ -579,16 +579,15 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 				swing = styles[style]
 			end
 		end
-		local variant = if info.Variant == "Air" or info.Variant == "Dash" then info.Variant else nil
+		local variant = if info.Variant == "Air" or info.Variant == "Dash" or info.Variant == "Heavy" then info.Variant else nil
 		local step = if typeof(info.Step) == "number" then math.max(1, math.floor(info.Step)) else 1
 		local spec: { [string]: any }? = nil
 		local def: { [string]: any }? = nil
 		if variant then
-			-- jump attack / dash strike (combat V3): its own spec (the weapon style's, else the category's), timed on
-			-- Config/Combat AirAttacks / DashAttacks
+			-- jump attack / dash strike / heavy: its own spec (the weapon style's, else the category's; a heavy without one
+			-- sounds like the finisher), timed on its Config/WeaponMoves move
 			spec = swing[variant] or entry[variant]
-			local moves = if variant == "Air" then Combat.AirAttacks else Combat.DashAttacks
-			def = moves[requested] or moves[CombatSfx.DefaultCategory]
+			def = WeaponMoves.move(requested, step, variant) or WeaponMoves.move(CombatSfx.DefaultCategory, step, variant)
 		end
 		if not spec then
 			spec = swing.Finisher
@@ -599,8 +598,7 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 		end
 		if spec then
 			if not def then
-				local combo = Combat.Combos[requested] or Combat.Combos[CombatSfx.DefaultCategory]
-				def = combo and (combo[step] or combo[1])
+				def = WeaponMoves.move(requested, step) or WeaponMoves.move(CombatSfx.DefaultCategory, 1)
 			end
 			local speed = if typeof(info.Speed) == "number" and info.Speed > 0 then info.Speed else 1
 			local impact1 = if def and typeof(def.Impact) == "number" then def.Impact else 0.15

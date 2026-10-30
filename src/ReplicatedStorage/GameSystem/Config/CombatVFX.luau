@@ -117,16 +117,18 @@ CombatVFX.ArcLook = {
 	},
 }
 
--- SWINGS per category and combo step (Config/Combat Combos). TrailOn = fraction of the time to the hit
--- (Combos[category][step].Impact / speed) when the weapon trail starts (= the end of the wind-up of the clip);
+-- SWINGS per category and combo step (Config/WeaponMoves Steps). TrailOn = fraction of the time to the hit
+-- (the step's Impact / speed) when the weapon trail starts (= the end of the wind-up of the clip);
 -- TrailOff = seconds after the hit (at speed x1, divided by the speed) when it stops; no TrailOn = no trail.
--- Effects: each timed on Hit (0 = the attack call, 1 = Combos Impact (default), 2 = Combos Hits[1]) + Delay (s at x1),
+-- Effects: each timed on Hit (0 = the attack call, 1 = Impact (default), 2 = Hits[1]) + Delay (s at x1),
 -- Kind = "Arc" (default, see ARCS) | "Lines" (speed lines: Count, Spread { x, y }, Start, Length, Width, Extend, Hold,
 -- Fade, Jitter, Solid) | "Ground" (cracks + chunks) | "Flash" (a particle burst on an anchor: muzzle flash with Counts
 -- per weapon type, or any particle asset, Emit = count multiplier) | "Charge" (Magic orb; Hand = "LeftHand");
 -- Palette = "Element" (the weapon element's color; it also tints the asset's Tint emitters) or Color = Color3 instead
 -- of the rarity palette. Magic steps: Grand = true (the bigger area burst, Magic.Grand), Hand = "LeftHand" (the bolt
 -- leaves the left hand). A melee category without an entry gets Default (trail only). A missing step uses step 1.
+-- Heavy attacks: same fields, per category; a category without an entry uses its finisher's.
+CombatVFX.HeavySwing = {} :: { [string]: { [string]: any } }
 CombatVFX.Swing = {
 	Default = { TrailOn = 0.45, TrailOff = 0.12 },
 	Sword = {
@@ -601,7 +603,7 @@ CombatVFX.Death = { Asset = "Shared_DeathDissolve", Delay = 0.45, MaxSize = 14 }
 --             JumpSkip = { [category] = true }: no jump signature (the animation's Gain 0)
 CombatVFX.ZoneTiming = {
 	-- the attack clips the signature overlays are timed on (Config/CombatAnimations, seconds at x1): finisher clip
-	-- lengths (their Hit = the Combos finisher Impact), jump attack Dive markers and lengths (Hit = AirAttacks Impact)
+	-- lengths (their Hit = the finisher's Impact), jump attack Dive markers and lengths (Hit = AirAttacks Impact)
 	FinisherLength = { Sword = 0.95, Spear = 0.95, Heavy = 1.9, Dagger = 0.38, Ranged = 0.78, Magic = 0.98 },
 	JumpDive = { Sword = 0.2, Spear = 0.22, Heavy = 0.3, Dagger = 0.17 },
 	JumpLength = { Sword = 0.85, Spear = 0.95, Heavy = 1.3, Dagger = 0.62, Ranged = 0.8, Magic = 1.0 },

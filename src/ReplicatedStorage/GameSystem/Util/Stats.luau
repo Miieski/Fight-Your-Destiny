@@ -10,6 +10,7 @@ local Boosts = require(Config.Boosts)
 local PetMutations = require(Config.PetMutations)
 local Rarities = require(Config.Rarities)
 local RebirthShop = require(Config.RebirthShop)
+local WeaponMoves = require(Config.WeaponMoves)
 local Weapons = require(Config.Weapons)
 
 local Stats = {}
@@ -43,7 +44,8 @@ function Stats.weaponDps(weaponId: string, tier: number?): number
 	if not weapon then
 		return 0
 	end
-	return Stats.weaponDamage(weaponId, tier) * Weapons.CategoryById[weapon.Category].HitsPerSecond
+	local category = Weapons.CategoryById[weapon.Category]
+	return Stats.weaponDamage(weaponId, tier) * category.HitsPerSecond * category.AvgDamage
 end
 
 -- Highest zone index the profile has unlocked (1..12): sets attribute point and respec prices.
@@ -147,7 +149,6 @@ function Stats.compute(data: Data, context: Context?): { [string]: any }
 	out.MoveSpeed = math.min(caps.MoveSpeed, per.EnduranceSpeed * rp * peff("Endurance") + pet("Speed"))
 	out.WalkSpeed = base.WalkSpeed * (1 + out.MoveSpeed)
 	out.RollCooldown = math.max(caps.RollCooldownFloor, base.RollCooldown * (1 - per.MindRoll * rp * peff("Mind")))
-	out.AttackSpeed = math.min(caps.AttackSpeed, per.DexterityAttackSpeed * rp * peff("Dexterity"))
 
 	-- offense
 	out.CritChance = math.min(caps.CritChance, base.CritChance + per.ArcaneCrit * rp * peff("Arcane"))
@@ -181,6 +182,12 @@ function Stats.compute(data: Data, context: Context?): { [string]: any }
 	-- equipped weapon (A3)
 	local item = (data.Weapons or {})[data.EquippedWeapon or ""]
 	local weapon = item and Weapons.ById[item.id]
+	-- attack speed bonus = attribute (Dexterity, Magic: Intelligence) + the weapon's rarity, capped together: animation
+	-- and server timings all divide by 1 + this
+	local moves = weapon and WeaponMoves.Moves[weapon.Category]
+	local speedAttribute = moves and moves.Speed or "Dexterity"
+	local perSpeed = if speedAttribute == "Intelligence" then per.IntelligenceCastSpeed else per.DexterityAttackSpeed
+	out.AttackSpeed = math.min(caps.AttackSpeed, perSpeed * rp * peff(speedAttribute) + (if item then WeaponMoves.RaritySpeed[item.rarity] or 0 else 0))
 	out.AttributeDamageMult = 1
 	out.WeaponDamage = 0
 	if weapon then

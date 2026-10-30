@@ -4,7 +4,6 @@
 -- TipAttachment (found by name anywhere in the Tool, never by part names), colored by rarity (Colors.weapon) and
 -- enabled only during the swing. Config Trail, with the Tool's category overrides from Config TrailByCategory.
 --   Trails.swing(tool, palette, onDelay, offDelay)   on at now + onDelay, off at now + offDelay (no trail for Common)
---   Trails.extend(character, seconds)                 a confirmed hit: keep the trail on through the hit-stop (once)
 --   Trails.finish(tool, seconds)                      a running trail stops at the latest seconds from now (the
 --                                                     end of a jump attack's dive, Dives)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -101,15 +100,6 @@ function Trails.finish(tool: Instance?, seconds: number)
 		if at < rec.endAt then
 			rec.endAt = at
 		end
-	end
-end
-
-function Trails.extend(character: Model?, seconds: number)
-	local tool = character and character:FindFirstChildOfClass("Tool")
-	local rec = tool and records[tool]
-	if rec and rec.slot ~= 0 and rec.begun and not rec.extended then
-		rec.extended = true
-		rec.endAt += seconds
 	end
 end
 

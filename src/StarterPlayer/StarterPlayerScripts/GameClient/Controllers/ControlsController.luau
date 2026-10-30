@@ -1,10 +1,11 @@
 --!strict
 -- Player inputs. Keyboard, mouse and gamepad go through ContextActionService, with the keyboard and
 -- mouse keys taken from the KeyBindings setting (Settings > Keys; gamepad buttons are fixed). Touch
--- screens get movable buttons (Attack, Roll, Block and the 3 skill slots) placed from the ButtonLayout
+-- screens get movable buttons (Attack, Roll, Block, the 3 skill slots, LockOn and LockNext) placed from the ButtonLayout
 -- setting, with an editor opened from Settings > Controls. Skill uses go to SkillController. In first person or Shift-Lock the cursor is free while a
 -- window is open (Window's Modal backdrop) or while the Free Cursor key is held.
 --   Controls.Attack:Connect(fn(holding))  Controls.Roll:Connect(fn())  Controls.Block:Connect(fn(holding))
+--   Controls.LockOn:Connect(fn())  Controls.LockNext:Connect(fn())  Controls.setHidden(id, hidden)  a touch button out of play
 --   Controls.editLayout()  Controls.capture(fn(keyName?))  Controls.keyLabel(keyName)
 local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -29,11 +30,15 @@ local Controls = { Priority = 5 }
 local attackEvent = Instance.new("BindableEvent")
 local rollEvent = Instance.new("BindableEvent")
 local blockEvent = Instance.new("BindableEvent")
+local lockEvent = Instance.new("BindableEvent")
+local lockNextEvent = Instance.new("BindableEvent")
 Controls.Attack = attackEvent.Event
 Controls.Roll = rollEvent.Event
 Controls.Block = blockEvent.Event
+Controls.LockOn = lockEvent.Event
+Controls.LockNext = lockNextEvent.Event
 
-local ICONS = { Attack = "Sword", Roll = "Speed", Block = "Defense" }
+local ICONS = { Attack = "Sword", Roll = "Speed", Block = "Defense", LockOn = "Lock", LockNext = "Arrow" }
 -- Layout editor toolbar: left part of the screen so it never covers the buttons being moved.
 local EDITOR = { Width = 560, Height = 120, MaxWidthFraction = 0.56, CenterX = 0.3, Top = 70 }
 -- Fixed gamepad buttons, bound next to the player's keyboard / mouse key.
@@ -41,6 +46,8 @@ local GAMEPAD = {
 	Attack = Enum.KeyCode.ButtonR2,
 	Roll = Enum.KeyCode.ButtonB,
 	Block = Enum.KeyCode.ButtonL2,
+	LockOn = Enum.KeyCode.ButtonR3,
+	LockNext = Enum.KeyCode.DPadRight,
 	Skill1 = Enum.KeyCode.ButtonL1,
 	Skill2 = Enum.KeyCode.ButtonR1,
 	Skill3 = Enum.KeyCode.ButtonY,
@@ -58,6 +65,7 @@ local editing = false
 local selected: string? = nil
 local keys: { [string]: string } = SettingsConfig.defaultKeys()
 local held: { [string]: boolean } = {} -- hold actions (Attack, Block) currently down
+local hidden: { [string]: boolean } = {} -- touch buttons out of play (shown in the layout editor)
 local capturing: (() -> ())? = nil -- cancels the key capture in progress
 local swallowed: { [string]: boolean } = {} -- the key that ended a capture, ignored until released
 
@@ -76,6 +84,16 @@ local function refreshVisibility()
 	for id, highlight in pairs(highlights) do
 		highlight(editing and id == selected)
 	end
+	for id, button in pairs(buttons) do
+		button.Visible = editing or not hidden[id]
+	end
+end
+
+function Controls.setHidden(id: string, value: boolean)
+	hidden[id] = value
+	if root then
+		refreshVisibility()
+	end
 end
 
 local function fire(id: string, down: boolean)
@@ -88,6 +106,10 @@ local function fire(id: string, down: boolean)
 		blockEvent:Fire(down)
 	elseif id == "Roll" and down then
 		rollEvent:Fire()
+	elseif id == "LockOn" and down then
+		lockEvent:Fire()
+	elseif id == "LockNext" and down then
+		lockNextEvent:Fire()
 	elseif SKILL_SLOT[id] and down then
 		task.spawn(SkillController.use, SKILL_SLOT[id])
 	end
@@ -274,8 +296,8 @@ local function handler(action: SettingsConfig.KeyAction)
 		end
 		local began = state == Enum.UserInputState.Begin
 		local ended = state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel
-		if id == "Attack" or id == "Block" or id == "Roll" then
-			if began and (id ~= "Roll" or not Window.isOpen()) then
+		if id == "Attack" or id == "Block" or id == "Roll" or id == "LockOn" or id == "LockNext" then
+			if began and (id == "Attack" or id == "Block" or not Window.isOpen()) then
 				fire(id, true)
 			elseif ended then
 				fire(id, false)
