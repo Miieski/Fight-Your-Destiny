@@ -56,13 +56,24 @@ local function reconcile(target: Data, defaults: Data)
 	end
 end
 
--- Weapons whose id no longer exists (the Whip & Chain category was removed on 2026-10-12) leave the inventory:
--- refunded at their zone's shop price in Gold, unequipped, and their Index entries dropped.
+-- Weapons whose id no longer exists leave the inventory: unequipped (another owned weapon is equipped; none left =
+-- CombatService gives the starter sword), their Index entries dropped. Whip & Chain (removed 2026-10-12) are refunded
+-- at their zone's shop price in Gold; Gauntlets (removed 2026-10-30, test phase) are simply discarded.
 local ZONE_BY_PREFIX: { [string]: any } = {}
 for _, zone in ipairs(Zones.List) do
 	ZONE_BY_PREFIX[string.lower(zone.Id)] = zone
 end
-local REMOVED_CATEGORY_SUFFIX = "_whip"
+local REFUNDED_SUFFIX = "_whip"
+local REMOVED_SUFFIXES = { REFUNDED_SUFFIX, "_gauntlet" }
+
+local function hasRemovedSuffix(id: string): boolean
+	for _, suffix in ipairs(REMOVED_SUFFIXES) do
+		if string.sub(id, -#suffix) == suffix then
+			return true
+		end
+	end
+	return false
+end
 
 local function migrate(profile: Data)
 	local refund, removed = 0, 0
@@ -72,7 +83,7 @@ local function migrate(profile: Data)
 			profile.Weapons[uid] = nil
 			removed += 1
 			local zone = if typeof(id) == "string" then ZONE_BY_PREFIX[string.match(id, "^(%l+)_") or ""] else nil
-			if zone then
+			if zone and typeof(id) == "string" and string.sub(id, -#REFUNDED_SUFFIX) == REFUNDED_SUFFIX then
 				refund += Weapons.price(zone.Index)
 			end
 			if profile.EquippedWeapon == uid then
@@ -81,8 +92,20 @@ local function migrate(profile: Data)
 		end
 	end
 	for id in pairs(profile.Index or {}) do
-		if typeof(id) == "string" and string.sub(id, -#REMOVED_CATEGORY_SUFFIX) == REMOVED_CATEGORY_SUFFIX then
+		if typeof(id) == "string" and hasRemovedSuffix(id) then
 			profile.Index[id] = nil
+		end
+	end
+	-- the equipped weapon was removed: the strongest owned copy takes its place
+	if removed > 0 and not profile.EquippedWeapon then
+		local bestRank = -1
+		for uid, item in pairs(profile.Weapons or {}) do
+			local weapon = Weapons.ById[item.id]
+			local rank = if weapon then (item.rarity or 1) * 100 + weapon.Zone else -1
+			if rank > bestRank then
+				bestRank = rank
+				profile.EquippedWeapon = uid
+			end
 		end
 	end
 	if refund > 0 then
@@ -92,6 +115,8 @@ local function migrate(profile: Data)
 		print(`DataService: {removed} removed weapon(s) taken out of a profile, {refund} Gold refunded`)
 	end
 end
+
+DataService.Migrate = migrate -- also the self-check entry (a fake old profile from the Server command bar)
 
 local function useMemory(reason: string)
 	if not memoryMode then

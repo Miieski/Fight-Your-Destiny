@@ -34,7 +34,7 @@ AO_SAMPLES = 24
 AO_STRENGTH = 0.55  # how much the baked AO darkens the color map (0 = none)
 POINTS_JSON = os.path.join(W.BLEND_DIR, "weapons_v2_points.json")
 TRI_MIN = 800
-TRI_BUDGET = {"Gauntlet": 5000, "Magic": 5000}
+TRI_BUDGET = {"Magic": 5000}
 DEFAULT_BUDGET = 4000
 
 _points = {}

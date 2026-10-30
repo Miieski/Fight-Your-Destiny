@@ -47,14 +47,14 @@ Never edit another owner's file. If you need a change there, write it in your re
   `Category`, `Zone`, `Rarity` (1-8) once equipped, `Uid`). `Handle` attachments: `TipAttachment` (blade tip /
   head), `BaseAttachment` (hilt), `MuzzleAttachment` (Ranged, Magic), `ImpactAttachment` (Heavy: strike point).
   Today the Tools are simple placeholder parts; the real meshes come later with the same attachment names.
-* Categories (7) and rate (`Config/WeaponCategories` HitsPerSecond -> interval between two attacks at speed x1):
-  Sword 1.0/s (1.0 s), Spear 0.9/s (1.11 s), Heavy 0.4/s (2.5 s), Dagger 2.5/s (0.4 s), Gauntlet 1.8/s (0.556 s),
+* Categories (6) and rate (`Config/WeaponCategories` HitsPerSecond -> interval between two attacks at speed x1):
+  Sword 1.0/s (1.0 s), Spear 0.9/s (1.11 s), Heavy 0.4/s (2.5 s), Dagger 2.5/s (0.4 s),
   Ranged 1.2/s (0.833 s), Magic 1.0/s (1.0 s). Attack speed bonus: `speed` = 1 + AttackSpeed (up to 1.15).
 * **Combos** (`Config/Combat` `Combos`, read it): per category, the steps in order with `Name`, `Impact` (seconds
   after the attack request when the hit lands, at speed x1), `Finisher`, `Hits` (extra impacts: Dagger double
   slash at 0.2 s), `Lunge`. Sword 4 steps (RightSlash, LeftSlash, RisingSlash, SpinSlash finisher = circle around
   the player), Spear 3 (Thrust, Thrust2, PiercingLunge), Heavy 2 (OverheadSlam with ground slam, WideSmash),
-  Dagger 5 (SlashR, SlashL, StabR, StabL, DoubleSlash), Gauntlet 3 (Jab, Cross, Uppercut x2 damage),
+  Dagger 5 (SlashR, SlashL, StabR, StabL, DoubleSlash),
   Ranged 1 (Shot), Magic 1 (Cast). The combo restarts after `Combat.ComboReset` (0.8 s) without attacking.
 * Zone elements of the first zones (trail tint): Plains Nature (green), Desert Sand (gold), Jungle Poison (lime),
   Tundra Frost (icy blue); `Config/Combat` `StyleColors` has a color per element.
@@ -158,18 +158,18 @@ pose lie on / inside the ground). Gameplay by the main agent (done, tested in Pl
   was step 3, now 4), Heavy 3 (OverheadSlam 0.45, WideSmash 0.40 (no longer the finisher), **GroundBreaker** 0.55 (new
   finisher: jumping two-handed slam, circle radius 8 + ground slam radius 9)), Ranged 3 (Shot 0.05, **QuickShot** 0.05,
   **PowerShot** 0.12 finisher, faster arrow), Magic 3 (Cast 0.30, **Cast2** 0.28, **GrandCast** 0.40 finisher, radius
-  8.5). Sword (4), Dagger (5), Gauntlet (3) unchanged.
+  8.5). Sword (4), Dagger (5) unchanged.
 * **Jump attack** `Combat.AirAttacks[category]` (variant "Air"): attack while airborne (>= 1.2 studs under the feet).
   Melee: the body hangs `Hang` s, then dives (CombatController) so the feet touch the ground exactly at `Impact`; the
   hit is a circle around the landing point (counts as a finisher). Sword PlungeStrike (Impact 0.32, Hang 0.10, r 7),
   Spear DragoonDive (0.34, 0.12, r 6.5), Heavy MeteorSmash (0.45, 0.16, r 9, stagger), Dagger ShadowDrop (0.26, 0.06,
-  r 5), Gauntlet GroundPound (0.32, 0.10, r 7.5, stagger). Ranged AirVolley (Impact 0.12, Hang 0.25: the body hovers,
+  r 5). Ranged AirVolley (Impact 0.12, Hang 0.25: the body hovers,
   3 arrows fanned 14 deg toward the nearest enemy below / the ground ahead). Magic MeteorDrop (Impact 0.40, Hang 0.30:
   hovers, a radius 9 blast at the aim point). The combo restarts after it.
 * **Dash strike** `Combat.DashAttacks[category]` (variant "Dash"): attack pressed during a roll or within 0.35 s after
   it -> a long lunge out of the roll. Sword DashSlash (Impact 0.14, lunge 6 studs over 0.16 s, line 9), Spear
   ChargeThrust (0.16, 8 over 0.18, line 13), Heavy RushingSmash (0.30, 5 over 0.20, arc 150), Dagger ShadowStep (0.10 +
-  second hit 0.18, 6 over 0.14), Gauntlet RocketPunch (0.12, 6 over 0.16, line 8), Ranged SlideShot (0.08, no lunge),
+  second hit 0.18, 6 over 0.14), Ranged SlideShot (0.08, no lunge),
   Magic BlinkBlast (0.20, a radius 6 blast around the caster). The combo restarts after it.
 
 ### 8.2 API changes (keep the old calls working)
@@ -186,7 +186,7 @@ VFX.land(ctx)       -- NEW: a melee jump attack hits the ground. ctx = { Charact
 Sfx.combat("Land", ctx)   -- NEW event, same ctx as VFX.land (Position = a 3D sound there, IsLocal = own sound)
 Sfx.combat("Swing", ctx)  -- ctx.Variant as in VFX.swing
 ```
-New clip names: `<Category>_JumpAttack`, `<Category>_DashAttack` (7 categories each), `Spear_Attack3` (Sweep, the old
+New clip names: `<Category>_JumpAttack`, `<Category>_DashAttack` (6 categories each), `Spear_Attack3` (Sweep, the old
 PiercingLunge clip becomes `Spear_Attack4`), `Heavy_Attack3`, `Ranged_Attack2..3` (+ RangedCrossbow_ / RangedGun_
 versions where the style differs), `Magic_Attack2..3`. Optional (if time allows): `<Category>_Air` (upper-body stance
 while jumping / falling, Legs "Upper"), a second hurt clip, a landing recovery.
@@ -205,7 +205,7 @@ while jumping / falling, Legs "Upper"), a second hurt clip, a landing recovery.
 
 Owner: "Create different animations according to the zone weapon. So plains weapon will have a different animation than
 the void one." Answers: **12 fighting styles** (each zone its own stance and idle, rhythm, swing size and a signature
-move on finishers and jump attacks, for all 7 categories) and **effects and sounds too**.
+move on finishers and jump attacks, for all 6 categories) and **effects and sounds too**.
 * `Config/CombatStyles.luau` (main agent, read it): one style per zone - Plains Squire (the base, unchanged), Desert
   Dune Dancer, Jungle Feral, Tundra Glacier, Swamp Hexblade, Volcano Berserker, Hell Demon, Heaven Seraph, Dead
   Revenant, Abyss Tidecaller, Mechanical Automaton, Void Voidwalker. Each entry describes Moves, Finisher, Jump, Look and

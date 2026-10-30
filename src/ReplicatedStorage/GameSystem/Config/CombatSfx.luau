@@ -47,10 +47,10 @@ CombatSfx.StackWindow = 0.05 -- one swing hitting many enemies: at most StackMax
 CombatSfx.StackMax = 2 -- within StackWindow seconds
 -- sets heard once per window (two enemies biting on the same tick, one swing critting two enemies, one slam)
 CombatSfx.StackMaxOf = {
-	Hurt = 1, BlockHit = 1, Death = 1, SwordCrit = 1, DaggerCrit = 1, GauntletCrit = 1, MagicHolyChime = 1,
+	Hurt = 1, BlockHit = 1, Death = 1, SwordCrit = 1, DaggerCrit = 1, MagicHolyChime = 1,
 	HeavySlamBoom = 1, HeavySlamDebris = 1,
 	-- combat V3: one landing at a time; the Ranged AirVolley releases 3 arrows within 0.03 s
-	HeavyLandBoom = 1, HeavyLandCrunch = 1, GauntletLandThud = 1, LandCrack = 1, LandStab = 1, LandDirt = 1,
+	HeavyLandBoom = 1, HeavyLandCrunch = 1, LandCrack = 1, LandStab = 1, LandDirt = 1,
 	MagicGrandCast = 1, BowRelease = 3, CrossbowRelease = 3, GunShot = 3, Blowgun = 3,
 } :: { [string]: number }
 CombatSfx.HitLead = 0.02 -- a whoosh peaks this long before the hit lands
@@ -192,28 +192,6 @@ CombatSfx.Sets = {
 		{ Name = "Combat_Dagger_Draw1", Peak = 0.24, Length = 0.4, Start = 0.18 },
 		{ Name = "Combat_Dagger_Draw2", Peak = 0.13, Length = 0.3, Start = 0.04 },
 	},
-	-- Gauntlet
-	GauntletSwing = { -- jab / cross punch whoosh
-		{ Name = "Combat_Gauntlet_Swing1", Peak = 0.1, Length = 0.3 },
-		{ Name = "Combat_Gauntlet_Swing2", Peak = 0.08, Length = 0.28 },
-		{ Name = "Combat_Gauntlet_Swing3", Peak = 0.1, Length = 0.28 },
-	},
-	GauntletUpper = { -- uppercut finisher whoosh
-		{ Name = "Combat_Gauntlet_Upper1", Peak = 0.18, Length = 0.37 },
-		{ Name = "Combat_Gauntlet_Upper2", Peak = 0.1, Length = 0.25 },
-	},
-	GauntletHit = {
-		{ Name = "Combat_Gauntlet_Hit1", Peak = 0.08, Length = 0.3 },
-		{ Name = "Combat_Gauntlet_Hit2", Peak = 0.06, Length = 0.35 },
-		{ Name = "Combat_Gauntlet_Hit3", Peak = 0.04, Length = 0.35 },
-	},
-	GauntletHitHeavy = { -- layered under the uppercut's impact
-		{ Name = "Combat_Gauntlet_HitHeavy1", Peak = 0.02, Length = 0.42 },
-		{ Name = "Combat_Gauntlet_HitHeavy2", Peak = 0.06, Length = 0.38 },
-	},
-	GauntletCrit = { -- a sharp crack
-		{ Name = "Combat_Gauntlet_Crit", Peak = 0.11, Length = 0.57 },
-	},
 	-- Ranged
 	BowRelease = {
 		{ Name = "Combat_Ranged_BowRelease1", Peak = 0.01, Length = 0.3 },
@@ -300,11 +278,7 @@ CombatSfx.Sets = {
 		{ Name = "Combat_Heavy_LandCrunch1", Peak = 0.13, Length = 0.55, Start = 0.04 },
 		{ Name = "Combat_Heavy_LandCrunch2", Peak = 0.19, Length = 0.5, Start = 0.08 },
 	},
-	GauntletLandThud = { -- both fists punching the ground (GroundPound)
-		{ Name = "Combat_Gauntlet_LandThud1", Peak = 0.13, Length = 0.5 },
-		{ Name = "Combat_Gauntlet_LandThud2", Peak = 0.06, Length = 0.3, Start = 0.02 },
-	},
-	LandCrack = { -- the ground cracking (GroundPound, MeteorSmash)
+	LandCrack = { -- the ground cracking (MeteorSmash)
 		{ Name = "Combat_Shared_LandCrack1", Peak = 0.15, Length = 0.6, Start = 0.12 },
 		{ Name = "Combat_Shared_LandCrack2", Peak = 0.02, Length = 0.45 },
 	},
@@ -342,10 +316,6 @@ CombatSfx.Sets = {
 	DaggerShadow = { -- the shadow puff (ShadowStep vanishing, ShadowDrop landing)
 		{ Name = "Combat_Dagger_Shadow1", Peak = 0.11, Length = 0.45 },
 		{ Name = "Combat_Dagger_Shadow2", Peak = 0.38, Length = 0.56, Start = 0.1 },
-	},
-	GauntletRocket = { -- RocketPunch thrust
-		{ Name = "Combat_Gauntlet_Rocket1", Peak = 0.19, Length = 0.9, Start = 0.1 },
-		{ Name = "Combat_Gauntlet_Rocket2", Peak = 0.23, Length = 1.0, Start = 0.12 },
 	},
 	RangedSlide = { -- SlideShot: the knee sliding on the ground
 		{ Name = "Combat_Ranged_Slide1", Peak = 0.43, Length = 0.9, Start = 0.12 },
@@ -665,35 +635,6 @@ CombatSfx.Categories = {
 		Land = { Set = "LandDirt", Pitch = 1.15, Volume = 0.85, Also = { { Set = "DaggerShadow", Pitch = 0.8, Volume = 0.7 } } },
 		Equip = { Set = "DaggerDraw" },
 	},
-	Gauntlet = {
-		Swing = {
-			Steps = {
-				{ Set = "GauntletSwing" }, -- Jab
-				{ Set = "GauntletSwing", Pitch = 0.95 }, -- Cross
-			},
-			Finisher = { Set = "GauntletUpper" }, -- Uppercut
-			-- GroundPound (hang 0.10, landing 0.32): both fists swung down
-			Air = { Set = "AirDive", Lead = 0, Also = { AIR_RISE, { Set = "GauntletUpper", Pitch = 0.85, Lead = 0.03 } } },
-			-- RocketPunch (hit 0.12): the thrust from the call, peaking just before the punch, and its whoosh
-			Dash = { Set = "GauntletRocket", Lead = 0.04, Also = { { Set = "GauntletUpper", Pitch = 0.9 } } },
-		},
-		Impact = {
-			Materials = { -- stone: Shared
-				flesh = { Set = "GauntletHit" },
-				metal = { Set = "SwordHitMetal", Pitch = 0.9, Volume = 0.8 },
-			},
-			Crit = { Set = "GauntletCrit" },
-			-- the uppercut (x2 damage): lower, louder, with a heavier punch under it
-			Finisher = { Pitch = 0.93, Volume = 1.1, Also = { { Set = "GauntletHitHeavy" } } },
-		},
-		-- GroundPound landing: a punchy thud, the ground cracking, a heavy punch, a little debris
-		Land = { Set = "GauntletLandThud", Also = {
-			{ Set = "LandCrack" },
-			{ Set = "GauntletHitHeavy", Volume = 0.6 },
-			{ Set = "HeavySlamDebris", Pitch = 1.1, Volume = 0.35 },
-		} },
-		Equip = { Set = "BlockClink", Pitch = 0.85 },
-	},
 	Ranged = {
 		Swing = {
 			-- bows: the string release at the shot (Hit 0.05 s), the arrow leaving, the bow drawn again from 0.14 s
@@ -923,7 +864,7 @@ CombatSfx.ZoneAccent = {
 	ImpactWindow = 0.1,
 	FinisherImpact = 1.25, -- impact accent level on a finisher hit
 	-- the Light layer on every Nth ordinary combo step (fast weapons less often)
-	LightEvery = { Sword = 2, Spear = 2, Heavy = 1, Dagger = 3, Gauntlet = 2, Ranged = 2, Magic = 1 } :: { [string]: number },
+	LightEvery = { Sword = 2, Spear = 2, Heavy = 1, Dagger = 3, Ranged = 2, Magic = 1 } :: { [string]: number },
 }
 
 -- Plains (Squire): the base style, no accent ("plain steel whooshes, no extra layer").

@@ -14,7 +14,6 @@ Combat.Shapes = {
 	Spear = { Kind = "Line", Length = 10, Width = 3, MaxTargets = 4, Impact = 0.18, Anim = "Lunge" },
 	Heavy = { Kind = "Arc", Angle = 90, Radius = 6, MaxTargets = 6, Impact = 0.35, Anim = "Slash", SlamRadius = 6, Stagger = 0.3 },
 	Dagger = { Kind = "Arc", Angle = 60, Radius = 4, MaxTargets = 1, Impact = 0.08, Anim = "Lunge", BonusCrit = 0.20 },
-	Gauntlet = { Kind = "Cone", Angle = 90, Radius = 5, MaxTargets = 3, Impact = 0.1, Anim = "Lunge" },
 	Ranged = { Kind = "Projectile", Speed = 120, Range = 60, MaxTargets = 1, Impact = 0.05, Anim = "Lunge" },
 	Magic = { Kind = "AoE", Range = 35, Radius = 6, MaxTargets = 20, Impact = 0.3, Anim = "Lunge" },
 }
@@ -61,7 +60,7 @@ Combat.StyleColors = {
 -- weapon's interval. Per step (times in seconds at attack speed x1; they shrink with Stats AttackSpeed):
 --   Impact    when the hit lands after the attack request (= the "Hit" marker of the step's animation)
 --   Damage    damage multiplier of the step (the average over a combo stays close to 1, so the DPS of the weapon
---             document holds; the Gauntlet keeps its x2 third hit)
+--             document holds)
 --   Hits      extra impacts of the same step (Dagger finisher double slash): { seconds after the request, ... }
 --   Finisher  the last hit: bigger effect, more knockback, longer hit-stop, cannot be cancelled by Block
 --   Shape     fields that replace the category shape for this step (Combat.Shapes)
@@ -102,11 +101,6 @@ Combat.Combos = {
 		{ Name = "StabL", Impact = 0.08, Damage = 0.9, Lunge = 1.5 },
 		{ Name = "DoubleSlash", Impact = 0.08, Hits = { 0.2 }, Damage = 0.7, Lunge = 1.5, Finisher = true, Knockback = 5 },
 	},
-	Gauntlet = {
-		{ Name = "Jab", Impact = 0.1, Damage = 1.0, Lunge = 2 },
-		{ Name = "Cross", Impact = 0.1, Damage = 1.0, Lunge = 2 },
-		{ Name = "Uppercut", Impact = 0.16, Damage = 2.0, Lunge = 2, Finisher = true, Knockback = 8 },
-	},
 	-- combat V3: three shots / casts, the third one stronger
 	Ranged = {
 		{ Name = "Shot", Impact = 0.05, Damage = 0.9, Lunge = 0 },
@@ -137,8 +131,6 @@ Combat.AirAttacks = {
 		Shape = { Kind = "Circle", Radius = 9, MaxTargets = 10, SlamRadius = false } },
 	Dagger = { Name = "ShadowDrop", Impact = 0.26, Hang = 0.06, Damage = 1.5, Lunge = 2, Knockback = 4,
 		Shape = { Kind = "Circle", Radius = 5, MaxTargets = 3 } },
-	Gauntlet = { Name = "GroundPound", Impact = 0.32, Hang = 0.1, Damage = 1.6, Lunge = 1.5, Knockback = 10, Stagger = 0.3,
-		Shape = { Kind = "Circle", Radius = 7.5, MaxTargets = 6 } },
 	Ranged = { Name = "AirVolley", Impact = 0.12, Hang = 0.25, Damage = 0.6, Lunge = 0, Shots = 3, Spread = 14 },
 	Magic = { Name = "MeteorDrop", Impact = 0.4, Hang = 0.3, Damage = 1.5, Lunge = 0, Shape = { Radius = 9 } },
 } :: { [string]: { [string]: any } }
@@ -163,8 +155,6 @@ Combat.DashAttacks = {
 		Shape = { Angle = 150, Radius = 7, SlamRadius = false } },
 	Dagger = { Name = "ShadowStep", Impact = 0.1, Hits = { 0.18 }, Damage = 0.9, Lunge = 6, LungeSeconds = 0.14, Knockback = 3,
 		Shape = { Kind = "Line", Length = 7, Width = 3, MaxTargets = 2 } },
-	Gauntlet = { Name = "RocketPunch", Impact = 0.12, Damage = 1.4, Lunge = 6, LungeSeconds = 0.16, Knockback = 10,
-		Shape = { Kind = "Line", Length = 8, Width = 3.5, MaxTargets = 3 } },
 	Ranged = { Name = "SlideShot", Impact = 0.08, Damage = 1.2, Lunge = 0 },
 	Magic = { Name = "BlinkBlast", Impact = 0.2, Damage = 1.2, Lunge = 0, Knockback = 8,
 		Shape = { Kind = "Circle", Radius = 6, MaxTargets = 10 } },

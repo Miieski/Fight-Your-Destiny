@@ -38,7 +38,7 @@ RULES
  - Icons: use the asset ids already stored for each weapon (`Config/Weapons.luau`, field `Icon`).
    If an icon is missing, use the category icon.
  - **Config modules (all numbers/ids live here):**
-     * `Config/Weapons.luau` - 84 entries: `Id, Name, Category, Zone (1..12), Icon, Element`.
+     * `Config/Weapons.luau` - 72 entries: `Id, Name, Category, Zone (1..12), Icon, Element`.
        Names come from docs/weapon_system_document.txt section 6.
      * `Config/WeaponCategories.luau` - damage multiplier, hits/sec, range, shape/special text.
      * `Config/WeaponRarities.luau` - tier, name, color, damage multiplier, zone boost, element proc,
@@ -50,7 +50,7 @@ RULES
  PART 2 - THE WEAPON SHOP (HUD -> Shop -> "Weapons" tab)
 ---------------------------------------------------------------------
 LAYOUT (wood fantasy, 3D icons)
- - **Left side: 7 category tabs** (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic),
+ - **Left side: 6 category tabs** (Sword, Spear, Heavy, Dagger, Ranged, Magic),
    each with its 3D category icon; the selected tab is highlighted. On phones the
    tabs become a horizontal scroll bar on top.
  - **Main area: a grid of 12 cards for the selected category, ordered by zone 1 -> 12.**
@@ -150,7 +150,7 @@ After the server reply, open a full-screen modal over a dimmed background:
  - Gold is deducted exactly once per purchase, never when the purchase fails; spam-clicking Buy cannot
    start two openings or double-charge; leaving mid-animation keeps the weapon.
  - Locked weapons never reveal their name/model/stats; unlocking a zone reveals them.
- - All 84 weapons appear in the right category and zone order; no missing icons (fallback used and
+ - All 72 weapons appear in the right category and zone order; no missing icons (fallback used and
    listed otherwise).
  - No errors/warnings in the Output; no per-frame allocations in the reel.
  - MORNING/FINAL REPORT (short): what is finished, what is not, decisions you took, missing models or

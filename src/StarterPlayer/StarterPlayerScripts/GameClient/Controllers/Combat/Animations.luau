@@ -754,7 +754,7 @@ end
 
 -- The held weapon in the right hand's frame (through the RightGrip weld): its axis (Handle Base -> Tip), its face
 -- (toward a Muzzle / Impact attachment beside the axis: bow arrow side, axe edge; else the Handle's front -Z:
--- crossbow top, gun side, gauntlet back of the hand) and the Handle's origin from the wrist.
+-- crossbow top, gun side) and the Handle's origin from the wrist.
 local function measureTool(S: State)
 	S.toolDirty = false
 	S.handle = nil
@@ -822,7 +822,7 @@ local function measureTool(S: State)
 	end
 	axis = axis.Unit
 	-- corners beyond the hand along the weapon's axis are on the blade's side (lifting the blade raises them); a short
-	-- weapon (gauntlet: under BLADE_MIN studs past the hand) is only lifted by the hand
+	-- weapon (under BLADE_MIN studs past the hand) is only lifted by the hand
 	local handAlong = (inHand:PointToObjectSpace(ZERO) - base.Position):Dot(axis)
 	local bladeLen = 0
 	for i = 1, 8 do

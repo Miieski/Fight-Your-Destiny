@@ -149,7 +149,7 @@ MINI-BOSS 1: Cave Troll
                   | HP 4K    | DMG 240 | COINS 1.2K| LOOT: Troll Club (Weapon, Rare)
 MINI-BOSS 2: Crystal Spider Matriarch
                   | HP 5.6K  | DMG 336 | COINS 1.68K| LOOT: Crystal Spider Egg (Egg, Rare)
-BOSS: Golem       | HP 20K   | DMG 1.4K| COINS 8K  | LOOT: Golem Core Gauntlets (Weapon, Epic)
+BOSS: Golem       | HP 20K   | DMG 1.4K| COINS 8K  | LOOT: Stone Hammer (Weapon, Epic)
 
 =====================================================================
  ZONE 2: DESERT

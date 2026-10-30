@@ -1,6 +1,6 @@
 --!strict
 -- Weapon models V2 -> the game's weapon Tools (docs/weapons_combat_brief.txt Phase 3).
--- After the owner's import of the 84 FBX (File > Import 3D, all of Blender_Exports/Weapons_ALL_import/*.fbx in one
+-- After the owner's import of the 72 FBX (File > Import 3D, all of Blender_Exports/Weapons_ALL_import/*.fbx in one
 -- queue, Scale Unit = Meters), with the imported models / MeshParts anywhere in the place (not rotated):
 --   require(game.ServerStorage.DevTools.ApplyWeaponMeshes)(searchRoot?)   -- default: the whole place
 -- For every weapon it finds the import named like its file ("01_plains_sword") or like its id ("plains_sword"),

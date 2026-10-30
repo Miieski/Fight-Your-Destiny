@@ -1,6 +1,6 @@
 =====================================================================
  FIGHT YOUR DESTINY - WEAPON MODELING BRIEF (BLENDER)
- 84 weapons: 7 categories x 12 zones, built ONE BY ONE
+ 72 weapons: 6 categories x 12 zones, built ONE BY ONE
 =====================================================================
 Weapon list, names and categories: docs/weapon_system_document.txt (section 6).
 Use the Blender connector. Do not start this task until the owner says go.
@@ -24,7 +24,7 @@ RULES
    rarity glow/aura/particles are added in Studio.
  - Strong silhouette: a player must tell the category and zone at a glance, also from far away on a
    phone screen.
- - Budget: 500-3,000 triangles per weapon (Gauntlet and Magic up to 4,000). One mesh (or very few),
+ - Budget: 500-3,000 triangles per weapon (Magic up to 4,000). One mesh (or very few),
    one material, one 512x512 or 1024x1024 texture set (color, plus metalness/roughness/normal if they
    help). Clean UVs, no overlapping islands, no n-gons on the final mesh, applied transforms, correct
    normals.
@@ -35,7 +35,7 @@ RULES
  2. SCALE, ORIGIN, ORIENTATION
 ---------------------------------------------------------------------
  - Build at real scale in meters, then plan 1 stud = 0.28 m. Approximate lengths in studs:
-   Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Gauntlet 1.8 (pair, one per hand) | Ranged 5 | Magic 6.
+   Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Ranged 5 | Magic 6.
  - Origin at the **grip center** (where the hand holds it). Blade/head direction along one fixed axis.
  - **Pilot first:** model the Plains Sword, export it, and let the owner import it into Studio and hold
    it as a Tool. Fix the axis/scale convention until it holds correctly, write the convention in
@@ -50,7 +50,7 @@ Blender/Weapons/
   weapons_manifest.csv             id, category, zone, triangles, status, notes
   Sword/      01_plains_sword.blend ... 12_void_sword.blend
   Spear/      01_plains_spear.blend ... 12_void_spear.blend
-  Heavy/      Dagger/      Gauntlet/      Ranged/      Magic/   (same pattern)
+  Heavy/      Dagger/      Ranged/      Magic/   (same pattern)
 Blender_Exports/Weapons/<Category>/<number>_<id>.fbx          (for Studio import)
 Icons/Weapons/<Category>/<number>_<id>_icon.png               (512x512, transparent)
 ```
@@ -72,7 +72,7 @@ Icons/Weapons/<Category>/<number>_<id>_icon.png               (512x512, transpar
  8. Only then start the next weapon. Never batch-generate several weapons at once.
  Within a category, build in zone order 1 -> 12 so the weapons visibly progress in craftsmanship
  and richness (the zone 12 weapon is the most elaborate).
- Order of categories: Sword (also the pilot), Spear, Heavy, Dagger, Gauntlet, Ranged, Magic.
+ Order of categories: Sword (also the pilot), Spear, Heavy, Dagger, Ranged, Magic.
  Checkpoints: after the pilot, then after every category, send the owner screenshots of the
  12 weapons together (a lineup) and wait for feedback before the next category.
 

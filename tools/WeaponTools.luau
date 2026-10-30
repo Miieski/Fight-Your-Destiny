@@ -7,7 +7,7 @@
 -- Convention (same as the Blender models): the Handle's origin is where the hand holds the weapon, the
 -- blade / head points along the Handle's +Y, its front faces -Z. The FBX export (Y up, -Z forward) maps
 -- Blender (x, y, z) to Roblox (-x, z, y)... i.e. Blender +X becomes -X: a bow string drawn on Blender -X is
--- on Roblox +X, a gauntlet's thumb on +X. Tool.Grip per category / ranged type: GRIPS below.
+-- on Roblox +X. Tool.Grip per category / ranged type: GRIPS below.
 -- Every Tool: attributes WeaponId, Category, Zone (1..12), Placeholder; TipAttachment and BaseAttachment
 -- on the Handle (+ MuzzleAttachment for Ranged and Magic, ImpactAttachment = the head's strike point for Heavy);
 -- parts unanchored, CanCollide off, Massless.
@@ -53,7 +53,7 @@ local PALETTE = {
 -- { name, shape ("Block" | "Ball" | "Cyl" = cylinder along Y | "Diamond" = block turned 45 deg around Z),
 --   size, position, color role (1 blade, 2 handle, 3 accent neon), z rotation in degrees? }
 -- Tip / Base: attachment positions; Muzzle: Ranged / Magic only; Impact: Heavy only (front face of the head). Lengths match Config/Weapons sizes
--- of the real models (Sword 4.5, Spear 8, Heavy 5, Dagger 2, Gauntlet 1.8, Ranged 5, Magic 6).
+-- of the real models (Sword 4.5, Spear 8, Heavy 5, Dagger 2, Ranged 5, Magic 6).
 local V = Vector3.new
 local SHAPES = {
 	Sword = {
@@ -98,15 +98,6 @@ local SHAPES = {
 		},
 		Tip = V(0, 1.57, 0), Base = V(0, 0.5, 0),
 	},
-	Gauntlet = { -- origin = fist center, knuckles +Y (one right-hand gauntlet, Blender/Weapons/README.txt)
-		Parts = {
-			{ "Fist", "Block", V(0.62, 0.6, 0.5), V(0, 0, 0), 1 },
-			{ "Cuff", "Cyl", V(0.58, 1.1, 0.5), V(0, -0.8, 0), 2 },
-			{ "Knuckles", "Block", V(0.66, 0.16, 0.54), V(0, 0.28, 0), 3 },
-			{ "Thumb", "Block", V(0.16, 0.36, 0.3), V(0.36, 0.02, 0), 1 },
-		},
-		Tip = V(0, 0.36, 0), Base = V(0, -0.3, 0),
-	},
 	Ranged = { -- a bow: limbs along Y, string on +X, arrows fly towards -X (like the imported bows)
 		Parts = {
 			{ "Grip", "Cyl", V(0.26, 0.8, 0.26), V(0, 0, 0), 2 },
@@ -140,11 +131,9 @@ local GRIP_TYPES = {
 	Bow = turn(Vector3.new(0, 0, 1), Vector3.new(0, 1, 0), Vector3.new(-1, 0, 0)), -- limbs up, string to the body, arrow forward
 	Gun = turn(Vector3.new(0, -1, 0), Vector3.new(0, 0, -1), Vector3.new(1, 0, 0)), -- muzzle forward, pistol grip down
 	Crossbow = turn(Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1), Vector3.new(0, -1, 0)), -- bolt forward, prod flat, trigger down
-	Fist = turn(Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1), Vector3.new(0, -1, 0)), -- knuckles forward, back of the hand up
 }
 local GRIPS: { [string]: CFrame } = { -- per category (placeholders)
 	Ranged = GRIP_TYPES.Bow,
-	Gauntlet = GRIP_TYPES.Fist,
 }
 -- Real Ranged models are bows, crossbows or guns (Blender/Weapons/README.txt): per weapon.
 local WEAPON_GRIPS: { [string]: CFrame } = {

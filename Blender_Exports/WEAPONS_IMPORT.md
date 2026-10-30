@@ -1,11 +1,11 @@
-# Weapon FBX files to import (Weapons V2, 7 categories x 12 zones = 84)
+# Weapon FBX files to import (Weapons V2, 6 categories x 12 zones = 72)
 
 Made by tools/blender/fyd_weapons2.py (convention in Blender/Weapons/README.txt), rebuilt from each icon on
-2026-10-12, all 84 re-checked against their icons on 2026-10-13 (side-by-side sheets: `Previews/Weapons/<Category>/<NN>_<id>_compare.png`). Until they are imported the
+2026-10-12, all 72 re-checked against their icons on 2026-10-13 (side-by-side sheets: `Previews/Weapons/<Category>/<NN>_<id>_compare.png`). Until they are imported the
 game uses the PLACEHOLDER Tools of `ReplicatedStorage.Assets.Weapons` (attribute Placeholder = true), so nothing
 is blocked. The old V1 files are in `BackUP_Files/old_weapon_models_2026-10-12/`.
 
-**STATUS 2026-10-13: IMPORTED AND APPLIED** (84/84 Tools on their real mesh, 68 with their glow mask). What the import
+**STATUS 2026-10-13: IMPORTED AND APPLIED** (72/72 Tools on their real mesh, 68 with their glow mask). What the import
 really gave, for the next time: one MeshPart + SurfaceAppearance per file (the `<id>_Glow` faces are merged into it:
 `DevTools.WeaponGlow` gives them back as an emissive mask, called by ApplyWeaponMeshes), and the Studio Default
 preset reads the files as centimeters (28x too big: ApplyWeaponMeshes scales them back). After a re-export of some
@@ -14,10 +14,10 @@ preset reads the files as centimeters (28x too big: ApplyWeaponMeshes scales the
 ## How to import (owner)
 
 1. Studio > **File > Import 3D**. In the file browser open `Blender_Exports/Weapons_ALL_import/` (a flat copy of the
-   84 files, not in git), press **Ctrl+A** and **Open**: the 84 files go into the importer's **import queue**.
+   72 files, not in git), press **Ctrl+A** and **Open**: the 72 files go into the importer's **import queue**.
 2. In the queue, set **Scale Unit = Meters** (preset or per file; the Iron Shortsword must come in about 4.5 studs
    long). Keep the defaults otherwise: Import Only As Model ON, Merge Meshes OFF, Insert In Workspace ON, textures on.
-   Do not rotate the imports. Click **Import** (all 84 boxes ticked) and wait until the 84 models are in the Workspace.
+   Do not rotate the imports. Click **Import** (all 72 boxes ticked) and wait until the 72 models are in the Workspace.
    If the Scale Unit was forgotten, nothing is lost: the next step scales each weapon back to its length.
 3. Tell Claude, or run in the command bar: `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)()` (or pass the
    folder: `require(game.ServerStorage.DevTools.ApplyWeaponMeshes)(workspace.ImportedWeapons)`).
@@ -29,7 +29,7 @@ preset reads the files as centimeters (28x too big: ApplyWeaponMeshes scales the
 4. Check a few weapons in Play (grip, trail from Base to Tip), delete the imported models from the Workspace, save the
    place. `require(game.ServerStorage.DevTools.WeaponTools).missing()` lists the weapons still on placeholders.
 
-(Use the 3D Importer rather than the Asset Manager's Bulk Import: its import queue takes the 84 files at once and
+(Use the 3D Importer rather than the Asset Manager's Bulk Import: its import queue takes the 72 files at once and
 shows the embedded textures in its preview before importing.)
 
 | File | Name | Category | Zone | Length (studs) | Triangles | Glow | Goes to |
@@ -82,18 +82,6 @@ shows the embedded textures in its preview before importing.)
 | `Blender_Exports/Weapons/Dagger/10_abyss_dagger.fbx` | Angler Dagger | Dagger | Abyss | 2 | 1258 | yes | ReplicatedStorage.Assets.Weapons.abyss_dagger |
 | `Blender_Exports/Weapons/Dagger/11_mechanical_dagger.fbx` | Nano Dagger | Dagger | Mechanical | 2 | 976 | yes | ReplicatedStorage.Assets.Weapons.mechanical_dagger |
 | `Blender_Exports/Weapons/Dagger/12_void_dagger.fbx` | Rift Dagger | Dagger | Void | 2 | 1186 | yes | ReplicatedStorage.Assets.Weapons.void_dagger |
-| `Blender_Exports/Weapons/Gauntlet/01_plains_gauntlet.fbx` | Leather Knuckles | Gauntlet | Plains | 1.8 | 2060 | no | ReplicatedStorage.Assets.Weapons.plains_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/02_desert_gauntlet.fbx` | Desert Wraps | Gauntlet | Desert | 1.8 | 2912 | no | ReplicatedStorage.Assets.Weapons.desert_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/03_jungle_gauntlet.fbx` | Jaguar Claws | Gauntlet | Jungle | 1.8 | 2324 | no | ReplicatedStorage.Assets.Weapons.jungle_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/04_tundra_gauntlet.fbx` | Frost Knuckles | Gauntlet | Tundra | 1.8 | 2184 | yes | ReplicatedStorage.Assets.Weapons.tundra_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/05_swamp_gauntlet.fbx` | Mud Fists | Gauntlet | Swamp | 1.8 | 2304 | yes | ReplicatedStorage.Assets.Weapons.swamp_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/06_volcano_gauntlet.fbx` | Magma Gauntlets | Gauntlet | Volcano | 1.8 | 2010 | yes | ReplicatedStorage.Assets.Weapons.volcano_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/07_hell_gauntlet.fbx` | Demon Fists | Gauntlet | Hell | 1.8 | 2236 | yes | ReplicatedStorage.Assets.Weapons.hell_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/08_heaven_gauntlet.fbx` | Angelic Gauntlets | Gauntlet | Heaven | 1.8 | 2308 | yes | ReplicatedStorage.Assets.Weapons.heaven_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/09_dead_gauntlet.fbx` | Bone Knuckles | Gauntlet | Dead | 1.8 | 2436 | yes | ReplicatedStorage.Assets.Weapons.dead_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/10_abyss_gauntlet.fbx` | Pearl Gauntlets | Gauntlet | Abyss | 1.8 | 2288 | yes | ReplicatedStorage.Assets.Weapons.abyss_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/11_mechanical_gauntlet.fbx` | Power Gauntlets | Gauntlet | Mechanical | 1.8 | 2556 | yes | ReplicatedStorage.Assets.Weapons.mechanical_gauntlet |
-| `Blender_Exports/Weapons/Gauntlet/12_void_gauntlet.fbx` | Singularity Gauntlets | Gauntlet | Void | 1.8 | 2742 | yes | ReplicatedStorage.Assets.Weapons.void_gauntlet |
 | `Blender_Exports/Weapons/Ranged/01_plains_ranged.fbx` | Hunting Bow | Ranged | Plains | 5 | 994 | no | ReplicatedStorage.Assets.Weapons.plains_ranged |
 | `Blender_Exports/Weapons/Ranged/02_desert_ranged.fbx` | Desert Recurve Bow | Ranged | Desert | 5 | 1494 | no | ReplicatedStorage.Assets.Weapons.desert_ranged |
 | `Blender_Exports/Weapons/Ranged/03_jungle_ranged.fbx` | Poison Blowgun | Ranged | Jungle | 5 | 1518 | yes | ReplicatedStorage.Assets.Weapons.jungle_ranged |

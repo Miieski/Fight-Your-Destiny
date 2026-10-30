@@ -1,7 +1,7 @@
 --!strict
 -- Owner tools V2 (DESIGN.md section 13; owner 2026-10-13: "I want to test every possibility in game"). 8 tabs:
 --   Resources  Gold, Diamonds, Rebirth Credits, boss keys, boosts, game passes
---   Weapons    give any weapon (zone x category x rarity), a zone's 7, all 84; shop: next rarity, pity, reset
+--   Weapons    give any weapon (zone x category x rarity), a zone's 6, all 72; shop: next rarity, pity, reset
 --   Armor      give a piece / a set (zone x slot x rarity x count), every set, clear
 --   Pets       give any pet (zone / premium x species x rarity x mutation x size x items), a zone's pets, eggs,
 --              new items for every pet, clear, extra slots, egg simulation
@@ -320,7 +320,7 @@ local function weaponsPage(page: Instance)
 	button(give, "Give 1", "go", function() send("giveWeapon", weaponId(), rarity.get()) end)
 	button(give, "Give 5", "go", function() repeatSend(5, "giveWeapon", weaponId(), rarity.get()) end)
 	button(give, "Zone's 7 weapons", "primary", function() send("giveWeapons", zone.get(), rarity.get()) end)
-	button(give, "All 84 weapons", "primary", function() send("giveWeapons", "All", rarity.get()) end)
+	button(give, "All 72 weapons", "primary", function() send("giveWeapons", "All", rarity.get()) end)
 	button(give, "Every rarity (8)", "primary", function()
 		task.spawn(function()
 			for tier = 1, #Rarities.List do
@@ -704,7 +704,7 @@ local function testsPage(page: Instance)
 	local notes = section(page, "Notifications")
 	local tests = {
 		{ "Loot: Rare", { "loot", "Obtained Rare Wolf Pup Egg", 3 } },
-		{ "Loot: Legendary", { "loot", "Obtained Legendary Golem Core Gauntlets", 5 } },
+		{ "Loot: Legendary", { "loot", "Obtained Legendary Stone Hammer", 5 } },
 		{ "Loot: Divine", { "loot", "Obtained Divine Supreme Angel's Halo", 7 } },
 		{ "Loot: Secret", { "loot", "Obtained Secret Void Dragon Egg", 8 } },
 		{ "Reward", { "reward", "Daily reward claimed: +500 Gold" } },

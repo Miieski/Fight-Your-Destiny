@@ -27,7 +27,7 @@ RULES
 ---------------------------------------------------------------------
  PHASE 1 - DELETE THE WHIP & CHAIN CATEGORY (do first)
 ---------------------------------------------------------------------
-Weapon categories become 7 (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic) = **84 weapons**.
+Weapon categories become 6 (Sword, Spear, Heavy, Dagger, Ranged, Magic) = **72 weapons**.
 Remove EVERYTHING related to Whip & Chain, then verify with a project-wide search for "Whip", "whip" and
 "Chain" (ignore unrelated words):
  - Blender: `Blender/Weapons/Whip/` (.blend files), `Blender_Exports/Weapons/Whip/` (.fbx), `Icons/Weapons/Whip/`
@@ -71,14 +71,14 @@ The current weapon models are replaced. The reference for each new model is **it
    After modeling, render the new model from the icon's camera angle and compare it with the icon side by side; iterate until it is
    faithful (shape, proportions, color palette, emissive parts).
  - Style: between low-poly and realistic (faceted, clean bevels), per docs/weapon_modeling_brief.txt. Budget 800-4,000 triangles
-   (up to 5,000 for Magic and Gauntlet). One mesh, one material/texture set (1024 max), emissive parts separated, clean UVs,
+   (up to 5,000 for Magic). One mesh, one material/texture set (1024 max), emissive parts separated, clean UVs,
    transforms applied, origin at the grip center, same axis/scale convention as Blender/Weapons/README.txt (keep it, do not change it).
  - Keep the same file names and structure so nothing else breaks:
    `Blender/Weapons/<Category>/<NN>_<id>.blend` (source of truth, overwritten after the backup) and
    **`Blender_Exports/Weapons/<Category>/<NN>_<id>.fbx` replaced with the new model**
    (the owner's path: `Roblox Project\Fight Your Destiny\Blender_Exports\Weapons`).
  - Build ONE weapon at a time and check it yourself with screenshots before the next one. Category order: Sword, Spear, Heavy, Dagger,
-   Gauntlet, Ranged, Magic; zones 1 -> 12 inside a category. After each category save a lineup image in `Previews/Weapons/` and push.
+   Ranged, Magic; zones 1 -> 12 inside a category. After each category save a lineup image in `Previews/Weapons/` and push.
  - Update `weapons_manifest.csv` (triangles, status "v2"). Do not change the icons unless a model reveals a real mistake in an icon
    (then note it in NIGHT_LOG.md and ask the owner in the final report).
  - **Studio side:** the owner re-imports the FBX files (Asset Manager -> Bulk Import). Prepare a Luau helper
@@ -126,7 +126,6 @@ and a reviewer sub-agent checks everything at the end (feel, performance, server
  | Spear | 3 hits: thrust, thrust, long lunging thrust that pierces | long reach, forward lunges |
  | Heavy | 2 hits: overhead slam with ground shockwave, wide horizontal smash | slow, heavy, big hit-stop and shake |
  | Dagger | 5 fast hits alternating hands, finisher double-slash | very fast, tiny lunges, crit sparks |
- | Gauntlet | 3 hits: jab, cross, uppercut/ground pound (3rd hit x2 damage) | punchy, rhythmic |
  | Ranged | one shot per click: bow draw and release or gun fire with recoil, quick aim stance | precise, no combo, short recovery |
  | Magic | one cast per click: staff raise, cast circle, release (projectile or area) | readable casting pose |
  - Pipeline: first run a **pilot** with the Sword combo end to end (animation + trail + sound + hit-stop), validate the feel, and then do the other
@@ -139,7 +138,7 @@ and a reviewer sub-agent checks everything at the end (feel, performance, server
 
 4C. VFX (inspired by the Blox Fruits feel but original)
  - Per category: **slash arcs** (Sword/Dagger: crescent meshes + Trails from `TipAttachment`), **thrust lines and a pierce streak** (Spear), **ground cracks and
-   shockwave rings with debris** (Heavy), **impact bursts and fist shockwaves** (Gauntlet), **muzzle flash, arrow/bullet trails, impact sparks** (Ranged),
+   shockwave rings with debris** (Heavy), **muzzle flash, arrow/bullet trails, impact sparks** (Ranged),
    **cast circle, charged orb, projectile with trail, area burst** (Magic).
  - Shared: hit sparks (flash + a few shards), crit burst, block spark and shield flash, roll dust and afterimage, enemy hit flash, death dissolve,
    damage-number style, weapon trail color by **rarity** (Common none, Uncommon green ... Secret rainbow), subtle zone-element tint of the trail
@@ -149,7 +148,7 @@ and a reviewer sub-agent checks everything at the end (feel, performance, server
 
 4D. SFX
  - Per category: swing whoosh (3 pitch variants per hit of the combo), finisher whoosh, impact on flesh/metal/stone (3 variants each), crit sting,
-   Heavy slam boom, Dagger quick slashes, Gauntlet punches, bow draw/release and gun shot, magic charge/cast/explosion.
+   Heavy slam boom, Dagger quick slashes, bow draw/release and gun shot, magic charge/cast/explosion.
  - Shared: roll whoosh, block clang, block break, hurt, death, level of rarity chime reuse, UI unaffected.
  - Use free, public audio from the Toolbox (sanitize and verify each plays; Roblox restricts private audio), pitch variation +-5%, never repeat the same
    variant twice in a row, route all sounds through the existing SoundGroups (PlayerFX volume), and cap simultaneous sounds. List any missing sounds

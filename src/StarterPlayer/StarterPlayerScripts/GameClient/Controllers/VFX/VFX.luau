@@ -27,7 +27,7 @@
 --   anchors (Anchors: root, feet, hand, Tool Tip / Muzzle / Impact attachments) read at their start, so they follow
 --   the animation's pose at the hit. Magic casts are remembered (Casts) so the area burst follows the release.
 -- Land (Config Land[category]): the landing shockwave of a melee jump attack at the ground point, sized by the hit
--- radius: flat rings, flash, dust (ground colored), debris, cracks (Heavy, Gauntlet), Spear spike, Dagger shadow.
+-- radius: flat rings, flash, dust (ground colored), debris, cracks (Heavy), Spear spike, Dagger shadow.
 -- Impact: sparks on the enemy's body toward the camera (crit burst, finisher beam ring, Dagger crit cross); a
 -- confirmed local hit keeps the trail on through the hit-stop. Shot: Shots (arrow / bolt / bullet / orb by the
 -- shooter's weapon). Burst: "Slam" = Heavy shockwave ring + dust ring, "Enemy" = disc, an element / "Arcane" = Magic

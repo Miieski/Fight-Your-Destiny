@@ -5,7 +5,7 @@ then the design documents in `docs/`:
 - `docs/enemy_database.txt` - stats, rewards, loot and diamonds (source of truth for numbers)
 - `docs/zone_design_document.txt` - look and layout of every zone
 - `docs/boss_patterns_document.txt` - boss attack patterns, tools and workflow
-- `docs/weapon_system_document.txt` - 84 weapons, rarity, zone damage scaling, zone boost, shop
+- `docs/weapon_system_document.txt` - 72 weapons, rarity, zone damage scaling, zone boost, shop
 
 ## 1. What this is
 
@@ -32,8 +32,8 @@ an NPC combat game with a zone-progression and rebirth loop.
   trophy). Drop chance: 2% normal enemies (identical for all), 4% mini-bosses, 6% bosses.
   8 rarity tiers: Common, Uncommon, Rare, Epic, Legendary, Mythic, Divine, Secret.
   Stronger enemy = rarer loot (see section 1 of `enemy_database.txt` for the exact rule).
-* **Weapons:** 7 categories (Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic) x 12 zones
-  = 84 weapons (the Whip & Chain category was removed on 2026-10-12). Each weapon belongs to a zone; damage = zone base x category x
+* **Weapons:** 6 categories (Sword, Spear, Heavy, Dagger, Ranged, Magic) x 12 zones
+  = 72 weapons (Whip & Chain removed on 2026-10-12, the fist category on 2026-10-30). Each weapon belongs to a zone; damage = zone base x category x
   rarity, plus a Zone Boost when used in its home zone. Bought in the shop with a RANDOM rarity.
 * **Rebirth (superseded - see DESIGN.md section 4):** resets Gold, weapons, armor, stats, eggs
   and pets, keeps diamonds and boss keys (old text follows),
@@ -558,12 +558,12 @@ fixes per category in `docs/NIGHT_LOG.md`, one row per weapon in `Blender/Weapon
   `Blender/Weapons/<Cat>/<NN>_<id>.blend`, exports `Blender_Exports/Weapons/<Cat>/<NN>_<id>.fbx`
   (Y up, textures embedded) and updates the manifest. `lineup(category)` makes `Previews/Weapons/<Cat>_lineup.png`.
 * Builders: one module per category, `fyd_weapon_swords.py`, `fyd_weapon_spears.py`, `fyd_weapon_heavy.py`,
-  `fyd_weapon_daggers.py`, `fyd_weapon_gauntlets.py`, `fyd_weapon_ranged.py`,
+  `fyd_weapon_daggers.py`, `fyd_weapon_ranged.py`,
   `fyd_weapon_magic.py` (the Whip builder was deleted with the category)
   (`BUILDERS[zone_index - 1]`), shared parts in `fyd_weapon_parts.py`. Convention in `Blender/Weapons/README.txt`.
 * Icons uploaded; ids in `Config/Weapons.luau` between `-- ICONS BEGIN` / `-- ICONS END`
   (`Weapons.ById[id].Icon`). `tools/weapon_icon_table.py` prints the table from `Icons/asset_ids.json`.
-* Per-type conventions (gauntlet = one right-hand piece, ranged bow/crossbow/gun)
+* Per-type conventions (ranged bow/crossbow/gun)
   are in `Blender/Weapons/README.txt`. Lineups: `Previews/Weapons/<Category>_lineup.png`.
 * **2026-10-12: WEAPONS V2** - the 84 models were rebuilt from their icons (`tools/blender/fyd_weapons2.py`,
   `fyd_w2_parts.py`, builders `fyd_w2_<category>.py`, runner `run_weapons2.py`; compare sheets
@@ -621,7 +621,7 @@ What was built (all in `src/`, mirrored from Studio):
   `Net.request("Admin", cmd, ...)` (setGold, addGold, setDiamonds, addDiamonds, notify, setZone,
   unlockAll, equipWeaponFake, equipArmorFake, equipPetFake, clearEquipment, damageSelf, heal, setBadge).
   `RewardService` is a stub (`RedeemCode` -> "Codes are not available yet").
-* **New configs:** `Config/Rarities, Weapons (84), Economy, Products, Settings, Profile, Audio, UI`.
+* **New configs:** `Config/Rarities, Weapons (72), Economy, Products, Settings, Profile, Audio, UI`.
 * **UI Kit** (`GameClient/UI/Kit/`): Theme (colors, fonts, screen scaling), Panel, Button, IconButton,
   Bar, Slot, Tabs, Slider, Toggle, Badge, Toast, Window, Icons (placeholder shapes; put image ids in
   `Icons.Assets`), Screens.

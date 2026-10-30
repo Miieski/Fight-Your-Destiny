@@ -134,7 +134,7 @@ Settings K. Mouse buttons only for Attack, Block and Roll. Keys Roblox or the ga
 Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 
 ### Attack rules
-* **Melee categories** (Sword, Spear, Heavy, Dagger, Gauntlet): **hold** the
+* **Melee categories** (Sword, Spear, Heavy, Dagger): **hold** the
   attack input to attack continuously at the weapon's attack speed.
 * **Ranged and Magic categories**: **one press = one shot** (click/tap). Holding does not
   auto-fire (unless the player owns the Auto-Attack pass).
@@ -142,12 +142,12 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
   enemy in range (melee) or fires at the nearest enemy (ranged/magic). Toggle button on the HUD.
 * Weapon stats (damage, hits per second, range, shape) come from `docs/weapon_system_document.txt`.
 * **Combos** (`Config/Combat` Combos): each attack is the next step of the category's combo (Sword 4, Spear 4, Heavy 3,
-  Dagger 5, Gauntlet 3, Ranged 3, Magic 3 steps; the last one is a finisher). The average damage over a combo stays
-  about x1 (the Gauntlet keeps its x2 third hit). The combo restarts after 0.8 s without attacking.
+  Dagger 5, Ranged 3, Magic 3 steps; the last one is a finisher). The average damage over a combo stays
+  about x1. The combo restarts after 0.8 s without attacking.
 * **Jump attack** (combat V3, owner 2026-10-14: "a special animation when the character jump+attack"): attacking in the
   air (feet at least 1.2 studs above the ground) is the category's jump attack. Melee weapons hang a moment at the top,
   then dive so the body lands exactly at the hit: a shockwave circle around the landing point (Sword r 7, Spear 6.5,
-  Heavy 9, Dagger 5, Gauntlet 7.5; x1.3 to x1.6 damage, knockback, stagger for Heavy / Gauntlet), counted as a finisher.
+  Heavy 9, Dagger 5; x1.3 to x1.6 damage, knockback, stagger for Heavy), counted as a finisher.
   Ranged: the body hovers and fires 3 arrows down at the nearest enemy (x0.6 each). Magic: hovers and drops a radius 9
   blast (x1.5). One jump attack per jump; the combo restarts after it. The server checks the player is airborne.
 * **Dash strike** (Iron Soul style): an attack pressed during a roll or within 0.35 s after it is a long lunge out of
@@ -387,7 +387,7 @@ redone after a Rebirth has its sub-zone prices reset.
 * A pet follows the player visually (no collision, light on performance: max 3 followers).
 
 ## 6. Weapons (reference)
-Full rules in `docs/weapon_system_document.txt`: 7 categories x 12 zones = 84 weapons, random
+Full rules in `docs/weapon_system_document.txt`: 6 categories x 12 zones = 72 weapons, random
 rarity on purchase, damage = zone base x category x rarity, Zone Boost in the home zone.
 Changes for this design:
 * Weapons are bought with **Gold** at the hub weapon shop.
@@ -608,7 +608,7 @@ ReplicatedStorage.Assets
 Mechanical, Void`. Sub-zone `<ZoneId>_1.._4`. Weapons `<zoneId lower>_<category>` (for example
 `plains_sword`, `void_magic`). Armor `<zoneId lower>_<helmet|chest|legs>`. Rarities (1..8):
 `Common, Uncommon, Rare, Epic, Legendary, Mythic, Divine, Secret`. Stats `MaxHP, Attack, Defense,
-Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet, Ranged, Magic` (Whip & Chain removed on 2026-10-12).
+Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Ranged, Magic` (Whip & Chain removed on 2026-10-12, the fist category on 2026-10-30).
 
 ## 13. Admin panel (owner only)
 
@@ -659,7 +659,7 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Gauntlet
 
 * **Batches of 3 zones.** Batch 1: Hub + Plains, Desert, Jungle. Batch 2: Tundra, Swamp, Volcano.
   Batch 3: Hell, Heaven, Dead. Batch 4: Abyss, Mechanical, Void.
-* **All 84 weapons and 36 armor pieces are built from the start** (config + models). Items of
+* **All 72 weapons and 36 armor pieces are built from the start** (config + models). Items of
   zones that are not released yet stay hidden from shops/loot until their batch ships.
 * The full loop (kill -> unlock -> boss -> key -> Rebirth -> redo -> next zone) must work on
   Plains before building anything else.

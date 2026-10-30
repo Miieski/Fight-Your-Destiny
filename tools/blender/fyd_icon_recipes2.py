@@ -258,19 +258,6 @@ def Dagger():
     sword(parent=root, length=1.9, width=0.42, tip=0.35, blade=M("SteelBright", "#E4EBF2", metal=0.75, rough=0.2, coat=0.7))
 
 
-def Gauntlet():
-    root = I.empty("Fist", rot=(0, 25, 8))
-    S = steel()
-    I.cyl(0.48, 0.75, steel_dark(), segs=28, loc=(0, 0, -0.75), parent=root)
-    I.torus(0.5, 0.07, gold(), rsegs=8, loc=(0, 0, -0.42), parent=root)
-    I.box(0.95, 0.75, 0.85, S, loc=(0, 0, 0.05), bevel=0.2, parent=root)
-    for i in range(4):
-        x = -0.33 + 0.22 * i
-        I.box(0.2, 0.36, 0.3, S, loc=(x, -0.42, 0.28), bevel=0.07, parent=root)
-        I.sphere(0.07, gold(), loc=(x, -0.6, 0.33), parent=root)
-    I.box(0.25, 0.4, 0.5, S, loc=(0.55, -0.15, -0.05), rot=(0, -25, 0), bevel=0.08, parent=root)
-
-
 def Ranged():
     W = wood()
     I.torus(1.2, 0.09, W, arc=140, start=110, rsegs=12, loc=(0.55, 0, 0), rot=(90, 0, 0))
@@ -349,7 +336,7 @@ RECIPES = {
     "Stats": {"MaxHP": MaxHP, "Attack": Attack, "Defense": Defense, "Speed": Speed, "Crit": Crit, "GoldGain": GoldGain},
     "Items": {"Weapon": Weapon, "Helmet": Helmet, "Chest": Chest, "Legs": Legs, "Egg": Egg, "Trophy": Trophy,
               "Pet": Pet},
-    "Categories": {"Sword": Sword, "Spear": Spear, "Heavy": Heavy, "Dagger": Dagger, "Gauntlet": Gauntlet,
+    "Categories": {"Sword": Sword, "Spear": Spear, "Heavy": Heavy, "Dagger": Dagger,
                    "Ranged": Ranged, "Magic": Magic},
     "Marks": {"Lock": Lock, "Check": Check, "Arrow": Arrow, "Plus": Plus, "Close": Close, "Star": Star},
 }

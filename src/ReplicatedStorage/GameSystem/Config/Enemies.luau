@@ -228,7 +228,7 @@ local LOOKS: { [string]: { any } } = {
 	plains_miner_skeleton = { "Biped", 5.5, rgb(232, 226, 206), rgb(232, 182, 42), "Miner's Pickaxe", "Weapon" },
 	plains_cave_troll = { "Biped", 10, rgb(112, 132, 112), rgb(152, 122, 92), "Troll Club", "Weapon", { Bulky = true } },
 	plains_crystal_spider_matriarch = { "Arachnid", 9, rgb(62, 52, 72), rgb(60, 222, 210), "Crystal Spider Egg", "Egg", { Eyes = rgb(80, 255, 240) } },
-	plains_golem = { "Golem", 18, rgb(122, 92, 72), rgb(92, 162, 62), "Golem Core Gauntlets", "Weapon", { Eyes = rgb(90, 255, 120) } },
+	plains_golem = { "Golem", 18, rgb(122, 92, 72), rgb(92, 162, 62), "Stone Hammer", "Weapon", { Eyes = rgb(90, 255, 120) } },
 
 	desert_scorpion = { "Arachnid", 3.5, rgb(212, 172, 102), rgb(122, 82, 42), "Scorpion Stinger", "Weapon" },
 	desert_sand_snake = { "Serpent", 6, rgb(226, 196, 112), rgb(92, 72, 42), "Sand Snake Egg", "Egg" },

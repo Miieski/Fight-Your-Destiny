@@ -1,13 +1,13 @@
 =====================================================================
  FIGHT YOUR DESTINY - WEAPON SYSTEM DOCUMENT
- 7 categories x 12 weapons = 84 weapons (one per category per zone)
+ 6 categories x 12 weapons = 72 weapons (one per category per zone)
 =====================================================================
 
 ---------------------------------------------------------------------
  1. CORE RULES
 ---------------------------------------------------------------------
 - There are 7 weapon categories. Each category has exactly 12 weapons,
-  one for each zone. So every zone has 7 weapons of its own (84 total).
+  one for each zone. So every zone has 6 weapons of its own (72 total).
 - Every weapon belongs to ONE zone. A weapon's zone sets its base
   damage, so a Legendary weapon from the Void is far stronger than a
   Legendary weapon from the Plains.
@@ -44,15 +44,13 @@ the difference is in HOW they play (reach, area, speed, safety).
    |                   |          |          |       | slam and a short stagger.
  4 | Dagger            |   0.4    |   2.5    |   4   | Very fast. +20% crit chance
    |                   |          |          |       | (crit = x2 damage).
- 5 | Gauntlet (fists)  |   0.6    |   1.8    |   5   | 3-hit combo; the 3rd hit
-   |                   |          |          |       | does x2 damage.
- 6 | Ranged (bow/gun)  |   0.8    |   1.2    |  60   | Safe, single target
+ 5 | Ranged (bow/gun)  |   0.8    |   1.2    |  60   | Safe, single target
    |                   |          |          |       | projectile.
- 7 | Magic (staff)     |   0.8    |   1.0    |  35   | Area damage in a small radius
+ 6 | Magic (staff)     |   0.8    |   1.0    |  35   | Area damage in a small radius
    |                   |          |          |       | around the target.
 
 Approximate DPS per hit-rate (Common, relative to Sword = 10 in zone 1):
-    Sword 10 | Spear 10.8 | Heavy 10 | Dagger 10 (+crits) | Gauntlet 10.8
+    Sword 10 | Spear 10.8 | Heavy 10 | Dagger 10 (+crits)
     Ranged 9.6 | Magic 8 (but area)
 
 Ranged and Magic have slightly lower single-target DPS because they are
@@ -158,22 +156,22 @@ Damage shown is for a COMMON weapon. Multiply by the rarity multiplier
 (section 3) and apply the Zone Boost when in the home zone.
 
 Reference table for a zone's base damage:
-    Zone | Sword | Spear | Heavy | Dagger | Gauntlet | Ranged | Magic
-    -----+-------+-------+-------+--------+----------+--------+-------
-     1   |  10   |  12   |  25   |   4    |    6     |   8    |   8
-     2   | 100   | 120   | 250   |  40    |   60     |  80    |  80
-     3   |  1K   | 1.2K  | 2.5K  | 400    |  600     | 800    | 800
-     4   | 10K   | 12K   | 25K   |  4K    |   6K     |  8K    |  8K
-     5   |100K   |120K   |250K   | 40K    |  60K     | 80K    | 80K
-     6   |  1M   | 1.2M  | 2.5M  | 400K   | 600K     | 800K   | 800K
-     7   | 10M   | 12M   | 25M   |  4M    |   6M     |  8M    |  8M
-     8   |100M   |120M   |250M   | 40M    |  60M     | 80M    | 80M
-     9   |  1B   | 1.2B  | 2.5B  | 400M   | 600M     | 800M   | 800M
-    10   | 10B   | 12B   | 25B   |  4B    |   6B     |  8B    |  8B
-    11   |100B   |120B   |250B   | 40B    |  60B     | 80B    | 80B
-    12   |  1T   | 1.2T  | 2.5T  | 400B   | 600B     | 800B   | 800B
+    Zone | Sword | Spear | Heavy | Dagger | Ranged | Magic
+    -----+-------+-------+-------+--------+--------+-------
+     1   |  10   |  12   |  25   |   4    |   8    |   8
+     2   | 100   | 120   | 250   |  40    |  80    |  80
+     3   |  1K   | 1.2K  | 2.5K  | 400    | 800    | 800
+     4   | 10K   | 12K   | 25K   |  4K    |  8K    |  8K
+     5   |100K   |120K   |250K   | 40K    | 80K    | 80K
+     6   |  1M   | 1.2M  | 2.5M  | 400K   | 800K   | 800K
+     7   | 10M   | 12M   | 25M   |  4M    |  8M    |  8M
+     8   |100M   |120M   |250M   | 40M    | 80M    | 80M
+     9   |  1B   | 1.2B  | 2.5B  | 400M   | 800M   | 800M
+    10   | 10B   | 12B   | 25B   |  4B    |  8B    |  8B
+    11   |100B   |120B   |250B   | 40B    | 80B    | 80B
+    12   |  1T   | 1.2T  | 2.5T  | 400B   | 800B   | 800B
 
-Names (category order: Sword, Spear, Heavy, Dagger, Gauntlet, Ranged,
+Names (category order: Sword, Spear, Heavy, Dagger, Ranged,
 Magic):
 
 ZONE 1 - PLAINS (element: Nature)
@@ -181,7 +179,6 @@ ZONE 1 - PLAINS (element: Nature)
   Spear      | Hunter's Spear
   Heavy      | Stone Hammer
   Dagger     | Hunter's Knife
-  Gauntlet   | Leather Knuckles
   Ranged     | Hunting Bow
   Magic      | Apprentice Staff
 
@@ -190,7 +187,6 @@ ZONE 2 - DESERT (element: Sand)
   Spear      | Nomad Pike
   Heavy      | Obelisk Hammer
   Dagger     | Scorpion Dagger
-  Gauntlet   | Desert Wraps
   Ranged     | Desert Recurve Bow
   Magic      | Sandstorm Staff
 
@@ -199,7 +195,6 @@ ZONE 3 - JUNGLE (element: Poison)
   Spear      | Tribal Spear
   Heavy      | Totem Club
   Dagger     | Venom Fang
-  Gauntlet   | Jaguar Claws
   Ranged     | Poison Blowgun
   Magic      | Shaman Totem Staff
 
@@ -208,7 +203,6 @@ ZONE 4 - TUNDRA (element: Frost)
   Spear      | Icicle Lance
   Heavy      | Glacier Axe
   Dagger     | Ice Shard Dagger
-  Gauntlet   | Frost Knuckles
   Ranged     | Frostbite Crossbow
   Magic      | Blizzard Staff
 
@@ -217,7 +211,6 @@ ZONE 5 - CURSED SWAMP (element: Curse)
   Spear      | Witch Hunter Spear
   Heavy      | Swamp Maul
   Dagger     | Toad Tooth Dagger
-  Gauntlet   | Mud Fists
   Ranged     | Plague Bow
   Magic      | Cauldron Staff
 
@@ -226,7 +219,6 @@ ZONE 6 - VOLCANO (element: Burn)
   Spear      | Obsidian Spear
   Heavy      | Lava Hammer
   Dagger     | Ember Dagger
-  Gauntlet   | Magma Gauntlets
   Ranged     | Flame Bow
   Magic      | Eruption Staff
 
@@ -235,7 +227,6 @@ ZONE 7 - HELL (element: Hellfire)
   Spear      | Infernal Halberd
   Heavy      | Doom Axe
   Dagger     | Imp Claw Dagger
-  Gauntlet   | Demon Fists
   Ranged     | Soulfire Crossbow
   Magic      | Infernal Tome Staff
 
@@ -244,7 +235,6 @@ ZONE 8 - HEAVEN (element: Holy)
   Spear      | Celestial Lance
   Heavy      | Judgment Hammer
   Dagger     | Feather Dagger
-  Gauntlet   | Angelic Gauntlets
   Ranged     | Dawn Bow
   Magic      | Seraph Staff
 
@@ -253,7 +243,6 @@ ZONE 9 - REALM OF THE DEAD (element: Soul Drain)
   Spear      | Grave Pike
   Heavy      | Gravedigger's Maul
   Dagger     | Ghoul Fang
-  Gauntlet   | Bone Knuckles
   Ranged     | Bone Crossbow
   Magic      | Lich Staff
 
@@ -262,7 +251,6 @@ ZONE 10 - ABYSS (element: Tidal)
   Spear      | Deepsea Trident
   Heavy      | Kraken Anchor
   Dagger     | Angler Dagger
-  Gauntlet   | Pearl Gauntlets
   Ranged     | Harpoon Gun
   Magic      | Tidecaller Staff
 
@@ -271,7 +259,6 @@ ZONE 11 - MECHANICAL CITY (element: Shock)
   Spear      | Electro Lance
   Heavy      | Hydraulic Hammer
   Dagger     | Nano Dagger
-  Gauntlet   | Power Gauntlets
   Ranged     | Pulse Rifle
   Magic      | Tesla Coil Staff
 
@@ -280,7 +267,6 @@ ZONE 12 - THE VOID (element: Gravity)
   Spear      | Void Piercer
   Heavy      | Void Maul
   Dagger     | Rift Dagger
-  Gauntlet   | Singularity Gauntlets
   Ranged     | Starfall Bow
   Magic      | Void Staff
 
@@ -314,7 +300,7 @@ a Desert weapon for good results. This is the intended progression.
 CONFIG MODULES (keep every number in config, never hard-coded)
     Config/WeaponCategories.luau   category multipliers, speed, range, special
     Config/WeaponRarities.luau     multipliers, zone boost, proc chance, odds
-    Config/Weapons.luau            84 entries: id, name, category, zone, model
+    Config/Weapons.luau            72 entries: id, name, category, zone, model
     Config/Zones.luau              zone base damage, element, shop price
 
 INVENTORY ENTRY
@@ -337,7 +323,7 @@ CLIENT RESPONSIBILITIES
     - Tool models: reuse a mesh per category and change color, size and
       particles per zone. Rarity can add glow, aura and trail.
 
-ASSET PLAN (to avoid making 84 unique models by hand)
+ASSET PLAN (to avoid making 72 unique models by hand)
     - 7 base animation sets (one per category).
     - 12 zone color/material themes applied to the base meshes.
     - 8 rarity glow/aura levels.

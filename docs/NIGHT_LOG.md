@@ -1,5 +1,31 @@
 # WEAPON OVERHAUL DECISIONS (owner prompt "WEAPON ANIMATIONS OVERHAUL", 2026-10-30) - newest first
 
+- STEP 0, GAUNTLET CATEGORY REMOVED (Studio agent). 84 weapons / 7 categories -> 72 / 6. No refund (the old Whip refund
+  stays for old Whip items). `DataService.migrate`: gauntlet items and index entries are dropped; if the equipped one was
+  removed, the strongest other copy is equipped, none left = the starter sword (CombatService). Self-check in Play (Server,
+  `DataService.Migrate` on fake profiles): equipped gauntlet + 2 others -> best copy equipped, 0 Gold given; only a gauntlet
+  -> empty inventory, 0 Gold; old Whip -> still refunded. Removed:
+  - Studio: 12 `Assets.Weapons.*_gauntlet` Tools, 12 `ServerStorage.ImportedWeapons.*_gauntlet`, VFX `Gauntlet_PunchRing` /
+    `Gauntlet_PunchLines`, 15 sounds `Assets.Sounds.Combat.Combat_Gauntlet_*`. All in backup before_weapon_overhaul.
+  - Code / config: `WeaponCategories` row, `Weapons` (12 icons, the NAMES column), `Combat` (shape, combo, jump attack, dash
+    strike), `Attributes.Scaling`, `Audio`, `CombatSfx`, `CombatVFX`, `CombatAnimations` (clips Gauntlet_*), `Icons`, DevTools
+    `WeaponPoints` / `WeaponBounds` / `WeaponGlow` / `WeaponTools` (shape and Fist grip).
+  - Moved to `_removed/` (43 paths): `Blender/Weapons/Gauntlet`, `Blender/Icons/Categories/Gauntlet.blend*`,
+    `Blender_Exports/Weapons/Gauntlet`, the 24 `Weapons_ALL_import` entries, `Icons/Categories/Gauntlet*`,
+    `Icons/Weapons/Gauntlet`, `Previews/Weapons/*`, `tools/blender/fyd_w2_gauntlets.py`, `fyd_weapon_gauntlets.py`, 9
+    `docs/screenshots` images.
+  - Data files stripped: `Icons/asset_ids.json`, `Blender/Weapons/weapons_bounds.json`, `weapons_emissive_ids.json`,
+    `weapons_v2_points.json`, `weapons_manifest.csv`. Docs and briefs updated, counts recomputed.
+  - The Golem's loot "Golem Core Gauntlets" is now "Stone Hammer" (Enemies, EnemyDatabase, AdminPanel, enemy_database.txt).
+  - Proof: `grep -rIil gauntlet src tools docs DESIGN.md HANDOFF.md README.md Blender Blender_Exports` leaves only the
+    exceptions. EXCEPTIONS: `DataService.luau` (the "_gauntlet" suffix of the save clean-up), `tools/PropsRound6.luau`,
+    `tools/PropsTundraMonuments.luau`, `docs/prop_texture_guide.md`, `docs/Round6_Knights_Bricks/PROMPT_ROUND6.txt` (armour
+    on knight statues, not the weapon), this log (history), `docs/Weapon_Overhaul/` (prompt and plan), `_removed/`, and
+    dated history entries of HANDOFF.md still say 84 / 7 (true when written). Not checked: `.blend` / `.fbx` binaries.
+- Filmstrips (Studio agent): `tools/grab_studio.py` grabs the Studio window (PrintWindow) on `FYDSHOT|<set>/<name>` log
+  markers, `tools/make_filmstrip.py` composes the sheet and GIF. Poses = the AnimDebug freeze hook, a Scriptable camera and
+  the root CFrame are forced every frame by the capture thread (the Assistant resets the camera after each execute_luau).
+  Backup before_weapon_overhaul: complete, 2 identical sets on disk (stamps 125850 and 130307).
 - Prompt: docs/Weapon_Overhaul/PROMPT_WEAPON_OVERHAUL.txt. Plan and every design decision: docs/Weapon_Overhaul/PLAN.md.
 - The existing combat stack is evolved, not rewritten. Hammer = Heavy, Bow = Ranged, Staff = Magic (ids kept).
 - Backup before_weapon_overhaul first. One Studio agent; the main agent composes the dagger pair icons, runs the Play

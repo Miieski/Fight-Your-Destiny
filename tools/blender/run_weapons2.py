@@ -20,7 +20,7 @@ sys.path.insert(0, HERE)
 import fyd_weapons2 as W2  # noqa: E402
 
 MODULES = {"Sword": "fyd_w2_swords", "Spear": "fyd_w2_spears", "Heavy": "fyd_w2_heavy", "Dagger": "fyd_w2_daggers",
-           "Gauntlet": "fyd_w2_gauntlets", "Ranged": "fyd_w2_ranged", "Magic": "fyd_w2_magic"}
+           "Ranged": "fyd_w2_ranged", "Magic": "fyd_w2_magic"}
 
 
 def main():

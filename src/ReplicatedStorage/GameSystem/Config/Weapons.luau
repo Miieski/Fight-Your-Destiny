@@ -1,5 +1,5 @@
 --!strict
--- 7 categories x 12 zones = 84 weapons (docs/weapon_system_document.txt). Ids: "<zone lower>_<category lower>"
+-- 6 categories x 12 zones = 72 weapons (docs/weapon_system_document.txt). Ids: "<zone lower>_<category lower>"
 -- (file "01_plains_sword" -> "plains_sword"). Each entry: Id, Name, Category, Zone (1..12), ZoneId, Icon (asset
 -- id; nil -> the UI shows the category icon) and Element (the zone's element, weapon doc section 4).
 -- Weapons.ByCategory[categoryId] = the category's 12 weapons in zone order 1 -> 12.
@@ -36,87 +36,75 @@ Weapons.ELEMENT_EFFECTS = {
 } :: { [string]: string }
 
 -- ICONS BEGIN
--- Weapon icons (Icons/Weapons/<Category>/<NN>_<id>_icon.png), one per weapon (84).
+-- Weapon icons (Icons/Weapons/<Category>/<NN>_<id>_icon.png), one per weapon (72).
 local ICONS: { [string]: string } = {
-	abyss_dagger = "rbxassetid://121352156006496",
-	abyss_gauntlet = "rbxassetid://105544516655870",
+	abyss_dagger = "rbxassetid://87902797375457",
 	abyss_heavy = "rbxassetid://127217505712705",
 	abyss_magic = "rbxassetid://124411550949391",
 	abyss_ranged = "rbxassetid://97995107822512",
 	abyss_spear = "rbxassetid://102828414148654",
 	abyss_sword = "rbxassetid://140705468541573",
-	dead_dagger = "rbxassetid://79263806196546",
-	dead_gauntlet = "rbxassetid://117388436835380",
+	dead_dagger = "rbxassetid://81999515756392",
 	dead_heavy = "rbxassetid://136226146917964",
 	dead_magic = "rbxassetid://125919149275111",
 	dead_ranged = "rbxassetid://112356627800092",
 	dead_spear = "rbxassetid://115971354260490",
 	dead_sword = "rbxassetid://86350187699042",
-	desert_dagger = "rbxassetid://80769431678520",
-	desert_gauntlet = "rbxassetid://140513919785351",
+	desert_dagger = "rbxassetid://86306212086877",
 	desert_heavy = "rbxassetid://91449788324392",
 	desert_magic = "rbxassetid://125583414576401",
 	desert_ranged = "rbxassetid://82800104861443",
 	desert_spear = "rbxassetid://130304382924941",
 	desert_sword = "rbxassetid://127203537657986",
-	heaven_dagger = "rbxassetid://125500276175834",
-	heaven_gauntlet = "rbxassetid://80021136948391",
+	heaven_dagger = "rbxassetid://118634527144872",
 	heaven_heavy = "rbxassetid://133423625377016",
 	heaven_magic = "rbxassetid://82264301837554",
 	heaven_ranged = "rbxassetid://138020324207787",
 	heaven_spear = "rbxassetid://125293223326464",
 	heaven_sword = "rbxassetid://115117176295789",
-	hell_dagger = "rbxassetid://114379121679101",
-	hell_gauntlet = "rbxassetid://109593543598583",
+	hell_dagger = "rbxassetid://116259203488531",
 	hell_heavy = "rbxassetid://73260158876105",
 	hell_magic = "rbxassetid://97405863103612",
 	hell_ranged = "rbxassetid://72252551214812",
 	hell_spear = "rbxassetid://77484183713373",
 	hell_sword = "rbxassetid://115568529523971",
-	jungle_dagger = "rbxassetid://80365365646322",
-	jungle_gauntlet = "rbxassetid://79543148939645",
+	jungle_dagger = "rbxassetid://80906609010201",
 	jungle_heavy = "rbxassetid://71687581202589",
 	jungle_magic = "rbxassetid://115098708827011",
 	jungle_ranged = "rbxassetid://100020057417066",
 	jungle_spear = "rbxassetid://120336713062825",
 	jungle_sword = "rbxassetid://73574132420956",
-	mechanical_dagger = "rbxassetid://84907284765428",
-	mechanical_gauntlet = "rbxassetid://108198929546310",
+	mechanical_dagger = "rbxassetid://116898809676391",
 	mechanical_heavy = "rbxassetid://74200144440698",
 	mechanical_magic = "rbxassetid://115166658245698",
 	mechanical_ranged = "rbxassetid://118602386622794",
 	mechanical_spear = "rbxassetid://120270748769824",
 	mechanical_sword = "rbxassetid://125746837454794",
-	plains_dagger = "rbxassetid://104697896741545",
-	plains_gauntlet = "rbxassetid://123020380647015",
+	plains_dagger = "rbxassetid://127409608688056",
 	plains_heavy = "rbxassetid://130534127780120",
 	plains_magic = "rbxassetid://104650324095907",
 	plains_ranged = "rbxassetid://70685182438815",
 	plains_spear = "rbxassetid://71400183932637",
 	plains_sword = "rbxassetid://75894377351246",
-	swamp_dagger = "rbxassetid://71273846124406",
-	swamp_gauntlet = "rbxassetid://125594295636505",
+	swamp_dagger = "rbxassetid://126847151358249",
 	swamp_heavy = "rbxassetid://111414243163616",
 	swamp_magic = "rbxassetid://124875548378639",
 	swamp_ranged = "rbxassetid://83084086676562",
 	swamp_spear = "rbxassetid://107865546779607",
 	swamp_sword = "rbxassetid://128484317854811",
-	tundra_dagger = "rbxassetid://82139952524102",
-	tundra_gauntlet = "rbxassetid://104829630921097",
+	tundra_dagger = "rbxassetid://77858194161892",
 	tundra_heavy = "rbxassetid://85980397077175",
 	tundra_magic = "rbxassetid://122111764115214",
 	tundra_ranged = "rbxassetid://136169629960694",
 	tundra_spear = "rbxassetid://113434317061374",
 	tundra_sword = "rbxassetid://104079839321876",
-	void_dagger = "rbxassetid://110930016138754",
-	void_gauntlet = "rbxassetid://84333124268760",
+	void_dagger = "rbxassetid://132806334516214",
 	void_heavy = "rbxassetid://136104271834738",
 	void_magic = "rbxassetid://133994291514591",
 	void_ranged = "rbxassetid://80946372819099",
 	void_spear = "rbxassetid://103041162156233",
 	void_sword = "rbxassetid://114683905930446",
-	volcano_dagger = "rbxassetid://90066620308550",
-	volcano_gauntlet = "rbxassetid://75830267899586",
+	volcano_dagger = "rbxassetid://102787357462716",
 	volcano_heavy = "rbxassetid://131757062024385",
 	volcano_magic = "rbxassetid://132900539392146",
 	volcano_ranged = "rbxassetid://78939561471445",
@@ -127,18 +115,18 @@ local ICONS: { [string]: string } = {
 
 -- Names per zone, in the category order above.
 local NAMES = {
-	Plains = { "Iron Shortsword", "Hunter's Spear", "Stone Hammer", "Hunter's Knife", "Leather Knuckles", "Hunting Bow", "Apprentice Staff" },
-	Desert = { "Sand Scimitar", "Nomad Pike", "Obelisk Hammer", "Scorpion Dagger", "Desert Wraps", "Desert Recurve Bow", "Sandstorm Staff" },
-	Jungle = { "Jungle Machete", "Tribal Spear", "Totem Club", "Venom Fang", "Jaguar Claws", "Poison Blowgun", "Shaman Totem Staff" },
-	Tundra = { "Frostbrand Blade", "Icicle Lance", "Glacier Axe", "Ice Shard Dagger", "Frost Knuckles", "Frostbite Crossbow", "Blizzard Staff" },
-	Swamp = { "Rotwood Sword", "Witch Hunter Spear", "Swamp Maul", "Toad Tooth Dagger", "Mud Fists", "Plague Bow", "Cauldron Staff" },
-	Volcano = { "Magma Blade", "Obsidian Spear", "Lava Hammer", "Ember Dagger", "Magma Gauntlets", "Flame Bow", "Eruption Staff" },
-	Hell = { "Demon Blade", "Infernal Halberd", "Doom Axe", "Imp Claw Dagger", "Demon Fists", "Soulfire Crossbow", "Infernal Tome Staff" },
-	Heaven = { "Radiant Longsword", "Celestial Lance", "Judgment Hammer", "Feather Dagger", "Angelic Gauntlets", "Dawn Bow", "Seraph Staff" },
-	Dead = { "Deathbringer Sword", "Grave Pike", "Gravedigger's Maul", "Ghoul Fang", "Bone Knuckles", "Bone Crossbow", "Lich Staff" },
-	Abyss = { "Tidal Sword", "Deepsea Trident", "Kraken Anchor", "Angler Dagger", "Pearl Gauntlets", "Harpoon Gun", "Tidecaller Staff" },
-	Mechanical = { "Plasma Sword", "Electro Lance", "Hydraulic Hammer", "Nano Dagger", "Power Gauntlets", "Pulse Rifle", "Tesla Coil Staff" },
-	Void = { "Voidforged Blade", "Void Piercer", "Void Maul", "Rift Dagger", "Singularity Gauntlets", "Starfall Bow", "Void Staff" },
+	Plains = { "Iron Shortsword", "Hunter's Spear", "Stone Hammer", "Hunter's Knife", "Hunting Bow", "Apprentice Staff" },
+	Desert = { "Sand Scimitar", "Nomad Pike", "Obelisk Hammer", "Scorpion Dagger", "Desert Recurve Bow", "Sandstorm Staff" },
+	Jungle = { "Jungle Machete", "Tribal Spear", "Totem Club", "Venom Fang", "Poison Blowgun", "Shaman Totem Staff" },
+	Tundra = { "Frostbrand Blade", "Icicle Lance", "Glacier Axe", "Ice Shard Dagger", "Frostbite Crossbow", "Blizzard Staff" },
+	Swamp = { "Rotwood Sword", "Witch Hunter Spear", "Swamp Maul", "Toad Tooth Dagger", "Plague Bow", "Cauldron Staff" },
+	Volcano = { "Magma Blade", "Obsidian Spear", "Lava Hammer", "Ember Dagger", "Flame Bow", "Eruption Staff" },
+	Hell = { "Demon Blade", "Infernal Halberd", "Doom Axe", "Imp Claw Dagger", "Soulfire Crossbow", "Infernal Tome Staff" },
+	Heaven = { "Radiant Longsword", "Celestial Lance", "Judgment Hammer", "Feather Dagger", "Dawn Bow", "Seraph Staff" },
+	Dead = { "Deathbringer Sword", "Grave Pike", "Gravedigger's Maul", "Ghoul Fang", "Bone Crossbow", "Lich Staff" },
+	Abyss = { "Tidal Sword", "Deepsea Trident", "Kraken Anchor", "Angler Dagger", "Harpoon Gun", "Tidecaller Staff" },
+	Mechanical = { "Plasma Sword", "Electro Lance", "Hydraulic Hammer", "Nano Dagger", "Pulse Rifle", "Tesla Coil Staff" },
+	Void = { "Voidforged Blade", "Void Piercer", "Void Maul", "Rift Dagger", "Starfall Bow", "Void Staff" },
 }
 
 function Weapons.idOf(zoneId: string, categoryId: string): string
@@ -161,7 +149,7 @@ end
 
 Weapons.ById = {} :: { [string]: Weapon }
 Weapons.ByCategory = {} :: { [string]: { Weapon } }
-Weapons.List = {} :: { Weapon } -- all 84: category order, then zone order
+Weapons.List = {} :: { Weapon } -- all 72: category order, then zone order
 for index, category in ipairs(Weapons.Categories) do
 	local list = {}
 	for _, zone in ipairs(Zones.List) do

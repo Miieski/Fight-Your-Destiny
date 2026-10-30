@@ -82,7 +82,6 @@ A3. WEAPON DAMAGE SCALING (by weapon category, like Elden Ring)
  | Spear | 0.5 | 0.7 | - | - | B / A |
  | Heavy | 1.2 | - | - | - | S |
  | Dagger | - | 0.8 | - | 0.4 | A / C |
- | Gauntlet | 0.7 | 0.5 | - | - | A / B |
  | Ranged | - | 1.2 | - | - | S |
  | Magic | - | - | 1.2 | - | S |
  Grade letters from the weight: >= 1.0 S, 0.7-0.99 A, 0.5-0.69 B, 0.3-0.49 C, below D.

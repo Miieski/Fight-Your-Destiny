@@ -72,7 +72,6 @@ Attributes.Scaling = {
 	Spear = { Strength = 0.5, Dexterity = 0.7 },
 	Heavy = { Strength = 1.2 },
 	Dagger = { Dexterity = 0.8, Arcane = 0.4 },
-	Gauntlet = { Strength = 0.7, Dexterity = 0.5 },
 	Ranged = { Dexterity = 1.2 },
 	Magic = { Intelligence = 1.2 },
 } :: { [string]: { [string]: number } }
@@ -95,7 +94,7 @@ end
 
 Attributes.pct = pct
 
--- "Heavy +9.6%, Gauntlet +5.6%, ..." for one attribute (per point, before the soft cap and RebirthPower)
+-- "Heavy +9.6%, Sword +4.8%, ..." for one attribute (per point, before the soft cap and RebirthPower)
 local function damageList(id: string, k: number): string
 	local list = {}
 	for category, weights in pairs(Attributes.Scaling) do

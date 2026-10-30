@@ -76,7 +76,7 @@ Server-authoritative; rules from DESIGN.md section 2 and docs/weapon_system_docu
  - Hit shapes (server, at the swing's impact moment):
    Sword: arc 120 deg, radius 6, up to 3 targets | Spear: line 10 long x 3 wide, pierces up to 4 |
    Heavy: arc 90 deg radius 6 + small ground slam AoE radius 6, target stagger 0.3 s | Dagger: arc 60 deg radius 4,
-   single target (+20% crit chance on top) | Gauntlet: cone 90 deg radius 5, 3-hit combo, 3rd hit x2 damage |
+   single target (+20% crit chance on top) |
    Ranged: projectile 120 studs/s, range 60, hits the first enemy | Magic: projectile or targeted AoE at the aim point
    within range 35, radius 6 (x (1 + Magic radius bonus)), hits all inside
  - **Damage per hit** = formula in menu_systems_brief.txt A4 with `Util/Stats.compute` (shared), with NO zone factor (rule 1B).

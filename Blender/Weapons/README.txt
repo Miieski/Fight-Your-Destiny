@@ -6,9 +6,9 @@ convention below needs a fix after the first import in Studio, change export_fbx
 fyd_weapons.py and re-export every FBX in one pass from these .blend files (the "Weapon" object).
 
 WEAPONS V2 (2026-10-12, docs/weapons_combat_brief.txt Phase 3) - THE CURRENT MODELS
-- All 84 weapons (Whip & Chain removed) were rebuilt with tools/blender/fyd_weapons2.py + fyd_w2_parts.py + one
+- All 72 weapons were rebuilt with tools/blender/fyd_weapons2.py + fyd_w2_parts.py + one
   builder per category (fyd_w2_swords.py, fyd_w2_spears.py, fyd_w2_heavy.py, fyd_w2_daggers.py,
-  fyd_w2_gauntlets.py, fyd_w2_ranged.py, fyd_w2_magic.py), each one compared side by side with its icon:
+  fyd_w2_ranged.py, fyd_w2_magic.py), each one compared side by side with its icon:
   Previews/Weapons/<Category>/<NN>_<id>_compare.png (icon | V2 from the icon's angle), _preview.png (3 angles),
   Previews/Weapons/<Category>_lineup.png. The icons were NOT re-rendered (they stay the reference).
 - Same convention as below (meters, origin = grip, head +Z, front -Y, category length, FBX Y up / -Z forward).
@@ -21,7 +21,7 @@ WEAPONS V2 (2026-10-12, docs/weapons_combat_brief.txt Phase 3) - THE CURRENT MOD
 - Run headless: blender -b Blender/Icons/_IconTemplate.blend --python tools/blender/run_weapons2.py --
   <Category> <zone indexes...>   (or -- --lineup <Category>).
 - The V1 .blend / .fbx files are kept in BackUP_Files/old_weapon_models_2026-10-12/.
-- IMPORT: Blender_Exports/WEAPONS_IMPORT.md (File > Import 3D of the 84 files, then DevTools.ApplyWeaponMeshes).
+- IMPORT: Blender_Exports/WEAPONS_IMPORT.md (File > Import 3D of the 72 files, then DevTools.ApplyWeaponMeshes).
   Done on 2026-10-13: the importer merges the Glow faces into the one textured MeshPart, so their glow comes back as a
   SurfaceAppearance emissive mask (tools/blender/weapon_emissive_masks.py -> weapons_emissive_ids.json ->
   tools/WeaponGlow.luau). The axis convention below was checked on the imported meshes.
@@ -30,12 +30,9 @@ AXIS / SCALE CONVENTION (pilot: Sword/01_plains_sword, 2026-10-05; all weapons f
 imported in Studio by the owner)
 - Built in METERS at real scale, then every weapon is scaled so its longest side is exactly the
   category length of the brief (1 stud = 0.28 m):
-    Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Gauntlet 1.8 (one hand) | Ranged 5 | Magic 6 studs
+    Sword 4.5 | Spear 8 | Heavy 5 | Dagger 2 | Ranged 5 | Magic 6 studs
 - ORIGIN = grip center (where the hand holds the weapon).
 - In Blender the blade / head points along +Z (up) and the front of the weapon faces -Y.
-- GAUNTLET exception: ONE right-hand gauntlet per zone (mirror it in Studio, scale X -1, for the left
-  hand). Origin = fist center (where the hand is), knuckles along +Z, forearm cuff along -Z, back of the
-  hand facing -Y, thumb on -X. Attach it to the RightHand/LeftHand rather than as a Tool grip.
 - RANGED: origin = the hand grip, longest side along Z. Bows: limbs along Z, string on -X, arrows fly
   towards +X. Crossbows: bolt points +Z, prod spans X, trigger grip hangs towards +Y. Guns and the blowgun:
   muzzle +Z, pistol grip towards -X. Set Tool.Grip per weapon type in Studio.
@@ -59,11 +56,11 @@ ONE .blend PER WEAPON
 - Previews: Previews/Weapons/<Category>/<NN>_<id>_preview.png (3 angles) and <Category>_lineup.png.
 - weapons_manifest.csv: id, category, zone, display name, triangles, budget, length, glow, status.
 
-BUDGETS: 500-3,000 triangles (Gauntlet and Magic up to 4,000). Rarity is NOT modeled.
+BUDGETS: 500-3,000 triangles (Magic up to 4,000). Rarity is NOT modeled.
 
 IN STUDIO (weapon Tools, 2026-10-05; for the V2 files use DevTools.ApplyWeaponMeshes, see
 Blender_Exports/WEAPONS_IMPORT.md - it updates the existing Tools in place and uses the measured points)
-- Until the FBX files are imported, ReplicatedStorage.Assets.Weapons holds 84 PLACEHOLDER Tools (simple parts per
+- Until the FBX files are imported, ReplicatedStorage.Assets.Weapons holds 72 PLACEHOLDER Tools (simple parts per
   category, zone colors, attribute Placeholder = true) so the shop, case opening and equipping already work.
 - After the Bulk Import (File Dimensions = Meters), put the imported models in one folder (any place, e.g.
   workspace.ImportedWeapons) and run in the command bar:
@@ -75,5 +72,5 @@ Blender_Exports/WEAPONS_IMPORT.md - it updates the existing Tools in place and u
   require(...).missing() lists the weapons that still use a placeholder.
 - Tool.Grip (R15, measured in Play): identity = the head points straight up out of the fist with the front facing
   forward (swords, spears, heavies, daggers, staffs). Bows: limbs up, string toward the body. Crossbows
-  (tundra, hell, dead) and guns / blowgun (jungle, abyss, mechanical): muzzle forward. Gauntlets: knuckles forward,
-  back of the hand up. The FBX export maps Blender +X to Roblox -X (bow strings and gauntlet thumbs are on +X).
+  (tundra, hell, dead) and guns / blowgun (jungle, abyss, mechanical): muzzle forward.
+  The FBX export maps Blender +X to Roblox -X (bow strings are on +X).

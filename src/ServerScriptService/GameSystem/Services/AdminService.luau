@@ -651,7 +651,7 @@ local COMMANDS: { [string]: Command } = {
 	end,
 
 	-- Admin panel V2 (owner 2026-10-13: "test every possibility") ------------------------------------------
-	-- giveWeapons(zone | "All", rarity): every weapon of a zone (7) or of the game (84), for free
+	-- giveWeapons(zone | "All", rarity): every weapon of a zone (6) or of the game (72), for free
 	giveWeapons = function(player, zoneValue, rarity)
 		local profile = DataService:Get(player)
 		if not profile then return false, "Profile not loaded" end

@@ -19,7 +19,6 @@ CombatVFX.Pool = {
 		Spear_PierceStreak = 2, Spear_ThrustLines = 2, Spear_PierceRing = 1,
 		Heavy_SmashArc = 1, Heavy_GroundCrack = 1, Heavy_SlamRing = 1,
 		Dagger_SlashArc = 3, Dagger_StabStreak = 3, Dagger_StabRing = 2,
-		Gauntlet_PunchRing = 2, Gauntlet_PunchLines = 2,
 		Ranged_MuzzleFlash = 2, Ranged_ShotRing = 2, Ranged_Arrow = 3, Ranged_Bolt = 1, Ranged_Bullet = 1,
 		Magic_CastCircle = 2, Magic_ChargeOrb = 1, Magic_Bolt = 1, Magic_AreaBurst = 1,
 		-- combat V3: jump attack landings, dives, dash strikes
@@ -50,7 +49,6 @@ CombatVFX.Emit = {
 	Spear_PierceRing = { Flash = 1 },
 	Heavy_GroundCrack = { Dust = 8, Pebbles = 8 },
 	Heavy_SlamRing = { Dust = 10 },
-	Gauntlet_PunchRing = { Flash = 1, Puff = 3 },
 	Magic_CastCircle = { Runes = 5 },
 	Magic_ChargeOrb = { Motes = 0, Glow = 0 }, -- continuous while charging (Rate in the asset)
 	Magic_AreaBurst = { Flash = 1, Column = 10, Motes = 12 },
@@ -87,12 +85,10 @@ CombatVFX.Trail = { -- applied on the Shared_WeaponTrail clone (one per equipped
 }
 -- per category (the Tool's Category attribute); the trail spans the weapon's Base -> Tip attachments, measured on the V2
 -- weapons (ServerStorage.DevTools.WeaponPoints): Sword 3.4-3.6, Spear head 1.3-2, Heavy head 0.9-1.7, Dagger 1.1-1.3,
--- Gauntlet fist 0.6-0.8 studs (the placeholders match); Ranged and Magic have no trail
 CombatVFX.TrailByCategory = {
 	Spear = { Lifetime = 0.16 },
 	Heavy = { Lifetime = 0.3 },
 	Dagger = { Lifetime = 0.12 },
-	Gauntlet = { Lifetime = 0.1 },
 }
 
 -- ARCS (Arcs: beam crescents, rings and straight streaks) -----------------------------------------------------------
@@ -226,24 +222,6 @@ CombatVFX.Swing = {
 			{ Asset = "Dagger_SlashArc", Hit = 2, Radius = 3.7, Width = 1.5, Height = 0.6, From = -115, To = 65, Roll = -42, Reveal = 0.035, Hold = 0.03, Fade = 0.12, Profile = "Crescent", Core = 0.42 },
 		} },
 	},
-	Gauntlet = {
-		-- Jab / Cross: a shockwave ring just in front of the fist, facing the punch (the punch runs along the camera axis,
-		-- so the ring reads as a circle), plus short speed lines
-		{ TrailOn = 0.5, TrailOff = 0.06, Effects = {
-			{ Asset = "Gauntlet_PunchRing", Anchor = "Tip", Offset = { 0, 0, -0.7 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 0.7, Grow = 3, Width = 0.6, Reveal = 0, Hold = 0.02, Fade = 0.15, Core = 0.4 },
-			{ Kind = "Lines", Asset = "Gauntlet_PunchLines", Anchor = "Tip", Offset = { 0, 0, 0.6 }, Count = 3, Spread = { 0.6, 0.5 }, Start = 0, Length = 2.4, Width = 0.1, Extend = 0.04, Hold = 0.02, Fade = 0.1, Jitter = 0.02 },
-		} },
-		{ TrailOn = 0.5, TrailOff = 0.06, Effects = {
-			{ Asset = "Gauntlet_PunchRing", Anchor = "Tip", Offset = { 0, 0, -0.7 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 0.8, Grow = 3.3, Width = 0.7, Reveal = 0, Hold = 0.02, Fade = 0.17, Core = 0.4 },
-			{ Kind = "Lines", Asset = "Gauntlet_PunchLines", Anchor = "Tip", Offset = { 0, 0, 0.6 }, Count = 4, Spread = { 0.7, 0.6 }, Start = 0, Length = 2.8, Width = 0.11, Extend = 0.04, Hold = 0.02, Fade = 0.1, Jitter = 0.02 },
-		} },
-		-- Uppercut finisher: flat rings above the rising fist (beside the head) and speed lines going up
-		{ TrailOn = 0.5, TrailOff = 0.1, Effects = {
-			{ Asset = "Gauntlet_PunchRing", Anchor = "Tip", Offset = { 0, 0.5, 0 }, Profile = "Full", From = 0, To = 360, Radius = 0.8, Grow = 3, Width = 0.8, Reveal = 0, Hold = 0.03, Fade = 0.2, Core = 0.45 },
-			{ Asset = "Gauntlet_PunchRing", Anchor = "Tip", Offset = { 0, 1.1, 0 }, Delay = 0.04, Profile = "Full", From = 0, To = 360, Radius = 1.1, Grow = 2.6, Width = 0.55, Reveal = 0, Hold = 0.02, Fade = 0.2, Core = 0.4 },
-			{ Kind = "Lines", Asset = "Gauntlet_PunchLines", Anchor = "Tip", Pitch = 90, Count = 4, Spread = { 0.6, 0.6 }, Start = -0.8, Length = 3.2, Width = 0.12, Extend = 0.05, Hold = 0.03, Fade = 0.12, Jitter = 0.02 },
-		} },
-	},
 	Ranged = {
 		-- Shot: the muzzle flash at the release (bows: a light snap, crossbows: snap + sparks, guns: fire + smoke) and a
 		-- small ring past the muzzle facing the shot (reads as a circle from the camera behind)
@@ -317,7 +295,6 @@ CombatVFX.AirSwing = {
 	Heavy = { Dive = { Asset = "Shared_DiveLines", Count = 8, Spread = 1.6, Top = { 0.5, 3 }, Bottom = { 0.3, 2.4 }, Width = 0.4, Fade = 0.18, MinFall = 18, LandGap = 0.6, Timeout = 1.9, TrailOff = 0.16, Ring = DIVE_RING, RingHeight = -0.5 } },
 	-- ShadowDrop: dark violet streaks (a shadow falling), no wind ring
 	Dagger = { Dive = { Asset = "Shared_DiveLines", Count = 5, Spread = 1.0, Top = { 0.3, 2 }, Bottom = { 0.4, 2 }, Width = 0.24, Fade = 0.12, MinFall = 18, LandGap = 0.6, Timeout = 1.6, TrailOff = 0.1, Color = rgb(110, 70, 185), Solid = true } },
-	Gauntlet = { Dive = { Asset = "Shared_DiveLines", Count = 6, Spread = 1.3, Top = { 0.5, 2.5 }, Bottom = { 0.4, 2.2 }, Width = 0.32, Fade = 0.14, MinFall = 18, LandGap = 0.6, Timeout = 1.8, TrailOff = 0.1, Ring = DIVE_RING, RingHeight = -0.5 } },
 	-- AirVolley: the body hovers (a wind ring under the feet), the volley is released aimed down (a ring past the muzzle
 	-- tilted along the shot, a bigger flash); the 3 arrows are VFX.shot
 	Ranged = { Effects = {
@@ -374,16 +351,6 @@ CombatVFX.DashSwing = {
 		{ Hit = 0, Asset = "Shared_DashStreak", Shape = "Line", Height = -0.1, Start = -1.2, Length = 7.5, Width = 1.3, Reveal = 0.14, Hold = 0.02, Fade = 0.16, Grow = 0, Profile = "Spike", Core = 0.2, Color = rgb(120, 80, 200) },
 		{ Asset = "Dagger_SlashArc", Radius = 3.8, Width = 1.5, Height = 0.4, From = 110, To = -75, Roll = 12, Reveal = 0.035, Hold = 0.03, Fade = 0.12, Profile = "Crescent", Core = 0.42 },
 		{ Asset = "Dagger_SlashArc", Hit = 2, Radius = 3.8, Width = 1.5, Height = 0.5, From = -110, To = 75, Roll = -12, Reveal = 0.035, Hold = 0.03, Fade = 0.12, Profile = "Crescent", Core = 0.42 },
-	} },
-	-- RocketPunch (lunge 6 in 0.16 s, line 8): wake, a big ring at the fist, a second one ahead, lines and a thrust
-	-- streak past the fist
-	Gauntlet = { TrailOn = 0.3, TrailOff = 0.08, Effects = {
-		{ Kind = "Lines", Hit = 0, Asset = "Shared_DashLines", Height = -0.2, Count = 5, Spread = { 1.3, 1.5 }, Start = -1.5, Length = 8.5, Width = 0.2, Extend = 0.16, Hold = 0.04, Fade = 0.16, Jitter = 0.03 },
-		{ Hit = 0, Asset = "Shared_DashStreak", Shape = "Line", Height = -0.1, Start = -1.2, Length = 7.5, Width = 1.5, Reveal = 0.16, Hold = 0.02, Fade = 0.16, Grow = 0, Profile = "Spike", Core = 0.25 },
-		{ Asset = "Gauntlet_PunchRing", Anchor = "Tip", Offset = { 0, 0, -0.8 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 1.0, Grow = 3.4, Width = 0.8, Reveal = 0, Hold = 0.03, Fade = 0.2, Core = 0.45 },
-		{ Asset = "Gauntlet_PunchRing", Anchor = "Tip", Offset = { 0, 0, -4 }, Delay = 0.03, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 1.2, Grow = 2.8, Width = 0.6, Reveal = 0, Hold = 0.02, Fade = 0.2, Core = 0.4 },
-		{ Kind = "Lines", Asset = "Gauntlet_PunchLines", Anchor = "Tip", Offset = { 0, 0, 0.8 }, Count = 4, Spread = { 0.8, 0.7 }, Start = 0, Length = 5, Width = 0.14, Extend = 0.05, Hold = 0.03, Fade = 0.12, Jitter = 0.02 },
-		{ Asset = "Shared_DashStreak", Shape = "Line", Anchor = "Tip", Start = -1, Length = 7, Width = 1.0, Reveal = 0.04, Hold = 0.03, Fade = 0.14, Grow = 0.3, Profile = "Spike", Core = 0.45 },
 	} },
 	-- SlideShot (no lunge): dust under the sliding knee, the shot ring and flash
 	Ranged = { Effects = {
@@ -455,15 +422,6 @@ CombatVFX.Land = {
 		{ Kind = "Burst", Asset = "Dagger_ShadowPuff", Lift = 0.3, Emit = 1.3 },
 		{ Kind = "Burst", Asset = "Shared_LandFlash", Tint = "Weapon", Offset = { 0.7, 0.3, -1.6 }, Emit = 0.5, Fixed = true },
 	} },
-	-- GroundPound (r 7.5): shockwave + dust ring, short cracks and chunks where both fists hit (in front), flash, dust
-	Gauntlet = { Effects = {
-		{ Asset = "Shared_LandRing", Scale = true, Lift = 0.25, Profile = "Full", From = 0, To = 360, Radius = 0.25, Grow = 3, Width = 1.8, Reveal = 0, Hold = 0.05, Fade = 0.3, Core = 0.42 },
-		{ Asset = "Shared_DustRing", Scale = true, Palette = "Ground", Delay = 0.04, Lift = 0.2, Profile = "Full", From = 0, To = 360, Radius = 0.2, Grow = 3.3, Width = 2.6, Reveal = 0, Hold = 0.03, Fade = 0.38, Core = 0.05 },
-		{ Kind = "Ground", Asset = "Shared_LandCrack", Offset = { 0, 0, -1.6 }, Cracks = 6, CrackLength = { 2.5, 4.5 }, CrackWidth = 0.4, Grow = 0.08, Hold = 0.3, Fade = 0.35, CrackColor = rgb(45, 36, 30),
-			Chunks = 6, ChunkSize = { 0.3, 0.6 }, ChunkUp = { 14, 22 }, ChunkOut = { 4, 8 }, Gravity = 75, ChunkLife = 0.6 },
-		{ Kind = "Burst", Asset = "Shared_LandFlash", Tint = "Weapon", Offset = { 0, 0.4, -1.6 }, Fixed = true },
-		{ Kind = "Burst", Asset = "Shared_LandDust", Tint = "Ground", Lift = 0.3 },
-	} },
 	Default = LAND_SWORD,
 }
 
@@ -477,7 +435,7 @@ CombatVFX.Impact = {
 		Reveal = 0, Hold = 0.04, Fade = 0.22, Core = 0.35, Profile = "Full", Color = rgb(255, 214, 110), Tint = 0.3 },
 	FinisherMax = 3, -- finisher rings at most within FinisherWindow s (a spin that hits 6 enemies would blow out to white)
 	FinisherWindow = 0.1,
-	CategoryEmit = { Dagger = 0.7, Heavy = 1.5, Gauntlet = 1.2 }, -- normal sparks x this (Dagger hits 2.5 times a second)
+	CategoryEmit = { Dagger = 0.7, Heavy = 1.5 }, -- normal sparks x this (Dagger hits 2.5 times a second)
 	CritEmit = { Dagger = 0.85 },
 	-- crits of these categories also flash a quick X slash mark facing the camera (Dagger crits often)
 	CritCross = {
@@ -644,9 +602,9 @@ CombatVFX.Death = { Asset = "Shared_DeathDissolve", Delay = 0.45, MaxSize = 14 }
 CombatVFX.ZoneTiming = {
 	-- the attack clips the signature overlays are timed on (Config/CombatAnimations, seconds at x1): finisher clip
 	-- lengths (their Hit = the Combos finisher Impact), jump attack Dive markers and lengths (Hit = AirAttacks Impact)
-	FinisherLength = { Sword = 0.95, Spear = 0.95, Heavy = 1.9, Dagger = 0.38, Gauntlet = 0.52, Ranged = 0.78, Magic = 0.98 },
-	JumpDive = { Sword = 0.2, Spear = 0.22, Heavy = 0.3, Dagger = 0.17, Gauntlet = 0.2 },
-	JumpLength = { Sword = 0.85, Spear = 0.95, Heavy = 1.3, Dagger = 0.62, Gauntlet = 0.75, Ranged = 0.8, Magic = 1.0 },
+	FinisherLength = { Sword = 0.95, Spear = 0.95, Heavy = 1.9, Dagger = 0.38, Ranged = 0.78, Magic = 0.98 },
+	JumpDive = { Sword = 0.2, Spear = 0.22, Heavy = 0.3, Dagger = 0.17 },
+	JumpLength = { Sword = 0.85, Spear = 0.95, Heavy = 1.3, Dagger = 0.62, Ranged = 0.8, Magic = 1.0 },
 	LateWindup = 0.15, -- s (Animations LATE_WINDUP)
 	LateSplit = 0.55, -- fraction of the recovery holding the late signature's wind-up part (Animations LATE_SPLIT)
 }

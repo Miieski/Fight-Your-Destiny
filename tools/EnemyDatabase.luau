@@ -15,7 +15,7 @@ return {
 	plains_miner_skeleton = { 960, 48, 192, "Miner's Pickaxe", "Weapon" },
 	plains_cave_troll = { 4000, 240, 1200, "Troll Club", "Weapon" },
 	plains_crystal_spider_matriarch = { 5600, 336, 1680, "Crystal Spider Egg", "Egg" },
-	plains_golem = { 20000, 1400, 8000, "Golem Core Gauntlets", "Weapon" },
+	plains_golem = { 20000, 1400, 8000, "Stone Hammer", "Weapon" },
 	desert_scorpion = { 800, 40, 160, "Scorpion Stinger", "Weapon" },
 	desert_sand_snake = { 1000, 50, 200, "Sand Snake Egg", "Egg" },
 	desert_vulture = { 1200, 60, 240, "Vulture Corpse", "Corpse" },

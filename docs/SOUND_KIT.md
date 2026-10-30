@@ -161,13 +161,13 @@ SourceCreator on each Sound. Played only through `Sfx.combat(event, ctx)` with t
 | Combat_Shared_Hurt3 | 9113527320 | Hurt | 0.51 |
 | Combat_Shared_Death | 9113475180 | Death (= old Death) | 0.70 |
 
-### Round 2 (Spear, Heavy, Dagger, Gauntlet, Ranged, Magic): 80 more sounds, 115 in total
+### Round 2 (Spear, Heavy, Dagger, Ranged, Magic): 80 more sounds, 115 in total
 
 Same source, settings and rule (nothing auditioned by ear; candidates to swap first: the bow release = Crossbow Fire
 at pitch 0.85, the gun = Air Bolt Gun). Ranged sounds follow the Tool's WeaponId (bow / crossbow tundra hell dead /
 blowgun jungle / gun abyss mechanical); Burst by Style (element groups); a quiet RarityReveal (rarity 5-6) or
 RarityLegendary (7-8) layered on Equip; enemy launches in the EnemyFX group. Reused with a pitch change (no new
-asset): Spear crit / finisher / equip, Heavy metal / stone / crit, Dagger metal, Gauntlet metal / equip, Ranged crit.
+asset): Spear crit / finisher / equip, Heavy metal / stone / crit, Dagger metal, Ranged crit.
 
 | Name | Asset id | Event | Volume |
 |---|---|---|---|
@@ -203,17 +203,6 @@ asset): Spear crit / finisher / equip, Heavy metal / stone / crit, Dagger metal,
 | Combat_Dagger_Crit2 | 9116196826 | Dagger crit sting | 0.82 |
 | Combat_Dagger_Draw1 | 9116190959 | Dagger equip | 1.43 |
 | Combat_Dagger_Draw2 | 9116191739 | Dagger equip | 2.5 |
-| Combat_Gauntlet_Swing1 | 9120728815 | Gauntlet Jab / Cross swing | 0.6 |
-| Combat_Gauntlet_Swing2 | 9120729337 | Gauntlet Jab / Cross swing | 1.0 |
-| Combat_Gauntlet_Swing3 | 9120729412 | Gauntlet Jab / Cross swing | 0.64 |
-| Combat_Gauntlet_Upper1 | 9120729005 | Gauntlet Uppercut swing | 0.89 |
-| Combat_Gauntlet_Upper2 | 9120729339 | Gauntlet Uppercut swing | 0.65 |
-| Combat_Gauntlet_Hit1 | 9117969584 | Gauntlet impact flesh | 0.56 |
-| Combat_Gauntlet_Hit2 | 9117969990 | Gauntlet impact flesh | 0.45 |
-| Combat_Gauntlet_Hit3 | 9117970227 | Gauntlet impact flesh | 0.48 |
-| Combat_Gauntlet_HitHeavy1 | 9117970193 | Uppercut impact layer | 0.45 |
-| Combat_Gauntlet_HitHeavy2 | 9117969717 | Uppercut impact layer | 0.5 |
-| Combat_Gauntlet_Crit | 9126212438 | Gauntlet crit sting (crack) | 1.23 |
 | Combat_Ranged_BowRelease1 | 9114001456 | bow swing | 1.33 |
 | Combat_Ranged_BowRelease2 | 9114000974 | bow swing | 1.18 |
 | Combat_Ranged_BowWhoosh1 | 9113167619 | bow swing layer, Shot whiz, blowgun layer | 0.63 |
@@ -275,10 +264,8 @@ another player's arrow whiz waits for the release of its swing (at most 0.3 s).
 | Combat_Heavy_LandBoom2 | 9125401225 | same set | 1.13 |
 | Combat_Heavy_LandCrunch1 | 9118617342 | Land Heavy rock crunch | 0.34 |
 | Combat_Heavy_LandCrunch2 | 9114036371 | Land Heavy rock crunch | 0.49 |
-| Combat_Gauntlet_LandThud1 | 9113535176 | Land Gauntlet (GroundPound) thud | 1.05 |
-| Combat_Gauntlet_LandThud2 | 9113524237 | Land Gauntlet thud | 0.72 |
-| Combat_Shared_LandCrack1 | 9119041016 | Land Gauntlet / Heavy ground crack | 0.46 |
-| Combat_Shared_LandCrack2 | 9125869504 | Land Gauntlet / Heavy ground crack | 2.46 |
+| Combat_Shared_LandCrack1 | 9119041016 | Land Heavy ground crack | 0.46 |
+| Combat_Shared_LandCrack2 | 9125869504 | Land Heavy ground crack | 2.46 |
 | Combat_Shared_LandStab1 | 9117738766 | Land Sword / Spear point into the ground | 0.99 |
 | Combat_Shared_LandStab2 | 9117736085 | Land Sword / Spear point into the ground | 1.72 |
 | Combat_Shared_LandDirt1 | 9118596772 | Land Dagger (ShadowDrop) thump, feet layer of Sword / Spear, Shared.Land | 1.08 |
@@ -296,8 +283,6 @@ another player's arrow whiz waits for the release of its swing (at most 0.3 s).
 | Combat_Heavy_Breaker2 | 9117034419 | Heavy step 3 GroundBreaker swing | 1.0 |
 | Combat_Dagger_Shadow1 | 9116405867 | Dagger ShadowStep vanish puff, ShadowDrop landing layer | 0.89 |
 | Combat_Dagger_Shadow2 | 9125646252 | same set | 1.86 |
-| Combat_Gauntlet_Rocket1 | 9120007469 | Gauntlet RocketPunch thrust | 0.75 |
-| Combat_Gauntlet_Rocket2 | 9120009733 | Gauntlet RocketPunch thrust | 0.78 |
 | Combat_Ranged_Slide1 | 9114658416 | Ranged SlideShot knee slide (all weapon styles) | 0.51 |
 | Combat_Ranged_Slide2 | 9114658160 | Ranged SlideShot knee slide | 0.56 |
 | Combat_Ranged_PowerRelease1 | 9114001801 | Ranged step 3 PowerShot report (bow, crossbow) | 1.7 |
@@ -310,9 +295,8 @@ another player's arrow whiz waits for the release of its swing (at most 0.3 s).
 
 Reused (no new asset): the AirVolley triple release = BowRelease / CrossbowRelease / GunShot / Blowgun three times
 0.015 s apart + BowWhoosh + Roll (backflip); jump attack weapon whooshes = SwordSwing / SpearThrust / HeavySwing /
-DaggerSlash / GauntletUpper (lower pitch); Land metal ring = SwordHitMetal, debris = HeavySlamDebris, GroundPound punch
-= GauntletHitHeavy; dash strikes = SwordSpin + SwordSwing, SpearPierce + SpearThrust, HeavySmash + HeavySwing,
-DaggerSlash x2, GauntletUpper; QuickShot = BowRelease / BowWhoosh / BowDraw (higher), crossbow / gun / blowgun steps 2-3
+DaggerSlash (lower pitch); Land metal ring = SwordHitMetal, debris = HeavySlamDebris; dash strikes = SwordSpin + SwordSwing, SpearPierce + SpearThrust, HeavySmash + HeavySwing,
+DaggerSlash x2; QuickShot = BowRelease / BowWhoosh / BowDraw (higher), crossbow / gun / blowgun steps 2-3
 from their own sets (+ HeavySlamBoom under the gun PowerShot); Cast2 = MagicCharge + MagicCast (higher); GrandCast /
 MeteorDrop = MagicCharge + MagicCast (lower) + GrandCast; BlinkBlast burst = the element's Burst style at its hit;
 GroundBreaker jump = Roll (lower), its slam = the existing Burst "Slam".
