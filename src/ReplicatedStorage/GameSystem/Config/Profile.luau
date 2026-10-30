@@ -41,7 +41,8 @@ function Profile.new(): { [string]: any }
 		Eggs = {},
 		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, premium = false, locked = false, mutation?, size? }
 		EquippedPets = {}, -- array of uids
-		EquippedSkills = {}, -- [slot 1..3] = skill id (Config/Skills); empty until the skills exist
+		EquippedSkills = {}, -- [slot 2..3] = skill id (Config/Skills); slot 1 is the weapon's
+		Mana = 100, -- Services/ManaService writes it in place (no patch to the client: attributes Mana / MaxMana)
 		Trophies = {},
 		Index = {},
 		IndexMutations = {}, -- [petId] = best mutation order hatched (Config/PetMutations, Pets V2)

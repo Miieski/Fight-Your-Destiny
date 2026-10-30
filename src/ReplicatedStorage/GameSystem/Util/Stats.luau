@@ -188,6 +188,8 @@ function Stats.compute(data: Data, context: Context?): { [string]: any }
 	local speedAttribute = moves and moves.Speed or "Dexterity"
 	local perSpeed = if speedAttribute == "Intelligence" then per.IntelligenceCastSpeed else per.DexterityAttackSpeed
 	out.AttackSpeed = math.min(caps.AttackSpeed, perSpeed * rp * peff(speedAttribute) + (if item then WeaponMoves.RaritySpeed[item.rarity] or 0 else 0))
+	out.MaxMana = base.Mana * (1 + per.MindMana * rp * peff("Mind"))
+	out.ManaRegen = base.ManaRegen * (1 + per.MindManaRegen * rp * peff("Mind"))
 	out.AttributeDamageMult = 1
 	out.WeaponDamage = 0
 	if weapon then

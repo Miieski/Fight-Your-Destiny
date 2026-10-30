@@ -5,6 +5,7 @@
 -- Moves[category] = {
 --   Class      "Melee" | "Bow" | "Staff" (input and server path)
 --   GuardBreakMult  a finisher / heavy on a staggered enemy (default Input.GuardBreakMult); StaggerChance per hit
+--   Quick      Bow / Staff: seconds from the press to a quick shot (the draw shows meanwhile); Burn = hits set enemies on fire
 --   Pair       true: the weapon is one in each hand (WeaponService adds the off-hand copy)
 --   Speed      attribute that speeds the weapon up (Util/Stats, with the rarity; default Dexterity)
 --   Dps        Common damage per second in zone 1, in tens: Sword 1.0 = 10 / s. WeaponCategories derives the category's
@@ -13,9 +14,9 @@
 --   Steps      the combo in order, the last one with Finisher = true
 --   Heavy      the hold attack; Air the jump attack; Dash the dash strike; Skill the Z skill
 -- }
--- Shape: Kind "Arc" / "Cone" (Angle in degrees, Radius), "Line" (Length x Width), "Projectile" (Speed, Range), "AoE" (cast
--- at the aim point within Range, Radius x (1 + Magic radius bonus)), "Circle" (Radius around the attacker). MaxTargets =
--- enemies per hit. A move's Shape fields replace the category's (false removes one: Heavy SlamRadius).
+-- Shape: Kind "Arc" / "Cone" (Angle in degrees, Radius), "Line" (Length x Width), "Projectile" (Speed, Range, 3D, no drop),
+-- "Fireball" (a projectile that explodes: Radius x (1 + Magic radius bonus)), "AoE" (cast at the aim point within Range),
+-- "Circle" (Radius around the attacker). MaxTargets = enemies per hit. A move's Shape fields replace the category's (false removes one: Heavy SlamRadius).
 -- A move (times in seconds at attack speed x1; they shrink with Stats AttackSpeed):
 --   Name       shown nowhere, the reference for clips, VFX and sounds
 --   Clip       clip of Config/CombatAnimations (default <Category>_Attack<step> / _Heavy / _JumpAttack / _DashAttack)
@@ -30,6 +31,7 @@
 --              LungeSeconds = its duration (default Combat.Feel.LungeSeconds)
 --   Heavy: MaxCharge seconds of hold to the full charge, ChargeDamage and ChargeRadius = bonus at full charge, ChargeArmor =
 --              damage taken is reduced this much during the hold
+--   Pierce     enemies a projectile goes through; Shots, Spread fan several; Cost = mana; Size = projectile size
 --   Skill: the Z move, its cooldown and cost are in Config/Skills
 --   Air: Hang = seconds the body stays still before the dive / the shot; Shots, Spread (Ranged volley)
 local WeaponMoves = {}
@@ -130,27 +132,31 @@ WeaponMoves.Moves = {
 			Shape = { Kind = "Circle", Radius = 6, MaxTargets = 4 } },
 	},
 	Ranged = {
-		Class = "Bow", Dps = 0.96,
-		Shape = { Kind = "Projectile", Speed = 120, Range = 60, MaxTargets = 1 },
+		Class = "Bow", Dps = 0.96, Quick = 0.1,
+		Shape = { Kind = "Projectile", Speed = 160, Range = 110, MaxTargets = 1 },
 		Steps = {
-			{ Name = "Shot", Impact = 0.05, Duration = 0.833, Damage = 0.9 },
-			{ Name = "QuickShot", Impact = 0.05, Duration = 0.833, Damage = 0.9 },
-			{ Name = "PowerShot", Impact = 0.12, Duration = 0.833, Damage = 1.2, Finisher = true, Knockback = 6, Shape = { Speed = 170 } },
+			{ Name = "QuickShot", Impact = 0, Duration = 0.42, Damage = 1.0 },
 		},
-		Air = { Name = "AirVolley", Impact = 0.12, Duration = 0.8, Hang = 0.25, Damage = 0.6, Shots = 3, Spread = 14 },
-		Dash = { Name = "SlideShot", Impact = 0.08, Duration = 0.6, Damage = 1.2 },
+		Heavy = { Name = "ChargedShot", Impact = 0, Duration = 0.5, Damage = 2.4, MaxCharge = 0.8, ChargeDamage = 0.6, Pierce = 3, Knockback = 6,
+			Shape = { Speed = 240 } },
+		Air = { Name = "AirVolley", Impact = 0.12, Duration = 0.7, Hang = 0.25, Damage = 1.0, Shots = 3, Spread = 14 },
+		Dash = { Name = "SlideShot", Impact = 0.08, Duration = 0.5, Damage = 1.6 },
+		Skill = { Name = "TripleShot", Clip = "Ranged_Attack3", Impact = 0.05, Duration = 0.5, Damage = 2.4, Shots = 3, Spread = 6, Pierce = 2 },
 	},
 	Magic = {
-		Class = "Staff", Dps = 0.8, Speed = "Intelligence",
-		Shape = { Kind = "AoE", Range = 35, Radius = 6, MaxTargets = 20 },
+		Class = "Staff", Dps = 0.8, Speed = "Intelligence", Quick = 0.15, Burn = true,
+		Shape = { Kind = "Fireball", Speed = 70, Range = 90, Radius = 6, MaxTargets = 12 },
 		Steps = {
-			{ Name = "Cast", Impact = 0.3, Duration = 1.0, Damage = 0.9 },
-			{ Name = "Cast2", Impact = 0.28, Duration = 1.0, Damage = 0.9 },
-			{ Name = "GrandCast", Impact = 0.4, Duration = 1.0, Damage = 1.2, Finisher = true, Shape = { Radius = 8.5 } },
+			{ Name = "Fireball", Impact = 0, Duration = 0.62, Damage = 1.0, Cost = 6 },
 		},
-		Air = { Name = "MeteorDrop", Impact = 0.4, Duration = 1.0, Hang = 0.3, Damage = 1.5, Shape = { Radius = 9 } },
-		Dash = { Name = "BlinkBlast", Impact = 0.2, Duration = 0.7, Damage = 1.2, Knockback = 8,
+		Heavy = { Name = "Inferno", Impact = 0, Duration = 0.8, Damage = 2.6, Cost = 18, MaxCharge = 1.0, ChargeDamage = 0.6, ChargeRadius = 0.4, Size = 2.4,
+			Shape = { Speed = 52, Radius = 8 } },
+		Air = { Name = "MeteorDrop", Impact = 0.4, Duration = 0.9, Hang = 0.3, Damage = 2.4, Cost = 12,
+			Shape = { Kind = "AoE", Range = 35, Radius = 9, MaxTargets = 12 } },
+		Dash = { Name = "BlinkBlast", Impact = 0.2, Duration = 0.6, Damage = 1.6, Cost = 8, Knockback = 8,
 			Shape = { Kind = "Circle", Radius = 6, MaxTargets = 10 } },
+		Skill = { Name = "FlameNova", Clip = "Magic_Attack3", Impact = 0.25, Duration = 0.7, Damage = 3.2, Knockback = 10,
+			Shape = { Kind = "Circle", Radius = 12, MaxTargets = 12 } },
 	},
 } :: { [string]: { [string]: any } }
 

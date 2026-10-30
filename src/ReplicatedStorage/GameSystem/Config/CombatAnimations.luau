@@ -1140,7 +1140,7 @@ Clips.Dagger_Air = {
 }
 
 -- ------------------------------------------------------------------------------------------------
--- RANGED (3 steps, 0.833 s interval; AimPitch: the torso follows the aim up / down)
+-- RANGED: tap = a quick shot (Attack1), hold = the draw of the charged shot (Heavy) (AimPitch: the torso follows the aim)
 -- Bows (style Ranged, the default): the bow in the right hand, side-on archer, the left hand draws to the face.
 -- RBlade = the upper limb, RFace = the arrow side (Muzzle) toward the target.
 -- ------------------------------------------------------------------------------------------------
@@ -1406,6 +1406,23 @@ end
 rifleClips("RangedCrossbow", { 0, 90 }, { 0, 90 })
 rifleClips("RangedGun", { 90, 0 }, { 0, 0 })
 
+-- Heavy: the charged shot. The press starts it: the string comes to the cheek (Charge: held until the release), then the
+-- release. A quick shot leaves from any point of this draw. Crossbows and guns: the steady aim, then their power shot.
+Clips.Ranged_Heavy = {
+	Length = 0.62, Legs = "Stand", AimPitch = true, FadeIn = 0.05, FadeOut = 0.12, Markers = { Charge = 0.12, Hit = 0.14 },
+	Poses = {
+		P(0, nil, BOW_AIM),
+		P(0.12, "o", BOW_AIM, { RootP = { 0, -0.26, 0 }, Waist = { -4, 12, 0 }, LHand = { -10, 0.32, 0.35 } }),
+		P(0.14, "O", BOW_AIM, { RHand = { -22, 0.0, 1.15 }, RBlade = { -62, 50 }, LHand = { 120, 0.3, 0.5 } }),
+		P(0.3, "O", BOW_AIM, { LHand = { 125, 0.25, 0.5 } }),
+		P(0.62, "s", BOW_AIM),
+	},
+}
+Clips.RangedCrossbow_Heavy = table.clone(Clips.RangedCrossbow_Attack3)
+Clips.RangedCrossbow_Heavy.Markers = { Charge = 0.06, Hit = Clips.RangedCrossbow_Attack3.Markers.Hit }
+Clips.RangedGun_Heavy = table.clone(Clips.RangedGun_Attack3)
+Clips.RangedGun_Heavy.Markers = { Charge = 0.06, Hit = Clips.RangedGun_Attack3.Markers.Hit }
+
 -- ------------------------------------------------------------------------------------------------
 -- MAGIC: a staff in the right hand, readable casting pose (3 steps, 1.0 s interval; AimPitch)
 -- ------------------------------------------------------------------------------------------------
@@ -1456,11 +1473,28 @@ Clips.Magic_Attack1 = {
 }
 
 -- Block: the staff held level in front, both hands on it.
+-- The heal channel (the staff's Block): the staff held high with both hands, head bowed.
 Clips.Magic_Block = {
-	Length = 0.13, Hold = true, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.12,
+	Length = 0.2, Hold = true, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.15,
 	Poses = {
-		P(0, nil, STAFF_GUARD, { LGrip = { 1.2, 0 } }),
-		P(0.13, "O", STAFF_GUARD, { RootP = { 0, -0.3, 0 }, RHand = { -30, 0.1, 0.85 }, RBlade = { 95, 5 }, LGrip = { 1.2, 1 } }),
+		P(0, nil, STAFF_GUARD),
+		P(0.2, "O", STAFF_GUARD, { RootP = { 0, -0.12, 0 }, Waist = { 6, 0, 0 }, Neck = { -2, 0, 0 },
+			RHand = { -18, 0.75, 0.7 }, RBlade = { -5, 95 }, LHand = { 18, 0.45, 0.72 } }),
+	},
+}
+-- Heavy: the charged fireball. The staff goes high (Charge: held while the flame grows), then thrown forward on the
+-- release. A quick fireball leaves from any point of this raise.
+Clips.Magic_Heavy = {
+	Length = 0.86, Legs = "Stand", AimPitch = true, FadeIn = 0.06, FadeOut = 0.12, Markers = { Charge = 0.15, Hit = 0.2 },
+	Poses = {
+		P(0, nil, STAFF_GUARD),
+		P(0.15, "o", STAFF_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.1, 0 }, Waist = { 8, -8, 0 }, Neck = { -5, -5, 0 },
+			RHand = { -33, 0.62, 0.72 }, RBlade = { -5, 105 }, LHand = { 35, 0.18, 0.85 } }),
+		P(0.2, "i", STAFF_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.32, -0.1 }, Waist = { -12, 5, 0 }, Neck = { 8, -5, 0 },
+			RHand = { -40, 0.15, 1.2 }, RBlade = { -25, 38 }, LHand = { 25, 0.0, 1.0 }, RFoot = { 0.12, 0, -0.6, -12 } }),
+		P(0.34, "O", STAFF_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.33, -0.1 }, Waist = { -13, 5, 0 }, Neck = { 8, -5, 0 },
+			RHand = { -40, 0.13, 1.22 }, RBlade = { -25, 36 }, LHand = { 25, -0.02, 1.0 }, RFoot = { 0.12, 0, -0.6, -12 } }),
+		P(0.86, "s", STAFF_GUARD),
 	},
 }
 Clips.Magic_BlockHit = blockHitClip()

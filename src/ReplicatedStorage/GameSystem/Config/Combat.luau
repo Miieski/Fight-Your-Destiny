@@ -31,6 +31,15 @@ Combat.Block = {
 	ParryCooldown = 0.5,
 }
 
+-- Staff: Stats.compute MaxMana and ManaRegen come from Mind. Regen x OutOfCombat after OutOfCombatDelay s without casting or
+-- being hit. Services/ManaService ticks every Tick s; attributes Mana / MaxMana change by at least 1 (no network spam).
+Combat.Mana = { Tick = 0.25, OutOfCombat = 2.5, OutOfCombatDelay = 4 }
+-- Heal channel (the staff's Block): up to Fraction of max HP (x (1 + Faith healing)) over Seconds, ManaPerSecond drained; the
+-- walk speed x SpeedFactor; allies within AllyRange studs get AllyShare of it; a dodge or running out of mana stops it;
+-- Cooldown s after it ends. Burn: Stacks at most, each deals DamageFraction of the weapon's damage every Tick s for Seconds s.
+Combat.Heal = { Fraction = 0.2, Seconds = 3, ManaPerSecond = 15, SpeedFactor = 0.5, AllyRange = 20, AllyShare = 0.5, Cooldown = 2 }
+Combat.Burn = { Stacks = 3, DamageFraction = 0.1, Tick = 0.5, Seconds = 3 }
+
 -- Lock-on (client only, Controllers/LockOnController; the server only ever receives a direction): the nearest enemy
 -- within ConeDegrees of the camera's center and Range studs. CameraSpeed / FaceSpeed = exponential turn rates (per s).
 -- A hit from a boss worth BreakFraction of the player's max HP or more breaks it (Net "LockBreak").
@@ -82,12 +91,13 @@ Combat.Feel = {
 	Shake = { Finisher = 0.45, Heavy = 0.6 }, -- Fx.shake strength on a confirmed finisher / heavy hit, slams; none on light hits
 	FovPulse = { Degrees = 6, Seconds = 0.25 }, -- finishers
 	LungeSeconds = 0.12,
+	AimOffset = Vector3.new(1.8, 0.6, 0), -- camera over the shoulder with a bow or a staff, so the crosshair is not on the body
+	AimOffsetRate = 10, -- per second
 	ComboCounterSeconds = 2, -- the combo hit counter fades after this long without a hit
 }
 
 Combat.AutoAttackTick = 0.1 -- seconds between Auto-Attack target checks (client)
 Combat.AutoAttackReachBonus = 1 -- studs added to the weapon reach when Auto-Attack looks for a target
-Combat.AimAssistBonus = 4 -- studs added to the reach for the touch / gamepad aim assist
 Combat.ShotBuffer = 0.25 -- a Ranged / Magic press this early is kept until the weapon is ready
 
 return Combat

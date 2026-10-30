@@ -4,7 +4,7 @@
 -- same on every client: clip (Combat/Animations), trail and effects (VFX), whoosh (Sfx.combat). All the data is in
 -- Config/WeaponMoves: a new weapon needs no new code.
 --   AnimationController.play(state) -> length of the clip in seconds
---     state = { Character, Category, Step, Variant?, Speed, Aim?, Direction?, IsLocal }
+--     state = { Character, Category, Step, Variant?, Speed, Aim?, Direction?, IsLocal, Glow? (Charge: the staff's flame grows) }
 --     Variant: nil (combo step) | "Heavy" | "Air" | "Dash" | "Skill" | "Charge" (the hold's wind-up: clip only)
 --   AnimationController.tool(character) -> Tool?, rarity?, element?, zone?   the held weapon
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -34,8 +34,13 @@ function AnimationController.play(state: { [string]: any }): number
 	local character, category, step, variant, speed = state.Character, state.Category, state.Step, state.Variant, state.Speed
 	if variant == "Charge" then
 		Animations.charge(character, category, speed)
+		if state.Glow then
+			local tool, _, element = AnimationController.tool(character)
+			VFX.chargeGlow({ Character = character, Tool = tool, Category = category, Element = element, Speed = speed })
+		end
 		return 0
 	end
+	VFX.chargeEnd(character)
 	local length = Animations.attack(character, category, step, speed, state.Aim, variant)
 	local move = WeaponMoves.move(category, step, variant)
 	local tool, rarity, element, zone = AnimationController.tool(character)

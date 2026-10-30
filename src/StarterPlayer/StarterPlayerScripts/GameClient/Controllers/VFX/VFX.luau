@@ -267,7 +267,7 @@ function VFX.swing(ctx: { [string]: any })
 				-- the arrows of this shot (Net "Projectile", sent at the request) leave at the release
 				Shots.record(character, impact)
 			end
-			if category == "Magic" and variant ~= "Dash" then
+			if category == "Magic" and variant == "Air" then
 				-- the server's Burst of this cast is drawn from the release (BlinkBlast sends none: its blast is an effect)
 				Casts.record(character, tool, impact, Colors.style(element or "Arcane"), spec.Grand == true, spec.Hand)
 			end
@@ -471,6 +471,56 @@ end
 -- ------------------------------------------------------------------------------------------------
 -- Shots and bursts
 -- ------------------------------------------------------------------------------------------------
+-- The flame on a staff while a charged cast is held, grown by its full charge (AnimationController).
+function VFX.chargeGlow(ctx: { [string]: any })
+	local moves = WeaponMoves.Moves[ctx.Category]
+	local steps = Config.Swing[ctx.Category]
+	local effects = steps and steps[#steps] and steps[#steps].Effects
+	if moves and moves.Class == "Staff" and moves.Heavy and effects then
+		for _, effect in ipairs(effects) do
+			if effect.Kind == "Charge" then
+				Casts.charge(effect, ctx.Character, ctx.Tool, Colors.style(ctx.Element or "Burn"), moves.Heavy.MaxCharge / (ctx.Speed or 1))
+				return
+			end
+		end
+	end
+end
+
+function VFX.chargeEnd(character: Model)
+	Casts.stop(character)
+end
+
+-- The light circle under a healing player: one Neon disc per character, welded to the root, seen by everybody.
+local circles: { [Instance]: BasePart } = setmetatable({}, { __mode = "k" }) :: any
+function VFX.channel(ctx: { [string]: any })
+	local cfg = Config.Channel
+	local character = ctx.Character
+	local root = rootOf(character)
+	local circle = circles[character]
+	if circle then
+		circles[character] = nil
+		circle:Destroy()
+	end
+	if ctx.On and root then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local drop = root.Size.Y / 2 + (if humanoid then humanoid.HipHeight else 2) - 0.1
+		local part = Instance.new("Part")
+		part.Name = "HealCircle"
+		part.Shape = Enum.PartType.Cylinder
+		part.Size = Vector3.new(cfg.Thickness, cfg.Radius * 2, cfg.Radius * 2)
+		part.Material = Enum.Material.Neon
+		part.Color = cfg.Color
+		part.Transparency = cfg.Transparency
+		part.CanCollide, part.CanQuery, part.CanTouch, part.Massless = false, false, false, true
+		part.CFrame = root.CFrame * CFrame.new(0, -drop, 0) * CFrame.Angles(0, 0, math.pi / 2)
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0, weld.Part1 = root, part
+		weld.Parent = part
+		part.Parent = character
+		circles[character] = part
+	end
+end
+
 function VFX.shot(ctx: { [string]: any })
 	local started = os.clock()
 	Shots.shot(ctx)

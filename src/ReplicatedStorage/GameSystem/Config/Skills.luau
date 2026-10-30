@@ -38,6 +38,8 @@ Skills.List = {
 	{ Id = "dagger_blade_storm", Name = "Blade Storm", Icon = "Dagger", Cooldown = 8, Category = "Dagger" },
 	{ Id = "spear_cyclone_sweep", Name = "Cyclone Sweep", Icon = "Spear", Cooldown = 9, Category = "Spear" },
 	{ Id = "heavy_earthbreaker", Name = "Earthbreaker", Icon = "Heavy", Cooldown = 10, Category = "Heavy" },
+	{ Id = "ranged_triple_shot", Name = "Triple Shot", Icon = "Ranged", Cooldown = 7, Category = "Ranged" },
+	{ Id = "magic_flame_nova", Name = "Flame Nova", Icon = "Magic", Cooldown = 9, Category = "Magic", Cost = 25 },
 } :: { { [string]: any } }
 
 Skills.ById = {} :: { [string]: { [string]: any } }

@@ -170,7 +170,16 @@ CombatVFX.HeavySwing = {
 	} },
 } :: { [string]: { [string]: any } }
 -- Z skills: a category without an entry uses its dash strike's effects.
+CombatVFX.Channel = { Radius = 4.5, Thickness = 0.12, Transparency = 0.55, Color = rgb(150, 255, 170) } -- the heal's light circle
 CombatVFX.SkillSwing = {
+	-- FlameNova: one fast ring of fire around the caster, see-through
+	Magic = { Effects = {
+		{ Asset = "Heavy_SmashArc", Radius = 10, Width = 1.6, Height = -1.5, From = 90, To = -270, Roll = 0, Reveal = 0.12, Hold = 0.04, Fade = 0.16, Profile = "Ring", Core = 0.3, Color = rgb(255, 130, 40) },
+	} },
+	-- TripleShot: the charged shot's flash
+	Ranged = { Effects = {
+		{ Kind = "Flash", Asset = "Ranged_MuzzleFlash", Anchor = "Muzzle", Emit = 1.2 },
+	} },
 	-- CycloneSweep: two rings at the spear's reach
 	Spear = { TrailOn = 0.3, TrailOff = 0.34, Effects = {
 		{ Asset = "Spear_SweepArc", Radius = 8.5, Width = 1.3, Height = -0.2, From = 90, To = -270, Roll = 0, Reveal = 0.16, Hold = 0.03, Fade = 0.12, Profile = "Ring", Core = 0.32 },
@@ -598,6 +607,7 @@ CombatVFX.Shot = {
 	MinTime = 0.05,
 	TrailLife = 0.2,
 	MaxHold = 0.3, -- s: a player's arrow waits at most this long for the release of its swing (Shots.record)
+	StuckSeconds = 2.5, -- an arrow that hit a wall or the ground stays there this long
 }
 CombatVFX.Ranged = {
 	Default = "Bow", -- weapon type of a Ranged Tool missing from Kinds
@@ -613,6 +623,8 @@ CombatVFX.Ranged = {
 		Crossbow = { Asset = "Ranged_Bolt", Spark = "Shared_HitSpark", SparkEmit = 0.9 },
 		Gun = { Asset = "Ranged_Bullet", Spark = "Shared_HitSpark", SparkEmit = 0.7 },
 		Orb = { Asset = "Shared_Projectile", Size = 0.9, Spark = "Shared_HitSpark" },
+		-- every staff is a fire staff: the core flame stays orange, its trail takes the weapon element's color
+		Fireball = { Asset = "Shared_Projectile", Size = 1.2, Color = rgb(255, 140, 40), Spark = "Shared_HitSpark" },
 		Enemy = { Asset = "Shared_Projectile", Size = 1.4, Spark = "Shared_HitSpark" },
 	},
 }

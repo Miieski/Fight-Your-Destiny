@@ -10,6 +10,7 @@
 --                                                the variant's Impact). After Animations.charge a "Heavy" attack
 --                                                releases the held wind-up instead of restarting it
 --   Animations.charge(character, category, speed)  plays the heavy clip and holds it at its Charge marker
+--   Animations.aim(character, direction)         the aim pitch of AimPitch clips while a shot is drawn
 --   Animations.cancel(character)                 stops the attack clip quickly (the dodge cancels the recovery)
 --   Animations.block(character, on)              guard pose while Block is held
 --   Animations.blockHit(character)               a hit taken while blocking
@@ -68,7 +69,7 @@ local MOVE_SPEED = 1.5 -- studs / s: a character counts as moving above this (or
 local MOVE_LOCK = 0.35 -- seconds after an attack / roll start during which the lunge / dash speed is ignored
 local SPAWN_WINDOW = 3 -- a new character plays Shared_Spawn if its joints are ready within this many seconds
 local TWIST_MAX = math.rad(110) -- forearm twist toward the blade
-local AIM_PITCH_MAX = math.rad(40) -- torso pitch toward the attack's aim (AimPitch clips)
+local AIM_PITCH_MAX = math.rad(55) -- torso pitch toward the attack's aim (AimPitch clips)
 -- jump attack sync (local player): falling faster than this = diving; total wait; lead before Hit; catch-up rate
 local DIVE_VY, SYNC_HOLD_MAX, LAND_LEAD, CATCH_UP = 8, 1.3, 0.025, 3
 local AIR_FADE = 0.15 -- airborne stance blend
@@ -1791,6 +1792,13 @@ function Animations.charge(character: Model, category: string, speed: number)
 		local sp = if typeof(speed) == "number" and speed > 0 then speed else 1
 		play(S, clip, sp, sp, "attack")
 		S.act.holdAt = clip.charge or (clip.hit or clip.length) * CHARGE_POINT
+	end
+end
+
+function Animations.aim(character: Model, direction: Vector3)
+	local S = states[character]
+	if S and direction.Magnitude > 1e-3 then
+		S.aimPitch = clamp(asin(clamp(direction.Unit.Y, -1, 1)), -AIM_PITCH_MAX, AIM_PITCH_MAX)
 	end
 end
 

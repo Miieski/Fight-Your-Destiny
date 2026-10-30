@@ -9,10 +9,14 @@
 --                                         refused variants fall back to the combo
 --   Net.send("Charge", on: boolean)       the hold starts (after the running swing's impact): the server's own clock
 --                                         measures the charge, whatever the client claims
+--   Bow / staff: the aimDir / aimPoint are 3D (crosshair, any angle); the origin is rebuilt from the character, walls are
+--                                         raycast here, Pierce = the first N enemies on the line, a Fireball explodes where
+--                                         the line ends and sets enemies on fire (Combat.Burn); a move's Cost is spent here
 --   Net.send("Roll", dir: Vector3?)       cooldown = Stats RollCooldown, i-frames Combat.Roll.IFrames; refused before
 --                                         the running attack's impact (a roll only cancels the recovery)
 --   Net.send("Block", holding: boolean)   damage x (1 - Stats Block x guard strength), speed x Combat.Block.SpeedFactor,
---                                         no attacks; guard meter and perfect parry: Combat.Block
+--                                         no attacks; guard meter and perfect parry: Combat.Block. With a staff: the heal
+--                                         channel (ManaService)
 --   CombatService:DamagePlayer(player, raw, source?) -> dealt   (enemies and bosses call this; source = the enemy state,
 --                                         a perfect parry staggers it)
 -- Events: "Swing" (attacker, category, step, dir, speed, aim, variant?) = the compact attack state, to the other players
@@ -38,6 +42,7 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local EnemyService = require(script.Parent.EnemyService)
+local ManaService = require(script.Parent.ManaService)
 local WeaponService = require(script.Parent.WeaponService)
 
 local CombatService = { Priority = 5 }
@@ -47,6 +52,7 @@ type PlayerState = {
 	gap: number, -- the running move's Duration / speed
 	impactAt: number, -- when the running move's first hit lands
 	chargeAt: number?, -- the hold started (Net "Charge")
+	lastHeavy: boolean, -- the running move is a heavy: a new one must wait for its whole Duration
 	combo: number,
 	comboAt: number,
 	comboCategory: string?,
@@ -71,7 +77,7 @@ local function stateOf(player: Player): PlayerState
 	local state = states[player]
 	if not state then
 		state = {
-			lastAttack = -math.huge, gap = 0, impactAt = 0, chargeAt = nil, combo = 0, comboAt = 0, comboCategory = nil,
+			lastAttack = -math.huge, gap = 0, impactAt = 0, chargeAt = nil, lastHeavy = false, combo = 0, comboAt = 0, comboCategory = nil,
 			lastRoll = -math.huge, rollAt = -math.huge, rollUntil = 0, rollEnd = 0, lastAir = -math.huge,
 			blocking = false, blockAt = -math.huge, parryUntil = 0, guard = Combat.Block.GuardMax, guardAt = 0, blockLockUntil = 0, stats = nil,
 		}
@@ -152,7 +158,45 @@ local function visualTo(origin: Vector3): { Player }
 	return list
 end
 
-type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, breaker: number?, staggerChance: number?, knockback: any, stagger: number?, category: string, element: string? }
+type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, breaker: number?, staggerChance: number?, burn: boolean?, knockback: any, stagger: number?, category: string, element: string? }
+
+-- Fire on an enemy: damage over time from the attacker's weapon, up to Combat.Burn.Stacks (a new hit also renews it).
+type Burn = { player: Player, damage: number, stacks: number, untilAt: number, position: () -> Vector3 }
+local burns: { [any]: Burn } = {}
+
+local function addBurn(player: Player, enemy: any, stats: { [string]: any })
+	local cfg = Combat.Burn
+	local burn = burns[enemy]
+	if burn then
+		burn.stacks = math.min(cfg.Stacks, burn.stacks + 1)
+		burn.untilAt = os.clock() + cfg.Seconds
+		burn.player = player
+	else
+		burns[enemy] = {
+			player = player,
+			damage = math.max(1, (stats.WeaponDamage or 0) * cfg.DamageFraction),
+			stacks = 1,
+			untilAt = os.clock() + cfg.Seconds,
+			position = function()
+				return centerOf(enemy)
+			end,
+		}
+	end
+end
+
+local function burnTick()
+	local now = os.clock()
+	for enemy, burn in pairs(burns) do
+		if not enemy.alive or now >= burn.untilAt or not burn.player.Parent then
+			burns[enemy] = nil
+		else
+			local damage = math.max(1, math.floor(burn.damage * burn.stacks + 0.5))
+			local at = burn.position() + Vector3.new(0, (enemy.halfHeight or 2) + 1, 0)
+			EnemyService:Damage(burn.player, enemy, damage, 0)
+			Net.fire(burn.player, "Hit", at, damage, false, false, "Burn")
+		end
+	end
+end
 
 -- One hit on one enemy: crit roll, Boss Slayer, knockback, the "Hit" number for the attacker and the "Impact" for
 -- the players around.
@@ -181,6 +225,9 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 		EnemyService:Stagger(enemy, strike.stagger)
 	elseif staggerChance and enemy.alive and EnemyService.Stagger and rng:NextNumber() < staggerChance then
 		EnemyService:Stagger(enemy, WeaponMoves.Input.ChanceStagger)
+	end
+	if strike.burn and enemy.alive then
+		addBurn(player, enemy, stats)
 	end
 	Net.fire(player, "Hit", at, damage, crit, strike.finisher, strike.category)
 	for _, viewer in ipairs(visualTo(at)) do
@@ -241,21 +288,31 @@ local function inCircle(center: Vector3, radius: number): { any }
 	return list
 end
 
--- The first enemy along a shot (center within its radius of the line), or nil.
-local function firstOnRay(origin: Vector3, dir: Vector3, range: number): (any, number)
-	local best, bestAlong = nil, range
-	for _, enemy in ipairs(EnemyService:GetNear(origin, range)) do
-		local center = centerOf(enemy)
-		local offset = center - origin
+local airParams = RaycastParams.new()
+airParams.FilterType = Enum.RaycastFilterType.Exclude
+
+-- A shot along a line: the first `pierce` enemies (center within their radius of the line) before any wall, the distance
+-- it flies, and whether it ends in a wall.
+local function alongRay(character: Instance?, origin: Vector3, dir: Vector3, range: number, pierce: number): ({ { enemy: any, along: number } }, number, boolean)
+	airParams.FilterDescendantsInstances = { character :: Instance, workspace:FindFirstChild("Enemies") :: Instance }
+	local wall = workspace:Raycast(origin, dir * range, airParams)
+	local limit = if wall then wall.Distance else range
+	local found = {}
+	for _, enemy in ipairs(EnemyService:GetNear(origin, limit)) do
+		local offset = centerOf(enemy) - origin
 		local along = offset:Dot(dir)
-		if along > 0 and along < bestAlong then
-			local side = (offset - dir * along).Magnitude
-			if side <= (enemy.radius or 1) + 1 then
-				best, bestAlong = enemy, along
-			end
+		if along > 0 and along < limit and (offset - dir * along).Magnitude <= (enemy.radius or 1) + 1 then
+			table.insert(found, { enemy = enemy, along = along })
 		end
 	end
-	return best, bestAlong
+	table.sort(found, function(a, b)
+		return a.along < b.along
+	end)
+	for i = #found, pierce + 1, -1 do
+		found[i] = nil
+	end
+	local stopped = #found == pierce
+	return found, math.max(0.5, if stopped then found[pierce].along else limit), wall ~= nil and not stopped
 end
 
 -- The combo step of this attack: the next one, or the first after a pause / a weapon change.
@@ -272,8 +329,6 @@ end
 
 -- The server's view of "in the air": rising / falling, or nothing under the feet within Combat.AirAttack.MinHeight
 -- (the client sends its jump attacks from the air, a little before the server sees it: generous on purpose).
-local airParams = RaycastParams.new()
-airParams.FilterType = Enum.RaycastFilterType.Exclude
 local function airborne(root: BasePart, humanoid: Humanoid): boolean
 	if math.abs(root.AssemblyLinearVelocity.Y) > 4 then
 		return true
@@ -297,7 +352,7 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	local function refuse()
 		Net.fire(player, "Combo", state.comboCategory or "", state.combo, false)
 	end
-	if state.blocking then
+	if state.blocking or ManaService:IsChanneling(player) then
 		return refuse()
 	end
 	local weapon, category = weaponOf(player)
@@ -314,7 +369,9 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	end
 	local chargeAt = state.chargeAt
 	state.chargeAt = nil
-	local charged = variant == "Heavy" and moves.Heavy ~= nil and chargeAt ~= nil
+	-- a heavy flows out of a light step after the hold threshold, not at once: spamming Charge + Heavy gains nothing
+	local heavyGate = if state.lastHeavy then state.gap else math.min(state.gap, WeaponMoves.Input.HoldThreshold)
+	local charged = variant == "Heavy" and moves.Heavy ~= nil and chargeAt ~= nil and now - state.lastAttack >= heavyGate * Combat.RateTolerance
 	if not charged and now - state.lastAttack < state.gap * Combat.RateTolerance then
 		return refuse() -- faster than the weapon allows
 	end
@@ -348,9 +405,15 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 		Net.fire(player, "Combo", id, index, true)
 	end
 	local shape = WeaponMoves.shape(id, step)
+	if step.Cost and not ManaService:Spend(player, step.Cost) then
+		Net.fire(player, "NoMana")
+		return refuse()
+	end
+	ManaService:Touch(player)
 	-- an early request (network jitter tolerance) is booked at its due time, so the long-run rate stays the weapon's
 	state.lastAttack = if charged then now else math.max(now, state.lastAttack + state.gap)
 	state.gap = step.Duration / speed
+	state.lastHeavy = charged
 	local impact = step.Impact / speed
 	state.impactAt = now + impact
 	-- the server's own measure of the hold: 0 (just started) .. 1 (full), whatever the client says
@@ -361,17 +424,18 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 		finisher = step.Finisher == true or kind ~= nil and kind ~= "Dash",
 		breaker = if step.Finisher == true or kind == "Heavy" or kind == "Skill" then moves.GuardBreakMult or WeaponMoves.Input.GuardBreakMult else nil,
 		staggerChance = moves.StaggerChance,
+		burn = moves.Burn,
 		knockback = step.Knockback,
 		stagger = step.Stagger,
 		category = id,
 		element = if weapon then weapon.Element else nil,
 	}
 	local origin = root.Position
-	-- the 3D aim (other players' Ranged / Magic aim pitch): toward the aimed point, else the flat direction
-	local aim = dir
+	-- the 3D aim: toward the aimed point, else the sent direction
+	local aim = if finite(aimDir) and aimDir.Magnitude > 0.01 then aimDir.Unit else dir
 	if finite(aimPoint) then
 		local offset = aimPoint - (origin + Vector3.new(0, 1.5, 0))
-		if offset.Magnitude > 0.5 and offset.Magnitude < 500 then
+		if offset.Magnitude > 0.5 then
 			aim = offset.Unit
 		end
 	end
@@ -381,52 +445,47 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 		end
 	end
 
-	if shape.Kind == "Projectile" then
+	if shape.Kind == "Projectile" or shape.Kind == "Fireball" then
 		local muzzle = origin + Vector3.new(0, 1.2, 0) + dir * 1.5
 		local style = if weapon then weapon.Element else "Physical"
+		local base = aim
 		if kind == "Air" then
-			-- the volley from the air: toward the aimed point (else down and forward), fanned out around the vertical
-			local toward = if finite(aimPoint) then aimPoint - muzzle else nil
-			local base = if toward and toward.Magnitude > 1 then toward.Unit else (dir - Vector3.new(0, 0.45, 0)).Unit
-			-- always down at least 10 degrees (never up into the sky)
+			-- the volley from the air: always down at least 10 degrees (never up into the sky)
 			local pitch = math.clamp(math.asin(math.clamp(base.Y, -1, 1)), math.rad(-85), math.rad(-10))
 			base = flat(base) * math.cos(pitch) + Vector3.new(0, math.sin(pitch), 0)
-			local shots = step.Shots or 1
-			for i = 1, shots do
-				local yaw = math.rad(((i - 1) - (shots - 1) / 2) * (step.Spread or 0))
-				local d = CFrame.fromAxisAngle(Vector3.yAxis, yaw):VectorToWorldSpace(base)
-				local target, along = firstOnRay(muzzle, d, shape.Range)
-				-- the arrow stops in the ground when it hits no enemy before
-				airParams.FilterDescendantsInstances = { root.Parent :: Instance, workspace:FindFirstChild("Enemies") :: Instance }
-				local wall = workspace:Raycast(muzzle, d * along, airParams)
-				if wall then
-					target, along = nil, wall.Distance
-				end
-				local distance = math.max(0.5, along)
-				for _, viewer in ipairs(visualTo(origin)) do
-					Net.fire(viewer, "Projectile", muzzle, d, shape.Speed, distance, style, player)
-				end
-				if target then
-					task.delay(impact + distance / shape.Speed, function()
+		end
+		local shots = step.Shots or 1
+		for i = 1, shots do
+			local yaw = math.rad(((i - 1) - (shots - 1) / 2) * (step.Spread or 0))
+			local d = CFrame.fromAxisAngle(Vector3.yAxis, yaw):VectorToWorldSpace(base)
+			local targets, distance, stuck = alongRay(root.Parent, muzzle, d, shape.Range, step.Pierce or 1)
+			for _, viewer in ipairs(visualTo(origin)) do
+				Net.fire(viewer, "Projectile", muzzle, d, shape.Speed, distance, style, player, stuck, step.Size)
+			end
+			if shape.Kind == "Fireball" then
+				local at = muzzle + d * distance
+				local radius = shape.Radius * (1 + (stats.MagicRadius or 0)) * (1 + (step.ChargeRadius or 0) * charge)
+				task.delay(impact + distance / shape.Speed, function()
+					if not rootOf(player) then
+						return
+					end
+					for _, viewer in ipairs(visualTo(at)) do
+						Net.fire(viewer, "Burst", at, radius, style)
+					end
+					local inBlast = inCircle(at, radius)
+					for n = 1, math.min(#inBlast, shape.MaxTargets) do
+						hit(player, inBlast[n].enemy, stats, strike)
+					end
+				end)
+			else
+				for _, target in ipairs(targets) do
+					task.delay(impact + target.along / shape.Speed, function()
 						if rootOf(player) then
-							hit(player, target, stats, strike)
+							hit(player, target.enemy, stats, strike)
 						end
 					end)
 				end
 			end
-			return
-		end
-		local target, along = firstOnRay(origin + Vector3.new(0, 1.2, 0), dir, shape.Range + 1.5)
-		local distance = math.max(0.5, along - 1.5)
-		for _, viewer in ipairs(visualTo(origin)) do
-			Net.fire(viewer, "Projectile", muzzle, dir, shape.Speed, distance, style, player)
-		end
-		if target then
-			task.delay(impact + distance / shape.Speed, function()
-				if rootOf(player) then
-					hit(player, target, stats, strike)
-				end
-			end)
 		end
 		return
 	end
@@ -545,6 +604,7 @@ local function roll(player: Player, dir: any)
 	if now - state.lastRoll < cooldown * Combat.RateTolerance or now < state.impactAt - Combat.Roll.ImpactTolerance then
 		return
 	end
+	ManaService:Channel(player, false)
 	state.chargeAt = nil
 	state.lastRoll = math.max(now, state.lastRoll + cooldown)
 	state.gap = 0 -- the dodge cancels the recovery: the next move may start after the roll
@@ -574,6 +634,11 @@ local function setBlocking(player: Player, holding: any)
 	local stats = CombatService:Stats(player)
 	local want = holding == true
 	local now = os.clock()
+	local _, category = weaponOf(player)
+	if category and WeaponMoves.Moves[category.Id].Class == "Staff" then
+		ManaService:Channel(player, want) -- the staff has no guard: holding the button heals
+		return
+	end
 	if state.blocking == want or (want and now < state.blockLockUntil) then
 		return
 	end
@@ -620,6 +685,7 @@ function CombatService:DamagePlayer(player: Player, raw: number, source: any?): 
 		Net.fire(player, "Hurt", 0, "dodge")
 		return 0
 	end
+	ManaService:Touch(player)
 	local stats = CombatService:Stats(player)
 	local block = Combat.Block
 	local root = humanoid.Parent and humanoid.Parent:FindFirstChild("HumanoidRootPart")
@@ -701,6 +767,12 @@ function CombatService:EnsureStarterWeapon(player: Player, zoneId: string?)
 end
 
 function CombatService:Init()
+	task.spawn(function()
+		while true do
+			task.wait(Combat.Burn.Tick)
+			burnTick()
+		end
+	end)
 	Net.handle("Attack", attack, 0)
 	Net.handle("Charge", charge, 0.1)
 	Net.handle("Roll", roll, 0.2)

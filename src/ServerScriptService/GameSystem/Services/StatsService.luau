@@ -43,8 +43,8 @@ function StatsService:Apply(player: Player)
 		humanoid.MaxHealth = maxHP
 		humanoid.Health = math.min(maxHP, math.max(1, fraction * maxHP))
 	end
-	-- blocking halves the speed (CombatService sets the Blocking attribute)
-	humanoid.WalkSpeed = stats.WalkSpeed * (if player:GetAttribute("Blocking") then Combat.Block.SpeedFactor else 1)
+	-- blocking halves the speed (CombatService sets the Blocking attribute), so does the heal channel (ManaService)
+	humanoid.WalkSpeed = stats.WalkSpeed * (if player:GetAttribute("Blocking") then Combat.Block.SpeedFactor elseif player:GetAttribute("Channeling") then Combat.Heal.SpeedFactor else 1)
 end
 
 local function train(player: Player, plan: any): (boolean, any)

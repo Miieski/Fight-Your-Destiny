@@ -31,6 +31,8 @@ Attributes.PerPoint = {
 	VigorRegen = 0.001, -- of Max HP per second, out of combat
 	MindGold = 0.06,
 	MindRoll = 0.012,
+	MindMana = 0.04, -- max mana
+	MindManaRegen = 0.03,
 	EnduranceDefense = 2.0, -- Defense points
 	EnduranceBlock = 0.01,
 	EnduranceSpeed = 0.008,
@@ -51,6 +53,8 @@ Attributes.Base = {
 	HP = 100,
 	RegenDelay = 5, -- seconds after the last damage
 	RollCooldown = 1.2,
+	Mana = 100,
+	ManaRegen = 4, -- per second
 	Block = 0.60,
 	CritChance = 0.05,
 	CritDamage = 2.0,
@@ -119,7 +123,7 @@ local function effectsOf(id: string): { string }
 	if id == "Vigor" then
 		return { `Max HP +{pct(p.VigorHP)}`, `HP regeneration out of combat +{pct(p.VigorRegen)} of Max HP per second` }
 	elseif id == "Mind" then
-		return { `Gold Gain +{pct(p.MindGold)}`, `Roll cooldown -{pct(p.MindRoll)} (base {num(base.RollCooldown)} s, floor {num(caps.RollCooldownFloor)} s)` }
+		return { `Gold Gain +{pct(p.MindGold)}`, `Roll cooldown -{pct(p.MindRoll)} (base {num(base.RollCooldown)} s, floor {num(caps.RollCooldownFloor)} s)`, `Max mana +{pct(p.MindMana)}, mana regeneration +{pct(p.MindManaRegen)}` }
 	elseif id == "Endurance" then
 		return {
 			`Defense +{num(p.EnduranceDefense)}`,

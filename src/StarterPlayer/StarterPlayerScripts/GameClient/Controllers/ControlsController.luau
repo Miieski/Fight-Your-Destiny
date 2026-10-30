@@ -272,6 +272,10 @@ local function setCursorFree(free: boolean)
 	cursorButton.Visible = free
 end
 
+function Controls.isCursorFree(): boolean
+	return cursorButton ~= nil and cursorButton.Visible
+end
+
 local function press(action: SettingsConfig.KeyAction)
 	if action.Window then
 		Window.toggle(action.Window)

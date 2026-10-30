@@ -4,9 +4,11 @@
 --   Melee weapons (Config/WeaponMoves): a press starts the next combo step at once, a press in the last BufferWindow of
 --   a move queues the next one (holding never chains); the combo restarts after ComboReset s without attacking. Still
 --   down after HoldThreshold: the swing flows into the heavy's wind-up (after its impact), the release or the full
---   charge fires it. Ranged and Magic: one press = one shot (holding repeats only with the Auto-Attack pass).
---   Aim: the lock-on target (LockOnController), else the camera direction (melee); the body turns to it smoothly,
---   movement never stops. Only heavy, jump and dash moves lunge (move Lunge).
+--   charge fires it. Bow and staff: the press starts the draw; a release before HoldThreshold fires the quick shot at
+--   press + Quick at the earliest, a longer hold charges and the release fires the charged shot.
+--   Aim: the lock-on target (LockOnController), else the camera direction (melee) or the point under the crosshair at the
+--   center of the screen (bow, staff: any angle); the body turns to it smoothly, movement never stops. Only heavy, jump
+--   and dash moves lunge (move Lunge).
 --   Feel on a confirmed hit (Net "Hit"): small shake and FOV pulse on finishers, heavies and slams, combo counter.
 --   Roll: 12-stud dash (i-frames on the server). It cancels the recovery of an attack, nothing else does: pressed during
 --   the start-up it waits for the impact. No attack during the roll.
@@ -39,10 +41,12 @@ local Fx = require(script.Parent.FxController)
 local LockOn = require(script.Parent.LockOnController)
 local Settings = require(script.Parent.SettingsController)
 local AnimationController = require(script.Parent.Combat.AnimationController)
+local ManaBar = require(script.Parent.Parent.UI.ManaBar)
 local Animations = require(script.Parent.Combat.Animations)
 local VFX = require(script.Parent.VFX.VFX)
 local Kit = script.Parent.Parent.UI.Kit
 local Icons = require(Kit.Icons)
+local Window = require(Kit.Window)
 local Screens = require(Kit.Screens)
 local Theme = require(Kit.Theme)
 
@@ -59,6 +63,8 @@ for _, zone in ipairs(Zones.List) do
 	ZONE_OF_ELEMENT[zone.Element] = zone.Index
 end
 local STAT_KEYS = { "Attributes", "Rebirths", "RebirthUpgrades", "Weapons", "EquippedWeapon", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Boosts" }
+local CROSSHAIR_REACH = 600 -- studs
+local CROSSHAIR = { Dot = 6, Ring = 24 } -- pixels
 local SHAKE_GAP = 0.05 -- several enemies hit by one swing give one shake
 local LUNGE_KEEP_DISTANCE = 2.5 -- the lunge stops this far from the aimed enemy
 local AIR_AIM_AHEAD = 14 -- Ranged / Magic jump attacks without an enemy in front aim at the ground this far ahead
@@ -69,6 +75,9 @@ local COMBO_COUNTER = { Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.from
 local holding = false
 local pressAt = -math.huge
 local queued = false -- a press buffered for the next move
+local drawPending = false -- bow / staff: a press waits for the weapon
+local drawing = false -- bow / staff: the draw is under way
+local drawAt = 0
 local charging = false
 local chargeAt = 0
 local blocking = false
@@ -138,7 +147,7 @@ local function reach(shape: any): number
 end
 
 local function isMelee(shape: any): boolean
-	return shape.Kind ~= "Projectile" and shape.Kind ~= "AoE"
+	return shape.Kind ~= "Projectile" and shape.Kind ~= "AoE" and shape.Kind ~= "Fireball"
 end
 
 local function autoOn(): boolean
@@ -184,36 +193,18 @@ local function nearestEnemy(origin: Vector3, range: number, forward: Vector3?, m
 	return best, bestPosition
 end
 
-local function usesMouse(): boolean
-	local last = UserInputService:GetLastInputType()
-	if last == Enum.UserInputType.Touch or string.find(last.Name, "Gamepad") then
-		return false
-	end
-	return UserInputService.MouseEnabled
-end
-
--- The world point under the mouse (PC), or nil.
-local function mousePoint(root: BasePart): Vector3?
+-- The world point under the crosshair (the center of the screen): the first thing the camera ray meets.
+local crosshairParams = RaycastParams.new()
+crosshairParams.FilterType = Enum.RaycastFilterType.Exclude
+local function crosshairPoint(): Vector3?
 	local camera = workspace.CurrentCamera
 	if not camera then
 		return nil
 	end
-	local location = UserInputService:GetMouseLocation()
-	local ray = camera:ViewportPointToRay(location.X, location.Y)
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = { player.Character :: Instance }
-	local result = workspace:Raycast(ray.Origin, ray.Direction * 600, params)
-	if result then
-		return result.Position
-	end
-	if math.abs(ray.Direction.Y) > 1e-3 then
-		local t = (root.Position.Y - 3 - ray.Origin.Y) / ray.Direction.Y
-		if t > 0 then
-			return ray.Origin + ray.Direction * t
-		end
-	end
-	return nil
+	local view = camera.CFrame
+	crosshairParams.FilterDescendantsInstances = { player.Character :: Instance }
+	local result = workspace:Raycast(view.Position, view.LookVector * CROSSHAIR_REACH, crosshairParams)
+	return if result then result.Position else view.Position + view.LookVector * CROSSHAIR_REACH
 end
 
 -- Attack direction and aim point. forced = Auto-Attack's target; the lock-on target wins over the rest. Melee: the camera
@@ -232,18 +223,13 @@ local function aim(root: BasePart, shape: any, forced: Vector3?): (Vector3, Vect
 		end
 		return wanted, nil, false
 	end
-	local assisted = false
-	if not point and usesMouse() then
-		point = mousePoint(root)
-	elseif not point then
-		local _, position = nearestEnemy(root.Position, reach(shape) + Combat.AimAssistBonus, flat(root.CFrame.LookVector))
-		point = position
-		assisted = position ~= nil
+	if not point then
+		point = crosshairPoint()
 	end
 	if point then
 		local offset = point - root.Position
 		if Vector3.new(offset.X, 0, offset.Z).Magnitude > 0.5 then
-			return flat(offset), point, assisted or locked
+			return flat(offset), point, locked
 		end
 	end
 	return flat(root.CFrame.LookVector), point, false
@@ -449,6 +435,10 @@ local function attackOnce(forced: Vector3?, heavy: boolean?, skillSlot: number?)
 	comboAt = now
 	comboCategory = categoryId
 	local shape = WeaponMoves.shape(categoryId, step)
+	if step.Cost and (player:GetAttribute("Mana") or 0) < step.Cost then
+		ManaBar.flash() -- no cast, no cooldown wasted
+		return false
+	end
 	local dir, point, assisted = aim(root, shape, forced)
 	if variant == "Air" and not isMelee(shape) and not forced then
 		-- shooting / casting down from the air: the nearest enemy in front, else the ground a little ahead
@@ -522,6 +512,7 @@ end
 
 local function releaseCharge()
 	charging = false
+	drawing = false
 	if not attackOnce(nil, true) then
 		Net.send("Charge", false)
 		local character = player.Character
@@ -610,7 +601,9 @@ end
 -- Another player's swing (Net "Swing"): animation, trail and whoosh only.
 local function onSwing(attacker: Player, category: string, step: number, dir: Vector3, speed: number, aim: Vector3?, variant: string?)
 	local character = attacker.Character
-	if attacker == player or not character or typeof(category) ~= "string" or typeof(step) ~= "number" or not WeaponMoves.Moves[category] then
+	-- dev hook: attribute SwingSelfTest on the local player plays a Swing sent to oneself (the receive path, without a second
+	-- client, as the MCP can only run one)
+	if (attacker == player and player:GetAttribute("SwingSelfTest") ~= true) or not character or typeof(category) ~= "string" or typeof(step) ~= "number" or not WeaponMoves.Moves[category] then
 		return
 	end
 	AnimationController.play({
@@ -622,6 +615,7 @@ local function onSwing(attacker: Player, category: string, step: number, dir: Ve
 		Aim = if typeof(aim) == "Vector3" then aim else nil,
 		Direction = if typeof(dir) == "Vector3" then dir else nil,
 		IsLocal = false,
+		Glow = true, -- a Charge state from the server is a real hold
 	})
 end
 
@@ -703,7 +697,11 @@ local function applyBlock(down: boolean)
 	end
 	blocking = down
 	Net.send("Block", down)
+	local _, moves = weapon()
 	local character = player.Character
+	if moves.Class == "Staff" then
+		return -- the staff's Block is the heal channel: the Channeling attribute shows it
+	end
 	if character then
 		if down then
 			Animations.cancel(character)
@@ -792,6 +790,8 @@ local function roll()
 	nextAttack = 0
 	queued = false
 	charging = false
+	drawing = false
+	drawPending = false
 	local move = humanoid.MoveDirection
 	local dir = if move.Magnitude > 0.1 then flat(move) else flat(root.CFrame.LookVector)
 	Net.send("Roll", dir)
@@ -902,8 +902,45 @@ local function comboTick()
 		queued = false
 		attackOnce()
 	end
-	if holding then
-		local categoryId, moves = weapon()
+	local categoryId, moves = weapon()
+	if moves.Class ~= "Melee" then
+		if drawPending and now >= nextAttack and now >= rollingUntil and now >= plungeUntil and not blocking then
+			drawPending = false
+			local root = rootPart()
+			if root then
+				drawing = true
+				drawAt = now
+				local cost = moves.Steps[1].Cost
+				if cost and (player:GetAttribute("Mana") or 0) < cost then
+					drawing = false
+					ManaBar.flash()
+				else
+					AnimationController.play({ Character = root.Parent, Category = categoryId, Step = 1, Variant = "Charge", Speed = attackSpeed(), IsLocal = true })
+				end
+			end
+		end
+		if drawing then
+			local character = player.Character
+			local camera = workspace.CurrentCamera
+			if holding and character and camera then
+				Animations.aim(character, camera.CFrame.LookVector)
+				LockOn.face(flat(camera.CFrame.LookVector), 0.15)
+			end
+			if holding then
+				if not charging and now - drawAt >= INPUT.HoldThreshold and moves.Heavy then
+					charging = true
+					chargeAt = now
+					Net.send("Charge", true)
+					if character then
+						AnimationController.play({ Character = character, Category = categoryId, Step = 1, Variant = "Charge", Speed = attackSpeed(), IsLocal = true, Glow = true })
+					end
+				end
+			elseif now >= drawAt + moves.Quick / attackSpeed() then
+				drawing = false
+				attackOnce()
+			end
+		end
+	elseif holding then
 		local heavy = moves.Heavy
 		if charging then
 			if heavy and (now - chargeAt) * attackSpeed() >= heavy.MaxCharge then
@@ -925,9 +962,9 @@ function CombatController:Start()
 	Net.on("Swing", onSwing)
 	Net.on("Impact", onImpact)
 	Net.on("AirSlam", onAirSlam)
-	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string, shooter: Player?)
+	Net.on("Projectile", function(origin: Vector3, dir: Vector3, speed: number, distance: number, style: string, shooter: Player?, stuck: boolean?, size: number?)
 		local from = if typeof(shooter) == "Instance" and shooter:IsA("Player") then shooter else nil
-		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style, Shooter = from })
+		VFX.shot({ Origin = origin, Direction = dir, Speed = speed, Distance = distance, Style = style, Shooter = from, Stuck = stuck, Size = size })
 		-- the shooter's own release / fire sound is the Swing; Shot is the projectile itself (enemy shots included)
 		Sfx.combat("Shot", {
 			Position = origin,
@@ -958,14 +995,11 @@ function CombatController:Start()
 			local now = os.clock()
 			pressAt = now
 			local _, moves = weapon()
-			if moves.Class ~= "Melee" and not autoOn() then
-				-- one press = one shot, kept for a moment if the weapon is not ready yet
-				task.spawn(function()
-					local deadline = os.clock() + Combat.ShotBuffer
-					while not attackOnce() and os.clock() < deadline do
-						task.wait()
-					end
-				end)
+			if moves.Class ~= "Melee" then
+				-- a press a little early is kept until the weapon is ready
+				if now >= nextAttack - Combat.ShotBuffer then
+					drawPending = true
+				end
 				return
 			end
 			if now < rollingUntil or now < plungeUntil then
@@ -1003,6 +1037,70 @@ function CombatController:Start()
 				end
 			end
 		end
+	end)
+
+	-- the heal channel of every player, the local one too (the server decides when it ends)
+	local function watchChannel(other: Player)
+		other:GetAttributeChangedSignal("Channeling"):Connect(function()
+			local on = other:GetAttribute("Channeling") == true
+			if other.Character then
+				Animations.block(other.Character, on)
+				VFX.channel({ Character = other.Character, On = on })
+			end
+			if other == player and not on then
+				blocking = false
+				blockHeld = false
+				Net.send("Block", false)
+			end
+		end)
+	end
+	for _, other in ipairs(Players:GetPlayers()) do
+		watchChannel(other)
+	end
+	Players.PlayerAdded:Connect(watchChannel)
+
+	-- bow and staff: the crosshair at the center of the screen, the camera over the shoulder, the mouse held at the center
+	-- outside windows (the Free Cursor key lets it go)
+	local crosshair = Instance.new("ScreenGui")
+	crosshair.Name = "Crosshair"
+	crosshair.ResetOnSpawn = false
+	crosshair.IgnoreGuiInset = true
+	crosshair.DisplayOrder = 2
+	crosshair.Enabled = false
+	local ring = Instance.new("Frame")
+	ring.AnchorPoint = Vector2.new(0.5, 0.5)
+	ring.Position = UDim2.fromScale(0.5, 0.5)
+	ring.Size = UDim2.fromOffset(CROSSHAIR.Ring, CROSSHAIR.Ring)
+	ring.BackgroundTransparency = 1
+	Theme.round(ring)
+	Theme.stroke(ring, Color3.new(1, 1, 1), 2)
+	ring.Parent = crosshair
+	local dot = Instance.new("Frame")
+	dot.AnchorPoint = Vector2.new(0.5, 0.5)
+	dot.Position = UDim2.fromScale(0.5, 0.5)
+	dot.Size = UDim2.fromOffset(CROSSHAIR.Dot, CROSSHAIR.Dot)
+	dot.BackgroundColor3 = Color3.new(1, 1, 1)
+	Theme.round(dot)
+	Theme.stroke(dot, Theme.Colors.Ink, 1)
+	dot.Parent = crosshair
+	crosshair.Parent = player:WaitForChild("PlayerGui")
+	local mouseHeld = false
+	RunService:BindToRenderStep("FYD_Aim", Enum.RenderPriority.Camera.Value - 1, function(dt: number)
+		local _, moves = weapon()
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local aiming = moves.Class ~= "Melee" and humanoid ~= nil and not player:GetAttribute("Spectating")
+		crosshair.Enabled = aiming and not Window.isOpen()
+		if humanoid then
+			humanoid.CameraOffset = humanoid.CameraOffset:Lerp(if aiming then FEEL.AimOffset else Vector3.zero, 1 - math.exp(-FEEL.AimOffsetRate * dt))
+		end
+		local hold = aiming and not Window.isOpen() and not Controls.isCursorFree() and UserInputService.MouseEnabled and UserInputService:GetLastInputType() ~= Enum.UserInputType.Touch
+		if hold then
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		elseif mouseHeld then
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		end
+		mouseHeld = hold
 	end)
 
 	-- guard poses and block bubbles (VFX.block) of the other players (the local one is drawn on input)
@@ -1084,6 +1182,8 @@ function CombatController:Start()
 		queued = false
 		rollQueued = false
 		charging = false
+		drawing = false
+		drawPending = false
 		blocking = false
 		blockHeld = false
 		comboStep = 0

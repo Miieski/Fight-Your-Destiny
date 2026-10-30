@@ -22,7 +22,8 @@ Net.EVENTS = {
 	"OpenWindow", -- windowId, arg?: the server asks the client to open a window (hub portals -> Zones)
 	"Team", -- { Id, Leader = userId, Members = { userId } } or nil: the player's team (TeamService)
 	"TeamInvite", -- { Id, From = userId, FromName, Seconds }: an invite to answer (TeamService)
-	"Projectile", -- origin, direction, speed, distance, style, shooter?: a shot to draw (CombatService: shooter = the player; EnemyService: nil)
+	"Projectile", -- origin, direction, speed, distance, style, shooter?, stuck?, size?: a shot to draw (CombatService: shooter = the player; EnemyService: nil); stuck = it stays in the wall a moment
+	"NoMana", -- this player's cast was refused: not enough mana (the bar flashes)
 	"Burst", -- position, radius, style: an area effect to draw (Magic, slams)
 	"Motion", -- player, kind ("Roll" | "Hurt" | "BlockHit" | "Parry"), dir?: another player's roll / hit reaction (animation, effects, sound)
 	"Hurt", -- amount, kind ("hit" | "block" | "dodge" | "parry" | "break"): damage taken by this player; break = the guard broke

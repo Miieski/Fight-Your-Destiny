@@ -43,7 +43,7 @@ function Shots.kind(tool: Instance?): string
 		return "Orb"
 	end
 	if tool:GetAttribute("Category") == "Magic" then
-		return "Orb"
+		return "Fireball"
 	end
 	local id = tool:GetAttribute("WeaponId")
 	return if typeof(id) == "string" and Config.Ranged.Kinds[id] then Config.Ranged.Kinds[id] else Config.Ranged.Default
@@ -98,7 +98,7 @@ local function shotStep(fx: Fx, t: number): boolean
 	else
 		fx.arrived = true
 		fx.part.Position = fx.finish
-		fx.part.Transparency = 1
+		fx.part.Transparency = if fx.stuck then 0 else 1 -- an arrow that hit a wall stays in it a moment
 		local trail = fx.child.Trail
 		if trail then
 			trail.Enabled = false
@@ -139,7 +139,7 @@ function Shots.sparkBegin(fx: Fx): boolean
 	return true
 end
 
-local function launch(look: any, from: Vector3, muzzle: Attachment?, finish: Vector3, travel: number, color: Color3, delay: number, arrive: any?)
+local function launch(look: any, from: Vector3, muzzle: Attachment?, finish: Vector3, travel: number, color: Color3, delay: number, arrive: any?, stuck: boolean?, scale: number?)
 	local fx = Runner.acquire(look.Asset)
 	if not fx or not fx.part then
 		if fx then
@@ -149,7 +149,8 @@ local function launch(look: any, from: Vector3, muzzle: Attachment?, finish: Vec
 	end
 	local part = fx.part
 	if look.Size then
-		part.Size = Vector3.new(look.Size, look.Size, look.Size)
+		local size = look.Size * (scale or 1)
+		part.Size = Vector3.new(size, size, size)
 	end
 	part.Color = if look.Color then look.Color else color
 	local trail = fx.child.Trail
@@ -160,7 +161,8 @@ local function launch(look: any, from: Vector3, muzzle: Attachment?, finish: Vec
 	fx.travel = math.max(Config.Shot.MinTime, travel)
 	fx.arrive = arrive or false
 	fx.done = shotDone
-	Runner.run(fx, delay, fx.travel + Config.Shot.TrailLife, shotBegin, shotStep)
+	fx.stuck = stuck == true
+	Runner.run(fx, delay, fx.travel + (if stuck then Config.Shot.StuckSeconds else Config.Shot.TrailLife), shotBegin, shotStep)
 end
 
 function Shots.shot(ctx: { [string]: any })
@@ -198,7 +200,7 @@ function Shots.shot(ctx: { [string]: any })
 			end
 		end
 	end
-	launch(look, origin, muzzle, finish, distance / speed, Colors.style(style), delay, nil)
+	launch(look, origin, muzzle, finish, distance / speed, Colors.style(style), delay, nil, ctx.Stuck, ctx.Size)
 end
 
 function Shots.fire(look: any, from: Vector3, finish: Vector3, travel: number, color: Color3, delay: number, character: Model?, tool: Instance?, arrive: any?, origin: Attachment?)

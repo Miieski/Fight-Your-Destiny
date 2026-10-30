@@ -92,6 +92,8 @@ local function chargeDone(fx: Fx)
 	fx.part.Transparency = 1
 end
 
+local running: { [Instance]: any } = setmetatable({}, { __mode = "k" }) :: any
+
 function Casts.charge(spec: any, character: Model, tool: Instance?, color: Color3, release: number)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not (root and root:IsA("BasePart")) or release <= 0 then
@@ -111,6 +113,16 @@ function Casts.charge(spec: any, character: Model, tool: Instance?, color: Color
 	fx.done = chargeDone
 	Runner.tint(fx, color)
 	Runner.run(fx, 0, release + spec.Linger, chargeBegin, chargeStep)
+	running[character] = fx
+end
+
+-- A hold let go before its full charge: the flame goes out at once.
+function Casts.stop(character: Model)
+	local fx = running[character]
+	if fx then
+		running[character] = nil
+		Runner.stop(fx)
+	end
 end
 
 function Casts.record(character: Model, tool: Instance?, release: number, color: Color3, grand: boolean?, hand: string?)

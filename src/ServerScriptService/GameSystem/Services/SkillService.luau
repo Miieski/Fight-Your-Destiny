@@ -10,6 +10,7 @@ local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local CombatService = require(script.Parent.CombatService)
 local DataService = require(script.Parent.DataService)
+local ManaService = require(script.Parent.ManaService)
 
 local SkillService = { Priority = 6 }
 
@@ -36,8 +37,15 @@ function SkillService:Start()
 		if now < (cooldowns[skill.Id] or 0) - Skills.COOLDOWN_TOLERANCE then
 			return false, Skills.RESOURCE_ERROR
 		end
+		if skill.Cost and not ManaService:Has(player, skill.Cost) then
+			Net.fire(player, "NoMana")
+			return false, Skills.RESOURCE_ERROR
+		end
 		if not CombatService:Skill(player, aimDir, aimPoint) then
 			return false, Skills.RESOURCE_ERROR
+		end
+		if skill.Cost then
+			ManaService:Spend(player, skill.Cost)
 		end
 		cooldowns[skill.Id] = now + skill.Cooldown
 		return true
