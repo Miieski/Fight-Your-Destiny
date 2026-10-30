@@ -193,7 +193,7 @@ function VFX.swing(ctx: { [string]: any })
 	local moves = WeaponMoves.Moves[category]
 	if root and moves and Runner.near(root.Position) then
 		local stepIndex = if typeof(ctx.Step) == "number" then ctx.Step else 1
-		local variant = if ctx.Variant == "Air" or ctx.Variant == "Dash" or ctx.Variant == "Heavy" then ctx.Variant else nil
+		local variant = if ctx.Variant == "Air" or ctx.Variant == "Dash" or ctx.Variant == "Heavy" or ctx.Variant == "Skill" then ctx.Variant else nil
 		local steps = Config.Swing[category]
 		local info = WeaponCategories.ById[category]
 		local def = WeaponMoves.move(category, stepIndex, variant) or moves.Steps[1]
@@ -202,6 +202,8 @@ function VFX.swing(ctx: { [string]: any })
 			spec = (if variant == "Air" then Config.AirSwing else Config.DashSwing)[category]
 		elseif variant == "Heavy" then
 			spec = Config.HeavySwing[category] or (steps and steps[#steps])
+		elseif variant == "Skill" then
+			spec = Config.SkillSwing[category] or Config.DashSwing[category]
 		end
 		spec = spec or (if steps then steps[stepIndex] or steps[1] elseif info and info.Melee then Config.Swing.Default else nil)
 		if spec then

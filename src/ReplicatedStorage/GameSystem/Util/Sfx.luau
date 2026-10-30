@@ -579,14 +579,14 @@ function Sfx.combat(event: string, ctx: { [string]: any }?)
 				swing = styles[style]
 			end
 		end
-		local variant = if info.Variant == "Air" or info.Variant == "Dash" or info.Variant == "Heavy" then info.Variant else nil
+		local variant = if info.Variant == "Air" or info.Variant == "Dash" or info.Variant == "Heavy" or info.Variant == "Skill" then info.Variant else nil
 		local step = if typeof(info.Step) == "number" then math.max(1, math.floor(info.Step)) else 1
 		local spec: { [string]: any }? = nil
 		local def: { [string]: any }? = nil
 		if variant then
 			-- jump attack / dash strike / heavy: its own spec (the weapon style's, else the category's; a heavy without one
 			-- sounds like the finisher), timed on its Config/WeaponMoves move
-			spec = swing[variant] or entry[variant]
+			spec = swing[variant] or entry[variant] or (if variant == "Skill" then swing.Dash else nil)
 			def = WeaponMoves.move(requested, step, variant) or WeaponMoves.move(CombatSfx.DefaultCategory, step, variant)
 		end
 		if not spec then

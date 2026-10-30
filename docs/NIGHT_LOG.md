@@ -1,5 +1,21 @@
 # WEAPON OVERHAUL DECISIONS (owner prompt "WEAPON ANIMATIONS OVERHAUL", 2026-10-30) - newest first
 
+- SWORD PILOT (Studio agent): 4 hits + finisher, first hit 0.10 s, step 0.34 s, finisher 0.62 s, heavy 0.12 s after the release.
+  Clips Sword_Attack1..5 and Sword_Heavy rewritten so each swing starts where the last one ended; new step DownCut. Z = Dash
+  Slash (reuses the Sword_DashAttack clip, its own move in WeaponMoves, 8 s cooldown in Skills). The hold's clip waits at a
+  `Charge` marker. Common weapons now get a trail too (Weapon.TrailFromTier 1): the owner asked for a trail per weapon.
+- DPS decision (Studio agent): `WeaponCategories.DamageMult` is derived: Dps / (hits per second x average step Damage). The DPS
+  levels stay the old ones (Sword 10 / s in Plains), so the much faster steps give smaller hit numbers (Common Plains sword
+  about 3.3 per light hit, not 10) and the same time to kill; shop texts stay right. Attack speed still raises DPS (up to x2,
+  the old cap was x1.15). Heavy, jump, dash and skill Damage values were raised to fit the new scale.
+- Guard meter: no HUD bar (not in the prompt); breaks show as a hurt reaction and the block is refused for 1.5 s.
+- Skills: slot 1 (Z) is the equipped category's skill (`Skills.Basic`), not stored in the profile; slots 2 and 3 keep
+  EquippedSkills. The skill plays at once on the client; if the server refuses it the clip is cancelled.
+- Lock-on keys: L, H (next), gamepad R3, D-pad right; touch: Lock button, arrow only while locked. A boss hit worth 15% of max
+  HP breaks it. Enemy position data on the client: model pivot + TargetHeight.
+- Filmstrips: real-time footage with `FYDSHOT|BURST` (48 fps). Raw bursts stay out of the repo (about 100 MB per weapon);
+  only the GIF and 8 picks are kept (`tools/make_rt_gif.py`). Frozen poses show no effects, the real-time block shows them.
+
 - STEP 0, GAUNTLET CATEGORY REMOVED (Studio agent). 84 weapons / 7 categories -> 72 / 6. No refund (the old Whip refund
   stays for old Whip items). `DataService.migrate`: gauntlet items and index entries are dropped; if the equipped one was
   removed, the strongest other copy is equipped, none left = the starter sword (CombatService). Self-check in Play (Server,

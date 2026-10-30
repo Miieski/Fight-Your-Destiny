@@ -189,93 +189,133 @@ Clips.Sword_Equip = {
 	},
 }
 
+-- Combo clips (Config/WeaponMoves Sword, overhaul 2026-10-30): the Hit marker = the step's Impact (0.10), the next step can
+-- start at 0.34. Each swing starts where the last one ended, so the chain flows: right -> left -> low -> high -> down -> spin.
 -- Attack 1, RightSlash: cocked behind the right shoulder -> diagonal down across the front -> low left.
 Clips.Sword_Attack1 = {
-	Length = 0.8, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.16 },
+	Length = 0.5, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.1, Markers = { Hit = 0.1 },
 	Poses = {
-		P(0, nil, SWORD_GUARD),
-		P(0.08, "o", SWORD_GUARD, { Root = { 0, -20, 0 }, RootP = { 0, -0.3, 0 }, Waist = { -2, -40, 0 }, Neck = { 6, 45, 0 },
+		P(0, nil, SWORD_GUARD, { Root = { 0, -20, 0 }, RootP = { 0, -0.3, 0 }, Waist = { -2, -40, 0 }, Neck = { 6, 45, 0 },
 			RHand = { -110, 0.6, 0.85 }, RBlade = { -140, 55 }, LHand = { 15, -0.1, 1.0 },
 			RFoot = { 0.15, 0, -0.55, -10 }, LFoot = { -0.15, 0, 0.45, 25 } }),
-		P(0.16, "i", SWORD_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.34, -0.05 }, Waist = { -8, 12, 0 }, Neck = { 6, -18, 0 },
+		P(0.1, "i", SWORD_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.34, -0.05 }, Waist = { -8, 12, 0 }, Neck = { 6, -18, 0 },
 			RHand = { -12, -0.1, 1.5 }, RBlade = { 40, -5 }, LHand = { 70, -0.45, 0.6 },
 			RFoot = { 0.15, 0, -0.75, -10 }, LFoot = { -0.15, 0, 0.45, 25 } }),
-		P(0.27, "O", SWORD_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.36, -0.05 }, Waist = { -10, 35, 0 }, Neck = { 8, -45, 0 },
+		P(0.19, "O", SWORD_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.36, -0.05 }, Waist = { -10, 35, 0 }, Neck = { 8, -45, 0 },
 			RHand = { 75, -0.2, 1.45 }, RBlade = { 110, -5 }, LHand = { 120, -0.4, 0.55 },
 			RFoot = { 0.15, 0, -0.75, -10 }, LFoot = { -0.15, 0, 0.45, 25 } }),
-		P(0.45, "s", SWORD_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.34, -0.05 }, Waist = { -9, 33, 0 }, Neck = { 8, -43, 0 },
+		P(0.34, "s", SWORD_GUARD, { Root = { 0, 25, 0 }, RootP = { 0, -0.34, -0.05 }, Waist = { -9, 33, 0 }, Neck = { 8, -43, 0 },
 			RHand = { 72, -0.25, 1.4 }, RBlade = { 105, -2 }, LHand = { 115, -0.4, 0.55 },
 			RFoot = { 0.15, 0, -0.75, -10 }, LFoot = { -0.15, 0, 0.45, 25 } }),
-		P(0.8, "s", SWORD_GUARD),
+		P(0.5, "s", SWORD_GUARD),
 	},
 }
 
 -- Attack 2, LeftSlash: backhand from over the left shoulder, flat across the front, out to the right.
 Clips.Sword_Attack2 = {
-	Length = 0.8, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.16 },
+	Length = 0.5, Legs = "Stand", FadeIn = 0.06, FadeOut = 0.1, Markers = { Hit = 0.1 },
 	Poses = {
-		P(0, nil, SWORD_GUARD),
-		P(0.08, "o", SWORD_GUARD, { Root = { 0, 28, 0 }, RootP = { 0, -0.28, 0 }, Waist = { -4, 35, 0 }, Neck = { 6, -55, 0 },
+		P(0, nil, SWORD_GUARD, { Root = { 0, 28, 0 }, RootP = { 0, -0.28, 0 }, Waist = { -4, 35, 0 }, Neck = { 6, -55, 0 },
 			RHand = { 75, 0.45, 0.7 }, RBlade = { 150, 50 }, LHand = { 40, -0.7, 0.5 } }),
-		P(0.16, "i", SWORD_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.32, -0.05 }, Waist = { -6, -12, 0 }, Neck = { 4, 10, 0 },
+		P(0.1, "i", SWORD_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.32, -0.05 }, Waist = { -6, -12, 0 }, Neck = { 4, 10, 0 },
 			RHand = { 0, -0.05, 1.5 }, RBlade = { -45, 0 }, LHand = { 55, -0.4, 0.9 },
 			RFoot = { 0.2, 0, -0.75, -10 } }),
-		P(0.27, "O", SWORD_GUARD, { Root = { 0, -15, 0 }, RootP = { 0, -0.34, -0.05 }, Waist = { -8, -35, 0 }, Neck = { 6, 45, 0 },
+		P(0.19, "O", SWORD_GUARD, { Root = { 0, -15, 0 }, RootP = { 0, -0.34, -0.05 }, Waist = { -8, -35, 0 }, Neck = { 6, 45, 0 },
 			RHand = { -95, -0.1, 1.45 }, RBlade = { -115, 5 }, LHand = { 45, -0.3, 0.9 },
 			RFoot = { 0.2, 0, -0.75, -10 } }),
-		P(0.45, "s", SWORD_GUARD, { Root = { 0, -13, 0 }, RootP = { 0, -0.32, -0.05 }, Waist = { -8, -33, 0 }, Neck = { 6, 43, 0 },
+		P(0.34, "s", SWORD_GUARD, { Root = { 0, -13, 0 }, RootP = { 0, -0.32, -0.05 }, Waist = { -8, -33, 0 }, Neck = { 6, 43, 0 },
 			RHand = { -92, -0.15, 1.4 }, RBlade = { -112, 8 }, LHand = { 45, -0.32, 0.88 },
 			RFoot = { 0.2, 0, -0.75, -10 } }),
-		P(0.8, "s", SWORD_GUARD),
+		P(0.5, "s", SWORD_GUARD),
 	},
 }
 
 -- Attack 3, RisingSlash: low crouch, the blade rises through the front and ends overhead on the toes.
 Clips.Sword_Attack3 = {
-	Length = 0.85, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.18 },
+	Length = 0.5, Legs = "Stand", FadeIn = 0.06, FadeOut = 0.1, Markers = { Hit = 0.1 },
 	Poses = {
-		P(0, nil, SWORD_GUARD),
-		P(0.09, "o", SWORD_GUARD, { Root = { 0, -10, 0 }, RootP = { 0, -0.45, 0.05 }, Waist = { -24, -12, 0 }, Neck = { 20, 10, 0 },
+		P(0, nil, SWORD_GUARD, { Root = { 0, -10, 0 }, RootP = { 0, -0.45, 0.05 }, Waist = { -24, -12, 0 }, Neck = { 20, 10, 0 },
 			RHand = { -30, -0.85, 0.95 }, RBlade = { -20, -5 }, LHand = { 30, -0.3, 1.0 },
 			RFoot = { 0.25, 0, -0.6, -15 }, LFoot = { -0.2, 0, 0.5, 25 } }),
-		P(0.18, "i", SWORD_GUARD, { Root = { 0, 4, 0 }, RootP = { 0, -0.2, -0.08 }, Waist = { -4, 0, 0 }, Neck = { 6, 0, 0 },
+		P(0.1, "i", SWORD_GUARD, { Root = { 0, 4, 0 }, RootP = { 0, -0.2, -0.08 }, Waist = { -4, 0, 0 }, Neck = { 6, 0, 0 },
 			RHand = { -10, -0.05, 1.35 }, RBlade = { -5, 55 }, LHand = { 70, -0.7, 0.5 },
 			RFoot = { 0.25, 0, -0.65, -15 }, LFoot = { -0.2, 0, 0.5, 25 } }),
-		P(0.29, "O", SWORD_GUARD, { Root = { 0, 8, 0 }, RootP = { 0, 0.08, -0.08 }, Waist = { 8, 4, 0 }, Neck = { -10, 0, 0 },
+		P(0.19, "O", SWORD_GUARD, { Root = { 0, 8, 0 }, RootP = { 0, 0.08, -0.08 }, Waist = { 8, 4, 0 }, Neck = { -10, 0, 0 },
 			RHand = { -5, 1.05, 0.7 }, RBlade = { 0, 130 }, LHand = { 100, -0.6, 0.5 },
 			RFoot = { 0.25, 0, -0.65, -15 }, LFoot = { -0.2, 0, 0.5, 25 } }),
-		P(0.5, "s", SWORD_GUARD, { Root = { 0, 8, 0 }, RootP = { 0, -0.02, -0.05 }, Waist = { 6, 4, 0 }, Neck = { -8, 0, 0 },
+		P(0.34, "s", SWORD_GUARD, { Root = { 0, 8, 0 }, RootP = { 0, -0.02, -0.05 }, Waist = { 6, 4, 0 }, Neck = { -8, 0, 0 },
 			RHand = { -8, 0.95, 0.75 }, RBlade = { -2, 120 }, LHand = { 95, -0.6, 0.5 },
 			RFoot = { 0.25, 0, -0.65, -15 }, LFoot = { -0.2, 0, 0.5, 25 } }),
-		P(0.85, "s", SWORD_GUARD),
+		P(0.5, "s", SWORD_GUARD),
 	},
 }
 
--- Attack 4, SpinSlash (finisher): deep twist, a full jumping turn with the blade straight out, heavy landing.
--- The spin poses keep the arm in the torso frame (Torso = true) so the blade turns with the body.
+-- Attack 4, DownCut: from overhead straight down the center line, driving forward onto the front foot.
 Clips.Sword_Attack4 = {
-	Length = 0.95, Legs = "Own", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.22 },
+	Length = 0.52, Legs = "Stand", FadeIn = 0.06, FadeOut = 0.1, Markers = { Hit = 0.11 },
 	Poses = {
-		P(0, nil, SWORD_GUARD),
-		P(0.1, "o", SWORD_GUARD, { Root = { 0, -50, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -10, -25, 0 }, Neck = { 8, 55, 0 },
+		P(0, nil, SWORD_GUARD, { Root = { 0, 8, 0 }, RootP = { 0, 0.02, -0.05 }, Waist = { 8, 4, 0 }, Neck = { -10, 0, 0 },
+			RHand = { -6, 1.0, 0.72 }, RBlade = { -2, 125 }, LHand = { 90, -0.6, 0.5 },
+			RFoot = { 0.25, 0, -0.65, -15 }, LFoot = { -0.2, 0, 0.5, 25 } }),
+		P(0.11, "i", SWORD_GUARD, { Root = { 0, 4, 0 }, RootP = { 0, -0.38, -0.12 }, Waist = { -18, 2, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -4, -0.1, 1.5 }, RBlade = { -3, -8 }, LHand = { 70, -0.5, 0.6 },
+			RFoot = { 0.2, 0, -0.85, -12 }, LFoot = { -0.2, 0, 0.55, 25 } }),
+		P(0.2, "O", SWORD_GUARD, { Root = { 0, 2, 0 }, RootP = { 0, -0.46, -0.14 }, Waist = { -24, 0, 0 }, Neck = { 20, 0, 0 },
+			RHand = { -8, -0.62, 1.2 }, RBlade = { -5, -38 }, LHand = { 75, -0.55, 0.6 },
+			RFoot = { 0.2, 0, -0.85, -12 }, LFoot = { -0.2, 0, 0.55, 25 } }),
+		P(0.36, "s", SWORD_GUARD, { Root = { 0, 2, 0 }, RootP = { 0, -0.42, -0.12 }, Waist = { -22, 0, 0 }, Neck = { 18, 0, 0 },
+			RHand = { -10, -0.58, 1.18 }, RBlade = { -6, -34 }, LHand = { 75, -0.55, 0.6 },
+			RFoot = { 0.2, 0, -0.85, -12 }, LFoot = { -0.2, 0, 0.55, 25 } }),
+		P(0.52, "s", SWORD_GUARD),
+	},
+}
+
+-- Attack 5, SpinSlash (finisher): a deep twist, a full jumping turn with the blade straight out, heavy landing.
+-- The spin poses keep the arm in the torso frame (Torso = true) so the blade turns with the body.
+Clips.Sword_Attack5 = {
+	Length = 0.78, Legs = "Own", FadeIn = 0.05, FadeOut = 0.1, Markers = { Hit = 0.14 },
+	Poses = {
+		P(0, nil, SWORD_GUARD, { Root = { 0, -50, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -10, -25, 0 }, Neck = { 8, 55, 0 },
 			RHand = { -120, -0.1, 1.2 }, RBlade = { -150, 0 }, LHand = { 20, -0.1, 1.0 },
 			RFoot = { 0.3, 0, -0.5, -20 }, LFoot = { -0.25, 0, 0.45, 30 } }),
-		P(0.13, "l", SWORD_GUARD, { Torso = true, Root = { 0, -35, 0 }, RootP = { 0, -0.35, 0 }, Waist = { -8, 0, 0 }, Neck = { 0, 0, 0 },
+		P(0.03, "l", SWORD_GUARD, { Torso = true, Root = { 0, -35, 0 }, RootP = { 0, -0.35, 0 }, Waist = { -8, 0, 0 }, Neck = { 0, 0, 0 },
 			RHand = { -90, 0.0, 1.45 }, RBlade = { -95, 3 }, LHand = { 80, -0.3, 0.6 },
 			RFoot = { 0.3, 0, -0.5, -20 }, LFoot = { -0.25, 0, 0.45, 30 } }),
-		P(0.25, "l", SWORD_GUARD, { Torso = true, Root = { 0, 130, 0 }, RootP = { 0, 0.6, 0 }, Waist = { -8, 0, 0 }, Neck = { 0, 0, 0 },
+		P(0.13, "l", SWORD_GUARD, { Torso = true, Root = { 0, 130, 0 }, RootP = { 0, 0.6, 0 }, Waist = { -8, 0, 0 }, Neck = { 0, 0, 0 },
 			RHand = { -90, 0.02, 1.45 }, RBlade = { -92, 4 }, LHand = { 85, -0.3, 0.55 },
 			RFoot = { 0.25, 0.7, -0.3, -20 }, LFoot = { -0.25, 0.65, 0.3, 30 } }),
-		P(0.38, "l", SWORD_GUARD, { Torso = true, Root = { 0, 290, 0 }, RootP = { 0, 0.0, 0 }, Waist = { -10, 4, 0 }, Neck = { 2, -4, 0 },
+		P(0.24, "l", SWORD_GUARD, { Torso = true, Root = { 0, 290, 0 }, RootP = { 0, 0.0, 0 }, Waist = { -10, 4, 0 }, Neck = { 2, -4, 0 },
 			RHand = { -95, -0.1, 1.42 }, RBlade = { -100, 0 }, LHand = { 75, -0.25, 0.75 },
 			RFoot = { 0.28, 0.1, -0.45, -20 }, LFoot = { -0.28, 0.1, 0.45, 30 } }),
-		P(0.44, "O", SWORD_GUARD, { Torso = true, Root = { 0, 330, 0 }, RootP = { 0, -0.5, 0 }, Waist = { -14, 10, 0 }, Neck = { 8, -10, 0 },
+		P(0.3, "O", SWORD_GUARD, { Torso = true, Root = { 0, 330, 0 }, RootP = { 0, -0.5, 0 }, Waist = { -14, 10, 0 }, Neck = { 8, -10, 0 },
 			RHand = { -100, -0.25, 1.4 }, RBlade = { -110, -5 }, LHand = { 60, -0.2, 0.9 },
 			RFoot = { 0.3, 0, -0.5, -20 }, LFoot = { -0.3, 0, 0.5, 30 } }),
-		P(0.62, "s", SWORD_GUARD, { Torso = true, Root = { 0, 345, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -13, 10, 0 }, Neck = { 8, -12, 0 },
+		P(0.5, "s", SWORD_GUARD, { Torso = true, Root = { 0, 345, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -13, 10, 0 }, Neck = { 8, -12, 0 },
 			RHand = { -98, -0.25, 1.38 }, RBlade = { -108, -3 }, LHand = { 58, -0.22, 0.88 },
 			RFoot = { 0.3, 0, -0.5, -20 }, LFoot = { -0.3, 0, 0.5, 30 } }),
-		P(0.95, "s", SWORD_SPIN_END),
+		P(0.78, "s", SWORD_SPIN_END),
+	},
+}
+
+-- Heavy, HeavyCleave: both hands bring the sword up behind the head and the weight rocks back (Charge: the wind-up waits
+-- here while the button is held), then a full diagonal cleave stepping through. The release takes Impact to reach Hit.
+Clips.Sword_Heavy = {
+	Length = 0.86, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.12, Markers = { Charge = 0.16, Hit = 0.24 },
+	Poses = {
+		P(0, nil, SWORD_GUARD, { LGrip = { -0.35, 0 } }),
+		P(0.16, "o", SWORD_GUARD, { Root = { 6, -28, 0 }, RootP = { 0, -0.36, 0.1 }, Waist = { 8, -32, 0 }, Neck = { -4, 40, 0 },
+			RHand = { -30, 1.0, 0.45 }, RBlade = { -40, 140 }, LHand = { 0, 0.9, 0.4 }, LGrip = { -0.35, 1 },
+			RFoot = { 0.2, 0, -0.35, -15 }, LFoot = { -0.2, 0, 0.7, 30 } }),
+		P(0.24, "i", SWORD_GUARD, { Root = { -8, 18, 0 }, RootP = { 0, -0.5, -0.2 }, Waist = { -18, 22, 0 }, Neck = { 12, -24, 0 },
+			RHand = { 8, -0.2, 1.45 }, RBlade = { 22, -20 }, LHand = { 20, -0.2, 1.2 }, LGrip = { -0.35, 1 },
+			RFoot = { 0.2, 0, -0.95, -12 }, LFoot = { -0.2, 0, 0.75, 30 } }),
+		P(0.38, "O", SWORD_GUARD, { Root = { -10, 32, 0 }, RootP = { 0, -0.56, -0.22 }, Waist = { -22, 32, 0 }, Neck = { 16, -36, 0 },
+			RHand = { 62, -0.62, 1.2 }, RBlade = { 95, -32 }, LHand = { 60, -0.6, 1.0 }, LGrip = { -0.35, 0.7 },
+			RFoot = { 0.2, 0, -0.95, -12 }, LFoot = { -0.2, 0, 0.75, 30 } }),
+		P(0.6, "s", SWORD_GUARD, { Root = { -8, 30, 0 }, RootP = { 0, -0.5, -0.2 }, Waist = { -18, 30, 0 }, Neck = { 14, -34, 0 },
+			RHand = { 58, -0.55, 1.18 }, RBlade = { 90, -28 }, LHand = { 70, -0.5, 0.8 }, LGrip = { -0.35, 0 },
+			RFoot = { 0.2, 0, -0.9, -12 }, LFoot = { -0.2, 0, 0.7, 30 } }),
+		P(0.86, "s", SWORD_GUARD, { LGrip = { -0.35, 0 } }),
 	},
 }
 

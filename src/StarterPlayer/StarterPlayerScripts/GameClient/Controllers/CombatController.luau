@@ -33,6 +33,8 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 
 local State = require(script.Parent.Parent.State)
 local Controls = require(script.Parent.ControlsController)
+local SkillController = require(script.Parent.SkillController)
+local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
 local Fx = require(script.Parent.FxController)
 local LockOn = require(script.Parent.LockOnController)
 local Settings = require(script.Parent.SettingsController)
@@ -405,8 +407,9 @@ local function landed(character: Model, categoryId: string, groundPoint: Vector3
 	Fx.fovPulse(FEEL.FovPulse.Degrees, FEEL.FovPulse.Seconds)
 end
 
--- One attack now if the weapon is ready (heavy = the release of a charge). Returns true when it was sent.
-local function attackOnce(forced: Vector3?, heavy: boolean?): boolean
+-- One attack now if the weapon is ready (heavy = the release of a charge, skillSlot = a Z skill: the move runs at once, the
+-- answer is the server's). Returns true when it was sent.
+local function attackOnce(forced: Vector3?, heavy: boolean?, skillSlot: number?): (boolean, any)
 	local root, humanoid = rootPart()
 	if not (root and humanoid) or blocking or player:GetAttribute("Spectating") then
 		return false
@@ -422,6 +425,8 @@ local function attackOnce(forced: Vector3?, heavy: boolean?): boolean
 	local variant: string? = nil
 	if heavy then
 		variant = "Heavy"
+	elseif skillSlot then
+		variant = "Skill"
 	elseif moves.Dash and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
 		variant = "Dash"
 	elseif moves.Air and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then
@@ -492,6 +497,14 @@ local function attackOnce(forced: Vector3?, heavy: boolean?): boolean
 	end
 	pendingAttacks += 1
 	sentAt = now
+	if skillSlot then
+		local ok, result = Net.request("UseSkill", skillSlot, dir, point)
+		if not ok then
+			nextAttack = 0
+			Animations.cancel(character)
+		end
+		return ok, result
+	end
 	Net.send("Attack", dir, point, variant)
 	return true
 end
@@ -969,6 +982,10 @@ function CombatController:Start()
 	end)
 	Controls.Roll:Connect(roll)
 	Controls.Block:Connect(setBlocking)
+	SkillController.perform = function(slot: number): (boolean, any)
+		local ok, result = attackOnce(nil, nil, slot)
+		return ok, if ok or result then result else Skills.RESOURCE_ERROR
+	end
 	RunService.Heartbeat:Connect(comboTick)
 
 	-- Auto-Attack: the nearest enemy in the weapon's reach

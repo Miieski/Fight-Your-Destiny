@@ -5,7 +5,7 @@
 -- Config/WeaponMoves: a new weapon needs no new code.
 --   AnimationController.play(state) -> length of the clip in seconds
 --     state = { Character, Category, Step, Variant?, Speed, Aim?, Direction?, IsLocal }
---     Variant: nil (combo step) | "Heavy" | "Air" | "Dash" | "Charge" (the hold's wind-up: clip only)
+--     Variant: nil (combo step) | "Heavy" | "Air" | "Dash" | "Skill" | "Charge" (the hold's wind-up: clip only)
 --   AnimationController.tool(character) -> Tool?, rarity?, element?, zone?   the held weapon
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -46,7 +46,7 @@ function AnimationController.play(state: { [string]: any }): number
 		Category = category,
 		Step = step,
 		Variant = variant,
-		Finisher = variant == "Air" or variant == "Heavy" or (variant == nil and move ~= nil and move.Finisher == true),
+		Finisher = variant == "Air" or variant == "Heavy" or variant == "Skill" or (variant == nil and move ~= nil and move.Finisher == true),
 		Direction = state.Direction or Vector3.new(0, 0, -1),
 		Rarity = rarity,
 		Element = element,

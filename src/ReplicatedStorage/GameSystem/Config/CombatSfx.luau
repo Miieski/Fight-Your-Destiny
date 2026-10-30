@@ -499,6 +499,7 @@ CombatSfx.Categories = {
 				{ Set = "SwordSwing" }, -- RightSlash
 				{ Set = "SwordSwing", Pitch = 1.06 }, -- LeftSlash
 				{ Set = "SwordRise", Pitch = 1.04 }, -- RisingSlash
+				{ Set = "SwordSwing", Pitch = 0.92 }, -- DownCut
 			},
 			-- SpinSlash: the heavy whoosh with a lower blade swish under it
 			Finisher = { Set = "SwordSpin", Pitch = 0.96, Also = { { Set = "SwordSwing", Pitch = 0.88, Volume = 0.55 } } },

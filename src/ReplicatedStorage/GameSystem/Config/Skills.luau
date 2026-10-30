@@ -1,26 +1,22 @@
 --!strict
--- Skills (docs/weapons_combat_brief.txt Phase 2). Only the framework exists: 3 slots on the HUD (keys Z / X / C
--- on PC, editable in Settings > Keys; LB / RB / Y on a gamepad; touch buttons next to Attack on mobile). The list
--- is empty and SkillService answers "not available" until the skills are built.
--- profile.EquippedSkills = { [slot 1..3] = skillId } (empty for now).
---
--- Schema of a skill entry (for later):
+-- Skills: 3 slots on the HUD (keys Z / X / C on PC, editable in Settings > Keys; LB / RB / Y on a gamepad; touch buttons
+-- next to Attack on mobile). Slot 1 (Z) is the basic skill of the equipped weapon's category (Skills.Basic); slots 2 and 3
+-- come from profile.EquippedSkills = { [slot 2..3] = skillId } (none exist yet).
+-- A skill entry:
 --   {
---     Id = "sword_whirlwind",       -- unique id, the value stored in profile.EquippedSkills
---     Name = "Whirlwind",           -- display name
---     Icon = "rbxassetid://...",    -- 3D icon (Icons/Skills/<Id>_icon.png); nil = a generic icon
+--     Id = "sword_dash_slash",      -- unique id
+--     Name = "Dash Slash",          -- display name
+--     Icon = "Sword",               -- icon name of UI/Kit/Icons or an asset id; nil = a generic icon
 --     Cooldown = 8,                 -- seconds, checked on the server
---     Category = "Sword",           -- the weapon category that can use it (nil = any weapon)
---     Animation = "Sword_Skill1",   -- clip of Config/CombatAnimations
---     VFX = "Sword_Whirlwind",      -- effect in ReplicatedStorage.Assets.VFX
---     SFX = "SkillWhirlwind",       -- sound of Util/Sfx
---     Cost = nil,                   -- optional resource cost (the slot shakes when it is missing)
+--     Category = "Sword",           -- the weapon category it belongs to; its move is Config/WeaponMoves Moves[Category].Skill
+--     Cost = nil,                   -- mana cost (the slot shakes when it is missing)
 --     Element = nil,                -- optional element: tints the slot frame (Config/Skills ELEMENT_COLORS)
 --   }
 local Skills = {}
 
 Skills.SLOT_COUNT = 3
 Skills.USE_INTERVAL = 0.2 -- seconds between two UseSkill requests of a player (server rate limit)
+Skills.COOLDOWN_TOLERANCE = 0.15 -- seconds a skill may come early (network jitter)
 Skills.RESOURCE_ERROR = "resource" -- UseSkill answer when the cost is missing: the slot shakes
 
 Skills.Text = {
@@ -37,11 +33,24 @@ Skills.ELEMENT_COLORS = {
 	Frost = Color3.fromRGB(150, 210, 255),
 } :: { [string]: Color3 }
 
-Skills.List = {} :: { { [string]: any } }
+Skills.List = {
+	{ Id = "sword_dash_slash", Name = "Dash Slash", Icon = "Sword", Cooldown = 8, Category = "Sword" },
+} :: { { [string]: any } }
 
 Skills.ById = {} :: { [string]: { [string]: any } }
+Skills.Basic = {} :: { [string]: { [string]: any } } -- [category] = its slot 1 skill
 for _, skill in ipairs(Skills.List) do
 	Skills.ById[skill.Id] = skill
+	Skills.Basic[skill.Category] = skill
+end
+
+-- The skill in a slot for this weapon category and these equipped skills.
+function Skills.at(slot: number, category: string?, equipped: any): { [string]: any }?
+	if slot == 1 then
+		return if category then Skills.Basic[category] else nil
+	end
+	local id = if typeof(equipped) == "table" then equipped[slot] else nil
+	return if typeof(id) == "string" then Skills.ById[id] else nil
 end
 
 function Skills.validSlot(slot: any): boolean

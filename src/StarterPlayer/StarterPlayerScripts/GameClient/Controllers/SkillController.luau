@@ -1,7 +1,7 @@
 --!strict
--- Skills on the client (docs/weapons_combat_brief.txt Phase 2): the 3 slots of the HUD (PC) and the 3 touch buttons
--- (mobile) register here as views of a slot. A use (key, gamepad, tap) asks the server (Net.request "UseSkill");
--- an empty slot shows the toast "Skills are coming soon". The server decides everything; this only shows it.
+-- Skills on the client: the 3 slots of the HUD (PC) and the 3 touch buttons (mobile) register here as views of a slot.
+-- A use (key, gamepad, tap) goes to SkillController.perform (set by CombatController: the move starts at once, the server
+-- answers Net.request "UseSkill"); an empty slot shows the toast "Skills are coming soon". The server decides everything.
 --   SkillController.register(slot, view, showKey?)   view = a UI/Kit/SkillSlot
 --   SkillController.use(slot)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,12 +10,13 @@ local UserInputService = game:GetService("UserInputService")
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local SettingsConfig = require(ReplicatedStorage.GameSystem.Config.Settings)
 local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
+local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Settings = require(script.Parent.SettingsController)
 local State = require(script.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.UI.Notifier)
 local KeyLabel = require(script.Parent.Parent.UI.Kit.KeyLabel)
 
-local SkillController = { Priority = 3 }
+local SkillController = { Priority = 3, perform = nil :: ((number) -> (boolean, any))? }
 
 local GAMEPAD_LABELS = { "LB", "RB", "Y" }
 
@@ -28,9 +29,11 @@ local cooldownEnd: { [number]: number } = {}
 local busy: { [number]: boolean } = {}
 
 local function skillAt(slot: number): { [string]: any }?
-	local equipped = State.get("EquippedSkills")
-	local id = if typeof(equipped) == "table" then equipped[slot] else nil
-	return if typeof(id) == "string" then Skills.ById[id] else nil
+	local weapons = State.get("Weapons")
+	local uid = State.get("EquippedWeapon")
+	local item = typeof(weapons) == "table" and uid and weapons[uid]
+	local weapon = item and Weapons.ById[item.id]
+	return Skills.at(slot, if weapon then weapon.Category else nil, State.get("EquippedSkills"))
 end
 
 local function usingGamepad(): boolean
@@ -84,7 +87,13 @@ function SkillController.use(slot: number)
 		return
 	end
 	busy[slot] = true
-	local ok, result = Net.request("UseSkill", slot)
+	local perform = SkillController.perform
+	local ok, result = false, nil
+	if perform then
+		ok, result = perform(slot)
+	else
+		ok, result = Net.request("UseSkill", slot)
+	end
 	busy[slot] = nil
 	if ok then
 		local seconds = def.Cooldown or 0
@@ -103,6 +112,8 @@ end
 
 function SkillController:Start()
 	State.changed("EquippedSkills", paintAll)
+	State.changed("EquippedWeapon", paintAll)
+	State.changed("Weapons", paintAll)
 	Settings.changed("KeyBindings", paintAll)
 	local wasGamepad = usingGamepad()
 	UserInputService.LastInputTypeChanged:Connect(function()

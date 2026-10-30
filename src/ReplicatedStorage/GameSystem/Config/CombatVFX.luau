@@ -67,7 +67,7 @@ CombatVFX.Tint = {
 
 -- WEAPON COLORS (trails and arcs) -----------------------------------------------------------------------------------
 CombatVFX.Weapon = {
-	TrailFromTier = 2, -- rarity tiers below this (Common) get no trail; their arc uses CommonColor
+	TrailFromTier = 1, -- rarity tiers below this get no trail; their arc uses CommonColor
 	CommonColor = rgb(222, 228, 238),
 	ElementTint = 0.22, -- the zone element color (Config/Combat StyleColors) mixed into the rarity color
 	HeadWhite = 0.45, -- the newest part of the trail is lightened this much toward white
@@ -128,7 +128,14 @@ CombatVFX.ArcLook = {
 -- of the rarity palette. Magic steps: Grand = true (the bigger area burst, Magic.Grand), Hand = "LeftHand" (the bolt
 -- leaves the left hand). A melee category without an entry gets Default (trail only). A missing step uses step 1.
 -- Heavy attacks: same fields, per category; a category without an entry uses its finisher's.
-CombatVFX.HeavySwing = {} :: { [string]: { [string]: any } }
+CombatVFX.HeavySwing = {
+	-- HeavyCleave: one wide diagonal crescent, bigger than the light slashes, the trail on the whole cut
+	Sword = { TrailOn = 0.2, TrailOff = 0.16, Effects = {
+		{ Asset = "Sword_SlashArc", Radius = 6.2, Width = 2.4, Height = 0.4, From = -75, To = 105, Roll = 42, Reveal = 0.09, Profile = "Crescent" },
+	} },
+} :: { [string]: { [string]: any } }
+-- Z skills: a category without an entry uses its dash strike's effects.
+CombatVFX.SkillSwing = {} :: { [string]: { [string]: any } }
 CombatVFX.Swing = {
 	Default = { TrailOn = 0.45, TrailOff = 0.12 },
 	Sword = {
@@ -143,6 +150,10 @@ CombatVFX.Swing = {
 		-- RisingSlash: from the ground in front up over the head (vertical plane, slightly from the right)
 		{ TrailOn = 0.45, TrailOff = 0.11, Effects = {
 			{ Asset = "Sword_SlashArc", Radius = 4.3, Width = 1.5, Height = 0.4, From = -60, To = 85, Roll = 100, Reveal = 0.06, Profile = "Crescent" },
+		} },
+		-- DownCut: straight down the center line (the rising slash's plane, the other way)
+		{ TrailOn = 0.45, TrailOff = 0.11, Effects = {
+			{ Asset = "Sword_SlashArc", Radius = 4.4, Width = 1.6, Height = 0.4, From = 85, To = -60, Roll = 100, Reveal = 0.06, Profile = "Crescent" },
 		} },
 		-- SpinSlash finisher: a full circle around the player (380 degrees, turning left like the clip), bigger, brighter
 		{ TrailOn = 0.55, TrailOff = 0.22, Effects = {
@@ -604,7 +615,7 @@ CombatVFX.Death = { Asset = "Shared_DeathDissolve", Delay = 0.45, MaxSize = 14 }
 CombatVFX.ZoneTiming = {
 	-- the attack clips the signature overlays are timed on (Config/CombatAnimations, seconds at x1): finisher clip
 	-- lengths (their Hit = the finisher's Impact), jump attack Dive markers and lengths (Hit = AirAttacks Impact)
-	FinisherLength = { Sword = 0.95, Spear = 0.95, Heavy = 1.9, Dagger = 0.38, Ranged = 0.78, Magic = 0.98 },
+	FinisherLength = { Sword = 0.78, Spear = 0.95, Heavy = 1.9, Dagger = 0.38, Ranged = 0.78, Magic = 0.98 },
 	JumpDive = { Sword = 0.2, Spear = 0.22, Heavy = 0.3, Dagger = 0.17 },
 	JumpLength = { Sword = 0.85, Spear = 0.95, Heavy = 1.3, Dagger = 0.62, Ranged = 0.8, Magic = 1.0 },
 	LateWindup = 0.15, -- s (Animations LATE_WINDUP)

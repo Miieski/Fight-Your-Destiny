@@ -9,13 +9,13 @@ import argparse
 import glob
 import os
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "docs", "before_after")
 FRAMES = os.path.join(OUT_DIR, "frames")
 VIEWPORT = (156, 231, 1446, 955)  # the Studio viewport inside the grabbed window
-CROP = (0.26, 0.04, 0.74, 0.96)  # the character, in fractions of the viewport
+CROP = (0.28, 0.14, 0.72, 0.98)  # the character, in fractions of the viewport
 CELL_W, PAD, TITLE_H, HEAD_H, LABEL_H = 400, 10, 76, 50, 34
 BG, WHITE = (30, 34, 44), (255, 255, 255)
 HEADS = {"AVANT": (236, 150, 40), "APRES": (60, 170, 90)}
@@ -32,10 +32,11 @@ def font(size):
 
 def load(path):
 	image = Image.open(path).convert("RGB")
-	if image.size[0] > VIEWPORT[2]:
+	if image.size[0] > VIEWPORT[2]:  # a full window grab; the real-time picks are already cropped
 		image = image.crop(VIEWPORT)
-	w, h = image.size
-	return image.crop((int(w * CROP[0]), int(h * CROP[1]), int(w * CROP[2]), int(h * CROP[3])))
+		w, h = image.size
+		image = image.crop((int(w * CROP[0]), int(h * CROP[1]), int(w * CROP[2]), int(h * CROP[3])))
+	return image
 
 
 def frames_of(folder):
@@ -62,6 +63,7 @@ def main():
 	sets = [(heading, frames_of(folder)) for heading, folder in a.set]
 	sample = load(sets[0][1][0])
 	cell_h = int(CELL_W * sample.size[1] / sample.size[0])
+	fit = lambda image: image.resize((CELL_W, cell_h), Image.LANCZOS) if abs(image.size[1] / image.size[0] - cell_h / CELL_W) < 0.02 else ImageOps.fit(image, (CELL_W, cell_h), Image.LANCZOS)
 	big, medium, small = font(44), font(30), font(22)
 	width = a.cols * CELL_W + (a.cols + 1) * PAD
 	height = TITLE_H
@@ -79,7 +81,7 @@ def main():
 		for i, path in enumerate(paths):
 			col, row = i % a.cols, i // a.cols
 			x, top = PAD + col * (CELL_W + PAD), y + row * (cell_h + LABEL_H + PAD)
-			sheet.paste(load(path).resize((CELL_W, cell_h), Image.LANCZOS), (x, top))
+			sheet.paste(fit(load(path)), (x, top))
 			draw.text((x + 4, top + cell_h + 3), label_of(path), font=small, fill=WHITE)
 		y += ((len(paths) + a.cols - 1) // a.cols) * (cell_h + LABEL_H + PAD)
 	out = os.path.join(OUT_DIR, a.name + "_filmstrip.png")

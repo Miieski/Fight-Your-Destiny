@@ -282,6 +282,8 @@ local function airborne(root: BasePart, humanoid: Humanoid): boolean
 	return workspace:Raycast(root.Position, Vector3.new(0, -reach, 0), airParams) == nil
 end
 
+local SKILL = newproxy() -- the variant of a Z skill: only CombatService:Skill can pass it, never the network
+
 local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	local root, humanoid = rootOf(player)
 	if not (root and humanoid) or player:GetAttribute("Spectating") then
@@ -318,6 +320,8 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	local kind: string? = nil
 	if charged then
 		kind = "Heavy"
+	elseif variant == SKILL then
+		kind = "Skill"
 	elseif variant == "Air" and moves.Air and now - state.lastAir >= Combat.AirAttack.MinGap and airborne(root, humanoid) then
 		kind = "Air"
 	elseif variant == "Dash" and moves.Dash and now - state.rollAt <= Combat.Roll.Duration + Combat.DashAttack.Window + Combat.DashAttack.Tolerance then
@@ -351,8 +355,8 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	local strike: Strike = {
 		multiplier = (step.Damage or 1) * (1 + (step.ChargeDamage or 0) * charge),
 		bonusCrit = shape.BonusCrit or 0,
-		finisher = step.Finisher == true or kind == "Air" or kind == "Heavy",
-		breaker = step.Finisher == true or kind == "Heavy",
+		finisher = step.Finisher == true or kind ~= nil and kind ~= "Dash",
+		breaker = step.Finisher == true or kind == "Heavy" or kind == "Skill",
 		knockback = step.Knockback,
 		stagger = step.Stagger,
 		category = id,
@@ -581,6 +585,19 @@ local function setBlocking(player: Player, holding: any)
 	if humanoid and stats then
 		humanoid.WalkSpeed = stats.WalkSpeed * (if want then Combat.Block.SpeedFactor else 1)
 	end
+end
+
+-- Runs the Z skill's move (SkillService checked its cooldown and cost). False = the player cannot act right now.
+function CombatService:Skill(player: Player, aimDir: any, aimPoint: any): boolean
+	local state = stateOf(player)
+	local now = os.clock()
+	local root = rootOf(player)
+	local _, category = weaponOf(player)
+	if not (root and category) or not WeaponMoves.Moves[category.Id].Skill or state.blocking or now < state.rollEnd or now - state.lastAttack < state.gap * Combat.RateTolerance then
+		return false
+	end
+	attack(player, aimDir, aimPoint, SKILL)
+	return true
 end
 
 function CombatService:IsBlocking(player: Player): boolean

@@ -1,29 +1,50 @@
 --!strict
--- Skills, server side (docs/weapons_combat_brief.txt Phase 2): framework only. Net.request("UseSkill", slot)
--- validates the slot and answers false, "not available" until the skills exist (Config/Skills). Cooldowns, costs
--- and effects will be decided here (server authoritative); the client only shows the result.
+-- Skills, server side. Net.request("UseSkill", slot, aimDir, aimPoint) -> true, or false + the reason: the slot's skill for
+-- the equipped weapon (Config/Skills), its cooldown (a small tolerance for the network) and cost are decided here; the
+-- move itself runs through CombatService (same hit shapes and rate rules as an attack).
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
+local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
+local CombatService = require(script.Parent.CombatService)
 local DataService = require(script.Parent.DataService)
 
 local SkillService = { Priority = 6 }
 
+local readyAt: { [Player]: { [string]: number } } = {}
+
 function SkillService:Start()
-	Net.handle("UseSkill", function(player: Player, slot: any)
+	Net.handle("UseSkill", function(player: Player, slot: any, aimDir: any, aimPoint: any)
 		if not Skills.validSlot(slot) then
 			return false, Skills.Text.InvalidSlot
 		end
 		local profile = DataService:Get(player)
-		local equipped = profile and profile.EquippedSkills
-		local id = if typeof(equipped) == "table" then equipped[slot] else nil
-		if not (typeof(id) == "string" and Skills.ById[id]) then
+		local item = profile and profile.EquippedWeapon and profile.Weapons[profile.EquippedWeapon]
+		local weapon = item and Weapons.ById[item.id]
+		local skill = Skills.at(slot, if weapon then weapon.Category else nil, profile and profile.EquippedSkills)
+		if not skill then
 			return false, Skills.Text.NotAvailable
 		end
-		-- the skills are not built yet: nothing can be used
-		return false, Skills.Text.NotAvailable
+		local cooldowns = readyAt[player]
+		if not cooldowns then
+			cooldowns = {}
+			readyAt[player] = cooldowns
+		end
+		local now = os.clock()
+		if now < (cooldowns[skill.Id] or 0) - Skills.COOLDOWN_TOLERANCE then
+			return false, Skills.RESOURCE_ERROR
+		end
+		if not CombatService:Skill(player, aimDir, aimPoint) then
+			return false, Skills.RESOURCE_ERROR
+		end
+		cooldowns[skill.Id] = now + skill.Cooldown
+		return true
 	end, Skills.USE_INTERVAL)
+	Players.PlayerRemoving:Connect(function(player)
+		readyAt[player] = nil
+	end)
 end
 
 return SkillService

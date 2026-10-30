@@ -5,8 +5,8 @@
 --                                                one move of Config/WeaponMoves; the clip's "Hit" marker lands at the
 --                                                move's Impact / speed; returns the clip length in seconds at that
 --                                                speed. variant "Air" = <Category>_JumpAttack, "Dash" =
---                                                <Category>_DashAttack, "Heavy" = <Category>_Heavy (the move's Clip
---                                                wins); a missing clip falls back to the step's clip (stretched to
+--                                                <Category>_DashAttack, "Heavy" = <Category>_Heavy, "Skill" =
+--                                                <Category>_Skill (the move's Clip wins); a missing clip falls back to the step's clip (stretched to
 --                                                the variant's Impact). After Animations.charge a "Heavy" attack
 --                                                releases the held wind-up instead of restarting it
 --   Animations.charge(character, category, speed)  plays the heavy clip and holds it at its Charge marker
@@ -90,7 +90,7 @@ local LIFT_EL_MAX, LIFT_H_MAX, LIFT_EL_STEP, LIFT_H_STEP, LIFT_EL_RELAX, LIFT_H_
 -- depth of the jump attack landings' ground stabs); deeper, the attack's own lift raises it (relaxes at ACTION_RELAX)
 local ACTION_DEPTH, ACTION_RELAX = 0.45, 1.5
 local BLADE_MIN = 1.2 -- studs past the hand: shorter weapons are lifted by the hand only
-local VARIANTS: { [string]: string } = { Air = "_JumpAttack", Dash = "_DashAttack", Heavy = "_Heavy" } -- clip name suffix
+local VARIANTS: { [string]: string } = { Air = "_JumpAttack", Dash = "_DashAttack", Heavy = "_Heavy", Skill = "_Skill" } -- clip name suffix
 local CHARGE_POINT = 0.6 -- a heavy clip without a Charge marker holds at this fraction of its wind-up
 
 local PI, TAU = math.pi, math.pi * 2

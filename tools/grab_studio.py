@@ -5,6 +5,7 @@ Only the Studio window is read (PrintWindow, so it works when another window cov
   python tools/grab_studio.py --out shot.png                      one grab of the window
   python tools/grab_studio.py --follow DIR [--timeout 300]        follows the Studio log: every line
       FYDSHOT|<weapon>/<name>   grabs DIR/<weapon>/<name>.jpg           (the Play client holds the pose meanwhile)
+      FYDSHOT|BURST|<set>|<seconds>   grabs DIR/<set>/000.jpg, 001.jpg ... as fast as it can (real-time footage, effects included)
       FYDSHOT|END               stops
 """
 import argparse
@@ -19,7 +20,7 @@ from PIL import Image
 
 LOG_DIR = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Roblox", "logs")
 MARK = b"FYDSHOT|"
-SAFE_NAME = re.compile(r"^[A-Za-z0-9_\-]+/[A-Za-z0-9_\-]+$")
+SAFE_NAME = re.compile(r"^[A-Za-z0-9_\-]+/[A-Za-z0-9_.\-]+$")
 user32 = ctypes.windll.user32
 gdi32 = ctypes.windll.gdi32
 user32.SetProcessDPIAware()
@@ -67,6 +68,18 @@ def grab(hwnd):
 	return Image.frombuffer("RGB", (width, height), data, "raw", "BGRX", 0, 1)
 
 
+def burst(hwnd, folder, seconds):
+	frames = []
+	start = time.time()
+	while time.time() - start < seconds:
+		frames.append((time.time() - start, grab(hwnd)))
+	os.makedirs(folder, exist_ok=True)
+	for index, (_, image) in enumerate(frames):
+		image.save(os.path.join(folder, f"{index:03d}.jpg"), quality=88)
+	print(f"burst {folder}: {len(frames)} frames in {seconds} s")
+	return len(frames)
+
+
 def newest_log():
 	return max(glob.glob(os.path.join(LOG_DIR, "*_Studio_*.log")), key=os.path.getmtime)
 
@@ -95,7 +108,10 @@ def follow(out_dir, timeout):
 				if name == "END":
 					print(f"{count} frames")
 					return
-				if SAFE_NAME.match(name):
+				if name.startswith("BURST|"):
+					_, folder, seconds = name.split("|")
+					count += burst(hwnd, os.path.join(out_dir, folder), float(seconds))
+				elif SAFE_NAME.match(name):
 					dest = os.path.join(out_dir, *name.split("/")) + ".jpg"
 					os.makedirs(os.path.dirname(dest), exist_ok=True)
 					grab(hwnd).save(dest, quality=92)

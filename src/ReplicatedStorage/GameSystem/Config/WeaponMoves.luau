@@ -9,7 +9,7 @@
 --              DamageMult from it, so tuning a timing never changes the DPS of a weapon
 --   Shape      the category's hit shape, see below
 --   Steps      the combo in order, the last one with Finisher = true
---   Heavy      the hold attack; Air the jump attack; Dash the dash strike
+--   Heavy      the hold attack; Air the jump attack; Dash the dash strike; Skill the Z skill
 -- }
 -- Shape: Kind "Arc" / "Cone" (Angle in degrees, Radius), "Line" (Length x Width), "Projectile" (Speed, Range), "AoE" (cast
 -- at the aim point within Range, Radius x (1 + Magic radius bonus)), "Circle" (Radius around the attacker). MaxTargets =
@@ -27,6 +27,7 @@
 --   Lunge      studs the attacker steps forward (heavy, jump, dash only: light steps never move the body),
 --              LungeSeconds = its duration (default Combat.Feel.LungeSeconds)
 --   Heavy: MaxCharge seconds of hold to the full charge, ChargeDamage and ChargeRadius = bonus at full charge
+--   Skill: the Z move, its cooldown and cost are in Config/Skills
 --   Air: Hang = seconds the body stays still before the dive / the shot; Shots, Spread (Ranged volley)
 local WeaponMoves = {}
 
@@ -45,18 +46,21 @@ WeaponMoves.Moves = {
 		Class = "Melee", Dps = 1.0,
 		Shape = { Kind = "Arc", Angle = 120, Radius = 6, MaxTargets = 3 },
 		Steps = {
-			{ Name = "RightSlash", Impact = 0.16, Duration = 1.0, Damage = 0.85 },
-			{ Name = "LeftSlash", Impact = 0.16, Duration = 1.0, Damage = 0.85 },
-			{ Name = "RisingSlash", Impact = 0.18, Duration = 1.0, Damage = 1.0 },
-			{ Name = "SpinSlash", Impact = 0.22, Duration = 1.0, Damage = 1.3, Finisher = true, Knockback = 9,
+			{ Name = "RightSlash", Impact = 0.1, Duration = 0.34, Damage = 1.0 },
+			{ Name = "LeftSlash", Impact = 0.1, Duration = 0.34, Damage = 1.0 },
+			{ Name = "RisingSlash", Impact = 0.1, Duration = 0.34, Damage = 1.05 },
+			{ Name = "DownCut", Impact = 0.11, Duration = 0.36, Damage = 1.15 },
+			{ Name = "SpinSlash", Impact = 0.14, Duration = 0.62, Damage = 1.9, Finisher = true, Knockback = 10,
 				Shape = { Kind = "Circle", Radius = 7, MaxTargets = 6 } },
 		},
-		Heavy = { Name = "HeavyCleave", Clip = "Sword_Attack4", Impact = 0.22, Duration = 0.7, Damage = 2.0, Lunge = 2.5, MaxCharge = 0.6, ChargeDamage = 0.5,
-			Knockback = 9, Stagger = 0.35, Shape = { Angle = 150, Radius = 7.5, MaxTargets = 5 } },
-		Air = { Name = "PlungeStrike", Impact = 0.32, Duration = 0.85, Hang = 0.1, Damage = 1.3, Lunge = 2, Knockback = 8,
+		Heavy = { Name = "HeavyCleave", Impact = 0.12, Duration = 0.6, Damage = 3.2, Lunge = 2.5, MaxCharge = 0.6, ChargeDamage = 0.5,
+			Knockback = 10, Stagger = 0.35, Shape = { Angle = 150, Radius = 7.5, MaxTargets = 5 } },
+		Air = { Name = "PlungeStrike", Impact = 0.32, Duration = 0.85, Hang = 0.1, Damage = 2.6, Lunge = 2, Knockback = 8,
 			Shape = { Kind = "Circle", Radius = 7, MaxTargets = 6 } },
-		Dash = { Name = "DashSlash", Impact = 0.14, Duration = 0.6, Damage = 1.25, Lunge = 6, LungeSeconds = 0.16, Knockback = 7,
+		Dash = { Name = "DashSlash", Impact = 0.14, Duration = 0.5, Damage = 1.8, Lunge = 6, LungeSeconds = 0.16, Knockback = 7,
 			Shape = { Kind = "Line", Length = 9, Width = 4, MaxTargets = 4 } },
+		Skill = { Name = "DashSlashSkill", Clip = "Sword_DashAttack", Impact = 0.14, Duration = 0.5, Damage = 6, Lunge = 11, LungeSeconds = 0.2, Knockback = 10,
+			Shape = { Kind = "Line", Length = 14, Width = 5, MaxTargets = 6 } },
 	},
 	Spear = {
 		Class = "Melee", Dps = 1.08,
