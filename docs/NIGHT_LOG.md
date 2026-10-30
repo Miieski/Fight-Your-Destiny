@@ -4315,4 +4315,4 @@ only the tag and attributes, nothing else.
   99 swamp textures, 144 fps; Desert_4 89 pyramid textures, 144 fps; 0 game errors. Backup after_round7. ROUND 7 DONE.
 - Main agent, final Play check: found a ManaBar startup error (line 38: `moves` is false until the data has loaded), fixed in
   Studio and on disk. The after_weapon_overhaul backup had only 4 of 6 files (Workspace and Lighting missing): replaced by
-  a new backup after_weapon_overhaul_final.
+  a new backup after_weapon_overhaul_final (6 files). Play again: 0 errors, mana panel hidden with daggers.
