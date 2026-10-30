@@ -36,6 +36,8 @@ Skills.ELEMENT_COLORS = {
 Skills.List = {
 	{ Id = "sword_dash_slash", Name = "Dash Slash", Icon = "Sword", Cooldown = 8, Category = "Sword" },
 	{ Id = "dagger_blade_storm", Name = "Blade Storm", Icon = "Dagger", Cooldown = 8, Category = "Dagger" },
+	{ Id = "spear_cyclone_sweep", Name = "Cyclone Sweep", Icon = "Spear", Cooldown = 9, Category = "Spear" },
+	{ Id = "heavy_earthbreaker", Name = "Earthbreaker", Icon = "Heavy", Cooldown = 10, Category = "Heavy" },
 } :: { { [string]: any } }
 
 Skills.ById = {} :: { [string]: { [string]: any } }

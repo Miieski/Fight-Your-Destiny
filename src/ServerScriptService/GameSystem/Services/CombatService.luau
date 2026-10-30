@@ -152,7 +152,7 @@ local function visualTo(origin: Vector3): { Player }
 	return list
 end
 
-type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, breaker: boolean, knockback: any, stagger: number?, category: string, element: string? }
+type Strike = { multiplier: number, bonusCrit: number, finisher: boolean, breaker: number?, staggerChance: number?, knockback: any, stagger: number?, category: string, element: string? }
 
 -- One hit on one enemy: crit roll, Boss Slayer, knockback, the "Hit" number for the attacker and the "Impact" for
 -- the players around.
@@ -162,7 +162,7 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 	end
 	local multiplier, bonusCrit = strike.multiplier, strike.bonusCrit
 	if strike.breaker and (enemy.staggerUntil or 0) > os.clock() then
-		multiplier *= WeaponMoves.Input.GuardBreakMult -- a finisher / heavy on a staggered enemy: the guard is broken
+		multiplier *= strike.breaker -- a finisher / heavy on a staggered enemy: the guard is broken
 	end
 	local critChance = math.min(1, (stats.CritChance or 0) + bonusCrit)
 	local crit = rng:NextNumber() < critChance
@@ -176,8 +176,11 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 	damage = math.max(1, math.floor(damage + 0.5))
 	local at = centerOf(enemy) + Vector3.new(0, (enemy.halfHeight or 2) + 1, 0)
 	EnemyService:Damage(player, enemy, damage, strike.knockback)
+	local staggerChance = strike.staggerChance
 	if strike.stagger and enemy.alive and EnemyService.Stagger then
 		EnemyService:Stagger(enemy, strike.stagger)
+	elseif staggerChance and enemy.alive and EnemyService.Stagger and rng:NextNumber() < staggerChance then
+		EnemyService:Stagger(enemy, WeaponMoves.Input.ChanceStagger)
 	end
 	Net.fire(player, "Hit", at, damage, crit, strike.finisher, strike.category)
 	for _, viewer in ipairs(visualTo(at)) do
@@ -356,7 +359,8 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 		multiplier = (step.Damage or 1) * (1 + (step.ChargeDamage or 0) * charge),
 		bonusCrit = shape.BonusCrit or 0,
 		finisher = step.Finisher == true or kind ~= nil and kind ~= "Dash",
-		breaker = step.Finisher == true or kind == "Heavy" or kind == "Skill",
+		breaker = if step.Finisher == true or kind == "Heavy" or kind == "Skill" then moves.GuardBreakMult or WeaponMoves.Input.GuardBreakMult else nil,
+		staggerChance = moves.StaggerChance,
 		knockback = step.Knockback,
 		stagger = step.Stagger,
 		category = id,
@@ -641,6 +645,11 @@ function CombatService:DamagePlayer(player: Player, raw: number, source: any?): 
 	end
 	local amount = raw
 	local kind = "hit"
+	local _, category = weaponOf(player)
+	local heavy = category and WeaponMoves.Moves[category.Id].Heavy
+	if state.chargeAt and heavy and heavy.ChargeArmor then
+		amount *= 1 - heavy.ChargeArmor -- the feel of a hammer's wind-up: tougher, never immune
+	end
 	if state.blocking then
 		-- each blocked hit wears the guard down: the block weakens, at 0 it breaks
 		local guard = guardOf(state, now)

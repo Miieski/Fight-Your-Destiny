@@ -431,7 +431,8 @@ local function stance(length: number, guard: Pose, breath: Pose): { [string]: an
 end
 
 -- ------------------------------------------------------------------------------------------------
--- SPEAR: two hands on the shaft, long reach, forward lunges (4 steps, 1.11 s interval at speed x1)
+-- SPEAR: two hands on the shaft, long reach, naginata-style sweeps and spins between the thrusts (4 steps + finisher,
+-- 0.40 s steps); it stays a spear: strong against guards (Config/WeaponMoves GuardBreakMult, StaggerChance).
 -- ------------------------------------------------------------------------------------------------
 -- Guard: left side forward, rear (right) hand out at the hip, the point raised toward the target (the shaft passes
 -- right of the body so it reads from the camera behind), left hand forward on the shaft.
@@ -464,74 +465,122 @@ Clips.Spear_Equip = {
 	},
 }
 
--- Attack 1, Thrust: pull back, both arms drive the point forward with a step.
+-- Attack 1, Thrust: pulled back, both arms drive the point forward with a step.
 Clips.Spear_Attack1 = {
-	Length = 0.8, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.18 },
+	Length = 0.58, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.1, Markers = { Hit = 0.11 },
 	Poses = {
-		P(0, nil, SPEAR_GUARD),
-		P(0.09, "o", SPEAR_GUARD, { Root = { 0, -32, 0 }, RootP = { 0, -0.3, 0.12 }, Waist = { -2, 0, 0 }, Neck = { 4, 25, 0 },
+		P(0, nil, SPEAR_GUARD, { Root = { 0, -32, 0 }, RootP = { 0, -0.3, 0.12 }, Waist = { -2, 0, 0 }, Neck = { 4, 25, 0 },
 			RHand = { -78, -0.55, 0.45 }, RBlade = { -4, 14 }, LGrip = { 1.1, 1 } }),
-		P(0.18, "i", SPEAR_GUARD, { Root = { 0, -15, 0 }, RootP = { 0, -0.36, -0.15 }, Waist = { -12, 8, 0 }, Neck = { 8, 8, 0 },
+		P(0.11, "i", SPEAR_GUARD, { Root = { 0, -15, 0 }, RootP = { 0, -0.36, -0.15 }, Waist = { -12, 8, 0 }, Neck = { 8, 8, 0 },
 			RHand = { -52, -0.3, 1.15 }, RBlade = { 3, 6 }, LGrip = { 1.7, 1 }, LFoot = { -0.1, 0, -0.75, 10 } }),
-		P(0.32, "O", SPEAR_GUARD, { Root = { 0, -14, 0 }, RootP = { 0, -0.37, -0.15 }, Waist = { -13, 8, 0 }, Neck = { 8, 8, 0 },
+		P(0.2, "O", SPEAR_GUARD, { Root = { 0, -14, 0 }, RootP = { 0, -0.37, -0.15 }, Waist = { -13, 8, 0 }, Neck = { 8, 8, 0 },
 			RHand = { -51, -0.3, 1.2 }, RBlade = { 3, 6 }, LGrip = { 1.75, 1 }, LFoot = { -0.1, 0, -0.75, 10 } }),
-		P(0.8, "s", SPEAR_GUARD),
+		P(0.4, "s", SPEAR_GUARD, { Root = { 0, -22, 0 }, RootP = { 0, -0.34, -0.08 }, Waist = { -9, 6, 0 }, Neck = { 6, 12, 0 },
+			RHand = { -62, -0.42, 0.95 }, RBlade = { 0, 10 }, LGrip = { 1.5, 1 }, LFoot = { -0.1, 0, -0.6, 10 } }),
+		P(0.58, "s", SPEAR_GUARD),
 	},
 }
 
--- Attack 2, Thrust2: overhand, the spear raised over the right shoulder stabs down-forward.
+-- Attack 2, Sweep: coiled to the right, the shaft swung flat and low through the front one-handed (180 degrees, the full
+-- reach), the left arm out for balance.
 Clips.Spear_Attack2 = {
-	Length = 0.8, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.18 },
+	Length = 0.62, Legs = "Stand", FadeIn = 0.06, FadeOut = 0.1, Markers = { Hit = 0.11 },
 	Poses = {
-		P(0, nil, SPEAR_GUARD),
-		P(0.09, "o", SPEAR_GUARD, { Root = { 0, -30, 0 }, RootP = { 0, -0.26, 0.08 }, Waist = { 6, 0, 0 }, Neck = { 0, 22, 0 },
-			RHand = { -78, 0.5, 0.75 }, RBlade = { -3, -2 }, LGrip = { 1.4, 1 } }),
-		P(0.18, "i", SPEAR_GUARD, { Root = { 0, -12, 0 }, RootP = { 0, -0.38, -0.15 }, Waist = { -14, 10, 0 }, Neck = { 10, 6, 0 },
-			RHand = { -52, 0.2, 1.1 }, RBlade = { 5, -10 }, LGrip = { 1.8, 1 }, LFoot = { -0.1, 0, -0.75, 10 } }),
-		P(0.32, "O", SPEAR_GUARD, { Root = { 0, -11, 0 }, RootP = { 0, -0.39, -0.15 }, Waist = { -15, 10, 0 }, Neck = { 10, 6, 0 },
-			RHand = { -51, 0.17, 1.15 }, RBlade = { 5, -11 }, LGrip = { 1.85, 1 }, LFoot = { -0.1, 0, -0.75, 10 } }),
-		P(0.8, "s", SPEAR_GUARD),
-	},
-}
-
--- Attack 3, Sweep (combat V3; Impact 0.22, a 180 deg arc): coiled far to the right with both hands, the shaft swept
--- flat and low through the front one-handed (the full 8-stud reach), the left arm out for balance, then regrip.
-Clips.Spear_Attack3 = {
-	Length = 0.95, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.22 },
-	Poses = {
-		P(0, nil, SPEAR_GUARD),
-		P(0.11, "o", SPEAR_GUARD, { Root = { 0, -70, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -6, -25, 0 }, Neck = { 6, 70, 0 },
+		P(0, nil, SPEAR_GUARD, { Root = { 0, -70, 0 }, RootP = { 0, -0.45, 0 }, Waist = { -6, -25, 0 }, Neck = { 6, 70, 0 },
 			RHand = { -105, -0.35, 0.75 }, RBlade = { -160, -4 }, LGrip = { 1.2, 1 },
 			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.4, 10 } }),
-		P(0.22, "i", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.6, -0.05 }, Waist = { -10, 10, 0 }, Neck = { 8, -5, 0 },
+		P(0.11, "i", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.6, -0.05 }, Waist = { -10, 10, 0 }, Neck = { 8, -5, 0 },
 			RHand = { -25, -0.4, 1.3 }, RBlade = { 15, -6 }, LGrip = { 1.2, 0 }, LHand = { 150, -0.3, 0.8 },
 			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.45, 10 } }),
-		P(0.34, "O", SPEAR_GUARD, { Root = { 0, 35, 0 }, RootP = { 0, -0.6, -0.05 }, Waist = { -10, 35, 0 }, Neck = { 8, -45, 0 },
+		P(0.22, "O", SPEAR_GUARD, { Root = { 0, 35, 0 }, RootP = { 0, -0.6, -0.05 }, Waist = { -10, 35, 0 }, Neck = { 8, -45, 0 },
 			RHand = { 65, -0.4, 1.25 }, RBlade = { 115, -4 }, LGrip = { 1.2, 0 }, LHand = { 170, -0.3, 0.8 },
 			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.45, 10 } }),
-		P(0.55, "s", SPEAR_GUARD, { Root = { 0, 32, 0 }, RootP = { 0, -0.55, -0.05 }, Waist = { -9, 32, 0 }, Neck = { 8, -40, 0 },
+		P(0.4, "s", SPEAR_GUARD, { Root = { 0, 32, 0 }, RootP = { 0, -0.55, -0.05 }, Waist = { -9, 32, 0 }, Neck = { 8, -40, 0 },
 			RHand = { 60, -0.42, 1.2 }, RBlade = { 110, -2 }, LGrip = { 1.2, 0.2 }, LHand = { 165, -0.3, 0.8 },
 			RFoot = { 0.35, 0, 0.3, -30 }, LFoot = { -0.3, 0, -0.45, 10 } }),
-		P(0.95, "s", SPEAR_GUARD),
+		P(0.62, "s", SPEAR_GUARD),
 	},
 }
 
--- Attack 4, PiercingLunge (finisher; was Attack 3 before combat V3): deep coil, a long one-handed lunge, the left arm
--- thrown back for balance.
-Clips.Spear_Attack4 = {
-	Length = 0.95, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.15, Markers = { Hit = 0.24 },
+-- Attack 3, WheelSpin: out of the sweep the body keeps turning, a full spin with the spear held wide in the right hand.
+local SPEAR_SPIN: Pose = {
+	Torso = true, RootP = { 0, -0.35, 0 }, Waist = { -8, 0, 0 }, Neck = { 0, 0, 0 },
+	RHand = { -90, -0.15, 1.3 }, RBlade = { -92, 2 }, LHand = { 90, -0.25, 0.75 }, LGrip = { 1.2, 0 },
+}
+Clips.Spear_Attack3 = {
+	Length = 0.7, Legs = "Own", FadeIn = 0.06, FadeOut = 0.1, Markers = { Hit = 0.11 },
 	Poses = {
-		P(0, nil, SPEAR_GUARD),
-		P(0.12, "o", SPEAR_GUARD, { Root = { 0, -40, 0 }, RootP = { 0, -0.42, 0.2 }, Waist = { 0, -5, 0 }, Neck = { 4, 35, 0 },
+		P(0, nil, SPEAR_SPIN, { Root = { 0, -40, 0 }, RootP = { 0, -0.5, 0 } }),
+		P(0.11, "l", SPEAR_SPIN, { Root = { 0, 110, 0 } }),
+		P(0.22, "l", SPEAR_SPIN, { Root = { 0, 250, 0 }, RootP = { 0, -0.15, 0 } }),
+		P(0.33, "O", SPEAR_SPIN, { Root = { 0, 335, 0 }, RootP = { 0, -0.42, 0 } }),
+		P(0.46, "s", SPEAR_SPIN, { Root = { 0, 335, 0 }, RootP = { 0, -0.4, 0 } }),
+		P(0.7, "s", with(SPEAR_GUARD, { Root = { 0, 335, 0 } })),
+	},
+}
+
+-- Attack 4, Thrust2: overhand, the spear brought high over the right shoulder stabs down and forward.
+Clips.Spear_Attack4 = {
+	Length = 0.58, Legs = "Stand", FadeIn = 0.06, FadeOut = 0.1, Markers = { Hit = 0.11 },
+	Poses = {
+		P(0, nil, SPEAR_GUARD, { Root = { 0, -30, 0 }, RootP = { 0, -0.26, 0.08 }, Waist = { 6, 0, 0 }, Neck = { 0, 22, 0 },
+			RHand = { -78, 0.5, 0.75 }, RBlade = { -3, -2 }, LGrip = { 1.4, 1 } }),
+		P(0.11, "i", SPEAR_GUARD, { Root = { 0, -12, 0 }, RootP = { 0, -0.38, -0.15 }, Waist = { -14, 10, 0 }, Neck = { 10, 6, 0 },
+			RHand = { -52, 0.2, 1.1 }, RBlade = { 5, -10 }, LGrip = { 1.8, 1 }, LFoot = { -0.1, 0, -0.75, 10 } }),
+		P(0.2, "O", SPEAR_GUARD, { Root = { 0, -11, 0 }, RootP = { 0, -0.39, -0.15 }, Waist = { -15, 10, 0 }, Neck = { 10, 6, 0 },
+			RHand = { -51, 0.17, 1.15 }, RBlade = { 5, -11 }, LGrip = { 1.85, 1 }, LFoot = { -0.1, 0, -0.75, 10 } }),
+		P(0.4, "s", SPEAR_GUARD, { Root = { 0, -18, 0 }, RootP = { 0, -0.34, -0.1 }, Waist = { -10, 8, 0 }, Neck = { 8, 10, 0 },
+			RHand = { -58, -0.1, 1.0 }, RBlade = { 2, 0 }, LGrip = { 1.6, 1 }, LFoot = { -0.1, 0, -0.6, 10 } }),
+		P(0.58, "s", SPEAR_GUARD),
+	},
+}
+
+-- Attack 5, PiercingLunge (finisher): deep coil, a long one-handed lunge, the left arm thrown back for balance.
+Clips.Spear_Attack5 = {
+	Length = 0.9, Legs = "Stand", FadeIn = 0.05, FadeOut = 0.1, Markers = { Hit = 0.14 },
+	Poses = {
+		P(0, nil, SPEAR_GUARD, { Root = { 0, -40, 0 }, RootP = { 0, -0.42, 0.2 }, Waist = { 0, -5, 0 }, Neck = { 4, 35, 0 },
 			RHand = { -88, -0.45, 0.45 }, RBlade = { -6, 14 }, LGrip = { 1.0, 1 },
 			RFoot = { 0.2, 0, 0.6, -30 }, LFoot = { -0.1, 0, -0.45, 10 } }),
-		P(0.24, "i", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.6, -0.35 }, Waist = { -18, 15, 0 }, Neck = { 14, -5, 0 },
+		P(0.14, "i", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.6, -0.35 }, Waist = { -18, 15, 0 }, Neck = { 14, -5, 0 },
 			RHand = { -45, -0.1, 1.35 }, RBlade = { 3, 2 }, LGrip = { 1.6, 0 }, LHand = { 150, -0.3, 0.75 },
 			RFoot = { 0.2, 0, 0.75, -30 }, LFoot = { -0.1, 0, -1.0, 10 } }),
-		P(0.42, "O", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.62, -0.35 }, Waist = { -19, 15, 0 }, Neck = { 14, -5, 0 },
+		P(0.3, "O", SPEAR_GUARD, { Root = { 0, -5, 0 }, RootP = { 0, -0.62, -0.35 }, Waist = { -19, 15, 0 }, Neck = { 14, -5, 0 },
 			RHand = { -44, -0.08, 1.38 }, RBlade = { 3, 2 }, LGrip = { 1.6, 0 }, LHand = { 155, -0.3, 0.75 },
 			RFoot = { 0.2, 0, 0.75, -30 }, LFoot = { -0.1, 0, -1.0, 10 } }),
-		P(0.95, "s", SPEAR_GUARD),
+		P(0.9, "s", SPEAR_GUARD),
+	},
+}
+
+-- Heavy, GuardSplitter: the spear raised high behind in both hands (Charge), a long cleaving arc over the top into a deep
+-- forward stance: the overhead naginata cut, the move that breaks guards.
+Clips.Spear_Heavy = {
+	Length = 0.92, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.12, Markers = { Charge = 0.16, Hit = 0.24 },
+	Poses = {
+		P(0, nil, SPEAR_GUARD),
+		P(0.16, "o", SPEAR_GUARD, { Root = { 6, -45, 0 }, RootP = { 0, -0.42, 0.15 }, Waist = { 6, -20, 0 }, Neck = { -2, 40, 0 },
+			RHand = { -90, 0.7, 0.6 }, RBlade = { -150, 50 }, LGrip = { 0.9, 1 },
+			RFoot = { 0.25, 0, 0.55, -30 }, LFoot = { -0.15, 0, -0.45, 10 } }),
+		P(0.24, "i", SPEAR_GUARD, { Root = { -8, -5, 0 }, RootP = { 0, -0.62, -0.3 }, Waist = { -20, 10, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -35, -0.1, 1.3 }, RBlade = { 0, -14 }, LGrip = { 1.6, 1 },
+			RFoot = { 0.25, 0, 0.7, -30 }, LFoot = { -0.15, 0, -0.95, 10 } }),
+		P(0.4, "O", SPEAR_GUARD, { Root = { -10, -2, 0 }, RootP = { 0, -0.66, -0.3 }, Waist = { -24, 12, 0 }, Neck = { 18, 0, 0 },
+			RHand = { -30, -0.4, 1.25 }, RBlade = { 0, -30 }, LGrip = { 1.6, 1 },
+			RFoot = { 0.25, 0, 0.7, -30 }, LFoot = { -0.15, 0, -0.95, 10 } }),
+		P(0.92, "s", SPEAR_GUARD),
+	},
+}
+
+-- Skill, CycloneSweep (Z): two full turns with the spear out at the end of the arm, rising and landing.
+Clips.Spear_Skill = {
+	Length = 0.96, Legs = "Own", FadeIn = 0.05, FadeOut = 0.12, Markers = { Hit = 0.14 },
+	Poses = {
+		P(0, nil, SPEAR_SPIN, { Root = { 0, -60, 0 }, RootP = { 0, -0.55, 0 } }),
+		P(0.14, "l", SPEAR_SPIN, { Root = { 0, 130, 0 }, RootP = { 0, -0.1, 0 } }),
+		P(0.3, "l", SPEAR_SPIN, { Root = { 0, 390, 0 }, RootP = { 0, 0.3, 0 } }),
+		P(0.46, "l", SPEAR_SPIN, { Root = { 0, 640, 0 }, RootP = { 0, 0, 0 } }),
+		P(0.56, "O", SPEAR_SPIN, { Root = { 0, 695, 0 }, RootP = { 0, -0.5, 0 } }),
+		P(0.96, "s", with(SPEAR_GUARD, { Root = { 0, 695, 0 } })),
 	},
 }
 
@@ -611,7 +660,7 @@ Clips.Spear_Air = {
 }
 
 -- ------------------------------------------------------------------------------------------------
--- HEAVY: two hands, slow and heavy, big anticipation (3 steps, 2.5 s interval)
+-- HEAVY (hammers, axes): two hands, heavy sweeps, a slam that charges (3 steps + finisher, 0.60 s steps)
 -- RFace = the striking face of the head (ImpactAttachment side), turned toward the swing.
 -- ------------------------------------------------------------------------------------------------
 local HEAVY_GUARD: Pose = {
@@ -646,44 +695,106 @@ Clips.Heavy_Equip = {
 	},
 }
 
--- Attack 1, OverheadSlam: a long lift over the head (lean back), a beat at the top, crashes into the ground in front.
+-- Attack 1, SweepRight: coiled far to the right, a full flat sweep across the front to the left.
 Clips.Heavy_Attack1 = {
-	Length = 1.7, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.2, Markers = { Hit = 0.45 },
+	Length = 0.95, Legs = "Stand", FadeIn = 0.07, FadeOut = 0.12, Markers = { Hit = 0.12 },
 	Poses = {
-		P(0, nil, HEAVY_GUARD),
-		P(0.28, "o", HEAVY_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.12, 0.05 }, Waist = { 12, 0, 0 }, Neck = { -8, 0, 0 },
-			RHand = { -10, 0.85, 0.35 }, RBlade = { 0, 145 }, RFace = { 0, 55 } }),
-		P(0.36, "s", HEAVY_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.1, 0.06 }, Waist = { 14, 0, 0 }, Neck = { -9, 0, 0 },
-			RHand = { -10, 0.9, 0.3 }, RBlade = { 0, 150 }, RFace = { 0, 60 } }),
-		P(0.45, "i", HEAVY_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.6, -0.1 }, Waist = { -30, 0, 0 }, Neck = { 20, 0, 0 },
-			RHand = { -5, -0.5, 1.1 }, RBlade = { 0, -22 }, RFace = { 0, -112 },
-			RFoot = { 0.3, 0, -0.3, -15 }, LFoot = { -0.3, 0, 0.35, 20 } }),
-		P(0.62, "O", HEAVY_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.62, -0.1 }, Waist = { -32, 0, 0 }, Neck = { 22, 0, 0 },
-			RHand = { -5, -0.52, 1.1 }, RBlade = { 0, -24 }, RFace = { 0, -114 },
-			RFoot = { 0.3, 0, -0.3, -15 }, LFoot = { -0.3, 0, 0.35, 20 } }),
-		P(1.0, "s", HEAVY_GUARD, { Root = { 0, 4, 0 }, RootP = { 0, -0.5, -0.05 }, Waist = { -20, 0, 0 }, Neck = { 14, 0, 0 },
-			RHand = { -15, -0.55, 0.95 }, RBlade = { -10, -10 }, RFace = { -10, -100 } }),
-		P(1.7, "s", HEAVY_GUARD),
+		P(0, nil, HEAVY_GUARD, { Root = { 0, -55, 0 }, RootP = { 0, -0.4, 0 }, Waist = { -5, -35, 0 }, Neck = { 6, 60, 0 },
+			RHand = { -120, -0.2, 0.8 }, RBlade = { -150, 15 }, RFace = { -60, 0 },
+			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
+		P(0.12, "i", HEAVY_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.45, -0.05 }, Waist = { -10, 20, 0 }, Neck = { 6, -20, 0 },
+			RHand = { -10, -0.3, 1.2 }, RBlade = { 20, 0 }, RFace = { 110, 0 },
+			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
+		P(0.26, "O", HEAVY_GUARD, { Root = { 0, 35, 0 }, RootP = { 0, -0.45, -0.05 }, Waist = { -12, 40, 0 }, Neck = { 8, -50, 0 },
+			RHand = { 80, -0.4, 1.0 }, RBlade = { 130, -10 }, RFace = { 220, 0 },
+			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
+		P(0.6, "s", HEAVY_GUARD, { Root = { 0, 32, 0 }, RootP = { 0, -0.42, -0.05 }, Waist = { -10, 36, 0 }, Neck = { 8, -45, 0 },
+			RHand = { 75, -0.45, 0.95 }, RBlade = { 125, -12 }, RFace = { 215, 0 } }),
+		P(0.95, "s", HEAVY_GUARD, { RFace = { 330, -35 } }),
 	},
 }
 
--- Attack 2, WideSmash (finisher): coiled far to the right, a full flat sweep across the front to the left.
+-- Attack 2, SweepLeft: the weight carries it back, a backhand sweep the other way.
 Clips.Heavy_Attack2 = {
-	Length = 1.8, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.2, Markers = { Hit = 0.4 },
+	Length = 0.95, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.12, Markers = { Hit = 0.12 },
+	Poses = {
+		P(0, nil, HEAVY_GUARD, { Root = { 0, 40, 0 }, RootP = { 0, -0.42, 0 }, Waist = { -8, 36, 0 }, Neck = { 6, -50, 0 },
+			RHand = { 80, -0.3, 0.9 }, RBlade = { 130, 10 }, RFace = { 40, 0 },
+			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
+		P(0.12, "i", HEAVY_GUARD, { Root = { 0, -10, 0 }, RootP = { 0, -0.45, -0.05 }, Waist = { -10, -20, 0 }, Neck = { 6, 20, 0 },
+			RHand = { -15, -0.3, 1.2 }, RBlade = { -20, 0 }, RFace = { -110, 0 },
+			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
+		P(0.26, "O", HEAVY_GUARD, { Root = { 0, -40, 0 }, RootP = { 0, -0.45, -0.05 }, Waist = { -12, -35, 0 }, Neck = { 8, 45, 0 },
+			RHand = { -95, -0.4, 1.0 }, RBlade = { -130, -10 }, RFace = { -220, 0 },
+			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
+		P(0.6, "s", HEAVY_GUARD, { Root = { 0, -36, 0 }, RootP = { 0, -0.42, -0.05 }, Waist = { -10, -32, 0 }, Neck = { 8, 40, 0 },
+			RHand = { -90, -0.45, 0.95 }, RBlade = { -125, -12 }, RFace = { -215, 0 } }),
+		P(0.95, "s", HEAVY_GUARD, { RFace = { -30, -35 } }),
+	},
+}
+
+-- Attack 3, OverheadSlam: over the head and straight into the ground in front.
+Clips.Heavy_Attack3 = {
+	Length = 1.05, Legs = "Stand", FadeIn = 0.08, FadeOut = 0.12, Markers = { Hit = 0.13 },
+	Poses = {
+		P(0, nil, HEAVY_GUARD, { Root = { 0, 5, 0 }, RootP = { 0, -0.1, 0.06 }, Waist = { 14, 0, 0 }, Neck = { -9, 0, 0 },
+			RHand = { -10, 0.9, 0.3 }, RBlade = { 0, 150 }, RFace = { 0, 60 } }),
+		P(0.13, "i", HEAVY_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.6, -0.1 }, Waist = { -30, 0, 0 }, Neck = { 20, 0, 0 },
+			RHand = { -5, -0.5, 1.1 }, RBlade = { 0, -22 }, RFace = { 0, -112 },
+			RFoot = { 0.3, 0, -0.3, -15 }, LFoot = { -0.3, 0, 0.35, 20 } }),
+		P(0.3, "O", HEAVY_GUARD, { Root = { 0, 0, 0 }, RootP = { 0, -0.62, -0.1 }, Waist = { -32, 0, 0 }, Neck = { 22, 0, 0 },
+			RHand = { -5, -0.52, 1.1 }, RBlade = { 0, -24 }, RFace = { 0, -114 },
+			RFoot = { 0.3, 0, -0.3, -15 }, LFoot = { -0.3, 0, 0.35, 20 } }),
+		P(0.62, "s", HEAVY_GUARD, { Root = { 0, 4, 0 }, RootP = { 0, -0.5, -0.05 }, Waist = { -20, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -15, -0.55, 0.95 }, RBlade = { -10, -10 }, RFace = { -10, -100 } }),
+		P(1.05, "s", HEAVY_GUARD),
+	},
+}
+
+-- Attack 4, GroundBreaker (finisher, Legs Own): squat, a jump with the weapon swung up over the head, a two-handed slam
+-- that drops into a deep squat, then the heave back to the guard. The jump is the clip's own (RootP).
+Clips.Heavy_Attack4 = {
+	Length = 1.25, Legs = "Own", FadeIn = 0.07, FadeOut = 0.12, Markers = { Hit = 0.2 },
+	Poses = {
+		P(0, nil, HEAVY_GUARD, { Root = { 0, -10, 0 }, RootP = { 0, -0.85, 0.1 }, Waist = { -24, -10, 0 }, Neck = { 18, 10, 0 },
+			RHand = { -60, -0.6, 0.6 }, RBlade = { -170, -15 }, RFace = { -170, -105 },
+			RFoot = { 0.38, 0, -0.1, -15 }, LFoot = { -0.38, 0, 0.2, 20 } }),
+		P(0.1, "o", HEAVY_GUARD, { Root = { 12, 0, 0 }, RootP = { 0, 1.3, 0.1 }, Waist = { 14, 0, 0 }, Neck = { -10, 0, 0 },
+			RHand = { -8, 0.95, 0.35 }, RBlade = { 0, 155 }, RFace = { 0, 65 },
+			RFoot = { 0.25, 1.55, -0.2, -15 }, LFoot = { -0.25, 1.45, 0.3, 20 } }),
+		P(0.15, "s", HEAVY_GUARD, { Root = { 15, 0, 0 }, RootP = { 0, 1.4, 0.05 }, Waist = { 16, 0, 0 }, Neck = { -11, 0, 0 },
+			RHand = { -8, 1.0, 0.3 }, RBlade = { 0, 162 }, RFace = { 0, 72 },
+			RFoot = { 0.3, 1.45, -0.25, -15 }, LFoot = { -0.3, 1.35, 0.3, 20 } }),
+		P(0.2, "i", HEAVY_GUARD, { Root = { -10, 12, 0 }, RootP = { 0, -0.9, -0.15 }, Waist = { -28, -5, 0 }, Neck = { 22, -8, 0 },
+			RHand = { -38, 0.05, 1.35 }, RBlade = { -33, -28 }, RFace = { -33, -118 },
+			RFoot = { 0.4, 0, -0.3, -15 }, LFoot = { -0.4, 0, 0.3, 20 } }),
+		P(0.42, "O", HEAVY_GUARD, { Root = { -10, 12, 0 }, RootP = { 0, -0.95, -0.15 }, Waist = { -30, -5, 0 }, Neck = { 23, -8, 0 },
+			RHand = { -38, 0.03, 1.35 }, RBlade = { -33, -30 }, RFace = { -33, -120 },
+			RFoot = { 0.4, 0, -0.3, -15 }, LFoot = { -0.4, 0, 0.3, 20 } }),
+		P(0.8, "s", HEAVY_GUARD, { Root = { 4, 4, 0 }, RootP = { 0, -0.55, -0.05 }, Waist = { -20, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -15, -0.55, 0.95 }, RBlade = { -10, -10 }, RFace = { -10, -100 } }),
+		P(1.25, "s", HEAVY_GUARD),
+	},
+}
+
+-- Heavy, ChargedSlam: the weapon hauled up over the head, back arched (Charge: the hold, the longer the bigger the
+-- shockwave), then the crash into the ground; low on one knee, the long heave back up.
+Clips.Heavy_Heavy = {
+	Length = 1.4, Legs = "Stand", FadeIn = 0.1, FadeOut = 0.15, Markers = { Charge = 0.22, Hit = 0.32 },
 	Poses = {
 		P(0, nil, HEAVY_GUARD),
-		P(0.3, "o", HEAVY_GUARD, { Root = { 0, -55, 0 }, RootP = { 0, -0.4, 0 }, Waist = { -5, -35, 0 }, Neck = { 6, 60, 0 },
-			RHand = { -120, -0.2, 0.8 }, RBlade = { -150, 15 }, RFace = { -60, 0 },
-			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
-		P(0.4, "i", HEAVY_GUARD, { Root = { 0, 10, 0 }, RootP = { 0, -0.45, -0.05 }, Waist = { -10, 20, 0 }, Neck = { 6, -20, 0 },
-			RHand = { -10, -0.3, 1.2 }, RBlade = { 20, 0 }, RFace = { 110, 0 },
-			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
-		P(0.55, "O", HEAVY_GUARD, { Root = { 0, 35, 0 }, RootP = { 0, -0.45, -0.05 }, Waist = { -12, 40, 0 }, Neck = { 8, -50, 0 },
-			RHand = { 80, -0.4, 1.0 }, RBlade = { 130, -10 }, RFace = { 220, 0 },
-			RFoot = { 0.3, 0, -0.25, -20 }, LFoot = { -0.3, 0, 0.3, 25 } }),
-		P(0.95, "s", HEAVY_GUARD, { Root = { 0, 32, 0 }, RootP = { 0, -0.42, -0.05 }, Waist = { -10, 36, 0 }, Neck = { 8, -45, 0 },
-			RHand = { 75, -0.45, 0.95 }, RBlade = { 125, -12 }, RFace = { 215, 0 } }),
-		P(1.8, "s", HEAVY_GUARD, { RFace = { 330, -35 } }),
+		P(0.22, "o", HEAVY_GUARD, { Root = { 10, 5, 0 }, RootP = { 0, -0.08, 0.1 }, Waist = { 16, 0, 0 }, Neck = { -10, 0, 0 },
+			RHand = { -10, 0.95, 0.28 }, RBlade = { 0, 158 }, RFace = { 0, 68 },
+			RFoot = { 0.32, 0, -0.1, -15 }, LFoot = { -0.32, 0, 0.35, 20 } }),
+		P(0.32, "i", HEAVY_GUARD, { Root = { -12, 8, 0 }, RootP = { 0, -0.9, -0.15 }, Waist = { -30, -5, 0 }, Neck = { 22, -6, 0 },
+			RHand = { -30, 0.0, 1.3 }, RBlade = { -25, -28 }, RFace = { -25, -118 },
+			RFoot = { 0.4, 0, -0.35, -15 }, LFoot = { -0.4, 0, 0.45, 20 } }),
+		P(0.56, "O", HEAVY_GUARD, { Root = { -12, 8, 0 }, RootP = { 0, -0.95, -0.15 }, Waist = { -32, -5, 0 }, Neck = { 23, -6, 0 },
+			RHand = { -30, -0.02, 1.3 }, RBlade = { -25, -30 }, RFace = { -25, -120 },
+			RFoot = { 0.4, 0, -0.35, -15 }, LFoot = { -0.4, 0, 0.45, 20 } }),
+		P(0.95, "s", HEAVY_GUARD, { Root = { 4, 4, 0 }, RootP = { 0, -0.55, -0.05 }, Waist = { -20, 0, 0 }, Neck = { 14, 0, 0 },
+			RHand = { -15, -0.55, 0.95 }, RBlade = { -10, -10 }, RFace = { -10, -100 } }),
+		P(1.4, "s", HEAVY_GUARD),
 	},
 }
 

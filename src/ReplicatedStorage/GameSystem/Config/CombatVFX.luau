@@ -149,6 +149,16 @@ CombatVFX.ArcLook = {
 -- leaves the left hand). A melee category without an entry gets Default (trail only). A missing step uses step 1.
 -- Heavy attacks: same fields, per category; a category without an entry uses its finisher's.
 CombatVFX.HeavySwing = {
+	-- GuardSplitter: a tall arc over the top at the spear's reach
+	Spear = { TrailOn = 0.2, TrailOff = 0.16, Effects = {
+		{ Asset = "Spear_SweepArc", Radius = 8.5, Width = 1.4, Height = 0.8, From = 90, To = -70, Roll = 90, Reveal = 0.08, Hold = 0.04, Fade = 0.14, Profile = "Crescent", Core = 0.34 },
+	} },
+	-- ChargedSlam: straight down; the shockwave is the server's Burst "Slam", its size follows the charge
+	Heavy = { TrailOn = 0.3, TrailOff = 0.16, Effects = {
+		{ Asset = "Heavy_SmashArc", Radius = 4.8, Width = 1.8, Height = 1.6, From = 150, To = -62, Roll = 90, Reveal = 0.07, Hold = 0.05, Fade = 0.16, Profile = "Crescent", Core = 0.4 },
+		{ Kind = "Ground", Asset = "Heavy_GroundCrack", Anchor = "Impact", Cracks = 6, CrackLength = { 4.5, 8 }, CrackWidth = 0.5, Grow = 0.1, Hold = 0.9, Fade = 0.5, CrackColor = rgb(45, 36, 30),
+			Chunks = 6, ChunkSize = { 0.4, 0.8 }, ChunkUp = { 16, 26 }, ChunkOut = { 5, 10 }, Gravity = 70, ChunkLife = 0.75 },
+	} },
 	-- CrossRend: two crossing streaks ahead of the body
 	Dagger = { TrailOn = 0.2, TrailOff = 0.12, Effects = {
 		{ Asset = "Dagger_StabStreak", Shape = "Line", Yaw = 10, Offset = { 0.6, 0.3, 0 }, Start = 0.5, Length = 6, Width = 0.8, Reveal = 0.04, Hold = 0.03, Fade = 0.1, Grow = 0.2, Profile = "Spike", Core = 0.4 },
@@ -161,6 +171,17 @@ CombatVFX.HeavySwing = {
 } :: { [string]: { [string]: any } }
 -- Z skills: a category without an entry uses its dash strike's effects.
 CombatVFX.SkillSwing = {
+	-- CycloneSweep: two rings at the spear's reach
+	Spear = { TrailOn = 0.3, TrailOff = 0.34, Effects = {
+		{ Asset = "Spear_SweepArc", Radius = 8.5, Width = 1.3, Height = -0.2, From = 90, To = -270, Roll = 0, Reveal = 0.16, Hold = 0.03, Fade = 0.12, Profile = "Ring", Core = 0.32 },
+		{ Asset = "Spear_SweepArc", Hit = 2, Radius = 9.5, Width = 1.3, Height = 0.1, From = 90, To = -270, Roll = 0, Reveal = 0.16, Hold = 0.03, Fade = 0.12, Profile = "Ring", Core = 0.32 },
+	} },
+	-- Earthbreaker: the finisher's slam, cracks and chunks; the wide shockwave is the server's Burst "Slam"
+	Heavy = { TrailOn = 0.5, TrailOff = 0.16, Effects = {
+		{ Asset = "Heavy_SmashArc", Radius = 4.8, Width = 1.8, Height = 1.6, From = 150, To = -62, Roll = 90, Reveal = 0.07, Hold = 0.05, Fade = 0.16, Profile = "Crescent", Core = 0.4 },
+		{ Kind = "Ground", Asset = "Heavy_GroundCrack", Anchor = "Impact", Cracks = 6, CrackLength = { 5, 9 }, CrackWidth = 0.55, Grow = 0.1, Hold = 0.9, Fade = 0.5, CrackColor = rgb(45, 36, 30),
+			Chunks = 6, ChunkSize = { 0.4, 0.8 }, ChunkUp = { 16, 26 }, ChunkOut = { 5, 10 }, Gravity = 70, ChunkLife = 0.75 },
+	} },
 	-- BladeStorm: two thin rings around the player
 	Dagger = { TrailOn = 0.2, TrailOff = 0.42, Effects = {
 		{ Asset = "Dagger_SlashArc", Radius = 5, Width = 1.0, Height = 0.2, From = 90, To = -270, Roll = 0, Reveal = 0.16, Hold = 0.02, Fade = 0.1, Profile = "Ring" },
@@ -201,16 +222,20 @@ CombatVFX.Swing = {
 			{ Kind = "Lines", Asset = "Spear_ThrustLines", Anchor = "Tip", Count = 3, Spread = { 1.8, 1.4 }, Start = -2, Length = 6, Width = 0.18, Extend = 0.06, Hold = 0.03, Fade = 0.12, Jitter = 0.03 },
 			{ Asset = "Spear_PierceRing", Anchor = "Tip", Offset = { 0, 0, -1.2 }, Pitch = 90, Profile = "Full", From = 0, To = 360, Radius = 0.8, Grow = 3, Width = 0.65, Reveal = 0, Hold = 0.02, Fade = 0.16, Core = 0.38 },
 		} },
+		-- Sweep (combat V3): the shaft swept flat and low from the far right through the front (Arc 180, radius 8.5): a
+		-- wide low crescent and dust kicked up under it
+		{ TrailOn = 0.5, TrailOff = 0.14, Effects = {
+			{ Asset = "Spear_SweepArc", Radius = 6.8, Width = 1.5, Height = -0.7, From = 105, To = -100, Roll = -4, Reveal = 0.08, Hold = 0.05, Fade = 0.2, Profile = "Crescent", Core = 0.36, Delay = -0.03, Ground = true },
+		} },
+		-- WheelSpin: a thin ring at the spear's reach
+		{ TrailOn = 0.3, TrailOff = 0.2, Effects = {
+			{ Asset = "Spear_SweepArc", Radius = 7.5, Width = 1.2, Height = -0.2, From = 90, To = -250, Roll = 0, Reveal = 0.16, Hold = 0.03, Fade = 0.12, Profile = "Ring", Core = 0.32 },
+		} },
 		-- Thrust2: overhand, from above the right shoulder stabbing down-forward
 		{ TrailOn = 0.5, TrailOff = 0.1, Effects = {
 			{ Asset = "Spear_PierceStreak", Shape = "Line", Anchor = "Tip", Pitch = -10, Start = -2.5, Length = 8, Width = 1.1, Reveal = 0.05, Hold = 0.03, Fade = 0.14, Grow = 0.15, Profile = "Spike", Core = 0.35, Delay = -0.02 },
 			{ Kind = "Lines", Asset = "Spear_ThrustLines", Anchor = "Tip", Pitch = -10, Count = 3, Spread = { 1.8, 1.4 }, Start = -2, Length = 6, Width = 0.18, Extend = 0.06, Hold = 0.03, Fade = 0.12, Jitter = 0.03 },
 			{ Asset = "Spear_PierceRing", Anchor = "Tip", Pitch = 80, Offset = { 0, 0, -1.2 }, Profile = "Full", From = 0, To = 360, Radius = 0.8, Grow = 3, Width = 0.65, Reveal = 0, Hold = 0.02, Fade = 0.16, Core = 0.38 },
-		} },
-		-- Sweep (combat V3): the shaft swept flat and low from the far right through the front (Arc 180, radius 8.5): a
-		-- wide low crescent and dust kicked up under it
-		{ TrailOn = 0.5, TrailOff = 0.14, Effects = {
-			{ Asset = "Spear_SweepArc", Radius = 6.8, Width = 1.5, Height = -0.7, From = 105, To = -100, Roll = -4, Reveal = 0.08, Hold = 0.05, Fade = 0.2, Profile = "Crescent", Core = 0.36, Delay = -0.03, Ground = true },
 		} },
 		-- PiercingLunge finisher (step 4 since combat V3): a longer, brighter streak, more lines, two pierce rings along
 		-- the reach (Line 14 studs)
@@ -222,16 +247,20 @@ CombatVFX.Swing = {
 		} },
 	},
 	Heavy = {
+		-- SweepRight: a full flat sweep from far right across the front to the left, big and bright
+		{ TrailOn = 0.75, TrailOff = 0.18, Effects = {
+			{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.8, Width = 1.8, Height = 0.4, From = 150, To = -140, Roll = -6, Reveal = 0.1, Hold = 0.07, Fade = 0.26, Core = 0.4, Profile = "Crescent" },
+		} },
+		-- SweepLeft: the backhand, the same sweep the other way
+		{ TrailOn = 0.75, TrailOff = 0.18, Effects = {
+			{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.8, Width = 1.8, Height = 0.4, From = -150, To = 140, Roll = 6, Reveal = 0.1, Hold = 0.07, Fade = 0.26, Core = 0.4, Profile = "Crescent" },
+		} },
 		-- OverheadSlam: a vertical arc from over the head into the ground in front, then cracks, flying chunks and dust
 		-- where the head (ImpactAttachment) lands; the server's "Slam" burst adds the shockwave ring
 		{ TrailOn = 0.8, TrailOff = 0.1, Effects = {
 			{ Asset = "Heavy_SmashArc", Delay = -0.05, Radius = 4.2, Width = 1.8, Height = 1.2, Offset = { 0.4, 0, 0 }, From = 130, To = -58, Roll = 62, Reveal = 0.07, Hold = 0.06, Fade = 0.22, Profile = "Crescent", Core = 0.36 },
 			{ Kind = "Ground", Asset = "Heavy_GroundCrack", Anchor = "Impact", Cracks = 6, CrackLength = { 3.5, 6 }, CrackWidth = 0.42, Grow = 0.1, Hold = 1.1, Fade = 0.6, CrackColor = rgb(45, 36, 30),
 				Chunks = 6, ChunkSize = { 0.35, 0.7 }, ChunkUp = { 14, 22 }, ChunkOut = { 4, 9 }, Gravity = 70, ChunkLife = 0.75 },
-		} },
-		-- WideSmash: a full flat sweep from far right across the front to the left, big and bright
-		{ TrailOn = 0.75, TrailOff = 0.18, Effects = {
-			{ Asset = "Heavy_SmashArc", Delay = -0.06, Radius = 5.8, Width = 1.8, Height = 0.4, From = 150, To = -140, Roll = -6, Reveal = 0.1, Hold = 0.07, Fade = 0.26, Core = 0.4, Profile = "Crescent" },
 		} },
 		-- GroundBreaker finisher (combat V3): the jump with the weapon over the head, a two-handed slam straight down in
 		-- front: a vertical arc into the ground, cracks and chunks where the head lands (the server's "Slam" burst,
@@ -652,7 +681,7 @@ CombatVFX.Death = { Asset = "Shared_DeathDissolve", Delay = 0.45, MaxSize = 14 }
 CombatVFX.ZoneTiming = {
 	-- the attack clips the signature overlays are timed on (Config/CombatAnimations, seconds at x1): finisher clip
 	-- lengths (their Hit = the finisher's Impact), jump attack Dive markers and lengths (Hit = AirAttacks Impact)
-	FinisherLength = { Sword = 0.78, Spear = 0.95, Heavy = 1.9, Dagger = 0.74, Ranged = 0.78, Magic = 0.98 },
+	FinisherLength = { Sword = 0.78, Spear = 0.9, Heavy = 1.25, Dagger = 0.74, Ranged = 0.78, Magic = 0.98 },
 	JumpDive = { Sword = 0.2, Spear = 0.22, Heavy = 0.3, Dagger = 0.17 },
 	JumpLength = { Sword = 0.85, Spear = 0.95, Heavy = 1.3, Dagger = 0.62, Ranged = 0.8, Magic = 1.0 },
 	LateWindup = 0.15, -- s (Animations LATE_WINDUP)

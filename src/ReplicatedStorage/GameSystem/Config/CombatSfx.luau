@@ -532,9 +532,10 @@ CombatSfx.Categories = {
 		Swing = {
 			Steps = {
 				{ Set = "SpearThrust" }, -- Thrust
-				{ Set = "SpearThrust", Pitch = 1.06 }, -- Thrust2
-				-- Sweep (combat V3, hit 0.22): the wide shaft swoosh with a wooden swish under it
+				-- Sweep: the wide shaft swoosh with a wooden swish under it
 				{ Set = "SpearSweep", Also = { { Set = "SpearShaft", Pitch = 0.75, Volume = 0.8 } } },
+				{ Set = "SpearSweep", Pitch = 1.08 }, -- WheelSpin
+				{ Set = "SpearThrust", Pitch = 1.06 }, -- Thrust2
 			},
 			-- PiercingLunge (step 4 since combat V3): the long hissing pierce over a lower thrust
 			Finisher = { Set = "SpearPierce", Also = { { Set = "SpearThrust", Pitch = 0.9, Volume = 0.6 } } },
@@ -564,9 +565,10 @@ CombatSfx.Categories = {
 	Heavy = {
 		Swing = {
 			Steps = {
-				{ Set = "HeavySwing" }, -- OverheadSlam (its ground slam: Burst "Slam")
-				-- WideSmash (no longer the finisher since combat V3): the rumbling smash over a lower slow whoosh
+				-- SweepRight: the rumbling smash over a lower slow whoosh
 				{ Set = "HeavySmash", Also = { { Set = "HeavySwing", Pitch = 0.9, Volume = 0.6 } } },
+				{ Set = "HeavySmash", Pitch = 1.05, Also = { { Set = "HeavySwing", Pitch = 0.95, Volume = 0.6 } } }, -- SweepLeft
+				{ Set = "HeavySwing" }, -- OverheadSlam (its ground slam: Burst "Slam")
 			},
 			-- GroundBreaker (combat V3, slam 0.55): the jump (0.2-0.38), the huge swing peaking at the slam; the ground
 			-- slam is the server's Burst "Slam" (radius 9)

@@ -4,6 +4,7 @@
 -- its clips in Config/CombatAnimations; no new code.
 -- Moves[category] = {
 --   Class      "Melee" | "Bow" | "Staff" (input and server path)
+--   GuardBreakMult  a finisher / heavy on a staggered enemy (default Input.GuardBreakMult); StaggerChance per hit
 --   Pair       true: the weapon is one in each hand (WeaponService adds the off-hand copy)
 --   Speed      attribute that speeds the weapon up (Util/Stats, with the rarity; default Dexterity)
 --   Dps        Common damage per second in zone 1, in tens: Sword 1.0 = 10 / s. WeaponCategories derives the category's
@@ -27,7 +28,8 @@
 --   Stagger    seconds every enemy hit is staggered
 --   Lunge      studs the attacker steps forward (heavy, jump, dash only: light steps never move the body),
 --              LungeSeconds = its duration (default Combat.Feel.LungeSeconds)
---   Heavy: MaxCharge seconds of hold to the full charge, ChargeDamage and ChargeRadius = bonus at full charge
+--   Heavy: MaxCharge seconds of hold to the full charge, ChargeDamage and ChargeRadius = bonus at full charge, ChargeArmor =
+--              damage taken is reduced this much during the hold
 --   Skill: the Z move, its cooldown and cost are in Config/Skills
 --   Air: Hang = seconds the body stays still before the dive / the shot; Shots, Spread (Ranged volley)
 local WeaponMoves = {}
@@ -36,6 +38,7 @@ WeaponMoves.Input = {
 	HoldThreshold = 0.22, -- a press still down after this long flows into the heavy / charged attack
 	BufferWindow = 0.35, -- a press in the last 35% of a move queues the next one
 	ComboReset = 0.8, -- seconds after a move's Duration without an attack: the combo restarts
+	ChanceStagger = 0.4, -- seconds of a StaggerChance stagger
 	GuardBreakMult = 1.5, -- finisher or heavy on a staggered enemy (enemies have no guard: stagger = guard broken)
 }
 
@@ -64,39 +67,47 @@ WeaponMoves.Moves = {
 			Shape = { Kind = "Line", Length = 14, Width = 5, MaxTargets = 6 } },
 	},
 	Spear = {
-		Class = "Melee", Dps = 1.08,
+		Class = "Melee", Dps = 1.08, GuardBreakMult = 2.0, StaggerChance = 0.2,
 		Shape = { Kind = "Line", Length = 10, Width = 3, MaxTargets = 4 },
 		Steps = {
-			{ Name = "Thrust", Impact = 0.18, Duration = 1.11, Damage = 0.9 },
-			{ Name = "Thrust2", Impact = 0.18, Duration = 1.11, Damage = 0.9 },
-			{ Name = "Sweep", Impact = 0.22, Duration = 1.11, Damage = 0.95, Knockback = 6,
-				Shape = { Kind = "Arc", Angle = 180, Radius = 8.5, MaxTargets = 6 } },
-			{ Name = "PiercingLunge", Impact = 0.24, Duration = 1.11, Damage = 1.25, Finisher = true, Knockback = 8,
+			{ Name = "Thrust", Impact = 0.11, Duration = 0.4, Damage = 1.0 },
+			{ Name = "Sweep", Impact = 0.11, Duration = 0.4, Damage = 1.1, Knockback = 6,
+				Shape = { Kind = "Arc", Angle = 180, Radius = 9.5, MaxTargets = 5 } },
+			{ Name = "WheelSpin", Impact = 0.11, Duration = 0.46, Damage = 1.15, Knockback = 6,
+				Shape = { Kind = "Circle", Radius = 9, MaxTargets = 5 } },
+			{ Name = "Thrust2", Impact = 0.11, Duration = 0.4, Damage = 1.05 },
+			{ Name = "PiercingLunge", Impact = 0.14, Duration = 0.72, Damage = 1.9, Finisher = true, Knockback = 8,
 				Shape = { Length = 14, MaxTargets = 6 } },
 		},
-		Heavy = { Name = "HeavyThrust", Clip = "Spear_Attack4", Impact = 0.24, Duration = 0.8, Damage = 2.0, Lunge = 3, MaxCharge = 0.6, ChargeDamage = 0.5,
-			Knockback = 9, Stagger = 0.35, Shape = { Length = 14, MaxTargets = 6 } },
-		Air = { Name = "DragoonDive", Impact = 0.34, Duration = 0.95, Hang = 0.12, Damage = 1.3, Lunge = 3, Knockback = 8,
+		Heavy = { Name = "GuardSplitter", Impact = 0.13, Duration = 0.7, Damage = 3.3, Lunge = 3, MaxCharge = 0.6, ChargeDamage = 0.5,
+			Knockback = 8, Stagger = 0.5, Shape = { Kind = "Arc", Angle = 110, Radius = 11, MaxTargets = 5 } },
+		Air = { Name = "DragoonDive", Impact = 0.34, Duration = 0.9, Hang = 0.12, Damage = 2.8, Lunge = 3, Knockback = 8,
 			Shape = { Kind = "Circle", Radius = 6.5, MaxTargets = 6 } },
-		Dash = { Name = "ChargeThrust", Impact = 0.16, Duration = 0.65, Damage = 1.3, Lunge = 8, LungeSeconds = 0.18, Knockback = 9,
+		Dash = { Name = "ChargeThrust", Impact = 0.16, Duration = 0.55, Damage = 2.2, Lunge = 8, LungeSeconds = 0.18, Knockback = 9,
 			Shape = { Length = 13, MaxTargets = 6 } },
+		Skill = { Name = "CycloneSweep", Impact = 0.14, Hits = { 0.34 }, Duration = 0.72, Damage = 2.6, Knockback = 8,
+			Shape = { Kind = "Circle", Radius = 10.5, MaxTargets = 6 } },
 	},
 	Heavy = {
 		Class = "Melee", Dps = 1.0,
-		Shape = { Kind = "Arc", Angle = 90, Radius = 6, MaxTargets = 6, SlamRadius = 6, Stagger = 0.3 },
+		Shape = { Kind = "Arc", Angle = 200, Radius = 7.5, MaxTargets = 6 },
 		Steps = {
-			{ Name = "OverheadSlam", Impact = 0.45, Duration = 2.5, Damage = 0.85 },
-			{ Name = "WideSmash", Impact = 0.4, Duration = 2.5, Damage = 0.95, Knockback = 6,
-				Shape = { Angle = 200, Radius = 7.5, MaxTargets = 8, SlamRadius = false } },
-			{ Name = "GroundBreaker", Impact = 0.55, Duration = 2.5, Damage = 1.2, Finisher = true, Knockback = 12,
-				Shape = { Kind = "Circle", Radius = 8, MaxTargets = 10, SlamRadius = 9, Stagger = 0.6 } },
+			{ Name = "SweepRight", Impact = 0.12, Duration = 0.6, Damage = 1.0, Knockback = 6 },
+			{ Name = "SweepLeft", Impact = 0.12, Duration = 0.6, Damage = 1.05, Knockback = 6 },
+			{ Name = "OverheadSlam", Impact = 0.13, Duration = 0.65, Damage = 1.2, Knockback = 7,
+				Shape = { Angle = 90, Radius = 6, SlamRadius = 6, Stagger = 0.3 } },
+			{ Name = "GroundBreaker", Impact = 0.2, Duration = 0.95, Damage = 2.0, Finisher = true, Knockback = 12,
+				Shape = { Kind = "Circle", Radius = 8, MaxTargets = 8, SlamRadius = 9, Stagger = 0.6 } },
 		},
-		Heavy = { Name = "ChargedSlam", Clip = "Heavy_Attack3", Impact = 0.3, Duration = 1.0, Damage = 2.0, Lunge = 2, MaxCharge = 1.2, ChargeDamage = 1.0, ChargeRadius = 0.8,
-			Knockback = 12, Shape = { Kind = "Circle", Radius = 8, MaxTargets = 10, SlamRadius = 9, Stagger = 0.6 } },
-		Air = { Name = "MeteorSmash", Impact = 0.45, Duration = 1.3, Hang = 0.16, Damage = 1.5, Lunge = 2, Knockback = 12, Stagger = 0.6,
-			Shape = { Kind = "Circle", Radius = 9, MaxTargets = 10, SlamRadius = false } },
-		Dash = { Name = "RushingSmash", Impact = 0.3, Duration = 0.9, Damage = 1.3, Lunge = 5, LungeSeconds = 0.2, Knockback = 11, Stagger = 0.4,
-			Shape = { Angle = 150, Radius = 7, SlamRadius = false } },
+		-- the long hold: up to 2x damage, a shockwave up to 1.9x as wide, 20% less damage taken while winding up (no immunity)
+		Heavy = { Name = "ChargedSlam", Impact = 0.14, Duration = 0.85, Damage = 2.8, Lunge = 1.5, MaxCharge = 1.2, ChargeDamage = 1.0, ChargeRadius = 0.9, ChargeArmor = 0.2,
+			Knockback = 12, Shape = { Kind = "Circle", Radius = 6, MaxTargets = 8, SlamRadius = 8, Stagger = 0.6 } },
+		Air = { Name = "MeteorSmash", Impact = 0.45, Duration = 1.1, Hang = 0.16, Damage = 2.8, Lunge = 2, Knockback = 12, Stagger = 0.6,
+			Shape = { Kind = "Circle", Radius = 9, MaxTargets = 8 } },
+		Dash = { Name = "RushingSmash", Impact = 0.3, Duration = 0.8, Damage = 2.2, Lunge = 5, LungeSeconds = 0.2, Knockback = 11, Stagger = 0.4,
+			Shape = { Angle = 150, Radius = 7 } },
+		Skill = { Name = "Earthbreaker", Clip = "Heavy_Attack4", Impact = 0.2, Duration = 0.95, Damage = 4.2, Knockback = 14,
+			Shape = { Kind = "Circle", Radius = 9, MaxTargets = 10, SlamRadius = 13, Stagger = 0.8 } },
 	},
 	Dagger = {
 		Class = "Melee", Dps = 1.0, Pair = true,
