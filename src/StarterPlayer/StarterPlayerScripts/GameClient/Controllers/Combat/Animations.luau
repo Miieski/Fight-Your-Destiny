@@ -1777,6 +1777,9 @@ function Animations.attack(character: Model, category: string, step: number, spe
 		local unit = if typeof(aim) == "Vector3" and aim.Magnitude > 1e-3 then aim.Unit else nil
 		S.aimPitch = if unit then clamp(asin(clamp(unit.Y, -1, 1)), -AIM_PITCH_MAX, AIM_PITCH_MAX) else 0
 		play(S, clip, rate1, sp, "attack")
+		if hit and impact <= 0 then
+			S.act.t = hit -- a shot leaves at the release: the clip starts on it (the draw came before)
+		end
 		S.act.sync = own and S.isLocal and variant == "Air" and clip.dive ~= nil
 		local air = known == "Air"
 		styleSlot(S, S.act, category, air or known == "Heavy" or (known == nil and def ~= nil and def.Finisher == true), air)

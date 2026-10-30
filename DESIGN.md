@@ -134,22 +134,36 @@ Settings K. Mouse buttons only for Attack, Block and Roll. Keys Roblox or the ga
 Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 
 ### Attack rules
-* **Melee categories** (Sword, Spear, Heavy, Dagger): **hold** the
-  attack input to attack continuously at the weapon's attack speed.
-* **Ranged and Magic categories**: **one press = one shot** (click/tap). Holding does not
-  auto-fire (unless the player owns the Auto-Attack pass).
-* **Auto-Attack (paid game pass):** when enabled, the player automatically attacks the nearest
-  enemy in range (melee) or fires at the nearest enemy (ranged/magic). Toggle button on the HUD.
-* Weapon stats (damage, hits per second, range, shape) come from `docs/weapon_system_document.txt`.
-* **Combos** (`Config/Combat` Combos): each attack is the next step of the category's combo (Sword 4, Spear 4, Heavy 3,
-  Dagger 5, Ranged 3, Magic 3 steps; the last one is a finisher). The average damage over a combo stays
-  about x1. The combo restarts after 0.8 s without attacking.
+* **One attack button for every weapon: tap = combo / quick attack, hold = heavy / charged attack.** All timings, damage
+  and shapes: `Config/WeaponMoves` (it replaces the old `Config/Combat` combos).
+* **Melee** (Sword, Spear, Heavy, Dagger): a press starts the next step at once (first hit 0.08-0.12 s). A press in the last 35%
+  of a move queues the next one; holding never chains. Still down after 0.22 s: the swing flows into the heavy's wind-up (after
+  its impact); the release or the full charge fires it. Steps + finisher: Sword 4 + 1, Spear 4 + 1, Heavy 3 + 1, Dagger 5 + 1.
+  A heavy or finisher on a staggered enemy deals x1.5 (Spear x2; enemies have no guard: stagger = guard broken).
+* **Movement:** full speed while attacking, no root. Only heavy, jump and dash moves lunge. The body turns smoothly to the aim.
+* **Aim:** lock-on target, else the camera direction (melee), else the crosshair at the center of the screen (bow, staff: any
+  angle). **Lock-on:** button (L, gamepad R3): the nearest enemy in a 30 degree cone within 60 studs; the camera blends to it,
+  the body faces it, the arrow (H, D-pad right) goes to the next one; it ends if the target dies or leaves, or on a boss hit
+  worth 15% of max HP. The server never uses it: it only receives a direction.
+* **Bow** (`Ranged`, crossbows and guns too): tap = quick shot at press + 0.1 s; hold = charged shot (faster, up to +60%, pierces
+  3). No drop, infinite arrows, range 110; arrows stick in walls and the ground for 2.5 s.
+* **Staff** (`Magic`, every staff is a fire staff): tap = fireball at press + 0.15 s; hold = Inferno (bigger, slower, more damage,
+  more mana). Explodes in an area, burns (3 stacks at most, 3 s). See Mana and Heal below.
+* **Attack speed:** `1 + attribute + rarity`, combined cap x2.0 (Dexterity; Intelligence for staffs; rarity +0% to +50%,
+  `WeaponMoves.RaritySpeed`). Animation and timing windows scale together; the server uses the same number.
+* **Damage:** `WeaponCategories.DamageMult` is derived so that the DPS of a category stays its `Dps` in `WeaponMoves`, whatever
+  the timings. Faster steps = smaller hits, same time to kill. Attack speed still raises the DPS.
+* **Skills:** Z is the equipped category's basic skill (`Config/Skills`: Dash Slash, Cyclone Sweep, Earthbreaker, Blade Storm,
+  Triple Shot, Flame Nova); X and C stay as they are. Cooldown and cost are decided on the server.
+* **Auto-Attack (paid game pass):** when enabled, the player automatically attacks the nearest enemy in range through the light
+  path. Toggle button on the HUD.
+* Weapon stats come from `Config/WeaponMoves`; the table is in `docs/weapon_system_document.txt`.
 * **Jump attack** (combat V3, owner 2026-10-14: "a special animation when the character jump+attack"): attacking in the
   air (feet at least 1.2 studs above the ground) is the category's jump attack. Melee weapons hang a moment at the top,
   then dive so the body lands exactly at the hit: a shockwave circle around the landing point (Sword r 7, Spear 6.5,
   Heavy 9, Dagger 5; x1.3 to x1.6 damage, knockback, stagger for Heavy), counted as a finisher.
-  Ranged: the body hovers and fires 3 arrows down at the nearest enemy (x0.6 each). Magic: hovers and drops a radius 9
-  blast (x1.5). One jump attack per jump; the combo restarts after it. The server checks the player is airborne.
+  Ranged: the body hovers and fires 3 arrows down at the nearest enemy . Magic: hovers and drops a radius 9
+  blast. One jump attack per jump; the combo restarts after it. The server checks the player is airborne.
 * **Dash strike** (Iron Soul style): an attack pressed during a roll or within 0.35 s after it is a long lunge out of
   the roll (6-8 studs; x1.2 to x1.4 damage), then the combo restarts.
 * **Zone fighting styles** (owner 2026-10-14: "plains weapon will have a different animation than the void one"):
@@ -160,10 +174,18 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
   timing or the damage.
 
 ### Defense
-* **Roll:** 0.35 s of invulnerability, 12 studs, cooldown 1.5 s. Cannot roll while blocking.
-* **Block (hold):** reduces incoming damage by 60% (plus Defense), movement speed -50%,
-  cannot attack while blocking. A block animation + shield effect plays.
-* Rolls and blocks are checked on the **server** (cooldowns, i-frame window).
+* **Dodge** (Roll, Q / the Roll button): a 12-stud dash, 0.25 s of i-frames, 1.2 s cooldown (Mind reduces it, floor 0.6 s). It
+  can cancel the recovery of an attack, nothing else can: pressed during the start-up it waits for the impact.
+* **Block** (hold, melee): reduction `Stats Block` (60%, Endurance raises it, cap 85%), half speed, no attacks; it starts when
+  the running move is over. A guard meter (100, -25 per blocked hit, +30/s while not blocking) weakens it, down to 40% of itself;
+  at 0 it breaks and is refused for 1.5 s. No HUD for the meter.
+* **Perfect parry:** a hit within 0.2 s of the block press: no damage, the attacker staggers 1 s (not bosses), the guard refills.
+  A new press opens the window only 0.5 s after the last one.
+* **Mana:** a blue bar under the health bar, staff only. Server-side, saved in the profile. Max 100 and 4/s regen, both raised by
+  Mind; regen x2.5 after 4 s out of combat. Fireball 6, Inferno 18, Flame Nova 25. Not enough mana: the bar flashes, no cast,
+  no cooldown.
+* **Heal** (the staff's Block): hold to channel: 20% of max HP over 3 s (x (1 + Faith healing)), 15 mana/s, half speed, a light
+  circle under the player. Allies within 20 studs get 50%. Stops on release, a dodge, or no mana; 2 s cooldown.
 
 ### Damage model
 * `PlayerDamage = weapon damage (see weapon doc) x (1 + Attack bonuses) x crit`
@@ -178,6 +200,10 @@ Gamepad buttons stay fixed. List and rules: `Config/Settings` KEY_ACTIONS.
 * Boss arenas: see section 7 (defaults).
 
 ## 3. Player stats & armor
+
+### Attribute mapping (weapon overhaul)
+The prompt's names all exist: Dexterity = attack speed (melee, bow), Intelligence = staff cast speed and fire damage (its
+scaling), Mind (Esprit) = max mana and mana regen, Faith (Foi) = healing (`FaithHealing`). No fallback was needed.
 
 ### Base stats (level 0, no XP, no player level)
 | Stat | Id | Base | Effect |

@@ -49,9 +49,27 @@ the difference is in HOW they play (reach, area, speed, safety).
  6 | Magic (staff)     |   0.8    |   1.0    |  35   | Area damage in a small radius
    |                   |          |          |       | around the target.
 
-Approximate DPS per hit-rate (Common, relative to Sword = 10 in zone 1):
-    Sword 10 | Spear 10.8 | Heavy 10 | Dagger 10 (+crits)
-    Ranged 9.6 | Magic 8 (but area)
+Combat overhaul (2026-10-30): the numbers below are derived from
+Config/WeaponMoves: DamageMult = Dps / (hits per second x average step
+damage), so tuning a timing never moves the DPS. The DamageMult and hits
+per second columns of the table above are the OLD values, kept for the
+history of the balance; a hit is now smaller and faster, the DPS is the
+same (Common, zone 1):
+
+ Category | Steps | Hits/s | DamageMult | Damage | DPS  | First hit | Step
+ ---------+-------+--------+------------+--------+------+-----------+-----
+ Sword    | 4 + 1 |  2.50  |   0.328    |  3.3   | 10.0 |   0.10 s  | 0.34
+ Spear    | 4 + 1 |  2.10  |   0.415    |  4.2   | 10.8 |   0.11 s  | 0.40
+ Heavy    | 3 + 1 |  1.43  |   0.533    |  5.3   | 10.0 |   0.12 s  | 0.60
+ Dagger   | 5 + 1 |  5.38  |   0.203    |  2.0   | 10.0 |   0.08 s  | 0.22
+ Ranged   | tap   |  2.38  |   0.403    |  4.0   |  9.6 |   0.10 s  | 0.42
+ Magic    | tap   |  1.61  |   0.496    |  5.0   |  8.0 |   0.15 s  | 0.62
+
+Attack speed raises the DPS: 1 + attribute + rarity (+0% .. +50%), at
+most x2.0. Max targets: Sword 3, Spear 4, Heavy 6, Dagger 2.
+Z skills: Sword Dash Slash 8 s, Spear Cyclone Sweep 9 s, Heavy Earthbreaker
+10 s, Dagger Blade Storm 8 s, Ranged Triple Shot 7 s, Magic Flame Nova 9 s
+(25 mana). Daggers are a pair, one item.
 
 Ranged and Magic have slightly lower single-target DPS because they are
 safer and have range or area.
@@ -154,6 +172,10 @@ ZONE ELEMENT (optional flavor; works in every zone)
 ---------------------------------------------------------------------
 Damage shown is for a COMMON weapon. Multiply by the rarity multiplier
 (section 3) and apply the Zone Boost when in the home zone.
+
+Combat overhaul (2026-10-30): this table is the DPS level of each
+category per zone (damage per old-style hit). The real damage per hit
+is now DamageMult x zone base x rarity, see section 2.
 
 Reference table for a zone's base damage:
     Zone | Sword | Spear | Heavy | Dagger | Ranged | Magic

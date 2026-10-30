@@ -1,5 +1,8 @@
 # Combat contracts (hack & slash, docs/weapons_combat_brief.txt Phase 4)
 
+**Weapon overhaul, 2026-10-30:** read section 10 first: it replaces the combo tables, the call order and the APIs below where
+they differ. How the animations work: `docs/animation_system.md`.
+
 The main agent owns the gameplay and the integration. Three sub-agents fill in the feel: **animations**, **VFX**,
 **SFX**. Each one owns its files only and keeps the API below exactly (names, arguments, return values), so the
 integration in `CombatController` never has to change.
@@ -222,3 +225,21 @@ move on finishers and jump attacks, for all 6 categories) and **effects and soun
   attacks, timed on their Dive / Hit markers, "late" mode on very short wind-ups). Plains runs the old path. Dev hooks
   `AnimZone` (character attribute: show the held weapon in any zone's style) and `AnimHitDebug` (writes `AnimHitAt` /
   `AnimHitPose` / `AnimHitClip`).
+
+## 10. Weapon overhaul (2026-10-30)
+
+* **Data:** `Config/WeaponMoves` holds every shape, step, heavy, jump attack, dash strike and skill move
+  (`Combat.Shapes`, `Combos`, `AirAttacks`, `DashAttacks` are gone). `WeaponMoves.move(category, step, variant)`,
+  `WeaponMoves.shape(category, move)`.
+* **Call order, local attack:** `aim` -> `LockOn.face` -> lunge (heavy, jump, dash only) -> `AnimationController.play` (clip,
+  `VFX.swing`, `Sfx.combat("Swing")`) -> `Net.send("Attack", dir, point, variant)`. The hold: `Net.send("Charge", true)` +
+  `AnimationController.play` with Variant "Charge"; the release: Attack with variant "Heavy".
+* **Other players:** Net "Swing" -> `AnimationController.play` with `IsLocal = false`.
+* **Removed:** `Animations.hitStop`, `Trails.extend`, `Combat.Feel.HitStop`, the block cancel, the light lunge.
+* **New APIs:** `Animations.charge(character, category, speed)`, `Animations.aim(character, direction)`,
+  `VFX.chargeGlow(ctx)`, `VFX.chargeEnd(character)`, `VFX.channel(ctx)`, `Casts.stop(character)`,
+  `LockOn.toggle / next / release / point / face`, `ManaService:Has / Spend / Touch / Channel / IsChanneling`,
+  `CombatService:Skill`, `MenuBar.setPushDown`, `DataService.Migrate`.
+* **Net:** "Projectile" gets `stuck?, size?`; new "NoMana", "LockBreak"; "Hurt" kinds "parry", "break"; "Motion" kind "Parry".
+* **Readability limit** (`Config/CombatVFX`): a combat flash particle is at most 7 studs, 35-60% see-through, under 0.2 s; big arcs
+  see-through and at most 1.8 studs wide. A finisher or heavy must never hide enemies or boss telegraphs.

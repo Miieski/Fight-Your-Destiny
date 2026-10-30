@@ -12,6 +12,7 @@ local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local State = require(script.Parent.Parent.State)
 local Kit = script.Parent.Kit
 local Bar = require(Kit.Bar)
+local MenuBar = require(script.Parent.MenuBar)
 local Panel = require(Kit.Panel)
 local Screens = require(Kit.Screens)
 local Theme = require(Kit.Theme)
@@ -34,7 +35,8 @@ local function refreshVisible()
 	local item = typeof(weapons) == "table" and uid and weapons[uid]
 	local weapon = item and Weapons.ById[item.id]
 	local moves = weapon and WeaponMoves.Moves[weapon.Category]
-	panel.Visible = moves ~= nil and moves.Class == "Staff"
+	panel.Visible = if moves then moves.Class == "Staff" else false -- moves is false until the data has loaded
+	MenuBar.setPushDown(if panel.Visible then panel.Size.Y.Offset + GAP else 0) -- the menu makes room under the health bar
 end
 
 local function layout()
@@ -42,6 +44,7 @@ local function layout()
 	local size = if Theme.isCompact() then cfg.Compact else cfg.Normal
 	panel.Size = UDim2.fromOffset(size.X, math.floor(size.Y * HEIGHT_K))
 	panel.Position = UDim2.fromOffset(12, cfg.Top + size.Y + GAP)
+	MenuBar.setPushDown(if panel.Visible then panel.Size.Y.Offset + GAP else 0)
 end
 
 function ManaBar.flash()

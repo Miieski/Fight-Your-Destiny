@@ -7,6 +7,16 @@ then the design documents in `docs/`:
 - `docs/boss_patterns_document.txt` - boss attack patterns, tools and workflow
 - `docs/weapon_system_document.txt` - 72 weapons, rarity, zone damage scaling, zone boost, shop
 
+## Latest: WEAPON OVERHAUL (2026-10-30)
+
+Prompt `docs/Weapon_Overhaul/PROMPT_WEAPON_OVERHAUL.txt`, plan `docs/Weapon_Overhaul/PLAN.md`, decisions and test numbers at the
+top of `docs/NIGHT_LOG.md`. Gauntlets removed (72 weapons, 6 categories; files in `_removed/`). All combat data is in
+`Config/WeaponMoves`; animations: `docs/animation_system.md`; call order and APIs: `docs/COMBAT_CONTRACTS.md` section 10; rules:
+DESIGN.md section 2. New: `Controllers/LockOnController`, `Controllers/Combat/AnimationController`, `Services/ManaService`,
+`UI/ManaBar`. Filmstrips: `docs/before_after/W_*`, tools `grab_studio.py`, `make_filmstrip.py`, `make_rt_gif.py`.
+The VFX particle limits are on asset instances (`Assets.VFX`), not in src/: they live in the place file.
+Not done: a true two-client test, the old-save test through a real DataStore load, a real phone, the PC mouse feel.
+
 ## 1. What this is
 
 Roblox game **"Fight Your Destiny"** (placeId `106749213017380`, universeId `10769126910`):

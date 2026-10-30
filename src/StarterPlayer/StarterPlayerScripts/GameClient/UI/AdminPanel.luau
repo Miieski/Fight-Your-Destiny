@@ -16,6 +16,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
+local MenuBar = require(script.Parent.MenuBar)
 local Admins = require(ReplicatedStorage.GameSystem.Config.Admins)
 local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
@@ -784,10 +785,11 @@ local function build()
 	local crown = IconButton.new({ Name = "AdminToggle", Icon = "Admin", Label = "Admin", Size = Vector2.new(Theme.TOUCH, Theme.TOUCH), ShowLabel = false, AnchorPoint = Vector2.new(1, 0), Parent = Screens.hud(), OnClick = function()
 		Window.toggle("Admin")
 	end })
+	local pushDown = 0
 	local function layout()
 		if Theme.isCompact() then
 			crown.Instance.AnchorPoint = Vector2.zero
-			crown.Instance.Position = UDim2.fromOffset(12, TOP.Compact)
+			crown.Instance.Position = UDim2.fromOffset(12, TOP.Compact + pushDown)
 		else
 			crown.Instance.AnchorPoint = Vector2.new(1, 0)
 			crown.Instance.Position = UDim2.new(1, -12, 0, TOP.Normal)
@@ -795,6 +797,10 @@ local function build()
 	end
 	layout()
 	Theme.Changed:Connect(layout)
+	MenuBar.PushChanged:Connect(function(pixels: number)
+		pushDown = pixels
+		layout()
+	end)
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if not processed and input.KeyCode == Enum.KeyCode.F2 then
 			Window.toggle("Admin")

@@ -36,6 +36,9 @@ local apartLabels: { boolean } = {} -- Apart entries with ShowLabel keep their l
 local corner: { [number]: any } = {} -- index in `apart` -> its wide bottom-right button (PC)
 local CORNER = UIConfig.CornerButton
 local counts: { [string]: number } = {}
+local pushDown = 0 -- extra pixels under the health bar (the mana bar)
+local pushEvent = Instance.new("BindableEvent")
+MenuBar.PushChanged = pushEvent.Event -- fn(pixels): the Admin crown follows
 
 local function updateToggleBadge()
 	local total = 0
@@ -80,14 +83,14 @@ local function layout()
 	columnGrid.CellPadding = UDim2.fromOffset(gap, gap)
 	column.Size = UDim2.fromOffset(size.X, size.Y)
 	-- vertical middle of the left edge, never above the spot under the health bar
-	local top = math.max(TOP.Normal, math.floor((Theme.size().Y - size.Y) / 2))
+	local top = math.max(TOP.Normal + pushDown, math.floor((Theme.size().Y - size.Y) / 2))
 	column.Position = UDim2.fromOffset(MARGIN, top)
-	toggle.Instance.Position = UDim2.fromOffset(MARGIN, TOP.Compact)
+	toggle.Instance.Position = UDim2.fromOffset(MARGIN, TOP.Compact + pushDown)
 	-- Apart buttons: a column right of the health bar (the first one centered on it), or right of the
 	-- Menu button on phones
 	local health = UIConfig.Hud.Health
 	local x = if compact then MARGIN + GRID.Tile + SPACING else MARGIN + health.Normal.X + SPACING
-	local y = if compact then TOP.Compact else health.Top + (health.Normal.Y - GRID.Tile) / 2
+	local y = if compact then TOP.Compact + pushDown else health.Top + (health.Normal.Y - GRID.Tile) / 2
 	for index, button in ipairs(apart) do
 		local wide = corner[index]
 		local inCorner = wide ~= nil and pc and not compact
@@ -101,7 +104,18 @@ local function layout()
 			y += GRID.Tile + SPACING
 		end
 	end
-	popup.Position = UDim2.fromOffset(if compact then x + GRID.Tile + SPACING else MARGIN, TOP.Compact)
+	popup.Position = UDim2.fromOffset(if compact then x + GRID.Tile + SPACING else MARGIN, TOP.Compact + pushDown)
+end
+
+-- The space the mana bar takes under the health bar (0 = none).
+function MenuBar.setPushDown(pixels: number)
+	if pixels ~= pushDown then
+		pushDown = pixels
+		if column then
+			layout()
+		end
+		pushEvent:Fire(pixels)
+	end
 end
 
 function MenuBar:Start()

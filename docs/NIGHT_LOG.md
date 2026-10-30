@@ -1,5 +1,45 @@
 # WEAPON OVERHAUL DECISIONS (owner prompt "WEAPON ANIMATIONS OVERHAUL", 2026-10-30) - newest first
 
+- VERIFY (Studio agent, real numbers). Tests in Play in Studio, one client.
+  - Timing, Common weapons, speed x1.0, press to clip Hit / press to the Hit event back on the client (server + Studio round
+    trip): Sword 0.103 / 0.131, Spear 0.118 / 0.139, Hammer 0.125 / 0.153, Dagger 0.082 / 0.110. Press to projectile: Bow 0.133,
+    Staff 0.181. Hits land with the clip at any speed (x1.2: Sword 0.081, Dagger 0.060-0.069, Spear 0.086-0.096, Hammer
+    0.094-0.110). The finishers are slower by design: Sword 0.14, Spear 0.14, Hammer 0.20 (its jump).
+  - Frame time, phone emulator (iPhone 17 Pro landscape), 5 cave trolls, Legendary sword, two full combos + Z, lock-on on, 6 s:
+    864 frames, average 6.9 ms, p95 8.0, worst 9.3; animation update 0.04 ms. This is the emulator on this PC, not a phone.
+  - Exploits, from the client: 200 Attack in 2.5 s: 6 accepted, 194 refused. Far target and NaN / wrong-type arguments: 0 hits,
+    no server error. Heavy with no charge: a plain step. 40 Charge + Heavy in 2 s: 5 accepted. 8 UseSkill: 1 accepted. Roll with
+    no cooldown or in the start-up: refused. 300 fireballs: 6 cast. 30 heal presses in 3 s: 2 channels. At 4 mana: fireball and
+    Z refused (0 shots, 2 NoMana), mana never below 0.
+  - Heal: speed 8 of 16, circle on, 44 mana over 3 s, +24% of max HP (20% from the channel, the rest is natural regen), a dodge
+    stops it, mana-out stops it (1.63 s at 4 mana). Hammer hold: 58 -> 47 damage taken (20% armor).
+  - Save: read back from the DataStore: Mana 70 saved, equipped weapon kept across Play sessions. Old saves: `DataService.Migrate`
+    on fake profiles (Step 0) only. NOT DONE: an old save through a real load: injecting a gauntlet into the stored Studio profile
+    was refused by the permission system (shared data), not retried another way.
+  - Multiplayer: NOT a two-client test: the MCP starts Play Solo only. Closest check: dev hook `SwingSelfTest`: the server fired
+    Net "Swing" to the client for every step, Heavy, Charge, Skill of the 6 categories: all clips played through the receive
+    path, no error. `OffHand` and its weld exist on the client (server-made). The server's loop to viewers, the left dagger seen
+    by another client and the ally heal share were not exercised.
+  - Readability limit, worst frame washed out at normal camera distance: Sword 0.8% (old footage, other camera: 10.7%), Dagger 1.2%,
+    Spear 1.3%, Hammer 2.4%, Bow 1.3%, Staff 1.2%. An enemy's red telegraph and ground disc stay visible.
+  - Phone HUD: found and fixed: the menu tiles covered the mana bar (`MenuBar.setPushDown`), the Admin crown follows.
+  - Found and fixed in VERIFY: the staff's clip reached its release 0.3 s after the fireball left (clips of Impact 0 now start
+    on Hit). Found while building: Charge + Heavy skipped the rate check (now gated).
+  - Attack speed, Stats: Common 0, Legendary + 20 Dex +30%, Secret + max Dex +65%, with 100 rebirths capped at +100%.
+  - No script error in the log through the hub and Plains with every weapon. Other zones' weapons: Desert set and a Void sword only.
+- Bow / Staff (Studio agent): Hammer = `Heavy`, Bow = `Ranged`, Staff = `Magic`. One step each (tap); the old Shot / QuickShot /
+  PowerShot and Cast / Cast2 / GrandCast became tap and hold. Range 110. Crossbows and guns: their PowerShot clip as the hold.
+  The camera sits over the shoulder with a bow or staff (`Feel.AimOffset`) so the crosshair is not on the body. Burn lives in
+  CombatService (the game had no enemy damage over time): 10% of the weapon's damage per 0.5 s per stack, 3 stacks, 3 s; bosses burn
+  too. Jump and dash moves of the staff cost mana. Air volley keeps its "always down" rule.
+- Spear (Studio agent): GuardBreakMult x2 and 20% chance of a 0.4 s stagger per hit = "strong against guards". Hammer: base shape
+  is now the sweep; only OverheadSlam, GroundBreaker and the heavy have a shockwave.
+- Daggers (Studio agent): the left copy is a clone of the Handle turned 180 degrees around the blade (a mesh cannot be mirrored),
+  inside the Tool, welded to LeftHand on the server. Second trail on it. The dagger's skill and finisher hit 5 times.
+- Readability limit (main's request, owner's review of the sword): caps on the shared flash particles and big arcs, on the
+  asset instances (`Assets.VFX`, not in src/: they need the place file) and a lighter enemy hit tint (72% transparent, 0.07 s).
+  `CombatVFX` READABILITY LIMIT holds the rule.
+
 - SWORD PILOT (Studio agent): 4 hits + finisher, first hit 0.10 s, step 0.34 s, finisher 0.62 s, heavy 0.12 s after the release.
   Clips Sword_Attack1..5 and Sword_Heavy rewritten so each swing starts where the last one ended; new step DownCut. Z = Dash
   Slash (reuses the Sword_DashAttack clip, its own move in WeaponMoves, 8 s cooldown in Skills). The hold's clip waits at a
@@ -4273,3 +4313,6 @@ only the tag and attributes, nothing else.
   Tundra_4 62 ice brick textures, 144 fps, a character walks the castle entrance corridor from z 700 to z 825 (nothing
   blocks); Swamp_3 approach 144 fps and a character walks the path up to 3.6 studs from the sub-zone 4 gate; Swamp_4
   99 swamp textures, 144 fps; Desert_4 89 pyramid textures, 144 fps; 0 game errors. Backup after_round7. ROUND 7 DONE.
+- Main agent, final Play check: found a ManaBar startup error (line 38: `moves` is false until the data has loaded), fixed in
+  Studio and on disk. The after_weapon_overhaul backup had only 4 of 6 files (Workspace and Lighting missing): replaced by
+  a new backup after_weapon_overhaul_final.
