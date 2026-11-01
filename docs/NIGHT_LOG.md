@@ -1,5 +1,22 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 1, plains mountains (Studio agent). The two mountains of image 01 are the brown peak of `Plains_1.Decor.Mountains` and the
+  green one of `Plains_3.Decor.Backdrop`, west of the Plains_2 cliffs (x 1700-1848, z 160-460). There is no ground in that gap:
+  the cyan in the image is empty space, so the ridge has none to blend with on its outer side; it ends at y -11 like its
+  neighbours. New: `Plains_2.Decor.MountainRidge` (`DevTools.PlainsRidge`, re-runnable): 240 facets, same 0.3-stud slabs and tones,
+  crest y 74-94 (green top 85, brown peak 144), both ends sunk in the mountains, 18 pines (`MapProp` copies of the Plains_3 ones).
+  - DECISION: the crest sits on the east side (x about 1806), close to the cliffs. Further west a lower saddle stays hidden
+    behind the cliffs and the gap still shows from the beach. It runs slightly above the green top (94 near the brown peak,
+    85 near the green one), still far under the brown summit.
+  - DECISION: facets and trees do not collide. One invisible box `RidgeBlocker` (x 1700-1838, z 168-452, y -30 to 370) does.
+  - DECISION: one-off map geometry, not a MapProps template (the prompt says "if it is a reusable piece"). The pines are.
+  - Character test in Play, walking and jumping for 3-7 s: from the beach up the cliff: stopped at x 1878. On the cliff top going
+    west at z 240 and z 400: stopped at x 1838. Along the cliff top: stayed at x 1841, walked z 240 -> 325. From the brown mountain
+    going south: stopped at z 167. From the green one going north: stopped at z 452. Route: walked Plains_1 -> Plains_2 -> Plains_3
+    (2 gates open with unlockAll): 22 s, no block. Viewed from the first sub-zone, the forest side, the beach, far away: no seam
+    or gap. Log: 0 script errors. The cliffs stopped short at z 415-445 and showed a sliver of sky: fixed (the ridge foot comes
+    down to the ground there).
+
 - PART 0, Rebirth grey screen (Studio agent). ROOT CAUSE, reproduced in Play Solo with the real buttons: `RebirthPage` closed the
   window with `Window.close(true)`. In `Kit/Window`, quiet meant "another window replaces this one", so the backdrop stayed: a
   TextButton 4 x the screen size, `Modal`, 45% transparent, DisplayOrder 20, above the HUD. `current` was already nil, so
