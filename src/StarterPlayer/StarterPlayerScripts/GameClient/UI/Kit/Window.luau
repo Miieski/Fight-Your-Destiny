@@ -4,7 +4,8 @@
 --   Window.define(id, { Title, Icon?, Tabs?, TabIcons?, TabLabels?, Size?: Vector2, Build = function(ctx) end })
 --       Icon = an Icons id drawn left of the title; TabIcons / TabLabels = { [tab] = icon id / short label }
 --       ctx = { Frame, Pages = { [tab or "Main"] = ScrollingFrame }, Tabs?, Select(tab) }
---   Window.open(id, tab?), Window.close(), Window.toggle(id, tab?), Window.isOpen(id?)
+--   Window.open(id, tab?), Window.close(quiet?), Window.toggle(id, tab?), Window.isOpen(id?)
+--       quiet = no sound. The backdrop always goes with the window (it stays only when another window replaces it).
 --   Window.confirm({ Title, Text, ConfirmText, CancelText, OnConfirm })
 --   Window.placeholder(page, text?)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -239,6 +240,17 @@ function Window.page(id: string, tab: string?): ScrollingFrame
 	return build(id).pages[tab or MAIN]
 end
 
+-- The open window goes away; the backdrop stays (Window.open puts the next one on it, Window.close removes it).
+local function hideCurrent(): string?
+	local id = current
+	if id then
+		current = nil
+		built[id].frame.Visible = false
+		closedEvent:Fire(id)
+	end
+	return id
+end
+
 function Window.isOpen(id: string?): boolean
 	return if id then current == id else current ~= nil
 end
@@ -249,7 +261,7 @@ function Window.open(id: string, tab: string?)
 		return
 	end
 	if current then
-		Window.close(true)
+		hideCurrent()
 	end
 	local entry = build(id)
 	resize(entry)
@@ -266,20 +278,15 @@ function Window.open(id: string, tab: string?)
 end
 
 function Window.close(quiet: boolean?)
-	local id = current
-	if not id then
-		return
+	local id = hideCurrent()
+	-- A backdrop with no window would cover the whole screen and eat every click (the Rebirth grey screen, Round 8).
+	if backdrop then
+		backdrop.BackgroundTransparency = 1
+		backdrop.Visible = false
 	end
-	current = nil
-	local entry = built[id]
-	entry.frame.Visible = false
-	if not quiet then
-		local dim = backdrop :: TextButton
-		dim.BackgroundTransparency = 1
-		dim.Visible = false
+	if id and not quiet then
 		Sfx.play("UIClose")
 	end
-	closedEvent:Fire(id)
 end
 
 function Window.toggle(id: string, tab: string?)

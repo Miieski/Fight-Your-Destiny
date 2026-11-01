@@ -244,8 +244,37 @@ function DataService:Set(player: Player, key: string, value: any)
 	if profile then
 		profile[key] = value
 		if not Profile.NotReplicated[key] then
-			Net.fire(player, "Data", { [key] = value })
+			Net.fire(player, "Data", if value == nil then { __Clear = { key } } else { [key] = value })
 		end
+		changedEvent:Fire(player, key)
+	end
+end
+
+-- Several keys in one step: nothing can yield between them and the client gets one patch. `cleared` = keys set to nil.
+-- The Rebirth's commit: its new values are built on copies first, so a failure leaves the profile untouched.
+function DataService:SetMany(player: Player, changes: { [string]: any }, cleared: { string }?)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	local patch: { [string]: any } = {}
+	for key, value in pairs(changes) do
+		profile[key] = value
+		if not Profile.NotReplicated[key] then
+			patch[key] = value
+		end
+	end
+	if cleared then
+		patch.__Clear = cleared
+		for _, key in ipairs(cleared) do
+			profile[key] = nil
+		end
+	end
+	Net.fire(player, "Data", patch)
+	for key in pairs(changes) do
+		changedEvent:Fire(player, key)
+	end
+	for _, key in ipairs(cleared or {}) do
 		changedEvent:Fire(player, key)
 	end
 end
@@ -268,6 +297,20 @@ end
 -- client is told about it). Returns false when the save failed; the autosave retries later.
 function DataService:Save(player: Player): boolean
 	return save(player, false)
+end
+
+-- Saves in the background with retries: nothing waits for it (the autosave is still behind it if all of them fail).
+function DataService:SaveSoon(player: Player, retries: number, retrySeconds: number)
+	task.spawn(function()
+		for attempt = 1, retries do
+			if save(player, false) or not player.Parent then
+				return
+			end
+			if attempt < retries then
+				task.wait(retrySeconds)
+			end
+		end
+	end)
 end
 
 function DataService:AddGold(player: Player, amount: number)

@@ -31,6 +31,7 @@ Net.EVENTS = {
 	"EnemyKilled", -- position, gold: this player got the kill reward (EnemyService)
 	"BossRoom", -- { Phase = "Lobby" | "Minis" | "Boss" | "Victory" | "Failed" | "Left", Seconds?, Name?, ZoneId } (BossService)
 	"BossRewards", -- { Boss, ZoneId, Items = { { Text, Icon, Rarity? } } }: this player's boss room rewards
+	"RebirthDone", -- { Ok, Rebirth, Credits }: the Rebirth is committed and the player is back in the Hub (the client fades out)
 }
 
 local IS_SERVER = RunService:IsServer()

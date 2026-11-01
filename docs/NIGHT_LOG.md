@@ -1,5 +1,41 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 0, Rebirth grey screen (Studio agent). ROOT CAUSE, reproduced in Play Solo with the real buttons: `RebirthPage` closed the
+  window with `Window.close(true)`. In `Kit/Window`, quiet meant "another window replaces this one", so the backdrop stayed: a
+  TextButton 4 x the screen size, `Modal`, 45% transparent, DisplayOrder 20, above the HUD. `current` was already nil, so
+  clicking the backdrop did nothing and nothing could ever close it. Measured after a Rebirth: backdrop Visible = true for good,
+  `GetGuiObjectsAtPosition` on the menu returns it, the Inventory button does not open. In the MCP, the keyboard still walked
+  (19 studs); clicks and touches were blocked, so buttons and the mouse attack died. Walk keys in the owner's session: not
+  reproduced by the MCP's simulated keys, so I cannot say why they failed there; a touch joystick under that backdrop would be
+  blocked. Not the cause: controls, camera (stayed Custom), WalkSpeed (16), server errors (none).
+  - The lag: NOT reproduced as lag in Studio. Rebirth with 72 + 36 extra items and the Inventory built: request 0.64 s (the
+    DataStore save inside it, nothing on screen), worst frame 43 ms. One `Data` patch per key (14), then a save the client
+    waited for. That wait depends on the DataStore; not measured on a live server.
+  - Fix: `Window.close` always removes the backdrop (only `Window.open` keeps it, swapping windows). Staged sequence: client cover
+    (`Kit/Transition`, "Rebirth..." + spinner, 0.25 s, `Kit/InputLock` blocks input only during it), server commit on copies
+    in one step (`DataService:SetMany`: one patch, no yield), answer, then in the background: out of the boss room, streaming
+    around the Hub spawn, `ZoneService:RespawnInHub` (new character), `DataService:SaveSoon` (3 tries), Net "RebirthDone", cover off.
+    Client watchdog 8 s: all restored, GoToHub, small message. `DataService:Set(key, nil)` never reached the client (a nil
+    cannot travel in a table): patches now carry `__Clear`.
+  - DECISION: the Rebirth respawns in the Hub (owner's text), no longer at the start of zone r; the free sword is still zone r's.
+  - DECISION: the boss-room refusal is gone (asked by the owner), the "not during a fight" refusal stays everywhere, so in a
+    boss room a Rebirth needs no damage in the last CombatSeconds. A dead spectator is refused ("Not ready yet").
+  - DECISION: the golden flash is gone: the cover replaces it.
+  - Tests in Play, real buttons, fresh Play: 5 Rebirths in a row (Hub, Hub, Plains 1, Void 3, Plains boss room): each one back on
+    the Hub spawn with a new character, ArenaKey cleared, camera Custom, backdrop off. Confirm to uncovered 1.2-1.3 s, worst
+    client frame 40 ms. Refused (damage just taken): cover 0.67 s, message, nothing changed. Bad connection (Studio replication lag
+    1 s each way, request round trip 2.03 s): 3.0 s, fine. Watchdog (Studio-only attribute `RebirthTestStall`, the end event never
+    sent): 8 s, cover off, Hub, message; W walks and the Inventory opens afterwards.
+  - Phone emulator (iPhone 17 Pro landscape, menu popup, keyboard Return on the selected buttons): 1.18 s, 1820 frames, average
+    7.1 ms, p95 8.0, worst 302 ms. That one frame is the first respawn of a session (303 ms on PC too), under the cover.
+  - Save: Rebirths 9 and the Gold were read back after a new Play (session through the DataStore).
+  - Log: fresh Play from the start, whole Studio log scanned from before Play: 0 script errors, only engine lines (font json,
+    wrap-deformer).
+  - NOT tested: several players at once (MCP is Play Solo; each player has their own `busy` and thread, nothing shared), a real
+    phone or real touch, a live server's DataStore time. "With protected items" comes after Part 5.
+  - Tool note: `start_stop_play` hung once ("Start play hasn't finished yet") after a Play started during the backup's log flood;
+    `StudioTestService:ExecutePlayModeAsync` in a task.spawn got past it, and stop worked afterwards.
+
 - Backup before_round8 first. Order: Part 0, 1, 2, 3, 4, 5, 6, 7, then 8 last. One Studio agent; the main agent checks each
   part in Play, commits, pushes and shows the images.
 - Weapon types are the 6 real categories (Sword, Spear, Heavy, Dagger, Ranged, Magic); the prompt's "gloves" do not exist.

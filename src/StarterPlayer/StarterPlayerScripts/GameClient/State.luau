@@ -67,8 +67,15 @@ end
 
 Net.on("Data", function(patch: { [string]: any })
 	for key, value in pairs(patch) do
-		fromPatch[key] = true
-		set(key, value)
+		if key == "__Clear" then -- a nil cannot travel in a table: the keys set to nil
+			for _, cleared in ipairs(value) do
+				fromPatch[cleared] = true
+				set(cleared, nil)
+			end
+		else
+			fromPatch[key] = true
+			set(key, value)
+		end
 	end
 	if not ready then
 		ready = true

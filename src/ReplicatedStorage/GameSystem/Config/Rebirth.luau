@@ -13,6 +13,20 @@ local Rebirth = {}
 Rebirth.Max = 12 -- one per boss key (DESIGN.md section 16, question 3)
 Rebirth.CreditsPerRebirth = 3
 
+-- The staged sequence (RebirthService + UI/Pages/RebirthPage): the client covers the screen, the server commits at once
+-- and answers, streams the Hub in and respawns the player there (save in the background), then the client uncovers.
+Rebirth.Transition = {
+	Color = Color3.fromRGB(24, 16, 10),
+	FadeIn = 0.25,
+	FadeOut = 0.4,
+	MinSeconds = 0.8, -- the cover stays at least this long (no flicker)
+	SettleSeconds = 2, -- at most this long waiting for the new character on the Hub ground
+	Watchdog = 8, -- something failed: everything restored, sent to the Hub, a small message
+	StreamTimeout = 4, -- streaming around the Hub spawn before the respawn
+	SaveRetries = 3,
+	SaveRetrySeconds = 3,
+}
+
 -- What the Rebirth tab lists (the reset itself is RebirthService:Wipe).
 Rebirth.Lost = { "Gold", "Weapons", "Armor", "Attribute points", "Eggs", "Pets (premium pets are kept)", "Trophies" }
 Rebirth.Kept = { "Diamonds", "Boss keys", "Rebirth Credits and upgrades", "Premium pets", "Index", "Boosts and passes", "Unlocked zones" }

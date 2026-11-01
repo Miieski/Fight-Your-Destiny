@@ -1,14 +1,18 @@
 --!strict
 -- Rebirth (DESIGN.md section 4, rules in Config/Rebirth). Net.request("Rebirth") from the Rebirth tab of the Rebirth
--- window: the server checks everything (next Rebirth r <= Max, key of the zone-r boss, Gold >= cost, not in a boss
--- arena, not in a fight), then:
---   Rebirths = r, +3 Rebirth Credits, Gold / weapons / armor / attribute points / eggs / non-premium pets / trophies
---   reset (RebirthService:Wipe), the gates of zone r reset and RedoneSinceRebirth cleared, the player is sent to the
---   start of zone r with a free Common sword of that zone (the starter weapon rule). Reopening zone r's boss room
---   then opens zone r + 1 (ZoneService). Kept: Diamonds, keys, credits and Rebirth Shop upgrades, premium pets,
---   Index, boosts, passes, settings, unlocked zones.
+-- window: the server checks everything (next Rebirth r <= Max, key of the zone-r boss, Gold >= cost, not in a fight),
+-- then a staged sequence (Round 8, root cause of the old grey screen in docs/NIGHT_LOG.md):
+--   commit   the new values are built on copies, then written in one step (DataService:SetMany, one client patch):
+--            Rebirths = r, +3 Rebirth Credits, Gold / weapons / armor / attribute points / eggs / non-premium pets /
+--            trophies reset, the gates of zone r reset, RedoneSinceRebirth cleared, a free Common sword of that zone.
+--            A failure before this step changes nothing. The request answers right after it.
+--   respawn  in the background: out of any boss room, Hub streamed in, a new character on the Hub spawn, the save with
+--            retries (nothing waits for it), then Net "RebirthDone" (the client's cover comes off).
+-- Reopening zone r's boss room afterwards opens zone r + 1 (ZoneService). Kept: Diamonds, keys, credits and Rebirth
+-- Shop upgrades, premium pets, Index, boosts, passes, settings, unlocked zones.
 --   RebirthService:Wipe(player) -> premium pets kept   the reset alone (also the admin command wipeForRebirth)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
 local Net = require(ReplicatedStorage.GameSystem.Net)
@@ -23,21 +27,8 @@ local RebirthService = { Priority = 6 }
 
 local busy: { [Player]: boolean } = {}
 
--- The Rebirth reset: Gold, attribute points, weapons, armor, eggs, trophies, non-premium pets and whatever was
--- equipped from them. Returns the number of premium pets kept.
-function RebirthService:Wipe(player: Player): number
-	local profile = DataService:Get(player)
-	if not profile then
-		return 0
-	end
-	DataService:Set(player, "Gold", 0)
-	DataService:Set(player, "Attributes", Attributes.empty())
-	DataService:Set(player, "Weapons", {})
-	DataService:Set(player, "EquippedWeapon", nil)
-	DataService:Set(player, "Armor", {})
-	DataService:Set(player, "EquippedArmor", {})
-	DataService:Set(player, "Eggs", {})
-	DataService:Set(player, "Trophies", {})
+-- The reset as new values, on copies: nothing here touches the profile. Returns changes, cleared keys, premium pets kept.
+local function planReset(profile: { [string]: any }): ({ [string]: any }, { string }, number)
 	local pets, kept = {}, 0
 	for uid, pet in pairs(profile.Pets or {}) do
 		if pet.premium then
@@ -45,16 +36,59 @@ function RebirthService:Wipe(player: Player): number
 			kept += 1
 		end
 	end
-	DataService:Set(player, "Pets", pets)
 	local equipped = {}
 	for _, uid in ipairs(profile.EquippedPets or {}) do
 		if pets[uid] then
 			table.insert(equipped, uid)
 		end
 	end
-	DataService:Set(player, "EquippedPets", equipped)
+	local changes = {
+		Gold = 0,
+		Attributes = Attributes.empty(),
+		Weapons = {},
+		Armor = {},
+		EquippedArmor = {},
+		Eggs = {},
+		Trophies = {},
+		Pets = pets,
+		EquippedPets = equipped,
+	}
+	return changes, { "EquippedWeapon" }, kept
+end
+
+-- The Rebirth reset: Gold, attribute points, weapons, armor, eggs, trophies, non-premium pets and whatever was
+-- equipped from them. Returns the number of premium pets kept.
+function RebirthService:Wipe(player: Player): number
+	local profile = DataService:Get(player)
+	if not profile then
+		return 0
+	end
+	local changes, cleared, kept = planReset(profile)
+	DataService:SetMany(player, changes, cleared)
 	WeaponService:Refresh(player)
 	return kept
+end
+
+-- In the background once the Rebirth is committed: back in the Hub, whatever happens.
+local function finish(player: Player, result: { [string]: any })
+	local settings = Rebirth.Transition
+	local ok, err = pcall(function()
+		ZoneService:RespawnInHub(player, settings.StreamTimeout)
+	end)
+	if not ok then
+		warn(`RebirthService: respawn failed for {player.UserId}: {err}`)
+		pcall(function()
+			ZoneService:ToHub(player)
+		end)
+	end
+	DataService:SaveSoon(player, settings.SaveRetries, settings.SaveRetrySeconds)
+	busy[player] = nil
+	if RunService:IsStudio() and player:GetAttribute("RebirthTestStall") then
+		return -- test of the client watchdog: the end of the sequence never arrives
+	end
+	if player.Parent then
+		Net.fire(player, "RebirthDone", { Ok = ok, Rebirth = result.rebirth, Credits = result.credits })
+	end
 end
 
 local function rebirth(player: Player): (boolean, any)
@@ -67,9 +101,6 @@ local function rebirth(player: Player): (boolean, any)
 	if not (profile and humanoid and humanoid.Health > 0) then
 		return false, "Not ready yet"
 	end
-	if player:GetAttribute("ArenaKey") then
-		return false, "Leave the boss arena first"
-	end
 	if ZoneService:InCombat(player) then
 		return false, "You can't Rebirth during a fight"
 	end
@@ -79,25 +110,30 @@ local function rebirth(player: Player): (boolean, any)
 	end
 	local r = status.next
 	local zone = status.zone :: Zones.Zone
-	busy[player] = true
-	-- the zone being redone: its gates close again, and the "redone" marks start over
+	-- the plan: copies only, an error here leaves the profile as it was
 	local subZones = table.clone(profile.SubZones or {})
-	for n = 2, Zones.SUBZONE_COUNT do
+	for n = 2, Zones.SUBZONE_COUNT do -- the zone being redone: its gates close again, the "redone" marks start over
 		subZones[Zones.subZoneId(zone.Id, n)] = nil
 	end
-	DataService:Set(player, "SubZones", subZones)
-	DataService:Set(player, "RedoneSinceRebirth", {})
-	DataService:Set(player, "Rebirths", r)
-	DataService:Set(player, "RebirthCredits", math.floor(tonumber(profile.RebirthCredits) or 0) + Rebirth.CreditsPerRebirth)
-	RebirthService:Wipe(player)
-	-- a fresh start in the zone to redo, with its free Common sword (CombatService starter weapon rule)
-	CombatService:EnsureStarterWeapon(player, zone.Id)
-	busy[player] = nil
-	DataService:Save(player)
-	if not ZoneService:TeleportTo(player, zone.Id, 1) then
-		ZoneService:ToHub(player)
+	local changes, cleared = planReset(profile)
+	changes.SubZones = subZones
+	changes.RedoneSinceRebirth = {}
+	changes.Rebirths = r
+	changes.RebirthCredits = math.floor(tonumber(profile.RebirthCredits) or 0) + Rebirth.CreditsPerRebirth
+	-- the commit: one step, no yield
+	busy[player] = true
+	DataService:SetMany(player, changes, cleared)
+	local result = { rebirth = r, credits = Rebirth.CreditsPerRebirth, zone = zone.Id }
+	-- the fresh start after the commit; an error here must not stop the respawn
+	local ok, err = pcall(function()
+		WeaponService:Refresh(player)
+		CombatService:EnsureStarterWeapon(player, zone.Id) -- a free Common sword of the zone to redo
+	end)
+	if not ok then
+		warn(`RebirthService: fresh start failed for {player.UserId}: {err}`)
 	end
-	return true, { rebirth = r, credits = Rebirth.CreditsPerRebirth, zone = zone.Id }
+	task.spawn(finish, player, result)
+	return true, result
 end
 
 function RebirthService:Init()

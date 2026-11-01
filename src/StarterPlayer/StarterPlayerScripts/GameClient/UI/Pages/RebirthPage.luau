@@ -5,7 +5,6 @@
 --   RebirthPage.build(page)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
@@ -18,12 +17,11 @@ local Button = require(Kit.Button)
 local Icons = require(Kit.Icons)
 local Info = require(Kit.Info)
 local Theme = require(Kit.Theme)
+local Transition = require(Kit.Transition)
 local Window = require(Kit.Window)
 local ZoneVisibility = require(Kit.ZoneVisibility)
 
 local RebirthPage = {}
-
-local FLASH = { Color = Color3.fromRGB(255, 226, 140), Start = 0.15, Seconds = 0.9 }
 
 -- 2 -> "2", 1.5 -> "1.5", 2.0455 -> "2.05"
 local function times(value: number): string
@@ -48,29 +46,73 @@ local function title(parent: Instance, text: string, small: boolean)
 	Theme.text({ Font = "Title", Text = text, TextSize = if small then 22 else 26, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -24, 0, 30), Position = UDim2.fromOffset(14, 6), ZIndex = 2, Parent = parent })
 end
 
--- A full-screen golden flash when the Rebirth goes through.
-local function flash()
-	local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
-	if not playerGui then
-		return
+-- The staged Rebirth on this side: cover the screen (input blocked by the cover only), ask the server, wait for
+-- "RebirthDone" (back in the Hub), uncover. Every path ends in finish(); the watchdog covers the paths that never answer.
+local function runRebirth(onEnd: () -> ())
+	local settings = Rebirth.Transition
+	local started = os.clock()
+	local ended = false
+	local connection: RBXScriptConnection? = nil
+	local function finish(fade: boolean, kind: string?, text: string?, icon: string?)
+		if ended then
+			return
+		end
+		ended = true
+		if connection then
+			connection:Disconnect()
+		end
+		if fade then
+			Transition.hide(settings.FadeOut)
+		end
+		onEnd()
+		if text then
+			Sfx.play(if kind == "error" then "Denied" else "RebirthWhoosh")
+			Notifier.push({ Kind = kind or "info", Text = text, Icon = icon })
+		end
 	end
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "RebirthFlash"
-	gui.IgnoreGuiInset = true
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 60
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.fromScale(1, 1)
-	frame.BackgroundColor3 = FLASH.Color
-	frame.BackgroundTransparency = FLASH.Start
-	frame.BorderSizePixel = 0
-	frame.Parent = gui
-	gui.Parent = playerGui
-	local tween = TweenService:Create(frame, TweenInfo.new(FLASH.Seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { BackgroundTransparency = 1 })
-	tween.Completed:Connect(function()
-		gui:Destroy()
+	Window.close(true)
+	Transition.show({
+		Text = "Rebirth...",
+		Spinner = true,
+		Color = settings.Color,
+		FadeIn = settings.FadeIn,
+		Lock = "Rebirth",
+		Watchdog = settings.Watchdog,
+		OnTimeout = function() -- everything is already restored: back to the Hub and say so
+			finish(false, "error", "The Rebirth took too long. You are back in the Hub.")
+			pcall(Net.request, "GoToHub")
+		end,
+	})
+	connection = Net.on("RebirthDone", function(info: { [string]: any })
+		-- the new character is on the Hub ground before the cover comes off
+		local player = Players.LocalPlayer
+		local deadline = os.clock() + settings.SettleSeconds
+		local params = RaycastParams.new()
+		while os.clock() < deadline and not ended do
+			local character = player.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+			if root and character then
+				params.FilterDescendantsInstances = { character }
+				if workspace:Raycast(root.Position, Vector3.new(0, -20, 0), params) then
+					break
+				end
+			end
+			task.wait(0.1)
+		end
+		task.wait(math.max(0, settings.MinSeconds - (os.clock() - started)))
+		if info.Ok then
+			finish(true, "reward", `Rebirth {info.Rebirth}! +{info.Credits} Rebirth Credits`, "RebirthCredit")
+		else
+			finish(true, "error", "Something went wrong, but your Rebirth is done. You are back in the Hub.")
+		end
 	end)
-	tween:Play()
+	task.spawn(function()
+		task.wait(settings.FadeIn)
+		local called, ok, result = pcall(Net.request, "Rebirth")
+		if not (called and ok) then
+			finish(true, "error", if called and typeof(result) == "string" then result else "Could not Rebirth")
+		end
+	end)
 end
 
 -- what a Rebirth takes and keeps, as pictures (kid-friendly UI); the words are behind the (i)
@@ -255,17 +297,9 @@ function RebirthPage.build(page: ScrollingFrame, ctx: any?)
 					return
 				end
 				busy = true
-				local called, ok, result = pcall(Net.request, "Rebirth")
-				busy = false
-				if called and ok then
-					Sfx.play("RebirthWhoosh")
-					flash()
-					Window.close(true)
-					Notifier.push({ Kind = "reward", Text = `Rebirth {result.rebirth}! +{result.credits} Rebirth Credits`, Icon = "RebirthCredit" })
-				else
-					Sfx.play("Denied")
-					Notifier.push({ Kind = "error", Text = if called and typeof(result) == "string" then result else "Could not Rebirth" })
-				end
+				runRebirth(function()
+					busy = false
+				end)
 			end,
 		})
 	end })

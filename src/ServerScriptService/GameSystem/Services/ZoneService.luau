@@ -24,6 +24,7 @@ local byId: { [string]: SubZone } = {}
 local lastTeleport: { [Player]: number } = {}
 local lastMenuTeleport: { [Player]: number } = {} -- teleport menu cooldown
 local lastDamage: { [Player]: number } = {} -- "in combat" = took damage recently
+local hubRespawn: { [Player]: boolean } = {} -- on the way to the Hub (RespawnInHub): the location loop leaves them alone
 
 -- kind: "info" | "reward" | "error" | "loot" | "death" (see GameClient/UI/Notifier)
 local function notify(player: Player, text: string, kind: string?)
@@ -97,6 +98,31 @@ function ZoneService:ToHub(player: Player)
 		player:SetAttribute("RespawnSubZone", nil)
 		teleport(player, spawn.CFrame)
 	end
+end
+
+-- A fresh character on the Hub spawn (the Rebirth): out of any boss room, the Hub streamed in first.
+function ZoneService:RespawnInHub(player: Player, streamTimeout: number)
+	local hub = workspace:FindFirstChild("Hub")
+	local spawn = hub and hub:FindFirstChildOfClass("SpawnLocation")
+	hubRespawn[player] = true
+	ZoneService:LeaveArena(player, true)
+	if spawn then
+		pcall(function()
+			player:RequestStreamAroundAsync(spawn.Position, streamTimeout)
+		end)
+	end
+	if player.Parent then
+		player:SetAttribute("RespawnSubZone", nil)
+		setLocation(player, "Hub", "Hub")
+		local ok, err = pcall(function()
+			player:LoadCharacter()
+		end)
+		if not ok then
+			warn(`ZoneService: respawn failed for {player.UserId}: {err}`)
+			ZoneService:ToHub(player)
+		end
+	end
+	hubRespawn[player] = nil
 end
 
 -- Test/admin teleport straight to the Entrance of a sub-zone. It does not check unlocks: the caller
@@ -268,8 +294,15 @@ function ZoneService:Init()
 	hookWorld()
 
 	-- "Get diamonds" in the Shop offers a trip to the hub's Diamond Shop.
+	-- It is also the way out of a failed Rebirth transition (client watchdog): a dead or missing character respawns.
 	Net.handle("GoToHub", function(player: Player)
-		ZoneService:ToHub(player)
+		if rootOf(player) then
+			ZoneService:ToHub(player)
+		else
+			ZoneService:LeaveArena(player, true)
+			player:SetAttribute("RespawnSubZone", nil)
+			player:LoadCharacter()
+		end
 		return true
 	end, 2)
 
@@ -384,8 +417,8 @@ function ZoneService:Init()
 			-- turns the player into a spectator.
 			-- Respawn at the start of the current sub-zone (DESIGN.md section 2, Death).
 			local subZone = byId[player:GetAttribute("RespawnSubZone") or ""]
-			if player:GetAttribute("ArenaKey") then
-				subZone = nil -- BossService places spectators
+			if player:GetAttribute("ArenaKey") or hubRespawn[player] then
+				subZone = nil -- BossService places spectators; RespawnInHub stays on the Hub spawn
 			end
 			if subZone and character:WaitForChild("HumanoidRootPart", 10) then
 				task.wait(0.3)
@@ -402,6 +435,7 @@ function ZoneService:Init()
 		lastTeleport[player] = nil
 		lastMenuTeleport[player] = nil
 		lastDamage[player] = nil
+		hubRespawn[player] = nil
 	end)
 end
 
@@ -410,7 +444,7 @@ function ZoneService:Start()
 	while true do
 		local occupied: { [string]: boolean } = {}
 		for _, player in ipairs(Players:GetPlayers()) do
-			local root = rootOf(player)
+			local root = if hubRespawn[player] then nil else rootOf(player)
 			local arenaZone = player:GetAttribute("ArenaZone")
 			if root and typeof(arenaZone) == "string" then
 				setLocation(player, arenaZone, arenaZone .. "_Arena")

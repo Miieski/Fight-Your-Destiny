@@ -283,6 +283,10 @@ each Rebirth for the zone being redone (see below).
 * **Kept:** Diamonds, keys, Rebirth count, Rebirth Credits and Rebirth Shop upgrades,
   premium pets (bought with Robux), game passes, boosts, Index/collection, settings,
   cosmetics (skins), access to lower zones.
+* **Sequence (Round 8):** a short "Rebirth..." cover, the reset committed in one step on copies, the
+  player respawned on the Hub spawn (also from a zone or a boss room), the save in the background with
+  retries. An 8 s client watchdog restores everything and sends the player to the Hub if a step fails.
+  Refused during a fight. Config: `Rebirth.Transition`.
 * **Gold multiplier:** each Rebirth adds to the permanent Gold multiplier:
   `bonus(r) = 0.5 + 0.5 x (r - 1) / 11` -> +0.5 at Rebirth 1 rising to +1.0 at Rebirth 12.
   Total multiplier = `1 + sum of bonuses` (x10 after 12 Rebirths).
