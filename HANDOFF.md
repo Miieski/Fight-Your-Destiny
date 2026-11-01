@@ -20,6 +20,8 @@ Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
 - New UI is built on `UI/Kit/Components` (Part 8 restyles there).
 - Skill trees: `Config/WeaponSkillTrees` (the map, generated), `Config/WeaponSpecials` (5 moves per type, added to `Config/WeaponMoves` and `Config/Skills`),
   `Services/MasteryService`, `UI/Pages/SkillTreePage`. Client cooldowns are per skill id in `SkillController`. Profile version 3.
+- Floors: `tools/FloorsRound8.luau` (`F.zone(name)`, `F.hub()`, `F.clear(name)`, idempotent), `tools/make_floor_textures.py`, ids in `Config/PropTextures.Ground`.
+- Studio log: script lines are `[FLog::CreatorOutput / CreatorWarning / CreatorError]`; search for those when scanning the log file.
 - Map geometry added this round lives in the place file only (`tools/PlainsRidge.luau`, `tools/PropsRound8.luau` rebuild it).
 
 ## Latest: WEAPON OVERHAUL (2026-10-30)

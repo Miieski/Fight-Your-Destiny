@@ -31,6 +31,28 @@ local PropTextures = {
 		swamp_floor_mud_stone = "rbxassetid://91459519881550", -- round 7: swamp floors, 512 px = 24 x 24 studs
 		desert_pyramid_tier = "rbxassetid://97978285376143", -- round 7: one pyramid tier face, 20 x 10 studs (3 courses)
 	},
+	-- round 8 part 7: the ground of the Hub, Plains, Desert, Jungle and Tundra (256 px, tools/make_floor_textures.py, recipes in
+	-- docs/prop_texture_guide.md "Ground"). Tile = studs per tile as laid. fringe_* = a band tiled along a path edge, macro = a long soft tile.
+	Ground = {
+		grass = { Id = "rbxassetid://76784156208653", Tile = 34 },
+		dirt = { Id = "rbxassetid://71913215096187", Tile = 18 },
+		pavers = { Id = "rbxassetid://71357658804872", Tile = 16 },
+		sand = { Id = "rbxassetid://124138909553815", Tile = 30 },
+		slabs = { Id = "rbxassetid://72564392773940", Tile = 18 },
+		jungle_soil = { Id = "rbxassetid://138826029771149", Tile = 32 },
+		mossy_stone = { Id = "rbxassetid://86014062698328", Tile = 16 },
+		snow = { Id = "rbxassetid://87452768020104", Tile = 30 },
+		frost_slabs = { Id = "rbxassetid://76345190253957", Tile = 18 },
+		cave_rock = { Id = "rbxassetid://112765889342735", Tile = 28 },
+		fringe_grass = { Id = "rbxassetid://103931416962184", Tile = 26 },
+		fringe_sand = { Id = "rbxassetid://132496380237105", Tile = 26 },
+		fringe_moss = { Id = "rbxassetid://100381723159476", Tile = 26 },
+		fringe_snow = { Id = "rbxassetid://122481394293044", Tile = 26 },
+		macro_blotch = { Id = "rbxassetid://108726139080791", Tile = 150 },
+		cracks = { Id = "rbxassetid://107386962769153", Tile = 44 },
+		footprints = { Id = "rbxassetid://106157065460451", Tile = 16 },
+		leaf_litter = { Id = "rbxassetid://138026001453201", Tile = 22 },
+	},
 }
 
 return PropTextures

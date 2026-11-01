@@ -10,6 +10,7 @@ Machine-readable copy: `docs/asset_preview_index.json`.
 
 Added by hand here; the tables below and `docs/asset_preview_index.json` are from the last full `B.index()` run.
 
+- New in Part 7, small rows of Hub, Plains, Desert, Jungle, Tundra: the 15 `*_ground_*` details (docs/prop_inventory.md).
 - New, with samples: `hub_return_pad` (every zone block, 12 Variants), `hub_spawn_pad` (Hub), `plains_rail_buffer` (Plains).
 - Improved: `hub_furniture_planter`, `hub_furniture_planter_v2`, `plains_bridge_rail_section`.
 

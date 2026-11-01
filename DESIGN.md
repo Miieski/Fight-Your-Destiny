@@ -73,6 +73,9 @@ instead of inventing a parallel convention.
 * **Windows:** open with a quick pop (scale 0.9 -> 1, Back Out 0.2 s) over a dimmed backdrop;
   a close (X) button in the top-right corner.
 
+### Ground (Round 8)
+Each biome has its ground and path texture, a soft fringe along path edges, low curbs and small details, all without collision: `docs/prop_texture_guide.md` "Ground".
+
 ### UI for young players (owner 2026-10-13: "understandable for a 5 years old kid, avoid text, more visual")
 * **Realistic wood:** panels, insets and light boards use tiling wood textures (Blender, `Icons/UiTex`:
   WoodPanel / WoodInset / WoodLight) with iron corner brackets (`Kit/Panel.wood`, `UI/WoodSkin` dresses every

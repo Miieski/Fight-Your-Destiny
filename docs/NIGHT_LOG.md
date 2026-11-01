@@ -1,5 +1,27 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 7, better floors (Studio agent). `tools/FloorsRound8.luau`, `tools/make_floor_textures.py`, 18 textures uploaded (`Config/PropTextures.Ground`), recipes in
+  docs/prop_texture_guide.md "Ground". Backup: all 6 files of `..._175511_before_round8_floors`.
+  - DECISION: the ground is Parts, not Terrain, so `Texture` with StudsPerTile. Paths: Hub cobble pavers, Plains dirt, Plains_2 dirt on sand, Desert sandstone slabs, Jungle mossy
+    stone, Tundra frosted slabs. DECISION: the green Clearing discs of the jungle stay ground, only the brown ones are stone.
+  - DECISION: Hills, mountains, the Hub beach, MapFix patches and the desert Ripples strips keep flat colours (far surfaces, light touch). A few plain patches therefore still
+    show beside textured grass (one is at the bottom left of the Plains shot). Desert_4, Jungle_4, Tundra_4 keep their floors.
+  - Tundra_2 and Tundra_3 have no path part: no curbs, no fringe, no slabs; I did not add one, since navigation and paths must stay. Snow texture and details only.
+  - Added: 1,641 Texture instances (1,123 of them on the Tundra's Facets), 209 fringe parts, 1,450 detail copies (58-202 per zone, 100-256 triangles each, so about 10,000-35,000 triangles per sub-zone).
+  - Check: colliding or spawn parts 80,720 -> 80,720, 0 differences (position and size, Hub + Zones). Walk test on Plains_1 across curbs and fringes: 52 studs in 3.2 s at speed 17,
+    root height flat (2.90). Asset preview: 5 blocks rebuilt, 0 problems. Sync: every copy on its template version.
+  - Frame time, phone emulator (iPhone 17 Pro) on this PC: Hub 6.9 ms, Plains_1 6.94 ms, Tundra_3 6.94 ms, the same with everything hidden: the window is capped at 144 fps, so this
+    only says no visible cost on this GPU. NOT a real phone. Texture memory: 95-96 MB in both cases, but hiding does not unload a texture, so the real cost is not measured (18
+    images of 256 px, at most about 6 MB with mipmaps). The place uses StreamingEnabled.
+  - Log: 0 script errors. See the note below.
+  - LOG NOTE (coordinator's question). GetLogHistory is not being cleared or flooded: each Play DataModel has its own short buffer, and the game prints nothing at boot, so it stays
+    at 1-2 entries. A print, a warn and a forced error all arrived at once in a test. In Edit it holds 512 entries (the export lines).
+  - CORRECTION on my earlier reports: my scratchpad log scanner read only [FLog::Output / Warning / Error], and this Studio writes script lines as [FLog::CreatorOutput / CreatorWarning /
+    CreatorError], so my "0 errors" lines in Parts 0-6 did not actually read script errors. I fixed it and rescanned the whole log of this session (from 14:50 UTC): 411 CreatorError lines,
+    397 are CoreScripts "past shutdown" at Play stop, and all the others have a stack in my own commands (AssistantCommand) or come from `require(Config:Clone())` in those commands
+    (Armor:11, Skills:16). No game script error. Only warnings: 203785492 "Asset type does not match" (23, older than this round, not found in any script; not traced) and the
+    18 new textures "being generated" once, right after the upload.
+
 - PART 6, weapon skill trees (Studio agent). `Config/WeaponSkillTrees`, `Config/WeaponSpecials`, `Config/WeaponMastery`, `Services/MasteryService`,
   `UI/Pages/SkillTreePage` (on `UI/Kit/Components`), `Controllers/MasteryAuraController`; every node in docs/weapon_skill_trees.md; profile version 3.
   - DECISION: 6 trees, 25 nodes each, 53 points for a full tree, max level 60. No stamina in the game, so cooldown nodes; mana nodes for the staff.

@@ -3728,3 +3728,31 @@ Per mesh:
 `Textures[name]` = `{ ColorMap = "rbxassetid://..." }`.
 
 There are no Variant, Metal, NormalMap, RoughnessMap or MetalnessMap fields any more.
+
+## Ground (owner task round 8 part 7, 2026-11-01)
+
+Hub, Plains, Desert, Jungle, Tundra (not the Swamp). Tool: `tools/FloorsRound8.luau`. Textures: `tools/make_floor_textures.py` -> `docs/floor_textures/`, ids and
+tiles in `Config/PropTextures.Ground`. 18 images of 256 x 256. Nothing moves: Textures on the ground and path parts, everything else in a folder `Decor.FloorDetail`
+(CanCollide, CanTouch, CanQuery, CastShadow false, no script).
+
+Layers, in order:
+1. Ground: `Texture` Top (Right on the Hub's cylinders, the flat face of a `Facet` wedge in the Tundra), slightly see-through so the part's colour stays near the hills.
+2. Long tile: `macro_blotch` at 150 studs on the big parts, to hide the repetition.
+3. Path: its own `Texture` on every Path / PathJoint / Clearing, plus an overlay (`cracks` or `leaf_litter`).
+4. Fringe: a Part with Transparency 1, 0.04 above the path, along each path edge, with the `fringe_*` band (alpha 0 on both long sides, so no seam). V = the width.
+5. Curbs: stone runs of 9 studs along the edges, top 0.18-0.32 above the path, no collision. One every 10-15 studs, 72% of them, so the line stays broken.
+6. Details: 3/4 near the path, 1/4 anywhere in the zone; a ray refuses any spot under a prop or a building.
+
+| biome | ground (tile) | path (tile) | overlay | fringe (width) | details | palette |
+|---|---|---|---|---|---|---|
+| Hub | `grass` 34, alpha .3 | `pavers` 16, borders tile 9 tint #C6C0B8 | - | `fringe_grass` 7 | `hub_ground_curb`, `hub_ground_pebbles`, `plains_ground_tuft`, `plains_ground_flowers` | stone #C8BCA8 #BDB09C #D4C9B6, joint #7D6F60 |
+| Plains | `grass` 34, alpha .3 | `dirt` 18 | - | `fringe_grass` 7, tint #E8E8E8 | `plains_ground_curb`, `_tuft`, `_flowers`, `_pebbles` | grass #4FA832 to #7CCC45, dirt #B08A58 to #D8B47C |
+| Beach (Plains_2) | `sand` 30, alpha .2 | `dirt` 18 | - | `fringe_sand` 7 | `plains_ground_curb`, `desert_ground_ripple`, `plains_ground_pebbles`, `_tuft` | sand #E4C278 to #F8E2A4 |
+| Desert | `sand` 30, alpha .2 | `slabs` 18 | `cracks` 44, alpha .5 | `fringe_sand` 8 | `desert_ground_curb`, `_ripple`, `_chips` | slabs #E2C288 #D8B67A #ECD096 #D0AC70, joint #A07C4C |
+| Canyon (Desert_3) | `sand` tint #F5CDA0 | `slabs` tint #F5D7AF | `cracks` | `fringe_sand` tint | same, more chips | |
+| Jungle | `jungle_soil` 32, alpha .3 | `mossy_stone` 16 | `leaf_litter` 22 | `fringe_moss` 7 | `jungle_ground_curb`, `_fern`, `_root`, `plains_ground_pebbles` | stone #8C9484 #7C8676 #9AA090, moss #5F8F3E, joint #3E4A34 |
+| Tundra | `snow` 30 on each Facet, tinted with the Facet's own colour | `frost_slabs` 18 | `footprints` strip beside the path | `fringe_snow` 8 | `tundra_ground_curb`, `_clump`, `_chips` | slabs #CFE0F2 #DCEBF8 #C4D8EE, joint #9CB4D0 |
+| Plains_4 cave | `cave_rock` 28 (a light touch, indoors) | - | - | - | - | stone #757080, joint #4A4654 |
+
+Desert_4, Jungle_4, Tundra_4: floors kept (their brick floors date from rounds 6-7). Tundra_2 and Tundra_3 have no path part: the snow and the details only, along the line from the
+entrance to the gate. Hills, mountains and the Hub beach stay flat colours: far surfaces, and the low-poly facets read well as they are.

@@ -1640,3 +1640,18 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
   Crate_Swamp / Ore_Crate, Chest_Sunken, Rowboat_Sunk, Scarecrow_Swamp, Fountain_Marble, Anvil_A, Dwarf_Forge,
   Mine_Cart_Lava, Hanging_Lantern, Lantern_Iron, Lantern_Grave, Giant_Shell_A.
 - `workspace._Staging.BenchWork.Bench_Smooth`: the already-improved bench.
+
+### Round 8 Part 7 (owner, better floors, 2026-11-01)
+
+15 new ground details, each one union, no collision, no shadow, all in `Decor.FloorDetail` (recipes: docs/prop_texture_guide.md "Ground"):
+| template | triangles |
+|---|---:|
+| `hub_ground_curb`, `plains_ground_curb`, `desert_ground_curb`, `jungle_ground_curb`, `tundra_ground_curb` | 100 |
+| `hub_ground_pebbles` | 252 |
+| `plains_ground_pebbles`, `desert_ground_chips`, `tundra_ground_chips` | 240-248 |
+| `plains_ground_tuft` | 140 |
+| `plains_ground_flowers` | 256 |
+| `desert_ground_ripple` | 112 |
+| `jungle_ground_fern` | 254 |
+| `jungle_ground_root` | 172 |
+| `tundra_ground_clump` | 120 |
