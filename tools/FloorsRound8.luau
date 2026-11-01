@@ -204,6 +204,70 @@ function F.tundra_lake_shards(): Model
 	return finish(m, "tundra_lake_shards", list)
 end
 
+-- Round 9 part 11: the look of an ice ramp, no collision. Its origin is the centre of the Ramp wedge (16 x 8 x 26, high side on +Z), which stays as the collider, invisible, with its 2 RampSide rails
+function F.tundra_ice_ramp(): Model
+	local m = Instance.new("Model")
+	m.Name = "tundra_ice_ramp"
+	local rng = Random.new(827)
+	local list = {}
+	local n = Vector3.new(0, 26, -8).Unit
+	local up = Vector3.new(0, 8, 26).Unit
+	local function onSlope(t: number, lift: number): CFrame
+		return CFrame.fromMatrix(up * t + n * lift, Vector3.xAxis, n, Vector3.xAxis:Cross(n))
+	end
+	local ice, snow = { "a8ccec", "8fb8e0", "7ca8d8", "bfe4fa" }, { "f0f6fe", "e2eefa" }
+	for i = 1, 6 do -- ridges across the slope
+		table.insert(list, H.chamfered(Vector3.new(15, 0.3, rng:NextNumber(0.5, 0.7)), onSlope(-11 + (i - 1) * 4.4 + rng:NextNumber(-0.3, 0.3), 0.17), hex("bcd6ee"), { "topSides" }, 0.08))
+	end
+	for side = -1, 1, 2 do
+		table.insert(list, H.chamfered(Vector3.new(1, 0.18, 26.8), onSlope(0, 0.14) * CFrame.new(side * 7.4, 0, 0), hex("eaf2fc"), { "topSides" }, 0.07)) -- snow along the foot of the walls
+		for i = 1, 6 do -- retaining wall: ice blocks stepping up with the rail they cover
+			local long = 26 / 6
+			local z = -13 + (i - 0.5) * long
+			local top = z / 13 * 4 + 0.8 + rng:NextNumber(-0.1, 0.1)
+			local bottom = -4.3
+			table.insert(list, H.chamfered(Vector3.new(3.2, top - bottom, long - 0.1), CFrame.new(side * 9.6, (top + bottom) / 2, z), hex(pick(rng, ice)), { "topSides" }, 0.18))
+			table.insert(list, H.chamfered(Vector3.new(3.5, 0.32, long + 0.05), CFrame.new(side * 9.6, top + 0.08, z), hex(pick(rng, snow)), { "topSides" }, 0.12))
+			for k = 1, 2 do -- icicles under the cap, outside
+				local len = rng:NextNumber(0.7, 1.6)
+				table.insert(list, piece("WedgePart", Vector3.new(0.26, len, 0.42), CFrame.new(side * 11.3, top - 0.08 - len / 2, z + (k - 1.5) * 1.6 + rng:NextNumber(-0.3, 0.3)) * CFrame.Angles(math.pi, 0, 0), hex(pick(rng, { "bfe4fa", "d6eefc" }))))
+			end
+		end
+		ST.blob(list, rng, CFrame.new(side * 10.2, -3.9, -13.6), 1.5, 0.9, 1.2, function(v: Vector3): Color3 -- rim stones at the foot
+			return hex(if v.Y > 0.4 then "eef4fc" else "768096")
+		end, 0.2)
+		ST.blob(list, rng, CFrame.new(side * 12, -3.95, -9), 1.1, 0.7, 1, function(v: Vector3): Color3
+			return hex(if v.Y > 0.4 then "eef4fc" else "8a94aa")
+		end, 0.15)
+		ST.blob(list, rng, CFrame.new(side * 9.6, -3.7, -14.6), 3, 0.75, 1.8, function(v: Vector3): Color3 -- snow at the foot
+			return hex(if v.Y > 0.5 then "f6faff" else "dce8f8")
+		end, 0.1)
+	end
+	finish(m, "tundra_ice_ramp", list)
+	for _, d in ipairs(m:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.CastShadow = true
+		end
+	end
+	local plate = Instance.new("Part")
+	plate.Name = "Slope"
+	plate.Size = Vector3.new(16, 0.1, 27.3)
+	plate.CFrame = onSlope(0, 0.05)
+	plate.Color = hex("dce8f6")
+	plate.Material = Enum.Material.SmoothPlastic
+	plate.TopSurface, plate.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+	plate.Anchored = true
+	plate.CanCollide, plate.CanTouch, plate.CanQuery = false, false, false
+	local t = Instance.new("Texture")
+	t.Name = "SlopeTex"
+	t.Texture = Tex.ramp_packed.Id
+	t.Face = Enum.NormalId.Top
+	t.StudsPerTileU, t.StudsPerTileV = Tex.ramp_packed.Tile, Tex.ramp_packed.Tile
+	t.Parent = plate
+	plate.Parent = m
+	return m
+end
+
 function F.tundra_ground_clump(): Model
 	local m = Instance.new("Model")
 	m.Name = "tundra_ground_clump"
@@ -250,7 +314,7 @@ local BUILD = {
 F.IDS = {
 	"hub_ground_curb", "hub_ground_pebbles", "plains_ground_curb", "plains_ground_pebbles", "plains_ground_tuft", "plains_ground_flowers",
 	"desert_ground_curb", "desert_ground_chips", "desert_ground_ripple", "jungle_ground_curb", "jungle_ground_fern", "jungle_ground_root", "jungle_ground_tuft",
-	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "tundra_lake_shards", "beach_ground_curb", "canyon_ground_curb", "mine_ground_flagstones", "mine_ground_gravel",
+	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "tundra_lake_shards", "tundra_ice_ramp", "beach_ground_curb", "canyon_ground_curb", "mine_ground_flagstones", "mine_ground_gravel",
 }
 
 function F.build(id: string): string

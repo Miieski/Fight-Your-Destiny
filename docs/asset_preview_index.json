@@ -9924,6 +9924,23 @@
      "newTemplate": false,
      "totalInstances": 40,
      "quality": "new"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_ice_ramp",
+     "instances": 4,
+     "largest": 28.0,
+     "ownTint": 0,
+     "sizeClass": "large",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 4,
+     "quality": "new"
     }
    ],
    "name": "Volcano",

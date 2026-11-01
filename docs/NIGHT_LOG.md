@@ -1,5 +1,28 @@
 # ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
 
+- PART 11, ice ramps (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-02_001744_before_r9_part11`. New tool: `tools/RampsRound9.luau`; template `tundra_ice_ramp` in FloorsRound8; recipe: docs/prop_texture_guide.md "Ice ramps". Sheet `docs/before_after/R9-11_ramps.png`: ramp and wall, Edit, same camera; image 18 against a Play shot.
+  - WHAT THEY WERE: `Decor.Ground` of Tundra_3: 4 `Ramp` wedges (16 x 8 x 26) and 8 `RampSide` rails (3 x 9.2 x 27), bare colours, colliding, no texture at all. n / total: 4 / 4 ramps, 8 / 8 rails, all there are in the tundra (search by name in the 4 sub-zones). The "before" on the sheet was taken by showing the old parts again for one shot.
+  - THE BUG of image 18: nothing was stretched, since no texture was laid: a flat Ramp, grey-blue rails 0.8 higher than it, and rails whose ends share a face with the `SnowLip` ends (x 7939, 7961, 8039, 8061). A Texture on a WedgePart's slope uses the 26-stud length for a 27.2-stud face, so it would have stretched 4.6 %: not used.
+  - DECISION: the wedges stay exactly as they are, Transparency 1, as the colliders. The look is one template on each ramp, no collision, no query, in `Decor.IceRamps`: a flat Part laid 0.1 over the slope with `ramp_packed` (a Part, so the tile has its true length), 6 ridges, snow along the walls, 12 stepped ice blocks with snow caps over the rails, 24 icicles, rim stones and snow at the foot. Same pivot as the Ramp.
+  - DECISION, outside the ramps: the flat dark terrace wall (`T2Body`) takes `frost_slabs` tile 18, tinted, Front and Back: it stands right between the ramps in image 18. Texture only.
+  - Colliders: `R.colliders()` before = after, string equal: position, size, rotation, CanCollide, CanQuery of all 12 parts. Whole map 80,732 -> 80,732, 0 differences. Copies: 0 colliding, 0 query.
+  - PLAY, every ramp walked by MoveTo both ways: root height 2.70 at the foot, 10.70 on the terrace, each way 2.4-2.8 s at speed 16:
+    | ramp | up | down |
+    |---|---|---|
+    | SW (7950, 533) | OK, twice | OK |
+    | NW (7950, 634) | OK | OK, twice |
+    | NE (8050, 634) | OK | OK |
+    | SE (8050, 533) | OK | OK |
+    4 / 4 ramps, 0 blocked. The look was then re-stamped by a Sync (no colliding part in it), the walk was not repeated after that.
+  - Close up: ramp from the foot, from the top and from the outside (Play), the slope and the walls: no stretch, no z-fighting seen. Both sides of one ramp; the 4 are the same template.
+  - FOUND: 2 deaths during the tests at (7950, 653), on the low ground north of the terrace: one hit of -11,900 on this low-level account. I did not see the attacker; wolves roam this zone. It happened at the foot on flat ground, not on a ramp. No profile change: Gold 46.08K and Diamonds 237 the same after. I did not use `killAll` because it pays rewards.
+  - FOUND, for screenshots: in Play the camera can go back to Custom by itself. `RunService:BindToRenderStep` that sets `cam.CFrame` holds it for the shot.
+  - Added: 1 image (`ramp_packed`, counted in Part 10), 4 x `tundra_ice_ramp` (2,198 tris + a plate): about +8,800 triangles, all in Tundra_3. 2 Textures on the wall. Asset preview: sample added, `B.check("Tundra")`: 56 assets, 1170 copies, 0 problems. Preview ground not touched.
+  - Frame time, this PC, not a phone, capped at 144 fps: at the ramps 6.94 ms, worst 8.46. Measured, says nothing about a phone.
+  - Log: 0 script errors after this Play.
+  - Walking character: not seen (about 6 minutes of Play in this part).
+  - NOT tested: a phone; 2 players; ramps on a real run with enemies chasing; the wall texture from the south side of the terrace in Play.
+
 - PART 10, frozen lake (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_235736_before_r9_part10`. New tool: `tools/LakeRound9.luau`; images: `make_floor_textures.py --tundra`; recipe: docs/prop_texture_guide.md "Frozen lake". Sheet `docs/before_after/R9-10_lake.png`: fixed view, top view (both Edit), Play view against image 17.
   - WHAT IT WAS: 380 wedge Facets in pale colours, flat, top y 0.14, colliding; 123 thick blue `Crack` parts; 2 `OpenWater` holes; 4 `tundra_fishing_hole` props. No script reads any of it (searched src and tools), so no sliding to keep.
   - DECISION: real transparency refused: 380 see-through parts over nothing would cost more than the rest of the zone and show the ground under them. "Semi-transparent deep ice" is painted: the facets go from pale #CFEEFC at the shore to #4C94DC at 80 studs from it, each keeps its small old tone step, Reflectance 0.06. Colliders do not change, Color and Reflectance only.

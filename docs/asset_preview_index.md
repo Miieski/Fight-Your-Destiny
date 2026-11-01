@@ -527,6 +527,7 @@ Frost biome: Snowy Plains, Frozen Lake, Mountain, Ice Citadel. Block `ByZone.04_
 | `tundra_glass_frame` | prop | large | 8 | yes | improved | none (done) |
 | `tundra_ground_chips` | prop | small | 54 | yes | improved | none (done) |
 | `tundra_lake_shards` | prop | small | 40 | yes | new | none (done) |
+| `tundra_ice_ramp` | prop | large | 4 | yes | new | none (done) |
 | `tundra_ground_clump` | prop | small | 120 | yes | improved | none (done) |
 | `tundra_ground_curb` | prop | medium | 30 | yes | improved | none (done) |
 | `tundra_scaffold` | prop | large | 3 | yes | improved | none (done) |

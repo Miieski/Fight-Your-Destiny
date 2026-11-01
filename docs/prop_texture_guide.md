@@ -3821,6 +3821,19 @@ Tundra_2, `tools/LakeRound9.luau`, everything in `Decor.LakeSkin`, no collision,
 
 Don't: a Texture on each Facet (they face all ways, the cracks break); anything over y 0.17 at a fishing hole.
 
+## Ice ramps (owner task round 9 part 11, 2026-11-01)
+
+Tundra_3, 4 ramps. `tools/RampsRound9.luau`, template `tundra_ice_ramp` (FloorsRound8), 2,198 tris + 1 plate. `Ramp` and `RampSide` stay as they are, Transparency 1: they are the colliders, never move them.
+
+| piece | how |
+|---|---|
+| Slope | a flat Part 16 x 0.1 x 27.3, 0.05 over the wedge's slope, `ramp_packed` tile 16, tint none. Never a Texture on a WedgePart: it maps the slope on the 26-stud length |
+| Ridges | 6, 15 wide, 0.3 high, #BCD6EE |
+| Walls | 6 stepped blocks a side over the rails, 3.2 wide, inner face on x +-8, #A8CCEC #8FB8E0 #7CA8D8 #BFE4FA, snow cap #F0F6FE #E2EEFA |
+| Icicles | 2 per block, outside, 0.7-1.6 long, #BFE4FA #D6EEFC |
+| Foot | rim stones #768096 #8A94AA with a snow top, snow heap #F6FAFF |
+| Terrace wall | `frost_slabs` tile 18, tint #9CB4DC, alpha .2, on `T2Body` Front and Back |
+
 ## Mine cavern (owner task round 9 part 3, 2026-11-01)
 
 Plains_4, `tools/CaveRound9.luau`. Natural mine: warm brown-grey rock, packed dirt, no violet. 3 images are new; the shape of the cavern is the old shell.

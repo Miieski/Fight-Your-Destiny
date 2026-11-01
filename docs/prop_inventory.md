@@ -1658,3 +1658,4 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
 | `jungle_ground_tuft` (round 9 part 9, jungle path edges) | 160 |
 | `tundra_ground_clump` | 120 |
 | `tundra_lake_shards` (round 9 part 10, shore of the Tundra_2 lake) | 92 |
+| `tundra_ice_ramp` (round 9 part 11, Tundra_3, the look only: `Ramp` and `RampSide` stay as colliders) | 2,198 + 1 plate |
