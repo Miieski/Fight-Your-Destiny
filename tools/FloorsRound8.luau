@@ -180,6 +180,15 @@ function F.jungle_ground_root(): Model
 	return finish(m, "jungle_ground_root", list)
 end
 
+-- Round 9 part 9: the grass of the jungle set, for the edges of its paths
+function F.jungle_ground_tuft(): Model
+	local m = Instance.new("Model")
+	m.Name = "jungle_ground_tuft"
+	local list = {}
+	blades(list, Random.new(824), 8, 0.9, 0.55, { "4a7a38", "5f8f3e", "3f6e36", "6e9e48" })
+	return finish(m, "jungle_ground_tuft", list)
+end
+
 function F.tundra_ground_clump(): Model
 	local m = Instance.new("Model")
 	m.Name = "tundra_ground_clump"
@@ -219,13 +228,13 @@ local BUILD = {
 	desert_ground_curb = function() return curb("desert_ground_curb", 815, { "d8b67a", "c8a468", "e4c690", "b89458" }, 1.2, "e0bc78", { key = "slabs", alpha = 0.3 }) end,
 	canyon_ground_curb = function() return curb("canyon_ground_curb", 821, { "d8a878", "c89868", "e4b888", "b88858" }, 1.2, "dca878", { key = "slabs", tint = "f5d7af", alpha = 0.3 }) end,
 	desert_ground_chips = function() return pebbles("desert_ground_chips", 816, "d8b67a", "a8824c", 4, 1.4) end,
-	jungle_ground_curb = function() return curb("jungle_ground_curb", 817, { "6e7c62", "7c8a6e", "5e7056", "5a8a48" }, nil, "4a7a38", { key = "mossy_stone", alpha = 0.3 }) end,
+	jungle_ground_curb = function() return curb("jungle_ground_curb", 817, { "6e7c62", "76826a", "667258", "5a7a48" }, nil, "4a7a38", { key = "jungle_mossy", alpha = 0.3 }) end,
 	tundra_ground_curb = function() return curb("tundra_ground_curb", 818, { "c4d8ee", "d4e4f6", "b4cce6", "e8f2fc" }, 1.1, "eef4fc", { key = "frost_slabs", alpha = 0.3 }) end,
 	tundra_ground_chips = function() return pebbles("tundra_ground_chips", 819, "bcd6f0", "86a8cc", 3, 1.3) end,
 }
 F.IDS = {
 	"hub_ground_curb", "hub_ground_pebbles", "plains_ground_curb", "plains_ground_pebbles", "plains_ground_tuft", "plains_ground_flowers",
-	"desert_ground_curb", "desert_ground_chips", "desert_ground_ripple", "jungle_ground_curb", "jungle_ground_fern", "jungle_ground_root",
+	"desert_ground_curb", "desert_ground_chips", "desert_ground_ripple", "jungle_ground_curb", "jungle_ground_fern", "jungle_ground_root", "jungle_ground_tuft",
 	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "beach_ground_curb", "canyon_ground_curb", "mine_ground_flagstones", "mine_ground_gravel",
 }
 
@@ -265,7 +274,7 @@ local CANYON = {
 	width = 8, curb = "canyon_ground_curb", details = { { "desert_ground_chips", 40 }, { "desert_ground_ripple", 14 } },
 }
 local JUNGLE = {
-	ground = "jungle_soil", alpha = 0.3, path = "mossy_stone", overlay = "leaf_litter", fringe = "fringe_moss", width = 7, curb = "jungle_ground_curb",
+	ground = "jungle_moss", alpha = 0.12, path = "jungle_cobble", overlay = "leaf_litter", curb = "jungle_ground_curb", -- round 9 part 9: no fringe, JungleRound9 lays soft patches; after F.zone run J.skin, J.blend, J.details
 	details = { { "jungle_ground_fern", 46 }, { "jungle_ground_root", 18 }, { "plains_ground_pebbles", 12 } },
 }
 local TUNDRA = {
@@ -569,10 +578,12 @@ function F.zone(name: string): string
 		end
 	end
 	for i, s in ipairs(segs) do
-		strip(folder, b, s, -1, i * 2, rng)
-		strip(folder, b, s, 1, i * 2 + 1, rng)
+		if b.fringe then
+			strip(folder, b, s, -1, i * 2, rng)
+			strip(folder, b, s, 1, i * 2 + 1, rng)
+		end
 	end
-	local fringes = #segs * 2
+	local fringes = if b.fringe then #segs * 2 else 0
 	if b.prints then
 		for i, s in ipairs(segs) do
 			local right = sideOf(s)

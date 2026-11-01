@@ -3750,7 +3750,7 @@ Layers, in order:
 | Beach (Plains_2) | `sand` 30, alpha .2 | `dirt` 18 | - | `fringe_sand` 7 | `plains_ground_curb`, `desert_ground_ripple`, `plains_ground_pebbles`, `_tuft` | sand #E4C278 to #F8E2A4 |
 | Desert | `sand` 30, alpha .2 | `slabs` 18 | `cracks` 44, alpha .5 | `fringe_sand` 8 | `desert_ground_curb`, `_ripple`, `_chips` | slabs #E2C288 #D8B67A #ECD096 #D0AC70, joint #A07C4C |
 | Canyon (Desert_3) | `sand` tint #F5CDA0 | `slabs` tint #F5D7AF | `cracks` | `fringe_sand` tint | same, more chips | |
-| Jungle | `jungle_soil` 32, alpha .3 | `mossy_stone` 16 | `leaf_litter` 22 | `fringe_moss` 7 | `jungle_ground_curb`, `_fern`, `_root`, `plains_ground_pebbles` | stone #8C9484 #7C8676 #9AA090, moss #5F8F3E, joint #3E4A34 |
+| Jungle (round 9 part 9: see Jungle ground) | `jungle_moss` 32, alpha .12 | `jungle_cobble` 20 | `leaf_litter` 22, alpha .45 | none, patches | `jungle_ground_curb`, `_fern`, `_root`, `_tuft`, `plains_ground_pebbles` | stone #8A9678 #7E8A6E #96A082 #76826A, moss #5F8F3E, joint #62705A |
 | Tundra | `snow` 30 on each Facet, tinted with the Facet's own colour | `frost_slabs` 18 | `footprints` strip beside the path | `fringe_snow` 8 | `tundra_ground_curb`, `_clump`, `_chips` | slabs #CFE0F2 #DCEBF8 #C4D8EE, joint #9CB4D0 |
 | Plains_4 cave (round 9: `mine_dirt`, see Mine cavern) | `cave_rock` 28 (a light touch, indoors) | - | - | - | - | stone #757080, joint #4A4654 |
 
@@ -3769,10 +3769,10 @@ No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `
 | `beach_ground_curb` (variant) | `sand` 30 | white | #D8BC80 #E4CC94 #C8AA70 #F0DCAA | sand #E4C278 | Plains_2 |
 | `desert_ground_curb` | `slabs` 18 | white | #D8B67A #C8A468 #E4C690 #B89458 | sand #E0BC78 | Desert_1, Desert_2 |
 | `canyon_ground_curb` (variant) | `slabs` 18 | #F5D7AF | #D8A878 #C89868 #E4B888 #B88858 | sand #DCA878 | Desert_3 |
-| `jungle_ground_curb` | `mossy_stone` 16 | white | #6E7C62 #7C8A6E #5E7056 #5A8A48 | moss #4A7A38 | Jungle_1-3 |
+| `jungle_ground_curb` | `jungle_mossy` 20 | white | #6E7C62 #76826A #667258 #5A7A48 | moss #4A7A38 | Jungle_1-3 |
 | `tundra_ground_curb` | `frost_slabs` 18 | white | #C4D8EE #D4E4F6 #B4CCE6 #E8F2FC | snow #EEF4FC | Tundra_1 |
 | Ruins Ledge, LedgeSand | `sand` 30 | own | | | Desert_3 |
-| Plaza PlazaBorder, Slab | `mossy_stone` 16 | own | | | Jungle_3 (Part 9 redoes the jungle ground) |
+| Plaza PlazaBorder, Slab | `jungle_mossy` 20, tint own + 45 % white | own | | | Jungle_3 |
 | SnowLip | `snow` 30 | own | | | Tundra_3 |
 | Shore, PathShore, Island, Path, Clearing, Square | `dirt` 18 | own | | | Swamp_1-3 (the Swamp had no ground texture) |
 | PoolRim | `swamp_wall_stone` 8 | own | | | Swamp_4 |
@@ -3781,6 +3781,30 @@ No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `
 | DaisStep, Step | `frost_slabs` 18 | own | | | Tundra boss room |
 | MiniDais, Plinth | `slabs` 18 | own | | | Desert boss room |
 | Hills Facet | `grass` 34 | own | | | Plains_1, Plains_3 (the grass banks, images 03 and 04) |
+
+## Jungle ground (owner task round 9 part 9, 2026-11-01)
+
+One set for Jungle_1, 2, 3. `tools/make_floor_textures.py --jungle`, laid by `tools/JungleRound9.luau`, ids in `Config/PropTextures.Ground`. Style: 3-5 tones, soft low joints, same stones and the same 2 mosses in every image. Rule: nothing straight where 2 grounds meet.
+
+Palette: stone #8A9678 #7E8A6E #96A082 #76826A, joint #62705A (2 steps off the stone, never black), moss #5F8F3E #4A7A38 #3F6E36, dirt #7A5A3A #967250 #6A4E34.
+
+| use | image | tile | how |
+|---|---|---:|---|
+| Ground | `jungle_moss` | 32 | Top, alpha .12 over the part's #349C3C, `macro_blotch` on the large parts. `Corridor.Ground` too |
+| Paths, cobble discs | `jungle_cobble` | 20 | 4-stud cobbles, opaque. `leaf_litter` over the blocks, alpha .45 |
+| Plaza | `jungle_slab` | 30 | 10-stud slabs, `macro_blotch` over |
+| Worn slabs, border, curbs | `jungle_mossy` | 20 | EdgeTex, alpha .25-.3, the part's own colour shows |
+| Gate corridors, brown clearings | `jungle_dirt` | 24 | Warm dirt with a few stones and moss specks from the palette |
+| Green clearings | `jungle_moss` | 32 | Part colour = ground colour, so no rim |
+| Moss patch | `jungle_moss_a`, `_b` | Decal | 10-15 x 6.5-9.5 along an edge, centre -1.2 to +1.6 from it, every 5.5-7.5 studs, turned up to 0.3 rad, y 0.27 |
+| Dirt patch | `jungle_dirt_patch` | Decal | 22 % of the steps, under the moss, y 0.25 |
+| Worn patch | moss | Decal | 4-6.5 x 3-5 on the stones (12 % of the steps), 5-8 x 3.5-5.5 across the rim of a disc |
+| Loose cobbles | `jungle_cobble_fade` | Decal | 17.4 x 11 at each stone end of a corridor, y 0.235, dense end on the stones |
+| Grass, ferns, roots | `jungle_ground_tuft`, `_fern`, `_root` | | every 13-20 studs along the edges, 0.4-2.6 out |
+
+Heights: ground 0, clearing 0.1, corridor dirt 0.18, path block 0.2, cobble disc 0.22, patches 0.25-0.28. Patches: Part Transparency 1 + Decal, no collision, no query, no shadow.
+Jungle_4 and the boss room keep the temple brick of rounds 6-7, same stone family.
+After `F.zone` on a jungle sub-zone: `J.skin`, `J.blend`, `J.details`.
 
 ## Mine cavern (owner task round 9 part 3, 2026-11-01)
 

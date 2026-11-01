@@ -419,7 +419,7 @@ Poison biome: Jungle Edge, River, Lost Temple, Temple Heart. Block `ByZone.03_Ju
 | `hub_plant_mushroom_b` | plant | small | 9 | yes | old | redesign (low-poly pass) |
 | `jungle_bamboo` | plant | large | 27 | yes | improved | none (done) |
 | `jungle_flower_bush` | plant | medium | 225 | yes | improved | none (done) |
-| `jungle_ground_fern` | plant | small | 138 | yes | improved | none (done) |
+| `jungle_ground_fern` | plant | small | 176 | yes | improved | none (done) |
 | `jungle_lily_pads` | plant | medium | 35 | yes | improved | none (done) |
 | `jungle_moss_patch_large` | plant | medium | 25 | yes | improved | none (done) |
 | `jungle_moss_patch_medium` | plant | medium | 36 | yes | improved | none (done) |
@@ -437,8 +437,9 @@ Poison biome: Jungle Edge, River, Lost Temple, Temple Heart. Block `ByZone.03_Ju
 | `hub_prop_log_a` | prop | medium | 8 | yes | old | redesign (low-poly pass) |
 | `hub_return_pad` | prop | medium | 1 | yes | improved | none (done) |
 | `jungle_drum` | prop | medium | 5 | yes | improved | none (done) |
-| `jungle_ground_curb` | prop | medium | 129 | yes | improved | none (done) |
-| `jungle_ground_root` | prop | medium | 54 | yes | improved | none (done) |
+| `jungle_ground_curb` | prop | medium | 110 | yes | improved | none (done) |
+| `jungle_ground_root` | prop | medium | 98 | yes | improved | none (done) |
+| `jungle_ground_tuft` | plant | small | 137 | yes | new | none (done) |
 | `jungle_ruin_block` | prop | large | 6 | yes | improved | none (done) |
 | `mossy_slabs` | prop | medium | 4 | yes | improved | none (done) |
 | `plains_ground_pebbles` | prop | small | 36 | yes | improved | none (done) |

@@ -5374,14 +5374,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "jungle_ground_fern",
-     "instances": 138,
+     "instances": 176,
      "largest": 3.4,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 138,
+     "totalInstances": 176,
      "quality": "improved"
     },
     {
@@ -5696,14 +5696,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "jungle_ground_curb",
-     "instances": 129,
+     "instances": 110,
      "largest": 9.8,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "prop",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 129,
+     "totalInstances": 110,
      "quality": "improved"
     },
     {
@@ -5713,14 +5713,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "jungle_ground_root",
-     "instances": 54,
+     "instances": 98,
      "largest": 7.6,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "prop",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 54,
+     "totalInstances": 98,
      "quality": "improved"
     },
     {
@@ -9890,6 +9890,23 @@
      "newTemplate": true,
      "totalInstances": 5,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_ground_tuft",
+     "instances": 137,
+     "largest": 1.4,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 137,
+     "quality": "new"
     }
    ],
    "name": "Volcano",

@@ -1,5 +1,34 @@
 # ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
 
+- PART 9, jungle ground (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_232120_before_r9_part9`. New tool: `tools/JungleRound9.luau`; images: `make_floor_textures.py --jungle`; recipe and palette: docs/prop_texture_guide.md "Jungle ground". Sheets `docs/before_after/R9-09_gate.png`, `_arch`, `_plaza`, `_torch`: top row Edit shots, same camera; bottom row the owner's image against a Play shot.
+  - WHAT THE "GRASS PANELS" WERE: the `Fringe` parts of Round 8. Their image fades on the 2 long sides only, so the ends were straight cuts, and the band was stretched (blurred). Count, by name and by a search of every thin or textured part of the 4 sub-zones and the boss room:
+    | area | panels before | replaced |
+    |---|---:|---:|
+    | Entrance (Jungle_1, z < -50) | 3 | 3 |
+    | Jungle_1, the rest | 21 | 21 |
+    | Jungle_2 | 24 | 24 |
+    | Jungle_3 | 6 | 6 |
+    | Jungle_4 | 0 | - |
+    | Boss room | 0 | - |
+    | total | 54 | 54 / 54 |
+  - WHAT THE OTHER PIECES WERE: the brown wedge = `Corridor.Path` of Jungle_2 and Jungle_3, a bare colour; the very bright green beside it = `Corridor.Ground`, no texture at all. The flat grey plaza = 2 `Plaza` parts with no texture. The white-pink cobble = `mossy_stone` with its light stones (up to #C0C8B4), plus the aura. It has no pink of its own: seen with an Iron Shortsword, no aura.
+  - THE SET, 9 images of 256 px, one palette: `jungle_cobble` (tile 20, paths), `jungle_slab` (30, plaza), `jungle_mossy` (20, curbs, PlazaBorder, Slab), `jungle_dirt` (24, corridors, brown clearings), `jungle_moss` (32, ground), Decals `jungle_moss_a`, `_b`, `jungle_dirt_patch`, `jungle_cobble_fade`. `mossy_stone`, `jungle_soil`, `fringe_moss` are laid nowhere now, still in Config.
+  - DECISION: first palette too dark: under the teal `Jungle_3` preset the walking surface went almost black. Stone lifted 15 %, 5 images uploaded again, so 5 ids of the first upload are unused on Roblox.
+  - DECISION: the 54 panels become 787 small patches (Part + Decal, soft irregular edge): 526 moss, 99 dirt, 162 worn (on the stones, and across the rim of each cobble disc, whose cobbles do not line up with a rotated path). A ray refuses any spot over water or a bank. 4 `CobbleFade` plates of loose cobbles make the end of each stone path run out on the corridor dirt. Instances 791 parts + 791 decals, against 54 + 54.
+  - DECISION: green Clearings take the colour of the ground (#60C448 -> #349C3C), or they stay bright discs with a rim. Attribute `GreenClearing` remembers them. Brown Clearings are now dirt, under the cobble discs.
+  - DECISION: `Slab` and `PlazaBorder` keep their own darker colours under `jungle_mossy`, so the plaza keeps its pattern of worn slabs, now the same stone. `jungle_moss_patch_*` (66 copies, map, arena, preview) recoloured to the same 2 greens, shape unchanged.
+  - DECISION: Jungle_4 and the boss room keep their floor: the temple brick of rounds 6-7 is already green-grey with moss, and has none of the problems above. Same stone family; the Jungle_4 floor meets the new plaza strip at the torches, seen in Play (R9-09_torch). `Exterior.Ground` of Jungle_4 not changed.
+  - FOUND, coplanar faces: cobble discs and path blocks shared the top y 0.2; a path block overlapped `Corridor.Path` too. Discs up 0.02, `Corridor.Path` down 0.02. None of these parts collide.
+  - FOUND: 19 Round 8 curbs lay right across a path at a junction, a line of stones in the walkway: removed. 110 left (+1 in the preview). `jungle_ground_curb` rebuilt on `jungle_mossy`, 111 / 111 copies synced. Edges `E.zone("Jungle")`: 22 / 22 parts on `jungle_mossy`. Curbs still match the ground, seen in all sheets.
+  - Follow-up of Part 1 done: `edge.key` in FloorsRound8, `Slab` and `PlazaBorder` plan in EdgesRound9. Jungle_3 plaza floor no longer flat grey.
+  - Added: 9 images (6 more loaded than before), 137 `jungle_ground_tuft` (new template, 160 tris), 38 ferns, 44 roots; -19 curbs. About +36,000 triangles over Jungle_1-3, 791 alpha quads. No script.
+  - Asset preview: `jungle_ground_tuft` sample added, `B.check("Jungle")`: 72 assets, 2434 copies, 0 problems. Preview ground not touched.
+  - Colliders: colliding or spawn parts 80,732 -> 80,732, 0 differences (`F.compare`, after everything).
+  - PLAY: walked by Humanoid:MoveTo through the Jungle_2 gate both ways, root height flat 2.70. Plates, torches and gate unchanged: not touched by any step. Boss room entered with `setZone` zone 5 twice, the seal ring and the small seal sit as before, moss in the new green. I anchored the character near the mini-bosses the first time and it died there: the room sent it back, no reward, only the Defeated screen.
+  - Log after Play: 0 script errors. Warnings: 14 "being generated" (new images), 2 old 203785492.
+  - Walking character: not seen. About 8 minutes of Play, anchored most of the time, so a weak check.
+  - NOT tested: a phone; the path seen in full sun in Play (Clock 14.4 leaves these spots in shade, the owner's shots were sunlit); Jungle_1 and Jungle_4 in Play (Edit shots only for the entrance); walking the Jungle_3 gate after the change. Patches at phone camera distance not looked at.
+
 - PART 6, diamonds from mini-bosses and bosses (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_224447_before_r9_part6`. New: `Config/BossRewards.luau`, `docs/boss_rewards.md` (table, rules). Sheet `docs/before_after/R9-06_victory.png`.
   - HOW DIAMONDS WERE HELD: `profile.Diamonds`, `DataService:AddDiamonds`, replicated by the normal data patch, so the HUD follows. Rebirth does not touch them (`Config/Rebirth.Kept`, `planReset`).
   - PARTICIPANTS, existing rule kept: in `room.players` when the enemy dies and at least 5 % of its HP dealt (`Bosses.REWARD_MIN_SHARE`). A dead spectator stays in the room, so is paid if the 5 % is met. Who left is out of the list, paid for what died before. Written in docs/boss_rewards.md.

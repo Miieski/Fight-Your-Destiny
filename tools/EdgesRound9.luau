@@ -61,7 +61,7 @@ end
 local dirt = { id = Ground.dirt.Id, tile = Ground.dirt.Tile, alpha = 0.3 }
 local PLANS = {
 	Desert = { { root = function() return sub("Desert", "Desert_3").Decor.Ruins end, names = { "Ledge", "LedgeSand" }, id = Ground.sand.Id, tile = Ground.sand.Tile, alpha = 0.3 } },
-	Jungle = { { root = function() return sub("Jungle", "Jungle_3").Decor.Plaza end, names = { "PlazaBorder", "Slab" }, id = Ground.mossy_stone.Id, tile = Ground.mossy_stone.Tile, alpha = 0.25 } },
+	Jungle = { { root = function() return sub("Jungle", "Jungle_3").Decor.Plaza end, names = { "PlazaBorder", "Slab" }, id = Ground.jungle_mossy.Id, tile = Ground.jungle_mossy.Tile, alpha = 0.25, lift = 0.45 } },
 	Tundra = { { root = function() return sub("Tundra", "Tundra_3").Decor.Ground end, names = { "SnowLip" }, id = Ground.snow.Id, tile = Ground.snow.Tile, alpha = 0.2 } },
 	Swamp = {
 		{ root = function() return sub("Swamp", "Swamp_1").Decor.Ground end, names = { "Shore", "PathShore", "Island", "Path" }, id = dirt.id, tile = dirt.tile, alpha = dirt.alpha },

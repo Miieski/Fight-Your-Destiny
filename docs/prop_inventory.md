@@ -1655,4 +1655,5 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
 | `desert_ground_ripple` | 112 |
 | `jungle_ground_fern` | 254 |
 | `jungle_ground_root` | 172 |
+| `jungle_ground_tuft` (round 9 part 9, jungle path edges) | 160 |
 | `tundra_ground_clump` | 120 |

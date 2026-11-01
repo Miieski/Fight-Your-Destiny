@@ -60,6 +60,23 @@ local PropTextures = {
 		mine_rock = { Id = "rbxassetid://91114649053474", Tile = 24 },
 		mine_railbed = { Id = "rbxassetid://74954610355167", Tile = 18 },
 		mine_puddle = { Id = "rbxassetid://83839882413390", Tile = 10 },
+		-- Round 9 part 9, one set for the jungle (docs/prop_texture_guide.md "Jungle ground"): jungle_mossy = curbs and worn slabs, *_a, *_b, *_patch, *_fade = single Decals with soft
+		-- irregular edges (tools/JungleRound9.luau), not tiled. mossy_stone, jungle_soil and fringe_moss above and below are no longer laid anywhere.
+		jungle_cobble = { Id = "rbxassetid://110874152574057", Tile = 20 },
+		jungle_slab = { Id = "rbxassetid://85970919688074", Tile = 30 },
+		jungle_mossy = { Id = "rbxassetid://112795111286343", Tile = 20 },
+		jungle_dirt = { Id = "rbxassetid://82640824139863", Tile = 24 },
+		jungle_moss = { Id = "rbxassetid://116550932157396", Tile = 32 },
+		jungle_moss_a = { Id = "rbxassetid://73539599988601", Tile = 12 },
+		jungle_moss_b = { Id = "rbxassetid://109202300443888", Tile = 12 },
+		jungle_dirt_patch = { Id = "rbxassetid://110745150276560", Tile = 12 },
+		jungle_cobble_fade = { Id = "rbxassetid://75954844447846", Tile = 17 },
+		-- Round 9 parts 10 and 11, Tundra_2 lake and Tundra_3 ramps (docs/prop_texture_guide.md "Frozen lake", "Ice ramps"): lake_ice = alpha tile, the others single Decals
+		lake_ice = { Id = "rbxassetid://124183707345073", Tile = 72 },
+		lake_frost = { Id = "rbxassetid://114206935989316", Tile = 30 },
+		lake_slush = { Id = "rbxassetid://115216343129071", Tile = 30 },
+		lake_bubbles = { Id = "rbxassetid://85871143907717", Tile = 12 },
+		ramp_packed = { Id = "rbxassetid://100508224823369", Tile = 16 },
 		fringe_grass = { Id = "rbxassetid://103931416962184", Tile = 26 },
 		fringe_sand = { Id = "rbxassetid://132496380237105", Tile = 26 },
 		fringe_moss = { Id = "rbxassetid://100381723159476", Tile = 26 },

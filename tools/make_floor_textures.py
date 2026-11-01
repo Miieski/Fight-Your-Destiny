@@ -2,6 +2,8 @@
 
   python tools/make_floor_textures.py          writes docs/floor_textures/*.png and docs/floor_textures/sheet.png (preview)
   python tools/make_floor_textures.py --cave   writes only the mine images of Round 9 part 3
+  python tools/make_floor_textures.py --jungle writes only the jungle ground set of Round 9 part 9
+  python tools/make_floor_textures.py --tundra writes only the frozen lake and ice ramp images of Round 9 parts 10 and 11
 
 Solid ground: drawn in their real colours (Texture.Color3 tints the variants). Fringe: a band with an uneven alpha, laid along a path
 edge so grass / sand / moss / snow creeps over the path (alpha 0 on both long sides, so it never shows a seam). Overlays: alpha only.
@@ -138,7 +140,7 @@ def blades(im, seed, count, colors, length=(5, 11)):
 	return out.convert("RGB")
 
 
-def stones(seed, per_side, joint, palette, relief=0.2, jitter=0.3, rows=None, offset=False, moss=0.0):
+def stones(seed, per_side, joint, palette, relief=0.2, jitter=0.3, rows=None, offset=False, moss=0.0, joint_width=0.09):
 	"""Cobbles or slabs: a Voronoi cell per stone (Manhattan-free, wraps), soft bevel from the distance to the joint."""
 	rng = random.Random(seed)
 	rows = rows or per_side
@@ -176,7 +178,7 @@ def stones(seed, per_side, joint, palette, relief=0.2, jitter=0.3, rows=None, of
 				elif d < second:
 					second = d
 			edge = (math.sqrt(second) - math.sqrt(best)) / 2
-			t = min(1, edge / (S / per_side * 0.09))
+			t = min(1, edge / (S / per_side * joint_width))
 			shade = (1 + relief * (min(1, edge / (S / per_side * 0.3)) - 0.6)) * cell[3]
 			shade *= 1 + (grain[y][x] - 0.5) * 0.22
 			color = tuple(c * shade for c in cell[2])
@@ -436,6 +438,243 @@ def mine_puddle(seed):
 	return im
 
 
+def blob_points(x, y, r, k, a, seed, corners=9):
+	"""An uneven flat stone."""
+	wob = random.Random(seed)
+	points = []
+	for i in range(corners):
+		t = i / corners * math.tau
+		q = r * wob.uniform(0.82, 1.1)
+		px, py = math.cos(t) * q, math.sin(t) * q * k
+		points.append((x + px * math.cos(a) - py * math.sin(a), y + px * math.sin(a) + py * math.cos(a)))
+	return points
+
+
+def moss_wash(im, seed, amount, tones=("5f8f3e", "4a7a38"), strength=0.8):
+	"""Round 9 part 9: large soft moss areas over a stone image, the same two greens everywhere, tileable."""
+	field = stretch(fbm(seed, 3, 3))
+	detail = stretch(fbm(seed + 1, 12, 2))
+	a, b = hexrgb(tones[0]), hexrgb(tones[1])
+	source = im.convert("RGB")
+	limit = 1 - amount
+
+	def pixel(x, y):
+		base = source.getpixel((x, y))
+		t = max(0, min(1, (field[y][x] + (detail[y][x] - 0.5) * 0.18 - limit) / 0.1))
+		return mix(base, mix(a, b, detail[y][x]), t * strength)
+
+	return image_from(pixel)
+
+
+def soft_patch(seed, tones, edge=0.3, lobes=9, stretch_x=1.0, opacity=1.0):
+	"""Round 9 part 9: one patch for a Decal, not tiled: 3 large tones, an irregular outline, a soft edge, alpha 0 well inside the square."""
+	rng = random.Random(seed)
+	wobble = [rng.uniform(0.62, 1.0) for _ in range(lobes)]
+	warp = stretch(fbm(seed + 1, 5, 3))
+	tone = stretch(fbm(seed + 2, 4, 2))
+	fine = stretch(fbm(seed + 3, 24, 2))
+	colors = [hexrgb(t) for t in tones]
+	pixels = []
+	for y in range(S):
+		for x in range(S):
+			dx, dy = (x - S / 2) / (S / 2) / stretch_x, (y - S / 2) / (S / 2)
+			t = (math.atan2(dy, dx) / math.tau + 0.5) * lobes
+			i = int(t) % lobes
+			f = t - int(t)
+			f = f * f * (3 - 2 * f)
+			rim = lerp(wobble[i], wobble[(i + 1) % lobes], f) * 0.86
+			d = math.sqrt(dx * dx + dy * dy) / rim + (warp[y][x] - 0.5) * 0.5 + (fine[y][x] - 0.5) * 0.12
+			alpha = max(0, min(1, (1 - d) / edge))
+			alpha *= max(0, min(1, (1 - max(abs(x - S / 2), abs(y - S / 2)) / (S / 2)) / 0.08))
+			v = tone[y][x]
+			color = colors[0] if v < 0.38 else (colors[1] if v < 0.64 else colors[2])
+			if 0.33 < v < 0.43:
+				color = mix(colors[0], colors[1], (v - 0.33) / 0.1)
+			elif 0.59 < v < 0.69:
+				color = mix(colors[1], colors[2], (v - 0.59) / 0.1)
+			pixels.append(tuple(int(c) for c in color) + (int(alpha * 255 * opacity),))
+	im = Image.new("RGBA", (S, S))
+	im.putdata(pixels)
+	return im
+
+
+def cobble_fade(seed, palette, moss):
+	"""Round 9 part 9: loose cobbles for a Decal across the end of a path: packed at the bottom of the image, thinning out to nothing at the top."""
+	rng = random.Random(seed)
+	cell = 44
+	layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+	shade = Image.new("L", (S, S), 0)
+	stones_list = []
+	for row in range(6):
+		for col in range(7):
+			x = (col + (0.5 if row % 2 else 0)) * cell + rng.uniform(-5, 5) + 6
+			y = S - 14 - row * (cell - 8) + rng.uniform(-5, 5)
+			keep = 1.35 - max(0, (S - y) / S) * 1.6
+			side = min(x, S - x) / S
+			if rng.random() < keep and side > 0.03:
+				stones_list.append((x, y, rng.uniform(17, 23) * (0.72 + 0.28 * max(0, keep)), rng.uniform(0.72, 0.9), rng.uniform(0, 3.1), rng.choice(palette), rng.randrange(9999)))
+	draw_s = ImageDraw.Draw(shade)
+	draw_l = ImageDraw.Draw(layer)
+	for x, y, r, k, a, color, sd in stones_list:
+		draw_s.polygon(blob_points(x, y + 2.5, r * 1.04, k, a, sd), fill=120)
+	shade = shade.filter(ImageFilter.GaussianBlur(3))
+	for x, y, r, k, a, color, sd in stones_list:
+		draw_l.polygon(blob_points(x, y, r, k, a, sd), fill=hexrgb(color) + (255,))
+	alpha = layer.getchannel("A").filter(ImageFilter.GaussianBlur(1.3))
+	rgb = layer.convert("RGB").filter(ImageFilter.GaussianBlur(1.3))
+	mossy = stretch(fbm(seed + 2, 6, 3))
+	rgb = Image.frombytes("RGB", (S, S), bytes(int(c) for q in [mix(rgb.getpixel((x, y)), hexrgb(moss), max(0, (mossy[y][x] - 0.66) * 2.2)) for y in range(S) for x in range(S)] for c in q))
+	out = Image.new("RGBA", (S, S), (58, 44, 30, 0))
+	out.paste((58, 44, 30, 255), mask=shade)
+	top = rgb.convert("RGBA")
+	top.putalpha(alpha)
+	out.alpha_composite(top)
+	return out
+
+
+JUNGLE_STONE = ["8a9678", "7e8a6e", "96a082", "76826a"]
+JUNGLE_JOINT = "62705a"
+JUNGLE_MOSS = ("5f8f3e", "4a7a38", "3f6e36")
+
+
+def jungle_set():
+	"""The Round 9 part 9 images: one set for the whole jungle, 3-5 tones, soft low joints, same greens and browns (docs/prop_texture_guide.md "Jungle ground")."""
+	out = {}
+	out["jungle_cobble"] = stones(201, 5, JUNGLE_JOINT, JUNGLE_STONE, relief=0.1, jitter=0.2, offset=True, moss=0.32, joint_width=0.15)
+	out["jungle_slab"] = moss_wash(slabs(202, 3, 3, JUNGLE_JOINT, JUNGLE_STONE, 0.08), 212, 0.2)
+	out["jungle_mossy"] = moss_wash(stones(203, 4, JUNGLE_JOINT, JUNGLE_STONE, relief=0.1, jitter=0.22, offset=True, moss=0.4, joint_width=0.15), 213, 0.42)
+	dirt = base_ground(204, "7a5a3a", "967250", 0.12)
+	dirt = speckle(dirt, 214, 110, ["6a4e34", "a8865c", "84643f"], (1, 2.6), 0.6)
+	dirt = speckle(dirt, 224, 22, JUNGLE_STONE, (2.2, 4), 0.8)
+	out["jungle_dirt"] = speckle(dirt, 234, 26, ["5f8f3e", "4a7a38"], (1.2, 2.6), 0.55)
+	ground = base_ground(205, "2f7f3a", "4a9440", 0.08)
+	ground = moss_wash(ground, 215, 0.3, ("3f8a3a", "357c38"), 0.7)
+	ground = blades(ground, 225, 160, ["2f7436", "4f9c42", "3b8a3a"], (4, 7))
+	out["jungle_moss"] = speckle(ground, 235, 18, ["6c5a34", "5a4a2c"], (0.9, 1.8), 0.5)
+	out["jungle_moss_a"] = soft_patch(206, JUNGLE_MOSS, 0.3, 9)
+	out["jungle_moss_b"] = soft_patch(207, JUNGLE_MOSS, 0.26, 13)
+	out["jungle_dirt_patch"] = soft_patch(208, ("6a4e34", "7a5a3a", "8c6a46"), 0.42, 8, 1.0, 0.92)
+	out["jungle_cobble_fade"] = cobble_fade(209, JUNGLE_STONE, "5f8f3e")
+	return out
+
+
+def voronoi_lines(seed, cells, warp_amount=10):
+	"""Distance to the nearest cell border, in pixels, wrapped: 0 on a crack line."""
+	rng = random.Random(seed)
+	points = [(rng.uniform(0, S), rng.uniform(0, S)) for _ in range(cells)]
+	warp_x = fbm(seed + 1, 6, 2)
+	warp_y = fbm(seed + 2, 6, 2)
+	out = []
+	for y in range(S):
+		row = []
+		for x in range(S):
+			wx = x + (warp_x[y][x] - 0.5) * warp_amount * 2
+			wy = y + (warp_y[y][x] - 0.5) * warp_amount * 2
+			a, b = 1e18, 1e18
+			for px, py in points:
+				dx = abs(wx - px) % S
+				dy = abs(wy - py) % S
+				dx = min(dx, S - dx)
+				dy = min(dy, S - dy)
+				d = dx * dx + dy * dy
+				if d < a:
+					a, b = d, a
+				elif d < b:
+					b = d
+			row.append((math.sqrt(b) - math.sqrt(a)) / 2)
+		out.append(row)
+	return out
+
+
+def lake_ice(seed):
+	"""Round 9 part 10: one tile, alpha only, over the facets that hold the depth gradient: soft frost, deep cracks (a blue shadow), fine white cracks of 2 depths, trapped bubbles."""
+	big = voronoi_lines(seed, 7, 12)
+	small = voronoi_lines(seed + 10, 26, 7)
+	mask = stretch(fbm(seed + 20, 4, 3))
+	frost = stretch(fbm(seed + 21, 5, 4))
+	pixels = []
+	for y in range(S):
+		for x in range(S):
+			color, alpha = (232, 246, 255), 0.0
+			# frost: pale, large, soft
+			alpha = max(0, frost[y][x] - 0.6) * 0.7
+			# deep crack: a wide blue shadow beside the line, under the ice
+			sy, sx = (y + 3) % S, (x + 2) % S
+			deep = max(0, 1 - big[sy][sx] / 6)
+			if deep > 0:
+				blue = (30, 84, 158)
+				k = deep * deep * 0.55
+				na = k + alpha * (1 - k)
+				color = mix(color, blue, k / max(na, 0.001))
+				alpha = na
+			# fine lines, the second family only in places
+			line = max(0, 1 - big[y][x] / 1.5)
+			fine = max(0, 1 - small[y][x] / 1.1) * max(0, min(1, (mask[y][x] - 0.42) / 0.12)) * 0.6
+			white = max(line * 0.9, fine)
+			if white > 0:
+				na = white + alpha * (1 - white)
+				color = mix(color, (246, 252, 255), white / max(na, 0.001))
+				alpha = na
+			pixels.append(tuple(int(c) for c in color) + (int(min(1, alpha) * 255),))
+	im = Image.new("RGBA", (S, S))
+	im.putdata(pixels)
+	# trapped bubbles, wrapped
+	rng = random.Random(seed + 30)
+	spots = []
+	for _ in range(5):
+		cx, cy = rng.randrange(S), rng.randrange(S)
+		for _ in range(9):
+			spots.append((cx + rng.gauss(0, 9), cy + rng.gauss(0, 9), rng.uniform(0.7, 1.9)))
+	layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+
+	def paint(draw, ox, oy):
+		for x, y, r in spots:
+			draw.ellipse((x + ox - r, y + oy - r, x + ox + r, y + oy + r), fill=(240, 250, 255, 150))
+
+	wrap_draw(layer, paint)
+	im.alpha_composite(layer)
+	return im
+
+
+def bubbles(seed):
+	"""Round 9 part 10: one cluster of air trapped in the ice, for a Decal: pale rings, soft, rising in a line."""
+	rng = random.Random(seed)
+	layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+	draw = ImageDraw.Draw(layer)
+	for _ in range(26):
+		a, q = rng.uniform(0, math.tau), rng.random() ** 0.7 * 92
+		x, y = S / 2 + math.cos(a) * q, S / 2 + math.sin(a) * q * 0.7
+		r = rng.uniform(3, 11) * (1 - q / 150)
+		draw.ellipse((x - r, y - r, x + r, y + r), fill=(214, 238, 252, 110), outline=(246, 252, 255, 210), width=2)
+		draw.ellipse((x - r * 0.5, y - r * 0.6, x - r * 0.1, y - r * 0.2), fill=(255, 255, 255, 220))
+	return layer.filter(ImageFilter.GaussianBlur(0.8))
+
+
+def ramp_packed(seed):
+	"""Round 9 part 11: packed snow over ice, tiled on the slope: pale snow, blue worn tracks, low contrast."""
+	base = base_ground(seed, "cfe0f4", "eaf3fc", 0.05)
+	tracks = stretch(fbm(seed + 1, 4, 3))
+	source = base.convert("RGB")
+	ice = hexrgb("a8cdee")
+
+	def pixel(x, y):
+		t = max(0, min(1, (tracks[y][x] - 0.58) / 0.16)) * 0.65
+		return mix(source.getpixel((x, y)), ice, t)
+
+	return speckle(image_from(pixel), seed + 2, 90, ["c0d6ee", "ffffff"], (1, 2.6), 0.5)
+
+
+def tundra_set():
+	"""The Round 9 parts 10 and 11 images."""
+	return {
+		"lake_ice": lake_ice(301),
+		"lake_frost": soft_patch(302, ("e4f2fc", "d4eafa", "f2f9ff"), 0.55, 11, 1.0, 0.85),
+		"lake_slush": soft_patch(303, ("f4f8fe", "e2eefa", "cfe2f4"), 0.4, 13, 1.0, 0.95),
+		"lake_bubbles": bubbles(304),
+		"ramp_packed": ramp_packed(305),
+	}
+
+
 def cave_set():
 	"""The Round 9 part 3 images (the Round 8 set stays as uploaded)."""
 	bed = base_ground(75, "3c3028", "54443a", 0.16)
@@ -496,9 +735,9 @@ def build():
 
 
 if __name__ == "__main__":
-	if len(sys.argv) > 1 and sys.argv[1] == "--cave":
+	if len(sys.argv) > 1 and sys.argv[1] in ("--cave", "--jungle", "--tundra"):
 		os.makedirs(OUT, exist_ok=True)
-		for name, im in cave_set().items():
+		for name, im in {"--cave": cave_set, "--jungle": jungle_set, "--tundra": tundra_set}[sys.argv[1]]().items():
 			im.save(os.path.join(OUT, name + ".png"), optimize=True)
 			print(name)
 	else:
