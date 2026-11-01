@@ -69,7 +69,7 @@ local PLANS = {
 		{ root = function() return sub("Swamp", "Swamp_3").Decor.Ground end, names = { "Path", "Square" }, id = dirt.id, tile = dirt.tile, alpha = dirt.alpha },
 		{ root = function() return sub("Swamp", "Swamp_4").Decor.Pools end, names = { "PoolRim" }, id = Textures.BossRoomBrick.swamp_wall_stone, tile = 8, alpha = 0.2 },
 	},
-	Caves = { { root = function() return sub("Plains", "Plains_4").Decor.Mine end, names = { "Footings" }, id = Ground.cave_rock.Id, tile = Ground.cave_rock.Tile, alpha = 0.35, lift = 0.75 } },
+	Caves = { { root = function() return sub("Plains", "Plains_4").Decor.Mine end, names = { "Footings" }, id = Ground.mine_dirt.Id, tile = Ground.mine_dirt.Tile, alpha = 0.35, lift = 0.75 } },
 	BossRooms = {
 		{ root = function() return ServerStorage.BossArenas.Plains end, names = { "Dais", "DaisStep", "PlatformRim", "Floor" }, id = Ground.cave_rock.Id, tile = Ground.cave_rock.Tile, alpha = 0.35, lift = 0.6 },
 		{ root = function() return ServerStorage.BossArenas.Tundra end, names = { "DaisStep", "Step" }, id = Ground.frost_slabs.Id, tile = Ground.frost_slabs.Tile, alpha = 0.3 },

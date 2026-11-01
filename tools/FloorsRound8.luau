@@ -194,7 +194,23 @@ function F.tundra_ground_clump(): Model
 	return finish(m, "tundra_ground_clump", list)
 end
 
+-- Round 9 part 3: 3 worn flat stones, sunk in the dirt of the mine
+function F.mine_ground_flagstones(): Model
+	local m = Instance.new("Model")
+	m.Name = "mine_ground_flagstones"
+	local rng = Random.new(823)
+	local list = {}
+	for i = 1, 3 do
+		local a = i / 3 * TAU + rng:NextNumber(-0.4, 0.4)
+		local r = rng:NextNumber(0.9, 1.5)
+		local size = Vector3.new(rng:NextNumber(1.8, 2.8), 0.34, rng:NextNumber(1.5, 2.2))
+		table.insert(list, H.chamfered(size, CFrame.new(math.cos(a) * r, -0.05, math.sin(a) * r) * CFrame.Angles(0, rng:NextNumber(0, TAU), 0), hex(pick(rng, { "6e6256", "625648", "786a5c" })), { "topSides" }, 0.1))
+	end
+	return finish(m, "mine_ground_flagstones", list)
+end
+
 local BUILD = {
+	mine_ground_gravel = function() return pebbles("mine_ground_gravel", 822, "8a7a68", "5c4c3e", 5, 1.6) end,
 	hub_ground_curb = function() return curb("hub_ground_curb", 811, { "c8bca8", "bdb09c", "d4c9b6", "b0a490" }, nil, "6fa84a", { key = "pavers", tint = "e8decc", alpha = 0.3 }) end,
 	hub_ground_pebbles = function() return pebbles("hub_ground_pebbles", 812, "b8b0a0", "8c8478", 4, 1.4) end,
 	plains_ground_curb = function() return curb("plains_ground_curb", 813, { "9c7c52", "b08a58", "8c6e48", "c09a68" }, nil, "4f8a34", { key = "dirt", tint = "e8d8c0", alpha = 0.3 }) end,
@@ -210,7 +226,7 @@ local BUILD = {
 F.IDS = {
 	"hub_ground_curb", "hub_ground_pebbles", "plains_ground_curb", "plains_ground_pebbles", "plains_ground_tuft", "plains_ground_flowers",
 	"desert_ground_curb", "desert_ground_chips", "desert_ground_ripple", "jungle_ground_curb", "jungle_ground_fern", "jungle_ground_root",
-	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "beach_ground_curb", "canyon_ground_curb",
+	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "beach_ground_curb", "canyon_ground_curb", "mine_ground_flagstones", "mine_ground_gravel",
 }
 
 function F.build(id: string): string

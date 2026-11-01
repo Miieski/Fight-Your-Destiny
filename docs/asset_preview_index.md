@@ -221,6 +221,8 @@ Nature biome: Plains, Beach, Forest, Cave. Block `ByZone.01_Plains`, screenshot 
 | `ladder` | prop | medium | 1 | yes | improved | none (done) |
 | `plains_ground_curb` | prop | medium | 71 | yes | improved | none (done) |
 | `beach_ground_curb` | prop | medium | 30 | yes | improved | none (done) |
+| `mine_ground_flagstones` | prop | small | 15 | yes | new | none (done) |
+| `mine_ground_gravel` | prop | small | 44 | yes | new | none (done) |
 | `plains_ground_pebbles` | prop | small | 54 | yes | improved | none (done) |
 | `plains_prop_fallen_log_large` | prop | large | 5 | yes | old | redesign (low-poly pass) |
 | `plains_prop_mine_support` | prop | large | 5 | yes | improved | none (done) |

@@ -3752,7 +3752,7 @@ Layers, in order:
 | Canyon (Desert_3) | `sand` tint #F5CDA0 | `slabs` tint #F5D7AF | `cracks` | `fringe_sand` tint | same, more chips | |
 | Jungle | `jungle_soil` 32, alpha .3 | `mossy_stone` 16 | `leaf_litter` 22 | `fringe_moss` 7 | `jungle_ground_curb`, `_fern`, `_root`, `plains_ground_pebbles` | stone #8C9484 #7C8676 #9AA090, moss #5F8F3E, joint #3E4A34 |
 | Tundra | `snow` 30 on each Facet, tinted with the Facet's own colour | `frost_slabs` 18 | `footprints` strip beside the path | `fringe_snow` 8 | `tundra_ground_curb`, `_clump`, `_chips` | slabs #CFE0F2 #DCEBF8 #C4D8EE, joint #9CB4D0 |
-| Plains_4 cave | `cave_rock` 28 (a light touch, indoors) | - | - | - | - | stone #757080, joint #4A4654 |
+| Plains_4 cave (round 9: `mine_dirt`, see Mine cavern) | `cave_rock` 28 (a light touch, indoors) | - | - | - | - | stone #757080, joint #4A4654 |
 
 Desert_4, Jungle_4, Tundra_4: floors kept (their brick floors date from rounds 6-7). Tundra_2 and Tundra_3 have no path part: the snow and the details only, along the line from the
 entrance to the gate. Hills, mountains and the Hub beach stay flat colours: far surfaces, and the low-poly facets read well as they are.
@@ -3776,8 +3776,37 @@ No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `
 | SnowLip | `snow` 30 | own | | | Tundra_3 |
 | Shore, PathShore, Island, Path, Clearing, Square | `dirt` 18 | own | | | Swamp_1-3 (the Swamp had no ground texture) |
 | PoolRim | `swamp_wall_stone` 8 | own | | | Swamp_4 |
-| Mine_Support Footings | `cave_rock` 28 | own | | | Plains_4 cave |
+| Mine_Support Footings | `mine_dirt` 30 | own | | | Plains_4 cave |
 | Dais, DaisStep, PlatformRim, Floor | `cave_rock` 28 | own | | | Plains boss room |
 | DaisStep, Step | `frost_slabs` 18 | own | | | Tundra boss room |
 | MiniDais, Plinth | `slabs` 18 | own | | | Desert boss room |
 | Hills Facet | `grass` 34 | own | | | Plains_1, Plains_3 (the grass banks, images 03 and 04) |
+
+## Mine cavern (owner task round 9 part 3, 2026-11-01)
+
+Plains_4, `tools/CaveRound9.luau`. Natural mine: warm brown-grey rock, packed dirt, no violet. 3 images are new; the shape of the cavern is the old shell.
+
+Palette recipe. Facet colours, bottom to top; the layers tilt and wave (`y + 3.5 sin(2a + 0.7) + 2 sin(5a) + 1.8 sin(z / 23)`), each triangle takes one tone of its layer:
+
+| layer, up to y | tones | role |
+|---|---|---|
+| 7 | #3F342B #463A30 #3A3029 | dark damp foot |
+| 13 | #54463A #5C4C3E | lower wall |
+| 19 | #74604C #6C5A48 | brown |
+| 23 | #7A746A #6E685E | grey |
+| 31 | #7C664E #705C48 | brown |
+| 35 | #5A4C40 #544840 | dark seam |
+| 44 | #6F6A60 #79726A | grey |
+| top | #4E443C #564A40 #483E36 | dark crown |
+
+| item | how |
+|---|---|
+| Walls | the 576 facets of `CaveShell` recoloured, shape and colliders unchanged. `mine_rock` (tile 24), an alpha image: soft patches, cracks, gold and copper flecks along a vein. On 60 % of the triangles under y 40 (`RockTex`, inner face), so the strata colours stay |
+| Tunnel | 480 wedges in `Decor.MineRock.Tunnel`: rings along the corridor, half width 15.5-18, ceiling 25.8 just above the beams, a collar opening towards the cavern. `TunnelWallE`, `TunnelWallW`, `TunnelCeiling` stay where they were, Transparency 1, still colliding |
+| Buttresses | 6 ribs, 192 wedges, `Decor.MineRock.Buttresses`, stuck on the shell by raycast, no collision |
+| Floor | `mine_dirt` tile 30, tint #ECE8E2, `macro_blotch` over it (ZIndex 2). `mine_railbed`, a soft dark band under the rails, on a 132 x 11 plate. Flagstones `mine_ground_flagstones` x 15 (#6E6256 #625648 #786A5C), `mine_ground_gravel` x 44, damp spots `mine_puddle` x 9 as Decals, all in `Decor.FloorDetail` |
+| Light | preset `Plains_4`: Ambient and OutdoorAmbient #968A7A (was the blue #8292B0, which made the stone purple), Brightness 1.2, Atmosphere #806E5A, ColorCorrection tint #FFFAF4, saturation -0.04. 14 warm pools #FFC88E in `Decor.MineRock.LightPools`: 3 torches (0.75, range 32), 5 gold ores and the far minecart (0.6, range 34-36), 5 mine supports (0.25, range 18: the tunnel is narrow) |
+| Rocks, spikes, pillars | Variant `Mine` of the templates (browns), the other zones keep their colours. `gate_mine` RockFace #8A7864 #7C6C5A #94806A, so the mouth is the same rock outside and inside |
+| Crystals | 13 scaled down where they stand: the 4 at the portal x 0.4, 2 x 0.5, 7 blue ores x 0.6. Their light 12 / 0.7 in the template |
+
+Don't: long strata ledges along the wall. Tried twice, on a rough shell they hang in the air and read as planks.

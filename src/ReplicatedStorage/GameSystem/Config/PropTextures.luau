@@ -44,6 +44,11 @@ local PropTextures = {
 		snow = { Id = "rbxassetid://87452768020104", Tile = 30 },
 		frost_slabs = { Id = "rbxassetid://76345190253957", Tile = 18 },
 		cave_rock = { Id = "rbxassetid://112765889342735", Tile = 28 },
+		-- Round 9 part 3, the mine of Plains_4: mine_rock = alpha overlay over the strata colours of the facets; mine_railbed = band; mine_puddle = one Decal
+		mine_dirt = { Id = "rbxassetid://77292448422877", Tile = 30 },
+		mine_rock = { Id = "rbxassetid://91114649053474", Tile = 24 },
+		mine_railbed = { Id = "rbxassetid://74954610355167", Tile = 18 },
+		mine_puddle = { Id = "rbxassetid://83839882413390", Tile = 10 },
 		fringe_grass = { Id = "rbxassetid://103931416962184", Tile = 26 },
 		fringe_sand = { Id = "rbxassetid://132496380237105", Tile = 26 },
 		fringe_moss = { Id = "rbxassetid://100381723159476", Tile = 26 },

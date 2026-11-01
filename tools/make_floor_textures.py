@@ -1,6 +1,7 @@
 """Round 8 part 7: the tileable ground textures (256 px, soft shading, low-mid poly look). No external image, all drawn here.
 
   python tools/make_floor_textures.py          writes docs/floor_textures/*.png and docs/floor_textures/sheet.png (preview)
+  python tools/make_floor_textures.py --cave   writes only the mine images of Round 9 part 3
 
 Solid ground: drawn in their real colours (Texture.Color3 tints the variants). Fringe: a band with an uneven alpha, laid along a path
 edge so grass / sand / moss / snow creeps over the path (alpha 0 on both long sides, so it never shows a seam). Overlays: alpha only.
@@ -8,6 +9,7 @@ edge so grass / sand / moss / snow creeps over the path (alpha 0 on both long si
 import math
 import os
 import random
+import sys
 
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -324,6 +326,128 @@ def sand(seed, low, high):
 	return image_from(pixel)
 
 
+def mine_dirt(seed):
+	"""Round 9 part 3: packed dirt and gravel with embedded stones, warm brown-grey, low contrast, soft edges."""
+	dirt = base_ground(seed, "6a5642", "8c755a", 0.14)
+	rng = random.Random(seed + 1)
+	stones_list = [(rng.randrange(S), rng.randrange(S), rng.uniform(5, 11), rng.uniform(0.55, 0.85), rng.uniform(0, 3.1), rng.choice(["7c6b58", "857460", "726250", "8c7a64"])) for _ in range(14)]
+	shade = Image.new("L", (S, S), 0)
+	top = Image.new("RGBA", (S, S), (125, 107, 86, 0))
+
+	def blob(x, y, r, k, a, grow):
+		"""An uneven flat stone, 9 corners."""
+		wob = random.Random(int(x * 7 + y))
+		points = []
+		for i in range(9):
+			t = i / 9 * math.tau
+			q = (r + grow) * wob.uniform(0.82, 1.1)
+			px, py = math.cos(t) * q, math.sin(t) * q * k
+			points.append((x + px * math.cos(a) - py * math.sin(a), y + px * math.sin(a) + py * math.cos(a)))
+		return points
+
+	def paint_shade(draw, ox, oy):
+		for x, y, r, k, a, _ in stones_list:
+			draw.polygon(blob(x + ox, y + oy + 1.5, r, k, a, 0.4), fill=26)
+
+	def paint_top(draw, ox, oy):
+		for x, y, r, k, a, color in stones_list:
+			draw.polygon(blob(x + ox, y + oy, r, k, a, 0), fill=hexrgb(color) + (255,))
+
+	wrap_draw(shade, paint_shade)
+	wrap_draw(top, paint_top)
+	shade = blur_wrap(shade, 3)
+	dark = Image.new("RGB", (S, S), (54, 42, 32))
+	out = Image.composite(dark, dirt, shade)
+	alpha = blur_wrap(top.getchannel("A"), 1.8)
+	top.putalpha(alpha)
+	out = out.convert("RGBA")
+	out.alpha_composite(top)
+	out = speckle(out.convert("RGB"), seed + 2, 150, ["5c4a38", "4e3e30", "a08a70", "8c7a64"], (0.8, 2), 0.7)
+	return speckle(out, seed + 3, 34, ["6e6458", "827868", "564a3e"], (2, 3.6), 0.85)
+
+
+def mine_rock_overlay(seed):
+	"""Round 9 part 3: alpha only, over facets that keep their own strata colour: soft patches, cracks, little copper and gold flecks along a vein."""
+	rng = random.Random(seed)
+	field = stretch(fbm(seed + 1, 4, 3))
+	layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+	layer.putdata([(30, 24, 18, int(max(0, v - 0.55) * 110)) if v > 0.55 else (230, 214, 190, int(max(0, 0.42 - v) * 80)) for row in field for v in row])
+	lines = []
+	for _ in range(6):
+		x, y, a = rng.randrange(S), rng.randrange(S), rng.uniform(0, math.tau)
+		points = [(x, y)]
+		for _ in range(rng.randrange(4, 8)):
+			a += rng.uniform(-0.8, 0.8)
+			x, y = x + math.cos(a) * rng.uniform(10, 24), y + math.sin(a) * rng.uniform(10, 24)
+			points.append((x, y))
+		lines.append((points, rng.choice((1, 2, 2, 3))))
+	cracks = Image.new("L", (S, S), 0)
+
+	def paint(draw, ox, oy):
+		for points, width in lines:
+			draw.line([(p[0] + ox, p[1] + oy) for p in points], fill=75, width=width)
+
+	wrap_draw(cracks, paint)
+	cracks = blur_wrap(cracks, 0.7)
+	ink = Image.new("RGBA", (S, S), (26, 20, 16, 255))
+	ink.putalpha(cracks)
+	layer.alpha_composite(ink)
+	veins = []
+	for _ in range(2):
+		x, y, a = rng.randrange(S), rng.randrange(S), rng.uniform(0, math.tau)
+		for _ in range(30):
+			a += rng.uniform(-0.25, 0.25)
+			x, y = x + math.cos(a) * 5, y + math.sin(a) * 5
+			if rng.random() < 0.7:
+				veins.append((x + rng.uniform(-3, 3), y + rng.uniform(-3, 3), rng.uniform(1, 2.4), rng.choice(["c8843c", "b87434", "e8c050", "dca848"])))
+	glints = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+
+	def paint_veins(draw, ox, oy):
+		for x, y, r, color in veins:
+			draw.ellipse((x + ox - r, y + oy - r, x + ox + r, y + oy + r), fill=hexrgb(color) + (255,))
+
+	wrap_draw(glints, paint_veins)
+	layer.alpha_composite(glints)
+	return layer
+
+
+def mine_puddle(seed):
+	"""Round 9 part 3: one damp spot for a Decal, not tiled: dark wet ground, a soft uneven edge, a thin light rim."""
+	rng = random.Random(seed)
+	wobble = [rng.uniform(0.75, 1.05) for _ in range(9)]
+	field = stretch(fbm(seed + 1, 6, 3))
+	pixels = []
+	for y in range(S):
+		for x in range(S):
+			dx, dy = (x - S / 2) / (S / 2), (y - S / 2) / (S / 2)
+			t = (math.atan2(dy, dx) / math.tau + 0.5) * len(wobble)
+			i = int(t) % len(wobble)
+			f = t - int(t)
+			f = f * f * (3 - 2 * f)
+			rim = lerp(wobble[i], wobble[(i + 1) % len(wobble)], f)
+			d = math.sqrt(dx * dx + dy * dy) / rim + (field[y][x] - 0.5) * 0.3
+			alpha = min(1, max(0, (0.92 - d) / 0.22))
+			wet = min(1, max(0, (0.62 - d) / 0.12))
+			color = mix((70, 56, 44), (60, 58, 56), wet)
+			color = mix(color, (130, 126, 116), 0.3 * max(0, 1 - abs(d - 0.6) / 0.04))
+			pixels.append(tuple(int(c) for c in color) + (int(alpha * (120 + 70 * wet)),))
+	im = Image.new("RGBA", (S, S))
+	im.putdata(pixels)
+	return im
+
+
+def cave_set():
+	"""The Round 9 part 3 images (the Round 8 set stays as uploaded)."""
+	bed = base_ground(75, "3c3028", "54443a", 0.16)
+	bed = speckle(bed, 76, 240, ["2c221c", "6a5a4c", "4a3c32", "7c6c5c"], (1, 3), 0.85)
+	return {
+		"mine_dirt": mine_dirt(72),
+		"mine_rock": mine_rock_overlay(73),
+		"mine_railbed": fringe(bed, 77),
+		"mine_puddle": mine_puddle(74),
+	}
+
+
 def build():
 	os.makedirs(OUT, exist_ok=True)
 	out = {}
@@ -372,4 +496,10 @@ def build():
 
 
 if __name__ == "__main__":
-	build()
+	if len(sys.argv) > 1 and sys.argv[1] == "--cave":
+		os.makedirs(OUT, exist_ok=True)
+		for name, im in cave_set().items():
+			im.save(os.path.join(OUT, name + ".png"), optimize=True)
+			print(name)
+	else:
+		build()
