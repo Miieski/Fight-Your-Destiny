@@ -262,7 +262,8 @@ scaling), Mind (Esprit) = max mana and mana regen, Faith (Foi) = healing (`Faith
 ### Currencies
 * **Gold:** from killing enemies, selling trophies, quests and rewards. Never lost on death (since 2026-10-13);
   lost entirely on Rebirth. Values scale x10 per zone.
-* **Diamonds:** premium currency. Dropped ONLY by mini-bosses and bosses, and sold for Robux.
+* **Diamonds:** premium currency. Earned ONLY from mini-bosses and bosses, and sold for Robux. Every victory pays 3 x zone index (mini-boss) or
+  10 x zone index (boss), to each player who qualifies, plus a random bonus drop (`docs/boss_rewards.md`, `Config/BossRewards`).
   **Kept on Rebirth.** Uses: Diamond eggs, Rebirth Protection, Gold boosts, skins (the weapon rarity reroll was removed on
   2026-10-13).
 * **Rebirth Credits:** earned on Rebirth (3 each), spent in the Rebirth Shop.
@@ -484,8 +485,8 @@ Changes for this design:
   `docs/boss_patterns_document.txt` (a clean telegraph for every damaging attack).
 * **Boss HP scaling by group size (default):** `bossHP x (1 + 0.6 x (players - 1))`.
 * **Rewards:** every player who dealt **at least 5% of the boss's total HP** receives their own
-  Gold, loot rolls and diamond chance (rolled **separately per player**). The first time a
-  player beats a boss, they also receive its **key** (guaranteed).
+  Gold, diamonds (full amount, every victory, `docs/boss_rewards.md`), loot rolls and bonus diamond chance (rolled
+  **separately per player**). The first time a player beats a boss, they also receive its **key** (guaranteed).
 * **Death in a boss arena (default):** the player loses nothing (no death penalty) and is removed from
   the fight (spectates until it ends), then returns to the hub. If everyone dies, the arena is
   destroyed and players go back to the hub.

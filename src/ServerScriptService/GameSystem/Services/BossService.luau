@@ -7,8 +7,9 @@
 --   invulnerable) -> boss dies -> rewards screen -> 15 s later everyone is back at the Entrance of sub-zone 4.
 --   Boss HP x (1 + 0.6 x (players - 1)). A dead player loses 35% Gold (ZoneService) and watches as a spectator until
 --   the end; if everyone is dead the room closes.
---   Rewards: for the boss and for each mini-boss, every player who dealt at least 5% of its HP receives, rolled
---   separately: Gold (x Gold multiplier), the loot roll (mini 4%, boss 6%, x Loot Luck), diamonds (mini 15%:
+--   Rewards: for the boss and for each mini-boss, every player of the room who dealt at least 5% of its HP receives, rolled
+--   separately: Gold (x Gold multiplier), the Diamonds of Config/BossRewards (every victory, the full amount, once per enemy of
+--   the fight per player: docs/boss_rewards.md), the loot roll (mini 4%, boss 6%, x Loot Luck), bonus diamonds (mini 15%:
 --   2 + z / 3 + z, boss 40%: 10 + 3z, chance x (1 + Diamond Luck)) and, the first time they beat this boss, its Key.
 --   BossService:Enter(player, zoneId, withTeam, admin?) / Leave(player, stay?) / RoomOf(player)
 --   Hooks for the boss patterns (next step): Config/Bosses.Patterns, BossService.OnEnrage(room, state) at 50% HP.
@@ -16,6 +17,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
+local BossRewards = require(ReplicatedStorage.GameSystem.Config.BossRewards)
 local Bosses = require(ReplicatedStorage.GameSystem.Config.Bosses)
 local DoorAnimations = require(ReplicatedStorage.GameSystem.Config.DoorAnimations)
 local Enemies = require(ReplicatedStorage.GameSystem.Config.Enemies)
@@ -47,6 +49,7 @@ export type Room = {
 	group: any,
 	spectators: { [Player]: boolean },
 	rewards: { [Player]: { Item } },
+	paid: { [string]: { [Player]: boolean } }, -- [enemy id] = who was rewarded for it in this fight (BossRewards.settle)
 	connections: { RBXScriptConnection },
 	doorParts: { BasePart },
 	doorPrompt: ProximityPrompt?,
@@ -239,20 +242,32 @@ local function addItem(room: Room, player: Player, item: Item)
 	table.insert(room.rewards[player], item)
 end
 
--- Rewards of one mini-boss / boss for every player with at least 5% of its HP in damage, rolled per player.
+-- Rewards of one mini-boss / boss for every player with at least 5% of its HP in damage, rolled per player. Once per enemy per
+-- player: a repeated call finds them in room.paid and gives nothing, Gold and rolls included. Save() yields, hence the list.
 local function rewardEnemy(room: Room, state: any)
 	local def = state.def
 	local zone = Zones.ById[room.zoneId]
 	local roomDefs = Enemies.BossRoom[room.zoneId]
 	local isBoss = def.Tier == "boss"
+	local earners = {}
 	for _, player in ipairs(room.players) do
 		local dealt = state.damage[player] or 0
+		if DataService:Get(player) and player.Parent and dealt >= state.maxHP * Bosses.REWARD_MIN_SHARE then
+			table.insert(earners, player)
+		end
+	end
+	room.paid[def.Id] = room.paid[def.Id] or {}
+	for player, diamonds in pairs(BossRewards.settle(room.paid[def.Id], room.zoneId, def.Tier, earners)) do
 		local profile = DataService:Get(player)
-		if profile and player.Parent and dealt >= state.maxHP * Bosses.REWARD_MIN_SHARE then
+		if profile and player.Parent then
 			local stats = Stats.compute(profile, { now = os.time() })
 			local gold = math.max(1, math.floor(def.Gold * (stats.GoldMult or 1) * Playtest.GoldMultiplier + 0.5))
 			DataService:AddGold(player, gold)
 			addItem(room, player, { Text = `{Format.number(gold)} Gold ({def.Name})`, Icon = "Gold" })
+			if diamonds > 0 then
+				DataService:AddDiamonds(player, diamonds)
+				addItem(room, player, { Text = `{diamonds} Diamonds ({def.Name})`, Icon = "Diamond" })
+			end
 			RewardService.progress(player, "EarnGold", gold)
 			RewardService.progress(player, if isBoss then "BeatBoss" else "KillMiniBoss", 1)
 			IndexService:Discover(player, def.Id)
@@ -266,7 +281,7 @@ local function rewardEnemy(room: Room, state: any)
 			if rng:NextNumber() < chance then
 				local amount = if isBoss then 10 + 3 * zone.Index elseif def == roomDefs.Mini1 then 2 + zone.Index else 3 + zone.Index
 				DataService:AddDiamonds(player, amount)
-				addItem(room, player, { Text = `{amount} Diamonds`, Icon = "Diamond" })
+				addItem(room, player, { Text = `{amount} Bonus Diamonds ({def.Name})`, Icon = "Diamond" })
 			end
 			if isBoss and not (profile.Keys and profile.Keys[room.zoneId]) then
 				local keys = table.clone(profile.Keys or {})
@@ -406,7 +421,7 @@ local function createRoom(zoneId: string): Room?
 	model.Parent = workspace:FindFirstChild("BossArenas") or workspace
 	local room: Room = {
 		key = `boss_{zoneId}_{counter}`, zoneId = zoneId, model = model, slot = slot, players = {}, phase = "Lobby",
-		scale = 1, group = nil, spectators = {}, rewards = {}, connections = {}, doorParts = {}, doorPrompt = nil,
+		scale = 1, group = nil, spectators = {}, rewards = {}, paid = {}, connections = {}, doorParts = {}, doorPrompt = nil,
 		enraged = false, closing = false,
 	}
 	local door = model:FindFirstChild("Door")

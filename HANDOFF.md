@@ -57,8 +57,8 @@ an NPC combat game with a zone-progression and rebirth loop.
   more, plus an enrage phase at 50% HP. The Void Dragon has 4 patterns.
 * **Currencies:**
   * **Coins** - dropped by every enemy; values grow x10 per zone.
-  * **Diamonds** - premium currency; dropped ONLY by mini-bosses (15%) and bosses (40%),
-    amounts grow slowly (+z per zone), and sold for Robux (Developer Products).
+  * **Diamonds** - premium currency; from mini-bosses and bosses only, and sold for Robux (Developer Products). Every victory pays
+    3 x zone (mini-boss) or 10 x zone (boss) to each player, plus the old random bonus (15% / 40%): `docs/boss_rewards.md`.
 * **Loot:** each enemy has one possible loot item (corpse, egg, weapon, armor, material,
   trophy). Drop chance: 2% normal enemies (identical for all), 4% mini-bosses, 6% bosses.
   8 rarity tiers: Common, Uncommon, Rare, Epic, Legendary, Mythic, Divine, Secret.

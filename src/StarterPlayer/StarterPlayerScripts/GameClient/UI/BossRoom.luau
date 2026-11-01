@@ -174,7 +174,8 @@ local function showRewards(data: any)
 	local compact = Theme.isCompact()
 	local width = if compact then 420 else 520
 	local rows = math.max(1, #items)
-	local height = 150 + math.min(rows, 7) * 40
+	local visible = math.min(rows, if compact then 5 else 7) -- a phone in landscape has room for 5 rows, the list scrolls
+	local height = 150 + visible * 40
 	local frame = Panel.new({ Name = "BossRewards", Size = UDim2.fromOffset(width, height), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Parent = root })
 	rewards = frame
 	Theme.text({ Font = "Title", Text = "Victory!", TextSize = 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -20, 0, 38), Position = UDim2.fromOffset(10, 8), Parent = frame })
@@ -182,7 +183,7 @@ local function showRewards(data: any)
 	local list = Instance.new("ScrollingFrame")
 	list.BackgroundTransparency = 1
 	list.BorderSizePixel = 0
-	list.Size = UDim2.new(1, -24, 0, math.min(rows, 7) * 40)
+	list.Size = UDim2.new(1, -24, 0, visible * 40)
 	list.Position = UDim2.fromOffset(12, 74)
 	list.CanvasSize = UDim2.fromOffset(0, rows * 40)
 	list.ScrollBarThickness = 6
@@ -193,7 +194,16 @@ local function showRewards(data: any)
 	if #items == 0 then
 		Theme.text({ Text = "No reward: deal at least 5% of an enemy's HP to share its rewards.", TextSize = 18, Wrapped = true, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 36), Parent = list })
 	end
-	for _, item in ipairs(items) do
+	-- the rare loot and the key first: with the gold and diamond lines the list can scroll, and they must not be the hidden rows
+	local ordered = {}
+	for _, wanted in ipairs({ true, false }) do
+		for _, item in ipairs(items) do
+			if (item.Icon == "Key" or typeof(item.Rarity) == "number") == wanted then
+				table.insert(ordered, item)
+			end
+		end
+	end
+	for _, item in ipairs(ordered) do
 		local row = Instance.new("Frame")
 		row.BackgroundTransparency = 1
 		row.Size = UDim2.new(1, -8, 0, 36)

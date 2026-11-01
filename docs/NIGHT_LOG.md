@@ -1,5 +1,32 @@
 # ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
 
+- PART 6, diamonds from mini-bosses and bosses (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_224447_before_r9_part6`. New: `Config/BossRewards.luau`, `docs/boss_rewards.md` (table, rules). Sheet `docs/before_after/R9-06_victory.png`.
+  - HOW DIAMONDS WERE HELD: `profile.Diamonds`, `DataService:AddDiamonds`, replicated by the normal data patch, so the HUD follows. Rebirth does not touch them (`Config/Rebirth.Kept`, `planReset`).
+  - PARTICIPANTS, existing rule kept: in `room.players` when the enemy dies and at least 5 % of its HP dealt (`Bosses.REWARD_MIN_SHARE`). A dead spectator stays in the room, so is paid if the 5 % is met. Who left is out of the list, paid for what died before. Written in docs/boss_rewards.md.
+  - DECISION: the room already had a RANDOM diamond drop (mini 15 %, boss 40 %), which the brief did not mention. Kept, as "13 Bonus Diamonds (Golem)": "no change to drops", and Diamond Luck (Rebirth Shop, pets) acts only on it. So a fight pays the table plus sometimes a bonus. The owner can decide to drop it, 1 block in `rewardEnemy`; Diamond Luck would then do nothing.
+  - DECISION: the guard is on the whole reward of one enemy for one player, not only the diamonds: a repeat gives no Gold or roll either. Real rewards do not change. `room.paid`, one table per enemy id, filled by the pure `BossRewards.settle`. Key per enemy id: mini 1 and mini 2 of a room have different ids.
+  - DECISION: Victory list: rare loot and key first (with 6+ lines they would have been below the fold), then Gold and Diamonds per enemy. Phone: 5 rows, not 7: with 7 the panel went off the bottom of the iPhone 17 Pro screen in landscape (344 high at UI scale, 381 viewport, seen on the sheet). PC keeps 7.
+  - Also fixed by moving to a list: `rewardEnemy` looped on `room.players` around a yielding Save, which could skip a player if one left during it.
+  - PLAY, real rooms through `setZone` zone 5, damage through `EnemyService:Damage` (the same call as Admin `killAll`), credited to the player, on the real group `onDeath`. Diamonds:
+    | fight | start | mini 1 | mini 2 | boss | lines beyond the table |
+    |---|---:|---:|---:|---:|---|
+    | Plains (zone 1) | 3 | 6 | 9 | 32 | boss bonus 13 |
+    | Desert (zone 2) | 32 | 42 | 48 | 68 | mini bonus 4 |
+    | Jungle (zone 3), mini 1 then the player dies, room wiped | 68 | 77 | - | - | 77 kept after the wipe |
+    | Tundra (zone 4), after a stop and restart, on the phone emulator | 77 | 89 | 101 | 141 | none |
+    | Desert again, Admin `killAll`, phone | 141 | | | 189 | boss bonus 16: 2nd victory of the same boss pays |
+    | Desert again, Admin `killAll`, PC | 189 | | | 237 | boss bonus 16 |
+  - IDEMPOTENCE, real test: the Server command context has its OWN copy of the modules (`DataService:Get` returns nil there), so a `Script` was added to the running Server to reach the live room. After a victory it called `room.group.onDeath(state, player)` 4 times with the real states (boss, mini 1, mini 2, boss). Plains: diamonds 32 -> 32, Gold 56,960 -> 56,960, reward lines 7 -> 7. Desert: 68 -> 68, 165,760 -> 165,760, 8 -> 8. The repeat of a mini-boss before both are dead would still count down `minisLeft` and call the boss early: that is outside the reward and no real path fires it (`die` runs once, enemies leave the list).
+  - REBIRTH, game flow: Admin `rebirthReady`, then `Net.request("Rebirth")`: diamonds 77 -> 77, Gold 285,760 -> 0, Rebirths 0 -> 1, Credits 0 -> 3.
+  - SAVE: the Studio profile DOES persist: API access is on, store `PlayerProfiles_v1`, key of the test account. Read back during Play (read only): stored Diamonds 77, Rebirths 1. Stop, Play: 77 in the new session. That also means Studio tests write the real entry of that account.
+  - TEST PROFILE after the tests. Put back by Admin: Rebirths 0, Credits 0, Gold 46,080. NOT put back: Diamonds 237 (was 3), keys Plains, Desert, Tundra (was Plains), 1 Epic egg from a drop, the Plains gates and the Rebirth's free sword in place of the weapon it had. `unlockAll` reopens gates.
+  - SELF-CHECK of the pure function, `BossRewards.selfCheck()`: true, "12 zones, teams of 1 to 5 paid in full, second payout empty".
+  - Phone: iPhone 17 Pro landscape, 2 Victory screens, panel inside the screen after the fix, HUD 141 and 189. Back to `default` after.
+  - HUD counter followed each time: 32, 68, 141, 189, 237 seen on screen.
+  - Log after all Plays: 0 game script errors. 2 errors are mine, requiring a loose clone of BossRewards in Edit. 0 DataStore warnings.
+  - Walking character: not seen. Sampled once for 8 s after spawn, drift 0 studs. About 10 minutes of Play in the rooms, character mostly teleported or anchored, so a weak check. Cause still unknown.
+  - NOT tested: 2 or more players (the participant loop only by the self-check). A player who leaves mid-fight or a spectator paid at victory: rule read from the code, the solo case can only wipe. Touch scrolling of the list: the emulator takes no GUI input. Enemies killed by real weapon hits: `Damage` was called directly. Swamp and later zones: amounts only, no fight possible. A failed Save. Frame time.
+
 - CAVE FIX before Part 6, black walls of Plains_4 (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_221318_before_r9_cavefix`. Sheet `docs/before_after/R9-03_cave_black_walls.png`, same 2 cameras before and after, in Edit with the `Plains_4` preset applied by hand then put back (checked: Ambient, ClockTime, 5 Lighting children).
   - WHAT THE BLACK AREAS WERE: found by casting the screen rays against every Decor part. Plain `CaveShell` facets and `MineRock.Buttresses` wedges of the "dark damp foot" layer (#3F342B, #463A30, #3A3029) on the west / north-west side, read at about (14, 9, 5) on screen. Not an overlay, not unlit space behind the shell, not the crack overlay (the overlay is on some of them, the gold flecks showed on the black).
   - WHY: the warm pools sit at the gold ore, and all the gold ore is on the east. The west had crystals only, so a dark colour under the ambient alone. Same cause as the west floor that stayed dark.
