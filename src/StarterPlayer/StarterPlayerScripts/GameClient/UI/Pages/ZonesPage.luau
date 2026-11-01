@@ -17,6 +17,7 @@ local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
 local Chips = require(Kit.Chips)
+local Components = require(Kit.Components)
 local Fade = require(Kit.Fade)
 local Icons = require(Kit.Icons)
 local ZoneVisibility = require(Kit.ZoneVisibility)
@@ -38,10 +39,15 @@ local cards: { Card } = {}
 local listPage: Frame
 local zonePage: Frame
 local preview: { icon: Frame, iconId: string?, title: TextLabel, description: TextLabel, boss: TextLabel, bossRow: Frame }
+local unlockBox: { frame: Frame, key: any, gold: any, button: any, zone: string? }
 local header: { icon: Frame, iconId: string?, title: TextLabel, info: TextLabel }
 local shownZone: string? = nil
 local pendingZone: string? = nil -- zone page to show once the window has opened (signals are deferred)
+local pendingPreview: string? = nil -- locked zone to show in the preview once the window has opened
 local busy = false
+local shownPreview: string? = nil
+local pinnedPreview: string? = nil -- the zone to buy, chosen with a click
+local refreshPreview: () -> ()
 
 -- data -----------------------------------------------------------------------------------------------
 local function iconFor(id: string): string
@@ -81,6 +87,44 @@ local function teleport(zoneId: string, n: number?)
 end
 
 -- page 1: zone list + preview -------------------------------------------------------------------------
+-- the zone to buy after a Rebirth: "Boss key: owned / missing", "Gold: price", Buy (the server decides)
+local function paintUnlock(id: string)
+	local box = unlockBox
+	local status = if Zones.ById[id] then ZoneVisibility.unlockStatus(id) else nil
+	local show = status ~= nil and status.eligible
+	box.frame.Visible = show
+	preview.bossRow.Visible = id ~= HUB and not show
+	preview.description.Visible = not show
+	box.zone = if show then id else nil
+	if status and show then
+		local colors = Theme.Colors
+		box.key:Set(`Boss key: {if status.hasKey then "owned" else "missing"}`, if status.hasKey then colors.Good else colors.Bad)
+		box.gold:Set(`Gold: {Format.number(status.price)}`, if status.enoughGold then colors.Good else colors.Bad)
+		box.button:SetStyle(if status.ready then "primary" else "disabled")
+	end
+end
+
+local function buyZone()
+	local id = unlockBox.zone
+	if not id or busy then
+		return
+	end
+	local status = ZoneVisibility.unlockStatus(id)
+	if not status.ready then
+		Sfx.play("Denied")
+		Notifier.push({ Kind = "error", Text = status.reason or "Not available", Icon = "Lock" })
+		return
+	end
+	busy = true
+	local called, ok, result = pcall(Net.request, "BuyZoneUnlock", id)
+	busy = false
+	if not (called and ok) then
+		Sfx.play("Denied")
+		Notifier.push({ Kind = "error", Text = if called and typeof(result) == "string" then result else "Could not buy", Icon = "Lock" })
+	end
+	refreshPreview()
+end
+
 local function setPreview(id: string)
 	local isHub = id == HUB
 	local zone = Zones.ById[id]
@@ -96,6 +140,14 @@ local function setPreview(id: string)
 	preview.description.Text = if isHub or ZoneVisibility.isRevealed(id) then "" else ZoneVisibility.requirement(id)
 	preview.bossRow.Visible = not isHub
 	preview.boss.Text = if zone then ZoneVisibility.bossName(id) else "" -- next to the skull
+	shownPreview = id
+	paintUnlock(id)
+end
+
+refreshPreview = function()
+	if shownPreview then
+		paintUnlock(shownPreview)
+	end
 end
 
 local function paintRow(id: string)
@@ -170,7 +222,9 @@ local function makeRow(parent: Instance, id: string, name: string, order: number
 	local pin = Icons.create("MapPin", row, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(1, -6, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5) })
 	local soon = Icons.create("Clock", row, { Size = UDim2.fromOffset(34, 34), Position = UDim2.new(1, -8, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5) })
 	row.MouseEnter:Connect(function()
-		setPreview(id)
+		if not pinnedPreview then -- a chosen zone stays while the mouse crosses the list on its way to Buy
+			setPreview(id)
+		end
 	end)
 	row.Activated:Connect(function()
 		Sfx.play("UIClick")
@@ -180,8 +234,12 @@ local function makeRow(parent: Instance, id: string, name: string, order: number
 			Notifier.push({ Kind = "info", Text = `{ZoneVisibility.displayName(id)}: {UIConfig.Text.ComingSoon}` })
 		elseif not ZoneVisibility.isRevealed(id) then
 			-- no sub-zone page for a hidden zone: it would show its names
-			Sfx.play("Denied")
-			Notifier.push({ Kind = "error", Text = ZoneVisibility.requirement(id), Icon = "Lock" })
+			pinnedPreview = if ZoneVisibility.unlockStatus(id).eligible then id else nil
+			setPreview(id)
+			if not pinnedPreview then
+				Sfx.play("Denied")
+				Notifier.push({ Kind = "error", Text = ZoneVisibility.requirement(id), Icon = "Lock" })
+			end
 		else
 			ZonesPage.showZone(id)
 		end
@@ -322,7 +380,17 @@ end
 -- Opens the window (on a zone's sub-zones when zoneId is given), e.g. from a hub portal.
 function ZonesPage.open(zoneId: string?)
 	pendingZone = if zoneId and Zones.ById[zoneId] and not Zones.NOT_BUILT[zoneId] then zoneId else nil
+	if pendingZone and not ZoneVisibility.isRevealed(pendingZone) then
+		pendingPreview = pendingZone -- a locked zone has no sub-zone page: the list, on its row
+		pendingZone = nil
+	end
 	if Window.isOpen("Zones") then
+		if pendingPreview then
+			ZonesPage.showList()
+			pinnedPreview = pendingPreview
+			setPreview(pendingPreview)
+			pendingPreview = nil
+		end
 		if pendingZone then
 			ZonesPage.showZone(pendingZone)
 			pendingZone = nil
@@ -384,6 +452,7 @@ function ZonesPage.build(ctx: any)
 	side.BackgroundTransparency = 0.35
 	Theme.corner(side, 8)
 	Theme.stroke(side, Theme.Colors.GoldDark, 2)
+	side.Active = true -- a click here must not reach the backdrop behind the window
 	side.Parent = listPage
 	local holder = Instance.new("Frame")
 	holder.BackgroundTransparency = 1
@@ -412,6 +481,23 @@ function ZonesPage.build(ctx: any)
 		description = Theme.text({ Text = "", TextSize = 20, Wrapped = true, Size = UDim2.new(0.9, 0, 0.18, 0), Position = UDim2.new(0.5, 0, 0.67, 0), AnchorPoint = Vector2.new(0.5, 0), Parent = side }),
 		boss = Theme.text({ Font = "Button", Text = "", TextSize = 24, Color = Theme.Colors.DangerLight, Size = UDim2.new(0.75, 0, 0.85, 0), LayoutOrder = 2, Parent = bossRow }),
 		bossRow = bossRow,
+	}
+	-- the zone to buy, under its name
+	local box = Instance.new("Frame")
+	box.Name = "ZoneUnlock"
+	box.BackgroundTransparency = 1
+	box.Size = UDim2.new(0.94, 0, 0.34, 0)
+	box.Position = UDim2.new(0.5, 0, 0.65, 0)
+	box.AnchorPoint = Vector2.new(0.5, 0)
+	box.Visible = false
+	box.Parent = side
+	local chips = Components.CounterRow(box, { Size = UDim2.new(1, 0, 0, 40), Align = "Center" })
+	unlockBox = {
+		frame = box,
+		key = Components.Counter(chips, "Key", "", { Height = 36, LayoutOrder = 1 }),
+		gold = Components.Counter(chips, "Gold", "", { Height = 36, LayoutOrder = 2 }),
+		button = Components.Button({ Name = "BuyZone", Text = "Buy", Icon = "Gold", Style = "primary", TextSize = 24, Size = UDim2.new(0.7, 0, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -2), AnchorPoint = Vector2.new(0.5, 1), Parent = box, OnClick = buyZone }),
+		zone = nil,
 	}
 
 	zonePage = Instance.new("Frame")
@@ -464,6 +550,11 @@ function ZonesPage.build(ctx: any)
 	end
 	State.changed("Zones", refresh)
 	State.changed("SubZones", refresh)
+	for _, key in ipairs({ "Gold", "Keys", "Rebirths" }) do
+		State.changed(key, function()
+			refreshPreview()
+		end)
+	end
 	Players.LocalPlayer:GetAttributeChangedSignal("CurrentSubZone"):Connect(refresh)
 	Window.Opened:Connect(function(id)
 		if id == "Zones" then
@@ -472,6 +563,11 @@ function ZonesPage.build(ctx: any)
 				pendingZone = nil
 			else
 				ZonesPage.showList()
+				pinnedPreview = pendingPreview
+				if pendingPreview then
+					setPreview(pendingPreview)
+					pendingPreview = nil
+				end
 			end
 		end
 	end)

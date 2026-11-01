@@ -1,5 +1,26 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 4, zone unlock and stat prices (Studio agent).
+  - Zones: `Config/RebirthZoneUnlock` + Net "BuyZoneUnlock" (ZoneService). DECISION: "after a Rebirth" keeps the old count: zone z
+    needs z - 1 Rebirths and zone z - 1 open, plus the key of boss z - 1 and the Gold. The old free route (reopen the boss room
+    of the redone zone, `CheckRedo`, `RedoneSinceRebirth`) is gone: otherwise the price could be skipped. Prices: Plains ->
+    Desert 4,000, then x10 per zone, table in docs/rebirth_zone_unlock_prices.md.
+  - Tests: 0 Rebirths: refused. No key: refused. 3,999 Gold: refused. 5,000 Gold: bought, 4,000 taken, 1,000 left. Again: "Already
+    open". Next zone too early, fake id, wrong type: refused. 6 requests at once: 1 accepted. Buy button in Play with real
+    clicks: 450K -> 50K. Portal sign "Boss key: owned - Gold: 4M"; touching the portal opens the Zones menu on that zone.
+  - Found and fixed: a row's hover replaced the zone to buy while the mouse crossed the list, so the Buy click landed on the
+    backdrop and closed the window. A clicked zone now stays until the window is reopened.
+  - Stats: `Config/StatPrices`. The real Gold bonus is not +10%: it is additive, +50% (1st) to +100% (12th) on the base, x10 in all.
+    DECISION: the owner's rule on the real step of each Rebirth (+50%, +36%, ... +11%) minus 5 points, compounded, x6.02 after 12.
+    Applying "bonus - 5 points" to the raw +50..+100% would outgrow the Gold (x553 for x10), against the owner's aim.
+  - DECISION: base 400 -> 15. Growth 1.1 -> 1.105, so that level 319 at 12 Rebirths costs 6.1e15 as before (6.4e15): "max at the
+    very end" stays. Docs: docs/stat_prices.md.
+  - Target: the first 3-5 points from the first fights of zone 1. A Plains_1 enemy gives 16 / 20 / 24 Gold. Result in Play: from 100
+    Gold, 5 points for 15 + 17 + 18 + 20 + 22 = 92, the 6th refused: 3 points after 3 kills, 5 after about 5. At 3 Rebirths
+    and level 5: 58, as the table. Old saves: points kept; a respec refunds the new prices (test phase).
+  - Log: fresh Play, 0 script errors. CollisionSoil checked: dropped on the planter soil, the character stands at y 4.80.
+  - NOT tested: phone layout of the Buy box; 2 players.
+
 - PART 3, doors, portals, boss door (Studio agent).
   - All 36 sub-zone gates have a uniform `Barrier` (24 x 16) whose descendants are the door, so one data-driven animator covers
     them (`Controllers/GateController`, `Config/DoorAnimations`: 9 types, 7 modes). DECISION per gate is the `Doors` table.

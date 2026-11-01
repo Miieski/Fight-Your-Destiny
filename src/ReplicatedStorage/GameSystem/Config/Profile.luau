@@ -32,7 +32,6 @@ function Profile.new(): { [string]: any }
 		Keys = {},
 		Zones = { Plains = true },
 		SubZones = {},
-		RedoneSinceRebirth = {},
 		CurrentZone = "Plains",
 		Attributes = Attributes.empty(), -- points bought per attribute (Config/Attributes), reset on Rebirth
 		Weapons = {}, -- [uid] = { id = "plains_sword", rarity = 1 }

@@ -3,7 +3,7 @@
 -- tab of the Rebirth window (UI/Pages/RebirthPage).
 --   Rebirth r (1..Max) needs the key of the zone-r boss, Rebirths == r - 1 and Gold >= Rebirth.cost(r) (10 x the price
 --   of zone r's boss-room gate). The key is not consumed. Zone r is "the zone being redone": its gates reset, and
---   reopening its boss room afterwards (ZoneService) opens zone r + 1 (key r + r Rebirths + zone r redone).
+--   zone r + 1 is then bought with key r + Gold (Config/RebirthZoneUnlock).
 local Attributes = require(script.Parent.Attributes)
 local RebirthShop = require(script.Parent.RebirthShop)
 local Zones = require(script.Parent.Zones)

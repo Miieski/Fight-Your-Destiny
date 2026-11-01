@@ -4,11 +4,11 @@
 -- then a staged sequence (Round 8, root cause of the old grey screen in docs/NIGHT_LOG.md):
 --   commit   the new values are built on copies, then written in one step (DataService:SetMany, one client patch):
 --            Rebirths = r, +3 Rebirth Credits, Gold / weapons / armor / attribute points / eggs / non-premium pets /
---            trophies reset, the gates of zone r reset, RedoneSinceRebirth cleared, a free Common sword of that zone.
+--            trophies reset, the gates of zone r reset, a free Common sword of that zone.
 --            A failure before this step changes nothing. The request answers right after it.
 --   respawn  in the background: out of any boss room, Hub streamed in, a new character on the Hub spawn, the save with
 --            retries (nothing waits for it), then Net "RebirthDone" (the client's cover comes off).
--- Reopening zone r's boss room afterwards opens zone r + 1 (ZoneService). Kept: Diamonds, keys, credits and Rebirth
+-- Zone r + 1 is then bought with zone r's key + Gold (Config/RebirthZoneUnlock). Kept: Diamonds, keys, credits and Rebirth
 -- Shop upgrades, premium pets, Index, boosts, passes, settings, unlocked zones.
 --   RebirthService:Wipe(player) -> premium pets kept   the reset alone (also the admin command wipeForRebirth)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -117,7 +117,6 @@ local function rebirth(player: Player): (boolean, any)
 	end
 	local changes, cleared = planReset(profile)
 	changes.SubZones = subZones
-	changes.RedoneSinceRebirth = {}
 	changes.Rebirths = r
 	changes.RebirthCredits = math.floor(tonumber(profile.RebirthCredits) or 0) + Rebirth.CreditsPerRebirth
 	-- the commit: one step, no yield

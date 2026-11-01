@@ -84,8 +84,8 @@ Zones.Descriptions = {
 -- No spoilers for locked zones (docs/enemies_npcs_pets_brief.txt 1A): what every UI and server message shows for a
 -- zone the player has not unlocked. Clients go through GameClient/UI/Kit/ZoneVisibility.
 Zones.HIDDEN_NAME = "???"
-Zones.HIDDEN_REQUIREMENT = "Defeat the boss of the previous zone and Rebirth to reveal"
-Zones.HIDDEN_SHORT = "Locked: defeat the previous boss and Rebirth"
+Zones.HIDDEN_REQUIREMENT = "Defeat the boss of the previous zone and Rebirth, then buy it in the Zones menu"
+Zones.HIDDEN_SHORT = "Locked: previous boss, Rebirth, then buy it"
 
 -- Is the zone unlocked in this profile's Zones table (zone 1 always is)?
 function Zones.isUnlocked(zonesTable: { [string]: any }?, zoneId: string?): boolean
@@ -107,7 +107,7 @@ function Zones.requirementText(zoneId: string, short: boolean?): string
 	if short then
 		return `Needs {previous.Boss} key + {rebirths} Rebirth{plural}`
 	end
-	return `Needs the {previous.Boss} key, {rebirths} Rebirth{plural} and {previous.Name} redone`
+	return `Needs the {previous.Boss} key, {rebirths} Rebirth{plural} and its Gold price`
 end
 
 -- Gold price to open sub-zone n of a zone (0 for sub-zone 1).

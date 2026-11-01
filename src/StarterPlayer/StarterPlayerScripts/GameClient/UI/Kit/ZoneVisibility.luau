@@ -11,6 +11,8 @@
 --   ZoneVisibility.changed(fn) -> disconnect      fn() when the unlocked zones change
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Format = require(ReplicatedStorage.GameSystem.Util.Format)
+local RebirthZoneUnlock = require(ReplicatedStorage.GameSystem.Config.RebirthZoneUnlock)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.Parent.State)
 local Icons = require(script.Parent.Icons)
@@ -53,6 +55,20 @@ end
 
 function ZoneVisibility.requirement(zoneId: string?, short: boolean?): string
 	return if short then Zones.HIDDEN_SHORT else Zones.HIDDEN_REQUIREMENT
+end
+
+-- The buy rule of a zone for this player (Config/RebirthZoneUnlock).
+function ZoneVisibility.unlockStatus(zoneId: string): RebirthZoneUnlock.Status
+	return RebirthZoneUnlock.status({ Zones = State.get("Zones"), Keys = State.get("Keys"), Rebirths = State.get("Rebirths"), Gold = State.get("Gold") }, zoneId)
+end
+
+-- "Boss key: owned  -  Gold: 4K" for the zone to buy now, nil for the others (the portal sign).
+function ZoneVisibility.unlockLine(zoneId: string): string?
+	local status = ZoneVisibility.unlockStatus(zoneId)
+	if not status.eligible then
+		return nil
+	end
+	return `Boss key: {if status.hasKey then "owned" else "missing"}  -  Gold: {Format.number(status.price)}`
 end
 
 -- The zone's own icon id (the diorama); "Zones" when there is no icon for it.

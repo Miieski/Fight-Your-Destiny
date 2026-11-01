@@ -10,6 +10,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Playtest = require(ReplicatedStorage.GameSystem.Config.Playtest)
+local RebirthZoneUnlock = require(ReplicatedStorage.GameSystem.Config.RebirthZoneUnlock)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local RewardService = require(script.Parent.RewardService)
@@ -153,27 +154,26 @@ function ZoneService:EnterZone(player: Player, zoneId: string)
 	end
 end
 
--- Zone unlock chain (DESIGN.md section 4): reopening zone N's boss room after a Rebirth (Rebirths >= N) marks zone N
--- "redone"; zone N + 1 opens with the key of boss N, at least N Rebirths and zone N redone since the last Rebirth
--- (RebirthService clears RedoneSinceRebirth).
-function ZoneService:CheckRedo(player: Player, zoneId: string)
+-- Zone unlock (DESIGN.md section 4, Config/RebirthZoneUnlock): after enough Rebirths, the next zone is bought with the key of
+-- the previous boss + Gold. Nothing below yields: the Gold and the zone change together, a second click finds it open.
+local function buyZone(player: Player, zoneId: any): (boolean, any)
 	local profile = DataService:Get(player)
-	local zone = Zones.ById[zoneId]
-	if not (profile and zone) or (tonumber(profile.Rebirths) or 0) < zone.Index then
-		return
+	if not profile then
+		return false, "Not ready yet"
 	end
-	if not (profile.RedoneSinceRebirth or {})[zoneId] then
-		local redone = table.clone(profile.RedoneSinceRebirth or {})
-		redone[zoneId] = true
-		DataService:Set(player, "RedoneSinceRebirth", redone)
+	if typeof(zoneId) ~= "string" or not Zones.ById[zoneId] then
+		return false, "Bad request"
 	end
-	local nextZone = Zones.List[zone.Index + 1]
-	if nextZone and not profile.Zones[nextZone.Id] and (profile.Keys or {})[zoneId] then
-		local open = table.clone(profile.Zones)
-		open[nextZone.Id] = true
-		DataService:Set(player, "Zones", open)
-		notify(player, `{nextZone.Name} unlocked! Travel there from the Zones menu.`, "reward")
+	local status = RebirthZoneUnlock.status(profile, zoneId)
+	if not status.ready then
+		return false, status.reason or "Not available"
 	end
+	local open = table.clone(profile.Zones)
+	open[zoneId] = true
+	DataService:SetMany(player, { Gold = profile.Gold - status.price, Zones = open })
+	DataService:SaveSoon(player, 3, 3)
+	notify(player, `{Zones.ById[zoneId].Name} unlocked!`, "reward")
+	return true, { Zone = zoneId, Cost = status.price, Gold = profile.Gold }
 end
 
 local function tryUnlock(player: Player, subZone: SubZone)
@@ -201,9 +201,6 @@ local function tryUnlock(player: Player, subZone: SubZone)
 	DataService:Set(player, "SubZones", unlocked)
 	notify(player, `{Zones.ById[subZone.zoneId].SubZones[subZone.n]} unlocked!`, "reward")
 	RewardService.progress(player, "OpenSubZone", 1)
-	if subZone.n == Zones.BOSS_SUBZONE then
-		ZoneService:CheckRedo(player, subZone.zoneId)
-	end
 end
 
 -- Boss rooms (Part C) are run by BossService; these wrappers keep the old call sites (lazy require: BossService
@@ -292,6 +289,8 @@ function ZoneService:Init()
 		end
 	end
 	hookWorld()
+
+	Net.handle("BuyZoneUnlock", buyZone, 0.5)
 
 	-- "Get diamonds" in the Shop offers a trip to the hub's Diamond Shop.
 	-- It is also the way out of a failed Rebirth transition (client watchdog): a dead or missing character respawns.

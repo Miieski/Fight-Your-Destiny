@@ -21,6 +21,7 @@ local Fade = require(UI.Kit.Fade)
 local Icons = require(UI.Kit.Icons)
 local Theme = require(UI.Kit.Theme)
 local ZoneVisibility = require(UI.Kit.ZoneVisibility)
+local ZonesPage = require(UI.Pages.ZonesPage)
 local TweenService = game:GetService("TweenService")
 
 local PortalController = { Priority = 20 }
@@ -397,7 +398,7 @@ local function paint(portal: BasePart)
 	label.Text = if notBuilt and not hidden then "Coming soon" else HIDDEN_TEXT
 	local hint = gui:FindFirstChild("Hint", true) :: TextLabel?
 	if hint then
-		hint.Text = if hidden then ZoneVisibility.requirement(zoneId) else ""
+		hint.Text = if hidden then ZoneVisibility.unlockLine(zoneId) or ZoneVisibility.requirement(zoneId) else ""
 		hint.Visible = hidden
 	end
 	local lock = gui:FindFirstChild("Lock", true)
@@ -422,6 +423,12 @@ local function use(zoneId: string)
 	end
 	local zone = Zones.ById[zoneId]
 	if not zone then
+		return
+	end
+	if ZoneVisibility.unlockStatus(zoneId).eligible then
+		-- the zone to buy: its key and price, with the Buy button
+		lastTry[zoneId] = now
+		ZonesPage.open(zoneId)
 		return
 	end
 	busy = true

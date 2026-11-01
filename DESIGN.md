@@ -298,6 +298,16 @@ each Rebirth for the zone being redone (see below).
   that zone (starter weapon rule); reopening zone r's boss room ("redone") opens zone r + 1 (zone unlock chain
   below). Rules in `Config/Rebirth`, server `RebirthService`, UI `UI/Pages/RebirthPage`.
 
+### Zone unlock after a Rebirth (Round 8)
+Zone z opens with z - 1 Rebirths, zone z - 1 open, the key of boss z - 1 and Gold: (last sub-zone price of zone z - 1 + 2nd sub-zone
+price of zone z) / 2, floored to 2 significant digits. The player buys it in the Zones menu; the server checks everything.
+`Config/RebirthZoneUnlock`, table in `docs/rebirth_zone_unlock_prices.md`. This replaces walking through the zone again and takes
+precedence over any older text here about a zone being "redone".
+
+### Stat prices (Round 8)
+`Config/StatPrices`: 15 x 1.105 ^ level x a Rebirth multiplier (each Rebirth: its real Gold step minus 5 points, compounded). Table in
+`docs/stat_prices.md`.
+
 ### Doors and portals (Round 8)
 * The unlock state of doors and portals is **personal**: the opening plays on the unlocking player's client, then the door
   stays open for that player on every visit, with no animation at join. Its collision is removed on that client only; the

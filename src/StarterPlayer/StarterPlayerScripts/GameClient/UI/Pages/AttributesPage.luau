@@ -90,7 +90,7 @@ end
 
 -- Gold left once the waiting points are paid
 local function goldLeft(): number
-	return (State.get("Gold") or 0) - Attributes.costOf(Attributes.level(State.get("Attributes")), waitingCount())
+	return (State.get("Gold") or 0) - Attributes.costOf(Attributes.level(State.get("Attributes")), waitingCount(), State.get("Rebirths"))
 end
 
 local function pct(x: number, decimals: number?): string
@@ -172,7 +172,7 @@ local function refresh()
 	levelChip:Set(`{level}/{Attributes.MaxLevel}`)
 	local gold = goldLeft()
 	goldChip:Set(Format.number(math.max(0, gold)))
-	local price = Attributes.pointCost(level)
+	local price = Attributes.pointCost(level, State.get("Rebirths"))
 	local equipped = (data.Weapons or {})[data.EquippedWeapon or ""]
 	local weaponDef = equipped and Weapons.ById[equipped.id]
 	local category = if weaponDef then weaponDef.Category else nil
@@ -280,7 +280,7 @@ local function buy(id: string): boolean
 	if have(id) + waiting(id) >= Attributes.MaxPoints then
 		return false
 	end
-	local price = Attributes.pointCost(Attributes.level(State.get("Attributes")) + waitingCount())
+	local price = Attributes.pointCost(Attributes.level(State.get("Attributes")) + waitingCount(), State.get("Rebirths"))
 	if goldLeft() < price then
 		Sfx.play("Denied")
 		Notifier.push({ Kind = "error", Text = "Not enough Gold", Icon = "Gold" })

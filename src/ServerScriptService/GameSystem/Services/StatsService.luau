@@ -74,7 +74,7 @@ local function train(player: Player, plan: any): (boolean, any)
 		return false, "Nothing to train"
 	end
 	local level = Attributes.level(current)
-	local cost = Attributes.costOf(level, count)
+	local cost = Attributes.costOf(level, count, profile.Rebirths)
 	if typeof(profile.Gold) ~= "number" or profile.Gold < cost then
 		return false, "Not enough Gold"
 	end
@@ -104,7 +104,7 @@ local function respec(player: Player): (boolean, any)
 		return false, "Not enough Diamonds"
 	end
 	-- the Gold the points cost comes back (the price only depends on the level, so this is exactly what was paid)
-	local refund = Attributes.refundOf(profile.Attributes)
+	local refund = Attributes.refundOf(profile.Attributes, profile.Rebirths)
 	DataService:Set(player, "Diamonds", profile.Diamonds - cost)
 	DataService:Set(player, "Attributes", Attributes.empty())
 	DataService:AddGold(player, refund)

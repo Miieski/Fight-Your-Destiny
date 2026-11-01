@@ -3,12 +3,11 @@
 -- 0..MaxPoints points each, bought one at a time with Gold. Effects use the EFFECTIVE points (soft cap) times
 -- RebirthPower; hard caps are absolute (never multiplied). Every derived number is computed in Util/Stats.compute.
 --
--- Price (owner 2026-10-12: "max at the very end of the game"): the next point costs CostBase x CostGrowth ^ L, L = the
--- attribute level (total points bought). It does NOT follow the zone: Gold income grows x10 per zone, so the level a
--- player can afford grows with the zones. Calibration (docs/NIGHT_LOG.md): spending about one Rebirth cost of a zone
--- (x the Rebirth Gold multiplier, x1.5 for the other Gold bonuses) brings the level to ~26 in zone 1, ~160 in zone 6,
--- ~314 in zone 12: the last points (320 = every attribute at 40) come at the very end of the game.
+-- Price: Config/StatPrices (Round 8). It does NOT follow the zone: Gold income grows x10 per zone, so the level a
+-- player can afford grows with the zones; the last points (320 = every attribute at 40) come at the very end of the game.
 export type Attribute = { Id: string, Name: string, Icon: string, Short: string, Effects: { string } }
+
+local StatPrices = require(script.Parent.StatPrices)
 
 local Attributes = {}
 
@@ -17,9 +16,6 @@ Attributes.SoftCap = 20 -- points above this count half (Peff)
 Attributes.SoftCapRate = 0.5
 Attributes.RebirthPowerPerRebirth = 0.25 -- RebirthPower = 1 + 0.25 x Rebirths
 
--- Cost of the next point: round(CostBase x CostGrowth ^ L), L = total points already bought (x10 every ~24 levels).
-Attributes.CostBase = 400
-Attributes.CostGrowth = 1.1
 -- Respec: every point back to 0 for RespecBase + RespecPerZone x Z Diamonds; the Gold the points cost is given back
 -- (owner 2026-10-13: "When you reset stat with diamond you have to get back your money spend").
 Attributes.RespecBase = 5
@@ -191,16 +187,16 @@ function Attributes.rebirthPower(rebirths: number): number
 	return 1 + Attributes.RebirthPowerPerRebirth * (rebirths or 0)
 end
 
--- Gold price of the next point at attribute level L.
-function Attributes.pointCost(level: number): number
-	return math.round(Attributes.CostBase * Attributes.CostGrowth ^ level)
+-- Gold price of the next point at attribute level L after that many Rebirths.
+function Attributes.pointCost(level: number, rebirths: number?): number
+	return StatPrices.cost(level, rebirths)
 end
 
 -- Total Gold for `count` more points starting at level L.
-function Attributes.costOf(level: number, count: number): number
+function Attributes.costOf(level: number, count: number, rebirths: number?): number
 	local total = 0
 	for i = 0, count - 1 do
-		total += Attributes.pointCost(level + i)
+		total += Attributes.pointCost(level + i, rebirths)
 	end
 	return total
 end
@@ -239,8 +235,8 @@ function Attributes.respecCost(zone: number): number
 end
 
 -- The Gold a respec gives back: what every point bought cost (points 1..L; the price only depends on the level).
-function Attributes.refundOf(values: { [string]: number }?): number
-	return Attributes.costOf(0, Attributes.level(values))
+function Attributes.refundOf(values: { [string]: number }?, rebirths: number?): number
+	return Attributes.costOf(0, Attributes.level(values), rebirths)
 end
 
 function Attributes.empty(): { [string]: number }
