@@ -1,5 +1,20 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 2, objects (Studio agent). `DevTools.PropsRound8`, details in docs/prop_inventory.md "Round 8 Part 2".
+  - Teleport point: 12 / 12 zones, one template with 12 Variants. It is `HubReturn` of each zone's sub-zone 1. DECISION: the Neon
+    disc moved into the template (`Surface`, same colour per zone), `HubReturn` went invisible, so the disc sits at one height
+    in every zone. Only Plains and Desert had stone blocks; all 12 have them now, without collision in the other 10 (as today).
+  - DECISION: glow disc, runes and crystals are Parts and unions, no uploaded texture: Neon already gives the soft gradient.
+  - Spawn disc: one copy only in the whole game. Planter: 8 of 8, no look-alike in other biomes. The 32 small plant props
+    nested on the planters went: `hub_plant_*` copies are 32 fewer.
+  - Rail end: deeper than the +10% limit (5 studs, was 1.5) because the owner's text asks for posts behind it; collision unchanged.
+  - Tests in Play: spawned on the disc at (3.6, 3.3, -50.3). Walked on the pad in Plains, Jungle, Void: Hub in 1.4-1.8 s. Rail end:
+    stopped at z 870.2 from the front, z 872.8 from behind. Rune yaw 0.458 -> 0.772 in 2 s. Planter: the walker steps over the
+    1.6-stud rim (the humanoid's own step, the rim did not change); dropped on it, it stands on it. Log: 0 script errors.
+  - Found and fixed: `ringBlocks`' mortar core is a full disc (it hid the pad's surface); a rebuild had copied the Soil union
+    instead of the old cylinder, so `CollisionSoil` did not collide: remade from the old values (1.6 x 7.4 x 7.4).
+  - NOT done: `docs/asset_preview_index.json` not regenerated (hand note in the .md); phone frame time for these props.
+
 - PART 1, plains mountains (Studio agent). The two mountains of image 01 are the brown peak of `Plains_1.Decor.Mountains` and the
   green one of `Plains_3.Decor.Backdrop`, west of the Plains_2 cliffs (x 1700-1848, z 160-460). There is no ground in that gap:
   the cyan in the image is empty space, so the ridge has none to blend with on its outer side; it ends at y -11 like its

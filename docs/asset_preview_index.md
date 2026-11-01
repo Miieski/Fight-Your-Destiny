@@ -6,6 +6,13 @@ is a MapProps template (ServerStorage.MapProps.<propId>) with one sample per zon
 Rule: every new asset added to a map must also be added to the asset preview (run tools/BuildAssetPreview.luau).
 Machine-readable copy: `docs/asset_preview_index.json`.
 
+## Round 8 additions (2026-11-01)
+
+Added by hand here; the tables below and `docs/asset_preview_index.json` are from the last full `B.index()` run.
+
+- New, with samples: `hub_return_pad` (every zone block, 12 Variants), `hub_spawn_pad` (Hub), `plains_rail_buffer` (Plains).
+- Improved: `hub_furniture_planter`, `hub_furniture_planter_v2`, `plains_bridge_rail_section`.
+
 ## Summary
 
 - 628 distinct assets, 711 zone assets (an asset used in several zones counts once per zone).

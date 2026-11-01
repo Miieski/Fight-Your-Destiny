@@ -1602,6 +1602,18 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
 - Trophy stall extras (bbox 15.60 x 11.11 x 15.50, 63 parts): TrophyCup (3 gold cylinders, 255,201,60) at (-3.5, 3.9..5.5, -2.9), CounterSkull ball 1.5 (240,232,208) at (2.5, 4.4, -2.9), back wall: 3 Plaques cyl 0.4 x 3 (112,62,38), BoarHead/BoarSnout/2 Tusks, DeerHead + 4 Antlers, horned Skull (240,232,208).
 - Diamond shop extras (bbox 18.95 x 20.20 x 15.50, 73 parts): sign = SignPost 0.8 x 4.4 x 0.8 and SignBar 9 x 0.6 x 0.6 (255,201,60) at y 12.2, Diamond (1 block 4.8 x 1.8 x 1.4 + 4 wedges) Neon (95,212,255) with DiamondGirdle 4.9 x 0.3 x 1.5 Neon (245,246,250) at y 16.3..19.3; 3 Cushions 2.2 x 0.5 x 1.6 (74,108,220) with 3 gems (5 Neon pieces each; cyan, gold, cyan) at x -4/0/4; Chest (3 parts) at x -9.4 beside the stall; `Glow` T1 with PointLight (95,212,255) B0.6 R14 at y 9.
 
+### Round 8 Part 2 (owner, teleport point, spawn disc, planter, rail end, 2026-11-01)
+
+`DevTools.PropsRound8`. Every visible piece is decor (no collision, no query); old colliders stay invisible at the same place.
+
+| object | template | replaced | triangles (unions) | notes |
+|---|---|---|---|---|
+| 02 teleport point | `hub_return_pad`, 12 Variants (one per zone) | 12 / 12 zones + 12 preview samples | 5,190 | Copies `HubReturn_Point` on each `HubReturn`. `HubReturn` keeps its Touched teleport (now invisible), `HubReturn_Pad` keeps the sparkles. Plains and Desert: 14 old parts renamed `PadCollision`, invisible. Jungle `PadRim`, Tundra `PadRing` removed (no collision). Rune circle: PropFX Spin, 40 s. |
+| 03 spawn disc | `hub_spawn_pad` | 1 / 1 + 1 sample | 3,454 | Only one in the game (Hub). `SpawnLocation` untouched. `SpawnPadBase / Top / Gem` invisible colliders. PointLight 0.6, range 9. |
+| 04 planter | `hub_furniture_planter`, `hub_furniture_planter_v2` | 5 / 5 and 3 / 3 (hub 4 + 2, samples 2) | 6,570 / 8,134 | No other planter in any biome (searched Rim + Soil models and templates). Rim and Soil kept as invisible `CollisionRim`, `CollisionSoil`. The 32 nested `hub_plant_*` copies on the planters were removed: the template carries its plants. |
+| 05 rail end | `plains_rail_buffer` | 1 / 1 + 1 sample | 1,776 | The `RailBuffer` Part became a Model of the same name, invisible `Collision` 6 x 3 x 1.5 at the old place. 5 studs deep, not 1.5: posts and stones behind it (no collision); width 6.36, height 3.26. |
+| mine rails | `plains_bridge_rail_section` | 6 / 6 + 1 sample | 1,848 | Same sleepers and rail line, top y 1. Minecart was already improved. `volcano_bridge_rail_section_v` not in scope. |
+
 ## Upgrade status
 
 | id | template | instances synced | notes |

@@ -194,6 +194,8 @@ PropFX.Props = {
 		},
 		Emitters = { "PiecesRoot" },
 	},
+	-- the teleport point's rune circle turns slowly on the glowing disc
+	hub_return_pad = { Spin = { { Part = "Runes", Seconds = 40 } } },
 	-- the diamond sign floats and turns slowly (its sparkle is the hub's Diamond_Sparkle part); the three gems glint
 	diamond_shop = {
 		Spin = {
