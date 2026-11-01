@@ -189,6 +189,21 @@ function F.jungle_ground_tuft(): Model
 	return finish(m, "jungle_ground_tuft", list)
 end
 
+-- Round 9 part 10: small ice shards along the shore of the lake
+function F.tundra_lake_shards(): Model
+	local m = Instance.new("Model")
+	m.Name = "tundra_lake_shards"
+	local rng = Random.new(826)
+	local list = {}
+	for _ = 1, 4 do
+		local a, r = rng:NextNumber(0, TAU), rng:NextNumber(0.1, 0.8)
+		local h = rng:NextNumber(0.6, 1.5)
+		local cf = CFrame.new(math.cos(a) * r, h / 2 - 0.12, math.sin(a) * r) * CFrame.Angles(0, rng:NextNumber(0, TAU), 0) * CFrame.Angles(rng:NextNumber(-0.3, 0.3), 0, rng:NextNumber(-0.3, 0.3))
+		table.insert(list, piece("WedgePart", Vector3.new(rng:NextNumber(0.4, 0.8), h, rng:NextNumber(0.5, 1)), cf, hex(pick(rng, { "bfe4fa", "a8d8f6", "d6eefc", "8cc8f0" }))))
+	end
+	return finish(m, "tundra_lake_shards", list)
+end
+
 function F.tundra_ground_clump(): Model
 	local m = Instance.new("Model")
 	m.Name = "tundra_ground_clump"
@@ -235,7 +250,7 @@ local BUILD = {
 F.IDS = {
 	"hub_ground_curb", "hub_ground_pebbles", "plains_ground_curb", "plains_ground_pebbles", "plains_ground_tuft", "plains_ground_flowers",
 	"desert_ground_curb", "desert_ground_chips", "desert_ground_ripple", "jungle_ground_curb", "jungle_ground_fern", "jungle_ground_root", "jungle_ground_tuft",
-	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "beach_ground_curb", "canyon_ground_curb", "mine_ground_flagstones", "mine_ground_gravel",
+	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "tundra_lake_shards", "beach_ground_curb", "canyon_ground_curb", "mine_ground_flagstones", "mine_ground_gravel",
 }
 
 function F.build(id: string): string

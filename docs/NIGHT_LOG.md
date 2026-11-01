@@ -1,5 +1,19 @@
 # ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
 
+- PART 10, frozen lake (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_235736_before_r9_part10`. New tool: `tools/LakeRound9.luau`; images: `make_floor_textures.py --tundra`; recipe: docs/prop_texture_guide.md "Frozen lake". Sheet `docs/before_after/R9-10_lake.png`: fixed view, top view (both Edit), Play view against image 17.
+  - WHAT IT WAS: 380 wedge Facets in pale colours, flat, top y 0.14, colliding; 123 thick blue `Crack` parts; 2 `OpenWater` holes; 4 `tundra_fishing_hole` props. No script reads any of it (searched src and tools), so no sliding to keep.
+  - DECISION: real transparency refused: 380 see-through parts over nothing would cost more than the rest of the zone and show the ground under them. "Semi-transparent deep ice" is painted: the facets go from pale #CFEEFC at the shore to #4C94DC at 80 studs from it, each keeps its small old tone step, Reflectance 0.06. Colliders do not change, Color and Reflectance only.
+  - DECISION: one tile, `lake_ice` (256 px, tile 72, alpha): frost, a blue shadow under the deep cracks, fine white cracks in 2 weights, bubbles. A Texture per Facet was refused: the triangles all face different ways, so the cracks would break at each edge. So 25 flat pieces in a grid, axis aligned, Transparency 1, inside the lake outline, with world offsets: the cracks run on across them.
+  - FOUND, for later: on a Top face a `Texture` starts at the +X +Z corner and runs towards -X -Z, so a world-aligned offset is `-max % tile`, on both axes. My first tries had seams.
+  - FOUND: the Water of a fishing hole is see-through and at y 0.17: a Texture under it still paints over it, 2 of the 4 holes came out white. Each hole has a square gap in the ice pieces, hidden by its `Ice` ring. Decals keep off the holes. Props not touched, 4 / 4.
+  - The 123 `Crack` parts stay as the big cracks: white #EAF6FF, 55 % of their width, Transparency 0.2. They never collided.
+  - Added: 5 images (`lake_ice`, `lake_frost`, `lake_slush`, `lake_bubbles`, + `ramp_packed` for Part 11), 25 ice pieces, 14 frost + 10 bubble Decals, 45 slush Decals along the shore, 40 `tundra_lake_shards` (new template, 92 tris, no collision), all in `Decor.LakeSkin`, 84 alpha quads. About +3,800 triangles. Slush covers the small step between ice (0.14) and snow (0).
+  - Colliders: 80,732 -> 80,732, 0 differences. Asset preview: `tundra_lake_shards` added, `B.check("Tundra")`: 55 assets, 1166 copies, 0 problems. Preview ground not touched.
+  - PLAY: walked on the ice by MoveTo, 2 legs, 80 studs, height 2.83-2.84 flat, nothing blocked. Frame time (RenderStepped, 3 s, this PC, not a phone, capped at 144 fps): Tundra_2 lake 6.95 ms, worst 8.66; Jungle_2 6.95 ms, worst 10.36. So: no visible cost on this GPU, nothing about a phone.
+  - No z-fighting seen in 3 Play views at 15-120 studs; the ice is 0.016 over the facets. Not seen in motion over a long walk.
+  - Log: 0 script errors (scanned after the last Play).
+  - NOT tested: a phone; a long look at grazing angles for flicker; the far end of the lake close up in Play. Enemies were on the ice in the shots, not fought.
+
 - PART 9, jungle ground (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_232120_before_r9_part9`. New tool: `tools/JungleRound9.luau`; images: `make_floor_textures.py --jungle`; recipe and palette: docs/prop_texture_guide.md "Jungle ground". Sheets `docs/before_after/R9-09_gate.png`, `_arch`, `_plaza`, `_torch`: top row Edit shots, same camera; bottom row the owner's image against a Play shot.
   - WHAT THE "GRASS PANELS" WERE: the `Fringe` parts of Round 8. Their image fades on the 2 long sides only, so the ends were straight cuts, and the band was stretched (blurred). Count, by name and by a search of every thin or textured part of the 4 sub-zones and the boss room:
     | area | panels before | replaced |

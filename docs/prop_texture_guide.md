@@ -3806,6 +3806,21 @@ Heights: ground 0, clearing 0.1, corridor dirt 0.18, path block 0.2, cobble disc
 Jungle_4 and the boss room keep the temple brick of rounds 6-7, same stone family.
 After `F.zone` on a jungle sub-zone: `J.skin`, `J.blend`, `J.details`.
 
+## Frozen lake (owner task round 9 part 10, 2026-11-01)
+
+Tundra_2, `tools/LakeRound9.luau`, everything in `Decor.LakeSkin`, no collision, no script. Style: still low poly, the facets show through. One shared tile + a few Decals.
+
+| layer | how |
+|---|---|
+| Depth | Facet colours by distance to the shore: #CFEEFC, #8FCDF4 at 40 studs, #4C94DC from 80. Reflectance 0.06 |
+| Ice | `lake_ice`, tile 72, alpha. 25 axis-aligned pieces, top y 0.156, world offsets `-max % tile` on U and V, a square gap at each fishing hole |
+| Big cracks | the old `Crack` parts, #EAF6FF, thin, Transparency 0.2 |
+| Frost | `lake_frost` x 14, 26-48 wide, y 0.18 |
+| Bubbles | `lake_bubbles` x 10, 9-14 wide, y 0.19 |
+| Shore | `lake_slush` x 45, 26-34 x 14-20, y 0.20, on the edge. `tundra_lake_shards` x 40, 2-9 studs in |
+
+Don't: a Texture on each Facet (they face all ways, the cracks break); anything over y 0.17 at a fishing hole.
+
 ## Mine cavern (owner task round 9 part 3, 2026-11-01)
 
 Plains_4, `tools/CaveRound9.luau`. Natural mine: warm brown-grey rock, packed dirt, no violet. 3 images are new; the shape of the cavern is the old shell.

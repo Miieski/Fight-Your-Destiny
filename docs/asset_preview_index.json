@@ -9907,6 +9907,23 @@
      "newTemplate": false,
      "totalInstances": 137,
      "quality": "new"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_lake_shards",
+     "instances": 40,
+     "largest": 2.4,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 40,
+     "quality": "new"
     }
    ],
    "name": "Volcano",
