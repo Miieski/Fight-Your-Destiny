@@ -270,6 +270,31 @@ function Theme.setUserScale(value: number)
 	end
 end
 
+local lastPress = Vector2.zero
+UserInputService.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		lastPress = Vector2.new(input.Position.X, input.Position.Y)
+	end
+end)
+
+local function isOver(panel: GuiObject, at: Vector2): boolean
+	for _, object in ipairs(playerGui():GetGuiObjectsAtPosition(at.X, at.Y)) do
+		if object == panel or object:IsDescendantOf(panel) then
+			return true
+		end
+	end
+	return false
+end
+
+-- The rule of every "click outside closes it": from a dim button's Activated, true only if the press started AND ended outside
+-- panel (Roblox fires Activated on the dim for a press held on the panel). A gamepad has no pointer: always true.
+function Theme.clickedOutside(panel: GuiObject, input: InputObject): boolean
+	if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
+		return true
+	end
+	return not isOver(panel, lastPress) and not isOver(panel, Vector2.new(input.Position.X, input.Position.Y))
+end
+
 -- A ScreenGui with a scaled "Root" frame filling the safe area. Returns (gui, root).
 function Theme.screen(name: string, displayOrder: number?): (ScreenGui, Frame)
 	ensureMeasure()

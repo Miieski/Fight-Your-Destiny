@@ -21,7 +21,6 @@ UI.Menu = {
 	{ Id = "Index", Label = "Index", Icon = "Index" },
 	{ Id = "Quests", Label = "Quests", Icon = "Quests" },
 	{ Id = "Team", Label = "Team", Icon = "Team" },
-	{ Id = "Skills", Label = "Skills", Icon = "Star" }, -- the weapon skill trees (UI/Pages/SkillTreePage)
 	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
 	{ Id = "Zones", Label = "Zones", Icon = "Zones", Apart = true, ShowLabel = true, PcCorner = true }, -- teleport menu
 }
@@ -35,12 +34,18 @@ UI.CornerButton = { Size = Vector2.new(210, 68), Margin = 16, TextSize = 32 }
 -- Window shells. Size is the preferred size in design units; windows never exceed MaxScreenFraction.
 -- Kid-friendly (owner 2026-10-13): Icon is drawn left of the title, every tab shows TabIcons[tab] with the short
 -- TabLabels[tab] (or its name). Icon ids: UI/Kit/Icons.
+-- the weapon tabs inside the Skills tab of Stats
+UI.SkillTabs = { Tabs = { "Sword", "Spear", "Heavy", "Dagger", "Ranged", "Magic" },
+	TabIcons = { Sword = "Sword", Spear = "Spear", Heavy = "Heavy", Dagger = "Dagger", Ranged = "Ranged", Magic = "Magic" },
+	TabLabels = { Heavy = "Hammer", Ranged = "Bow", Magic = "Staff" } }
+
 UI.Windows = {
 	Inventory = { Title = "Inventory", Icon = "Inventory", Tabs = { "Equipment", "Weapons", "Armor", "Pets", "Eggs", "Trophies" }, Size = Vector2.new(1080, 620),
 		TabIcons = { Equipment = "Helmet", Weapons = "Sword", Armor = "Chest", Pets = "Pets", Eggs = "Egg", Trophies = "Trophy" },
 		TabLabels = { Equipment = "Me" } },
 	-- The whole RPG system lives here (DESIGN.md section 3): stats, upgrades and derived stats.
-	Stats = { Title = "Stats", Icon = "Stats", Size = Vector2.new(1080, 620) }, -- attributes (UI/Pages/AttributesPage)
+	-- attributes (UI/Pages/AttributesPage) and the weapon skill trees (UI/Pages/SkillTreePage, its weapon tabs: UI.SkillTabs)
+	Stats = { Title = "Stats", Icon = "Stats", Tabs = { "Stats", "Skills" }, TabIcons = { Stats = "Stats", Skills = "Star" }, Size = Vector2.new(1120, 700), CompactTabsWidth = 190 },
 	Shop = { Title = "Shop", Icon = "Shop", Tabs = { "Weapons", "Armor", "Diamonds" }, Size = Vector2.new(1040, 600),
 		TabIcons = { Weapons = "Sword", Armor = "Chest", Diamonds = "Diamond" } },
 	Rebirth = { Title = "Rebirth", Icon = "RebirthShop", Tabs = { "Rebirth", "Rebirth Shop" }, Size = Vector2.new(940, 620), -- UI/Pages/RebirthPage + RebirthShopPage
@@ -57,9 +62,6 @@ UI.Windows = {
 	Settings = { Title = "Settings", Icon = "Settings", Tabs = { "Audio", "Display", "Controls", "Keys", "Other" },
 		TabIcons = { Audio = "Speaker", Display = "Eye", Controls = "Gamepad", Keys = "Keyboard", Other = "Settings" },
 		TabLabels = { Audio = "Sound", Display = "Screen" } },
-	Skills = { Title = "Skills", Icon = "Star", Tabs = { "Sword", "Spear", "Heavy", "Dagger", "Ranged", "Magic" }, Size = Vector2.new(1120, 640),
-		TabIcons = { Sword = "Sword", Spear = "Spear", Heavy = "Heavy", Dagger = "Dagger", Ranged = "Ranged", Magic = "Magic" },
-		TabLabels = { Heavy = "Hammer", Ranged = "Bow", Magic = "Staff" } },
 	Zones = { Title = "Zones", Icon = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
 	-- owner tools V2 (UI/AdminPanel): every test command, 8 tabs
 	Admin = { Title = "Admin", Icon = "Admin", Tabs = { "Resources", "Weapons", "Armor", "Pets", "Stats", "World", "Rewards", "Tests" },

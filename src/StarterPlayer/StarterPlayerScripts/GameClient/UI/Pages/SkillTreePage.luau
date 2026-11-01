@@ -1,5 +1,5 @@
 --!strict
--- The Skills window (Round 8 part 6): one tab per weapon type, a node graph you drag and zoom (mouse wheel, pinch or the + / -
+-- The Skills tab of the Stats window (Round 8 part 6, a tab since Round 9): one tab per weapon type, a node graph you drag and zoom (mouse wheel, pinch or the + / -
 -- buttons), the selected node's details, the mastery bar, the free picks and the bar of 3 equipped special attacks. Built on
 -- Kit/Components. The server decides everything (Services/MasteryService).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,12 +10,14 @@ local Net = require(ReplicatedStorage.GameSystem.Net)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
 local Trees = require(ReplicatedStorage.GameSystem.Config.WeaponSkillTrees)
+local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local WeaponMastery = require(ReplicatedStorage.GameSystem.Config.WeaponMastery)
 local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Components = require(Kit.Components)
 local Icons = require(Kit.Icons)
+local Tabs = require(Kit.Tabs)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
 
@@ -28,6 +30,7 @@ local TOP = 54
 local BOTTOM = 70
 local SIDE = 280
 local ZOOM = { Min = 0.4, Max = 1.2, Start = 0.56, Step = 0.12 }
+local COMPACT_ROW_LEFT = 12 + 78 + 8 + UIConfig.Windows.Stats.CompactTabsWidth + 6 -- phones: the weapon tabs share the row of Stats | Skills
 
 local function data(): { [string]: any }
 	return { Mastery = State.get("Mastery"), FreePicks = State.get("FreePicks"), Gold = State.get("Gold"), EquippedSkills = State.get("EquippedSkills") }
@@ -45,7 +48,7 @@ end
 
 local paints: { () -> () } = {}
 local function paintAll()
-	if Window.isOpen("Skills") then
+	if Window.isOpen("Stats") then
 		for _, paint in ipairs(paints) do
 			paint()
 		end
@@ -70,16 +73,7 @@ local function line(parent: Instance, a: Vector2, b: Vector2): Frame
 	return bar
 end
 
-local function buildTab(page: ScrollingFrame, category: string)
-	for _, child in ipairs(page:GetChildren()) do
-		if child:IsA("UIListLayout") or child:IsA("UIPadding") then
-			child:Destroy()
-		end
-	end
-	page.ScrollingEnabled = false
-	page.AutomaticCanvasSize = Enum.AutomaticSize.None
-	page.CanvasSize = UDim2.new()
-	page.ScrollBarThickness = 0
+local function buildTab(page: Frame, root: ScrollingFrame, category: string)
 	local small = Theme.isCompact()
 	local side = if small then 260 else SIDE
 	local nodes = Trees.ByCategory[category]
@@ -181,7 +175,7 @@ local function buildTab(page: ScrollingFrame, category: string)
 		end
 	end)
 	UserInputService.TouchPinch:Connect(function(_, _, velocity)
-		if page.Visible and Window.isOpen("Skills") then
+		if page.Visible and root.Visible and Window.isOpen("Stats") then
 			zoom(velocity * 0.01)
 		end
 	end)
@@ -194,9 +188,9 @@ local function buildTab(page: ScrollingFrame, category: string)
 
 	-- the details of the chosen node
 	local panel = Components.Panel({ Name = "Details", Size = UDim2.new(0, side, 1, -(TOP + BOTTOM + 6)), Position = UDim2.new(1, -8, 0, TOP), AnchorPoint = Vector2.new(1, 0), Gems = false, BorderThickness = 3, Parent = page })
-	local name = Theme.text({ Font = "Title", Text = "", TextSize = if small then 18 else 24, Color = Theme.Colors.Gold, Wrapped = true, Size = UDim2.new(1, -20, 0, if small then 24 else 56), Position = UDim2.fromOffset(10, if small then 2 else 6), ZIndex = 3, Parent = panel })
-	local effect = Theme.text({ Text = "", TextSize = 18, Wrapped = true, Size = UDim2.new(1, -20, 0, if small then 58 else 76), Position = UDim2.fromOffset(10, if small then 26 else 64), ZIndex = 3, Parent = panel })
-	local costText = Theme.text({ Text = "", TextSize = 17, Color = Theme.Colors.TextDim, Wrapped = true, Size = UDim2.new(1, -20, 0, 66), Position = UDim2.fromOffset(10, 142), ZIndex = 3, Parent = panel })
+	local name = Theme.text({ Font = "Title", Text = "", TextSize = if small then 18 else 24, Color = Theme.Colors.Gold, Wrapped = true, Size = UDim2.new(1, -20, 0, if small then 24 else 36), Position = UDim2.fromOffset(10, if small then 2 else 6), ZIndex = 3, Parent = panel })
+	local effect = Theme.text({ Text = "", TextSize = 18, Wrapped = true, Size = UDim2.new(1, -20, 0, if small then 58 else 62), Position = UDim2.fromOffset(10, if small then 26 else 44), ZIndex = 3, Parent = panel })
+	local costText = Theme.text({ Text = "", TextSize = 17, Color = Theme.Colors.TextDim, Wrapped = true, Size = UDim2.new(1, -20, 0, 66), Position = UDim2.fromOffset(10, 108), ZIndex = 3, Parent = panel })
 	if small then -- the phone panel is short: the effect label takes the cost too (see paint) and fits its box
 		costText.Visible = false
 		effect.TextScaled = true
@@ -357,15 +351,63 @@ local function buildTab(page: ScrollingFrame, category: string)
 	task.defer(center)
 end
 
-function SkillTreePage.build(ctx: any)
-	for _, category in ipairs(Trees.Order) do
-		buildTab(ctx.Pages[category], category)
+function SkillTreePage.build(root: ScrollingFrame, ctx: any)
+	for _, child in ipairs(root:GetChildren()) do
+		if child:IsA("UIListLayout") or child:IsA("UIPadding") then
+			child:Destroy()
+		end
 	end
+	root.ScrollingEnabled = false
+	root.AutomaticCanvasSize = Enum.AutomaticSize.None
+	root.CanvasSize = UDim2.new()
+	root.ScrollBarThickness = 0
+	local small = Theme.isCompact()
+	local config = UIConfig.SkillTabs
+	local labels = config.TabLabels
+	if small then -- icons only: the row is short
+		labels = {}
+		for _, category in ipairs(config.Tabs) do
+			labels[category] = ""
+		end
+	end
+	local pages: { [string]: Frame } = {}
+	local row = Tabs.new({
+		Tabs = config.Tabs,
+		Icons = config.TabIcons,
+		Labels = labels,
+		Size = if small then UDim2.new(1, -(COMPACT_ROW_LEFT + Theme.TOUCH + 16), 0, Theme.TOUCH) else UDim2.new(1, -16, 0, Theme.TOUCH),
+		Position = if small then UDim2.fromOffset(COMPACT_ROW_LEFT, 8) else UDim2.fromOffset(8, 4),
+		OnSelect = function(name: string)
+			for category, page in pairs(pages) do
+				page.Visible = category == name
+			end
+		end,
+		Parent = if small then ctx.Frame else root,
+	})
+	if small then
+		local function follow()
+			row.Instance.Visible = root.Visible
+		end
+		root:GetPropertyChangedSignal("Visible"):Connect(follow)
+		follow()
+	end
+	local rowHeight = if small then 0 else Theme.TOUCH + 8
+	for _, category in ipairs(config.Tabs) do
+		local page = Instance.new("Frame")
+		page.Name = category
+		page.BackgroundTransparency = 1
+		page.Position = UDim2.fromOffset(0, rowHeight)
+		page.Size = UDim2.new(1, 0, 1, -rowHeight)
+		page.Parent = root
+		pages[category] = page
+		buildTab(page, root, category)
+	end
+	row:Select(config.Tabs[1])
 	for _, key in ipairs({ "Mastery", "FreePicks", "EquippedSkills", "Gold" }) do
 		State.changed(key, paintAll)
 	end
 	Window.Opened:Connect(function(id)
-		if id == "Skills" then
+		if id == "Stats" then
 			paintAll()
 		end
 	end)

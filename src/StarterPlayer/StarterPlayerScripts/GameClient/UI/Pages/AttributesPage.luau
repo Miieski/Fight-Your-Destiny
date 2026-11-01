@@ -219,13 +219,17 @@ local function tooltip(attribute: any)
 	holder.BackgroundTransparency = 0.45
 	holder.Size = UDim2.fromScale(1, 1)
 	holder.ZIndex = 30
-	holder.Activated:Connect(closeOverlay)
 	holder.Parent = root
 	overlay = holder -- remembered, so the X, a tap outside or closing the window removes it
 	local top = Theme.TOUCH + 16
 	local height = top + 14 + 34 * (#attribute.Effects + 1)
 	local panel = Panel.new({ Size = UDim2.fromOffset(math.min(520, root.AbsoluteSize.X / Theme.getScale() - 20), height), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 31, Parent = holder })
 	panel.Active = true
+	holder.Activated:Connect(function(input)
+		if Theme.clickedOutside(panel, input) then
+			closeOverlay()
+		end
+	end)
 	Icons.create(attribute.Icon, panel, { Size = UDim2.fromOffset(52, 52), Position = UDim2.fromOffset(14, 8), AnchorPoint = Vector2.zero, ZIndex = 32 })
 	Theme.text({ Font = "Title", Text = attribute.Name, TextSize = 28, Color = Theme.Colors.Gold, Align = "Left", Size = UDim2.new(1, -(74 + Theme.TOUCH + 16), 0, 40), Position = UDim2.fromOffset(74, 14), ZIndex = 32, Parent = panel })
 	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 33, OnClick = closeOverlay, Parent = panel })

@@ -1,0 +1,104 @@
+ROUND 9: LOTS OF SMALL FIXES (TEXTURES, DOORS, BUGS, BOSS REWARDS, MENUS, PORTALS)
+
+The 20 images are in docs/Round9_Fixes/. Their file names start with MY numbers (01..20, there is no 11: my count skipped it, nothing is missing) and 21 is the hub ground. Refer to them by those numbers. Do not ask for the images again.
+Round 8 is ALREADY DONE and in the project (door/portal animations, weapon skill trees, Rebirth rules and protection, new wood UI, floors, etc.): everything below builds on the existing code and configs (Config/DoorAnimations, Config/PortalBuild, the shared UI module, Config/PropTextures...). Where a point below contradicts what Round 8 did, ROUND 9 WINS (in particular the portal behaviour, PART 12). If the owner is not around, do not stop to ask: take the most reasonable reading, log it at the top of docs/NIGHT_LOG.md and carry on.
+
+COMMON RULES
+- Backup first in BackUP_Files/ (dated .rbxl, never overwrite). Max 2 sub-agents at once. If a step fails twice, log it in docs/NIGHT_LOG.md and move on. Push to https://github.com/Miieski/Fight-Your-Destiny after each part. Never put secrets in files.
+- The pink/purple glow around the player in the screenshots is the equipped weapon's aura, NOT a ground bug. Judge ground colors with that aura in mind (test with the aura off).
+- Quality as everywhere else: low-mid poly, soft gradients, clean tileable textures (128-256 px, shared per biome, tinted variants), correct StudsPerTile (no stretching, no z-fighting, no coplanar faces), mobile-friendly. Use MapProps/SyncMapProps (edit the asset in the asset preview, all instances follow); do NOT touch the ground of the asset preview. Keep names, tags, attributes, scripts, collisions, spawns and gameplay unless a part says otherwise.
+- PHOTO REPORT AFTER EACH CHANGE: ONE comparison image like the previous ones (title "NN - Name"; 2x2 grid: "AVANT - Zone de test" / "APRÈS - Zone de test" on top, "AVANT - Dans le jeu" / "APRÈS - Dans le jeu" below; same angle; orange labels for AVANT, green for APRÈS), saved in docs/before_after/. For animations: a filmstrip (8-12 frames).
+- Order of work: PART 7 (door bug) first because it blocks play, then 8, 2, 1, 3, 4, 5, 6, 9, 10, 11, 12, 13. All parts must be done.
+
+==================================================
+PART 1 - RAISED EDGES MUST USE THE GROUND TEXTURE (images 01, 03, 04)
+The raised borders/curbs/slabs along paths and around the ground have a flat grey or purple material that does not match the ground next to them. RULE FOR THE WHOLE GAME: every raised edge, curb, border stone, slab, embankment or terrace edge uses the SAME texture family and palette as the ground it belongs to (same biome, same tile scale, slightly darker/lighter tinted variant), with a small bevel and moss/dirt/sand/snow blending at the base. Do this by auditing ALL such pieces in hub, plains, desert, jungle, tundra, swamp, caves and boss rooms (search by name/mesh/material; list them in docs/NIGHT_LOG.md with "fixed n / total"). Image 04 (forest): no obvious grey edge is visible, so apply the rule to whatever is in that area (grass banks, path borders, fallen log base) and to the whole forest sub-zone. Share the textures with the floor system of the floor work (Config/PropTextures.luau, docs/prop_texture_guide.md "Ground").
+
+==================================================
+PART 2 - SLIDING DOORS CLIPPING INTO WALLS (images 02, 05) - ALL SLIDING DOORS
+Image 02: the plains gate leaves sit inside the wall/pillar (textures intersect). Image 05: the dark stone pillars at the cave entrance are merged into the rock walls (z-fighting and overlapping geometry).
+FIX FOR EVERY SLIDING OR OPENING DOOR IN THE GAME (sub-zone doors, zone doors, boss doors):
+- Audit all doors with a script: leaf size, closed position, open position, travel distance, wall/frame thickness, and report which leaves overlap walls, pillars or rocks (list in docs/NIGHT_LOG.md).
+- Make the sliding travel LONGER: leaf travel >= leaf width + wall/frame thickness + 0.5 stud clearance, so a leaf never ends up half inside a wall. Where a recess/pocket in the wall is needed, create it (real hollow pocket or a covered slot), or make the leaf rise/sink fully out of the way.
+- No coplanar faces: offset leaves 0.05-0.1 stud from frame/wall faces, make frames deeper than the leaf, and when the leaf has finished sliding open, hide it (Transparency = 1 and no collision, for that player only, consistent with the personal door state of the door system) so it can never show z-fighting; show it again if the door is closed again.
+- Image 05: separate the dark pillars from the rock (move/scale the pillars or the rock, or cover the junction with a clean rock/arch piece) so no texture overlap is visible from the player's views, inside and outside.
+- Verify visually from both sides and from 3 angles for EVERY door, in closed, opening, open positions. Photo report: one 2x2 image per door type.
+
+==================================================
+PART 3 - PLAINS CAVE: BETTER FLOOR AND WALLS (image 06)
+I do not like this cave floor (purple cobblestones tinted violet) and these walls at all. Redo the whole plains cave to look like a NATURAL MINE CAVERN and make the visuals more LOGICAL:
+- Walls: irregular faceted brown-gray rock with layers/strata, darker lower part, some ore veins (little copper/gold flecks), cracks, rock buttresses, and a curved rock ceiling with stalactites; no flat uniform panels.
+- Floor: packed dirt and gravel with embedded stones and a few flat flagstones near the rails; subtle darker rail bed; puddles or damp spots in a few places. No violet tint on the floor.
+- Keep: wooden support beams, crates, rails/minecart (already improved), lanterns and the glowing portal at the end, all gameplay and collisions. Purple crystals become small accent clusters only (not a floor color).
+- Logic: a consistent transition from the entrance (image 05) to the interior, ceiling height consistent with the beams, walls leading the eye to the end of the cave, warm lantern light pools, a natural cave mouth outside. Same style as the other redesigned areas (low-mid poly, palette recipe added in docs/prop_texture_guide.md).
+
+==================================================
+PART 4 - HOLE TO FILL SO THE OUTSIDE OF THE MAP IS NEVER VISIBLE (image 08)
+In image 08 there is an opening under the rock/stone arch where the edge or the outside of the map can be seen. Fill it with rock/terrain/vegetation so it looks natural, and add invisible collisions if needed. Then do a full audit of every zone and sub-zone: walk the whole border at player height and with the camera zoomed out, find every see-through gap, hole, floating edge or void behind decor, and fix them the same way (list "fixed n" with zones in docs/NIGHT_LOG.md and one before/after photo for the main ones).
+
+==================================================
+PART 5 - BOSS ROOM CIRCLES (images 09 and 19)
+Image 09: desert boss room (Anubis Guard), a flat orange disc with a blue center. Image 19: ice castle boss room, a flat dark-blue ring with an X.
+Make them more realistic but NOT too realistic, prefer TEXTURES (SurfaceAppearance/Decal, tileable, offset 0.02-0.05 to avoid z-fighting), assets only when it helps, in the same art direction as the rest of the game so it does not clash:
+- Desert: a carved sandstone medallion/mosaic: outer ring with hieroglyph band, golden inlay lines, lapis-blue center with a sun or ankh motif, worn edges and sand in cracks, matching the floor.
+- Ice: a rune circle carved into frosted blue stone/ice slabs with softly glowing frost lines, snow dust in the grooves.
+- Check how each circle is used (spawn area, attack telegraph, mechanic?). If it has a gameplay function keep size, position and readability exactly. Then check ALL other boss rooms (jungle, swamp, etc.) for a similar flat circle and give them the same treatment in their own style.
+
+==================================================
+PART 6 - DIAMONDS FROM MINI-BOSSES AND BOSSES (image 10)
+Players earn DIAMONDS every time they defeat a mini-boss or a boss, not only the first time (2nd, 3rd... victory too). Amounts (Config/BossRewards.luau): mini-boss 3 x zone index, boss 10 x zone index (zone 1 = 3 and 10, zone 6 = about 18 and 60; read the real zone indexes). Every participating player (up to 5 per boss room) receives the full amount for themselves. Show it on the Victory screen as a new line with the diamond icon (e.g. "10 Diamonds (Cursed Pharaoh)"), like the gold lines. Server-authoritative, no duplicates (idempotent per fight per player), saved at once, Diamonds are NOT lost at Rebirth. Do not change gold rewards, keys (first victory) or item drops. Document in docs/ and put the table in docs/boss_rewards.md.
+
+==================================================
+PART 7 - BUG: DOORS CLOSE BEHIND ME AFTER DEATH OR BOSS (image 07) - ALL ZONES
+Symptom: every time I die, or finish a boss, the doors close behind me and I cannot go BACK freely (I am locked in).
+- Find the root cause (door-closing logic triggered by respawn, boss end return teleport, rejoin, Rebirth; stale server/client state; attributes or tags reset; the per-player unlock state; the door animation system closing at the wrong time). Write it in docs/NIGHT_LOG.md.
+- Fix for ALL zones, sub-zones and boss rooms: once a door is unlocked it stays open in BOTH directions for that player forever, whatever happens (death, respawn, boss end, leaving the boss room, rejoin, teleport). Doors only relock via Rebirth rules. A boss room door may close only if it is part of the existing design DURING the fight and must reopen at the end.
+- Safety net: if a player is ever standing behind a door that is unlocked for them and closed, open it automatically (or move them to the correct side) within 1 s; the player must never be trapped.
+- Test in Play mode in every zone: die in a zone, die in a boss fight, win a boss, leave the boss room, rejoin, Rebirth, with 2 players; walk back through every door.
+
+==================================================
+PART 8 - MENUS CLOSE WHEN I HOLD AND RELEASE THE CLICK (image 12) + SKILLS INSIDE STATS
+Bug: if I hold the mouse button/touch and release it, the menu closes (happens in Skills but also in other menus). Cause is probably the "click outside to close" logic using MouseButton1Up/InputEnded without checking where the press started.
+- Fix it in the shared UI component module so it applies to ALL menus/popups/tooltips: a menu closes by outside click only if the press STARTED and ENDED outside the menu (track InputBegan on the same frame/object). A press that starts inside never closes the menu, even if released outside; dragging (scroll, pan, zoom of the skill tree, sliders) never closes it. Works with mouse, touch and gamepad. Test on every menu in the phone emulator.
+- The Skills screen (weapon skill trees) becomes a TAB inside the STATS menu (tabs: Stats | Skills). Remove the separate Skills button from the left menu. Keep every function, the weapon tabs, free picks, special attack slots; adapt the layout to the stats window; keep shortcuts working.
+
+==================================================
+PART 9 - JUNGLE GROUND: UNIFY ALL THE TEXTURES (images 13, 14, 15, 16)
+In these images the textures are not linked to each other: the hexagonal cobble path, the brown dirt wedge, the slate/plaza slabs with glowing plates, curbs, and the flat green "grass overlay" panels with blurry rectangular edges (they look like transparent rectangles lying on the path) all look like different games.
+- Define ONE jungle ground texture set (cobble path, slab plaza, mossy stone, dirt, curb/edge, moss/grass overlays) with a shared palette (green-grey mossy stone, warm brown dirt), the same tile scale and the same wear level; tone down the very bright white-pink cobble path so it sits in the jungle palette.
+- Replace the rectangular grass overlay panels with proper irregular blended transitions (moss patches as decals with soft irregular edges, grass tufts, roots, ferns) so the path, the dirt and the grass blend with no hard straight seams.
+- Make the dirt wedge at the gate blend into the path and the grass; keep the glowing plates, torches and gate gameplay unchanged. Audit the whole jungle (all 4 sub-zones, boss room, entrance) and apply the set everywhere. Same method as Part 1 for edges/curbs. Photo report: one 2x2 image per area (gate, arch, plaza, torch path).
+
+==================================================
+PART 10 - FROZEN LAKE MORE REALISTIC (image 17)
+Make the frozen lake texture more realistic while staying in the low-mid poly style: semi-transparent deep blue ice with a depth gradient from the shore to the center, a web of fine white cracks of different depths, trapped bubbles and frost patches, snow dust and slushy edges at the shore, a very soft reflectance/shine, small ice shards at the edges. Keep the ice-fishing hole props, collisions, sliding/gameplay (if any) and performance (one shared tileable texture plus a few decals).
+
+==================================================
+PART 11 - ICE RAMPS BETTER + TEXTURE BUG (image 18)
+Improve the ice ramps (the blue wedge ramps leading to the raised snow terrace with icicles): carved packed snow and ice with a snow cap, side retaining walls or ice blocks, small steps/ridges and rim stones for detail, icicles and frost at the edges, same palette as the tundra assets. FIX the texture bug: stretched or mis-tiled textures and seams/z-fighting on the wedge parts (check StudsPerTile, face orientation, coplanar overlaps with the side walls, WedgePart texture mapping; use a proper texture mapping for wedges). Keep exact walkable slope, collisions and size so the player can still walk up. Apply to ALL ice ramps in the tundra.
+
+==================================================
+PART 12 - LOCKED PORTALS INVISIBLE + BRICK ANIMATION BASED ON THE REAL PORTAL (image 20)
+Image 20 shows a locked portal: a dark stone brick arch with a "???" sign and a lock plate. This REPLACES the current portal behaviour where it differs.
+- A portal that is NOT unlocked for the player must be completely INVISIBLE for that player: no arch, no "???" sign, no lock plate, no text, no particles, no collision, no prompt (client-side, personal state; the server keeps refusing teleports). The Zones menu still shows the zone as locked with its requirements, so the player knows what to do.
+- The portal appears ONLY at the moment the zone becomes unlocked for that player (the current conditions: boss key + gold, bought in the Zones menu, or the normal first-time progression). It then assembles itself with a brick animation built from the REAL bricks of the current portal model: take the actual portal (the dark stone brick pillars, the arch, the cornice/keystone, the glowing gems/runes) and split it into its individual bricks (from the model parts, or by splitting meshes with a clean grid if the model is a single mesh while keeping the same look), then animate each brick flying/rising in from slightly randomized offsets (ground, sides, above) and stacking bottom-up with small dust puffs and stone sounds (3-5 s total, ease-out, per-brick delays), then the keystone, then the portal ACTIVATES (gems/runes/field light up with an emissive ramp, a pulse of particles, a sound).
+- Deconstruct/assemble logic must work for ALL portals of the game (each zone's portal keeps its own style/bricks), config in Config/PortalBuild.luau (brick order, speed, offsets, sounds). Players who join with the zone already unlocked see the finished lit portal instantly (no animation). After a Rebirth, a portal that is locked again silently disappears (no animation). Handle StreamingEnabled (portal outside view builds when streamed in, or is instantly finished) and mobile performance (brick count limited, parts anchored, tween on the client only, no physics).
+- Update the lock text everywhere: the old message "Defeat the boss of the previous zone and rebirth, then buy it in the Zones menu" must be rewritten to match the current rules (boss key + gold).
+- Photo report: a filmstrip of the assembly and a before/after (locked = nothing visible vs unlocked).
+
+==================================================
+PART 13 - HUB GROUND TEXTURE (image 21)
+The hub (accueil) ground is a large field of pale beige cobblestones with dark brown outlines, plus darker cobble paths and rings. It looks too realistic and clashes with every stylized asset (altar, fountain, benches, planters, arches). Redo it to match the art direction of the rest of the game: LESS realistic, more uniform with the other assets.
+- Stylized paving: bigger, simpler slabs with soft rounded corners, 3-4 warm beige/sand tones plus muted grey-brown joints, LOW contrast, subtle hand-painted gradients, no photographic noise, no heavy dark outlines, no baked shadows. Bigger slab scale (fewer stones in view), tileable, 256 px, shared by the whole hub with tinted variants: main plaza, radiating paths, the circular ring around the Rebirth Altar, steps and curbs.
+- Keep the layout (plaza, inner ring around the altar, paths toward each zone entrance) and tell them apart by tint and pattern, not by a different level of realism. Raised edge stones/curbs use the same texture family (PART 1). Add a few cheap details (cracks, small moss, a few pebbles) consistent with the other grounds.
+- Make the hub ground feel related to the plains and jungle grounds (same palette logic and wear level). Check it in daylight and at the phone camera distance. Do not change collisions, spawns or paths.
+- GENERAL RULE for every ground in this round (PARTS 1, 9, 10, 13): never more realistic than the stylized assets around it; if a texture looks photographic (strong outlines, noisy detail, baked occlusion), simplify it: fewer, larger shapes, 3-5 tones, soft low-contrast joints, same hand-painted feel as the buildings and props.
+- In the same picture: the "???" arches are the locked portals handled by PART 12 (invisible until unlocked, in the hub too); benches and planters must use the improved versions.
+- Photo report: before/after 2x2 for the hub (plaza, ring around the altar, path to a zone).
+
+==================================================
+VERIFY (all parts)
+- Before/after 2x2 images for every part (one per door type, per jungle area, per zone for edges, cave, circles, lake, ramps, hub, portal filmstrip).
+- Play-mode tests: die/win/rejoin/Rebirth with doors (Part 7); all doors open/closed with no clipping (Part 2); menus on mouse and phone emulator (Part 8); boss diamond rewards on 2+ victories with 2 players (Part 6); portal unlocked and locked states (Part 12). No Output errors, smooth in the phone emulator.
+- Update docs (prop_texture_guide.md, prop_inventory.md, asset_preview_index.md/.json, DESIGN.md, HANDOFF.md).
+- Final short report: per part OK / not OK, numbers of items fixed, and anything I must do by hand (only if truly unavoidable).

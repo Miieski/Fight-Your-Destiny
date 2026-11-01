@@ -1,3 +1,19 @@
+# ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
+
+- PART 8, menus (coordinator). ROOT CAUSE reproduced by mouse in Play: a press held on a window and released fires Activated on the Backdrop behind it (Active on the window does not stop that), so the
+  window closes. FIX in the shared code: `Theme.clickedOutside(panel, input)`: true only if the press started AND ended outside the panel. Used by the 5 dims: `Kit/Window`, `Kit/Overlay`, AttributesPage tooltip,
+  PetsPage and WeaponShopPage overlays. Gamepad has no pointer, it still closes as before. Tests by mouse: hold 1.5 s inside: stays open; drag out and release outside: stays; press outside, release inside: stays;
+  plain click outside: closes. NOT tested: real touch; the emulator does not pass clicks to GUI.
+  - Skills is now the tab of Stats: `Config/UI` Stats has tabs Stats | Skills, the menu button is gone (8 buttons again), `UI.SkillTabs` holds the 6 weapon tabs, `SkillTreePage.build(page, ctx)`.
+    DECISION phones: the weapon tabs share the row of Stats | Skills, as icons only (`Window` option CompactTabsWidth), so the graph loses no height. Stats window 1120 x 700 (clipped to 90 % of the screen).
+    Details panel: name, effect and cost moved up, the button was covering the cost in the shorter panel. No key opened Skills, so no shortcut to move.
+- PART 7, doors shut behind the player (coordinator). ROOT CAUSE reproduced in Play: with StreamingEnabled, a gate far from the player streams out (a death, a boss room, a teleport); when it streams back its parts
+  come with the server's pose (shut). `GateController` still counted that door as open and only placed pieces it had never seen, so the leaves stayed shut. Seen on Plains_2: leaves at the server's position with the door "open".
+  FIX: for an open door every refresh (1 s) re-checks all pieces: pose, collision, prompt, particles. That is also the safety net of the prompt: an unlocked door can never stay shut more than 1 s.
+  Nothing on the server changed, the unlocks were never lost. Boss room doors: only the room's own door moves during a fight, it was not the cause.
+  - Tests in Play (server pose kept in an attribute, compared on the client): stream out and back on Plains_2: open. Die on sub-zone 4 of Plains, Desert, Jungle, Tundra, Swamp: 0 pieces shut, 0 colliding, of 168.
+    Win the Plains boss, back at the entrance: 0 shut. NOT tested: 2 players (Studio solo here), other zones' bosses, a rejoin after the fix, a real walk through each door.
+
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
 - PART 8 + VERIFY, wood + metal UI (Studio agent). `Config/UITheme` (colors, fonts, sizes, rarity color, images), `Kit/Theme` reads it; `tools/make_ui_textures.py`, 11 images uploaded,

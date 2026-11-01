@@ -25,7 +25,7 @@ local DUST_TEXTURE = "rbxasset://textures/particles/smoke_main.dds"
 local FALL_FADE_FROM = 0.65 -- Fall / Retract: the fade starts here
 local TWO_LEAVES = { Hinge = true, Slide = true, CrackSlide = true }
 
-type Piece = { part: BasePart, home: CFrame, side: number, index: number, fadeOnly: boolean }
+type Piece = { part: BasePart, home: CFrame, side: number, index: number, fadeOnly: boolean, posed: CFrame? }
 type Gate = { cfg: DoorAnimations.DoorType, barrier: BasePart, frame: CFrame, open: boolean, playing: boolean, swing: number, pieces: { Piece }, seen: { [BasePart]: boolean }, proxies: { BasePart } }
 
 local collide: { [BasePart]: boolean } = {}
@@ -286,15 +286,17 @@ local function setGate(gate: Model, open: boolean, priceText: string, animated: 
 		elseif not open and door.open then
 			closeGate(door)
 		elseif open and not door.playing then
-			-- pieces that streamed in since: their open pose at once
-			local before = #door.pieces
+			-- a door that streamed back in (death, boss room, teleport) comes with the server's shut pose and collision: put
+			-- right at every refresh, so a door that is open for this player can never stay shut more than REFRESH_SECONDS
 			collect(door)
-			for i = before + 1, #door.pieces do
-				place(door, door.pieces[i], 1)
+			for _, piece in ipairs(door.pieces) do
+				local part = piece.part
+				if part.Parent and (piece.fadeOnly or part.CFrame ~= piece.posed) then
+					place(door, piece, 1)
+					piece.posed = part.CFrame
+				end
 			end
-			if #door.pieces > before then
-				flags(door, true)
-			end
+			flags(door, true)
 		end
 	end
 	for _, label in ipairs(gate:GetDescendants()) do

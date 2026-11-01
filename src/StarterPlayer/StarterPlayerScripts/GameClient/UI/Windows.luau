@@ -71,7 +71,8 @@ local BUILDERS = {
 	Shop = shop,
 	Inventory = inventory,
 	Stats = function(ctx: any)
-		AttributesPage.build(ctx.Pages.Main, ctx)
+		AttributesPage.build(ctx.Pages.Stats, ctx)
+		SkillTreePage.build(ctx.Pages.Skills, ctx)
 	end,
 	Settings = SettingsPage.build,
 	Pets = PetsPage.build,
@@ -83,7 +84,6 @@ local BUILDERS = {
 		RebirthShopPage.build(ctx.Pages["Rebirth Shop"], ctx)
 	end,
 	Zones = ZonesPage.build,
-	Skills = SkillTreePage.build,
 }
 
 function Windows:Start()
@@ -100,7 +100,7 @@ end
 function Windows:Init()
 	for id, def in pairs(UIConfig.Windows) do
 		if id ~= "Admin" then
-			Window.define(id, { Title = def.Title, Icon = def.Icon, Tabs = def.Tabs, TabIcons = def.TabIcons, TabLabels = def.TabLabels, Size = def.Size, Build = BUILDERS[id] or function(ctx)
+			Window.define(id, { Title = def.Title, Icon = def.Icon, Tabs = def.Tabs, TabIcons = def.TabIcons, TabLabels = def.TabLabels, Size = def.Size, CompactTabsWidth = def.CompactTabsWidth, Build = BUILDERS[id] or function(ctx)
 				placeholders(ctx, def.Intro)
 			end })
 		end

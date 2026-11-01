@@ -1,8 +1,9 @@
 --!strict
 -- Window manager: one window open at a time over a dim backdrop; pop animation (0.9 -> 1, Back Out),
 -- X button top-right, optional tabs, scrolling pages. Windows never exceed 90% of the screen.
---   Window.define(id, { Title, Icon?, Tabs?, TabIcons?, TabLabels?, Size?: Vector2, Build = function(ctx) end })
+--   Window.define(id, { Title, Icon?, Tabs?, TabIcons?, TabLabels?, Size?: Vector2, CompactTabsWidth?, Build = function(ctx) end })
 --       Icon = an Icons id drawn left of the title; TabIcons / TabLabels = { [tab] = icon id / short label }
+--       CompactTabsWidth = phones: the tabs stop at this width and the plate keeps only the icon (a page uses the rest of the row)
 --       ctx = { Frame, Pages = { [tab or "Main"] = ScrollingFrame }, Tabs?, Select(tab) }
 --   Window.open(id, tab?), Window.close(quiet?), Window.toggle(id, tab?), Window.isOpen(id?)
 --       quiet = no sound. The backdrop always goes with the window (it stays only when another window replaces it).
@@ -22,7 +23,7 @@ local Theme = require(script.Parent.Theme)
 
 local Window = {}
 
-type Definition = { Title: string, Icon: string?, Tabs: { string }?, TabIcons: { [string]: string }?, TabLabels: { [string]: string }?, Size: Vector2?, Build: ((any) -> ())? }
+type Definition = { Title: string, Icon: string?, Tabs: { string }?, TabIcons: { [string]: string }?, TabLabels: { [string]: string }?, Size: Vector2?, CompactTabsWidth: number?, Build: ((any) -> ())? }
 type Built = { frame: Frame, pages: { [string]: ScrollingFrame }, tabs: any?, pop: UIScale, def: Definition, banner: Frame, content: Frame }
 
 local HEADER = 74
@@ -67,8 +68,11 @@ local function ensureRoot(): Frame
 	cover(dim)
 	dim.Visible = false
 	dim.ZIndex = 1
-	dim.Activated:Connect(function()
-		Window.close()
+	dim.Activated:Connect(function(input)
+		local entry = if current then built[current] else nil
+		if not entry or Theme.clickedOutside(entry.frame, input) then
+			Window.close()
+		end
 	end)
 	dim.Parent = screenRoot
 	root = screenRoot
@@ -130,7 +134,7 @@ local function arrange(entry: Built)
 		banner.AnchorPoint = Vector2.zero
 		banner.Position = UDim2.fromOffset(12, 8)
 		-- many tabs need the room: the plate keeps only the window's icon
-		local narrow = entry.def.Icon ~= nil and #(entry.def.Tabs or {}) >= COMPACT_ICON_ONLY_TABS
+		local narrow = entry.def.Icon ~= nil and (entry.def.CompactTabsWidth ~= nil or #(entry.def.Tabs or {}) >= COMPACT_ICON_ONLY_TABS)
 		local width = if narrow then COMPACT_ICON_BANNER else COMPACT_BANNER
 		banner.Size = UDim2.fromOffset(width, Theme.TOUCH)
 		if limit then
@@ -144,7 +148,7 @@ local function arrange(entry: Built)
 		if entry.tabs then
 			local left = 12 + banner.Size.X.Offset + 8
 			entry.tabs.Instance.Position = UDim2.fromOffset(left, 8)
-			entry.tabs.Instance.Size = UDim2.new(1, -(left + Theme.TOUCH + 16), 0, Theme.TOUCH)
+			entry.tabs.Instance.Size = if entry.def.CompactTabsWidth then UDim2.fromOffset(entry.def.CompactTabsWidth, Theme.TOUCH) else UDim2.new(1, -(left + Theme.TOUCH + 16), 0, Theme.TOUCH)
 		end
 	else
 		banner.AnchorPoint = Vector2.new(0.5, 0)
