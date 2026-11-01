@@ -7,7 +7,9 @@
 		print(C.tunnel())   -- rock facets around the tunnel; the 3 flat tunnel parts stay as invisible colliders
 		print(C.relief())   -- buttresses in the cavern
 		print(C.floor())    -- dirt and gravel, rail bed, flagstones, gravel, damp spots
-		print(C.lights())   -- warm light pools at the torches, the gold ore and the minecart
+		print(C.lights())   -- warm light pools at the torches, the gold ore and the minecart, 3 on the west side
+		print(C.oreLights()) -- the 7 blue ore lights, 12 / 0.7; again after a Sync of that template
+		print(C.foot())     -- old dark foot colours -> the new ones, on facets already placed (shell, rock, Plains boss room)
 		print(C.crystals()) -- crystals scaled down to small accents: NOT idempotent, run it once
 		print(C.variants()) -- Variant "Mine" of the rocks, then Sync.run({ only = ids })
 
@@ -28,7 +30,7 @@ local AXIS_X, AXIS_Z = 2000, 900 -- the centre of the cavern
 
 -- bottom to top: dark damp foot, then brown and grey layers, a dark crown
 local LAYERS = {
-	{ top = 7, colors = { "3f342b", "463a30", "3a3029" } },
+	{ top = 7, colors = { "4f4135", "574838", "4a3d32" } }, -- was 3f342b, 463a30, 3a3029: black where no lamp reaches, see C.foot()
 	{ top = 13, colors = { "54463a", "5c4c3e" } },
 	{ top = 19, colors = { "74604c", "6c5a48" } },
 	{ top = 23, colors = { "7a746a", "6e685e" } },
@@ -52,6 +54,9 @@ local VARIANTS: { [string]: { [string]: string } } = {
 	plains_rock_ore_cluster_gold = { Rock = "54463a" },
 	plains_rock_crystal_cluster_a = { Rock = "54463a" },
 }
+
+local FOOT_REMAP = { ["3f342b"] = "4f4135", ["463a30"] = "574838", ["3a3029"] = "4a3d32" }
+local WEST_POOLS = { Vector3.new(1947, 9, 938), Vector3.new(1925, 9, 922), Vector3.new(1946, 9, 900) } -- in front of the buttresses, or their faces stay black
 
 local function zone()
 	return workspace.Zones.Plains.Plains_4
@@ -435,7 +440,49 @@ function C.lights(): string
 			n += 1
 		end
 	end
+	-- the west side has no gold ore, so it had no pool: its foot read as black holes and its floor stayed dark
+	for _, p in ipairs(WEST_POOLS) do
+		pool(p, 36, 0.65)
+		n += 1
+	end
 	return `lights: {n} warm pools`
+end
+
+-- Part 3 meant these 7 lights to be 12 / 0.7 too. At 26 / 1.5 they wash the west wall blue and fight the warm pools for the light budget.
+-- Sync.run on plains_rock_ore_cluster_blue puts the template's 26 / 1.5 back: run this after it.
+function C.oreLights(): string
+	local n = 0
+	for _, m in ipairs(zone().Decor.Cavern:GetChildren()) do
+		if m.Name == "Ore_Cluster_Blue" then
+			for _, l in ipairs(m:GetDescendants()) do
+				if l:IsA("PointLight") then
+					l.Range, l.Brightness = 12, 0.7
+					n += 1
+				end
+			end
+		end
+	end
+	return `ore lights: {n} set to 12 / 0.7`
+end
+
+-- Colours only, no shape and no collider: strata() is random, so re-running walls() would re-roll every facet.
+function C.foot(): string
+	local n = 0
+	local function remap(root: Instance)
+		for _, w in ipairs(root:GetDescendants()) do
+			if w:IsA("WedgePart") then
+				local new = FOOT_REMAP[w.Color:ToHex()]
+				if new then
+					w.Color = hex(new)
+					n += 1
+				end
+			end
+		end
+	end
+	remap(zone().Decor.CaveShell)
+	remap(zone().Decor.MineRock)
+	remap(ServerStorage.BossArenas.Plains.CaveShell)
+	return `foot: {n} facets recoloured`
 end
 
 ---------------------------------------------------------------------

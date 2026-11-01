@@ -3790,7 +3790,7 @@ Palette recipe. Facet colours, bottom to top; the layers tilt and wave (`y + 3.5
 
 | layer, up to y | tones | role |
 |---|---|---|
-| 7 | #3F342B #463A30 #3A3029 | dark damp foot |
+| 7 | #4F4135 #574838 #4A3D32 | dark damp foot (the old #3F342B range read as black holes where no lamp reaches) |
 | 13 | #54463A #5C4C3E | lower wall |
 | 19 | #74604C #6C5A48 | brown |
 | 23 | #7A746A #6E685E | grey |
