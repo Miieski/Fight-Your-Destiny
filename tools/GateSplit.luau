@@ -36,8 +36,8 @@ end
 
 -- the part's extent along the door's width (local X of frame)
 local function extent(part: BasePart, frame: CFrame): (number, number)
-	local rel = frame:ToObjectSpace(part.CFrame)
-	local half = part.Size / 2
+	local rel = frame:ToObjectSpace(part.ExtentsCFrame) -- a union's CFrame is not its centre
+	local half = part.ExtentsSize / 2
 	local reach = math.abs(rel.RightVector.X) * half.X + math.abs(rel.UpVector.X) * half.Y + math.abs(rel.LookVector.X) * half.Z
 	return rel.Position.X - reach, rel.Position.X + reach
 end

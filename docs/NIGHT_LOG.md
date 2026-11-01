@@ -1,5 +1,70 @@
 # ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
 
+- PART 2, doors clipping into walls (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_200901_before_r9_part2`. New tools: `tools/DoorAudit.luau`, `tools/DoorStage.luau`, `tools/DoorPockets.luau`. Sheets `docs/before_after/R9-02-<type>.png`, 9 of them.
+  - DECISION: every door in its open pose is hidden for that player, Hinge and Rise included (the owner's wording is for sliding leaves, the coordinator's note says all leaves). The leaves fade over the end of the move, `FadeFrom` per type. A hinged leaf that vanishes loses a little charm, but it can no longer show in a hill (image 02). `Config/DoorAnimations`, `Controllers/GateController`.
+  - FOUND: `LocalTransparencyModifier` on a part does NOT hide its Decal / Texture children. Tested in Play: a part at 1 left the decal floating. `Decal.LocalTransparencyModifier` exists, a Texture has it too, and at 1 the decal vanished. `setFade` sets both, and CastShadow off while hidden; all put back on closing. No gate or boss gate has a Decal or a Texture today, so this is for later doors.
+  - Numbers: Slide / CrackSlide travel 12 -> 16.5 (leaf 12 + post 4 + 0.5), `Travel`: hell_gate_4 17.5, heaven_gate_4 19, dead_gate_4 19.5. Rise 15.5 -> 16.5. Hinge 100 -> 88 degrees: Plains_2's open leaf no longer reaches the hill (Facet hits 4 -> 0). Boss doors: leaf width + 6.5 (Plains 9 -> 21.5), in 0.72 s, then hidden.
+  - DECISION: where a leaf ends inside a wall thicker than itself, the wall is the pocket, and the rule's "wall thickness" is the post in front of it, not the 28-stud wall: otherwise the leaf would come out behind the building. 3 doors had no wall to go into (the leaf came out behind a thin post): `gate_mine`, `heaven_gate_4`, `dead_gate_4` get a real pocket, a stone wall each side deeper than the leaf, 1 wall + 1 cap per side. They collide: they stand where a player can touch them; they close no route (`Bounds.CorridorEast` is behind them on Plains_4). Seen at t = 0.6 on all 12 sliding doors.
+  - Image 05: what merged with the rock was mostly the leaf itself, sitting in front of the rocks at x 12-24. Also moved in `gate_mine`: tall rocks 4 studs out, lower rocks 1.5, so they clear the pillars. Sync: 12 / 12 copies (gate_mine, heaven_gate_4, dead_gate_4, pylon_temple_gate), asset preview copies included. NOT changed: Plains_3 (rocks stand behind / in front of the arch, no shared face), Tundra_3 and Swamp_3 (rock frames, the leaf goes into the rock).
+  - BUG FOUND, fixed: `pylon_temple_gate` DoorGold crossed the door uncut, because a union's CFrame is not its centre; `GateSplit` now reads ExtentsCFrame, 1 piece cut. GateController had the same mistake for a piece's side. Swamp_4's skull crest also crosses the centre, on purpose: it goes with the right leaf.
+  - Boss doors: `openLeaves` now also takes what is fixed on the leaves (runes, bands, emblems), which used to stay in the air, fades seams across both leaves, uses a flat frame (the Interact part is tilted on Hell and Mechanical, so Hell's leaves slid diagonally), and the 3 one-leaf doors (Desert, Abyss, Swamp) rise. Dead_4's boss gate has no leaf part: nothing moves, the veil hides it, unchanged.
+  - AUDIT, in each door's own frame. Leaf = width x height x depth of ONE leaf. Frame = the post in studs; W = a wall behind it. Numbers come from colliders: a union with a hull collider overlaps by itself, so "self" = its own gate's unions, not a real clash. Every open leaf is hidden at that point.
+    | door | type | leaf | closed x | open / travel | frame | open leaf touches |
+    |---|---|---|---|---|---|---|
+    | Plains_2 gate_palisade | WoodDouble | 12 x 16 x 2.3 | 0..12 | 88 deg | 10 | self |
+    | Plains_3 gate_barricade | Plank | 24 x 13 x 3.9 | -12..12 | falls 13 | 20.6 | self |
+    | Plains_4 gate_mine | StoneSlide | 12 x 16 x 3.9 | 0..12 | 16.5 | 3.8 + pocket | pocket, rock |
+    | Plains_4 BossGate | slide | 15 x 36 x 3.2 | 0..15 | 21.5 | 6.7 | hill, rocks, crystals |
+    | Desert_2 sandstone_wall_gate | WoodDouble | 12 x 16 x 2.8 | 0..12 | 88 deg | W | self |
+    | Desert_3 canyon_barricade | Plank | 24 x 15 x 3.5 | -12..12 | falls 13 | 14.9 | self |
+    | Desert_4 pylon_temple_gate | SandSlide | 12 x 16 x 4 | 0..12 | 16.5 | W 28.6 | tower (pocket), corridor wall, step |
+    | Desert_4 BossGate | rise | 30 x 34 x 3 | -15..15 | 34.5 up | W | none |
+    | Jungle_2 jungle_palisade_gate | WoodDouble | 12 x 16 x 2.6 | 0..12 | 88 deg | W | self |
+    | Jungle_3 jungle_barricade_gate | Vine | 25 x 16 x 5.4 | -12..12 | up 12, aside 2 | W | self |
+    | Jungle_4 face_temple_gate | StoneRise | 24 x 16 x 3.9 | -12..12 | 16.5 up | W | self |
+    | Jungle_4 BossGate | slide | 15 x 36 x 2.5 | 0..15 | 21.5 | W 24 | head statue |
+    | Tundra_2 tundra_palisade_gate | WoodDouble | 12 x 16 x 2.6 | 0..12 | 88 deg | W | self |
+    | Tundra_3 tundra_ice_rock_gate | Ice | 13 x 16 x 5.6 | 0..13 | 16.5 | rock | rock (pocket), cliffs |
+    | Tundra_4 tundra_ice_castle_gate | Ice | 12 x 16 x 3.7 | 0..12 | 16.5 | W | castle wall (pocket) |
+    | Tundra_4 BossGate | slide | 16 x 38 x 3.5 | 0..16 | 22.5 | 6 | wall, ice spikes |
+    | Swamp_2 swamp_tree_gate | WoodDouble | 12 x 16 x 2.5 | 0..12 | 88 deg | W | self |
+    | Swamp_3 swamp_rock_gate | Vine | 25 x 17 x 4.8 | -12..12 | up 12, aside 2 | rock | self |
+    | Swamp_4 swamp_skull_gate | WoodDouble | 12 x 16 x 5.4 | 0..12 | 88 deg | W | self |
+    | Swamp_4 BossGate | rise | 17 x 17 x 0.4 | -8.5..8.5 | 17.5 up | rock | rock |
+    | Volcano_2 volcano_gate_2 | Plank | 24 x 16 x 2 | -12..12 | falls 13 | W | self |
+    | Volcano_3 volcano_gate_3 | Portcullis | 24 x 16 x 1.1 | -12..12 | 16.5 up | W 17 | lintel (pocket) |
+    | Volcano_4 volcano_gate_4 | StoneSlide | 12 x 16 x 3.3 | 0..12 | 16.5 | W 28 | pylon (pocket), rock, hill |
+    | Volcano_4 BossGate | slide | 20 x 56 x 4 | 0..20 | 26.5 | W 34 | hill |
+    | Hell_2 hell_gate_2 | Portcullis | 24 x 16 x 1.6 | -12..12 | 16.5 up | W 25 | self, sign |
+    | Hell_3 hell_gate_3 | StoneSlide | 12 x 16 x 2.4 | 0..12 | 16.5 | W 29 | wall (pocket) |
+    | Hell_4 hell_gate_4 | StoneSlide | 12 x 16 x 2.4 | 0..12 | 17.5 | 5 | castle (pocket) |
+    | Hell_4 BossGate | slide | 15.4 x 40 x 2.4 | 0..15.4 | 21.9 | W | none |
+    | Heaven_2 heaven_gate_2 | Energy | 24 x 16 x 1 | -12..12 | fades | 6.4 | - |
+    | Heaven_3 heaven_gate_3 | Portcullis | 24 x 16 x 1 | -12..12 | 16.5 up | 10.6 | lintel (pocket) |
+    | Heaven_4 heaven_gate_4 | StoneSlide | 12 x 16 x 2.9 | 0..12 | 19 | 6.5 + pocket | pocket, castle base |
+    | Heaven_4 BossGate | slide | 14.8 x 36 x 2.4 | 0..14.8 | 21.3 | W | none |
+    | Dead_2 dead_gate_2 | Energy | 24 x 16 x 0.6 | -12..12 | fades | 8 | - |
+    | Dead_3 dead_gate_3 | Energy | 24 x 16 x 3.7 | -12..12 | fades | W 27 | - |
+    | Dead_4 dead_gate_4 | StoneSlide | 12 x 16.6 x 5.2 | 0..12 | 19.5 | 7 + pocket | pocket, cathedral |
+    | Dead_4 BossGate | none | - | - | - | - | no leaf part |
+    | Abyss_2 abyss_gate_2 | Energy | 24 x 16 x 3.1 | -12..12 | fades | W 13 | - |
+    | Abyss_3 abyss_gate_3 | Energy | 24 x 16.7 x 3.7 | -12..12 | fades | W 12 | - |
+    | Abyss_4 abyss_gate_4 | StoneSlide | 12 x 16 x 5.3 | 0..12 | 16.5 | W 16 | wall (pocket), corridor rock, hill |
+    | Abyss_4 BossGate | rise | 32 x 40 x 3 | -16..16 | 40.5 up | W | gate top |
+    | Mechanical_2 mechanical_gate_2 | Portcullis | 24 x 16 x 1.4 | -12..12 | 16.5 up | W 18 | header, ceiling (pocket) |
+    | Mechanical_3 mechanical_gate_3 | StoneSlide | 12 x 16 x 3.2 | 0..12 | 16.5 | W 18 | wall (pocket) |
+    | Mechanical_4 mechanical_gate_4 | StoneSlide | 12 x 16 x 3.3 | 0..12 | 16.5 | W 18 | wall (pocket), jamb, keypad |
+    | Mechanical_4 BossGate | slide | 15 x 36 x 3 | 0..15 | 21.5 | 6 | wall |
+    | Void_2 void_gate_2 | Energy | 24 x 16 x 1 | -12..12 | fades | 8 | - |
+    | Void_3 void_gate_3 | Energy | 27.7 x 16.6 x 2.1 | -13.8..13.8 | fades | W 28 | - |
+    | Void_4 void_gate_4 | Energy | 30 x 30 x 1.9 | -15..15 | fades | 11.5 | - |
+    | Void_4 BossGate | slide | 15 x 36 x 3 | 0..15 | 21.5 | W 18 | pillar |
+  - Coplanar faces: a check by bounding boxes gives 13 candidates (Swamp_2 Vines and Hang, Swamp_3 Logs, Tundra_2 Logs and DoorGold, Volcano_2 Brace). Boxes of unions only, not confirmed by eye, none offset. The leaves were not moved 0.05-0.1 stud: closed leaves end inside their frame, and open ones are hidden.
+  - Tests in Play: Plains_4 hidden 12 / 12, 0 colliding, 0 shadows. `lockAll`: back shut, shown, Barrier colliding (a Rebirth uses the same closeGate). `unlockZone`: x 2006 -> 2022.5 in 1.8 s, fade from 1.4 s. Plains boss door by a fired Enter: leaf x 1992.5 -> 1971, 36 parts faded, all restored on Back. Log: 0 script errors. The walk through each type is in the Part 1 entry.
+  - NOT done: the prompt's "3 angles, closed / opening / open, every door": done as 2 sides of one door per type, plus t = 0.6 from the front on the 12 sliding doors. Boss doors of other zones than Plains were not played.
+  - Plank, Vine, Energy already vanished in Round 8: their sheets show closed on the left, open on the right, not a before.
+  - Seen during a Play test: the character walked by itself for about a minute (MoveDirection set, through the Plains_4 door and back). Not from my commands; I did not find the cause.
+
 - PART 8, menus (coordinator). ROOT CAUSE reproduced by mouse in Play: a press held on a window and released fires Activated on the Backdrop behind it (Active on the window does not stop that), so the
   window closes. FIX in the shared code: `Theme.clickedOutside(panel, input)`: true only if the press started AND ended outside the panel. Used by the 5 dims: `Kit/Window`, `Kit/Overlay`, AttributesPage tooltip,
   PetsPage and WeaponShopPage overlays. Gamepad has no pointer, it still closes as before. Tests by mouse: hold 1.5 s inside: stays open; drag out and release outside: stays; press outside, release inside: stays;

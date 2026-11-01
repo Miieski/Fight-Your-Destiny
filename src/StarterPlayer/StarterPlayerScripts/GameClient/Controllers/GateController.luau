@@ -2,9 +2,10 @@
 -- Shows each sub-zone gate as open or closed for THIS player (gates are unlocked per player), and plays its opening when
 -- the player unlocks it (Config/DoorAnimations: one row per door type, data only). The door is the gate's Barrier and
 -- its descendants: left / right pieces by their side of the Barrier's centre (DevTools.GateSplit cut the ones across it).
--- An open door keeps its open pose on this client; its collision goes for this player only. The server still checks where
+-- An open door keeps its open pose on this client, hidden (Round 9: LocalTransparencyModifier on the pieces and on their Decals
+-- and Textures, so a leaf never shows inside a wall); its collision goes for this player only. The server still checks where
 -- the player stands (ZoneService), so an open-looking gate grants nothing by itself. A gate that is already open at join,
--- or streams back in, is put in its open pose at once, with no animation; a gate locked again by a Rebirth goes back shut.
+-- or streams back in, is put in its open pose at once, with no animation; a gate locked again by a Rebirth comes back shut.
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -23,10 +24,11 @@ local PRICE_COLOR = Color3.fromRGB(255, 201, 60)
 local REFRESH_SECONDS = 1 -- gates stream in and out, so the state is re-applied regularly
 local DUST_TEXTURE = "rbxasset://textures/particles/smoke_main.dds"
 local FALL_FADE_FROM = 0.65 -- Fall / Retract: the fade starts here
+local FADE_FROM = 0.8 -- the other modes, unless the door type says otherwise
 local TWO_LEAVES = { Hinge = true, Slide = true, CrackSlide = true }
 
-type Piece = { part: BasePart, home: CFrame, side: number, index: number, fadeOnly: boolean, posed: CFrame? }
-type Gate = { cfg: DoorAnimations.DoorType, barrier: BasePart, frame: CFrame, open: boolean, playing: boolean, swing: number, pieces: { Piece }, seen: { [BasePart]: boolean }, proxies: { BasePart } }
+type Piece = { part: BasePart, home: CFrame, side: number, index: number, fadeOnly: boolean, posed: CFrame?, skins: { Decal }, shadow: boolean }
+type Gate = { cfg: DoorAnimations.DoorType, travel: number, barrier: BasePart, frame: CFrame, open: boolean, playing: boolean, swing: number, pieces: { Piece }, seen: { [BasePart]: boolean }, proxies: { BasePart } }
 
 local collide: { [BasePart]: boolean } = {}
 local gates: { [BasePart]: Gate } = setmetatable({}, { __mode = "k" }) :: any
@@ -34,26 +36,44 @@ local animate: { [string]: boolean } = {} -- sub-zones unlocked just now: their 
 
 local function addPiece(g: Gate, part: BasePart, fadeOnly: boolean?)
 	g.seen[part] = true
-	-- a piece cut by GateSplit keeps the original's pivot: its side is in its name
-	local side = if string.sub(part.Name, -2) == "_L" then -1 elseif string.sub(part.Name, -2) == "_R" then 1 elseif g.frame:PointToObjectSpace(part.Position).X >= 0 then 1 else -1
-	table.insert(g.pieces, { part = part, home = part.CFrame, side = side, index = #g.pieces + 1, fadeOnly = fadeOnly == true })
+	-- a piece cut by GateSplit keeps the original's pivot: its side is in its name; a union's Position is not its centre
+	local side = if string.sub(part.Name, -2) == "_L" then -1 elseif string.sub(part.Name, -2) == "_R" then 1 elseif g.frame:PointToObjectSpace(part.ExtentsCFrame.Position).X >= 0 then 1 else -1
+	local skins = {}
+	for _, child in ipairs(part:GetChildren()) do
+		if child:IsA("Decal") then -- a Texture is a Decal
+			table.insert(skins, child)
+		end
+	end
+	table.insert(g.pieces, { part = part, home = part.CFrame, side = side, index = #g.pieces + 1, fadeOnly = fadeOnly == true, skins = skins, shadow = part.CastShadow })
 end
 
--- t 0 (shut) .. 1 (open) for one piece
+-- 0 seen .. 1 hidden for this player. The part's modifier does not reach its Decals and Textures, they have their own; a hidden part casts no shadow.
+local function setFade(piece: Piece, fade: number)
+	local part = piece.part
+	part.LocalTransparencyModifier = fade
+	for _, skin in ipairs(piece.skins) do
+		skin.LocalTransparencyModifier = fade
+	end
+	part.CastShadow = piece.shadow and fade < 1
+end
+
+-- t 0 (shut) .. 1 (open, hidden) for one piece
 local function place(g: Gate, piece: Piece, t: number)
 	local cfg, part = g.cfg, piece.part
 	local mode = cfg.Mode
 	if piece.fadeOnly then
-		part.LocalTransparencyModifier = if t > 0 then 1 else 0 -- the Barrier's slab: the proxies stand in for it
+		setFade(piece, if t > 0 then 1 else 0) -- the Barrier's slab: the proxies stand in for it
 		return
 	end
 	local f = g.frame
+	local from = cfg.FadeFrom or FADE_FROM
+	local fade = math.clamp((t - from) / (1 - from), 0, 1)
 	if mode == "Hinge" then
 		local hinge = f * CFrame.new(piece.side * g.barrier.Size.X / 2, 0, 0)
 		local angle = math.rad(cfg.Angle or 90) * t * piece.side * g.swing
 		part.CFrame = hinge * CFrame.Angles(0, angle, 0) * hinge:Inverse() * piece.home
 	elseif mode == "Slide" or mode == "CrackSlide" then
-		part.CFrame = piece.home + f.RightVector * piece.side * (cfg.Distance or 12) * t
+		part.CFrame = piece.home + f.RightVector * piece.side * g.travel * t
 	elseif mode == "Rise" then
 		part.CFrame = piece.home + f.UpVector * (cfg.Height or 15) * t
 	elseif mode == "Fall" then
@@ -61,13 +81,14 @@ local function place(g: Gate, piece: Piece, t: number)
 		local k = math.clamp((t - 0.4 * (piece.index - 1) / n) / 0.6, 0, 1)
 		local bounce = if k < 0.8 then (k / 0.8) ^ 2 else 1 - 0.08 * math.sin((k - 0.8) / 0.2 * math.pi)
 		part.CFrame = (piece.home - f.UpVector * (cfg.Drop or 12) * bounce) * CFrame.Angles(0, 0, 0.35 * piece.side * k)
-		part.LocalTransparencyModifier = math.clamp((k - FALL_FADE_FROM) / (1 - FALL_FADE_FROM), 0, 1)
+		fade = math.clamp((k - FALL_FADE_FROM) / (1 - FALL_FADE_FROM), 0, 1)
 	elseif mode == "Retract" then
 		part.CFrame = piece.home + f.UpVector * (cfg.Height or 12) * t + f.RightVector * piece.side * 2 * t
-		part.LocalTransparencyModifier = math.clamp((t - 0.4) / 0.6, 0, 1)
+		fade = math.clamp((t - 0.4) / 0.6, 0, 1)
 	else
-		part.LocalTransparencyModifier = t
+		fade = t
 	end
+	setFade(piece, fade)
 end
 
 local function proxy(g: Gate, width: number, x: number)
@@ -260,7 +281,7 @@ local function closeGate(g: Gate)
 		if piece.part.Parent then
 			place(g, piece, 0)
 			piece.part.CFrame = piece.home
-			piece.part.LocalTransparencyModifier = 0
+			setFade(piece, 0)
 		end
 	end
 	for _, p in ipairs(g.proxies) do
@@ -277,7 +298,8 @@ local function setGate(gate: Model, open: boolean, priceText: string, animated: 
 		if not g then
 			local entrance = gate.Parent and gate.Parent:FindFirstChild("Entrance")
 			local swing = if entrance and entrance:IsA("BasePart") and barrier.CFrame:PointToObjectSpace(entrance.Position).Z < 0 then -1 else 1
-			g = { cfg = DoorAnimations.typeOf(gate:GetAttribute("MapPropId")), barrier = barrier, frame = barrier.CFrame, open = false, playing = false, swing = swing, pieces = {}, seen = {}, proxies = {} }
+			local id = gate:GetAttribute("MapPropId")
+			g = { cfg = DoorAnimations.typeOf(id), travel = DoorAnimations.distanceOf(id), barrier = barrier, frame = barrier.CFrame, open = false, playing = false, swing = swing, pieces = {}, seen = {}, proxies = {} }
 			gates[barrier] = g
 		end
 		local door = g :: Gate
@@ -291,7 +313,7 @@ local function setGate(gate: Model, open: boolean, priceText: string, animated: 
 			collect(door)
 			for _, piece in ipairs(door.pieces) do
 				local part = piece.part
-				if part.Parent and (piece.fadeOnly or part.CFrame ~= piece.posed) then
+				if part.Parent and (piece.fadeOnly or part.CFrame ~= piece.posed or part.LocalTransparencyModifier < 1) then
 					place(door, piece, 1)
 					piece.posed = part.CFrame
 				end

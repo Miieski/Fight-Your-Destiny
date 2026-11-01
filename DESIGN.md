@@ -326,6 +326,8 @@ precedence over any older text here about a zone being "redone".
   server still refuses teleports and sends back a player standing in a locked sub-zone.
 * Data only: `Config/DoorAnimations` (one row per door type, one line per gate; also the boss door veil) and
   `Config/PortalBuild` (the hub portal builds itself brick by brick when its zone opens).
+* Round 9: a door that has finished opening is hidden for that player, so a leaf can never show inside a wall; it comes back if a Rebirth closes
+  the door. Sliding leaves travel their width + frame + 0.5 and go into the wall, or into a stone pocket (`gate_mine`, `heaven_gate_4`, `dead_gate_4`).
 
 ### Weapon skill trees (Round 8)
 One tree per weapon type, 25 nodes, for life (a Rebirth keeps them): stats, 3 special attacks + a keystone + an ultimate, the Aura of Mastery and

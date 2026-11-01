@@ -1,16 +1,18 @@
 --!strict
 -- How each gate opens (Controllers/GateController, Round 8 part 3). Data only: a new door type = a new row in Types, a new
 -- gate = a line in Doors (key: the gate's MapPropId). The door pieces are the descendants of the gate's Barrier.
---   Mode "Hinge"      two leaves turn on their outer edges, stay open (Angle degrees, towards the next sub-zone)
---        "Slide"      two leaves slide apart into the walls, stay open (Distance studs)
+--   Mode "Hinge"      two leaves turn on their outer edges (Angle degrees, towards the next sub-zone)
+--        "Slide"      two leaves slide apart into the walls (Distance studs >= leaf width + frame + 0.5, see Travel)
 --        "CrackSlide" a glowing crack for CrackSeconds, then Slide (Glow, Shards = the ice burst)
---        "Rise"       the door rises, stays up (Height studs)
+--        "Rise"       the door rises (Height studs >= door height + 0.5)
 --        "Fall"       the pieces drop one after the other with a bounce and fade away (Drop studs)
 --        "Retract"    the pieces pull up and aside and fade away (Height studs)
 --        "Fade"       the door dissolves
 -- Sound: a name of Assets.Sounds, existing sounds as placeholders until door sounds are made. Dust: { Color, Burst }.
 -- Shake: studs of camera shake (big stone and ice doors), only within ShakeRange. After a Rebirth a door whose sub-zone
 -- is locked again goes back shut, silently.
+-- Round 9: a door in its open pose is hidden for this player, whatever its Mode, so a leaf can never show in a wall. FadeFrom = where in
+-- the opening (0..1) the leaves start to fade. Travel = the doors whose frame is wider than the type's Distance allows.
 local DoorAnimations = {}
 
 export type DoorType = {
@@ -20,6 +22,7 @@ export type DoorType = {
 	Distance: number?,
 	Height: number?,
 	Drop: number?,
+	FadeFrom: number?,
 	CrackSeconds: number?,
 	Glow: Color3?,
 	Sound: string?,
@@ -40,14 +43,14 @@ DoorAnimations.ShakeRange = 70
 DoorAnimations.ShakeSeconds = 0.45
 
 DoorAnimations.Types = {
-	WoodDouble = { Mode = "Hinge", Seconds = 1.6, Angle = 100, Sound = WOOD_SOUND, Dust = { Color = DUST, Burst = 14 } },
-	StoneSlide = { Mode = "Slide", Seconds = 1.8, Distance = 12, Sound = STONE_SOUND, Dust = { Color = DUST, Burst = 26 }, Shake = 0.12 },
-	SandSlide = { Mode = "Slide", Seconds = 1.8, Distance = 12, Sound = STONE_SOUND, Dust = { Color = SAND, Burst = 30 }, Shake = 0.12 },
-	StoneRise = { Mode = "Rise", Seconds = 1.8, Height = 15.5, Sound = STONE_SOUND, Dust = { Color = DUST, Burst = 26 }, Shake = 0.12 },
-	Portcullis = { Mode = "Rise", Seconds = 1.2, Height = 15.5, Sound = WOOD_SOUND, Dust = { Color = DUST, Burst = 8 } },
+	WoodDouble = { Mode = "Hinge", Seconds = 1.6, Angle = 88, FadeFrom = 0.72, Sound = WOOD_SOUND, Dust = { Color = DUST, Burst = 14 } },
+	StoneSlide = { Mode = "Slide", Seconds = 1.8, Distance = 16.5, FadeFrom = 0.8, Sound = STONE_SOUND, Dust = { Color = DUST, Burst = 26 }, Shake = 0.12 },
+	SandSlide = { Mode = "Slide", Seconds = 1.8, Distance = 16.5, FadeFrom = 0.8, Sound = STONE_SOUND, Dust = { Color = SAND, Burst = 30 }, Shake = 0.12 },
+	StoneRise = { Mode = "Rise", Seconds = 1.8, Height = 16.5, FadeFrom = 0.75, Sound = STONE_SOUND, Dust = { Color = DUST, Burst = 26 }, Shake = 0.12 },
+	Portcullis = { Mode = "Rise", Seconds = 1.2, Height = 16.5, FadeFrom = 0.75, Sound = WOOD_SOUND, Dust = { Color = DUST, Burst = 8 } },
 	Plank = { Mode = "Fall", Seconds = 1.4, Drop = 13, Sound = STONE_SOUND, Dust = { Color = DUST, Burst = 16 } },
 	Vine = { Mode = "Retract", Seconds = 1.4, Height = 12, Sound = WOOD_SOUND, Dust = { Color = LEAF, Burst = 18 } },
-	Ice = { Mode = "CrackSlide", CrackSeconds = 0.5, Seconds = 1.5, Distance = 12, Glow = rgb(150, 230, 255), Sound = ICE_SOUND, Dust = { Color = SNOW, Burst = 30 }, Shake = 0.14 },
+	Ice = { Mode = "CrackSlide", CrackSeconds = 0.5, Seconds = 1.5, Distance = 16.5, FadeFrom = 0.8, Glow = rgb(150, 230, 255), Sound = ICE_SOUND, Dust = { Color = SNOW, Burst = 30 }, Shake = 0.14 },
 	Energy = { Mode = "Fade", Seconds = 1.1, Sound = "PortalEnter", Dust = { Color = rgb(200, 180, 255), Burst = 12 } },
 } :: { [string]: DoorType }
 
@@ -68,6 +71,15 @@ DoorAnimations.Doors = {
 	void_gate_2 = "Energy", void_gate_3 = "Energy", void_gate_4 = "Energy",
 } :: { [string]: string }
 
+-- leaf width 12 + the door's frame + 0.5, where the frame is wider than the 4 studs of the types' Distance
+DoorAnimations.Travel = { hell_gate_4 = 17.5, heaven_gate_4 = 19, dead_gate_4 = 19.5 } :: { [string]: number }
+
+-- how far the leaves of this door slide
+function DoorAnimations.distanceOf(propId: any): number
+	local own = if typeof(propId) == "string" then DoorAnimations.Travel[propId] else nil
+	return own or DoorAnimations.typeOf(propId).Distance or 16.5
+end
+
 function DoorAnimations.typeOf(propId: any): DoorType
 	local name = if typeof(propId) == "string" then DoorAnimations.Doors[propId] else nil
 	return DoorAnimations.Types[name or DoorAnimations.Default]
@@ -81,6 +93,8 @@ DoorAnimations.BossVeil = {
 	ArriveSeconds = 0.75, -- the camera eases back, the character walks out
 	WalkStuds = 7,
 	Watchdog = 5, -- everything restored, whatever happened
+	DoorFrame = 6, -- a leaf of a boss gate slides its own width + this + 0.5, then it is hidden
+	RiseZones = { Desert = true, Abyss = true, Swamp = true } :: { [string]: boolean }, -- one leaf across the whole door: it rises instead
 	Tints = {
 		Plains = { rgb(255, 244, 200), rgb(190, 214, 130) }, Desert = { rgb(255, 228, 160), SAND },
 		Jungle = { rgb(214, 255, 190), LEAF }, Tundra = { rgb(216, 240, 255), SNOW },

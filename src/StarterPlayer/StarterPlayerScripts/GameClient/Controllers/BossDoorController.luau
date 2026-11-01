@@ -23,12 +23,13 @@ local LOCK = "BossDoor"
 local CAMERA_LOCK = "BossDoorCamera"
 local VEIL_SIZE = Vector3.new(36, 32, 0.3)
 local NEAR_DOOR = 60 -- studs: further than this (a team mate) the veil opens in front of the player
+local LEAF_SHARE = 0.8 -- of VEIL.Seconds: the leaves are gone before the teleport
 local LEAF_NAMES = { "Door", "DoorL", "DoorR", "Leaf", "DoorLeaf", "DoorPanel", "DoorInner" }
 local player = Players.LocalPlayer
 
 local token = 0
 local veil: BasePart? = nil
-local moved: { { part: BasePart, home: CFrame } } = {}
+local moved: { { part: BasePart, home: CFrame, tweens: { Tween } } } = {}
 
 local function tints(zoneId: any): { Color3 }
 	return VEIL.Tints[zoneId] or { Color3.new(1, 1, 1), Color3.new(1, 1, 1) }
@@ -36,8 +37,12 @@ end
 
 local function restoreDoor()
 	for _, item in ipairs(moved) do
+		for _, tween in ipairs(item.tweens) do
+			tween:Cancel()
+		end
 		if item.part.Parent then
 			item.part.CFrame = item.home
+			item.part.LocalTransparencyModifier = 0
 		end
 	end
 	moved = {}
@@ -78,7 +83,20 @@ local function makeVeil(cf: CFrame, zoneId: any): BasePart
 	return p
 end
 
--- this client only: the leaves of the boss gate part (the gate goes back after the transition)
+-- a part's box in the door's space: low corner, high corner
+local function box(part: BasePart, door: CFrame): (Vector3, Vector3)
+	local rel = door:ToObjectSpace(part.ExtentsCFrame)
+	local s = part.ExtentsSize / 2
+	local reach = Vector3.new(
+		math.abs(rel.XVector.X) * s.X + math.abs(rel.YVector.X) * s.Y + math.abs(rel.ZVector.X) * s.Z,
+		math.abs(rel.XVector.Y) * s.X + math.abs(rel.YVector.Y) * s.Y + math.abs(rel.ZVector.Y) * s.Z,
+		math.abs(rel.XVector.Z) * s.X + math.abs(rel.YVector.Z) * s.Y + math.abs(rel.ZVector.Z) * s.Z
+	)
+	return rel.Position - reach, rel.Position + reach
+end
+
+-- this client only: the leaves of the boss gate part, what is fixed on them goes with them, and once open they are hidden
+-- (the gate comes back after the transition). Round 9: travel = leaf width + DoorFrame + 0.5; a door of one leaf rises.
 local function openLeaves(zoneId: any, door: CFrame)
 	local zones = workspace:FindFirstChild("Zones")
 	local folder = zones and zones:FindFirstChild(tostring(zoneId))
@@ -87,13 +105,46 @@ local function openLeaves(zoneId: any, door: CFrame)
 	if not gate then
 		return
 	end
+	local look = door.LookVector * Vector3.new(1, 0, 1) -- the Interact part is tilted on some gates
+	door = CFrame.lookAt(door.Position, door.Position + look)
+	local leaves: { BasePart } = {}
+	local low, high = Vector3.one * math.huge, -Vector3.one * math.huge
+	local width = 0
 	for _, part in ipairs(gate:GetDescendants()) do
 		if part:IsA("BasePart") and table.find(LEAF_NAMES, part.Name) then
-			local x = door:PointToObjectSpace(part.Position).X
-			local side = if x >= 0 then 1 else -1
-			table.insert(moved, { part = part, home = part.CFrame })
-			TweenService:Create(part, TweenInfo.new(VEIL.Seconds * 0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { CFrame = part.CFrame + door.RightVector * side * 9 }):Play()
+			table.insert(leaves, part)
+			local a, b = box(part, door)
+			low, high = low:Min(a), high:Max(b)
+			width = math.max(width, b.X - a.X)
 		end
+	end
+	if #leaves == 0 then
+		return
+	end
+	local list = table.clone(leaves)
+	for _, part in ipairs(gate:GetDescendants()) do
+		if part:IsA("BasePart") and part.Transparency < 1 and not table.find(leaves, part) then
+			local a, b = box(part, door)
+			if a.X > low.X - 0.3 and b.X < high.X + 0.3 and a.Y > low.Y - 0.3 and b.Y < high.Y + 0.3 and a.Z > low.Z - 1.6 and b.Z < high.Z + 1.6 then
+				table.insert(list, part)
+			end
+		end
+	end
+	local rise = VEIL.RiseZones[zoneId] == true
+	local info = TweenInfo.new(VEIL.Seconds * LEAF_SHARE, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	local fade = TweenInfo.new(VEIL.Seconds * LEAF_SHARE * 0.3, Enum.EasingStyle.Linear, Enum.EasingDirection.In, 0, false, VEIL.Seconds * LEAF_SHARE * 0.7)
+	for _, part in ipairs(list) do
+		local a, b = box(part, door)
+		local x = (a.X + b.X) / 2
+		local across = a.X < -0.3 and b.X > 0.3 -- a seam or an emblem on both leaves
+		local shift = if rise then door.UpVector * (high.Y - low.Y + 0.5) elseif across then Vector3.zero else door.RightVector * (if x >= 0 then 1 else -1) * (width + VEIL.DoorFrame + 0.5)
+		local tweens = {
+			TweenService:Create(part, info, { CFrame = part.CFrame + shift }),
+			TweenService:Create(part, if across and not rise then TweenInfo.new(0.1) else fade, { LocalTransparencyModifier = 1 }),
+		}
+		tweens[1]:Play()
+		tweens[2]:Play()
+		table.insert(moved, { part = part, home = part.CFrame, tweens = tweens })
 	end
 end
 
