@@ -3,20 +3,21 @@
 -- window: the server checks everything (next Rebirth r <= Max, key of the zone-r boss, Gold >= cost, not in a fight),
 -- then a staged sequence (Round 8, root cause of the old grey screen in docs/NIGHT_LOG.md):
 --   commit   the new values are built on copies, then written in one step (DataService:SetMany, one client patch):
---            Rebirths = r, +3 Rebirth Credits, Gold / weapons / armor / attribute points / eggs / non-premium pets /
+--            Rebirths = r, +3 Rebirth Credits, Gold / unprotected weapons, armor and pets / attribute points / eggs /
 --            trophies reset, the gates of zone r reset, a free Common sword of that zone.
 --            A failure before this step changes nothing. The request answers right after it.
 --   respawn  in the background: out of any boss room, Hub streamed in, a new character on the Hub spawn, the save with
 --            retries (nothing waits for it), then Net "RebirthDone" (the client's cover comes off).
 -- Zone r + 1 is then bought with zone r's key + Gold (Config/RebirthZoneUnlock). Kept: Diamonds, keys, credits and Rebirth
--- Shop upgrades, premium pets, Index, boosts, passes, settings, unlocked zones.
---   RebirthService:Wipe(player) -> premium pets kept   the reset alone (also the admin command wipeForRebirth)
+-- Shop upgrades, protected items (Config/RebirthProtection), Index, boosts, passes, settings, unlocked zones.
+--   RebirthService:Wipe(player) -> protected items kept   the reset alone (also the admin command wipeForRebirth)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Attributes = require(ReplicatedStorage.GameSystem.Config.Attributes)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Rebirth = require(ReplicatedStorage.GameSystem.Config.Rebirth)
+local RebirthProtection = require(ReplicatedStorage.GameSystem.Config.RebirthProtection)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local CombatService = require(script.Parent.CombatService)
 local DataService = require(script.Parent.DataService)
@@ -27,37 +28,68 @@ local RebirthService = { Priority = 6 }
 
 local busy: { [Player]: boolean } = {}
 
--- The reset as new values, on copies: nothing here touches the profile. Returns changes, cleared keys, premium pets kept.
-local function planReset(profile: { [string]: any }): ({ [string]: any }, { string }, number)
-	local pets, kept = {}, 0
-	for uid, pet in pairs(profile.Pets or {}) do
-		if pet.premium then
-			pets[uid] = pet
-			kept += 1
+local function protectedOf(items: { [string]: any }?): ({ [string]: any }, number)
+	local kept, count = {}, 0
+	for uid, item in pairs(items or {}) do
+		if item.Protected then
+			kept[uid] = item
+			count += 1
 		end
 	end
-	local equipped = {}
+	return kept, count
+end
+
+-- The reset as new values, on copies: nothing here touches the profile. Returns changes, cleared keys, protected items kept.
+local function planReset(profile: { [string]: any }): ({ [string]: any }, { string }, number)
+	local weapons, keptWeapons = protectedOf(profile.Weapons)
+	local armor, keptArmor = protectedOf(profile.Armor)
+	local pets, keptPets = protectedOf(profile.Pets)
+	local keepEquipped = RebirthProtection.KeepEquippedState
+	local equippedPets = {}
+	local equippedArmor = {}
 	for _, uid in ipairs(profile.EquippedPets or {}) do
-		if pets[uid] then
-			table.insert(equipped, uid)
+		if keepEquipped and pets[uid] then
+			table.insert(equippedPets, uid)
+		end
+	end
+	for slot, uid in pairs(profile.EquippedArmor or {}) do
+		if keepEquipped and armor[uid] then
+			equippedArmor[slot] = uid
 		end
 	end
 	local changes = {
 		Gold = 0,
 		Attributes = Attributes.empty(),
-		Weapons = {},
-		Armor = {},
-		EquippedArmor = {},
+		Weapons = weapons,
+		Armor = armor,
+		EquippedArmor = equippedArmor,
 		Eggs = {},
 		Trophies = {},
 		Pets = pets,
-		EquippedPets = equipped,
+		EquippedPets = equippedPets,
 	}
-	return changes, { "EquippedWeapon" }, kept
+	local keepsWeapon = keepEquipped and profile.EquippedWeapon ~= nil and weapons[profile.EquippedWeapon] ~= nil
+	return changes, if keepsWeapon then {} else { "EquippedWeapon" }, keptWeapons + keptArmor + keptPets
 end
 
--- The Rebirth reset: Gold, attribute points, weapons, armor, eggs, trophies, non-premium pets and whatever was
--- equipped from them. Returns the number of premium pets kept.
+-- After the commit: a protected weapon in hand when the equipped one went (the starter sword covers "no weapon at all").
+local function equipSomething(player: Player)
+	local profile = DataService:Get(player)
+	if profile and not profile.EquippedWeapon then
+		local best, bestRarity = nil, -1
+		for uid, item in pairs(profile.Weapons or {}) do
+			if (item.rarity or 1) > bestRarity then
+				best, bestRarity = uid, item.rarity or 1
+			end
+		end
+		if best then
+			WeaponService:Equip(player, best)
+		end
+	end
+end
+
+-- The Rebirth reset: Gold, attribute points, eggs, trophies, the unprotected weapons, armor and pets. Returns the number of
+-- protected items kept.
 function RebirthService:Wipe(player: Player): number
 	local profile = DataService:Get(player)
 	if not profile then
@@ -127,6 +159,7 @@ local function rebirth(player: Player): (boolean, any)
 	local ok, err = pcall(function()
 		WeaponService:Refresh(player)
 		CombatService:EnsureStarterWeapon(player, zone.Id) -- a free Common sword of the zone to redo
+		equipSomething(player)
 	end)
 	if not ok then
 		warn(`RebirthService: fresh start failed for {player.UserId}: {err}`)

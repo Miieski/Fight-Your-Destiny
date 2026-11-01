@@ -66,9 +66,9 @@ for _, tab in ipairs(IndexBook.TABS) do
 		table.insert(IndexBook.Groups[tab], group)
 	end
 	if tab == "Pets" then
-		local group: Group = { Key = "Premium", ZoneId = nil, Zone = 0, Name = "Premium", Entries = {}, Rewarded = false }
+		local group: Group = { Key = "Premium", ZoneId = nil, Zone = 0, Name = "Special", Entries = {}, Rewarded = false }
 		for _, species in ipairs(Pets.Premium) do
-			add(tab, group, { Id = species.Id, Name = species.Name, Tab = tab, Kind = "pet", ZoneId = nil, Zone = 0, Role = "Premium" })
+			add(tab, group, { Id = species.Id, Name = species.Name, Tab = tab, Kind = "pet", ZoneId = nil, Zone = 0, Role = "Special" })
 		end
 		table.insert(IndexBook.Groups[tab], group)
 	end

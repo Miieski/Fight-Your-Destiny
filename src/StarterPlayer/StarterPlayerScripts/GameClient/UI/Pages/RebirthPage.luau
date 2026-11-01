@@ -6,7 +6,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
+local Armor = require(ReplicatedStorage.GameSystem.Config.Armor)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
+local Pets = require(ReplicatedStorage.GameSystem.Config.Pets)
+local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
+local RebirthProtection = require(ReplicatedStorage.GameSystem.Config.RebirthProtection)
+local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Rebirth = require(ReplicatedStorage.GameSystem.Config.Rebirth)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
@@ -14,6 +19,7 @@ local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
+local Components = require(Kit.Components)
 local Icons = require(Kit.Icons)
 local Info = require(Kit.Info)
 local Theme = require(Kit.Theme)
@@ -118,10 +124,40 @@ end
 -- what a Rebirth takes and keeps, as pictures (kid-friendly UI); the words are behind the (i)
 local ITEM_ICONS = {
 	Gold = "Gold", Weapons = "Sword", Armor = "Chest", ["Attribute points"] = "Stats", Eggs = "Egg",
-	["Pets (premium pets are kept)"] = "Pets", Trophies = "Trophy", Diamonds = "Diamond", ["Boss keys"] = "Key",
-	["Rebirth Credits and upgrades"] = "RebirthCredit", ["Premium pets"] = "Crown", Index = "Index",
+	Pets = "Pets", Trophies = "Trophy", Diamonds = "Diamond", ["Boss keys"] = "Key",
+	["Rebirth Credits and upgrades"] = "RebirthCredit", ["Protected items"] = "Defense", Index = "Index",
 	["Boosts and passes"] = "Boost", ["Unlocked zones"] = "Zones",
 }
+
+-- The player's weapons, armor and pets: kept (protected) and lost, by category, the most valuable lost ones named.
+local function itemSummary(): { kept: number, lost: number, keptLine: string, lostLine: string, top: string }
+	local kept, lost, keptParts, lostParts, ranked = 0, 0, {}, {}, {}
+	local names = { Weapon = "weapons", Armor = "armor", Pet = "pets" }
+	for _, category in ipairs(RebirthProtection.Categories) do
+		local k, l = 0, 0
+		for _, item in pairs(State.get(RebirthProtection.Keys[category]) or {}) do
+			if item.Protected then
+				k += 1
+			else
+				l += 1
+				local def: any = if category == "Weapon" then Weapons.ById[item.id] elseif category == "Armor" then Armor.ById[item.id] else Pets.ById[item.id]
+				table.insert(ranked, { rarity = item.rarity or 1, name = def and def.Name or "?" })
+			end
+		end
+		kept += k
+		lost += l
+		table.insert(keptParts, `{k} {names[category]}`)
+		table.insert(lostParts, `{l} {names[category]}`)
+	end
+	table.sort(ranked, function(a, b)
+		return a.rarity > b.rarity
+	end)
+	local top = {}
+	for i = 1, math.min(3, #ranked) do
+		table.insert(top, `{Rarities.get(ranked[i].rarity).Name} {ranked[i].name}`)
+	end
+	return { kept = kept, lost = lost, keptLine = table.concat(keptParts, ", "), lostLine = table.concat(lostParts, ", "), top = table.concat(top, ", ") }
+end
 
 function RebirthPage.build(page: ScrollingFrame, ctx: any?)
 	local small = Theme.isCompact()
@@ -270,12 +306,21 @@ function RebirthPage.build(page: ScrollingFrame, ctx: any?)
 	listBox("You lose", Rebirth.Lost, 0, Theme.Colors.Bad)
 	listBox("You keep", Rebirth.Kept, 1, Theme.Colors.Good)
 
+	-- the player's own items: what is kept, what is lost (the most valuable first), the way to protect them
+	local items = Components.Card(page, "Items", if small then 158 else 176, 5)
+	title(items, "Your items", small)
+	local keptText = Theme.text({ Text = "", TextSize = if small then 16 else 18, Color = Theme.Colors.Good, Align = "Left", Wrapped = true, Size = UDim2.new(1, -28, 0, 26), Position = UDim2.fromOffset(14, 36), ZIndex = 2, Parent = items })
+	local lostText = Theme.text({ Text = "", TextSize = if small then 16 else 18, Color = Theme.Colors.Bad, Align = "Left", Wrapped = true, Size = UDim2.new(1, -28, 0, 48), Position = UDim2.fromOffset(14, 62), ZIndex = 2, Parent = items })
+	Components.Button({ Name = "ProtectItems", Text = "Protect items", Icon = "Defense", Style = "secondary", TextSize = if small then 20 else 22, Size = UDim2.new(0.5, 0, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -8), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 2, Parent = items, OnClick = function()
+		Window.open("Inventory", "Weapons")
+	end })
+
 	-- the button
 	local footer = Instance.new("Frame")
 	footer.Name = "Footer"
 	footer.BackgroundTransparency = 1
 	footer.Size = UDim2.new(1, -8, 0, Theme.TOUCH + 34)
-	footer.LayoutOrder = 5
+	footer.LayoutOrder = 6
 	footer.Parent = page
 	local reason = Theme.text({ Text = "", TextSize = if small then 16 else 18, Color = Theme.Colors.TextDim, Size = UDim2.new(1, 0, 0, 24), Position = UDim2.new(0.5, 0, 1, 0), AnchorPoint = Vector2.new(0.5, 1), Parent = footer })
 	local status = Rebirth.status({})
@@ -288,9 +333,10 @@ function RebirthPage.build(page: ScrollingFrame, ctx: any?)
 			return
 		end
 		local r = status.next
+		local summary = itemSummary()
 		Window.confirm({
 			Title = `Rebirth {r}?`,
-			Text = `You lose your Gold, weapons, armor, attribute points, eggs, pets and trophies. You keep Diamonds, keys and Rebirth upgrades, and get +{Rebirth.CreditsPerRebirth} Rebirth Credits.`,
+			Text = `You lose your Gold, attribute points, eggs, trophies and {summary.lost} unprotected items{if summary.top ~= "" then ` ({summary.top}...)` else ""}. You keep Diamonds, keys, Rebirth upgrades and {summary.kept} protected items, and get +{Rebirth.CreditsPerRebirth} Rebirth Credits.`,
 			ConfirmText = "Rebirth",
 			OnConfirm = function()
 				if busy then
@@ -303,6 +349,16 @@ function RebirthPage.build(page: ScrollingFrame, ctx: any?)
 			end,
 		})
 	end })
+
+	local function refreshItems()
+		local summary = itemSummary()
+		keptText.Text = `Kept: {summary.kept} protected ({summary.keptLine})`
+		lostText.Text = `Lost: {summary.lostLine}{if summary.top ~= "" then `. Most valuable: {summary.top}` else ""}`
+	end
+	refreshItems()
+	for _, key in ipairs({ "Weapons", "Armor", "Pets" }) do
+		State.changed(key, refreshItems)
+	end
 
 	local function refresh()
 		local rebirths = math.max(0, math.floor(tonumber(State.get("Rebirths")) or 0))

@@ -141,7 +141,7 @@ local function lock(player: Player, uid: any, locked: any): (boolean, any)
 	return true, locked
 end
 
-local function sell(player: Player, uid: any): (boolean, any)
+local function sell(player: Player, uid: any, confirmed: any): (boolean, any)
 	local profile = DataService:Get(player)
 	if not profile then
 		return false, "Profile not loaded"
@@ -152,6 +152,9 @@ local function sell(player: Player, uid: any): (boolean, any)
 	end
 	if item.locked then
 		return false, "This piece is locked"
+	end
+	if item.Protected and confirmed ~= true then
+		return false, "This piece is protected"
 	end
 	for _, equippedUid in pairs(profile.EquippedArmor or {}) do
 		if equippedUid == uid then
@@ -184,7 +187,7 @@ local function sellMany(player: Player, uids: any): (boolean, any)
 	local gold, n = 0, 0
 	for _, uid in ipairs(uids) do
 		local item = if typeof(uid) == "string" then owned[uid] else nil
-		if item and Armor.ById[item.id] and not item.locked and not worn[uid] then
+		if item and Armor.ById[item.id] and not item.locked and not item.Protected and not worn[uid] then
 			gold += Armor.sellValue(item.id, item.rarity)
 			owned[uid] = nil
 			n += 1

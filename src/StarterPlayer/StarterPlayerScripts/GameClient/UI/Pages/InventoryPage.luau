@@ -17,6 +17,7 @@ local WeaponRarities = require(ReplicatedStorage.GameSystem.Config.WeaponRaritie
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
+local Protection = require(script.Parent.Parent.Protection)
 local Kit = script.Parent.Parent.Kit
 local Button = require(Kit.Button)
 local Chips = require(Kit.Chips)
@@ -208,6 +209,8 @@ function InventoryPage.buildWeapons(page: ScrollingFrame, ctx: any)
 			Theme.paintRarity(tier, entry.rarity)
 			local value = Weapons.sellValue(entry.id, entry.rarity)
 			local own: { GuiObject } = {} -- the copy's own sell buttons (hidden in select mode)
+			local protected = Protection.isProtected("Weapon", entry.uid)
+			Protection.badge(cell, "Weapon", entry.uid, (State.get("Weapons") or {})[entry.uid] or {}, weapon.Name, UDim2.fromOffset(2, 2))
 			if entry.uid ~= equipped then
 				-- sell: trash + its Gold value (the equipped weapon cannot be sold)
 				local function sell()
@@ -215,7 +218,7 @@ function InventoryPage.buildWeapons(page: ScrollingFrame, ctx: any)
 						return
 					end
 					busy = true
-					local called, ok, result = pcall(Net.request, "SellWeapon", entry.uid)
+					local called, ok, result = pcall(Net.request, "SellWeapon", entry.uid, protected)
 					busy = false
 					if called and ok then
 						Sfx.play("Purchase")
@@ -226,10 +229,10 @@ function InventoryPage.buildWeapons(page: ScrollingFrame, ctx: any)
 					end
 				end
 				local trash = Button.new({ Name = "Sell", Icon = "Trash", Style = "danger", Size = UDim2.fromOffset(40, 40), Position = UDim2.new(1, -2, 0, 2), AnchorPoint = Vector2.new(1, 0), ZIndex = 6, Depth = 3, Parent = cell, OnClick = function()
-					if entry.rarity >= CONFIRM_FROM then
+					if entry.rarity >= CONFIRM_FROM or protected then
 						Window.confirm({
 							Title = "Sell?",
-							Text = `Sell {rarity.Name} {weapon.Name} for {Format.number(value)} Gold?`,
+							Text = `{if protected then Protection.WARNING .. " " else ""}Sell {rarity.Name} {weapon.Name} for {Format.number(value)} Gold?`,
 							ConfirmText = "Sell",
 							CancelText = "Keep",
 							OnConfirm = sell,
@@ -278,7 +281,7 @@ function InventoryPage.buildWeapons(page: ScrollingFrame, ctx: any)
 				badge.Parent = cell
 				name.TextColor3 = Theme.Colors.Gold
 			end
-			bar:Attach(cell, { uid = entry.uid, value = value, rarity = entry.rarity, blocked = if entry.uid == equipped then "The equipped weapon cannot be sold" else nil,
+			bar:Attach(cell, { uid = entry.uid, value = value, rarity = entry.rarity, blocked = if entry.uid == equipped then "The equipped weapon cannot be sold" elseif protected then "Protected items are sold one at a time" else nil,
 				hide = own, ringAt = UDim2.new(1, -38, 0, 6) })
 			cell.Parent = grid
 		end

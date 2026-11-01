@@ -1,6 +1,6 @@
 --!strict
 -- Shop > Diamonds (docs/menu_systems_brief.txt D1). Diamonds are spent here; Robux packs are sold only in the hub.
---   Premium Eggs: one per unlocked zone (10 + 4 x zone Diamonds), hatched at once (PetsPage.buyPremium).
+--   Diamond Eggs: one per unlocked zone (10 + 4 x zone Diamonds), hatched at once (PetsPage.buyPremium).
 --   (The Weapon Reroll was removed on 2026-10-13: weapons are sold for Gold in Inventory > Weapons instead.)
 --   Gold Boost x2: 15 / 30 / 60 min packs (Config/Boosts Packs), time stacks, HUD timer (UI/BoostTimer).
 --   Skins: "Coming soon" silhouettes.   Get Diamonds: offers a trip to the hub.
@@ -116,7 +116,7 @@ function DiamondShopPage.build(page: ScrollingFrame, ctx: any)
 
 	-- premium eggs
 	local eggH = if small then 176 else 206
-	local eggs = section(page, 2, "Premium Eggs", "A random pet of the zone, rarity rolled like the weapon shop.", eggH + 48, "Egg")
+	local eggs = section(page, 2, "Diamond Eggs", "A random pet of the zone, rarity rolled like the weapon shop.", eggH + 48, "Egg")
 	local strip = Instance.new("ScrollingFrame")
 	strip.BackgroundTransparency = 1
 	strip.BorderSizePixel = 0

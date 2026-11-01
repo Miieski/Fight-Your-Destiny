@@ -211,7 +211,7 @@ local COMMANDS: { [string]: Command } = {
 		if index < 1 or index > Economy.PetSlots or not profile then return false, "equipPetFake(slot 1-" .. Economy.PetSlots .. ", rarity)" end
 		local uid = HttpService:GenerateGUID(false)
 		local pets = table.clone(profile.Pets)
-		pets[uid] = { id = "plains_pet1", rarity = tier(rarity), premium = false }
+		pets[uid] = { id = "plains_pet1", rarity = tier(rarity) }
 		local equipped = table.clone(profile.EquippedPets)
 		equipped[math.min(index, #equipped + 1)] = uid
 		DataService:Set(player, "Pets", pets)
@@ -335,13 +335,13 @@ local COMMANDS: { [string]: Command } = {
 		return true, `Ready for Rebirth {status.next} ({zone.Boss} key + {Format.number(status.cost)} Gold)`
 	end,
 	-- wipeForRebirth(): the Rebirth reset of docs/menu_systems_brief.txt section 7, to test the rules before the
-	-- Rebirth system exists. Reset: Gold, Attributes, Weapons, Armor, Eggs, non-premium Pets and whatever was
-	-- equipped from them. Kept: Diamonds, Keys, premium pets, Index, Credits, Rebirth upgrades, boosts, settings,
+	-- Rebirth system exists. Reset: Gold, Attributes, Eggs and the unprotected Weapons, Armor, Pets.
+	-- Kept: Diamonds, Keys, protected items, Index, Credits, Rebirth upgrades, boosts, settings,
 	-- passes (everything else is untouched).
 	wipeForRebirth = function(player)
 		if not DataService:Get(player) then return false, nil end
 		local kept = RebirthService:Wipe(player)
-		return true, `Rebirth wipe done ({kept} premium pet{if kept == 1 then "" else "s"} kept)`
+		return true, `Rebirth wipe done ({kept} protected item{if kept == 1 then "" else "s"} kept)`
 	end,
 	-- giveEgg(zone, rarity, count?): zone = 1..12 or a zone id; loot eggs (auto-sold when the storage is full)
 	giveEgg = function(player, zoneValue, rarity, howMany)

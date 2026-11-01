@@ -44,8 +44,8 @@ UI.Windows = {
 		TabIcons = { Weapons = "Sword", Armor = "Chest", Diamonds = "Diamond" } },
 	Rebirth = { Title = "Rebirth", Icon = "RebirthShop", Tabs = { "Rebirth", "Rebirth Shop" }, Size = Vector2.new(940, 620), -- UI/Pages/RebirthPage + RebirthShopPage
 		TabIcons = { Rebirth = "RebirthShop", ["Rebirth Shop"] = "RebirthCredit" }, TabLabels = { ["Rebirth Shop"] = "Shop" } },
-	Pets = { Title = "Pets", Icon = "Pets", Tabs = { "Pets", "Eggs", "Premium Eggs" }, Size = Vector2.new(1040, 620),
-		TabIcons = { Pets = "Pets", Eggs = "Egg", ["Premium Eggs"] = "Diamond" }, TabLabels = { ["Premium Eggs"] = "Premium" } },
+	Pets = { Title = "Pets", Icon = "Pets", Tabs = { "Pets", "Eggs", "Diamond Eggs" }, Size = Vector2.new(1040, 620),
+		TabIcons = { Pets = "Pets", Eggs = "Egg", ["Diamond Eggs"] = "Diamond" }, TabLabels = { ["Diamond Eggs"] = "Diamonds" } },
 	Index = { Title = "Index", Icon = "Index", Tabs = { "Weapons", "Armor", "Pets", "Enemies" }, Size = Vector2.new(1040, 620),
 		TabIcons = { Weapons = "Sword", Armor = "Chest", Pets = "Pets", Enemies = "Skull" } },
 	Quests = { Title = "Quests", Icon = "Quests", Tabs = { "Quests", "Daily Reward", "Playtime Gifts", "Codes" }, Size = Vector2.new(1000, 600),

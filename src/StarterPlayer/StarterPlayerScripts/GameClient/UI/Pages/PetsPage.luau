@@ -4,7 +4,7 @@
 --         storage count, filters (zone, rarity) and sort (rarity, zone, power) and the grid. A tap opens the
 --         detail panel: live 3D preview, values with Faith, Equip / Unequip, Lock, Release (confirm popup).
 --   Eggs: owned eggs stacked by zone and rarity, Hatch / Hatch All (free) -> the hatch screen (UI/Hatching).
---   Premium Eggs: one egg per zone for Diamonds (locked zones: black silhouette with "?"), Odds, the species.
+--   Diamond Eggs: one egg per zone for Diamonds (locked zones: black silhouette with "?"), Odds, the species.
 -- Every action is a server request (PetService); the pages redraw from the replicated profile.
 -- Kid-friendly UI (owner 2026-10-13): one header row (slots, storage, one funnel for every filter and sort, Best);
 -- the detail panel shows pictures + numbers, the sentences are behind its (i).
@@ -25,6 +25,7 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.Parent.State)
 local Hatching = require(script.Parent.Parent.Hatching)
 local Notifier = require(script.Parent.Parent.Notifier)
+local Protection = require(script.Parent.Parent.Protection)
 local Kit = script.Parent.Parent.Kit
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Button = require(Kit.Button)
@@ -294,7 +295,7 @@ detail = function(uid: string)
 			TraitCard.new(info, slot, trait, { Size = UDim2.new(1, -8, 0, if small then 46 else 56), Compact = small, ZIndex = 23, LayoutOrder = 5 + i })
 		end
 	end
-	local details = { `{species.Role} - {if species.Premium then "Premium pet" else zoneName(species.Zone)}` }
+	local details = { `{species.Role} - {if species.Premium then "Special pet" else zoneName(species.Zone)}` }
 	for _, stat in ipairs(lines) do
 		table.insert(details, stat)
 	end
@@ -313,7 +314,7 @@ detail = function(uid: string)
 	if mult > 1.0001 then
 		table.insert(details, string.format("Faith makes your pets %.1f%% stronger (included).", (mult - 1) * 100))
 	end
-	table.insert(details, if species.Premium then "Premium: kept on Rebirth, cannot be released." else `Worth (release value): {Format.number(Pets.worth(pet))} Gold`)
+	table.insert(details, `Worth (release value): {Format.number(Pets.worth(pet))} Gold`)
 	Button.new({ Name = "Info", Style = "wood", Icon = "Info", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -(Theme.TOUCH + 16), 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 24, Parent = panel, OnClick = function()
 		closeOverlay()
 		Info.show(overlayParent :: GuiObject, Pets.displayName(pet), details)
@@ -350,21 +351,18 @@ detail = function(uid: string)
 			detail(uid)
 		end
 	end })
-	local release = Button.new({ Name = "Release", Text = if species.Premium then "" else Format.number(Pets.worth(pet)), Icon = "Trash", Style = if pet.locked or species.Premium then "disabled" else "danger", Size = UDim2.fromOffset(width + 60, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
+	local release = Button.new({ Name = "Release", Text = Format.number(Pets.worth(pet)), Icon = "Trash", Style = if pet.locked then "disabled" else "danger", Size = UDim2.fromOffset(width + 60, Theme.TOUCH), LayoutOrder = 3, ZIndex = 23, Parent = row, OnClick = function()
 		if pet.locked then
 			Notifier.push({ Kind = "error", Text = "Unlock this pet first" })
-			return
-		elseif species.Premium then
-			Notifier.push({ Kind = "error", Text = "Premium pets cannot be released" })
 			return
 		end
 		Window.confirm({
 			Title = "Release pet?",
-			Text = `Release {Rarities.get(pet.rarity).Name} {Pets.displayName(pet)} for {Format.number(Pets.worth(pet))} Gold? This cannot be undone.`,
+			Text = `{if pet.Protected then Protection.WARNING .. " " else ""}Release {Rarities.get(pet.rarity).Name} {Pets.displayName(pet)} for {Format.number(Pets.worth(pet))} Gold? This cannot be undone.`,
 			ConfirmText = "Release",
 			CancelText = "Keep",
 			OnConfirm = function()
-				local ok, result = request("ReleasePet", uid)
+				local ok, result = request("ReleasePet", uid, pet.Protected == true)
 				if ok then
 					Sfx.play("Purchase")
 					closeOverlay()
@@ -382,7 +380,7 @@ end
 
 local function odds()
 	local panel = openOverlay(Vector2.new(700, 500))
-	Theme.text({ Font = "Title", Text = "Premium Egg Odds", TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
+	Theme.text({ Font = "Title", Text = "Diamond Egg Odds", TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -140, 0, 40), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 23, Parent = panel })
 	local body = Instance.new("ScrollingFrame")
 	body.BackgroundTransparency = 1
 	body.BorderSizePixel = 0
@@ -627,9 +625,8 @@ local function petCell(entry: Entry, order: number): TextButton
 	dots.Parent = cell
 	if entry.pet.locked then
 		badge(cell, "Lock", Theme.Colors.WoodLight, UDim2.new(1, -4, 0, 4), Vector2.new(1, 0))
-	elseif entry.species.Premium then
-		badge(cell, "Crown", Theme.Colors.WoodLight, UDim2.new(1, -4, 0, 4), Vector2.new(1, 0))
 	end
+	Protection.badge(cell, "Pet", entry.uid, entry.pet, entry.species.Name, UDim2.new(0, 4, 1, -28), Vector2.new(0, 1))
 	cell.Activated:Connect(function()
 		Sfx.play("UIClick")
 		detail(entry.uid)
@@ -918,7 +915,7 @@ local function buildEggs(page: ScrollingFrame)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Premium Eggs tab
+-- Diamond Eggs tab
 ----------------------------------------------------------------------------------------------------
 local buyPremium: (zone: any) -> ()
 
@@ -962,7 +959,7 @@ local function buildPremium(page: ScrollingFrame)
 	box.Parent = header
 	Icons.create("Diamond", box, { Size = UDim2.fromOffset(40, 40), Position = UDim2.new(0, -8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 4 })
 	local diamonds = Theme.text({ Font = "Number", Text = "", TextSize = 22, Align = "Right", Size = UDim2.new(1, -48, 1, -6), Position = UDim2.new(1, -10, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 4, Parent = box })
-	Info.button({ Parent = header, Frame = overlayParent, Title = "Premium Eggs", Lines = { "Rarity rolled like the weapon shop.", "Tap an egg to see its pets." }, Size = Theme.TOUCH, Position = UDim2.new(1, -(Theme.TOUCH + 76), 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, PopupSize = Vector2.new(520, 220) })
+	Info.button({ Parent = header, Frame = overlayParent, Title = "Diamond Eggs", Lines = { "Rarity rolled like the weapon shop.", "Tap an egg to see its pets." }, Size = Theme.TOUCH, Position = UDim2.new(1, -(Theme.TOUCH + 76), 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, PopupSize = Vector2.new(520, 220) })
 	Button.new({ Name = "Odds", Icon = "Dice", Style = "secondary", Size = UDim2.fromOffset(68, Theme.TOUCH), Position = UDim2.new(1, 0, 0, 0), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, Parent = header, OnClick = odds })
 	local cellSize = if small then Vector2.new(150, 176) else Vector2.new(176, 226)
 	local grid = gridFrame(page, Theme.TOUCH + 8, cellSize)
@@ -1039,7 +1036,7 @@ function PetsPage.build(ctx: any)
 	overlayParent = ctx.Frame
 	buildPets(ctx.Pages.Pets)
 	buildEggs(ctx.Pages.Eggs)
-	buildPremium(ctx.Pages["Premium Eggs"])
+	buildPremium(ctx.Pages["Diamond Eggs"])
 	for _, page in pairs(ctx.Pages) do
 		page:GetPropertyChangedSignal("Visible"):Connect(function()
 			if not page.Visible then

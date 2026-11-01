@@ -86,7 +86,7 @@ local function pay(player: Player, profile: { [string]: any }, reward: { [string
 		local s = services()
 		local tier = s.Shop.rollTier(Random.new(), 1)
 		s.Pet:GiveEgg(player, zone, tier)
-		table.insert(parts, `a premium {Zones.List[zone].Name} egg`)
+		table.insert(parts, `a Diamond {Zones.List[zone].Name} egg`)
 	end
 	if reward.Boost then
 		local minutes = reward.BoostMinutes or reward.Minutes or 0

@@ -18,6 +18,7 @@ local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.Parent.State)
 local Notifier = require(script.Parent.Parent.Notifier)
+local Protection = require(script.Parent.Parent.Protection)
 local Kit = script.Parent.Parent.Kit
 local Balance = require(ReplicatedStorage.GameSystem.Config.Balance)
 local ZoneVisibility = require(Kit.ZoneVisibility)
@@ -217,11 +218,11 @@ function ArmorPage.detail(uid: string)
 		end
 		Window.confirm({
 			Title = "Sell armor?",
-			Text = `Sell {rarity.Name} {piece.Name} for {Format.number(Armor.sellValue(item.id, item.rarity))} Gold? This cannot be undone.`,
+			Text = `{if item.Protected then Protection.WARNING .. " " else ""}Sell {rarity.Name} {piece.Name} for {Format.number(Armor.sellValue(item.id, item.rarity))} Gold? This cannot be undone.`,
 			ConfirmText = "Sell",
 			CancelText = "Keep",
 			OnConfirm = function()
-				local ok, result = request("SellArmor", uid)
+				local ok, result = request("SellArmor", uid, item.Protected == true)
 				if ok then
 					Sfx.play("Purchase")
 					Overlay.close()
@@ -501,11 +502,12 @@ function ArmorPage.build(page: ScrollingFrame, ctx: any)
 			if entry.item.locked then
 				badge(button, "Lock", Theme.Colors.WoodLight, UDim2.new(1, -4, 0, 4), Vector2.new(1, 0))
 			end
+			Protection.badge(button, "Armor", entry.uid, entry.item, entry.piece.Name, UDim2.new(0, 4, 1, -28), Vector2.new(0, 1))
 			button.Activated:Connect(function()
 				Sfx.play("UIClick")
 				ArmorPage.detail(entry.uid)
 			end)
-			local blocked = if entry.worn then "Worn pieces cannot be sold" elseif entry.item.locked then "Locked pieces cannot be sold" else nil
+			local blocked = if entry.worn then "Worn pieces cannot be sold" elseif entry.item.locked then "Locked pieces cannot be sold" elseif entry.item.Protected then "Protected pieces are sold one at a time" else nil
 			bar:Attach(button, { uid = entry.uid, value = Armor.sellValue(entry.item.id, entry.item.rarity), rarity = entry.item.rarity, blocked = blocked })
 			button.Parent = grid
 		end

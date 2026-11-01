@@ -76,6 +76,14 @@ local function hasRemovedSuffix(id: string): boolean
 end
 
 local function migrate(profile: Data)
+	-- version 2 (Round 8): the old `premium` flag of the pets goes, with no free protection (Rebirth Protection replaces it)
+	for _, pet in pairs(profile.Pets or {}) do
+		if typeof(pet) == "table" then
+			pet.premium = nil
+		end
+	end
+	profile.RedoneSinceRebirth = nil
+	profile.Version = Profile.VERSION
 	local refund, removed = 0, 0
 	for uid, item in pairs(profile.Weapons or {}) do
 		local id = if typeof(item) == "table" then item.id else nil

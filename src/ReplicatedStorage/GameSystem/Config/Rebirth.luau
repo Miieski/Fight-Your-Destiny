@@ -28,8 +28,8 @@ Rebirth.Transition = {
 }
 
 -- What the Rebirth tab lists (the reset itself is RebirthService:Wipe).
-Rebirth.Lost = { "Gold", "Weapons", "Armor", "Attribute points", "Eggs", "Pets (premium pets are kept)", "Trophies" }
-Rebirth.Kept = { "Diamonds", "Boss keys", "Rebirth Credits and upgrades", "Premium pets", "Index", "Boosts and passes", "Unlocked zones" }
+Rebirth.Lost = { "Gold", "Weapons", "Armor", "Attribute points", "Eggs", "Pets", "Trophies" }
+Rebirth.Kept = { "Diamonds", "Boss keys", "Rebirth Credits and upgrades", "Protected items", "Index", "Boosts and passes", "Unlocked zones" }
 
 -- The zone of Rebirth r (its boss key is needed, it is the zone redone afterwards).
 function Rebirth.zoneOf(r: number): Zones.Zone?

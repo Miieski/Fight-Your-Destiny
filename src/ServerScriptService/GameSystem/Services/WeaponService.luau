@@ -145,7 +145,7 @@ function WeaponService:Refresh(player: Player)
 end
 
 -- Sells one owned copy for Gold (owner 2026-10-13). The equipped weapon cannot be sold.
-local function sell(player: Player, uid: any): (boolean, any)
+local function sell(player: Player, uid: any, confirmed: any): (boolean, any)
 	if typeof(uid) ~= "string" then
 		return false, "Bad request"
 	end
@@ -159,6 +159,9 @@ local function sell(player: Player, uid: any): (boolean, any)
 	end
 	if profile.EquippedWeapon == uid then
 		return false, "Equip another weapon first"
+	end
+	if item.Protected and confirmed ~= true then
+		return false, "This weapon is protected"
 	end
 	local gold = Weapons.sellValue(item.id, item.rarity)
 	local owned = table.clone(profile.Weapons)
@@ -184,7 +187,7 @@ local function sellMany(player: Player, uids: any): (boolean, any)
 	local gold, count = 0, 0
 	for _, uid in ipairs(uids) do
 		local item = if typeof(uid) == "string" then owned[uid] else nil
-		if item and Weapons.ById[item.id] and uid ~= profile.EquippedWeapon then
+		if item and Weapons.ById[item.id] and uid ~= profile.EquippedWeapon and not item.Protected then
 			gold += Weapons.sellValue(item.id, item.rarity)
 			owned[uid] = nil
 			count += 1

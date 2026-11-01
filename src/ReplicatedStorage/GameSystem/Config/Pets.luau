@@ -3,7 +3,7 @@
 -- Steal an Egg, docs/pets_v2_plan.md, owner 2026-10-12). Slot roles are the same in every zone (stats + bonus).
 -- Models: ReplicatedStorage.Assets.Pets.<PetId> - the AI-generated rigs of DevTools/PetRigBuilder; Body / colors /
 -- accessories only drive the procedural placeholders (DevTools/PetModels). Ids: "<zone lower>_pet<slot>".
--- A stored pet is { id, rarity, premium, locked, mutation?, size?, traits? } (Config/PetMutations, Config/PetTraits).
+-- A stored pet is { id, rarity, locked, mutation?, size?, traits?, Protected?, ProtectedPricePaid? } (Config/PetMutations, Config/PetTraits).
 local PetMutations = require(script.Parent.PetMutations)
 local PetTraits = require(script.Parent.PetTraits)
 local PetRarities = require(script.Parent.PetRarities)
@@ -155,7 +155,7 @@ local SPECIES = {
 	},
 }
 
--- Premium pets (Robux only): fixed rarity, kept on Rebirth, never from eggs.
+-- The 4 special pets (Robux only): fixed rarity, never from eggs. Lost on Rebirth unless protected, like every pet.
 local PREMIUM = {
 	{ Id = "premium_dragonling", Name = "Golden Dragonling", Rarity = 5, Stats = { "Gold", "Attack" }, Bonus = "DiamondLuck", Body = "Quadruped", Colors = { "#E8B84A", "#FFF0B0" }, Accessories = { "Horns", "Wings", "Tail", "Glow" }, Scale = 1.15 },
 	{ Id = "premium_phoenix", Name = "Rainbow Phoenix", Rarity = 6, Stats = { "HP", "Speed" }, Bonus = "Regeneration", Body = "Bird", Colors = { "#FF5A3A", "#FFD040" }, Accessories = { "Flame", "Glow" }, Scale = 1.1 },
@@ -194,7 +194,7 @@ end
 Pets.Premium = {} :: { Species }
 for _, spec in ipairs(PREMIUM) do
 	local species: Species = {
-		Id = spec.Id, Name = spec.Name, ZoneId = nil, Zone = 0, Slot = 0, Role = "Premium",
+		Id = spec.Id, Name = spec.Name, ZoneId = nil, Zone = 0, Slot = 0, Role = "Special",
 		Stats = spec.Stats, Bonus = spec.Bonus, Body = spec.Body, Colors = { hex(spec.Colors[1]), hex(spec.Colors[2]) },
 		Accessories = spec.Accessories, Scale = spec.Scale, Premium = true, Rarity = spec.Rarity,
 	}

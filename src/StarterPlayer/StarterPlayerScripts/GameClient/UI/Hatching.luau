@@ -636,7 +636,7 @@ function Hatching.play(results: { any }, options: Options?)
 
 	local zone = Zones.List[best.zone]
 	local zoneText = if zone then ZoneVisibility.displayName(zone.Id) else ""
-	local eggName = if best.premiumEgg then `Premium {zoneText} Egg` else `{Rarities.get(best.eggRarity).Name} {zoneText} Egg`
+	local eggName = if best.premiumEgg then `Diamond {zoneText} Egg` else `{Rarities.get(best.eggRarity).Name} {zoneText} Egg`
 	local title = if #results > 1 then `Hatching {#results} eggs` else `Hatching: {eggName}`
 	Theme.text({ Name = "Title", Font = "Title", Text = title, TextSize = if compact then 26 else 34, Color = Theme.Colors.Gold, Size = UDim2.new(1, -40, 0, if compact then 32 else 42), Position = UDim2.new(0.5, 0, 0, 8), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = panel })
 

@@ -5,7 +5,7 @@
 --   Net.request("BuyPremiumEgg", zone)  -> Diamonds; the rarity is rolled with the shop odds, then it hatches
 --   Net.request("EquipPet" | "UnequipPet" | "ReleasePet", uid), ("LockPet", uid, bool), ("EquipBestPets")
 -- Hatch = { uid, petId, rarity, eggRarity, lucky (Egg Luck made it one tier rarer), zone, mutation?, size? }.
--- Every egg hatch also rolls a mutation and a size (Config/PetMutations, Pets V2); premium pets never mutate.
+-- Every egg hatch also rolls a mutation and a size (Config/PetMutations, Pets V2); the special pets never mutate.
 -- Every new pet rolls its 3 Bonus Stats items (Config/PetTraits: Crown, Accessory, Aura); pets owned before that
 -- update get theirs once when the profile loads.
 -- PetService:GiveEgg (loot, admin) auto-sells the egg when the egg storage is full.
@@ -126,7 +126,7 @@ end
 local function addPet(player: Player, profile: { [string]: any }, petId: string, tier: number, premium: boolean?, mutation: string?, size: string?, traitTier: number?): (string, any)
 	local uid = HttpService:GenerateGUID(false)
 	local owned = table.clone(profile.Pets)
-	local pet: { [string]: any } = { id = petId, rarity = tier, premium = premium == true, locked = false, traits = PetTraits.roll(random, traitTier) }
+	local pet: { [string]: any } = { id = petId, rarity = tier, locked = false, traits = PetTraits.roll(random, traitTier) }
 	if not premium then
 		pet.mutation = if PetMutations.get(mutation) then mutation else nil
 		pet.size = if PetMutations.getSize(size) then size else nil
@@ -293,7 +293,7 @@ local function lockPet(player: Player, uid: any, locked: any): (boolean, any)
 	return true, locked
 end
 
-local function releasePet(player: Player, uid: any): (boolean, any)
+local function releasePet(player: Player, uid: any, confirmed: any): (boolean, any)
 	local profile = DataService:Get(player)
 	if not profile then
 		return false, "Profile not loaded"
@@ -305,8 +305,8 @@ local function releasePet(player: Player, uid: any): (boolean, any)
 	if pet.locked then
 		return false, "This pet is locked"
 	end
-	if pet.premium then
-		return false, "Premium pets cannot be released"
+	if pet.Protected and confirmed ~= true then
+		return false, "This pet is protected"
 	end
 	local gold = Pets.worth(pet)
 	local owned = table.clone(profile.Pets)

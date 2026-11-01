@@ -6,7 +6,7 @@ local Settings = require(script.Parent.Settings)
 
 local Profile = {}
 
-Profile.VERSION = 1
+Profile.VERSION = 2
 
 Profile.Store = {
 	Name = "PlayerProfiles_v1",
@@ -38,7 +38,7 @@ function Profile.new(): { [string]: any }
 		Armor = {}, -- [uid] = { id = "plains_helmet", rarity = 1, locked = false } (Config/Armor)
 		EquippedArmor = {}, -- { Helmet = uid, Chest = uid, Legs = uid }
 		Eggs = {},
-		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, premium = false, locked = false, mutation?, size? }
+		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, locked = false, mutation?, size?, Protected?, ProtectedPricePaid? }
 		EquippedPets = {}, -- array of uids
 		EquippedSkills = {}, -- [slot 2..3] = skill id (Config/Skills); slot 1 is the weapon's
 		Mana = 100, -- Services/ManaService writes it in place (no patch to the client: attributes Mana / MaxMana)
