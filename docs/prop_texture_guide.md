@@ -3777,7 +3777,7 @@ No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `
 | Shore, PathShore, Island, Path, Clearing, Square | `dirt` 18 | own | | | Swamp_1-3 (the Swamp had no ground texture) |
 | PoolRim | `swamp_wall_stone` 8 | own | | | Swamp_4 |
 | Mine_Support Footings | `mine_dirt` 30 | own | | | Plains_4 cave |
-| Dais, DaisStep, PlatformRim, Floor | `cave_rock` 28 | own | | | Plains boss room |
+| Dais, DaisStep, PlatformRim, Floor | `mine_dirt` 30 | own | | | Plains boss room |
 | DaisStep, Step | `frost_slabs` 18 | own | | | Tundra boss room |
 | MiniDais, Plinth | `slabs` 18 | own | | | Desert boss room |
 | Hills Facet | `grass` 34 | own | | | Plains_1, Plains_3 (the grass banks, images 03 and 04) |
@@ -3810,3 +3810,20 @@ Palette recipe. Facet colours, bottom to top; the layers tilt and wave (`y + 3.5
 | Crystals | 13 scaled down where they stand: the 4 at the portal x 0.4, 2 x 0.5, 7 blue ores x 0.6. Their light 12 / 0.7 in the template |
 
 Don't: long strata ledges along the wall. Tried twice, on a rough shell they hang in the air and read as planks.
+
+## Boss seals (owner task round 9 part 5, 2026-11-01)
+
+Flat circles of the boss rooms, now carved seals. `tools/make_boss_seals.py` draws them, `tools/BossSeals.luau` lays them, ids in `Config/PropTextures.BossSeal`. They are decoration: no script uses them. Keep centre and outer size if a room changes.
+
+Recipe: 512 px, alpha outside the circle, a Decal on the top of one flat part (Transparency 1, 0.04 thick, 0.02 over what it replaces, no collision, no query, no shadow). 3-5 tones, soft noise shading, carved lines 1 tone off, a darker band, a worn wobbly edge, dust in the grooves. The old parts stay at Transparency 1.
+
+| room | image | wide | stone | lines | centre | dust |
+|---|---|---:|---|---|---|---|
+| Desert | `seal_desert` | 64 | #D8B47C #C8A468 #B89458 | gold #E0B64C, glyphs #7C5A30 | lapis #2C56B8, sun | sand #E6C684 |
+| Tundra | `seal_ice_ring` + `seal_ice` | 124 + 44 | #6E96CC #5A82BA | frost #DCF4FF | flake, PointLight #D6F0FF range 26 | snow #EEF6FF |
+| Jungle | `seal_jungle_ring` + `seal_jungle` | 137 + 30 | #7C8A6E #6E7C62 #848E78 | #46523A, moss line #7FBF5A | spiral | moss #5F8F3E |
+| Volcano | `seal_volcano` | 62 | #4A464B #3A363C | ember #FF8A30 | lava #FFB040, cracks | ash #5A5054 |
+| Abyss | `seal_abyss` | 96 | #1E5A96 #2A7A98 | #3CD8D2, glyphs #1A4A78 | spiral | #6AB8C0 |
+| Mechanical | `seal_mechanical` | 44 | #757B85 #4E545E | #3CF0FF | gear #596070 | #8A909A |
+
+A ring of a big room is a hollow image (`hollow`), not a full disc: a full 137-wide disc hid the slabs of the jungle floor.

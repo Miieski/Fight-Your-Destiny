@@ -38,6 +38,21 @@ local LAYERS = {
 	{ top = 1e9, colors = { "4e443c", "564a40", "483e36" } },
 }
 
+local VARIANTS: { [string]: { [string]: string } } = {
+	hub_rock_l_b = { Rock = "7a6650", RockB = "6a5846" }, -- RockB was "Rock 1": an attribute name cannot hold a space
+	hub_rock_m_a = { Rock = "6a5846" },
+	hub_rock_s_a = { Rock = "6a5846" },
+	hub_rock_s_b = { Body = "75634e" },
+	plains_rock_m_b = { RockB = "5a4a3c" },
+	plains_rock_stalactite_a = { Spike = "6a5a4a" },
+	plains_rock_stalagmite_a = { Spike = "6a5a4a" },
+	plains_rock_stalagmite_b = { Spike = "6a5a4a" },
+	plains_statue_cave_pillar_a = { Top = "54463a", Waist = "6e5c4a", Rubble = "54463a", Base = "6e5c4a" },
+	plains_rock_ore_cluster_blue = { Rock = "54463a" },
+	plains_rock_ore_cluster_gold = { Rock = "54463a" },
+	plains_rock_crystal_cluster_a = { Rock = "54463a" },
+}
+
 local function zone()
 	return workspace.Zones.Plains.Plains_4
 end
@@ -111,10 +126,10 @@ end
 ---------------------------------------------------------------------
 -- WALLS: the shell keeps its shape and its colliders, only its colours change
 ---------------------------------------------------------------------
-function C.walls(): string
+local function skinShell(shell: Instance, center: Vector3): string
 	local rng = Random.new(9301)
 	local groups: { [string]: { BasePart } } = {}
-	for _, w in ipairs(zone().Decor.CaveShell:GetChildren()) do
+	for _, w in ipairs(shell:GetChildren()) do
 		if w:IsA("WedgePart") then
 			for _, old in ipairs(w:GetChildren()) do
 				if old.Name == TEX then
@@ -144,16 +159,33 @@ function C.walls(): string
 			w.Color = color
 			count += 1
 			if skin then
-				overlay(w, Vector3.new(AXIS_X, 20, AXIS_Z) - w.Position, rng)
+				overlay(w, center - w.Position, rng)
 				textured += 1
 			end
 		end
 	end
-	local cap = zone().Decor.CaveShell:FindFirstChild("CapSlab")
+	local cap = shell:FindFirstChild("CapSlab")
 	if cap then
 		cap.Color = hex("3a3029")
 	end
 	return `walls: {count} facets recoloured, {textured} with the overlay`
+end
+
+function C.walls(): string
+	return skinShell(zone().Decor.CaveShell, Vector3.new(AXIS_X, 20, AXIS_Z))
+end
+
+-- the boss room is the same mine: same shell colours, same rocks. Its Floor texture comes from EdgesRound9, plan BossRooms.
+function C.arena(): string
+	local room = ServerStorage.BossArenas.Plains
+	local n = 0
+	for _, d in ipairs(room:GetDescendants()) do
+		if d:IsA("Model") and VARIANTS[d:GetAttribute("MapPropId") or ""] then
+			d:SetAttribute("Variant", "Mine")
+			n += 1
+		end
+	end
+	return skinShell(room.CaveShell, Vector3.new(2000, 20, -600)) .. `, {n} rocks in Variant Mine`
 end
 
 ---------------------------------------------------------------------
@@ -434,21 +466,6 @@ end
 ---------------------------------------------------------------------
 -- VARIANT "Mine": the same rocks in the palette of the mine; the templates keep their own colours for the rest of the map
 ---------------------------------------------------------------------
-local VARIANTS: { [string]: { [string]: string } } = {
-	hub_rock_l_b = { Rock = "7a6650", RockB = "6a5846" }, -- RockB was "Rock 1": an attribute name cannot hold a space
-	hub_rock_m_a = { Rock = "6a5846" },
-	hub_rock_s_a = { Rock = "6a5846" },
-	hub_rock_s_b = { Body = "75634e" },
-	plains_rock_m_b = { RockB = "5a4a3c" },
-	plains_rock_stalactite_a = { Spike = "6a5a4a" },
-	plains_rock_stalagmite_a = { Spike = "6a5a4a" },
-	plains_rock_stalagmite_b = { Spike = "6a5a4a" },
-	plains_statue_cave_pillar_a = { Top = "54463a", Waist = "6e5c4a", Rubble = "54463a", Base = "6e5c4a" },
-	plains_rock_ore_cluster_blue = { Rock = "54463a" },
-	plains_rock_ore_cluster_gold = { Rock = "54463a" },
-	plains_rock_crystal_cluster_a = { Rock = "54463a" },
-}
-
 function C.variants(): { string }
 	local ids = {}
 	for id, colors in pairs(VARIANTS) do

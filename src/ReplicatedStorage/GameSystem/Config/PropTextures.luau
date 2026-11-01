@@ -31,6 +31,17 @@ local PropTextures = {
 		swamp_floor_mud_stone = "rbxassetid://91459519881550", -- round 7: swamp floors, 512 px = 24 x 24 studs
 		desert_pyramid_tier = "rbxassetid://97978285376143", -- round 7: one pyramid tier face, 20 x 10 studs (3 courses)
 	},
+	-- Round 9 part 5: carved floor seals of the boss rooms, 512 px, alpha outside the circle, as a Decal (tools/make_boss_seals.py, tools/BossSeals.luau)
+	BossSeal = {
+		desert = "rbxassetid://128274461861592",
+		ice = "rbxassetid://116006315535262",
+		ice_ring = "rbxassetid://118024143861795",
+		jungle = "rbxassetid://110022752290185",
+		jungle_ring = "rbxassetid://137124130196060",
+		volcano = "rbxassetid://129817908518384",
+		abyss = "rbxassetid://80835894675422",
+		mechanical = "rbxassetid://75138907255797",
+	},
 	-- round 8 part 7: the ground of the Hub, Plains, Desert, Jungle and Tundra (256 px, tools/make_floor_textures.py, recipes in
 	-- docs/prop_texture_guide.md "Ground"). Tile = studs per tile as laid. fringe_* = a band tiled along a path edge, macro = a long soft tile.
 	Ground = {
