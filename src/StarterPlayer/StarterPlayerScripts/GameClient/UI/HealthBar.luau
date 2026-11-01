@@ -20,7 +20,7 @@ local HealthBar = { Priority = 10 }
 
 local VIGNETTE_DEPTH = 0.22 -- fraction of the screen covered by each red edge
 local PULSE = TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-local PORTRAIT = 1.12 -- portrait height relative to the panel (it overlaps the panel's left end)
+local PORTRAIT = 1.72 -- shield height relative to the panel (it overlaps the left end, the point hangs below it)
 
 local panel: Frame
 local bar: any
@@ -40,7 +40,7 @@ local function setLow(value: boolean)
 	end
 	table.clear(pulses)
 	vignette.Visible = value
-	local border = panel:FindFirstChildOfClass("UIStroke") :: UIStroke
+	local frame = bar.Frame :: ImageLabel
 	if value then
 		for _, edge in ipairs(edges) do
 			edge.BackgroundTransparency = 0.55
@@ -48,11 +48,11 @@ local function setLow(value: boolean)
 			tween:Play()
 			table.insert(pulses, tween)
 		end
-		local tween = TweenService:Create(border, PULSE, { Color = Theme.Colors.Health })
+		local tween = TweenService:Create(frame, PULSE, { ImageColor3 = Theme.Colors.Health })
 		tween:Play()
 		table.insert(pulses, tween)
 	else
-		border.Color = Theme.Colors.GoldLight
+		frame.ImageColor3 = Color3.new(1, 1, 1)
 	end
 end
 
@@ -120,17 +120,19 @@ end
 -- The player's avatar headshot in a gold ring over the panel's left end, like the currency icons.
 -- Test players without a Roblox account (UserId <= 0, Studio local servers) get the heart instead.
 local function makePortrait(parent: Instance)
+	local info = Theme.Images.Portrait
+	local shield = Theme.image(parent, "Portrait", { Name = "Shield", AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, -14, 0.5, 8), ZIndex = 7 })
+	shield.Size = UDim2.fromScale(PORTRAIT, PORTRAIT)
+	shield.SizeConstraint = Enum.SizeConstraint.RelativeYY
 	local ring = Instance.new("Frame")
 	ring.Name = "Portrait"
-	ring.AnchorPoint = Vector2.new(0, 0.5)
-	ring.Position = UDim2.new(0, -6, 0.5, 0)
-	ring.Size = UDim2.fromScale(PORTRAIT, PORTRAIT)
-	ring.SizeConstraint = Enum.SizeConstraint.RelativeYY
+	ring.AnchorPoint = Vector2.new(0.5, 0.5)
+	ring.Position = UDim2.fromScale(info.HoleX, info.HoleY)
+	ring.Size = UDim2.fromScale(info.Hole, info.Hole)
 	ring.BackgroundColor3 = Color3.new(1, 1, 1)
 	ring.ZIndex = 5
 	Theme.gradient(ring, Theme.Colors.WoodLight, Theme.Colors.WoodInset)
 	Theme.round(ring)
-	Theme.stroke(ring, Theme.Colors.GoldLight, 3)
 	local userId = Players.LocalPlayer.UserId
 	if userId > 0 then
 		local image = Instance.new("ImageLabel")
@@ -144,7 +146,7 @@ local function makePortrait(parent: Instance)
 	else
 		Icons.create("Heart", ring, { Size = UDim2.fromScale(0.8, 0.8), ZIndex = 6 })
 	end
-	ring.Parent = parent
+	ring.Parent = shield
 end
 
 local function layout()
@@ -159,9 +161,9 @@ function HealthBar:Start()
 	end)
 	makeVignette(vignetteScreen())
 	local root = Screens.hud()
-	panel = Panel.new({ Name = "Health", Position = UDim2.fromOffset(12, UIConfig.Hud.Health.Top), Gems = false, BorderThickness = 3, Parent = root })
+	panel = Panel.new({ Name = "Health", Position = UDim2.fromOffset(12, UIConfig.Hud.Health.Top), Bare = true, Parent = root })
 	makePortrait(panel)
-	bar = Bar.new({ Name = "HP", Size = UDim2.new(1, -68, 0.56, 0), Position = UDim2.new(0, 58, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = panel })
+	bar = Bar.new({ Name = "HP", Size = UDim2.new(1, -92, 0.62, 0), Position = UDim2.new(0, 70, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Framed = true, Parent = panel })
 	layout()
 	Theme.Changed:Connect(layout)
 	local player = Players.LocalPlayer

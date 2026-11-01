@@ -30,6 +30,8 @@ local MAIN = "Main"
 -- Phones (Theme.isCompact): the title banner moves to the left of the tab row, so the content gets the
 -- height of one row back (a phone in landscape is only ~380 design units tall).
 local COMPACT_BANNER = 210
+local COMPACT_ICON_BANNER = 78
+local COMPACT_ICON_ONLY_TABS = 5
 -- The screen root stops under the Roblox top bar; an oversized, centered backdrop dims that strip too.
 local BACKDROP_COVER = 4
 
@@ -127,22 +129,33 @@ local function arrange(entry: Built)
 	if compact then
 		banner.AnchorPoint = Vector2.zero
 		banner.Position = UDim2.fromOffset(12, 8)
-		banner.Size = UDim2.fromOffset(COMPACT_BANNER, Theme.TOUCH)
+		-- many tabs need the room: the plate keeps only the window's icon
+		local narrow = entry.def.Icon ~= nil and #(entry.def.Tabs or {}) >= COMPACT_ICON_ONLY_TABS
+		local width = if narrow then COMPACT_ICON_BANNER else COMPACT_BANNER
+		banner.Size = UDim2.fromOffset(width, Theme.TOUCH)
 		if limit then
-			limit.MaxSize = Vector2.new(COMPACT_BANNER, Theme.TOUCH)
+			limit.MaxSize = Vector2.new(width, Theme.TOUCH)
+		end
+		local title = banner:FindFirstChild("Title")
+		if title then
+			(title :: TextLabel).Visible = not narrow
 		end
 		top = 8 + Theme.TOUCH + 8
 		if entry.tabs then
-			local left = 12 + COMPACT_BANNER + 8
+			local left = 12 + banner.Size.X.Offset + 8
 			entry.tabs.Instance.Position = UDim2.fromOffset(left, 8)
 			entry.tabs.Instance.Size = UDim2.new(1, -(left + Theme.TOUCH + 16), 0, Theme.TOUCH)
 		end
 	else
 		banner.AnchorPoint = Vector2.new(0.5, 0)
-		banner.Position = UDim2.new(0.5, 0, 0, 10)
-		banner.Size = UDim2.new(0.5, 0, 0, 50)
+		banner.Position = UDim2.new(0.5, 0, 0, 8)
+		banner.Size = UDim2.new(0.5, 0, 0, 56)
 		if limit then
-			limit.MaxSize = Vector2.new(380, 50)
+			limit.MaxSize = Vector2.new(400, 56)
+		end
+		local title = banner:FindFirstChild("Title")
+		if title then
+			(title :: TextLabel).Visible = true
 		end
 		if entry.tabs then
 			entry.tabs.Instance.Position = UDim2.fromOffset(12, HEADER)
@@ -169,19 +182,19 @@ local function build(id: string): Built
 	local pop = Instance.new("UIScale")
 	pop.Parent = frame
 
-	local banner = Panel.new({ Name = "Banner", Size = UDim2.new(0.5, 0, 0, 50), Position = UDim2.new(0.5, 0, 0, 10), AnchorPoint = Vector2.new(0.5, 0), Gems = false, BorderThickness = 3, ZIndex = 3, Parent = frame })
+	local banner = Panel.banner({ Name = "Banner", Size = UDim2.new(0.5, 0, 0, 56), Position = UDim2.new(0.5, 0, 0, 8), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 3, Parent = frame })
 	local bannerLimit = Instance.new("UISizeConstraint")
-	bannerLimit.MaxSize = Vector2.new(380, 50)
+	bannerLimit.MaxSize = Vector2.new(400, 56)
 	bannerLimit.Parent = banner
 	if def.Icon then
 		-- the window's picture first, the word after it (kid-friendly, owner 2026-10-13)
-		Icons.create(def.Icon, banner, { Size = UDim2.new(0, 0, 1.25, 0), Position = UDim2.new(0, 6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 5 })
-		Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -78, 0.86, 0), Position = UDim2.new(0.5, 30, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
+		Icons.create(def.Icon, banner, { Size = UDim2.new(0, 0, 0.8, 0), Position = UDim2.new(0, 22, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 5 })
+		Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 30, Color = Theme.Colors.Text, Size = UDim2.new(1, -100, 0.58, 0), Position = UDim2.new(0.5, 26, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
 	else
-		Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 32, Color = Theme.Colors.Gold, Size = UDim2.new(1, -16, 0.86, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
+		Theme.text({ Name = "Title", Font = "Title", Text = def.Title, TextSize = 30, Color = Theme.Colors.Text, Size = UDim2.new(1, -48, 0.58, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4, Parent = banner })
 	end
 
-	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), ZIndex = 3, OnClick = Window.close, Parent = frame })
+	Button.new({ Name = "Close", Style = "wood", Icon = "Close", Size = UDim2.fromOffset(Theme.TOUCH, Theme.TOUCH), Position = UDim2.new(1, -10, 0, 10), AnchorPoint = Vector2.new(1, 0), ZIndex = 6, OnClick = Window.close, Parent = frame })
 
 	local entry: Built = { frame = frame, pages = {}, tabs = nil, pop = pop, def = def, banner = banner, content = nil :: any }
 	if def.Tabs then

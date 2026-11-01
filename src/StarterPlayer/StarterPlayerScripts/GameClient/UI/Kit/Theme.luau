@@ -11,58 +11,21 @@ local UserInputService = game:GetService("UserInputService")
 
 local Rarities = require(ReplicatedStorage.GameSystem.Config.Rarities)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
-
-local rgb = Color3.fromRGB
+local UITheme = require(ReplicatedStorage.GameSystem.Config.UITheme)
 
 local Theme = {}
 
-Theme.Colors = {
-	WoodTop = rgb(74, 48, 32),
-	WoodBottom = rgb(51, 32, 15),
-	WoodLight = rgb(104, 70, 44),
-	WoodInset = rgb(34, 21, 10),
-	WoodLine = rgb(22, 13, 6),
-	GoldLight = rgb(232, 180, 74),
-	GoldDark = rgb(176, 122, 34),
-	GoldFace = rgb(255, 212, 108),
-	GoldBase = rgb(122, 78, 20),
-	Gold = rgb(255, 201, 60),
-	Diamond = rgb(95, 212, 255),
-	Health = rgb(217, 59, 59),
-	HealthTrail = rgb(255, 196, 170),
-	Text = rgb(250, 240, 220),
-	TextDim = rgb(196, 176, 146),
-	TextDark = rgb(52, 30, 12),
-	Ink = rgb(30, 18, 8),
-	SteelLight = rgb(178, 184, 196),
-	SteelDark = rgb(112, 118, 130),
-	SteelBase = rgb(62, 66, 76),
-	DangerLight = rgb(232, 84, 74),
-	DangerDark = rgb(164, 36, 36),
-	DangerBase = rgb(96, 18, 18),
-	DisabledLight = rgb(150, 144, 136),
-	DisabledDark = rgb(112, 106, 100),
-	DisabledBase = rgb(66, 62, 58),
-	Good = rgb(91, 220, 110),
-	Bad = rgb(255, 96, 96),
-	Ruby = rgb(220, 40, 70),
-	Sapphire = rgb(60, 120, 240),
-	Amethyst = rgb(160, 80, 230),
-	Badge = rgb(226, 38, 38),
-	Black = rgb(0, 0, 0),
-}
+Theme.Colors = UITheme.Colors
+Theme.Images = UITheme.Images
 
-local GRENZE = "rbxasset://fonts/families/GrenzeGotisch.json"
-local BUILDER = "rbxasset://fonts/families/BuilderSans.json"
-Theme.Fonts = {
-	Title = Font.new(GRENZE, Enum.FontWeight.Bold),
-	Button = Font.new(GRENZE, Enum.FontWeight.SemiBold),
-	Body = Font.new(BUILDER, Enum.FontWeight.Medium),
-	Number = Font.new(BUILDER, Enum.FontWeight.Bold),
-}
+Theme.Fonts = {}
+for name, font in pairs(UITheme.Fonts) do
+	Theme.Fonts[name] = Font.new(font[1], font[2])
+end
 
-Theme.CORNER = 6
-Theme.BORDER = 4
+Theme.CORNER = UITheme.Corner
+Theme.PANEL_CORNER = UITheme.PanelCorner
+Theme.BORDER = UITheme.Border
 Theme.TOUCH = UIConfig.TOUCH
 Theme.PRESS_SECONDS = 0.08
 
@@ -102,6 +65,28 @@ function Theme.gradient(parent: Instance, top: Color3, bottom: Color3, rotation:
 	return gradient
 end
 
+-- A 9-slice (or plain) image of Config/UITheme.Images filling its parent, or props.Size.
+function Theme.image(parent: Instance, key: string, props: { [string]: any }?): ImageLabel
+	local info = UITheme.Images[key]
+	local p = props or {}
+	local image = Instance.new("ImageLabel")
+	image.Name = p.Name or key
+	image.BackgroundTransparency = 1
+	image.BorderSizePixel = 0
+	image.Image = info.Id
+	image.Size = p.Size or UDim2.fromScale(1, 1)
+	image.Position = p.Position or UDim2.new()
+	image.AnchorPoint = p.AnchorPoint or Vector2.zero
+	image.ZIndex = p.ZIndex or 1
+	if info.Slice then
+		image.ScaleType = Enum.ScaleType.Slice
+		image.SliceCenter = info.Slice
+		image.SliceScale = p.SliceScale or info.Scale or 1
+	end
+	image.Parent = parent
+	return image
+end
+
 -- A transparent TextLabel with the theme's text stroke.
 -- props: Font ("Title"|"Button"|"Body"|"Number"), Size, Position, AnchorPoint, Text, TextSize
 -- (max size, the text scales down to fit), Color, Align ("Left"|"Center"|"Right"), Parent, ...
@@ -131,7 +116,7 @@ function Theme.text(props: { [string]: any }): TextLabel
 	if props.Stroke ~= false then
 		local stroke = Instance.new("UIStroke")
 		stroke.Color = props.StrokeColor or Theme.Colors.Ink
-		stroke.Thickness = props.StrokeThickness or 1.75
+		stroke.Thickness = props.StrokeThickness or UITheme.TextStroke
 		stroke.Parent = label
 	end
 	label.Parent = props.Parent

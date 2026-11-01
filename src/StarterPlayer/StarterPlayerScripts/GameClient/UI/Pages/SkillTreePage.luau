@@ -234,6 +234,7 @@ local function buildTab(page: ScrollingFrame, category: string)
 	foot.Parent = page
 	Theme.text({ Font = "Button", Text = "Special attacks", TextSize = 20, Align = "Left", Size = UDim2.fromOffset(170, 40), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Parent = foot })
 	local slots = {}
+	local labels: { [string]: TextLabel } = {}
 	local slotNames = {}
 	for i = 1, WeaponMastery.MaxEquipped do
 		local slot = Components.Slot({ Name = "Special" .. i, Size = 56, Position = UDim2.fromOffset(170 + (i - 1) * 190, 3), Parent = foot, OnClick = function()
@@ -272,7 +273,9 @@ local function buildTab(page: ScrollingFrame, category: string)
 		Theme.round(button)
 		local stroke = Theme.stroke(button, Theme.Colors.SteelDark, 3)
 		Icons.create(if node.Kind == "Special" then category elseif node.Kind == "Passive" then "Crown" else "Stats", button, { Size = UDim2.fromScale(0.68, 0.68), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
-		Theme.text({ Font = "Button", Text = node.Name, TextSize = 16, Size = UDim2.fromOffset(150, 20), Position = UDim2.new(0.5, 0, 1, 2), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 5, Parent = button })
+		local nodeLabel = Theme.text({ Font = "Button", Text = node.Name, TextSize = if small then 20 else 17, Size = UDim2.fromOffset(if small then 190 else 150, if small then 26 else 20), Position = UDim2.new(0.5, 0, 1, 2), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 6, Parent = button })
+		nodeLabel.Visible = not small
+		labels[node.Id] = nodeLabel
 		button.Activated:Connect(function()
 			selected = node
 			Sfx.play("UIClick")
@@ -308,6 +311,11 @@ local function buildTab(page: ScrollingFrame, category: string)
 		local has = owned[selected.Id] == true
 		local equipped = (d.EquippedSkills or {})[category] or {}
 		name.Text = selected.Name
+		if small then -- the phone shows only the name of the selected node
+			for id, label in pairs(labels) do
+				label.Visible = id == selected.Id
+			end
+		end
 		effect.Text = Trees.effect(selected)
 		local needs = {}
 		for _, list in ipairs({ selected.Requires, selected.Any }) do

@@ -4,6 +4,7 @@
 -- seconds left; a shake when the skill cannot be paid; a frame tinted by rarity or element.
 --   local slot = SkillSlot.new({ Name, Size, Round?, Key?, LayoutOrder?, Position?, AnchorPoint?, Parent, OnActivate? })
 --   slot:SetSkill(def?)  slot:SetFrame(color?)  slot:SetTier(tier?)  slot:SetKey(text?)
+--   a special attack (def.Move) shows its initials, so 3 specials of a weapon type read apart
 --   slot:StartCooldown(seconds, total?)  slot:Shake()  slot:SetHighlight(on)
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -30,6 +31,8 @@ export type SkillSlot = typeof(setmetatable({} :: {
 	_tier: number?,
 	_keyPill: Frame,
 	_keyText: TextLabel,
+	_keyGem: ImageLabel,
+	_letters: TextLabel,
 	_halves: { UIGradient },
 	_sweep: Frame,
 	_seconds: TextLabel,
@@ -104,8 +107,15 @@ function SkillSlot.new(props: { [string]: any }): SkillSlot
 	else
 		Theme.corner(box, Theme.CORNER)
 	end
-	Theme.gradient(box, Theme.Colors.WoodTop, Theme.Colors.WoodInset)
+	box:SetAttribute("WoodSkin", false)
+	if round then
+		Theme.gradient(box, Theme.Colors.WoodTop, Theme.Colors.WoodInset)
+	else
+		box.BackgroundTransparency = 1
+		Theme.image(box, "Tile", { Name = "Plate" })
+	end
 	local border = Theme.stroke(box, Theme.Colors.GoldDark, 3)
+	border.Enabled = round
 	box.Parent = root
 
 	-- cooldown sweep + seconds (above the icon)
@@ -135,6 +145,11 @@ function SkillSlot.new(props: { [string]: any }): SkillSlot
 	local keyText = Theme.text({ Name = "Text", Font = "Button", Text = "", TextSize = 22, Color = Theme.Colors.Gold, Size = UDim2.new(1, -4, 0.92, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 6, Stroke = false, Parent = pill })
 	pill.Visible = false
 	pill.Parent = root
+	-- a one-letter key sits on a green gem; a long name keeps the dark pill
+	local gem = Theme.image(pill, "Gem", { Size = UDim2.fromScale(1.5, 1.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+	gem.Visible = false
+	local letters = Theme.text({ Name = "Letters", Font = "Button", Text = "", TextSize = 26, Color = Theme.Colors.GoldFace, StrokeThickness = 2.5, Size = UDim2.fromScale(0.86, 0.5), Position = UDim2.fromScale(0.5, 0.04), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 4, Parent = box })
+	letters.Visible = false
 
 	local self = setmetatable({
 		Instance = root,
@@ -145,6 +160,8 @@ function SkillSlot.new(props: { [string]: any }): SkillSlot
 		_tier = nil,
 		_keyPill = pill,
 		_keyText = keyText,
+		_keyGem = gem,
+		_letters = letters,
 		_halves = halves,
 		_sweep = sweep,
 		_seconds = seconds,
@@ -171,8 +188,17 @@ function SkillSlot.SetSkill(self: SkillSlot, def: { [string]: any }?)
 	end
 	if def then
 		self._icon = Icons.create(def.Icon or "Star", self.Box, { Size = UDim2.fromScale(0.74, 0.74), ZIndex = 2 })
+		local initials = ""
+		if def.Move then
+			for word in string.gmatch(def.Name or "", "%a+") do
+				initials ..= string.sub(word, 1, 1)
+			end
+		end
+		self._letters.Text = initials
+		self._letters.Visible = initials ~= ""
 		self.Box.BackgroundColor3 = Theme.Colors.WoodTop
 	else
+		self._letters.Visible = false
 		local lock = Icons.create("Lock", self.Box, { Size = UDim2.fromScale(0.48, 0.48), ZIndex = 2 })
 		Icons.setFaded(lock, EMPTY_ICON_FADE)
 		self._icon = lock
@@ -183,6 +209,9 @@ end
 -- Frame tint: a rarity / element color, or nil for the default gold.
 function SkillSlot.SetFrame(self: SkillSlot, color: Color3?)
 	self._frameColor = color
+	if not self._round then
+		self.Border.Enabled = color ~= nil
+	end
 	self._tier = nil
 	local old = self.Border:FindFirstChild("RarityGradient")
 	if old then
@@ -206,6 +235,14 @@ function SkillSlot.SetKey(self: SkillSlot, text: string?)
 	local label = text or ""
 	self._keyPill.Visible = label ~= ""
 	self._keyText.Text = label
+	local short = #label == 1
+	self._keyGem.Visible = short
+	self._keyPill.BackgroundTransparency = if short then 1 else 0.1
+	local edge = self._keyPill:FindFirstChildOfClass("UIStroke")
+	if edge then
+		edge.Enabled = not short
+	end
+	self._keyText.TextColor3 = if short then Theme.Colors.Text else Theme.Colors.Gold
 	-- the pill widens for long labels ("Left Alt"); the text scales inside it
 	self._keyPill.Size = UDim2.fromScale(math.max(KEY_PILL.MinWidth, KEY_PILL.PerChar * #label + KEY_PILL.Pad), KEY_PILL.Height)
 end

@@ -26,7 +26,7 @@ local GAP = 4 -- pixels under the health bar
 local HEIGHT_K = 0.62 -- of the health bar's height
 
 local panel: Frame
-local border: UIStroke
+local border: ImageLabel
 local bar: any
 
 local function refreshVisible()
@@ -49,15 +49,15 @@ end
 
 function ManaBar.flash()
 	if border then
-		border.Color = FLASH_COLOR
-		TweenService:Create(border, FLASH, { Color = Theme.Colors.GoldLight }):Play()
+		border.ImageColor3 = FLASH_COLOR
+		TweenService:Create(border, FLASH, { ImageColor3 = Color3.new(1, 1, 1) }):Play()
 	end
 end
 
 function ManaBar:Start()
-	panel = Panel.new({ Name = "Mana", Gems = false, BorderThickness = 3, Parent = Screens.hud() })
-	border = panel:FindFirstChildOfClass("UIStroke") :: UIStroke
-	bar = Bar.new({ Name = "MP", Size = UDim2.new(1, -20, 0.62, 0), Position = UDim2.new(0, 10, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Color = MANA_COLOR, Parent = panel })
+	panel = Panel.new({ Name = "Mana", Bare = true, Parent = Screens.hud() })
+	bar = Bar.new({ Name = "MP", Size = UDim2.new(1, -92, 0.72, 0), Position = UDim2.new(0, 70, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Framed = true, Color = MANA_COLOR, Parent = panel })
+	border = bar.Frame :: ImageLabel
 	layout()
 	Theme.Changed:Connect(layout)
 	local player = Players.LocalPlayer

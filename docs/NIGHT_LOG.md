@@ -1,5 +1,23 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 8 + VERIFY, wood + metal UI (Studio agent). `Config/UITheme` (colors, fonts, sizes, rarity color, images), `Kit/Theme` reads it; `tools/make_ui_textures.py`, 11 images uploaded,
+  list in docs/ui_textures/IMPORT_LIST.md. Nothing to import by hand. Backup: `..._175511_before_round8_floors` (6 files, before Part 7); none taken between Parts 7 and 8.
+  - The restyle is in the shared pieces, so every screen follows: `Kit/Panel` (wood planks, frame, steel corners, `Panel.banner`), `Button` (dark wood, `tab`, `tabOn`, tile), `Tabs`, `Slot`,
+    `Bar` (Framed), `IconButton`, `SkillSlot`, `Chips`, `Window`, `Components`, `HealthBar` (shield), `ManaBar`, `Currencies`. No pirate shape, wheel, waves or copied art.
+  - DECISION: titles and buttons use Merriweather instead of GrenzeGotisch: closer to the reference and easier to read small. DECISION: selected tab = lighter wood, not bright gold.
+  - DECISION: on phones, windows with 5+ tabs keep only the icon in the title plate, so the tab names stay readable. No stamina or XP bar added: the game has none on the HUD.
+  - Coordinator's notes done: tree labels on phones show only the selected node's name (bigger, 20); a special shows its initials on the bar (CC, TC) on PC and touch; Rebirth, protection and zone
+    screens go through Kit.
+  - The empty touch skill button came out square (the wood skin ignored the round corner, older bug made visible): fixed.
+  - Tests on the final code: all 11 windows and every tab opened, no error. By mouse: a menu tile, the window X, the protection popup (Cancel), Zones, a zone's sub-zones. Real Rebirth by button and
+    Confirm: Rebirths 2 -> 3, Gold 0, Hub, 30 weapons -> starter (the 2 protected armor / pets kept per the popup text, not re-counted), camera Custom, speed normal, no window left open. Boss room: entered by key E on
+    Plains_4, killed by Admin, sent back to (2000, 2.7, 771) by the game, camera and speed normal. Log (scanner fixed): 0 script errors.
+  - Frame time, phone emulator on this PC: Inventory and Index 6.94 ms (capped at 144 fps, worst 8.9). GUI memory 78 MB, textures 159 MB after opening every window. Not a real phone.
+  - NOT done or not tested: "phone portrait" shots: the game is locked to landscape, so the phone shots are landscape. Real taps. 2 players (only 1 in Studio here). Hatching, case opening,
+    toasts, Team invite and the Admin panel were not looked at after the restyle; they use the same Kit pieces. A door unlock + rejoin was not repeated on the final code (Parts 3 and 6 tested them, Part 3 by you).
+    Test profile changed again: Rebirths 3, all unlocked by Admin, keys given.
+  - The Windows temporary hook for the shots (attribute DevWindow) was removed from `Kit/Window`.
+
 - PART 7, better floors (Studio agent). `tools/FloorsRound8.luau`, `tools/make_floor_textures.py`, 18 textures uploaded (`Config/PropTextures.Ground`), recipes in
   docs/prop_texture_guide.md "Ground". Backup: all 6 files of `..._175511_before_round8_floors`.
   - DECISION: the ground is Parts, not Terrain, so `Texture` with StudsPerTile. Paths: Hub cobble pavers, Plains dirt, Plains_2 dirt on sand, Desert sandstone slabs, Jungle mossy

@@ -31,7 +31,7 @@ function Chips.chip(parent: Instance?, icon: string, text: string, props: { [str
 		frame.LayoutOrder = p.LayoutOrder
 	end
 	Theme.corner(frame, math.floor(h / 2))
-	Theme.stroke(frame, Theme.Colors.GoldDark, 1.5)
+	Theme.stroke(frame, Theme.Colors.GoldLight, 2)
 	local list = Instance.new("UIListLayout")
 	list.FillDirection = Enum.FillDirection.Horizontal
 	list.VerticalAlignment = Enum.VerticalAlignment.Center

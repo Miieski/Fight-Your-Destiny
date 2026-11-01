@@ -17,7 +17,8 @@ Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
   `Doors` line, and `DevTools.GateSplit` + a sync when it opens in two leaves. `Controllers/BossDoorController` is the boss door.
 - Rebirth Protection replaces the premium pets: `Config/RebirthProtection`, `Services/ProtectionService`, `UI/Protection`. Code identifiers
   such as `species.Premium`, `BuyPremiumEgg`, `grantPremium` stay: they name the Robux pets and the Diamond eggs, not a Rebirth rule.
-- New UI is built on `UI/Kit/Components` (Part 8 restyles there).
+- UI look: `Config/UITheme` + `tools/make_ui_textures.py` (ids in UITheme.Images, list in docs/ui_textures/IMPORT_LIST.md). New screens are built on `UI/Kit/Components`.
+- Doors: unlock state is personal; animation data in `Config/DoorAnimations`, `Config/PortalBuild`.
 - Skill trees: `Config/WeaponSkillTrees` (the map, generated), `Config/WeaponSpecials` (5 moves per type, added to `Config/WeaponMoves` and `Config/Skills`),
   `Services/MasteryService`, `UI/Pages/SkillTreePage`. Client cooldowns are per skill id in `SkillController`. Profile version 3.
 - Floors: `tools/FloorsRound8.luau` (`F.zone(name)`, `F.hub()`, `F.clear(name)`, idempotent), `tools/make_floor_textures.py`, ids in `Config/PropTextures.Ground`.

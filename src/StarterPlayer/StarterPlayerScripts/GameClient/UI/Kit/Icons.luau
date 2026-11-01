@@ -161,10 +161,10 @@ Icons.Ui = {
 }
 -- Realistic wood textures + iron corner (tools/blender/fyd_ui_textures.py, Icons/UiTex/<id>.png): Kit/Panel.
 Icons.Tex = {
-	IronCorner = "rbxassetid://139561957073102",
-	WoodInset = "rbxassetid://80816013746152",
+	IronCorner = "rbxassetid://83342804874146",
+	WoodInset = "rbxassetid://124175198489631",
 	WoodLight = "rbxassetid://125306183924707",
-	WoodPanel = "rbxassetid://79607230035855",
+	WoodPanel = "rbxassetid://102876232092438",
 }
 
 -- Older UI ids that now point at a 3D icon.

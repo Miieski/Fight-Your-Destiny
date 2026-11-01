@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T17:29:25Z",
+ "generated": "2026-11-01T17:33:32Z",
  "zones": [
   {
    "characters": [
@@ -383,14 +383,14 @@
      "resizedParts": 0,
      "propId": "hub_furniture_planter",
      "instances": 4,
-     "largest": 9,
+     "largest": 13.7,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "furniture",
      "inPreview": true,
-     "newTemplate": true,
+     "newTemplate": false,
      "totalInstances": 4,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -400,14 +400,14 @@
      "resizedParts": 0,
      "propId": "hub_furniture_planter_v2",
      "instances": 2,
-     "largest": 9,
+     "largest": 13.5,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "furniture",
      "inPreview": true,
-     "newTemplate": true,
+     "newTemplate": false,
      "totalInstances": 2,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -528,14 +528,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_plant_bush_a",
-     "instances": 20,
+     "instances": 18,
      "largest": 3.7,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 70,
+     "totalInstances": 68,
      "quality": "old"
     },
     {
@@ -546,14 +546,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_plant_bush_b",
-     "instances": 23,
-     "largest": 5.2,
+     "instances": 19,
+     "largest": 5.3,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 77,
+     "totalInstances": 73,
      "quality": "old"
     },
     {
@@ -564,14 +564,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_plant_flower_purple",
-     "instances": 24,
+     "instances": 18,
      "largest": 2,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 132,
+     "totalInstances": 126,
      "quality": "old"
     },
     {
@@ -582,14 +582,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_plant_flower_red",
-     "instances": 25,
+     "instances": 19,
      "largest": 2,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 80,
+     "totalInstances": 74,
      "quality": "old"
     },
     {
@@ -600,14 +600,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_plant_flower_yellow",
-     "instances": 29,
+     "instances": 23,
      "largest": 3.4,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 113,
+     "totalInstances": 107,
      "quality": "old"
     },
     {
@@ -695,6 +695,42 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "plains_ground_flowers",
+     "instances": 46,
+     "largest": 1.7,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 98,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Hub",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_ground_tuft",
+     "instances": 110,
+     "largest": 1.1,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 262,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Hub",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "clam_pearl",
      "instances": 8,
      "largest": 2.6,
@@ -722,6 +758,40 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 19,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Hub"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_ground_curb",
+     "instances": 10,
+     "largest": 9.9,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 10,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Hub"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_ground_pebbles",
+     "instances": 36,
+     "largest": 2.5,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 36,
      "quality": "improved"
     },
     {
@@ -780,6 +850,23 @@
      "newTemplate": true,
      "totalInstances": 52,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Hub"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_spawn_pad",
+     "instances": 1,
+     "largest": 19.4,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 1,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -1170,7 +1257,7 @@
      "category": "tree",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 64,
+     "totalInstances": 68,
      "quality": "old"
     },
     {
@@ -1188,7 +1275,7 @@
      "category": "tree",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 89,
+     "totalInstances": 97,
      "quality": "old"
     },
     {
@@ -1200,13 +1287,13 @@
      "resizedParts": 0,
      "propId": "hub_tree_pine_tree_c",
      "instances": 9,
-     "largest": 49.7,
+     "largest": 48.8,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "tree",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 63,
+     "totalInstances": 69,
      "quality": "old"
     },
     {
@@ -1262,6 +1349,10 @@
     {
      "folder": "Hub.Decor.Backdrop.NorthHill",
      "parts": 416
+    },
+    {
+     "folder": "Hub.Decor.FloorDetail",
+     "parts": 50
     },
     {
      "folder": "Hub.Decor.Ground",
@@ -1454,14 +1545,14 @@
      "resizedParts": 0,
      "propId": "plains_bridge_rail_section",
      "instances": 6,
-     "largest": 20,
+     "largest": 23.6,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "bridge",
      "inPreview": true,
-     "newTemplate": true,
+     "newTemplate": false,
      "totalInstances": 6,
-     "quality": "old"
+     "quality": "improved"
     },
     {
      "zones": [
@@ -1479,6 +1570,23 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 10,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_rail_buffer",
+     "instances": 1,
+     "largest": 10.3,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "bridge",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 1,
      "quality": "improved"
     },
     {
@@ -1923,7 +2031,7 @@
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 70,
+     "totalInstances": 68,
      "quality": "old"
     },
     {
@@ -1935,13 +2043,13 @@
      "resizedParts": 0,
      "propId": "hub_plant_bush_b",
      "instances": 54,
-     "largest": 5.2,
+     "largest": 5.3,
      "ownTint": 0,
      "sizeClass": "small",
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 77,
+     "totalInstances": 73,
      "quality": "old"
     },
     {
@@ -1959,7 +2067,7 @@
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 132,
+     "totalInstances": 126,
      "quality": "old"
     },
     {
@@ -1977,7 +2085,7 @@
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 80,
+     "totalInstances": 74,
      "quality": "old"
     },
     {
@@ -1995,7 +2103,7 @@
      "category": "plant",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 113,
+     "totalInstances": 107,
      "quality": "old"
     },
     {
@@ -2078,6 +2186,42 @@
     },
     {
      "zones": [
+      "Hub",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_ground_flowers",
+     "instances": 52,
+     "largest": 1.7,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 98,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Hub",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_ground_tuft",
+     "instances": 152,
+     "largest": 1.1,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 262,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Plains"
      ],
      "sizeVariants": 0,
@@ -2109,6 +2253,24 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 29,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_ground_ripple",
+     "instances": 30,
+     "largest": 5.2,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 132,
      "quality": "improved"
     },
     {
@@ -2222,6 +2384,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Plains"
      ],
      "sizeVariants": 0,
@@ -2235,6 +2425,41 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 1,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_ground_curb",
+     "instances": 101,
+     "largest": 9.2,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 101,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_ground_pebbles",
+     "instances": 54,
+     "largest": 2.8,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 90,
      "quality": "improved"
     },
     {
@@ -2850,14 +3075,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_tree_pine_tree_a",
-     "instances": 52,
+     "instances": 56,
      "largest": 28.9,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "tree",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 64,
+     "totalInstances": 68,
      "quality": "old"
     },
     {
@@ -2868,14 +3093,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_tree_pine_tree_b",
-     "instances": 80,
+     "instances": 88,
      "largest": 45.8,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "tree",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 89,
+     "totalInstances": 97,
      "quality": "old"
     },
     {
@@ -2886,14 +3111,14 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "hub_tree_pine_tree_c",
-     "instances": 54,
-     "largest": 49.7,
+     "instances": 60,
+     "largest": 48.8,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "tree",
      "inPreview": true,
      "newTemplate": true,
-     "totalInstances": 63,
+     "totalInstances": 69,
      "quality": "old"
     },
     {
@@ -3011,6 +3236,10 @@
      "parts": 2
     },
     {
+     "folder": "Plains.Plains_1.Decor.FloorDetail",
+     "parts": 14
+    },
+    {
      "folder": "Plains.Plains_1.Decor.Ground",
      "parts": 4
     },
@@ -3055,12 +3284,24 @@
      "parts": 320
     },
     {
+     "folder": "Plains.Plains_2.Decor.FloorDetail",
+     "parts": 12
+    },
+    {
      "folder": "Plains.Plains_2.Decor.Foam",
      "parts": 43
     },
     {
      "folder": "Plains.Plains_2.Decor.Ground",
      "parts": 6
+    },
+    {
+     "folder": "Plains.Plains_2.Decor.MountainRidge",
+     "parts": 1
+    },
+    {
+     "folder": "Plains.Plains_2.Decor.MountainRidge.Facets",
+     "parts": 240
     },
     {
      "folder": "Plains.Plains_2.Decor.Path",
@@ -3087,6 +3328,10 @@
      "parts": 333
     },
     {
+     "folder": "Plains.Plains_3.Decor.FloorDetail",
+     "parts": 22
+    },
+    {
      "folder": "Plains.Plains_3.Decor.Ground",
      "parts": 1
     },
@@ -3108,10 +3353,6 @@
     },
     {
      "folder": "Plains.Plains_4.Decor.Ground",
-     "parts": 1
-    },
-    {
-     "folder": "Plains.Plains_4.Decor.Mine",
      "parts": 1
     },
     {
@@ -3827,6 +4068,58 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "desert_ground_chips",
+     "instances": 96,
+     "largest": 2.7,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 96,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_ground_curb",
+     "instances": 100,
+     "largest": 10.1,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 100,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "desert_ground_ripple",
+     "instances": 102,
+     "largest": 5.2,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 132,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "desert_prop_spear",
      "instances": 8,
      "largest": 22.3,
@@ -3887,6 +4180,34 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 45,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
      "quality": "improved"
     },
     {
@@ -4310,6 +4631,10 @@
      "parts": 1856
     },
     {
+     "folder": "Desert.Desert_1.Decor.FloorDetail",
+     "parts": 10
+    },
+    {
      "folder": "Desert.Desert_1.Decor.Ground",
      "parts": 2
     },
@@ -4338,6 +4663,10 @@
      "parts": 1248
     },
     {
+     "folder": "Desert.Desert_2.Decor.FloorDetail",
+     "parts": 12
+    },
+    {
      "folder": "Desert.Desert_2.Decor.Ground",
      "parts": 4
     },
@@ -4356,6 +4685,10 @@
     {
      "folder": "Desert.Desert_3.Decor.Caves",
      "parts": 4
+    },
+    {
+     "folder": "Desert.Desert_3.Decor.FloorDetail",
+     "parts": 10
     },
     {
      "folder": "Desert.Desert_3.Decor.GateBraziers",
@@ -4387,7 +4720,7 @@
     },
     {
      "folder": "Desert.Desert_4.Decor.FloorInlay",
-     "parts": 47
+     "parts": 3
     },
     {
      "folder": "Desert.Desert_4.Decor.PyramidShell",
@@ -5006,6 +5339,23 @@
      ],
      "sizeVariants": 0,
      "resizedParts": 0,
+     "propId": "jungle_ground_fern",
+     "instances": 138,
+     "largest": 3.4,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "plant",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 138,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
      "propId": "jungle_lily_pads",
      "instances": 35,
      "largest": 10.1,
@@ -5262,6 +5612,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Jungle"
      ],
      "sizeVariants": 0,
@@ -5275,6 +5653,40 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 5,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_ground_curb",
+     "instances": 129,
+     "largest": 9.8,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 129,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "jungle_ground_root",
+     "instances": 54,
+     "largest": 7.6,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 54,
      "quality": "improved"
     },
     {
@@ -5309,6 +5721,24 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 4,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Jungle",
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "plains_ground_pebbles",
+     "instances": 36,
+     "largest": 2.8,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 90,
      "quality": "improved"
     },
     {
@@ -5748,6 +6178,10 @@
      "parts": 122
     },
     {
+     "folder": "Jungle.Jungle_1.Decor.FloorDetail",
+     "parts": 24
+    },
+    {
      "folder": "Jungle.Jungle_1.Decor.Ground",
      "parts": 1
     },
@@ -5765,7 +6199,7 @@
     },
     {
      "folder": "Jungle.Jungle_1.Decor.HubReturnDecor",
-     "parts": 2
+     "parts": 1
     },
     {
      "folder": "Jungle.Jungle_1.Decor.Paths",
@@ -5786,6 +6220,10 @@
     {
      "folder": "Jungle.Jungle_2.Decor.EdgeWall",
      "parts": 99
+    },
+    {
+     "folder": "Jungle.Jungle_2.Decor.FloorDetail",
+     "parts": 24
     },
     {
      "folder": "Jungle.Jungle_2.Decor.Ground",
@@ -5822,6 +6260,10 @@
     {
      "folder": "Jungle.Jungle_3.Decor.EdgeWall",
      "parts": 104
+    },
+    {
+     "folder": "Jungle.Jungle_3.Decor.FloorDetail",
+     "parts": 6
     },
     {
      "folder": "Jungle.Jungle_3.Decor.Ground",
@@ -6421,6 +6863,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Tundra"
      ],
      "sizeVariants": 0,
@@ -6468,6 +6938,57 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 8,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_ground_chips",
+     "instances": 54,
+     "largest": 1,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 54,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_ground_clump",
+     "instances": 120,
+     "largest": 4.3,
+     "ownTint": 0,
+     "sizeClass": "small",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 120,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "tundra_ground_curb",
+     "instances": 30,
+     "largest": 10.7,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 30,
      "quality": "improved"
     },
     {
@@ -6942,12 +7463,16 @@
      "parts": 1184
     },
     {
+     "folder": "Tundra.Tundra_1.Decor.FloorDetail",
+     "parts": 15
+    },
+    {
      "folder": "Tundra.Tundra_1.Decor.Ground",
      "parts": 354
     },
     {
      "folder": "Tundra.Tundra_1.Decor.HubReturnDecor",
-     "parts": 2
+     "parts": 1
     },
     {
      "folder": "Tundra.Tundra_1.Decor.Mountains",
@@ -7573,6 +8098,34 @@
      "inPreview": true,
      "newTemplate": false,
      "totalInstances": 34,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
      "quality": "improved"
     },
     {
@@ -8839,6 +9392,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Volcano"
      ],
      "sizeVariants": 0,
@@ -10028,6 +10609,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Hell"
      ],
      "sizeVariants": 0,
@@ -10989,6 +11598,34 @@
      "newTemplate": true,
      "totalInstances": 16,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -12192,6 +12829,34 @@
      "newTemplate": true,
      "totalInstances": 4,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -13403,6 +14068,34 @@
      "newTemplate": true,
      "totalInstances": 74,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
     },
     {
      "zones": [
@@ -14659,6 +15352,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Mechanical"
      ],
      "sizeVariants": 0,
@@ -15315,6 +16036,34 @@
     },
     {
      "zones": [
+      "Abyss",
+      "Dead",
+      "Desert",
+      "Heaven",
+      "Hell",
+      "Jungle",
+      "Mechanical",
+      "Plains",
+      "Swamp",
+      "Tundra",
+      "Void",
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "hub_return_pad",
+     "instances": 1,
+     "largest": 17.5,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 12,
+     "quality": "improved"
+    },
+    {
+     "zones": [
       "Void"
      ],
      "sizeVariants": 0,
@@ -15406,7 +16155,7 @@
      "resizedParts": 0,
      "propId": "void_rock_distant_island",
      "instances": 8,
-     "largest": 252,
+     "largest": 252.4,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "rock",
@@ -15457,7 +16206,7 @@
      "resizedParts": 0,
      "propId": "void_rock_distant_island_v4",
      "instances": 3,
-     "largest": 191.6,
+     "largest": 191.1,
      "ownTint": 0,
      "sizeClass": "large",
      "category": "rock",

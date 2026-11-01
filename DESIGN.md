@@ -76,6 +76,9 @@ instead of inventing a parallel convention.
 ### Ground (Round 8)
 Each biome has its ground and path texture, a soft fringe along path edges, low curbs and small details, all without collision: `docs/prop_texture_guide.md` "Ground".
 
+### UI theme (Round 8)
+All look values live in `Config/UITheme`; every screen is built from `UI/Kit` (Components is the door). To restyle, change UITheme and the images of `tools/make_ui_textures.py`, not a page.
+
 ### UI for young players (owner 2026-10-13: "understandable for a 5 years old kid, avoid text, more visual")
 * **Realistic wood:** panels, insets and light boards use tiling wood textures (Blender, `Icons/UiTex`:
   WoodPanel / WoodInset / WoodLight) with iron corner brackets (`Kit/Panel.wood`, `UI/WoodSkin` dresses every

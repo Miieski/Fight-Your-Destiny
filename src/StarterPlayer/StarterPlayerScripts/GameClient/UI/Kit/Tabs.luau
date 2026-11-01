@@ -1,5 +1,5 @@
 --!strict
--- Row of tab buttons; the selected one is gold, the others steel. Kid-friendly (owner 2026-10-13): each tab can
+-- Row of tab buttons: dark wood with a thin gold edge, the selected one lighter and more golden. Kid-friendly (owner 2026-10-13): each tab can
 -- show a big icon and a short label instead of its name.
 --   local tabs = Tabs.new({ Tabs = { "A", "B" }, Icons = { A = "Sword" }?, Labels = { A = "Short" }?, Parent, Size,
 --                           Position, OnSelect = function(name) end })
@@ -33,7 +33,7 @@ function Tabs.new(props: { [string]: any }): Tabs
 			Name = name,
 			Text = labels[name] or name,
 			Icon = icons[name],
-			Style = "secondary",
+			Style = "tab",
 			TextSize = 22,
 			LayoutOrder = i,
 			Size = UDim2.new(1 / count, -6 * (count - 1) / count, 1, 0),
@@ -53,7 +53,7 @@ function Tabs.Select(self: Tabs, name: string, silent: boolean?)
 	end
 	self.Selected = name
 	for tabName, button in pairs(self._buttons) do
-		button:SetStyle(if tabName == name then "primary" else "secondary")
+		button:SetStyle(if tabName == name then "tabOn" else "tab")
 	end
 	if not silent and self._onSelect then
 		self._onSelect(name)

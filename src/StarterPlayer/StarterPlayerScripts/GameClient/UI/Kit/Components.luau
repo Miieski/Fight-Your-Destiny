@@ -36,15 +36,15 @@ Components.Confirm = Window.confirm
 -- one tab of a custom layout; Selected picks its style
 function Components.TabButton(props: { [string]: any })
 	local copy = table.clone(props)
-	copy.Style = if props.Selected then "primary" else "secondary"
+	copy.Style = if props.Selected then "tabOn" else "tab"
 	copy.Selected = nil
 	return Button.new(copy)
 end
 
 function Components.TitleBanner(parent: Instance, text: string, props: { [string]: any }?): Frame
 	local p = props or {}
-	local banner = Panel.new({ Name = p.Name or "Banner", Size = p.Size or UDim2.new(1, -16, 0, 44), Position = p.Position or UDim2.fromOffset(8, 6), AnchorPoint = p.AnchorPoint, Gems = false, BorderThickness = 3, ZIndex = p.ZIndex, LayoutOrder = p.LayoutOrder, Parent = parent })
-	Theme.text({ Name = "Title", Font = "Title", Text = text, TextSize = p.TextSize or 26, Color = Theme.Colors.Gold, Size = UDim2.new(1, -16, 0.86, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = (p.ZIndex or 1) + 2, Parent = banner })
+	local banner = Panel.banner({ Name = p.Name or "Banner", Size = p.Size or UDim2.new(1, -16, 0, 50), Position = p.Position or UDim2.fromOffset(8, 6), AnchorPoint = p.AnchorPoint, BorderThickness = 3, ZIndex = p.ZIndex, LayoutOrder = p.LayoutOrder, Parent = parent })
+	Theme.text({ Name = "Title", Font = "Title", Text = text, TextSize = p.TextSize or 26, Color = Theme.Colors.Text, Size = UDim2.new(1, -48, 0.62, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = (p.ZIndex or 1) + 2, Parent = banner })
 	return banner
 end
 
@@ -56,6 +56,7 @@ function Components.Card(parent: Instance, name: string, height: number, order: 
 	frame.LayoutOrder = order
 	Theme.corner(frame, 8)
 	Theme.stroke(frame, Theme.Colors.GoldDark, 2)
+	Panel.wood(frame, "Panel", nil, 8)
 	frame.Parent = parent
 	return frame
 end

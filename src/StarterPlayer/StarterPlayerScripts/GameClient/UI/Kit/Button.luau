@@ -1,7 +1,7 @@
 --!strict
 -- Beveled button: a darker base under the face, a glossy top highlight; pressing moves the face down 2 px and
 -- scales to 0.96.
---   local button = Button.new({ Text, Style = "primary"|"secondary"|"danger"|"wood"|"go", Size, Position,
+--   local button = Button.new({ Text, Style = "primary"|"secondary"|"tab"|"tabOn"|"danger"|"wood"|"go", Size, Position,
 --       AnchorPoint, Parent, LayoutOrder, Icon (Icons id), TextSize, OnClick, Name, ZIndex, Depth })
 --   button.Instance, button.Face, button.Label, button:SetText(), :SetEnabled(), :SetStyle()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -21,10 +21,12 @@ local function styles()
 	local c = Theme.Colors
 	return {
 		primary = { Top = c.GoldFace, Bottom = c.GoldDark, Base = c.GoldBase, Text = c.TextDark, Border = c.Ink, TextStroke = false },
-		secondary = { Top = c.SteelLight, Bottom = c.SteelDark, Base = c.SteelBase, Text = c.Text, Border = c.Ink, TextStroke = true },
+		secondary = { Top = c.WoodLight, Bottom = c.WoodBottom, Base = c.WoodLine, Text = c.Text, Border = c.GoldDark, TextStroke = true },
+		tab = { Top = c.TabTop, Bottom = c.TabBottom, Base = c.WoodLine, Text = c.TextDim, Border = c.GoldDark, TextStroke = true },
+		tabOn = { Top = c.TabOnTop, Bottom = c.TabOnBottom, Base = c.GoldBase, Text = c.Text, Border = c.GoldFace, TextStroke = true },
 		danger = { Top = c.DangerLight, Bottom = c.DangerDark, Base = c.DangerBase, Text = c.Text, Border = c.GoldLight, TextStroke = true },
 		go = { Top = Color3.fromRGB(112, 226, 104), Bottom = Color3.fromRGB(44, 156, 60), Base = Color3.fromRGB(26, 92, 34), Text = c.Text, Border = c.Ink, TextStroke = true },
-		wood = { Top = c.WoodLight, Bottom = c.WoodBottom, Base = c.WoodLine, Text = c.Gold, Border = c.GoldDark, TextStroke = true },
+		wood = { Top = c.WoodLight, Bottom = c.WoodBottom, Base = c.WoodLine, Text = c.Gold, Border = c.GoldDark, TextStroke = true, Tile = true },
 		disabled = { Top = c.DisabledLight, Bottom = c.DisabledDark, Base = c.DisabledBase, Text = c.TextDim, Border = c.Ink, TextStroke = true },
 	}
 end
@@ -37,6 +39,8 @@ export type Button = typeof(setmetatable({} :: {
 	Enabled: boolean,
 	Style: string,
 	_gradient: UIGradient,
+	_tile: ImageLabel,
+	_shine: Frame,
 	_stroke: UIStroke,
 	_textStroke: UIStroke?,
 	_press: UIScale,
@@ -94,6 +98,7 @@ function Button.new(props: { [string]: any }): Button
 	fade.Transparency = NumberSequence.new(0.35, 1)
 	fade.Parent = shine
 	shine.Parent = face
+	local tile = Theme.image(face, "Tile", { ZIndex = root.ZIndex }) -- the wooden tile of the "wood" style
 
 	local hasIcon = props.Icon ~= nil
 	local hasText = props.Text ~= nil and props.Text ~= ""
@@ -125,6 +130,8 @@ function Button.new(props: { [string]: any }): Button
 		Enabled = props.Enabled ~= false,
 		Style = props.Style or "primary",
 		_gradient = gradient,
+		_tile = tile,
+		_shine = shine,
 		_stroke = stroke,
 		_textStroke = label:FindFirstChildOfClass("UIStroke"),
 		_press = press,
@@ -168,6 +175,10 @@ function Button._paint(self: Button)
 	self.Base.BackgroundColor3 = style.Base
 	self._gradient.Color = ColorSequence.new(style.Top, style.Bottom)
 	self._stroke.Color = style.Border
+	self._tile.Visible = style.Tile == true
+	self._shine.Visible = not style.Tile and self.Style ~= "tab" and self.Style ~= "tabOn"
+	self._stroke.Enabled = not style.Tile
+	self.Base.BackgroundTransparency = if style.Tile then 1 else 0
 	self._stroke.Thickness = if self.Style == "danger" and self.Enabled then 2.5 else 2
 	self.Label.TextColor3 = style.Text
 	if self._textStroke then

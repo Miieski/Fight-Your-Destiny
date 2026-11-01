@@ -1,7 +1,8 @@
 --!strict
 -- Segmented bar (HP, progress). The fill tweens; when the value drops, a lighter trailing segment
 -- shows the lost part for a moment.
---   local bar = Bar.new({ Size, Position, AnchorPoint, Parent, Color, TrailColor, Segments, ShowText })
+--   local bar = Bar.new({ Size, Position, AnchorPoint, Parent, Color, TrailColor, Segments, ShowText, Framed })
+--       Framed = the gold-edged frame with the angled end (HUD bars); bar.Frame is its image
 --   bar:Set(current, max, instant?)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -18,6 +19,7 @@ export type Bar = typeof(setmetatable({} :: {
 	Fill: Frame,
 	Trail: Frame,
 	Text: TextLabel?,
+	Frame: ImageLabel?,
 	_fraction: number,
 	_fillTween: Tween?,
 	_trailTween: Tween?,
@@ -35,7 +37,9 @@ function Bar.new(props: { [string]: any }): Bar
 	track.BorderSizePixel = 0
 	track.ClipsDescendants = true
 	Theme.corner(track, 4)
-	Theme.stroke(track, colors.Ink, 2)
+	if not props.Framed then
+		Theme.stroke(track, colors.GoldDark, 1.5)
+	end
 
 	local trail = Instance.new("Frame")
 	trail.Name = "Trail"
@@ -74,8 +78,20 @@ function Bar.new(props: { [string]: any }): Bar
 	if props.ShowText ~= false then
 		text = Theme.text({ Name = "Value", Font = "Number", TextSize = props.TextSize or 18, Size = UDim2.fromScale(0.96, 0.9), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3, Parent = track })
 	end
+	local frame: ImageLabel? = nil
+	if props.Framed then
+		-- beside the track, which clips its fill: the image grows out of the track by the frame's width
+		local info = Theme.Images.BarFrame
+		local a, t, s = track.AnchorPoint, track.Position, track.Size
+		frame = Theme.image(props.Parent, "BarFrame", {
+			ZIndex = 4,
+			AnchorPoint = a,
+			Position = UDim2.new(t.X.Scale, t.X.Offset - info.Left * (1 - a.X) + info.Right * a.X, t.Y.Scale, t.Y.Offset),
+			Size = UDim2.new(s.X.Scale, s.X.Offset + info.Left + info.Right, s.Y.Scale, s.Y.Offset + info.Top * 2),
+		})
+	end
 	track.Parent = props.Parent
-	return setmetatable({ Instance = track, Fill = fill, Trail = trail, Text = text, _fraction = 1, _token = 0 }, Bar)
+	return setmetatable({ Instance = track, Fill = fill, Trail = trail, Text = text, Frame = frame, _fraction = 1, _token = 0 }, Bar)
 end
 
 function Bar.Set(self: Bar, current: number, max: number, instant: boolean?)

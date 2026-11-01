@@ -128,19 +128,17 @@ local function makePill(id: string, order: number): Pill
 	bar.BackgroundColor3 = WHITE
 	bar.BorderSizePixel = 0
 	bar.ZIndex = 1
-	Theme.gradient(bar, Theme.Colors.WoodLight, Theme.Colors.WoodTop)
-	Theme.round(bar)
-	Theme.stroke(bar, Theme.Colors.Ink, 2.5)
+	bar.BackgroundTransparency = 1
+	Theme.image(bar, "Pill", { Name = "Plate", ZIndex = 1 })
 	bar.Parent = row
 
 	local track = Instance.new("Frame")
 	track.Name = "Track"
 	track.AnchorPoint = Vector2.new(0, 0.5)
 	track.BackgroundColor3 = Theme.Colors.WoodInset
+	track.BackgroundTransparency = 1
 	track.BorderSizePixel = 0
 	track.ZIndex = 2
-	Theme.round(track)
-	Theme.stroke(track, Theme.Colors.WoodLine, 1.5)
 	track.Parent = bar
 
 	local label = Theme.text({ Name = "Amount", Font = "Number", Text = "0", TextSize = 28, Color = WHITE, StrokeThickness = 2, Align = "Right", AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3, Parent = track })

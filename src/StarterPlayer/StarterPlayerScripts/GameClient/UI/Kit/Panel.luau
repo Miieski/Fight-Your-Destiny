@@ -3,13 +3,15 @@
 -- brackets, optional inner inset of dark-grain wood.
 --   Panel.new({ Size, Position, AnchorPoint, Parent, Name, Gems = true (corner brackets), Inset = false,
 --               InsetPadding = 8, ZIndex, Texture = "Panel" | "Light" | "Inset" }) -> frame, inset?
+--               Bare = true (no wood, no border: a holder for the HUD bars)
 --   Panel.wood(frame, kind?, tile?, corner?) -> ImageLabel: the tiled texture behind any frame's content
+--   Panel.banner(props) -> Frame: the gold title plate (Size, Position, AnchorPoint, Parent, Name, ZIndex)
 local Icons = require(script.Parent.Icons)
 local Theme = require(script.Parent.Theme)
 
 local Panel = {}
 
-local BRACKET = 30 -- iron corner size (design units)
+local BRACKET = Theme.Images.Bracket.Size -- steel corner size (design units)
 -- { x, y, rotation } of the four brackets (the image is the top-left one)
 local CORNERS = { { 0, 0, 0 }, { 1, 0, 90 }, { 1, 1, 180 }, { 0, 1, 270 } }
 local TILE = { Panel = 256, Inset = 256, Light = 200 }
@@ -40,6 +42,22 @@ function Panel.wood(frame: GuiObject, kind: string?, tile: number?, corner: numb
 	return image
 end
 
+function Panel.banner(props: { [string]: any }): Frame
+	local frame = Instance.new("Frame")
+	frame.Name = props.Name or "Banner"
+	frame.BackgroundTransparency = 1
+	frame.Size = props.Size or UDim2.fromOffset(300, 56)
+	frame.Position = props.Position or UDim2.new()
+	frame.AnchorPoint = props.AnchorPoint or Vector2.zero
+	frame.ZIndex = props.ZIndex or 1
+	if props.LayoutOrder then
+		frame.LayoutOrder = props.LayoutOrder
+	end
+	Theme.image(frame, "Banner", { Name = "Plate", ZIndex = frame.ZIndex })
+	frame.Parent = props.Parent
+	return frame
+end
+
 function Panel.new(props: { [string]: any }): (Frame, Frame?)
 	local colors = Theme.Colors
 	local frame = Instance.new("Frame")
@@ -53,12 +71,25 @@ function Panel.new(props: { [string]: any }): (Frame, Frame?)
 	if props.LayoutOrder then
 		frame.LayoutOrder = props.LayoutOrder
 	end
+	if props.Bare then
+		frame.BackgroundTransparency = 1
+		frame.Parent = props.Parent
+		return frame, nil
+	end
+	local big = props.Gems ~= false -- windows and popups: the thick wooden frame and steel corners
+	local corner = props.Corner or (if big then Theme.PANEL_CORNER else Theme.CORNER)
 	-- the flat gradient stays under the texture (shows while the image loads)
 	Theme.gradient(frame, colors.WoodTop, colors.WoodBottom)
-	Theme.corner(frame, props.Corner or Theme.CORNER)
-	Panel.wood(frame, props.Texture or "Panel", nil, props.Corner)
-	local border = Theme.stroke(frame, colors.GoldLight, props.BorderThickness or Theme.BORDER)
-	Theme.gradient(border, colors.GoldLight, colors.GoldDark)
+	Theme.corner(frame, corner)
+	Panel.wood(frame, props.Texture or "Panel", nil, corner)
+	local border = Theme.stroke(frame, if big then colors.Ink else colors.GoldLight, if big then 1 else props.BorderThickness or Theme.BORDER)
+	if not big then
+		Theme.gradient(border, colors.GoldLight, colors.GoldDark)
+	end
+	if big then
+		local out = Theme.Images.Frame.Outset
+		Theme.image(frame, "Frame", { Name = "WoodFrame", Size = UDim2.new(1, out * 2, 1, out * 2), Position = UDim2.fromOffset(-out, -out), ZIndex = frame.ZIndex + 1 })
+	end
 
 	if props.Gems ~= false then
 		local size = props.GemSize and props.GemSize * 2.6 or BRACKET
@@ -66,10 +97,10 @@ function Panel.new(props: { [string]: any }): (Frame, Frame?)
 			local bracket = Instance.new("ImageLabel")
 			bracket.Name = "Bracket"
 			bracket.BackgroundTransparency = 1
-			bracket.Image = Icons.Tex.IronCorner
+			bracket.Image = Theme.Images.Bracket.Id
 			bracket.AnchorPoint = Vector2.new(0.5, 0.5)
 			-- centered a little inside the corner so the bracket sits on the border
-			bracket.Position = UDim2.new(spot[1], (if spot[1] == 0 then 1 else -1) * (size / 2 - 5), spot[2], (if spot[2] == 0 then 1 else -1) * (size / 2 - 5))
+			bracket.Position = UDim2.new(spot[1], (if spot[1] == 0 then 1 else -1) * (size / 2 - 7), spot[2], (if spot[2] == 0 then 1 else -1) * (size / 2 - 7))
 			bracket.Size = UDim2.fromOffset(size, size)
 			bracket.Rotation = spot[3]
 			bracket.ZIndex = frame.ZIndex + 2

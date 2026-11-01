@@ -49,9 +49,12 @@ function Slot.new(props: { [string]: any }): Slot
 	box.Size = UDim2.fromScale(1, 1)
 	box.BackgroundColor3 = Theme.Colors.WoodInset
 	box.BorderSizePixel = 0
+	box:SetAttribute("WoodSkin", false) -- its own image, not the plain wood of inset boxes
 	Theme.corner(box, 6)
-	Theme.gradient(box, Theme.Colors.WoodTop, Theme.Colors.WoodInset)
+	local plate = Theme.image(box, "Slot", { Name = "Plate" })
+	Theme.corner(plate, 6)
 	local border = Theme.stroke(box, Theme.Colors.GoldDark, 3)
+	border.Enabled = false -- the plate has its gold; a rarity colors this edge
 	box.Parent = root
 
 	local self = setmetatable({ Instance = root, Box = box, Glow = glow, Border = border, _icon = nil, _onClick = props.OnClick }, Slot)
@@ -78,6 +81,7 @@ function Slot.Set(self: Slot, item: { Icon: string, Tier: number })
 	local rarity = Rarities.get(item.Tier)
 	self:_setIcon(item.Icon)
 	self.Border.Thickness = 3
+	self.Border.Enabled = true
 	Theme.paintRarity(self.Border, rarity.Tier)
 	self.Glow.Visible = rarity.Tier >= Rarities.GLOW_FROM
 	if self.Glow.Visible then
@@ -94,6 +98,7 @@ function Slot.Clear(self: Slot, iconId: string?)
 	end
 	self.Border.Color = Theme.Colors.GoldDark
 	self.Border.Thickness = 2
+	self.Border.Enabled = false
 	self.Glow.Visible = false
 	self.Box.BackgroundColor3 = Theme.Colors.WoodInset
 end
