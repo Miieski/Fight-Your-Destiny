@@ -2434,14 +2434,31 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "plains_ground_curb",
-     "instances": 101,
+     "instances": 71,
      "largest": 9.2,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "prop",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 101,
+     "totalInstances": 71,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Plains"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "beach_ground_curb",
+     "instances": 30,
+     "largest": 9.2,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 30,
      "quality": "improved"
     },
     {
@@ -4086,14 +4103,31 @@
      "sizeVariants": 0,
      "resizedParts": 0,
      "propId": "desert_ground_curb",
-     "instances": 100,
+     "instances": 73,
      "largest": 10.1,
      "ownTint": 0,
      "sizeClass": "medium",
      "category": "prop",
      "inPreview": true,
      "newTemplate": false,
-     "totalInstances": 100,
+     "totalInstances": 73,
+     "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "canyon_ground_curb",
+     "instances": 27,
+     "largest": 10.1,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "prop",
+     "inPreview": true,
+     "newTemplate": false,
+     "totalInstances": 27,
      "quality": "improved"
     },
     {

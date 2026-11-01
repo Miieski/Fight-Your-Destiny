@@ -17,6 +17,7 @@ Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
   `Doors` line, and `DevTools.GateSplit` + a sync when it opens in two leaves. `Controllers/BossDoorController` is the boss door.
   Open doors are hidden by LocalTransparencyModifier on the piece AND its Decals / Textures (the part's does not reach them). A union's centre is `part.ExtentsCFrame`, not `part.CFrame`.
   `tools/DoorAudit.luau` lists all doors, `tools/DoorStage.luau` poses one in Edit (always restore), `tools/DoorPockets.luau` holds the 3 pocket walls.
+- Raised edges: every curb, slab or border wears the ground's texture (EdgeTex). Curb recipes in `tools/FloorsRound8.luau` BUILD (`edge.key`), loose parts in `tools/EdgesRound9.luau`. A ground texture change needs them redone: docs/prop_texture_guide.md "Raised edges".
 - Rebirth Protection replaces the premium pets: `Config/RebirthProtection`, `Services/ProtectionService`, `UI/Protection`. Code identifiers
   such as `species.Premium`, `BuyPremiumEgg`, `grantPremium` stay: they name the Robux pets and the Diamond eggs, not a Rebirth rule.
 - UI look: `Config/UITheme` + `tools/make_ui_textures.py` (ids in UITheme.Images, list in docs/ui_textures/IMPORT_LIST.md). New screens are built on `UI/Kit/Components`.

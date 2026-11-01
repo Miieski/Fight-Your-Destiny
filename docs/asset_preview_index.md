@@ -219,7 +219,8 @@ Nature biome: Plains, Beach, Forest, Cave. Block `ByZone.01_Plains`, screenshot 
 | `hub_prop_starfish_a` | prop | small | 49 | yes | old | redesign (low-poly pass) |
 | `hub_return_pad` | prop | medium | 1 | yes | improved | none (done) |
 | `ladder` | prop | medium | 1 | yes | improved | none (done) |
-| `plains_ground_curb` | prop | medium | 101 | yes | improved | none (done) |
+| `plains_ground_curb` | prop | medium | 71 | yes | improved | none (done) |
+| `beach_ground_curb` | prop | medium | 30 | yes | improved | none (done) |
 | `plains_ground_pebbles` | prop | small | 54 | yes | improved | none (done) |
 | `plains_prop_fallen_log_large` | prop | large | 5 | yes | old | redesign (low-poly pass) |
 | `plains_prop_mine_support` | prop | large | 5 | yes | improved | none (done) |
@@ -327,7 +328,8 @@ Sand biome: Dunes, Oasis, Canyon, Pyramid. Block `ByZone.02_Desert`, screenshot 
 | `hub_plant_grass_tuft_b` | plant | small | 25 | yes | old | redesign (low-poly pass) |
 | `amphora` | prop | medium | 17 | yes | improved | none (done) |
 | `desert_ground_chips` | prop | small | 96 | yes | improved | none (done) |
-| `desert_ground_curb` | prop | medium | 100 | yes | improved | none (done) |
+| `desert_ground_curb` | prop | medium | 73 | yes | improved | none (done) |
+| `canyon_ground_curb` | prop | medium | 27 | yes | improved | none (done) |
 | `desert_ground_ripple` | prop | small | 102 | yes | improved | none (done) |
 | `desert_prop_spear` | prop | medium | 8 | yes | improved | none (done) |
 | `desert_rug` | prop | large | 11 | yes | improved | none (done) |

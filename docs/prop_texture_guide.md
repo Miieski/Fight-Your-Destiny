@@ -3756,3 +3756,28 @@ Layers, in order:
 
 Desert_4, Jungle_4, Tundra_4: floors kept (their brick floors date from rounds 6-7). Tundra_2 and Tundra_3 have no path part: the snow and the details only, along the line from the
 entrance to the gate. Hills, mountains and the Hub beach stay flat colours: far surfaces, and the low-poly facets read well as they are.
+
+## Raised edges (owner task round 9 part 1, 2026-11-01)
+
+Rule for the whole game: a curb, border stone, slab, embankment or terrace edge uses the texture family and the palette of the ground it belongs to (same biome, same tile, a slightly darker or lighter tint), with a small bevel and a foot of moss, dirt, sand or snow.
+No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `Texture` named `EdgeTex`, tinted, Transparency 0.25-0.35 so the stone's colours show under it. Curbs: Top, Left, Right of the union, in the template (`tools/FloorsRound8.luau` BUILD). Loose parts: `tools/EdgesRound9.luau`, top + sides of a block, the end of a cylinder, tint = the part's own colour.
+
+| edge | texture (tile) | tint | stones | foot | used in |
+|---|---|---|---|---|---|
+| `hub_ground_curb` | `pavers` 16 | #E8DECC | #C8BCA8 #BDB09C #D4C9B6 #B0A490 | moss #6FA84A | Hub |
+| `plains_ground_curb` | `dirt` 18 | #E8D8C0 | #9C7C52 #B08A58 #8C6E48 #C09A68 | moss #4F8A34 | Plains_1, Plains_3 |
+| `beach_ground_curb` (variant) | `sand` 30 | white | #D8BC80 #E4CC94 #C8AA70 #F0DCAA | sand #E4C278 | Plains_2 |
+| `desert_ground_curb` | `slabs` 18 | white | #D8B67A #C8A468 #E4C690 #B89458 | sand #E0BC78 | Desert_1, Desert_2 |
+| `canyon_ground_curb` (variant) | `slabs` 18 | #F5D7AF | #D8A878 #C89868 #E4B888 #B88858 | sand #DCA878 | Desert_3 |
+| `jungle_ground_curb` | `mossy_stone` 16 | white | #6E7C62 #7C8A6E #5E7056 #5A8A48 | moss #4A7A38 | Jungle_1-3 |
+| `tundra_ground_curb` | `frost_slabs` 18 | white | #C4D8EE #D4E4F6 #B4CCE6 #E8F2FC | snow #EEF4FC | Tundra_1 |
+| Ruins Ledge, LedgeSand | `sand` 30 | own | | | Desert_3 |
+| Plaza PlazaBorder, Slab | `mossy_stone` 16 | own | | | Jungle_3 (Part 9 redoes the jungle ground) |
+| SnowLip | `snow` 30 | own | | | Tundra_3 |
+| Shore, PathShore, Island, Path, Clearing, Square | `dirt` 18 | own | | | Swamp_1-3 (the Swamp had no ground texture) |
+| PoolRim | `swamp_wall_stone` 8 | own | | | Swamp_4 |
+| Mine_Support Footings | `cave_rock` 28 | own | | | Plains_4 cave |
+| Dais, DaisStep, PlatformRim, Floor | `cave_rock` 28 | own | | | Plains boss room |
+| DaisStep, Step | `frost_slabs` 18 | own | | | Tundra boss room |
+| MiniDais, Plinth | `slabs` 18 | own | | | Desert boss room |
+| Hills Facet | `grass` 34 | own | | | Plains_1, Plains_3 (the grass banks, images 03 and 04) |

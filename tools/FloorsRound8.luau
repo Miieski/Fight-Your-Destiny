@@ -46,8 +46,9 @@ local function pick(rng: Random, list: { any }): any
 	return list[rng:NextInteger(1, #list)]
 end
 
--- a run of low edge stones, 9 studs long along Z
-local function curb(id: string, seed: number, colors: { string }, wide: number?): Model
+-- a run of low edge stones, 9 studs long along Z. Round 9 part 1: in the palette of the ground they belong to, on a foot of that ground (moss, sand,
+-- snow), with the ground's own texture on the union (edge = key, tint, alpha; docs/prop_texture_guide.md "Raised edges")
+local function curb(id: string, seed: number, colors: { string }, wide: number?, foot: string?, edge: any?): Model
 	local m = Instance.new("Model")
 	m.Name = id
 	local rng = Random.new(seed)
@@ -60,7 +61,29 @@ local function curb(id: string, seed: number, colors: { string }, wide: number?)
 		table.insert(list, H.chamfered(Vector3.new(w, h + 0.2, long), CFrame.new(rng:NextNumber(-0.12, 0.12), (h - 0.2) / 2, z + long / 2) * CFrame.Angles(0, rng:NextNumber(-0.09, 0.09), 0), hex(pick(rng, colors)), { "topSides" }, 0.08))
 		z += long + rng:NextNumber(0.08, 0.22)
 	end
-	return finish(m, id, list)
+	if foot then
+		for i = 1, 3 do
+			local long = rng:NextNumber(3.2, 3.8)
+			table.insert(list, H.chamfered(Vector3.new(rng:NextNumber(1.7, 2.3) * (wide or 1), 0.3, long), CFrame.new(rng:NextNumber(-0.12, 0.12), -0.1, (i - 2) * 3), hex(foot), { "topSides" }, 0.1))
+		end
+	end
+	finish(m, id, list)
+	if edge then
+		local union = m:FindFirstChildWhichIsA("BasePart", true) :: BasePart
+		local info = Tex[edge.key]
+		for _, face in ipairs({ Enum.NormalId.Top, Enum.NormalId.Left, Enum.NormalId.Right }) do
+			local t = Instance.new("Texture")
+			t.Name = "EdgeTex"
+			t.Texture = info.Id
+			t.Face = face
+			t.StudsPerTileU, t.StudsPerTileV = info.Tile, info.Tile
+			t.OffsetStudsU = seed % info.Tile
+			t.Color3 = if edge.tint then hex(edge.tint) else Color3.new(1, 1, 1)
+			t.Transparency = edge.alpha
+			t.Parent = union
+		end
+	end
+	return m
 end
 
 local function pebbles(id: string, seed: number, top: string, side: string, count: number, radius: number): Model
@@ -172,20 +195,22 @@ function F.tundra_ground_clump(): Model
 end
 
 local BUILD = {
-	hub_ground_curb = function() return curb("hub_ground_curb", 811, { "a8a090", "b8b0a0", "989084", "c4bcac" }) end,
+	hub_ground_curb = function() return curb("hub_ground_curb", 811, { "c8bca8", "bdb09c", "d4c9b6", "b0a490" }, nil, "6fa84a", { key = "pavers", tint = "e8decc", alpha = 0.3 }) end,
 	hub_ground_pebbles = function() return pebbles("hub_ground_pebbles", 812, "b8b0a0", "8c8478", 4, 1.4) end,
-	plains_ground_curb = function() return curb("plains_ground_curb", 813, { "8c8c84", "a09c8c", "7c7a70", "b0a890" }) end,
+	plains_ground_curb = function() return curb("plains_ground_curb", 813, { "9c7c52", "b08a58", "8c6e48", "c09a68" }, nil, "4f8a34", { key = "dirt", tint = "e8d8c0", alpha = 0.3 }) end,
+	beach_ground_curb = function() return curb("beach_ground_curb", 820, { "d8bc80", "e4cc94", "c8aa70", "f0dcaa" }, nil, "e4c278", { key = "sand", alpha = 0.3 }) end,
 	plains_ground_pebbles = function() return pebbles("plains_ground_pebbles", 814, "a8a294", "7c766a", 4, 1.5) end,
-	desert_ground_curb = function() return curb("desert_ground_curb", 815, { "d8b67a", "c8a468", "e4c690", "b89458" }, 1.2) end,
+	desert_ground_curb = function() return curb("desert_ground_curb", 815, { "d8b67a", "c8a468", "e4c690", "b89458" }, 1.2, "e0bc78", { key = "slabs", alpha = 0.3 }) end,
+	canyon_ground_curb = function() return curb("canyon_ground_curb", 821, { "d8a878", "c89868", "e4b888", "b88858" }, 1.2, "dca878", { key = "slabs", tint = "f5d7af", alpha = 0.3 }) end,
 	desert_ground_chips = function() return pebbles("desert_ground_chips", 816, "d8b67a", "a8824c", 4, 1.4) end,
-	jungle_ground_curb = function() return curb("jungle_ground_curb", 817, { "6e7c62", "7c8a6e", "5e7056", "5a8a48" }) end,
-	tundra_ground_curb = function() return curb("tundra_ground_curb", 818, { "c4d8ee", "d4e4f6", "b4cce6", "e8f2fc" }, 1.1) end,
+	jungle_ground_curb = function() return curb("jungle_ground_curb", 817, { "6e7c62", "7c8a6e", "5e7056", "5a8a48" }, nil, "4a7a38", { key = "mossy_stone", alpha = 0.3 }) end,
+	tundra_ground_curb = function() return curb("tundra_ground_curb", 818, { "c4d8ee", "d4e4f6", "b4cce6", "e8f2fc" }, 1.1, "eef4fc", { key = "frost_slabs", alpha = 0.3 }) end,
 	tundra_ground_chips = function() return pebbles("tundra_ground_chips", 819, "bcd6f0", "86a8cc", 3, 1.3) end,
 }
 F.IDS = {
 	"hub_ground_curb", "hub_ground_pebbles", "plains_ground_curb", "plains_ground_pebbles", "plains_ground_tuft", "plains_ground_flowers",
 	"desert_ground_curb", "desert_ground_chips", "desert_ground_ripple", "jungle_ground_curb", "jungle_ground_fern", "jungle_ground_root",
-	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump",
+	"tundra_ground_curb", "tundra_ground_chips", "tundra_ground_clump", "beach_ground_curb", "canyon_ground_curb",
 }
 
 function F.build(id: string): string
@@ -212,7 +237,7 @@ local PLAINS = {
 	details = { { "plains_ground_tuft", 70 }, { "plains_ground_flowers", 26 }, { "plains_ground_pebbles", 18 } },
 }
 local BEACH = {
-	ground = "sand", alpha = 0.2, path = "dirt", fringe = "fringe_sand", width = 7, curb = "plains_ground_curb",
+	ground = "sand", alpha = 0.2, path = "dirt", fringe = "fringe_sand", width = 7, curb = "beach_ground_curb",
 	details = { { "desert_ground_ripple", 30 }, { "plains_ground_pebbles", 18 }, { "plains_ground_tuft", 12 } },
 }
 local DESERT = {
@@ -221,7 +246,7 @@ local DESERT = {
 }
 local CANYON = {
 	ground = "sand", tint = Color3.fromRGB(245, 205, 160), path = "slabs", pathTint = Color3.fromRGB(245, 215, 175), overlay = "cracks", fringe = "fringe_sand", fringeTint = Color3.fromRGB(245, 205, 160),
-	width = 8, curb = "desert_ground_curb", details = { { "desert_ground_chips", 40 }, { "desert_ground_ripple", 14 } },
+	width = 8, curb = "canyon_ground_curb", details = { { "desert_ground_chips", 40 }, { "desert_ground_ripple", 14 } },
 }
 local JUNGLE = {
 	ground = "jungle_soil", alpha = 0.3, path = "mossy_stone", overlay = "leaf_litter", fringe = "fringe_moss", width = 7, curb = "jungle_ground_curb",
