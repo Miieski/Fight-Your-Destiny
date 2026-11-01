@@ -298,6 +298,13 @@ each Rebirth for the zone being redone (see below).
   that zone (starter weapon rule); reopening zone r's boss room ("redone") opens zone r + 1 (zone unlock chain
   below). Rules in `Config/Rebirth`, server `RebirthService`, UI `UI/Pages/RebirthPage`.
 
+### Doors and portals (Round 8)
+* The unlock state of doors and portals is **personal**: the opening plays on the unlocking player's client, then the door
+  stays open for that player on every visit, with no animation at join. Its collision is removed on that client only; the
+  server still refuses teleports and sends back a player standing in a locked sub-zone.
+* Data only: `Config/DoorAnimations` (one row per door type, one line per gate; also the boss door veil) and
+  `Config/PortalBuild` (the hub portal builds itself brick by brick when its zone opens).
+
 ### Rebirth Shop (spend credits, permanent)
 Defaults (1 credit per level):
 | Upgrade | Id | Effect per level | Max level |

@@ -1,5 +1,31 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 3, doors, portals, boss door (Studio agent).
+  - All 36 sub-zone gates have a uniform `Barrier` (24 x 16) whose descendants are the door, so one data-driven animator covers
+    them (`Controllers/GateController`, `Config/DoorAnimations`: 9 types, 7 modes). DECISION per gate is the `Doors` table.
+    Double doors needed two leaves but the door pieces were whole unions: `DevTools.GateSplit` cut 73 pieces of 17 templates
+    at the centre (`_L` / `_R`), synced to their copies; a closed door looks the same. The Barrier's slab becomes moving proxies.
+  - Doors are personal: open pose, collision and prompt only on the owner's client, re-applied when parts stream back. Join: open
+    at once, no animation (checked: no dust emitter made). Locked again (lockAll, Rebirth uses the same path): shut, silent.
+  - DECISION: "doors between zones" do not exist in the map: zones are reached by the 12 hub portals, so they are Part B.
+  - DECISION: sounds are existing ones as placeholders (`Unlock`, `Combat_Shared_LandCrack1`, `Combat_Style_Tundra_Crack1`,
+    `PortalEnter`), in Config. Pieces of a nested Model (the swamp skull) stay on one leaf.
+  - Portal build (`Config/PortalBuild`): 49 client-side bricks stack from the steps in 4 s, then the real frame takes over and
+    the existing reveal lights it. Refused while it builds (checked by standing in it). DECISION: if the player is more than 240
+    studs away when the zone opens, it plays when they come near; it stays black until then. Not stored: leaving the
+    game before seeing it shows the finished portal at the next join.
+  - Boss door (`Controllers/BossDoorController`, Net "BossDoor", `DoorAnimations.BossVeil`): veil in the zone tint, leaves part,
+    camera push, fade at 0.6 s, teleport at 0.9 s, camera eases back, the character walks out: about 1.9 s in, same out.
+    Input locked for that time, watchdog 5 s. Tested Plains in and out: camera Custom, no lock left, ArenaKey cleared. A team mate
+    far from the gate gets the veil in front of them (code only). Spectators and Rebirth skip it. The lobby banner shows
+    during the fade (BossRoom fires it at once); left as is.
+  - Script check, 3 locked gates (Plains_2, Plains_4, Tundra_3), walking into the door 1.2 s: stopped 1.2-2.0 studs before it; Net
+    "Teleport": refused "locked: open its gate". Log after a fresh Play from before start: 0 script errors.
+  - Found and fixed: unions cut by GateSplit keep the original's pivot, so both leaves read as the right side: the side is now
+    in the name.
+  - NOT tested: 2 players (a door opening only on one client), real phone; phone frame time for doors (in VERIFY). Door types
+    seen in Play: 8 gates of 7 types; StoneSlide variants and the other 28 gates only by their shared code.
+
 - PART 2, objects (Studio agent). `DevTools.PropsRound8`, details in docs/prop_inventory.md "Round 8 Part 2".
   - Teleport point: 12 / 12 zones, one template with 12 Variants. It is `HubReturn` of each zone's sub-zone 1. DECISION: the Neon
     disc moved into the template (`Surface`, same colour per zone), `HubReturn` went invisible, so the disc sits at one height

@@ -2,7 +2,7 @@
 -- Full-screen transition (Rebirth, later the boss doors): a quick fade, an optional text with a small spinner, input
 -- blocked for as long as it lasts, and a watchdog so that a failed step can never leave the screen covered.
 --   Transition.show({ Text?, Spinner?, Color?, FadeIn?, Lock?, Watchdog?, OnTimeout? })
---   Transition.hide(seconds?)   normal end: fades out, gives the input back
+--   Transition.hide(seconds?, keepCamera?)   normal end: fades out, gives the input back (keepCamera: the caller eases it)
 --   Transition.restore()        forced end: everything back at once (overlay, input, camera)
 --   Transition.isActive()
 local Players = game:GetService("Players")
@@ -134,7 +134,7 @@ function Transition.show(props: { [string]: any })
 	end
 end
 
-function Transition.hide(seconds: number?)
+function Transition.hide(seconds: number?, keepCamera: boolean?)
 	if not active then
 		return
 	end
@@ -143,7 +143,9 @@ function Transition.hide(seconds: number?)
 	local mine = token
 	local fade = seconds or DEFAULT.FadeOut
 	setAlpha(p, fade, 1)
-	resetCamera()
+	if not keepCamera then
+		resetCamera()
+	end
 	task.delay(fade, function()
 		if mine == token then
 			active = false

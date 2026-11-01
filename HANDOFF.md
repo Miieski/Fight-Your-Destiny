@@ -7,6 +7,16 @@ then the design documents in `docs/`:
 - `docs/boss_patterns_document.txt` - boss attack patterns, tools and workflow
 - `docs/weapon_system_document.txt` - 72 weapons, rarity, zone damage scaling, zone boost, shop
 
+## Latest: ROUND 8 (2026-11-01, in progress)
+
+Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
+- Rebirth is a staged sequence (`RebirthService`, `Kit/Transition`, `Kit/InputLock`, `Config/Rebirth.Transition`): reset on copies,
+  one commit, respawn in the Hub, save in the background, 8 s client watchdog.
+- `Window.close` always removes the backdrop; only `Window.open` keeps it when it swaps windows.
+- Door and portal unlock state is personal per player. Data: `Config/DoorAnimations`, `Config/PortalBuild`. A new gate needs its
+  `Doors` line, and `DevTools.GateSplit` + a sync when it opens in two leaves. `Controllers/BossDoorController` is the boss door.
+- Map geometry added this round lives in the place file only (`tools/PlainsRidge.luau`, `tools/PropsRound8.luau` rebuild it).
+
 ## Latest: WEAPON OVERHAUL (2026-10-30)
 
 Prompt `docs/Weapon_Overhaul/PROMPT_WEAPON_OVERHAUL.txt`, plan `docs/Weapon_Overhaul/PLAN.md`, decisions and test numbers at the

@@ -17,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local Bosses = require(ReplicatedStorage.GameSystem.Config.Bosses)
+local DoorAnimations = require(ReplicatedStorage.GameSystem.Config.DoorAnimations)
 local Enemies = require(ReplicatedStorage.GameSystem.Config.Enemies)
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
@@ -159,7 +160,13 @@ function BossService:Leave(player: Player, stay: boolean?)
 				if humanoid and humanoid.Health <= 0 then
 					player:LoadCharacter() -- spectators come back alive at the entrance
 				else
-					ZoneService:Teleport(player, entrance)
+					Net.fire(player, "BossDoor", { Phase = "Exit", ZoneId = room.zoneId })
+					task.delay(DoorAnimations.BossVeil.Seconds, function()
+						if player.Parent and not roomOf[player] then
+							ZoneService:Teleport(player, entrance)
+							Net.fire(player, "BossDoor", { Phase = "Back", ZoneId = room.zoneId, Look = entrance + Vector3.new(0, 4, 0) })
+						end
+					end)
 				end
 			end
 		end
@@ -333,6 +340,14 @@ local function startFight(room: Room)
 	broadcast(room, { Phase = "Minis", Name = `{defs.Mini1.Name} & {defs.Mini2.Name}` })
 end
 
+local function gateOf(zoneId: string): BasePart?
+	local folder = workspace.Zones:FindFirstChild(zoneId)
+	local subZone = folder and folder:FindFirstChild(Zones.subZoneId(zoneId, Zones.BOSS_SUBZONE))
+	local gate = subZone and subZone:FindFirstChild("BossGate")
+	local interact = gate and gate:FindFirstChild("Interact", true)
+	return if interact and interact:IsA("BasePart") then interact else nil
+end
+
 local function addPlayer(room: Room, player: Player, index: number)
 	roomOf[player] = room
 	table.insert(room.players, player)
@@ -347,7 +362,16 @@ local function addPlayer(room: Room, player: Player, index: number)
 	local position = if pad then pad.Position + Vector3.yAxis * 3 else at(room, "BossSpawn") + Vector3.new(0, 3, 40)
 	local boss = room.model:FindFirstChild("BossSpawn", true) :: BasePart?
 	local look = if boss then Vector3.new(boss.Position.X, position.Y, boss.Position.Z) else position + Vector3.zAxis
-	ZoneService:Teleport(player, CFrame.lookAt(position, look))
+	-- the door transition (Controllers/BossDoorController): the teleport happens behind its light
+	local gate = gateOf(room.zoneId)
+	local destination = CFrame.lookAt(position, look)
+	Net.fire(player, "BossDoor", { Phase = "Enter", ZoneId = room.zoneId, Door = if gate then gate.CFrame else nil })
+	task.delay(DoorAnimations.BossVeil.Seconds, function()
+		if roomOf[player] == room and player.Parent then
+			ZoneService:Teleport(player, destination)
+			Net.fire(player, "BossDoor", { Phase = "Arrive", ZoneId = room.zoneId, Look = destination })
+		end
+	end)
 	if player.Character then
 		task.spawn(watchCharacter, room, player, player.Character)
 	end
@@ -416,14 +440,6 @@ local function createRoom(zoneId: string): Room?
 	setDoor(room, true)
 	task.delay(Bosses.LOBBY_SECONDS, startFight, room)
 	return room
-end
-
-local function gateOf(zoneId: string): BasePart?
-	local folder = workspace.Zones:FindFirstChild(zoneId)
-	local subZone = folder and folder:FindFirstChild(Zones.subZoneId(zoneId, Zones.BOSS_SUBZONE))
-	local gate = subZone and subZone:FindFirstChild("BossGate")
-	local interact = gate and gate:FindFirstChild("Interact", true)
-	return if interact and interact:IsA("BasePart") then interact else nil
 end
 
 local function canEnter(player: Player, zoneId: string): (boolean, string?)

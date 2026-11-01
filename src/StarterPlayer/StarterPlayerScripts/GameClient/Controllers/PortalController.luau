@@ -4,11 +4,14 @@
 -- screen fades like the Zones menu. Each portal also shows THIS player's state (docs/enemies_npcs_pets_brief.txt 1A):
 -- a locked zone's portal and its frame are under a BLACK FILTER (every color black / dark gray, a dark swirl, no
 -- zone name or icon) with a "? ? ?" sign and the generic requirement. When the zone unlocks, a reveal plays: white
--- flash, the black filter dissolves into the zone colors, the name comes back.
+-- flash, the black filter dissolves into the zone colors, the name comes back. Before that reveal the portal builds
+-- itself brick by brick (Config/PortalBuild): personal, once, at the moment of unlock (or when the player next comes near
+-- the hub); until the last brick it cannot be used. At join a finished portal is shown at once.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local PortalBuild = require(ReplicatedStorage.GameSystem.Config.PortalBuild)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.State)
@@ -32,6 +35,8 @@ local REFRESH_SECONDS = 2 -- portals can stream in and out: their look is re-app
 local busy = false
 local lastTry: { [string]: number } = {} -- zone id -> os.clock() of the last refused try
 local original: { [BasePart]: Color3 } = {}
+local pending: { [string]: boolean } = {} -- zone id -> opened, its portal waits to build
+local building: { [string]: boolean } = {}
 
 local function portals(): { BasePart }
 	local list = {}
@@ -261,17 +266,127 @@ local function filter(portal: BasePart, hidden: boolean, animate: boolean)
 	Sfx.play("Unlock", portal.Position)
 end
 
+-- the portal rises from its steps: bricks fly up and stack from the bottom, then the real frame lights up (the reveal)
+local function build(portal: BasePart, zoneId: string)
+	building[zoneId] = true
+	pending[zoneId] = nil
+	local config = PortalBuild
+	local frame = frameOf(zoneId)
+	local hiddenParts: { BasePart } = { portal }
+	local brickColor = Color3.fromRGB(79, 84, 94)
+	for _, item in ipairs(if frame then frame:GetDescendants() else {}) do
+		if item:IsA("BasePart") and item.Name ~= "Steps" then
+			table.insert(hiddenParts, item)
+			if item.Name == "PillarL" and looks[item] then
+				brickColor = looks[item].color
+			end
+		end
+	end
+	for _, part in ipairs(hiddenParts) do
+		part.LocalTransparencyModifier = 1
+	end
+	sign(portal).Enabled = false
+	-- the base of the frame = the bottom of the portal surface
+	local base = portal.CFrame * CFrame.new(0, -portal.Size.Y / 2, 0)
+	local targets: { { cf: CFrame, size: Vector3 } } = {}
+	local w = config.PillarWidth / 2
+	for row = 0, config.Rows - 1 do
+		for _, side in ipairs({ -1, 1 }) do
+			for column = 0, 1 do
+				local x = side * (config.PillarX - w / 2 + column * w)
+				table.insert(targets, { cf = base * CFrame.new(x, (row + 0.5) * config.BrickHeight, 0), size = Vector3.new(w - 0.06, config.BrickHeight - 0.06, config.PillarDepth) })
+			end
+		end
+	end
+	local archW = config.ArchWidth / config.ArchBricks
+	for i = 0, config.ArchBricks - 1 do
+		local x = (i + 0.5 - config.ArchBricks / 2) * archW
+		table.insert(targets, { cf = base * CFrame.new(x, config.Rows * config.BrickHeight + config.ArchHeight / 2, 0), size = Vector3.new(archW - 0.06, config.ArchHeight - 0.06, config.ArchDepth) })
+	end
+	local fx = Instance.new("ParticleEmitter")
+	fx.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	fx.Color = ColorSequence.new(config.DustColor)
+	fx.Rate = 0
+	fx.Lifetime = NumberRange.new(0.5, 1)
+	fx.Speed = NumberRange.new(1, 4)
+	fx.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 2.6) })
+	fx.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 1) })
+	local dustPart = Instance.new("Part")
+	dustPart.Name = "PortalBuildDust"
+	dustPart.Size = Vector3.new(1, 1, 1)
+	dustPart.Transparency = 1
+	dustPart.Anchored = true
+	dustPart.CanCollide, dustPart.CanQuery, dustPart.CanTouch = false, false, false
+	fx.Parent = dustPart
+	dustPart.Parent = workspace
+	local holder = Instance.new("Folder")
+	holder.Name = "PortalBuild_" .. zoneId
+	holder.Parent = workspace
+	local step = math.max(0.01, (config.Seconds - config.RiseSeconds) / #targets)
+	local random = Random.new()
+	local info = TweenInfo.new(config.RiseSeconds, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	for i, target in ipairs(targets) do
+		local brick = Instance.new("Part")
+		brick.Name = "Brick"
+		brick.Size = target.size
+		brick.Color = brickColor:Lerp(Color3.new(1, 1, 1), random:NextNumber(0, 0.09))
+		brick.Material = Enum.Material.SmoothPlastic
+		brick.Anchored = true
+		brick.CanCollide, brick.CanQuery, brick.CanTouch = false, false, false
+		brick.CFrame = (target.cf + Vector3.new(random:NextNumber(-config.StartSpread, config.StartSpread), -target.cf.Position.Y + base.Position.Y - config.StartDepth, random:NextNumber(-config.StartSpread, config.StartSpread))) * CFrame.Angles(random:NextNumber(-1, 1), random:NextNumber(-1, 1), 0)
+		brick.Parent = holder
+		TweenService:Create(brick, info, { CFrame = target.cf }):Play()
+		if i % config.SoundEvery == 1 then
+			Sfx.play(config.Sound, target.cf.Position)
+			dustPart.Position = target.cf.Position
+			fx:Emit(config.DustBurst)
+		end
+		task.wait(step)
+	end
+	task.wait(config.RiseSeconds)
+	-- the last brick is in: the real frame takes over and lights up
+	for _, part in ipairs(hiddenParts) do
+		if part.Parent then
+			part.LocalTransparencyModifier = 0
+		end
+	end
+	holder:Destroy()
+	filter(portal, false, true)
+	dustPart.Position = portal.Position
+	fx:Emit(config.PulseBurst)
+	task.delay(1.5, function()
+		dustPart:Destroy()
+	end)
+	building[zoneId] = nil
+end
+
 local function paint(portal: BasePart)
 	local zoneId = portal:GetAttribute("ZoneId") :: string
 	if original[portal] == nil then
 		original[portal] = portal.Color
 	end
+	if building[zoneId] then
+		return
+	end
 	local notBuilt = Zones.NOT_BUILT[zoneId] == true
 	local hidden = not ZoneVisibility.isRevealed(zoneId)
 	local was = revealed[zoneId]
+	if was == false and not hidden then
+		-- it opened just now: the build plays when the player is near (the filter stays until then)
+		revealed[zoneId] = true
+		pending[zoneId] = true
+		sign(portal).Enabled = false
+		return
+	elseif pending[zoneId] then
+		local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if root and (root.Position - portal.Position).Magnitude < PortalBuild.Range then
+			task.spawn(build, portal, zoneId)
+		end
+		return
+	end
 	if was == nil or was == hidden then
-		-- first paint or a change: black filter on, or the reveal (only animated when it happens live)
-		filter(portal, hidden, was ~= nil and not hidden)
+		-- first paint or a change: black filter on, or the finished portal at once
+		filter(portal, hidden, false)
 		revealed[zoneId] = not hidden
 	elseif hidden then
 		filter(portal, true, false) -- streamed-in parts get the filter too
@@ -298,7 +413,7 @@ local function refresh()
 end
 
 local function use(zoneId: string)
-	if busy then
+	if busy or pending[zoneId] or building[zoneId] then
 		return
 	end
 	local now = os.clock()
