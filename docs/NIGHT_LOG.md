@@ -1,5 +1,25 @@
 # ROUND 9 DECISIONS (owner prompt docs/Round9_Fixes/PROMPT_Round9_Fixes.txt, 2026-11-01) - newest first
 
+- PART 4, holes (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_213129_before_r9_part4`. New tool: `tools/HoleAudit.luau`. Sheets `docs/before_after/R9-04-arch.png`, `R9-04-tundra.png`, `R9-04-swamp.png`.
+  - Image 08 FOUND: Plains_3 side of `gate_barricade` (2024, 0, 456). The 2 gate rocks are pointed at the bottom, so the beach of Plains_2 showed under them, both sides. The blue wall is `CorridorRidge`.
+  - AUDIT: (1) `H.zone(id)`: flood fill from the entrance of the 20 sub-zones and the Hub, rays out from the border at 3 and 9 studs and from a zoomed out camera. (2) `H.scan()`: rays along z across the strip beside the 15 gates, every 8 studs out to 96, 3 heights. (3) By hand, once: 156 rays per sub-zone from y 110 looking down outwards (max zoom is 128). Then looked at each kind of hit.
+  - Results of the rays: every real hole was beside a gate. Other "void" hits are real views, seen and left: the sea around the Hub, Plains_2 and Desert_1 (open water with the far islands, on purpose). Swamp "void" were false: `Swamp_Cliff_A` has CanQuery false, a ray goes through it. Rays through 8 invisible parts (the NoClimb shells) are false too. Plains_4 from y 110 is inside the mountain.
+  - DECISION: a neighbour sub-zone seen through a gap counts as a hole (that is image 08), a far mountain does not. The same desert behind a pylon high up, above the rocks, is left alone (Desert_3).
+  - FIXED n, rocks in `Decor.MapFix.GateFill` on the gate's line, in the zone's colours, between the Bounds of the 2 sub-zones, so nobody can touch them. No collision, none needed: no invisible wall added.
+    | zone | open columns before | fixed | left |
+    |---|---:|---:|---|
+    | Plains | 8 (+ 2 seen by eye) | 10 | 2 slits at +-16 of Plains_3, behind the gate post |
+    | Desert | 18 | 18 | 1 slit (Desert_3, +16) |
+    | Jungle | 8 | 8 | 1 slit (Jungle_3, +16) |
+    | Tundra | 9 | 9 | 0 |
+    | Swamp | 6 | 6 | 2 slits (Swamp_2, Swamp_4, -16) |
+    | Swamp_4 outside | flat roof and plates seen over the wall from Swamp_3, camera high | 9 rocks on the roof, `RoofHill` | the box sides stay, they show only from far above |
+  - The 6 slits are 1-2 studs wide, next to a door post, at a grazing angle. A rock there would stand in the doorway, so they stay.
+  - Beside a doorway the rock is slim (13 x 14, centre at 22): it stays out of the opening.
+  - Added: 53 MeshPart rocks + 9 on the roof, a shared mesh, CanCollide and CanTouch false. No script. No collider changed (`GateFill` and `RoofHill` do not collide), no Bounds moved.
+  - Max zoom from a wall: the Swamp plates and the water past the rocks can be seen from y 110 in a daylight Edit view; in game the fog is 0.33-0.48. Not changed: it is ground, then water, not a void.
+  - NOT tested: a walk along every border; the audit is rays plus about 15 views, not a person walking it. Boss rooms: closed rooms, not audited here, Part 5 looks at them. Sub-zones of zones that cannot be played: not audited.
+
 - PART 3, the plains cave becomes a mine (Studio agent). Backup: all 6 files of `FightYourDestiny_2026-11-01_210606_before_r9_part3`. New tool: `tools/CaveRound9.luau`; recipe and palette: docs/prop_texture_guide.md "Mine cavern". Sheet `docs/before_after/R9-03_cave.png`, 6 rows.
   - WHY it was purple: the preset `Plains_4` (Ambient #8292B0, blue Atmosphere, blue tint) on grey-violet stone; 5 blue ore lights of range 26 added to it. Confirmed: with no aura the old floor was lavender in Edit. The preset is now warm. `Plains_4` is also the look of the Plains boss room, see Part 5.
   - 4 new images: `mine_dirt`, `mine_rock` (alpha overlay), `mine_railbed`, `mine_puddle`, by `make_floor_textures.py --cave`. 2 new assets: `mine_ground_flagstones`, `mine_ground_gravel` (asset preview: Plains 95 assets, 2470 copies, 0 problems). Preview ground not touched.
