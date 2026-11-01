@@ -1,0 +1,50 @@
+TASK: REMOVE "PREMIUM PETS" AND REPLACE THEM WITH "REBIRTH PROTECTION" (PAID WITH DIAMONDS)
+
+BEFORE ANYTHING: backup the place in BackUP_Files/ (dated .rbxl, never overwrite). Sub-agents: max 2 at once. Keep docs/NIGHT_LOG.md updated. If a step fails twice, log it and move on. Push to https://github.com/Miieski/Fight-Your-Destiny at the end. Never put secrets in files.
+
+1) GOAL
+Today, "premium pets" survive a Rebirth for free. Remove that special status completely. Replace it with a Diamond purchase that lets a player KEEP any item through Rebirth: pets, weapons and armor. The more valuable the item, the more expensive the protection.
+
+2) WHAT TO REMOVE (search the whole project first: Config, PlayerData/profile schema, Rebirth service, pet/egg/shop code, UI, docs)
+- The "premium" flag/field on pets, its badge/label in the UI, its special handling in the Rebirth reset, and any text saying premium pets are kept on Rebirth (DESIGN.md, HANDOFF.md, README, docs).
+- DO NOT delete any pet. All pets that can be bought with Diamonds stay available exactly as now (same prices, same shop/eggs). They simply become normal pets: lost at Rebirth unless the player pays the protection.
+- Old saves must still load: ignore/clear the old premium field safely, bump the data version, no errors. No automatic free protection for old premium pets (the game is still in development).
+
+3) NEW RULE: REBIRTH PROTECTION ("Keep Forever")
+- The player pays Diamonds ONCE for a specific owned item (one pet, one weapon or one armor piece). That item is then PROTECTED and is kept through ALL future Rebirths with no further payment.
+- No limit on the number of protected items: only the price limits it.
+- Rebirth now resets everything as before (Gold, weapons, armor, attributes, eggs, pets) EXCEPT: Diamonds, boss keys, and every item with Protected = true. Protected items stay in the inventory (and keep their equipped state if equipped; make this a Config flag KeepEquippedState = true). Unprotected items are lost.
+- Protection belongs to the item instance (its unique id), not to its type. Each weapon/armor/pet instance has its own rarity, so each is priced and protected separately. Store on the item: Protected = true and ProtectedPricePaid.
+- If a protected item is deleted, sold or consumed (fusion, upgrade, etc., if those exist), the protection is gone with it. Block accidental deletion/sale of protected items with a clear confirmation.
+
+4) PRICE FORMULA (all values in a new Config/RebirthProtection.luau, easy to tune)
+Price (Diamonds) = ceil( RarityBase[rarity] x ValueFactor(item) x CategoryMultiplier[type] )
+- RarityBase: read the REAL rarity names already used for pets, weapons and armor in the project (do not invent new ones) and map one price to each, growing roughly x2.5 per rarity step. Proposed starting point for a 6-step scale: 5 / 12 / 30 / 75 / 190 / 475 Diamonds. If the project has a different number of rarities, spread the same curve over them.
+- ValueFactor(item) = 1 + 0.15 x (zone/tier index of the item - 1). Use the item's zone, tier or level data that already exists (weapons and armor have zone/tier; for pets use their egg/zone tier). Items from later zones cost more.
+- CategoryMultiplier: pets 1.0, weapons 1.0, armor 1.0 (separate values so I can tune later).
+- Generate docs/rebirth_protection_prices.md with a table: every rarity x every zone x every category, so I can review and change the numbers.
+- The price is computed on the SERVER at purchase time, never trusted from the client.
+
+5) SERVER (authoritative, through the existing single Net module)
+- RemoteFunction "ProtectItem(itemId)": validate that the player owns the item, it is not already protected, the player has enough Diamonds; then atomically deduct Diamonds, set Protected, save the profile immediately (DataStore), and return success + new Diamond total. Idempotent against double clicks and rapid repeats; rate-limited; reject unknown ids and fake prices.
+- Rebirth service: updated reset rules from section 3. Make sure a failed or interrupted Rebirth never deletes protected items (do the reset on a copy, then commit).
+- Optional: a "GetProtectionPrice(itemId)" request used only to display the price (the real price is still recomputed at purchase).
+
+6) UI (mobile-first, fantasy-wood style with the existing 3D icons)
+- A shield/lock icon on every item card in the Pets, Weapons and Armor inventories. Unprotected: grey open-shield with the Diamond price shown. Protected: a golden shield badge with a soft glow.
+- Tapping an unprotected item's shield opens a small confirmation popup: item name, rarity, price in Diamonds, text "This item will be kept after every Rebirth", Buy / Cancel. If the player lacks Diamonds, show the missing amount and a button to the Diamond shop.
+- On the Rebirth screen: show what will be KEPT (Diamonds, keys, protected items, with their shield badges) and what will be LOST (unprotected pets, weapons, armor, listed by category with counts and the most valuable first), with a shortcut button "Protect items" that opens the inventory in protection mode. The final Rebirth confirmation must clearly warn about the items that will be lost.
+- Protected items must be hard to sell or delete by mistake (extra confirmation).
+- No old "premium" wording or badge anywhere.
+
+7) DOCUMENTATION
+Update DESIGN.md (it wins over older docs), HANDOFF.md, README and the relevant briefs: remove premium pets, add Rebirth Protection with the formula and the config file.
+
+8) TESTS (run them yourself in Studio, report results)
+- Rebirth with: protected pet/weapon/armor (kept, with equip state), unprotected ones (lost), Diamonds and keys kept.
+- Purchase: enough Diamonds, not enough Diamonds, already protected, double click, spam, fake item id, item not owned.
+- Save/load round trip: protected flags survive leaving and rejoining; old save with the premium field still loads.
+- Price check: print the price of one item per rarity/category/zone and compare with docs/rebirth_protection_prices.md.
+- No Output errors; UI works in the phone emulator.
+
+FINAL REPORT: files changed, how many places referenced "premium", price table location, anything I need to decide or do by hand.

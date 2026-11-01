@@ -1,3 +1,10 @@
+# ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
+
+- Backup before_round8 first. Order: Part 0, 1, 2, 3, 4, 5, 6, 7, then 8 last. One Studio agent; the main agent checks each
+  part in Play, commits, pushes and shows the images.
+- Weapon types are the 6 real categories (Sword, Spear, Heavy, Dagger, Ranged, Magic); the prompt's "gloves" do not exist.
+- The game has no stamina: stamina-cost nodes become cooldown nodes, mana for the staff.
+
 # WEAPON OVERHAUL DECISIONS (owner prompt "WEAPON ANIMATIONS OVERHAUL", 2026-10-30) - newest first
 
 - VERIFY (Studio agent, real numbers). Tests in Play in Studio, one client.

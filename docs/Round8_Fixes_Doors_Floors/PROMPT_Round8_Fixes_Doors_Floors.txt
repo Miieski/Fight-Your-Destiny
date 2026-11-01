@@ -1,0 +1,167 @@
+ROUND 8 (COMPLETE): REBIRTH BUG, MOUNTAINS, 3 OBJECTS + RAIL END, DOORS/PORTALS/BOSS TRANSITION, REBIRTH RULES + STAT PRICES, REBIRTH PROTECTION, WEAPON SKILL TREES, BETTER FLOORS, NEW WOOD UI
+
+The 7 images are in docs/Round8_Fixes_Doors_Floors/ (01..07): 01 plains mountains, 02 teleport point, 03 spawn disc, 04 planter, 05 rail end, 06 current game HUD/hub screenshot, 07 UI style reference (wood + metal borders). Do not ask for them again. PROMPT_Rebirth_Protection_original.txt in the same folder is the source of PART 5. If the owner is not around, do not stop to ask: take the most reasonable reading, log it at the top of docs/NIGHT_LOG.md and carry on.
+
+COMMON RULES
+- Backup first in BackUP_Files/ (dated .rbxl, never overwrite). Max 2 sub-agents at once (one Studio, one Blender). If a step fails twice, log it in docs/NIGHT_LOG.md and move on. Push to https://github.com/Miieski/Fight-Your-Destiny after each part. Never put secrets in files.
+- Quality: same as everything already improved (fountain, well, plains, desert, jungle, tundra, swamp): low-mid poly, beveled shapes with visible joints, soft gradients, clean colors, no PBR/photo textures.
+- Use the MapProps system (SyncMapProps) for objects: edit the asset in the asset preview, every instance in the maps follows (and the reverse). Do NOT touch the ground of the asset preview (the owner's zone colors stay). Keep position, rotation, size (within +10%), names, tags, attributes, scripts, ProximityPrompts, lights, glows and collisions. "replaced n / total" per object.
+- PHOTO REPORT AFTER EACH CHANGE: send ONE comparison image like the previous ones (title "NN - Name"; 2x2 grid: "AVANT - Zone de test" / "APRÈS - Zone de test" on top, "AVANT - Dans le jeu" / "APRÈS - Dans le jeu" below; same camera angle; orange labels for AVANT, green for APRÈS), saved in docs/before_after/ and shown right away. For animations, send a filmstrip (8-12 frames) and a GIF if your tools allow it.
+- Order of work: PART 0 (urgent bug) FIRST, then PART 1, 2, 3, 4, 5, 6, 7, and PART 8 (the new UI style) LAST. All screens created in PARTS 4-6 (rebirth screen, protection shields, skill tree, etc.) must be built with ONE shared UI component module (buttons, panels, tabs, slots, bars) so that PART 8 restyles everything at once.
+- Decisions I (the owner) already made, do not ask again: all answers are written in the parts below.
+
+==================================================
+PART 0 - URGENT BUG: REBIRTH LAG, GREY SCREEN, NO INPUT -> RESPAWN IN THE HUB
+Symptom: after confirming a Rebirth the game lags, the screen turns grey and NO key/button works anymore (the player is stuck).
+1. DIAGNOSE first (do not guess): reproduce in Play mode (and in the phone emulator), read Output/errors, ScriptProfiler/MicroProfiler, and check: heavy synchronous reset on the server (loops over all inventory/pets/zones, DataStore save inside the reset), a client UI overlay (grey fade/ScreenGui with Active=true or a modal frame) that is never removed, controls disabled (PlayerModule controls, ContextActionService sink, Humanoid PlatformStand/WalkSpeed 0, camera scriptable) and never restored, character not respawned or respawned far away, streaming around the new position not loaded yet, RemoteEvent errors that stop the sequence half-way. Write the root cause in docs/NIGHT_LOG.md.
+2. FIX it for real: the Rebirth must be a staged sequence: (a) server validates; (b) client shows a short clean transition (quick fade, "Rebirth..." with a small spinner, input blocked ONLY by this transition); (c) server performs the reset in small steps/off the critical frame (do the reset on a copy, then commit; save asynchronously with retry, never blocking the character); (d) the player is RESPAWNED IN THE HUB (hub spawn point; request streaming around it before the fade-out); (e) fade-out, all controls, camera, UI and prompts restored. Always restore controls/camera/UI in a finally-style path with a timeout watchdog (about 8 s): if something fails, force restore + respawn in the Hub + show a small error message. Never leave a grey screen.
+3. The Rebirth works the same for several players at once, never leaves the player in a boss room or in a zone, and also works from the boss room and from the phone.
+4. Test: 5 Rebirths in a row, Rebirth while in zone 1 / far zone / boss room, with protected items (after PART 5), with a bad connection simulated; frame time in the phone emulator; no Output errors. Report cause + fix with a short before/after note.
+
+==================================================
+PART 1 - PLAINS: CONNECT THE TWO MOUNTAINS (image 01)
+In the plains, between the first plains sub-zone and the forest sub-zone, there are two big mountains behind the rocks (NOT the ones facing the sea): on the screenshot, the big brown-gray peak on the left and the big green mountain on the right, with an open gap between them. Connect them with a CONTINUOUS MOUNTAIN RIDGE (a saddle/col) in the same style as the neighbouring mountains: faceted low-mid poly rock, layered tones, grass and trees on the lower slopes, rock and snow only where the existing peaks have them. The two summits stay; a lower ridge links them; the base blends into the terrain with no hard seam, no floating part and no gap. Check from the first sub-zone, from the forest sub-zone and from far away.
+- It is purely decorative: the player must NOT be able to climb it or pass through. Add invisible blocking collisions matching the new ridge and any remaining gap/slope, then test with a character (jump along it, walk into it, from both sides) and from the path. Do not block any real player path (verify the route from sub-zone 1 to the forest still works).
+- Make it a MapProps template if it is a reusable piece, and register it in the asset preview (plains block, large row).
+
+==================================================
+PART 2 - THREE OBJECTS + THE RAIL END (images 02, 03, 04, 05), AND ALL SIMILAR ITEMS
+For EACH of the 3 objects below, ALSO find every other instance that is exactly the same or visibly the same item (same MapPropId, same name, same mesh/part signature, including recolored copies in other biomes) and improve or replace them with the new version at the same time (keep each copy's position, rotation, biome colors and function). Report "replaced n / total" per object and the zones concerned.
+02 teleport point (the round pale-blue stone ring with blue glowing surface, grey stone blocks around it and white sparkles; it is a TELEPORT POINT, not a pond): make it a magical teleport pad: a ring of cut stone with beveled rim and carved patterns, 6-8 weathered stone blocks with moss and chipped edges placed around it with small rune carvings, a glowing surface that looks like the fountain water or a soft magic energy disc (keep the blue color and the transparency idea), a thin glowing rune circle, small crystals or lily-like leaves at the edge. Keep the sparkles (particles) and the existing teleport script, prompts, sound and collisions exactly. Keep the size and footprint.
+03 spawn/checkpoint (the grey stone disc with a yellow circle in the middle; it is a SPAWN POINT / CHECKPOINT): a stone disc platform with a beveled double rim, carved radial or ring patterns, 4 small corner studs or notches, and a golden emblem in the center (keep the yellow color as a polished gold inlay with a subtle glow, like a sun or a compass). Keep the spawn/checkpoint logic, team/neutral setup, size, position and collisions exactly (verify that players still spawn on it).
+04 round planter (a stone round planter with a green bush and flowers): a planter of cut stone blocks with a beveled cap rim and a darker base, rich soil, a real leafy bush (layered faceted leaf clusters, light gradient), varied flowers (yellow, pink, purple) with leaves, grass tufts and a few small pebbles. Plains style, like the improved cottages and fountain. Keep size and collisions.
+05 end of the rail in the plains cave sub-zone (the red/blue-gray end piece): improve the rail END (buffer stop): a thick wooden end beam with iron brackets and bolts, two sturdy posts or stone blocks behind it, a small spring or buffer plate, rust and wear, a few pebbles; keep size, position and collisions. If the rails or minecart in that cave are still the old version, give them the same style so they match.
+Register the new/updated assets in the asset preview (plains block) and update docs/asset_preview_index.md and docs/prop_inventory.md.
+
+==================================================
+PART 3 - DOOR OPENING ANIMATIONS, PORTAL BUILD ANIMATION, CLEAN BOSS ROOM TRANSITION
+A) OPENING ANIMATIONS for every door/gate that blocks a passage: doors between SUB-ZONES (the ones that open after the purchase), doors between ZONES (biome changes), and the BOSS ROOM doors. Choose what fits each door type (you decide the best look for each), for example:
+- Wooden double doors (plains, swamp, palisades): the leaves rotate on their hinges with a slight creak and STAY OPEN.
+- Stone doors (desert, jungle, temples): the panels slide apart or rise with dust particles and a stone-grind sound and STAY OPEN.
+- Plank barricades: the ropes/nails snap, the planks come loose, fall with a small bounce and fade away.
+- Ice doors (tundra, ice castle): a glowing crack runs across the door, then the leaves slide apart, with ice shards and a cold glow.
+- Vine/branch barricades (jungle, swamp): vines retract or branches fall apart.
+Duration about 1-2 s, ease-in/out motion, matching sound effects (use existing sounds or short placeholders configured in Config), small dust/particles, and a very light camera shake only for big stone/ice doors. All settings in Config (Config/DoorAnimations.luau) with one entry per door type, data-driven so adding a door type needs no new code.
+RULES: the unlock state is PERSONAL per player (like the sub-zone unlocks): the animation plays on the unlocking player's client when the unlock happens (purchase or condition met), then the door stays open for that player on every later visit (a player joining with an already unlocked door sees it open instantly with no animation). The collision of that door is removed only for that player (client-side collision/transparency switch with server validation: the server must still refuse teleports/entries for players who have not unlocked it). After a REBIRTH the door follows the current unlock state of the sub-zones (if locked again, it silently appears closed, no animation). Do not break existing prompts, prices or teleports. Handle streaming (StreamingEnabled) and doors outside the view, and late joiners. Keep it cheap for mobile.
+
+B) PORTAL BUILD ANIMATION (zone changes): when the player meets ALL the prerequisites for the next zone (use the existing conditions: boss defeated, keys, purchase), the portal APPEARS by being built BRICK BY BRICK: the stones of the portal frame fly or rise from the ground and stack in order from the bottom up (about 3-5 s total, with small dust puffs and a stone sound per few bricks), and when the last brick is placed the portal ACTIVATES automatically (the runes/gems/field light up with an emissive ramp, a short sound, a pulse of particles). It is personal per player (same rule as the doors), plays once at the moment of unlock, and later (and at join) the finished lit portal is shown instantly. The teleport only works once the portal is complete and lit. Use the existing portal models (pieces split into bricks if needed; keep the frame shape and the glow). Config in Config/PortalBuild.luau.
+
+C) CLEAN TRANSITION TO THE BOSS ROOM (the arena is in a separate place, the teleport must not be visible): when a player enters a boss door, play: the door opens onto a bright luminous veil, the camera pushes forward through the door (a short smooth dolly), a very short fade (about 0.3 s, hidden by the light) while the player is teleported to the arena, and on arrival the arena door opens and the camera eases back to the normal view with the character walking out of the door. Each player sees their own transition (up to 5 players per boss room), controls are locked only during the transition (about 1.5-2 s), always restored (even on errors), no camera stuck, no fall or flash of the wrong location. Do the reverse (clean exit) when leaving. Tint the veil and particles with the zone colors (sand dust in the desert, leaves in the jungle, snow in the tundra, spores in the swamp, etc.). Provide a fallback (plain short fade) if something fails.
+
+==================================================
+PART 4 - REBIRTH PROGRESSION RULE AND STAT PRICES
+A) NEW ZONE UNLOCK RULE AFTER A REBIRTH
+Today, after a Rebirth the player must walk through the whole previous zone (up to its 4th sub-zone / boss room) again to unlock the next one. REMOVE that obligation after a Rebirth. To unlock the next zone after a Rebirth the player only needs BOTH:
+- the BOSS KEY of the previous zone (keys are kept through Rebirth, as now), and
+- GOLD: the price is the AVERAGE of two existing prices, rounded down to a clean number: (price of the LAST purchasable sub-zone of the previous zone + price of the 2nd sub-zone of the next zone) / 2, then floored to 2 significant digits. Example: last plains sub-zone 3,120 and 2nd desert sub-zone 5,000 -> average 4,060 -> price 4,000. Read the REAL prices from Config; compute all zone transitions automatically in Config/RebirthZoneUnlock.luau (formula + generated table) and write docs/rebirth_zone_unlock_prices.md for me to review. Do the same for every zone pair (plains->desert, desert->jungle, etc., hub excluded if free).
+- Unlocking a zone this way gives access to that zone (its entry and first area); the other sub-zones inside it keep their normal rules and prices. Server-authoritative (price computed on the server, boss key checked on the server, atomic gold deduction, no double purchase). It follows the personal unlock state and the door/portal animations of PART 3 (the portal builds itself when gold + key are available/paid, the door opens when unlocked). Normal play before the first Rebirth is unchanged.
+- UI: on the zone map/portal show clearly "Boss key: owned / missing" and "Gold: price" with a Buy button; mobile friendly.
+B) STAT PRICES (affordable at the start of the game)
+- LOWER the base prices of the stats (attributes) a lot so that the first stat upgrades are affordable in the first minutes of the game and for the first Rebirth (target: a new player can buy the first 3-5 stat points with the gold of the first zone-1 fights; tune with the real gold income and write the target and the result in docs/NIGHT_LOG.md).
+- Price growth per Rebirth: +5% per Rebirth (compounded: price x 1.05^rebirths). This is 5 points less than the extra GOLD gain per Rebirth (+10% gold per Rebirth), so the player always earns faster than prices grow. Read the real gold bonus per Rebirth in the project: if it is +10%, price growth is +5%; if it differs, price growth = gold bonus - 5 points (never below 0). Everything in Config/StatPrices.luau with the formula and a generated table docs/stat_prices.md (stat x rebirth 0..20) for me to review.
+- Prices computed server-side. Old saves keep working. Show the new price in the stat UI.
+
+==================================================
+PART 5 - REBIRTH PROTECTION (REPLACES "PREMIUM PETS")
+(Original task text from the owner. Use the Rebirth sequence fixed in PART 0 as the reset flow. The weapon skill trees of PART 6 are NOT lost at Rebirth whatever the items protected.)
+
+REMOVE "PREMIUM PETS" AND REPLACE THEM WITH "REBIRTH PROTECTION" (PAID WITH DIAMONDS)
+
+
+1) GOAL
+Today, "premium pets" survive a Rebirth for free. Remove that special status completely. Replace it with a Diamond purchase that lets a player KEEP any item through Rebirth: pets, weapons and armor. The more valuable the item, the more expensive the protection.
+
+2) WHAT TO REMOVE (search the whole project first: Config, PlayerData/profile schema, Rebirth service, pet/egg/shop code, UI, docs)
+- The "premium" flag/field on pets, its badge/label in the UI, its special handling in the Rebirth reset, and any text saying premium pets are kept on Rebirth (DESIGN.md, HANDOFF.md, README, docs).
+- DO NOT delete any pet. All pets that can be bought with Diamonds stay available exactly as now (same prices, same shop/eggs). They simply become normal pets: lost at Rebirth unless the player pays the protection.
+- Old saves must still load: ignore/clear the old premium field safely, bump the data version, no errors. No automatic free protection for old premium pets (the game is still in development).
+
+3) NEW RULE: REBIRTH PROTECTION ("Keep Forever")
+- The player pays Diamonds ONCE for a specific owned item (one pet, one weapon or one armor piece). That item is then PROTECTED and is kept through ALL future Rebirths with no further payment.
+- No limit on the number of protected items: only the price limits it.
+- Rebirth now resets everything as before (Gold, weapons, armor, attributes, eggs, pets) EXCEPT: Diamonds, boss keys, and every item with Protected = true. Protected items stay in the inventory (and keep their equipped state if equipped; make this a Config flag KeepEquippedState = true). Unprotected items are lost.
+- Protection belongs to the item instance (its unique id), not to its type. Each weapon/armor/pet instance has its own rarity, so each is priced and protected separately. Store on the item: Protected = true and ProtectedPricePaid.
+- If a protected item is deleted, sold or consumed (fusion, upgrade, etc., if those exist), the protection is gone with it. Block accidental deletion/sale of protected items with a clear confirmation.
+
+4) PRICE FORMULA (all values in a new Config/RebirthProtection.luau, easy to tune)
+Price (Diamonds) = ceil( RarityBase[rarity] x ValueFactor(item) x CategoryMultiplier[type] )
+- RarityBase: read the REAL rarity names already used for pets, weapons and armor in the project (do not invent new ones) and map one price to each, growing roughly x2.5 per rarity step. Proposed starting point for a 6-step scale: 5 / 12 / 30 / 75 / 190 / 475 Diamonds. If the project has a different number of rarities, spread the same curve over them.
+- ValueFactor(item) = 1 + 0.15 x (zone/tier index of the item - 1). Use the item's zone, tier or level data that already exists (weapons and armor have zone/tier; for pets use their egg/zone tier). Items from later zones cost more.
+- CategoryMultiplier: pets 1.0, weapons 1.0, armor 1.0 (separate values so I can tune later).
+- Generate docs/rebirth_protection_prices.md with a table: every rarity x every zone x every category, so I can review and change the numbers.
+- The price is computed on the SERVER at purchase time, never trusted from the client.
+
+5) SERVER (authoritative, through the existing single Net module)
+- RemoteFunction "ProtectItem(itemId)": validate that the player owns the item, it is not already protected, the player has enough Diamonds; then atomically deduct Diamonds, set Protected, save the profile immediately (DataStore), and return success + new Diamond total. Idempotent against double clicks and rapid repeats; rate-limited; reject unknown ids and fake prices.
+- Rebirth service: updated reset rules from section 3. Make sure a failed or interrupted Rebirth never deletes protected items (do the reset on a copy, then commit).
+- Optional: a "GetProtectionPrice(itemId)" request used only to display the price (the real price is still recomputed at purchase).
+
+6) UI (mobile-first, fantasy-wood style with the existing 3D icons)
+- A shield/lock icon on every item card in the Pets, Weapons and Armor inventories. Unprotected: grey open-shield with the Diamond price shown. Protected: a golden shield badge with a soft glow.
+- Tapping an unprotected item's shield opens a small confirmation popup: item name, rarity, price in Diamonds, text "This item will be kept after every Rebirth", Buy / Cancel. If the player lacks Diamonds, show the missing amount and a button to the Diamond shop.
+- On the Rebirth screen: show what will be KEPT (Diamonds, keys, protected items, with their shield badges) and what will be LOST (unprotected pets, weapons, armor, listed by category with counts and the most valuable first), with a shortcut button "Protect items" that opens the inventory in protection mode. The final Rebirth confirmation must clearly warn about the items that will be lost.
+- Protected items must be hard to sell or delete by mistake (extra confirmation).
+- No old "premium" wording or badge anywhere.
+
+7) DOCUMENTATION
+Update DESIGN.md (it wins over older docs), HANDOFF.md, README and the relevant briefs: remove premium pets, add Rebirth Protection with the formula and the config file.
+
+8) TESTS (run them yourself in Studio, report results)
+- Rebirth with: protected pet/weapon/armor (kept, with equip state), unprotected ones (lost), Diamonds and keys kept.
+- Purchase: enough Diamonds, not enough Diamonds, already protected, double click, spam, fake item id, item not owned.
+- Save/load round trip: protected flags survive leaving and rejoining; old save with the premium field still loads.
+- Price check: print the price of one item per rarity/category/zone and compare with docs/rebirth_protection_prices.md.
+- No Output errors; UI works in the phone emulator.
+
+FINAL REPORT: files changed, how many places referenced "premium", price table location, anything I need to decide or do by hand.
+
+==================================================
+PART 6 - WEAPON SKILL TREES (SPECIAL ATTACKS + WEAPON STATS), KEPT THROUGH REBIRTH
+GOAL: one skill tree per WEAPON TYPE (read the real list from the weapon overhaul/Config: sword, dagger, hammer, gloves, spear/naginata, bow, staff, and any other category that exists; the removed gauntlet category stays removed). Each tree gives upgrades to that weapon type: stat bonuses AND special attacks.
+RULES (decided by the owner):
+- Tree linked to the weapon TYPE, kept FOR LIFE: nodes, mastery points and unlocked special attacks survive every Rebirth, even if the weapon item is lost (they apply to every weapon of that type the player owns/equips later).
+- Currency = WEAPON MASTERY XP: using a weapon type (hits, kills, bosses) earns mastery XP for ITS tree; level-ups of mastery give mastery points to spend only in that tree. Config/WeaponMastery.luau (XP curve, rewards, caps).
+- Size: about 25 nodes per tree, branching (3-4 paths that split and re-join, with some prerequisites and 2-3 ultimate nodes at the end).
+- Node content: most nodes = stat bonuses for the weapon type (damage, attack speed, crit chance/damage, range, stamina cost, combo/finisher power, block or parry bonus, mana for the staff, projectile speed for the bow...), clearly labeled and balanced against the Elden-Ring-style attributes (respect the +100% cap rule from the weapon overhaul); about 4-5 nodes per tree = SPECIAL ATTACKS (new animations/effects, procedural like the other weapon animations, replicated by attack-state, server-authoritative damage, cooldowns/stamina or mana cost) and 2-3 = passive/animation upgrades (new combo finisher, trail effect, aura, impact effect). Give every weapon type distinct, fun special attacks inspired by the Dueling Grounds-like fighting feel already described in the weapon overhaul. Keep the existing Z skill as is; special attacks are added as equippable skills with a simple mobile button bar (max 3 equipped special attacks per weapon, chosen in the tree screen).
+- FREE START BONUS: at the beginning the player gets 3 FREE nodes of their choice: they can unlock any 3 nodes, in any tree(s), without spending points (the 3 free picks are one-time, saved, shown as "Free picks: 3/3"; after using them the nodes cost points). They can be changed only through a free respec option for the first 10 minutes or a cheap respec in Gold (put the price in Config).
+- Unlocking a tree: the tree of the weapon type the player starts with is open. Opening each other weapon type's tree costs GOLD once (price in Config/WeaponMastery.luau, growing with the tier/zone of that weapon type, affordable and shown in the UI); a tree where a free pick was used is considered opened. Kept for life through Rebirth.
+- Server-authoritative: purchases, points, node prerequisites, special attack validation, cooldowns. DataStore schema versioned, old saves load without errors.
+- UI (built with the shared UI components): a "Skills" button in the left menu; a tree screen with the weapon tabs, a pannable/zoomable node graph (mobile friendly), node tooltip (name, effect, cost, prerequisites), locked/available/unlocked states, equip bar for special attacks, mastery bar and points, "free picks" counter.
+- Weapon stat display in the inventory/stat screens shows the bonuses coming from the tree.
+- Document: docs/weapon_skill_trees.md (every node of every tree with effect, cost, prerequisites), and balance notes. Test in Play mode: unlock nodes, rejoin, Rebirth (kept), special attacks with 2 players, phone emulator, no Output errors.
+
+==================================================
+PART 7 - BETTER FLOORS (hub, plains, desert, jungle, tundra)
+Improve the ground of the HUB, PLAINS, DESERT, JUNGLE and TUNDRA zones (not the swamp) in the same spirit as all the redesigns: more detailed and more realistic, but keeping the low-mid poly look. Cover the main PATHS and the visible ground AROUND the paths and around the buildings (the big far-away surfaces only need a light touch). Use ALL of these:
+1. New tileable ground textures (128-256 px, shared per biome, tinted variants) with soft shading and subtle detail: grass with color variation, dirt, cobblestones/pavers, sandstone slabs and sand, mossy stone, packed snow and frosted slabs.
+2. Detail props on top (cheap and grouped): pebbles, tufts of grass, small flowers, scattered cobbles, cracks, leaves, sand ripples, snow clumps, footprint-like marks, small rocks near the path edges.
+3. Raised borders/relief on paths: slightly raised edge stones or curbs, pavers and slabs with a little relief (0.1-0.3 studs), not affecting walking (no ledges that block movement; keep walkability smooth; collisions unchanged, keep ground flat for gameplay).
+4. Soft transitions between the path and the surroundings (blended edges, grass creeping on the path, sand over stones, snow drifts at the edge), no hard straight seams.
+Style per biome: let YOU choose the best fit (suggestion: hub = cobblestone pavers; plains = dirt path with grass edges; desert = sandstone slabs and sand; jungle = mossy stone path with roots and ferns; tundra = packed snow with frosted slabs and snow drifts).
+Performance (mobile first): moderate level: a few shared textures per biome, details as reused meshes/templates with CastShadow false, CanCollide false, CanTouch false, CanQuery false, no scripts; limit the added triangles; test in the Studio phone emulator (frame time) and keep texture memory low. If the ground is Terrain, use terrain materials and paint transitions; if it is Parts, use SurfaceAppearance/Texture with correct StudsPerTile (no stretching, no z-fighting). Do not change collisions, spawns, enemy spawn areas, paths/navigation or sizes.
+Write the recipes and hex palettes per biome in docs/prop_texture_guide.md ("Ground" section) and the texture ids in Config/PropTextures.luau. Register the new reusable detail pieces in the asset preview (small row of each zone block).
+
+==================================================
+PART 8 - NEW WOOD + METAL UI STYLE FOR THE WHOLE GAME (DO THIS LAST)
+References: image 06 = the current HUD/menus (keep their layout and the 3D icons), image 07 = the style reference. I want the game UI to look roughly like image 07 for its WOOD and BORDERS (I find them ideal), BUT WITHOUT the pirate/ship universe: no ship wheel, no waves, no barrel-ship hull shape, no pirate icons, no TedArthur watermark/logo (the image is a style reference only, never copy its artwork).
+What to take from image 07:
+- Panels: dark-to-warm brown WOOD PLANKS with visible grain, nails/rivets, slightly rounded thick wooden frame borders, steel corner brackets, a small bevel/inner shadow. Make the frame shape rectangular with rounded corners (not a ship hull).
+- A golden ornate title banner at the top of each window (gold border, brown inside, light serif title) with a close button.
+- Tab lists on the left side or top: dark brown buttons with a thin gold outline, the selected tab lighter and more golden.
+- Item slots: reddish-brown gradient squares with thin gold corner brackets; rarity glow around the item; selected slot highlighted.
+- Round-square wooden icon buttons for the left menu (Inventory, Stats, Shop, Rebirth, Pets, Index, Quests, Team, Skills, Zones) with gold corner rims, the 3D icon above and the label below; notification badges stay.
+- HUD: a shield-shaped (or rounded wooden) player portrait frame with wings/gold trim, health/stamina/XP bars with angled gold-edged ends like image 07 (adapt to the real stats of the game: HP, and stamina/mana/XP if they exist), coin and diamond counters in matching wooden pills with gold borders, the hotbar slots in the same wood with small green gem numbers/keys, the lock icons for locked slots.
+- Keep the Elden-Ring/fantasy feeling, gold + brown palette, readable text with a dark outline, large touch targets for mobile (min 44 px), safe areas respected, same layout positions as now so nothing breaks.
+How:
+- Create Config/UITheme.luau (colors, fonts, spacing, corner sizes, stroke widths, rarity colors) and ONE shared component module (Panel, TitleBanner, TabButton, Slot, IconButton, Bar, Counter, Popup, Tooltip) used by EVERY screen. No screen keeps its own old styling.
+- Textures: prepare tileable wood plank, metal bracket and gold border images (9-slice friendly, small sizes, 128-256 px) in docs/ui_textures/ with an import list of the exact files to upload; if you can upload them through the available tools do it, otherwise rebuild the style with UIGradient + UIStroke + layered frames so the UI is correct without any manual step, and list in the report only what truly needs my hand.
+- Restyle ALL screens and the HUD: inventory (weapons/armor/pets tabs), stats, shop, Rebirth screen (incl. the PART 5 keep/lose lists and the protection shields), pets, index, quests, team, zones/map, settings, skill tree (PART 6), zone unlock/purchase popups (PART 4), door/portal prompts, confirmation popups, tooltips, notifications, health/name bars if UI-based, loading and transition screens.
+- Performance: few shared images, no per-frame tweens on lists, ClipsDescendants and UIListLayout/UIGridLayout used sensibly; test in the phone emulator (frame time, memory).
+- Before/after: one 2x2 image per big screen (HUD, inventory, shop, rebirth, pets, quests, skills, zones) in docs/before_after/, 1280x720 and phone portrait.
+
+VERIFY (all parts)
+- Before/after images (2x2 format) for: the Rebirth fix (before: grey screen, after: Hub respawn), the mountains, each of the 3 objects (and a note of every similar item replaced), the rail end, one per door type, the portal build (filmstrip), the boss transition (filmstrip), and for the floors one image per zone (hub, plains, desert, jungle, tundra, path and surroundings).
+- Script check: for the doors, that a player without the unlock cannot pass or teleport; for objects, all instances use the new version; for floors, 0 changes in collisions, sizes, spawns and navigation.
+- Play mode: unlock a door, rejoin, rebirth, enter a boss room and leave, with 2 players if possible; no stuck camera or controls, no Output errors, smooth in the phone emulator.
+- Update docs/prop_inventory.md, docs/asset_preview_index.md/.json, DESIGN.md and HANDOFF.md (rule: doors unlock state personal, animation config files).
+- Final short report: per item OK / not OK, and anything I must do by hand (only if truly unavoidable).
