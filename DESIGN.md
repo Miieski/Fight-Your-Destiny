@@ -257,7 +257,7 @@ scaling), Mind (Esprit) = max mana and mana regen, Faith (Foi) = healing (`Faith
 * **Gold:** from killing enemies, selling trophies, quests and rewards. Never lost on death (since 2026-10-13);
   lost entirely on Rebirth. Values scale x10 per zone.
 * **Diamonds:** premium currency. Dropped ONLY by mini-bosses and bosses, and sold for Robux.
-  **Kept on Rebirth.** Uses: premium eggs, Gold boosts, skins (the weapon rarity reroll was removed on
+  **Kept on Rebirth.** Uses: Diamond eggs, Rebirth Protection, Gold boosts, skins (the weapon rarity reroll was removed on
   2026-10-13).
 * **Rebirth Credits:** earned on Rebirth (3 each), spent in the Rebirth Shop.
 * **Boss Keys:** one per boss (12). **Kept on Rebirth.**
@@ -270,7 +270,7 @@ Sub-zone 1 of a zone is free once the zone is open. For sub-zones 2-4 in zone z:
     price(z, 4) = 3,125 x 10^(z-1)     (opens the boss room)
 
 (About 25-40 kills of the previous sub-zone's enemies.) Sub-zone prices are paid again after
-each Rebirth for the zone being redone (see below).
+each Rebirth for that zone (see below).
 
 ### Rebirth
 * **Rebirth number r (r = 1..12)** is available when the player:
@@ -278,10 +278,10 @@ each Rebirth for the zone being redone (see below).
   2. has `Rebirths == r - 1`,
   3. pays the Gold cost: `RebirthCost(r) = 10 x price(r, 4)` (default).
 * The key is **not consumed**.
-* **Reset:** Gold, weapons, armor, stat levels, eggs, non-premium pets, trophies, and the
+* **Reset:** Gold, stat levels, eggs, trophies, every unprotected weapon, armor piece and pet, and the
   sub-zone unlocks of the current zone.
 * **Kept:** Diamonds, keys, Rebirth count, Rebirth Credits and Rebirth Shop upgrades,
-  premium pets (bought with Robux), game passes, boosts, Index/collection, settings,
+  protected items, game passes, boosts, Index/collection, settings,
   cosmetics (skins), access to lower zones.
 * **Sequence (Round 8):** a short "Rebirth..." cover, the reset committed in one step on copies, the
   player respawned on the Hub spawn (also from a zone or a boss room), the save in the background with
@@ -294,9 +294,15 @@ each Rebirth for the zone being redone (see below).
 * **Where (built 2026-10-12):** the **Rebirth** menu button (hotkey Y) opens the Rebirth window: tab
   **Rebirth** (next Rebirth, requirements, rewards, what is lost / kept, Rebirth button + confirmation) and tab
   **Rebirth Shop**. The Priest at the Rebirth Altar opens the Rebirth tab. Refused inside a boss arena and within
-  5 s of taking damage. After a Rebirth the player is sent to sub-zone 1 of zone r with a free Common sword of
-  that zone (starter weapon rule); reopening zone r's boss room ("redone") opens zone r + 1 (zone unlock chain
-  below). Rules in `Config/Rebirth`, server `RebirthService`, UI `UI/Pages/RebirthPage`.
+  5 s of taking damage. After a Rebirth the player respawns in the Hub, with a free Common sword of zone r when they own no
+  weapon (starter weapon rule); zone r + 1 is then bought (zone unlock below). Rules in `Config/Rebirth`, server `RebirthService`, UI `UI/Pages/RebirthPage`.
+
+### Rebirth Protection (Round 8, replaces the old premium pets)
+Diamonds, paid once for one item instance (weapon, armor piece or pet), keep it through every Rebirth, with no limit on the number
+of items. Price = ceil(RarityBase[rarity] x (1 + 0.15 x (zone - 1)) x CategoryMultiplier[category]), RarityBase 5 / 12 / 30 / 75 /
+190 / 475 / 1200 / 3000 (Common .. Secret). `Config/RebirthProtection`, `Services/ProtectionService`, table in
+`docs/rebirth_protection_prices.md`. Stored on the item: `Protected`, `ProtectedPricePaid`. An equipped protected item stays
+equipped (`KeepEquippedState`). A protected item leaves only through its single sell / release, with a warning; bulk sell skips it.
 
 ### Zone unlock after a Rebirth (Round 8)
 Zone z opens with z - 1 Rebirths, zone z - 1 open, the key of boss z - 1 and Gold: (last sub-zone price of zone z - 1 + 2nd sub-zone
@@ -315,6 +321,12 @@ precedence over any older text here about a zone being "redone".
 * Data only: `Config/DoorAnimations` (one row per door type, one line per gate; also the boss door veil) and
   `Config/PortalBuild` (the hub portal builds itself brick by brick when its zone opens).
 
+### Weapon skill trees (Round 8)
+One tree per weapon type, 25 nodes, for life (a Rebirth keeps them): stats, 3 special attacks + a keystone + an ultimate, the Aura of Mastery and
+Final Form. Mastery XP comes from fighting with that type (1 per hit, 6 / 40 / 120 per kill, at most 900 a minute), 1 point per level, max level 60.
+3 free picks per profile, trees open with Gold once, respec free for 10 minutes then 2,000 Gold. Up to 3 specials equipped per type, on X / C / T; Z stays
+the weapon skill. `Config/WeaponSkillTrees`, `Config/WeaponSpecials`, `Config/WeaponMastery`, `Services/MasteryService`, list in `docs/weapon_skill_trees.md`.
+
 ### Rebirth Shop (spend credits, permanent)
 Defaults (1 credit per level):
 | Upgrade | Id | Effect per level | Max level |
@@ -326,18 +338,10 @@ Defaults (1 credit per level):
 | Health Boost | `HealthBoost` | +10% Max HP | 8 |
 | Diamond Luck | `DiamondLuck` | +5% diamond drop chance from bosses | 6 |
 
-### Zone unlock chain
-To open **zone N+1** the player needs ALL of:
-* the **key of boss N**,
-* at least **N Rebirths**,
-* to have **redone zone N since their last Rebirth** (opened its boss room again).
-
-When zone N+1 opens (after the redo), the player has two choices:
-1. fight the boss of zone N again (more drops, diamond chances), or
-2. teleport directly to zone N+1.
-
-Lower zones stay accessible by teleport (their sub-zones stay open). The zone being
-redone after a Rebirth has its sub-zone prices reset.
+### Zone unlock
+See "Zone unlock after a Rebirth" below. When a zone opens, the player can fight the previous boss again or teleport to the new
+zone. Lower zones stay accessible by teleport (their sub-zones stay open). The zone being redone after a Rebirth has its
+sub-zone prices reset.
 
 ### AFK zone & offline bonus
 * **AFK zone** in the hub: while the player stands inside it (and is not moving much), they earn
@@ -370,7 +374,7 @@ redone after a Rebirth has its sub-zone prices reset.
   * Weapons no longer drop from enemies. They are bought in the shop and (later) player-traded.
 * **Head trophy:** sold for Gold at a hub merchant. Value = `25 x enemy Gold reward x rarityMult`.
 * **Egg:** hatch at the hub egg station into a **pet** from that zone's pet pool, with the egg's
-  rarity (guaranteed). **Premium eggs** (bought with diamonds) give a random rarity using the
+  rarity (guaranteed). **Diamond eggs** (bought with diamonds) give a random rarity using the
   shop odds table of the weapon doc.
 * Rarity of loot follows the rule in `docs/enemy_database.txt` (stronger enemy = rarer loot).
 * Rebirth Shop `LootLuck` multiplies the drop chances above (max +64%).
@@ -385,14 +389,14 @@ redone after a Rebirth has its sub-zone prices reset.
   |---|---|---|---|---|---|---|---|
   | +2% | +4% | +7% | +11% | +16% | +23% | +32% | +45% |
 * The common bonus uses 25% of the main-stat value of the same rarity (default).
-* Pets are lost on Rebirth, **except premium pets bought with Robux**.
+* Pets are lost on Rebirth, like weapons and armor, unless protected (Rebirth Protection).
 * **Pets V2 (owner 2026-10-12, inspired by the Roblox game Steal an Egg; `docs/pets_v2_plan.md`):**
-  * 72 species (6 per zone, same stat roles per slot) + 4 premium, list in `Config/Pets` (zone 1: Puppy,
+  * 72 species (6 per zone, same stat roles per slot) + 4 special (Robux), list in `Config/Pets` (zone 1: Puppy,
     Fox Kit, Bear Cub, Boar Piglet, Raccoon, Owl; Volcano mixes in baby dinosaurs; Abyss = sea animals).
   * Every egg hatch also rolls a **mutation** - Silver x1.2 (8%), Golden x1.5 (4%), Rainbow x2 (0.9%),
     Celestial x3 (0.1%) - and a **size** - Big x1.25 (9%), Huge x1.6 (1%), drawn 1.35x / 1.8x bigger.
     Both multiply the pet's main stats, bonus, Equip Best score and release value (`Config/PetMutations`).
-    Premium pets never mutate. Shown on the hatch reveal, pet cards, details and the Index (best mutation).
+    The special pets never mutate. Shown on the hatch reveal, pet cards, details and the Index (best mutation).
   * Models: cartoon meshes from Studio's AI generator, rigged by `DevTools/PetRigBuilder` (pieces + joints),
     animated in code by `Util/PetMotion` (walk cycle, wings, swim, float, idle, happy jump on kills); mutation
     looks by `Util/PetLook` (see-through metal / gold / rainbow / glowing shells). 12 zone eggs in the same style.
@@ -492,7 +496,7 @@ The hub is the central safe area (no combat). Players spawn here on join.
 * **Weapon Shop:** buy a weapon of a chosen zone; rarity is random (weapon doc). The Shop window also has an
   **Armor** tab (same rules, half price, own pity counters).
 * **Trainer:** stat upgrade menu.
-* **Egg Station:** hatch eggs, open premium eggs (diamonds). **Pet Manager** (equip/delete). The nest shows the
+* **Egg Station:** hatch eggs, open Diamond eggs. **Pet Manager** (equip/delete). The nest shows the
   game's own Plains / Desert / Jungle zone eggs (`Assets.Eggs`, 2026-10-18).
 * **Benches** (11, 2 seats each): one "Sit" prompt per bench (E / tap) seats the player on the nearest free seat;
   touching a bench never seats anyone; jump to stand up (`BenchService`).
@@ -530,7 +534,7 @@ enemy -> open the Trainer -> buy a stat -> open the next sub-zone -> meet the bo
   chat tag), Exclusive weapon (a unique cosmetic-like weapon with fixed stats, to be designed).
 * **Temporary boosts** (Robux or diamonds): Gold x2, Damage x1.5, Luck x2 for 15 / 30 / 60 min.
 * **Diamond packs** (Developer Products).
-* **Premium pets** (Robux) that **survive Rebirth.**
+* **Special pets** (Robux). They are lost on Rebirth unless protected, like every pet.
 * Ids go in `Config/Products.luau` (0 = hidden). Receipts use `ProcessReceipt` with purchase-id
   idempotency stored in the profile.
 
@@ -566,7 +570,7 @@ src/StarterPlayer/StarterPlayerScripts/GameClient/
 `DataService` (profile, DataStore, session lock, autosave 90 s) - `StatsService` (derived stats) -
 `CombatService` (player attacks, roll, block, validation) - `EnemyService` (spawn, AI, damage
 tracking, drops) - `BossService` (arenas, groups, patterns, rewards) - `ZoneService` (unlocks,
-gates, teleports, death respawn) - `ShopService` (weapons, armor, training, premium eggs) -
+gates, teleports, death respawn) - `ShopService` (weapons, armor, training, Diamond eggs) -
 `LootService` (drops, trophies) - `PetService` - `ArmorService` - `RebirthService` -
 `RewardService` (daily, playtime, quests, codes, boosts, AFK/offline) - `LeaderboardService` -
 `TeamService` - `MarketService` (Robux products) - `TutorialService` - `AdminService`.
@@ -594,7 +598,7 @@ LevelUp, RebirthWhoosh, UIClick, UIOpen, UIClose, MusicHub, MusicZone, MusicBoss
   Armor = {},                          -- [uid] = { id = "plains_helmet", slot = "Helmet", rarity = 1 }
   EquippedArmor = {},                  -- { Helmet = uid, Chest = uid, Legs = uid }
   Eggs = {},                           -- [uid] = { zone = "Plains", rarity = 1 }
-  Pets = {},                           -- [uid] = { id = "plains_pet1", rarity = 1, premium = false, mutation?, size?,
+  Pets = {},                           -- [uid] = { id = "plains_pet1", rarity = 1, mutation?, size?, Protected?, ProtectedPricePaid?,
                                        --   traits = { Crown = { rarity, stat, roll }, Accessory = {..}, Aura = {..} } }
   EquippedPets = {},                   -- array of uids
   EquippedSkills = {},                 -- [slot 1..3] = skill id (Config/Skills; empty for now)
@@ -668,7 +672,7 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Ranged, 
 * **V2 (owner 2026-10-13: "I want to test every possibility in game").** `UI/AdminPanel`, 8 tabs (owner-only, so
   plain text labels): **Money** (Gold, Diamonds, Rebirth Credits, boss keys, Gold Boost, game passes on / off),
   **Swords** (any weapon by zone x category x rarity, a zone's 7, all 84, shop rarity / pity, reset), **Armor**
-  (piece or set x rarity x count, every zone's set, clear), **Pets** (zone or Premium -> pet, rarity, mutation, size,
+  (piece or set x rarity x count, every zone's set, clear), **Pets** (zone or special -> pet, rarity, mutation, size,
   Bonus Stats item rarity; zone's pets; new items for every pet; eggs; Equip best; egg simulation; clear),
   **Stats** (each attribute 0..40, all at once, Rebirths, Rebirth ready / wipe, Rebirth Shop levels), **World**
   (teleports, zone locks, any enemy of a zone: spawn / loot / trophies / kill simulation / kill all, god mode,

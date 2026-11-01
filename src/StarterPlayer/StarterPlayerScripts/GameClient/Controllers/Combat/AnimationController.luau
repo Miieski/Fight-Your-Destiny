@@ -51,7 +51,7 @@ function AnimationController.play(state: { [string]: any }): number
 		Category = category,
 		Step = step,
 		Variant = variant,
-		Finisher = variant == "Air" or variant == "Heavy" or variant == "Skill" or (variant == nil and move ~= nil and move.Finisher == true),
+		Finisher = variant == "Air" or variant == "Heavy" or variant == "Skill" or (move ~= nil and move.Special == true) or (variant == nil and move ~= nil and move.Finisher == true),
 		Direction = state.Direction or Vector3.new(0, 0, -1),
 		Rarity = rarity,
 		Element = element,

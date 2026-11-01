@@ -34,6 +34,8 @@
 --   Pierce     enemies a projectile goes through; Shots, Spread fan several; Cost = mana; Size = projectile size
 --   Skill: the Z move, its cooldown and cost are in Config/Skills
 --   Air: Hang = seconds the body stays still before the dive / the shot; Shots, Spread (Ranged volley)
+local Specials = require(script.Parent.WeaponSpecials)
+
 local WeaponMoves = {}
 
 WeaponMoves.Input = {
@@ -189,6 +191,16 @@ function WeaponMoves.move(category: string, step: number?, variant: string?): { 
 		return moves[variant]
 	end
 	return moves.Steps[step or 1]
+end
+
+-- The special attacks of the skill trees (Config/WeaponSpecials) are moves of their category, under their Key.
+for category, list in pairs(Specials) do
+	for _, special in ipairs(list) do
+		local move = special.Move
+		move.Special = true
+		move.Fx = special.Fx
+		WeaponMoves.Moves[category][special.Key] = move
+	end
 end
 
 -- Hits per second and average step Damage of a full combo at speed x1 (shop text, DPS).

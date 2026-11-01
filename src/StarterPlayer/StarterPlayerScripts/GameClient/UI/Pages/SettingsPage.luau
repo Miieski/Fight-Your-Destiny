@@ -37,7 +37,7 @@ local ROW_ICONS = {
 	FirstPerson = "Eye", AutoAttack = "Sword", ButtonLayout = "Gamepad", FastOpen = "Clock",
 }
 local KEY_ICONS = {
-	Attack = "Sword", Block = "Defense", Roll = "Speed", AutoAttack = "Sword", Skill1 = "Star", Skill2 = "Star", Skill3 = "Star",
+	Attack = "Sword", Block = "Defense", Roll = "Speed", AutoAttack = "Sword", Skill1 = "Star", Skill2 = "Star", Skill3 = "Star", Skill4 = "Star",
 	FirstPerson = "Eye", FreeCursor = "Eye", RebirthShop = "RebirthShop",
 }
 

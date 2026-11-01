@@ -19,7 +19,7 @@ local StatsService = { Priority = 3 }
 
 local TRAIN_INTERVAL = 0.3
 -- profile keys that change the derived stats: the character is refreshed when one of them changes
-StatsService.WATCHED = { "Attributes", "Rebirths", "RebirthUpgrades", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Weapons", "EquippedWeapon", "Boosts" }
+StatsService.WATCHED = { "Mastery", "Attributes", "Rebirths", "RebirthUpgrades", "Pets", "EquippedPets", "Armor", "EquippedArmor", "Weapons", "EquippedWeapon", "Boosts" }
 
 function StatsService:Compute(player: Player): { [string]: any }?
 	local profile = DataService:Get(player)

@@ -412,7 +412,9 @@ local function attackOnce(forced: Vector3?, heavy: boolean?, skillSlot: number?)
 	if heavy then
 		variant = "Heavy"
 	elseif skillSlot then
-		variant = "Skill"
+		-- a special attack of the skill tree is its own move
+		local skill = Skills.at(skillSlot, categoryId, State.get("EquippedSkills"))
+		variant = if skill and skill.Move then skill.Move else "Skill"
 	elseif moves.Dash and now - rollStartedAt <= Combat.Roll.Duration + Combat.DashAttack.Window then
 		variant = "Dash"
 	elseif moves.Air and not airUsed and now - lastAir >= AIR.MinGap and inAir(root, humanoid) then

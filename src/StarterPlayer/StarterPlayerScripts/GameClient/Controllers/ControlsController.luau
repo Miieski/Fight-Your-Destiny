@@ -51,9 +51,10 @@ local GAMEPAD = {
 	Skill1 = Enum.KeyCode.ButtonL1,
 	Skill2 = Enum.KeyCode.ButtonR1,
 	Skill3 = Enum.KeyCode.ButtonY,
+	Skill4 = Enum.KeyCode.DPadUp,
 }
 -- "Skill1" -> 1
-local SKILL_SLOT = { Skill1 = 1, Skill2 = 2, Skill3 = 3 }
+local SKILL_SLOT = { Skill1 = 1, Skill2 = 2, Skill3 = 3, Skill4 = 4 }
 
 local root: Frame
 local toolbar: Frame

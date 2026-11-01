@@ -18,6 +18,7 @@ local EquipmentPage = require(script.Parent.Pages.EquipmentPage)
 local DiamondShopPage = require(script.Parent.Pages.DiamondShopPage)
 local RebirthShopPage = require(script.Parent.Pages.RebirthShopPage)
 local RebirthPage = require(script.Parent.Pages.RebirthPage)
+local SkillTreePage = require(script.Parent.Pages.SkillTreePage)
 local IndexPage = require(script.Parent.Pages.IndexPage)
 local QuestsPage = require(script.Parent.Pages.QuestsPage)
 local TeamUI = require(script.Parent.Team)
@@ -82,6 +83,7 @@ local BUILDERS = {
 		RebirthShopPage.build(ctx.Pages["Rebirth Shop"], ctx)
 	end,
 	Zones = ZonesPage.build,
+	Skills = SkillTreePage.build,
 }
 
 function Windows:Start()

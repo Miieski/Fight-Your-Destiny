@@ -1,5 +1,5 @@
 --!strict
--- Skills on the client: the 3 slots of the HUD (PC) and the 3 touch buttons (mobile) register here as views of a slot.
+-- Skills on the client: the slots of the HUD (PC) and the touch buttons (mobile) register here as views of a slot.
 -- A use (key, gamepad, tap) goes to SkillController.perform (set by CombatController: the move starts at once, the server
 -- answers Net.request "UseSkill"); an empty slot shows the toast "Skills are coming soon". The server decides everything.
 --   SkillController.register(slot, view, showKey?)   view = a UI/Kit/SkillSlot
@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local SettingsConfig = require(ReplicatedStorage.GameSystem.Config.Settings)
 local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
+local WeaponMastery = require(ReplicatedStorage.GameSystem.Config.WeaponMastery)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local Settings = require(script.Parent.SettingsController)
 local State = require(script.Parent.Parent.State)
@@ -18,14 +19,16 @@ local KeyLabel = require(script.Parent.Parent.UI.Kit.KeyLabel)
 
 local SkillController = { Priority = 3, perform = nil :: ((number) -> (boolean, any))? }
 
-local GAMEPAD_LABELS = { "LB", "RB", "Y" }
+local GAMEPAD_LABELS = { "LB", "RB", "Y", "Up" }
 
 type View = { view: any, showKey: boolean }
 local views: { [number]: { View } } = {}
 for slot = 1, Skills.SLOT_COUNT do
 	views[slot] = {}
 end
-local cooldownEnd: { [number]: number } = {}
+-- per skill, like the server: a slot shows another skill after a weapon change
+local cooldownEnd: { [string]: number } = {}
+local cooldownTotal: { [string]: number } = {}
 local busy: { [number]: boolean } = {}
 
 local function skillAt(slot: number): { [string]: any }?
@@ -57,6 +60,7 @@ local function paint(slot: number)
 		local color = def and def.Element and Skills.ELEMENT_COLORS[def.Element]
 		entry.view:SetFrame(color)
 		entry.view:SetKey(if entry.showKey then key else nil)
+		entry.view:StartCooldown(if def then (cooldownEnd[def.Id] or 0) - os.clock() else 0, def and cooldownTotal[def.Id])
 	end
 end
 
@@ -80,7 +84,7 @@ function SkillController.use(slot: number)
 		Notifier.push({ Kind = "info", Text = Skills.Text.ComingSoon })
 		return
 	end
-	if os.clock() < (cooldownEnd[slot] or 0) then
+	if os.clock() < (cooldownEnd[def.Id] or 0) then
 		for _, entry in ipairs(views[slot]) do
 			entry.view:Shake()
 		end
@@ -96,8 +100,11 @@ function SkillController.use(slot: number)
 	end
 	busy[slot] = nil
 	if ok then
-		local seconds = def.Cooldown or 0
-		cooldownEnd[slot] = os.clock() + seconds
+		-- the skill tree's cooldown nodes (the server applies the same)
+		local bonus = WeaponMastery.bonuses({ Mastery = State.get("Mastery") }, def.Category)
+		local seconds = (def.Cooldown or 0) * math.max(0.5, 1 - (bonus.Cooldown or 0))
+		cooldownEnd[def.Id] = os.clock() + seconds
+		cooldownTotal[def.Id] = seconds
 		for _, entry in ipairs(views[slot]) do
 			entry.view:StartCooldown(seconds)
 		end

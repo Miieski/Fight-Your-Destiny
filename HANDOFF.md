@@ -15,6 +15,11 @@ Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
 - `Window.close` always removes the backdrop; only `Window.open` keeps it when it swaps windows.
 - Door and portal unlock state is personal per player. Data: `Config/DoorAnimations`, `Config/PortalBuild`. A new gate needs its
   `Doors` line, and `DevTools.GateSplit` + a sync when it opens in two leaves. `Controllers/BossDoorController` is the boss door.
+- Rebirth Protection replaces the premium pets: `Config/RebirthProtection`, `Services/ProtectionService`, `UI/Protection`. Code identifiers
+  such as `species.Premium`, `BuyPremiumEgg`, `grantPremium` stay: they name the Robux pets and the Diamond eggs, not a Rebirth rule.
+- New UI is built on `UI/Kit/Components` (Part 8 restyles there).
+- Skill trees: `Config/WeaponSkillTrees` (the map, generated), `Config/WeaponSpecials` (5 moves per type, added to `Config/WeaponMoves` and `Config/Skills`),
+  `Services/MasteryService`, `UI/Pages/SkillTreePage`. Client cooldowns are per skill id in `SkillController`. Profile version 3.
 - Map geometry added this round lives in the place file only (`tools/PlainsRidge.luau`, `tools/PropsRound8.luau` rebuild it).
 
 ## Latest: WEAPON OVERHAUL (2026-10-30)
@@ -507,15 +512,15 @@ Live log with every decision and test: `docs/NIGHT_LOG.md` ("Menu systems task")
 * **A - Attributes** (Stats button, window "Attributes"): `Config/Attributes`, `Util/Stats.compute` (every derived
   stat, shared by server and UI), `StatsService` (TrainAttributes, RespecAttributes, Max HP / walk speed on the
   Humanoid), `DevTools/StatsTests` (78 checks incl. pets and armor; admin runStatsTests).
-* **B - Eggs & pets:** `Config/Pets` (72 species + 4 premium), `Config/PetRarities`, `PetService` (hatch, Hatch All,
-  premium eggs, equip / lock / release, Equip Best, auto-sell, `grantPremium`), procedural models built by
+* **B - Eggs & pets:** `Config/Pets` (72 species + 4 special), `Config/PetRarities`, `PetService` (hatch, Hatch All,
+  Diamond eggs, equip / lock / release, Equip Best, auto-sell, `grantPremium`), procedural models built by
   `DevTools/PetModels.buildAll()` into `ReplicatedStorage.Assets.Pets` / `Assets.Eggs` (in the place, not in git),
   `Kit/ModelIcon` (cached 3D icons), `PetFollowController`, `UI/Hatching`, `UI/Pages/PetsPage`. Egg odds checked by
   `DevTools/EggSim` (docs/egg_simulation.txt).
 * **C - Armor & Equipment:** `Config/Armor` (36 pieces), `ArmorService`, `Util/ArmorLook` (procedural pieces on R15,
   placeholders for the future Blender armor), `ArmorVisualsController` (Show Armor setting), Inventory tabs Equipment
   (own avatar on a pedestal, slots, picker with arrows, stats) / Weapons / Armor / Pets + Eggs shortcuts / Trophies.
-* **D1 Shop > Diamonds:** premium eggs, Weapon Reroll (keep new / old), Gold Boost x2 packs (`BoostService`, HUD
+* **D1 Shop > Diamonds:** Diamond eggs, Weapon Reroll (keep new / old), Gold Boost x2 packs (`BoostService`, HUD
   `UI/BoostTimer`), skins "Coming soon". **D2 Rebirth Shop** (`RebirthShopService`). **D3 Index** (`Config/IndexBook`,
   `IndexService`, rewards per zone and tab; weapons now store their best rarity). **D4 Quests** (`Config/Quests`,
   `Config/Codes`, `RewardService` with ClaimQuest / ClaimDaily / ClaimGift / RedeemCode and

@@ -305,6 +305,24 @@ local COMMANDS: { [string]: Command } = {
 		DataService:Set(player, "RebirthCredits", n)
 		return true, `Rebirth Credits = {n}`
 	end,
+	-- masteryXP(category, xp): weapon mastery XP (tests of the skill trees)
+	masteryXP = function(player, category, value)
+		local n = amount(value)
+		if not n or typeof(category) ~= "string" then return false, "masteryXP(category, xp)" end
+		local profile = DataService:Get(player)
+		if not profile then return false, "Profile not loaded" end
+		local all = table.clone(profile.Mastery or {})
+		local entry = table.clone(all[category] or { Nodes = {}, Free = {} })
+		entry.XP = (entry.XP or 0) + n
+		all[category] = entry
+		DataService:Set(player, "Mastery", all)
+		return true, `{category} XP = {entry.XP}`
+	end,
+	-- resetMastery(): no node, no XP, 3 free picks (tests)
+	resetMastery = function(player)
+		DataService:SetMany(player, { Mastery = {}, EquippedSkills = {}, FreePicks = 3, FreePickAt = 0 })
+		return true, "Mastery reset"
+	end,
 	-- giveKey(zone): the boss key of a zone (1-12 or id); clearKeys(): no key at all (Rebirth tests)
 	giveKey = function(player, zoneValue)
 		local zone = zoneOf(zoneValue) or Zones.List[math.floor(tonumber(zoneValue) or 0)]

@@ -138,6 +138,7 @@ local function detailLines(): { string }
 		`Gold gain: x{string.format("%.2f", s.GoldMult)}`,
 		`Crit chance: {pct(s.CritChance, 2)}`,
 		`Crit damage: x{string.format("%.2f", s.CritDamage)}`,
+		`Skill tree: +{pct((s.Tree or {}).Damage or 0)} damage, +{pct((s.Tree or {}).AttackSpeed or 0)} attack speed, -{pct((s.Tree or {}).Cooldown or 0)} cooldowns (the weapon type in hand)`,
 		`Loot luck: +{pct(s.LootMult - 1)}`,
 		`Element proc: +{pct(s.ElementProcBonus)}`,
 		`Magic radius: +{pct(s.MagicRadius)}`,

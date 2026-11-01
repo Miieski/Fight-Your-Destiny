@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Skills = require(ReplicatedStorage.GameSystem.Config.Skills)
+local WeaponMastery = require(ReplicatedStorage.GameSystem.Config.WeaponMastery)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
 local CombatService = require(script.Parent.CombatService)
 local DataService = require(script.Parent.DataService)
@@ -28,6 +29,11 @@ function SkillService:Start()
 		if not skill then
 			return false, Skills.Text.NotAvailable
 		end
+		if skill.Move and not WeaponMastery.hasSkill(profile, skill.Category, skill.Id) then
+			return false, Skills.Text.NotAvailable
+		end
+		local stats = CombatService:Stats(player)
+		local cost = if skill.Cost then skill.Cost * ((stats and stats.ManaCostMult) or 1) else nil
 		local cooldowns = readyAt[player]
 		if not cooldowns then
 			cooldowns = {}
@@ -37,17 +43,17 @@ function SkillService:Start()
 		if now < (cooldowns[skill.Id] or 0) - Skills.COOLDOWN_TOLERANCE then
 			return false, Skills.RESOURCE_ERROR
 		end
-		if skill.Cost and not ManaService:Has(player, skill.Cost) then
+		if cost and not ManaService:Has(player, cost) then
 			Net.fire(player, "NoMana")
 			return false, Skills.RESOURCE_ERROR
 		end
-		if not CombatService:Skill(player, aimDir, aimPoint) then
+		if not CombatService:Skill(player, aimDir, aimPoint, skill.Move) then
 			return false, Skills.RESOURCE_ERROR
 		end
-		if skill.Cost then
-			ManaService:Spend(player, skill.Cost)
+		if cost then
+			ManaService:Spend(player, cost)
 		end
-		cooldowns[skill.Id] = now + skill.Cooldown
+		cooldowns[skill.Id] = now + skill.Cooldown * ((stats and stats.SkillCooldownMult) or 1)
 		return true
 	end, Skills.USE_INTERVAL)
 	Players.PlayerRemoving:Connect(function(player)

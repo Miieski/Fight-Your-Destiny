@@ -21,6 +21,7 @@ UI.Menu = {
 	{ Id = "Index", Label = "Index", Icon = "Index" },
 	{ Id = "Quests", Label = "Quests", Icon = "Quests" },
 	{ Id = "Team", Label = "Team", Icon = "Team" },
+	{ Id = "Skills", Label = "Skills", Icon = "Star" }, -- the weapon skill trees (UI/Pages/SkillTreePage)
 	{ Id = "Settings", Label = "Settings", Icon = "Settings", Apart = true },
 	{ Id = "Zones", Label = "Zones", Icon = "Zones", Apart = true, ShowLabel = true, PcCorner = true }, -- teleport menu
 }
@@ -56,6 +57,9 @@ UI.Windows = {
 	Settings = { Title = "Settings", Icon = "Settings", Tabs = { "Audio", "Display", "Controls", "Keys", "Other" },
 		TabIcons = { Audio = "Speaker", Display = "Eye", Controls = "Gamepad", Keys = "Keyboard", Other = "Settings" },
 		TabLabels = { Audio = "Sound", Display = "Screen" } },
+	Skills = { Title = "Skills", Icon = "Star", Tabs = { "Sword", "Spear", "Heavy", "Dagger", "Ranged", "Magic" }, Size = Vector2.new(1120, 640),
+		TabIcons = { Sword = "Sword", Spear = "Spear", Heavy = "Heavy", Dagger = "Dagger", Ranged = "Ranged", Magic = "Magic" },
+		TabLabels = { Heavy = "Hammer", Ranged = "Bow", Magic = "Staff" } },
 	Zones = { Title = "Zones", Icon = "Zones", Size = Vector2.new(860, 540) }, -- teleport menu: zone list, then sub-zones
 	-- owner tools V2 (UI/AdminPanel): every test command, 8 tabs
 	Admin = { Title = "Admin", Icon = "Admin", Tabs = { "Resources", "Weapons", "Armor", "Pets", "Stats", "World", "Rewards", "Tests" },

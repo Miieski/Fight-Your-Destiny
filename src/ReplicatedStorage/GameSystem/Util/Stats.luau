@@ -10,6 +10,7 @@ local Boosts = require(Config.Boosts)
 local PetMutations = require(Config.PetMutations)
 local Rarities = require(Config.Rarities)
 local RebirthShop = require(Config.RebirthShop)
+local WeaponMastery = require(Config.WeaponMastery)
 local WeaponMoves = require(Config.WeaponMoves)
 local Weapons = require(Config.Weapons)
 
@@ -187,9 +188,20 @@ function Stats.compute(data: Data, context: Context?): { [string]: any }
 	local moves = weapon and WeaponMoves.Moves[weapon.Category]
 	local speedAttribute = moves and moves.Speed or "Dexterity"
 	local perSpeed = if speedAttribute == "Intelligence" then per.IntelligenceCastSpeed else per.DexterityAttackSpeed
-	out.AttackSpeed = math.min(caps.AttackSpeed, perSpeed * rp * peff(speedAttribute) + (if item then WeaponMoves.RaritySpeed[item.rarity] or 0 else 0))
-	out.MaxMana = base.Mana * (1 + per.MindMana * rp * peff("Mind"))
-	out.ManaRegen = base.ManaRegen * (1 + per.MindManaRegen * rp * peff("Mind"))
+	-- the skill tree of the weapon's type (Config/WeaponMastery); the +100% attack speed cap holds for the sum
+	local tree = WeaponMastery.bonuses(data, if weapon then weapon.Category else nil)
+	out.Tree = tree
+	out.AttackSpeed = math.min(caps.AttackSpeed, perSpeed * rp * peff(speedAttribute) + (if item then WeaponMoves.RaritySpeed[item.rarity] or 0 else 0) + (tree.AttackSpeed or 0))
+	out.MaxMana = base.Mana * (1 + per.MindMana * rp * peff("Mind") + (tree.ManaMax or 0))
+	out.ManaRegen = base.ManaRegen * (1 + per.MindManaRegen * rp * peff("Mind") + (tree.ManaRegen or 0))
+	out.CritChance = math.min(caps.CritChance, out.CritChance + (tree.CritChance or 0))
+	out.CritDamage *= 1 + (tree.CritDamage or 0)
+	out.Block = math.min(caps.Block, out.Block + (tree.Guard or 0))
+	out.FinisherPower = tree.FinisherPower or 0
+	out.Reach = tree.Reach or 0
+	out.ProjectileSpeed = tree.ProjectileSpeed or 0
+	out.SkillCooldownMult = math.max(0.5, 1 - (tree.Cooldown or 0))
+	out.ManaCostMult = math.max(0.5, 1 - (tree.ManaCost or 0))
 	out.AttributeDamageMult = 1
 	out.WeaponDamage = 0
 	if weapon then
@@ -199,7 +211,7 @@ function Stats.compute(data: Data, context: Context?): { [string]: any }
 			sum += weight * peff(attribute)
 		end
 		out.AttributeDamageMult = 1 + per.DamageScaling * rp * sum
-		out.WeaponDamage = Stats.weaponDamage(weapon.Id, item.rarity, weapon.ZoneId == zoneId) * out.AttributeDamageMult * (1 + out.DamageBonus)
+		out.WeaponDamage = Stats.weaponDamage(weapon.Id, item.rarity, weapon.ZoneId == zoneId) * out.AttributeDamageMult * (1 + out.DamageBonus) * (1 + (tree.Damage or 0))
 		out.WeaponId = weapon.Id
 		out.WeaponRarity = item.rarity
 	end

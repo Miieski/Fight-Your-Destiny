@@ -83,6 +83,14 @@ local function migrate(profile: Data)
 		end
 	end
 	profile.RedoneSinceRebirth = nil
+	-- version 3: EquippedSkills is per weapon type now; the old slot list never held a skill
+	if typeof(profile.EquippedSkills) == "table" then
+		for key in pairs(profile.EquippedSkills) do
+			if typeof(key) ~= "string" then
+				profile.EquippedSkills[key] = nil
+			end
+		end
+	end
 	profile.Version = Profile.VERSION
 	local refund, removed = 0, 0
 	for uid, item in pairs(profile.Weapons or {}) do

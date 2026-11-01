@@ -4,7 +4,7 @@
 -- seconds left; a shake when the skill cannot be paid; a frame tinted by rarity or element.
 --   local slot = SkillSlot.new({ Name, Size, Round?, Key?, LayoutOrder?, Position?, AnchorPoint?, Parent, OnActivate? })
 --   slot:SetSkill(def?)  slot:SetFrame(color?)  slot:SetTier(tier?)  slot:SetKey(text?)
---   slot:StartCooldown(seconds)  slot:Shake()  slot:SetHighlight(on)
+--   slot:StartCooldown(seconds, total?)  slot:Shake()  slot:SetHighlight(on)
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -217,7 +217,7 @@ local function setSweep(self: SkillSlot, remaining: number)
 	self._halves[2].Rotation = math.max(angle, 180)
 end
 
-function SkillSlot.StartCooldown(self: SkillSlot, seconds: number)
+function SkillSlot.StartCooldown(self: SkillSlot, seconds: number, total: number?)
 	if self._cooldownConn then
 		self._cooldownConn:Disconnect()
 		self._cooldownConn = nil
@@ -227,7 +227,7 @@ function SkillSlot.StartCooldown(self: SkillSlot, seconds: number)
 		self._seconds.Visible = false
 		return
 	end
-	self._cooldownTotal = seconds
+	self._cooldownTotal = total or seconds
 	self._cooldownEnd = os.clock() + seconds
 	self._sweep.Visible = true
 	self._seconds.Visible = true

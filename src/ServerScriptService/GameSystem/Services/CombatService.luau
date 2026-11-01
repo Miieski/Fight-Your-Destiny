@@ -36,6 +36,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Combat = require(ReplicatedStorage.GameSystem.Config.Combat)
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local Stats = require(ReplicatedStorage.GameSystem.Util.Stats)
+local WeaponMastery = require(ReplicatedStorage.GameSystem.Config.WeaponMastery)
 local WeaponCategories = require(ReplicatedStorage.GameSystem.Config.WeaponCategories)
 local WeaponMoves = require(ReplicatedStorage.GameSystem.Config.WeaponMoves)
 local Weapons = require(ReplicatedStorage.GameSystem.Config.Weapons)
@@ -43,6 +44,7 @@ local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local DataService = require(script.Parent.DataService)
 local EnemyService = require(script.Parent.EnemyService)
 local ManaService = require(script.Parent.ManaService)
+local MasteryService = require(script.Parent.MasteryService)
 local WeaponService = require(script.Parent.WeaponService)
 
 local CombatService = { Priority = 5 }
@@ -220,6 +222,7 @@ local function hit(player: Player, enemy: any, stats: { [string]: any }, strike:
 	damage = math.max(1, math.floor(damage + 0.5))
 	local at = centerOf(enemy) + Vector3.new(0, (enemy.halfHeight or 2) + 1, 0)
 	EnemyService:Damage(player, enemy, damage, strike.knockback)
+	MasteryService:AddXP(player, strike.category, WeaponMastery.XP.Hit)
 	local staggerChance = strike.staggerChance
 	if strike.stagger and enemy.alive and EnemyService.Stagger then
 		EnemyService:Stagger(enemy, strike.stagger)
@@ -342,7 +345,7 @@ end
 
 local SKILL = newproxy() -- the variant of a Z skill: only CombatService:Skill can pass it, never the network
 
-local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
+local function attack(player: Player, aimDir: any, aimPoint: any, variant: any, special: string?)
 	local root, humanoid = rootOf(player)
 	if not (root and humanoid) or player:GetAttribute("Spectating") then
 		return
@@ -381,7 +384,7 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	if charged then
 		kind = "Heavy"
 	elseif variant == SKILL then
-		kind = "Skill"
+		kind = special or "Skill"
 	elseif variant == "Air" and moves.Air and now - state.lastAir >= Combat.AirAttack.MinGap and airborne(root, humanoid) then
 		kind = "Air"
 	elseif variant == "Dash" and moves.Dash and now - state.rollAt <= Combat.Roll.Duration + Combat.DashAttack.Window + Combat.DashAttack.Tolerance then
@@ -405,7 +408,19 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 		Net.fire(player, "Combo", id, index, true)
 	end
 	local shape = WeaponMoves.shape(id, step)
-	if step.Cost and not ManaService:Spend(player, step.Cost) then
+	-- the skill tree's reach and projectile speed (a copy: the shared shape stays as it is)
+	if (stats.Reach or 0) > 0 or (stats.ProjectileSpeed or 0) > 0 then
+		shape = table.clone(shape)
+		for _, key in ipairs({ "Radius", "Length" }) do
+			if shape[key] then
+				shape[key] *= 1 + (stats.Reach or 0)
+			end
+		end
+		if shape.Speed then
+			shape.Speed *= 1 + (stats.ProjectileSpeed or 0)
+		end
+	end
+	if step.Cost and not ManaService:Spend(player, step.Cost * (stats.ManaCostMult or 1)) then
 		Net.fire(player, "NoMana")
 		return refuse()
 	end
@@ -419,10 +434,10 @@ local function attack(player: Player, aimDir: any, aimPoint: any, variant: any)
 	-- the server's own measure of the hold: 0 (just started) .. 1 (full), whatever the client says
 	local charge = if charged then math.clamp((now - (chargeAt :: number)) * speed / step.MaxCharge, 0, 1) else 0
 	local strike: Strike = {
-		multiplier = (step.Damage or 1) * (1 + (step.ChargeDamage or 0) * charge),
+		multiplier = (step.Damage or 1) * (1 + (step.ChargeDamage or 0) * charge) * (if step.Finisher then 1 + (stats.FinisherPower or 0) else 1),
 		bonusCrit = shape.BonusCrit or 0,
 		finisher = step.Finisher == true or kind ~= nil and kind ~= "Dash",
-		breaker = if step.Finisher == true or kind == "Heavy" or kind == "Skill" then moves.GuardBreakMult or WeaponMoves.Input.GuardBreakMult else nil,
+		breaker = if step.Finisher == true or kind == "Heavy" or kind == "Skill" or step.Special then moves.GuardBreakMult or WeaponMoves.Input.GuardBreakMult else nil,
 		staggerChance = moves.StaggerChance,
 		burn = moves.Burn,
 		knockback = step.Knockback,
@@ -657,15 +672,15 @@ local function setBlocking(player: Player, holding: any)
 end
 
 -- Runs the Z skill's move (SkillService checked its cooldown and cost). False = the player cannot act right now.
-function CombatService:Skill(player: Player, aimDir: any, aimPoint: any): boolean
+function CombatService:Skill(player: Player, aimDir: any, aimPoint: any, special: string?): boolean
 	local state = stateOf(player)
 	local now = os.clock()
 	local root = rootOf(player)
 	local _, category = weaponOf(player)
-	if not (root and category) or not WeaponMoves.Moves[category.Id].Skill or state.blocking or now < state.rollEnd or now - state.lastAttack < state.gap * Combat.RateTolerance then
+	if not (root and category) or not WeaponMoves.Moves[category.Id][special or "Skill"] or state.blocking or now < state.rollEnd or now - state.lastAttack < state.gap * Combat.RateTolerance then
 		return false
 	end
-	attack(player, aimDir, aimPoint, SKILL)
+	attack(player, aimDir, aimPoint, SKILL, special)
 	return true
 end
 

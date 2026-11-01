@@ -1,5 +1,54 @@
 # ROUND 8 DECISIONS (owner prompt docs/Round8_Fixes_Doors_Floors/PROMPT_Round8_Fixes_Doors_Floors.txt, 2026-11-01) - newest first
 
+- PART 6, weapon skill trees (Studio agent). `Config/WeaponSkillTrees`, `Config/WeaponSpecials`, `Config/WeaponMastery`, `Services/MasteryService`,
+  `UI/Pages/SkillTreePage` (on `UI/Kit/Components`), `Controllers/MasteryAuraController`; every node in docs/weapon_skill_trees.md; profile version 3.
+  - DECISION: 6 trees, 25 nodes each, 53 points for a full tree, max level 60. No stamina in the game, so cooldown nodes; mana nodes for the staff.
+    Node attack speed counts inside the +100% cap. DECISION: X / C / T are the 3 equipped specials, Z stays the weapon skill; a 4th touch button (Skill4).
+  - DECISION: a special is a move like any other (same server path and rate rules as the Z skill); no new clip, each uses a clip the type already has.
+  - Rules tests (real Net): free picks 3/3 then refused at 0; node before its parent, no points, fake id, closed tree: refused; open too poor refused,
+    1,500 Gold ok; equip 3 ok, 4th refused, locked and other type refused. Rejoin through the DataStore kept picks, nodes, open tree. A Rebirth kept
+    25 nodes, 3 equipped, XP. Hits on 3 boars gave +26 XP. Full Sword tree read on Play: damage 3.4 to 4.1, attack speed 0 to .09, crit .05 to .09,
+    cooldown .90, reach .08, finisher .33, block .64, aura attribute set.
+  - Respec: Spear 2,000 Gold, 25 nodes to 0, XP kept. Sword (3 free nodes): 2,000 Gold, 3 picks back. The 10-minute free window was NOT tested.
+  - By mouse in the window: Root with "Unlock (free pick)", Whirlwind "Equip" (becomes "Unequip"), both reached the server.
+  - All 30 specials accepted by the server on UseSkill. Mana spent on the staff. First run: 12 "resource" answers, all my test going faster than
+    the weapon's own attack gap; 3.4 s apart they all pass. The 30 clips played through the receive path (Swing to self): 0 errors.
+  - BUG FOUND by key test, fixed: the client kept cooldowns by slot, so after a weapon change X only shook until the old skill's cooldown ended. Now per
+    skill like the server; the slot shows the right time when the weapon comes back (Heavy 20 s, Spear none, Heavy back 17 s).
+  - BUG FOUND on phone, fixed: Skills window text overflowed the details panel, the Free picks counter hid under the graph. Side panel wider, name
+    smaller, cost in the effect label. The "Needs" line stays, joined to the cost.
+  - Aura particles were big squares: size cut in half; in the burst they are small sparkles.
+  - Log: 0 script errors in the Studio log file for all runs, including a fresh Play on the last code. LogService:GetLogHistory only returned 1-2 entries in
+    this Play, so the file is what I read.
+  - NOT tested: a real tap on the touch buttons (the emulator takes no mouse; the 4 buttons show, no overlap; Skill4 uses the same path as 1-3); 2 real
+    players (aura and Swing to others: only by Swing to self); the 900 XP per minute cap; a real play session for balance. The longest special text on
+    the phone panel was not looked at (the label scales to fit). The slot icons of specials are the weapon type's, so 3 equipped specials look alike.
+  - Test profile: changed by Admin and normal play (all trees full except Spear, level 60, Gold about 47K). Not reset.
+
+- PART 5, Rebirth Protection (Studio agent). `Config/RebirthProtection`, `Services/ProtectionService`, `UI/Protection`; prices in
+  docs/rebirth_protection_prices.md; profile version 2.
+  - "Premium pets" were the 4 Robux species and a stored `premium` flag. Removed: the flag (cleared at load, no free protection),
+    its Rebirth rule, its "cannot be released" rule, its crown badge and every visible word. DECISION: the 4 species stay as
+    "Special" pets, still Robux. DECISION: the "Premium Eggs" tab is now "Diamond Eggs" (same eggs, prices), since the owner wants
+    no old wording. 99 lines of code still say premium (`species.Premium`, `BuyPremiumEgg`, `grantPremium`, comments): identifiers
+    of those pets and eggs, nothing a player reads. Old briefs in docs/ keep their history.
+  - DECISION: 8 real rarities, so the curve continues: 5 / 12 / 30 / 75 / 190 / 475 / 1200 / 3000.
+  - DECISION: a protected item can still be sold one at a time, after a warning (the server needs `confirmed`); bulk sell skips it.
+    There is no fusion or upgrade that consumes items in the game.
+  - Purchase tests (real Net): 3 Diamonds: refused. Enough: 18 taken (Uncommon, zone 4 = 12 x 1.45 = 17.4). Already protected, fake id:
+    refused. 8 requests at once: 1 accepted. The wrong-type call only got "Too fast", so it was not exercised. Shown price = config
+    price. Armor (Rare, zone 1) 30, pet (Uncommon) 12, weapon (Legendary, zone 1) 190: all match the table.
+  - Rebirth test: from 12 weapons, 9 armor, 6 pets, 4 protected: kept exactly those 4 with their flags and prices; equipped weapon,
+    Chest and pet still equipped; Diamonds 1,750 and keys kept; Gold 0; back in the Hub.
+  - Guards: protected armor, weapon, pet refused without confirmation; bulk sell of 1 protected + 1 normal sold 1.
+  - Rejoin: new Play, through the DataStore: 4 protected items with prices 190, 18, 30, 12; Version 2.
+  - Old save: `DataService.Migrate` on a fake profile with `premium = true`: flag gone, not protected, version 2. NOT tested
+    through a real load (no stored profile with the old field, and I did not write one).
+  - Screens checked: shields on Weapons (PC), Pets (phone emulator), popup with missing Diamonds, Rebirth keep / lose card. In
+    the phone shot most pet pictures were still loading; not checked further.
+  - Log during these Plays: 0 script errors. NOT tested: Buy in the popup by click (the purchase was tested by request), Rebirth by the
+    real button with protected items, selling through the warning, 2 players.
+
 - PART 4, zone unlock and stat prices (Studio agent).
   - Zones: `Config/RebirthZoneUnlock` + Net "BuyZoneUnlock" (ZoneService). DECISION: "after a Rebirth" keeps the old count: zone z
     needs z - 1 Rebirths and zone z - 1 open, plus the key of boss z - 1 and the Gold. The old free route (reopen the boss room

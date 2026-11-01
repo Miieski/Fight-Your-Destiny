@@ -1,7 +1,7 @@
 --!strict
--- Skills: 3 slots on the HUD (keys Z / X / C on PC, editable in Settings > Keys; LB / RB / Y on a gamepad; touch buttons
--- next to Attack on mobile). Slot 1 (Z) is the basic skill of the equipped weapon's category (Skills.Basic); slots 2 and 3
--- come from profile.EquippedSkills = { [slot 2..3] = skillId } (none exist yet).
+-- Skills: 4 slots on the HUD (keys Z / X / C / T on PC, editable in Settings > Keys; LB / RB / Y / D-pad up on a gamepad; touch
+-- buttons next to Attack on mobile). Slot 1 (Z) is the basic skill of the equipped weapon's category (Skills.Basic); slots 2
+-- to 4 are the special attacks chosen in the skill tree: profile.EquippedSkills = { [category] = { skillId, ... } }, at most 3.
 -- A skill entry:
 --   {
 --     Id = "sword_dash_slash",      -- unique id
@@ -10,11 +10,14 @@
 --     Cooldown = 8,                 -- seconds, checked on the server
 --     Category = "Sword",           -- the weapon category it belongs to; its move is Config/WeaponMoves Moves[Category].Skill
 --     Cost = nil,                   -- mana cost (the slot shakes when it is missing)
+--     Move = nil,                   -- a special attack: its key in Config/WeaponMoves Moves[Category]
 --     Element = nil,                -- optional element: tints the slot frame (Config/Skills ELEMENT_COLORS)
 --   }
+local Specials = require(script.Parent.WeaponSpecials)
+
 local Skills = {}
 
-Skills.SLOT_COUNT = 3
+Skills.SLOT_COUNT = 4
 Skills.USE_INTERVAL = 0.2 -- seconds between two UseSkill requests of a player (server rate limit)
 Skills.COOLDOWN_TOLERANCE = 0.15 -- seconds a skill may come early (network jitter)
 Skills.RESOURCE_ERROR = "resource" -- UseSkill answer when the cost is missing: the slot shakes
@@ -48,13 +51,21 @@ for _, skill in ipairs(Skills.List) do
 	Skills.ById[skill.Id] = skill
 	Skills.Basic[skill.Category] = skill
 end
+for category, list in pairs(Specials) do
+	for _, special in ipairs(list) do
+		local skill = { Id = special.Key, Name = special.Name, Icon = category, Cooldown = special.Cooldown, Category = category, Cost = special.Cost, Move = special.Key }
+		table.insert(Skills.List, skill)
+		Skills.ById[skill.Id] = skill
+	end
+end
 
 -- The skill in a slot for this weapon category and these equipped skills.
 function Skills.at(slot: number, category: string?, equipped: any): { [string]: any }?
 	if slot == 1 then
 		return if category then Skills.Basic[category] else nil
 	end
-	local id = if typeof(equipped) == "table" then equipped[slot] else nil
+	local list = if typeof(equipped) == "table" and category then equipped[category] else nil
+	local id = if typeof(list) == "table" then list[slot - 1] else nil
 	return if typeof(id) == "string" then Skills.ById[id] else nil
 end
 

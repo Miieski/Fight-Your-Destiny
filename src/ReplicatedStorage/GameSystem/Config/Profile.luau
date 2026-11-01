@@ -6,7 +6,7 @@ local Settings = require(script.Parent.Settings)
 
 local Profile = {}
 
-Profile.VERSION = 2
+Profile.VERSION = 3
 
 Profile.Store = {
 	Name = "PlayerProfiles_v1",
@@ -40,7 +40,10 @@ function Profile.new(): { [string]: any }
 		Eggs = {},
 		Pets = {}, -- [uid] = { id = "plains_pet1", rarity = 1, locked = false, mutation?, size?, Protected?, ProtectedPricePaid? }
 		EquippedPets = {}, -- array of uids
-		EquippedSkills = {}, -- [slot 2..3] = skill id (Config/Skills); slot 1 is the weapon's
+		EquippedSkills = {}, -- [category] = { skill id, ... } the special attacks of slots 2..4; slot 1 is the weapon's (Config/Skills)
+		Mastery = {}, -- [category] = { XP, Open, Nodes = { [nodeId] = true }, Free = { [nodeId] = true } } (Config/WeaponMastery): kept for life
+		FreePicks = 3, -- free nodes left
+		FreePickAt = 0, -- os.time() of the first free pick (the free respec window)
 		Mana = 100, -- Services/ManaService writes it in place (no patch to the client: attributes Mana / MaxMana)
 		Trophies = {},
 		Index = {},
