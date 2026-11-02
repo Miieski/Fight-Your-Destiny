@@ -1659,3 +1659,21 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
 | `tundra_ground_clump` | 120 |
 | `tundra_lake_shards` (round 9 part 10, shore of the Tundra_2 lake) | 92 |
 | `tundra_ice_ramp` (round 9 part 11, Tundra_3, the look only: `Ramp` and `RampSide` stay as colliders) | 2,198 + 1 plate |
+
+## Portal ruins (round 9 part 14)
+
+Client-only: no copy in the map. Template `MapProps.portal_ruins_<zone>`, client copy `Assets.PortalRuins.<Zone>`, one sample in each zone's preview block, medium row (forced: 31 studs wide, attribute `SizeClass`). Plains has none, it is always open. 52-54 parts, 2 invisible stump colliders, top 5.56. At most one stands per player, and only within 400 studs.
+
+| Template | Cover | Tris |
+|---|---|---|
+| `portal_ruins_desert` | sand drifts, dry tufts | 3,302 |
+| `portal_ruins_jungle` | roots, moss, ivy, ferns | 3,620 |
+| `portal_ruins_tundra` | snow caps and drifts, ice shards, icicles | 2,828 |
+| `portal_ruins_swamp` | slime puddles and drips, dead roots, mushrooms | 4,148 |
+| `portal_ruins_volcano` | ash, ember cracks, black rock | 2,762 |
+| `portal_ruins_hell` | soot, red cracks, bone horns | 2,806 |
+| `portal_ruins_heaven` | cloud banks, golden ivy | 3,772 |
+| `portal_ruins_dead` | pale moss, pale roots, ghost mushrooms, ribs | 3,320 |
+| `portal_ruins_abyss` | coral, seaweed, barnacles | 3,952 |
+| `portal_ruins_mechanical` | gears, copper pipes, rust plates | 3,782 |
+| `portal_ruins_void` | dust, dark crystals, floating shards | 2,860 |

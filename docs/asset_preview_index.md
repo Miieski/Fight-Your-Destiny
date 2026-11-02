@@ -8,7 +8,7 @@ Machine-readable copy: `docs/asset_preview_index.json`.
 
 ## Summary
 
-- 646 distinct assets, 744 zone assets (an asset used in several zones counts once per zone).
+- 657 distinct assets, 755 zone assets (an asset used in several zones counts once per zone).
 - 236 improved, 410 still old (captured as they are in the map).
 - Before the FIRST edit of an old template: some map copies carry their own tint (rocks, cliffs, reef rocks) or
   parts resized one by one (attribute MapPropScale, kept by the sync). Run `Sync.run({ only = { id }, dryRun = true })`
@@ -360,6 +360,7 @@ Sand biome: Dunes, Oasis, Canyon, Pyramid. Block `ByZone.02_Desert`, screenshot 
 | `desert_tree_dead_tree_a` | tree | medium | 14 | yes | old | redesign (low-poly pass) |
 | `desert_tree_palm_a` | tree | medium | 26 | yes | old | redesign (low-poly pass) |
 | `cart` | vehicle | medium | 2 | yes | improved | none (done) |
+| `portal_ruins_desert` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_02_Desert.jpg`):
 
@@ -466,6 +467,7 @@ Poison biome: Jungle Edge, River, Lost Temple, Temple Heart. Block `ByZone.03_Ju
 | `jungle_tree_a` | tree | large | 72 | yes | old | redesign (low-poly pass) |
 | `jungle_tree_b` | tree | large | 74 | yes | old | redesign (low-poly pass) |
 | `jungle_tree_c` | tree | large | 69 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_jungle` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_03_Jungle.jpg`):
 
@@ -556,6 +558,7 @@ Frost biome: Snowy Plains, Frozen Lake, Mountain, Ice Citadel. Block `ByZone.04_
 | `tundra_tree_snow_pine_b` | tree | large | 118 | yes | old | redesign (low-poly pass) |
 | `tundra_tree_snow_pine_c` | tree | large | 113 | yes | old | redesign (low-poly pass) |
 | `pirate_ship` | vehicle | large | 1 | yes | improved | none (done) |
+| `portal_ruins_tundra` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_04_Tundra.jpg`):
 
@@ -648,6 +651,7 @@ Curse biome: Marsh, Dead Forest, Witch Village, Giant Cauldron. Block `ByZone.05
 | `swamp_tree_gate` | tree | large | 1 | yes | improved | none (done) |
 | `swamp_tree_twisted_tree_b` | tree | large | 81 | yes | old | redesign (low-poly pass) |
 | `swamp_rowboat` | vehicle | medium | 2 | yes | improved | none (done) |
+| `portal_ruins_swamp` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_05_Swamp.jpg`):
 
@@ -730,6 +734,7 @@ Burn biome: Volcano Foot, Magma Mine, Lava River, Crater. Block `ByZone.06_Volca
 | `volcano_tree_dead_tree_charred_b` | tree | medium | 23 | yes | old | redesign (low-poly pass) |
 | `cart` | vehicle | medium | 1 | yes | improved | none (done) |
 | `volcano_vehicle_mine_cart_lava` | vehicle | medium | 5 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_volcano` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_06_Volcano.jpg`):
 
@@ -807,6 +812,7 @@ Hellfire biome: Hellish Plains, Hell City, Castle Entrance, Throne Room. Block `
 | `hell_statue_kennel_bones` | statue | medium | 1 | yes | old | redesign (low-poly pass) |
 | `hell_tree_bone_tree_a` | tree | large | 12 | yes | old | redesign (low-poly pass) |
 | `hell_tree_bone_tree_b` | tree | large | 9 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_hell` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_07_Hell.jpg`):
 
@@ -889,6 +895,7 @@ Holy biome: Sky Island, Cloud Bridge, Castle Entrance, Throne Room. Block `ByZon
 | `heaven_tree_golden_tree_a` | tree | medium | 26 | yes | old | redesign (low-poly pass) |
 | `heaven_tree_golden_tree_b` | tree | medium | 28 | yes | old | redesign (low-poly pass) |
 | `heaven_tree_golden_tree_c` | tree | medium | 28 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_heaven` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_08_Heaven.jpg`):
 
@@ -972,6 +979,7 @@ Soul Drain biome: Graveyard, Catacombs, Haunted Cathedral, Royal Sarcophagus Roo
 | `dead_statue_tombstone_c` | statue | small | 49 | yes | old | redesign (low-poly pass) |
 | `dead_tree_grave_a` | tree | large | 19 | yes | old | redesign (low-poly pass) |
 | `dead_tree_grave_b` | tree | medium | 51 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_dead` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_09_Dead.jpg`):
 
@@ -1065,6 +1073,7 @@ Tidal biome: Coral Reef, Shipwreck, Abyssal Trench, Sunken Palace. Block `ByZone
 | `abyss_vehicle_mast_broken` | vehicle | large | 5 | yes | old | redesign (low-poly pass) |
 | `pirate_ship` | vehicle | large | 1 | yes | improved | none (done) |
 | `rowboat` | vehicle | medium | 4 | yes | improved | none (done) |
+| `portal_ruins_abyss` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_10_Abyss.jpg`):
 
@@ -1146,6 +1155,7 @@ Shock biome: Abandoned Factory, Industrial Sewers, Control Center, Reactor Core.
 | `mechanical_sign_screen_wall` | sign | medium | 14 | yes | old | redesign (low-poly pass) |
 | `mechanical_sign_warning_sign` | sign | medium | 21 | yes | old | redesign (low-poly pass) |
 | `mechanical_statue_energy_pillar` | statue | large | 14 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_mechanical` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_11_Mechanical.jpg`):
 
@@ -1222,6 +1232,7 @@ Gravity biome: Void Island, Crystal Forest, Voyagers' City, Heart of the Void. B
 | `void_tree_crystal_tree_a` | tree | large | 27 | yes | old | redesign (low-poly pass) |
 | `void_tree_crystal_tree_b` | tree | large | 31 | yes | old | redesign (low-poly pass) |
 | `void_tree_crystal_tree_c` | tree | large | 28 | yes | old | redesign (low-poly pass) |
+| `portal_ruins_void` | gate | medium | 0 | yes | new | none (done, client only: the next portal's ruin) |
 
 NPCs and enemies (14; area on the left of the block, behind the title; screenshot `docs/screenshots/asset_preview/chars_12_Void.jpg`):
 

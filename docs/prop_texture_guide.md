@@ -3894,6 +3894,16 @@ Palette recipe. Facet colours, bottom to top; the layers tilt and wave (`y + 3.5
 
 Don't: long strata ledges along the wall. Tried twice, on a rough shell they hang in the air and read as planks.
 
+## Portal ruins (owner task round 9 part 14, 2026-11-02)
+
+Same stones as the portal: a ruin is 38-39 of the 71 real bricks of `portal_frame`, in place (steps, stumps) or lying, so nothing new has to match them. What makes it a zone is the cover, a few low pads and small shapes, never a texture on the stone.
+- Stumps: 4 courses on the tall side, 2 or 3 on the short one, top bricks shifted and tilted a little, sharp stubs (`Chips`) on top. The pile lies under the tall stump; the middle stays clear, the rune must be seen from the lane.
+- Each fallen stone wears a pad of the zone's blanket colour (sand, moss, snow, slime, ash, soot, cloud, pale moss, sea growth, rust, void dust): this, not the ground drifts, is what reads from afar. Ground drifts go in FRONT of the stones or they are not seen.
+- Sand and snow on the sand-coloured plaza need shape, not colour: 3 stepped pads and 2 wedge ends.
+- A chamfer's cut faces come out pale grey: a dark pad gets a light outline. `pad()` sets `UsePartColor` on the pad before merging; a light stone keeps its pale bevel, as the portal's do.
+- Images: `ruin_cracks` (dark, alpha, Transparency 0.1) and `ruin_rune` (white, worn, tinted with the zone colour by Decal.Color3, Transparency 0.08), both on invisible plates over the steps, `tools/make_ruin_textures.py`. A dim PointLight (0.35, range 9) gives the rune its glow. Neon only for embers, ghost mushrooms and Void shards.
+- Sign: wooden board in the wood UI style, a SurfaceGui built on the client, 60 px per stud.
+
 ## Boss seals (owner task round 9 part 5, 2026-11-01)
 
 Flat circles of the boss rooms, now carved seals. `tools/make_boss_seals.py` draws them, `tools/BossSeals.luau` lays them, ids in `Config/PropTextures.BossSeal`. They are decoration: no script uses them. Keep centre and outer size if a room changes.

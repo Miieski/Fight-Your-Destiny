@@ -679,6 +679,18 @@ function B.plan(): any
 		a.sizeClass = sizeClass(a.largest)
 		a.host = false
 	end
+	-- a template only clients build has no copy in the map (attribute PreviewZone, the portal ruins): it still gets its sample in that zone's block
+	for _, t in ipairs(folder:GetChildren()) do
+		local zoneId = t:GetAttribute("PreviewZone")
+		if t:IsA("Model") and type(zoneId) == "string" then
+			local a = asset(t.Name)
+			a.zones[zoneId] = 0
+			a.category = categoryOf(t.Name, false)
+			a.quality = B.QUALITY[t.Name] or "improved"
+			a.sizeClass = t:GetAttribute("SizeClass")
+			a.host = false
+		end
+	end
 	-- hosts: a new asset whose representative holds nested copies (tagged before its capture)
 	plan.nested = {}
 	for _, id in ipairs(plan.order) do
@@ -728,7 +740,7 @@ local function zoneScale(a: any, zoneId: string): number
 			table.insert(list, s)
 		end
 	end
-	return median(list)
+	return if #list > 0 then median(list) else 1 -- a template without a copy in the map
 end
 
 ---------------------------------------------------------------------

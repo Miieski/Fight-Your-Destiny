@@ -4628,6 +4628,23 @@
      "newTemplate": false,
      "totalInstances": 6,
      "quality": "improved"
+    },
+    {
+     "zones": [
+      "Desert"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_desert",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Desert",
@@ -6179,6 +6196,23 @@
      "newTemplate": true,
      "totalInstances": 69,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Jungle"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_jungle",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Jungle",
@@ -7468,6 +7502,23 @@
      "newTemplate": false,
      "totalInstances": 3,
      "quality": "improved"
+    },
+    {
+     "zones": [
+      "Tundra"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_tundra",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Tundra",
@@ -8741,6 +8792,23 @@
      "newTemplate": false,
      "totalInstances": 2,
      "quality": "improved"
+    },
+    {
+     "zones": [
+      "Swamp"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_swamp",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Cursed Swamp",
@@ -9941,6 +10009,23 @@
      "newTemplate": false,
      "totalInstances": 4,
      "quality": "new"
+    },
+    {
+     "zones": [
+      "Volcano"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_volcano",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Volcano",
@@ -10957,6 +11042,23 @@
      "newTemplate": true,
      "totalInstances": 9,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Hell"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_hell",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Hell",
@@ -12070,6 +12172,23 @@
      "newTemplate": true,
      "totalInstances": 28,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Heaven"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_heaven",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Heaven",
@@ -13199,6 +13318,23 @@
      "newTemplate": true,
      "totalInstances": 51,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Dead"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_dead",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Realm of the Dead",
@@ -14483,6 +14619,23 @@
      "newTemplate": false,
      "totalInstances": 6,
      "quality": "improved"
+    },
+    {
+     "zones": [
+      "Abyss"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_abyss",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Abyss",
@@ -15547,6 +15700,23 @@
      "newTemplate": true,
      "totalInstances": 14,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Mechanical"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_mechanical",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "Mechanical City",
@@ -16577,6 +16747,23 @@
      "newTemplate": true,
      "totalInstances": 28,
      "quality": "old"
+    },
+    {
+     "zones": [
+      "Void"
+     ],
+     "sizeVariants": 0,
+     "resizedParts": 0,
+     "propId": "portal_ruins_void",
+     "instances": 0,
+     "largest": 31,
+     "ownTint": 0,
+     "sizeClass": "medium",
+     "category": "gate",
+     "inPreview": true,
+     "newTemplate": true,
+     "totalInstances": 0,
+     "quality": "improved"
     }
    ],
    "name": "The Void",

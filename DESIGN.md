@@ -332,6 +332,10 @@ precedence over any older text here about a zone being "redone".
   only. The server keeps refusing the teleport; the Zones menu shows the zone as locked with what it takes. When the zone opens the portal assembles
   from its real bricks (`Assets.PortalBricks`, made by `DevTools.PortalBricks`), bottom up, keystone last, then it lights up. Open at join: finished at
   once. Locked again: gone at once. Opened while far away: it builds when the player comes near. A player on the spot keeps it without collision until they walk out.
+* Round 9 part 14: the NEXT portal to open (the first locked zone, Plains is always open) stands in ruins for that player, in its zone's own look; later locked
+  portals stay invisible. The ruin is made of the portal's real bricks (`Assets.PortalRuins.<Zone>`, `Config/PortalRuins`, `DevTools.PortalRuins`), only its two stumps
+  collide, and its sign shows the live buy rule of `Config/RebirthZoneUnlock` (boss key, Gold, Rebirths) with a prompt: Buy when ready, otherwise Open Zones menu.
+  When the zone opens the portal builds itself from the ruin. The Zones menu names the next zone and has a Locate button: a 10 s Beam from the player to the ruin, from anywhere.
 * Round 9: a door that has finished opening is hidden for that player, so a leaf can never show inside a wall; it comes back if the door closes again
   (a Rebirth keeps gates and zones: `planReset` leaves them alone; only Admin relocks today). Sliding leaves travel their width + frame + 0.5 and go into the wall, or into a stone pocket (`gate_mine`, `heaven_gate_4`, `dead_gate_4`).
 
@@ -517,7 +521,7 @@ The hub is the central safe area (no combat). Players spawn here on join.
 * **Trophy Merchant:** sells head trophies.
 * **Rebirth Altar** and **Rebirth Shop.**
 * **Diamond Shop:** Robux packs, boosts, skins, game passes.
-* **Zone Portals:** one per zone, invisible until the zone is opened (Round 9; requirements in the Zones menu). Walking into an
+* **Zone Portals:** one per zone, invisible until the zone is opened (Round 9; requirements in the Zones menu); the next one to open stands in ruins with a sign (Round 9 part 14). Walking into an
   unlocked portal teleports the player **directly to sub-zone 1** of that zone (no sub-zone
   choice; the Zones menu in the HUD is where a sub-zone is chosen).
 * **AFK Zone**, **Team Board**, **Leaderboards**, **Codes** board and the **Tutorial guide** NPC.

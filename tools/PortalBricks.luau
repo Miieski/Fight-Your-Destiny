@@ -184,6 +184,9 @@ function PortalBricks.build(): string
 		old:Destroy()
 	end
 	folder.Parent = sets
+	for i, stone in ipairs(folder:GetChildren()) do
+		stone:SetAttribute("BrickId", i) -- DevTools.PortalRuins names them: a ruin holds some of them, by this id
+	end
 	local bricks, parts = #folder:GetChildren(), 0
 	for _, item in ipairs(folder:GetDescendants()) do
 		if item:IsA("BasePart") then

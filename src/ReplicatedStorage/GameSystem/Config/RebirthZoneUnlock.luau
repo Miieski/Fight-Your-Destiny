@@ -1,7 +1,7 @@
 --!strict
 -- After a Rebirth, the next zone is bought (Round 8 part 4): the BOSS KEY of the previous zone + GOLD. The player no longer walks
--- through the whole zone again. ZoneService handles Net "BuyZoneUnlock" with these rules; the Zones menu shows them (a
--- locked portal shows nothing, Round 9 part 12). A zone bought this way gives its entry and first area; its other sub-zones keep their prices.
+-- through the whole zone again. ZoneService handles Net "BuyZoneUnlock" with these rules; the Zones menu shows them, and so does the sign on the
+-- next portal's ruin (Round 9 part 14; a later locked portal shows nothing). A zone bought this way gives its entry and first area; its other sub-zones keep their prices.
 -- Price = (price of the LAST purchasable sub-zone of the previous zone + price of the 2nd sub-zone of this zone) / 2, floored
 -- to 2 significant digits. Review table: docs/rebirth_zone_unlock_prices.md.
 local Zones = require(script.Parent.Zones)
@@ -34,7 +34,7 @@ for _, zone in ipairs(Zones.List) do
 	RebirthZoneUnlock.Prices[zone.Id] = RebirthZoneUnlock.priceOf(zone.Id)
 end
 
-export type Status = { eligible: boolean, open: boolean, hasKey: boolean, enoughGold: boolean, ready: boolean, price: number, previous: any, reason: string? }
+export type Status = { eligible: boolean, open: boolean, hasKey: boolean, enoughGold: boolean, ready: boolean, price: number, previous: any, reason: string?, rebirths: number, needRebirths: number }
 
 -- For a profile-like table { Zones, Keys, Rebirths, Gold } (server profile or client State).
 -- eligible: this is the zone to buy now (the previous one is open and enough Rebirths are done).
@@ -42,14 +42,15 @@ function RebirthZoneUnlock.status(data: { [string]: any }, zoneId: string): Stat
 	local zone = Zones.ById[zoneId]
 	local previous = zone and Zones.List[zone.Index - 1]
 	local price = RebirthZoneUnlock.Prices[zoneId] or 0
-	local result: Status = { eligible = false, open = false, hasKey = false, enoughGold = false, ready = false, price = price, previous = previous, reason = "Not available" }
+	local result: Status = { eligible = false, open = false, hasKey = false, enoughGold = false, ready = false, price = price, previous = previous, reason = "Not available", rebirths = 0, needRebirths = 0 }
 	if not (zone and previous) then
 		result.open = zone ~= nil
 		return result
 	end
 	result.open = Zones.isUnlocked(data.Zones, zoneId)
 	local rebirths = math.floor(tonumber(data.Rebirths) or 0)
-	result.eligible = not result.open and not Zones.NOT_BUILT[zoneId] and Zones.isUnlocked(data.Zones, previous.Id) and rebirths >= zone.Index - 1
+	result.rebirths, result.needRebirths = rebirths, zone.Index - 1
+	result.eligible = not result.open and not Zones.NOT_BUILT[zoneId] and Zones.isUnlocked(data.Zones, previous.Id) and rebirths >= result.needRebirths
 	result.hasKey = typeof(data.Keys) == "table" and data.Keys[previous.Id] == true
 	result.enoughGold = (tonumber(data.Gold) or 0) >= price
 	result.ready = result.eligible and result.hasKey and result.enoughGold

@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local Net = require(ReplicatedStorage.GameSystem.Net)
+local PortalRuins = require(ReplicatedStorage.GameSystem.Config.PortalRuins)
 local Sfx = require(ReplicatedStorage.GameSystem.Util.Sfx)
 local UIConfig = require(ReplicatedStorage.GameSystem.Config.UI)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
@@ -20,6 +21,7 @@ local Chips = require(Kit.Chips)
 local Components = require(Kit.Components)
 local Fade = require(Kit.Fade)
 local Icons = require(Kit.Icons)
+local RuinGuide = require(Kit.RuinGuide)
 local ZoneVisibility = require(Kit.ZoneVisibility)
 local Theme = require(Kit.Theme)
 local Window = require(Kit.Window)
@@ -40,6 +42,7 @@ local listPage: Frame
 local zonePage: Frame
 local preview: { icon: Frame, iconId: string?, title: TextLabel, description: TextLabel, boss: TextLabel, bossRow: Frame }
 local unlockBox: { frame: Frame, key: any, gold: any, button: any, zone: string? }
+local locateButton: any
 local header: { icon: Frame, iconId: string?, title: TextLabel, info: TextLabel }
 local shownZone: string? = nil
 local pendingZone: string? = nil -- zone page to show once the window has opened (signals are deferred)
@@ -62,6 +65,15 @@ local function zoneOpen(zoneId: string): boolean
 	local zone = Zones.ById[zoneId]
 	local open = State.get("Zones") or {}
 	return zone ~= nil and (zone.Index == 1 or open[zoneId] == true)
+end
+
+local function nextZone(): string?
+	return PortalRuins.nextZone(State.get("Zones"))
+end
+
+-- the next zone stands in ruins in the hub with its name on a sign: the menu names it too
+local function nameOf(id: string): string
+	return if id == nextZone() then Zones.ById[id].Name else ZoneVisibility.displayName(id)
 end
 
 local function subZoneOpen(zoneId: string, n: number): boolean
@@ -89,6 +101,7 @@ end
 -- page 1: zone list + preview -------------------------------------------------------------------------
 -- the zone to buy after a Rebirth: "Boss key: owned / missing", "Gold: price", Buy (the server decides)
 local function paintUnlock(id: string)
+	locateButton.Instance.Visible = id == nextZone()
 	local box = unlockBox
 	local status = if Zones.ById[id] then ZoneVisibility.unlockStatus(id) else nil
 	local show = status ~= nil and status.eligible
@@ -125,6 +138,17 @@ local function buyZone()
 	refreshPreview()
 end
 
+local function locate()
+	local id = shownPreview
+	if id and id == nextZone() then
+		RuinGuide.start(id)
+		if currentZone() ~= HUB then
+			Notifier.push({ Kind = "info", Text = string.format(PortalRuins.Locate.FarText, Zones.ById[id].Name), Icon = "MapPin" })
+		end
+		Window.close()
+	end
+end
+
 local function setPreview(id: string)
 	local isHub = id == HUB
 	local zone = Zones.ById[id]
@@ -135,7 +159,7 @@ local function setPreview(id: string)
 		preview.icon = ZoneVisibility.icon(iconFor(id), if isHub then nil else id, parent, { Size = UDim2.fromScale(0.62, 0.5), Position = UDim2.fromScale(0.5, 0.04), AnchorPoint = Vector2.new(0.5, 0) })
 		preview.iconId = id
 	end
-	preview.title.Text = if isHub then "Hub" else `Zone {zone.Index} - {ZoneVisibility.displayName(id)}`
+	preview.title.Text = if isHub then "Hub" else `Zone {zone.Index} - {nameOf(id)}`
 	-- kid-friendly UI: no description sentence; a hidden zone keeps its short "how to open"
 	preview.description.Text = if isHub or ZoneVisibility.isRevealed(id) then "" else ZoneVisibility.requirement(id)
 	preview.bossRow.Visible = not isHub
@@ -175,7 +199,7 @@ local function paintRow(id: string)
 	entry.pin.Visible = state == "here"
 	entry.soon.Visible = state == "soon"
 	if id ~= HUB then
-		entry.title.Text = ZoneVisibility.displayName(id)
+		entry.title.Text = nameOf(id)
 		local hidden = not ZoneVisibility.isRevealed(id)
 		if entry.hidden ~= hidden then
 			entry.hidden = hidden
@@ -234,7 +258,7 @@ local function makeRow(parent: Instance, id: string, name: string, order: number
 			Notifier.push({ Kind = "info", Text = `{ZoneVisibility.displayName(id)}: {UIConfig.Text.ComingSoon}` })
 		elseif not ZoneVisibility.isRevealed(id) then
 			-- no sub-zone page for a hidden zone: it would show its names
-			pinnedPreview = if ZoneVisibility.unlockStatus(id).eligible then id else nil
+			pinnedPreview = if ZoneVisibility.unlockStatus(id).eligible or id == nextZone() then id else nil
 			setPreview(id)
 			if not pinnedPreview then
 				Sfx.play("Denied")
@@ -499,6 +523,9 @@ function ZonesPage.build(ctx: any)
 		button = Components.Button({ Name = "BuyZone", Text = "Buy", Icon = "Gold", Style = "primary", TextSize = 24, Size = UDim2.new(0.7, 0, 0, Theme.TOUCH), Position = UDim2.new(0.5, 0, 1, -2), AnchorPoint = Vector2.new(0.5, 1), Parent = box, OnClick = buyZone }),
 		zone = nil,
 	}
+
+	locateButton = Components.Button({ Name = "Locate", Text = "Locate", Icon = "MapPin", Style = "go", TextSize = 22, Size = UDim2.new(0.42, 0, 0, Theme.TOUCH), Position = UDim2.new(1, -8, 0, 8), AnchorPoint = Vector2.new(1, 0), Parent = side, OnClick = locate })
+	locateButton.Instance.Visible = false
 
 	zonePage = Instance.new("Frame")
 	zonePage.Name = "SubZones"

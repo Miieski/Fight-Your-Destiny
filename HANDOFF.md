@@ -7,10 +7,10 @@ then the design documents in `docs/`:
 - `docs/boss_patterns_document.txt` - boss attack patterns, tools and workflow
 - `docs/weapon_system_document.txt` - 72 weapons, rarity, zone damage scaling, zone boost, shop
 
-## Latest: ROUND 9 (2026-11-02, all 13 parts done)
+## Latest: ROUND 9 (2026-11-02, all 13 parts and addendum Part 14 done)
 
 Decisions, numbers and what was not tested: top of docs/NIGHT_LOG.md. Sheets: `docs/before_after/R9-*`. Round 9 notes are in the lines below.
-Waiting on the owner: File > Save; the 5 questions at the end of the "ROUND 9 FINAL CHECK" entry in docs/NIGHT_LOG.md.
+Waiting on the owner: File > Save; the 5 questions at the end of the "ROUND 9 FINAL CHECK" entry in docs/NIGHT_LOG.md, and the 2 of the "PART 14" entry.
 Studio Play writes the real `PlayerProfiles_v1` of the test account: a Rebirth there wipes it like any Rebirth. Read the whole profile before one.
 
 ## Round 8 (2026-11-01)
@@ -30,6 +30,7 @@ Decisions and test numbers: docs/NIGHT_LOG.md. Rules so far:
 - Doors: unlock state is personal; animation data in `Config/DoorAnimations`, `Config/PortalBuild`.
 - Hub ground (Round 9 part 13): `DevTools.HubRound9` (skin, lanes, details), images `make_floor_textures.py --hub`. `F.hub` still lays the old pavers: run the 3 steps after it. `PlazaBorder`, `InnerRingDark`, `AltarDaisBorder`, `FountainSquareBorder` and the 12 `PortalLane` are Transparency 1 on purpose, they are still colliders: a full disc just under a floor loses to depth precision at a distance (`docs/prop_texture_guide.md` "Hub ground"). Same trap for any thin stacked floor.
 - Portals (Round 9): locked = nothing on that client (`Controllers/PortalController`, modes hidden / ghost / ramp / shown, over portal, frame and swirl). Bricks: `Assets.PortalBricks.<MapPropId>`, rebuilt by `DevTools.PortalBricks.build()` after a change to the `portal_frame` recipe. Lock text: one source, `Zones.requirementText`. Do not keep needed state in a weak table keyed by an Instance: the Lua wrapper can be collected while the Instance lives.
+- Portal ruins (Round 9 part 14): `Controllers/PortalRuinController` (client only: which ruin stands, sign, prompt), `Config/PortalRuins` (anchors, sign texts, build, Locate), `UI/Kit/RuinGuide` (Locate). `DevTools.PortalRuins.build(zone)` rebuilds `MapProps.portal_ruins_<zone>` and its client copy `Assets.PortalRuins.<Zone>`; a change to the `portal_frame` recipe needs `PortalBricks.build()` then all 11 ruins. A ruin brick is named by the attribute `BrickId`. Templates with the attribute `PreviewZone` have no map copy and still get a preview sample. `require(Config.PortalRuins:Clone())` fails: it needs its `Zones` sibling.
 - Skill trees: `Config/WeaponSkillTrees` (the map, generated), `Config/WeaponSpecials` (5 moves per type, added to `Config/WeaponMoves` and `Config/Skills`),
   `Services/MasteryService`, `UI/Pages/SkillTreePage`. Client cooldowns are per skill id in `SkillController`. Profile version 3.
 - Floors: `tools/FloorsRound8.luau` (`F.zone(name)`, `F.hub()`, `F.clear(name)`, idempotent), `tools/make_floor_textures.py`, ids in `Config/PropTextures.Ground`.
