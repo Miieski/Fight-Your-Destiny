@@ -7,9 +7,15 @@ then the design documents in `docs/`:
 - `docs/boss_patterns_document.txt` - boss attack patterns, tools and workflow
 - `docs/weapon_system_document.txt` - 72 weapons, rarity, zone damage scaling, zone boost, shop
 
-## Latest: ROUND 8 (2026-11-01, in progress)
+## Latest: ROUND 9 (2026-11-02, all 13 parts done)
 
-Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
+Decisions, numbers and what was not tested: top of docs/NIGHT_LOG.md. Sheets: `docs/before_after/R9-*`. Round 9 notes are in the lines below.
+Waiting on the owner: File > Save; the 5 questions at the end of the "ROUND 9 FINAL CHECK" entry in docs/NIGHT_LOG.md.
+Studio Play writes the real `PlayerProfiles_v1` of the test account: a Rebirth there wipes it like any Rebirth. Read the whole profile before one.
+
+## Round 8 (2026-11-01)
+
+Decisions and test numbers: docs/NIGHT_LOG.md. Rules so far:
 - Rebirth is a staged sequence (`RebirthService`, `Kit/Transition`, `Kit/InputLock`, `Config/Rebirth.Transition`): reset on copies,
   one commit, respawn in the Hub, save in the background, 8 s client watchdog.
 - `Window.close` always removes the backdrop; only `Window.open` keeps it when it swaps windows.

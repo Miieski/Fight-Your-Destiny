@@ -332,8 +332,8 @@ precedence over any older text here about a zone being "redone".
   only. The server keeps refusing the teleport; the Zones menu shows the zone as locked with what it takes. When the zone opens the portal assembles
   from its real bricks (`Assets.PortalBricks`, made by `DevTools.PortalBricks`), bottom up, keystone last, then it lights up. Open at join: finished at
   once. Locked again: gone at once. Opened while far away: it builds when the player comes near. A player on the spot keeps it without collision until they walk out.
-* Round 9: a door that has finished opening is hidden for that player, so a leaf can never show inside a wall; it comes back if a Rebirth closes
-  the door. Sliding leaves travel their width + frame + 0.5 and go into the wall, or into a stone pocket (`gate_mine`, `heaven_gate_4`, `dead_gate_4`).
+* Round 9: a door that has finished opening is hidden for that player, so a leaf can never show inside a wall; it comes back if the door closes again
+  (a Rebirth keeps gates and zones: `planReset` leaves them alone; only Admin relocks today). Sliding leaves travel their width + frame + 0.5 and go into the wall, or into a stone pocket (`gate_mine`, `heaven_gate_4`, `dead_gate_4`).
 
 ### Weapon skill trees (Round 8)
 One tree per weapon type, 25 nodes, for life (a Rebirth keeps them): stats, 3 special attacks + a keystone + an ultimate, the Aura of Mastery and
