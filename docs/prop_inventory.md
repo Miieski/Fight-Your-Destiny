@@ -1646,9 +1646,9 @@ Shell.RoofMoss (the 196 x 160 roof slab, colliding). No plate in the MapProps te
 15 new ground details, each one union, no collision, no shadow, all in `Decor.FloorDetail` (recipes: docs/prop_texture_guide.md "Ground"):
 | template | triangles |
 |---|---:|
-| `hub_ground_curb`, `plains_ground_curb`, `beach_ground_curb`, `desert_ground_curb`, `canyon_ground_curb`, `jungle_ground_curb`, `tundra_ground_curb` (round 9: foot added, ground texture on the union) | about 205 |
+| `hub_ground_curb`, `plains_ground_curb`, `beach_ground_curb`, `desert_ground_curb`, `canyon_ground_curb`, `jungle_ground_curb`, `tundra_ground_curb` (round 9: foot added, ground texture on the union; hub curb on `hub_cobble` since part 13) | about 205 |
 | `mine_ground_flagstones`, `mine_ground_gravel` (round 9 part 3, Plains_4 only, no collision) | 84, 300 |
-| `hub_ground_pebbles` | 252 |
+| `hub_ground_pebbles` (36 on the grass, 14 on the ring road since round 9 part 13) | 252 |
 | `plains_ground_pebbles`, `desert_ground_chips`, `tundra_ground_chips` | 240-248 |
 | `plains_ground_tuft` | 140 |
 | `plains_ground_flowers` | 256 |

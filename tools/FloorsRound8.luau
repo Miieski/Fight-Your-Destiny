@@ -299,7 +299,7 @@ end
 
 local BUILD = {
 	mine_ground_gravel = function() return pebbles("mine_ground_gravel", 822, "8a7a68", "5c4c3e", 5, 1.6) end,
-	hub_ground_curb = function() return curb("hub_ground_curb", 811, { "c8bca8", "bdb09c", "d4c9b6", "b0a490" }, nil, "6fa84a", { key = "pavers", tint = "e8decc", alpha = 0.3 }) end,
+	hub_ground_curb = function() return curb("hub_ground_curb", 811, { "d6c29e", "c9b592", "dfcdac", "bda986" }, nil, "6fa84a", { key = "hub_cobble", tint = "e0c6a0", alpha = 0.3 }) end,
 	hub_ground_pebbles = function() return pebbles("hub_ground_pebbles", 812, "b8b0a0", "8c8478", 4, 1.4) end,
 	plains_ground_curb = function() return curb("plains_ground_curb", 813, { "9c7c52", "b08a58", "8c6e48", "c09a68" }, nil, "4f8a34", { key = "dirt", tint = "e8d8c0", alpha = 0.3 }) end,
 	beach_ground_curb = function() return curb("beach_ground_curb", 820, { "d8bc80", "e4cc94", "c8aa70", "f0dcaa" }, nil, "e4c278", { key = "sand", alpha = 0.3 }) end,
@@ -691,6 +691,7 @@ local HUB_TINT = {
 	AltarDais = Color3.fromRGB(245, 240, 232), FountainSquare = Color3.fromRGB(245, 240, 232), PortalLane = Color3.fromRGB(245, 240, 232), DockLane = Color3.fromRGB(255, 240, 205),
 }
 
+-- Round 9 part 13: this still lays the old pavers. After it run HubRound9 skin, lanes, details (docs/prop_texture_guide.md "Hub ground")
 function F.hub(): string
 	local d = workspace.Hub.Decor
 	clearIn(d, d)

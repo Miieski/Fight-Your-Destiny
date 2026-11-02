@@ -4,6 +4,7 @@
   python tools/make_floor_textures.py --cave   writes only the mine images of Round 9 part 3
   python tools/make_floor_textures.py --jungle writes only the jungle ground set of Round 9 part 9
   python tools/make_floor_textures.py --tundra writes only the frozen lake and ice ramp images of Round 9 parts 10 and 11
+  python tools/make_floor_textures.py --hub    writes only the hub ground set of Round 9 part 13
 
 Solid ground: drawn in their real colours (Texture.Color3 tints the variants). Fringe: a band with an uneven alpha, laid along a path
 edge so grass / sand / moss / snow creeps over the path (alpha 0 on both long sides, so it never shows a seam). Overlays: alpha only.
@@ -532,6 +533,239 @@ def cobble_fade(seed, palette, moss):
 	return out
 
 
+HUB_STONE = ["dccdae", "d3c3a2", "e3d6ba", "cbb998"]
+HUB_JOINT = "b5a283"
+HUB_MOSS = ("6fa84a", "5f8f3e", "7db858")
+
+
+def smooth(t):
+	t = max(0.0, min(1.0, t))
+	return t * t * (3 - 2 * t)
+
+
+def rounded_box(px, py, hx, hy, rad):
+	"""Signed distance to a box with round corners: negative inside."""
+	qx, qy = abs(px) - hx + rad, abs(py) - hy + rad
+	return math.hypot(max(qx, 0), max(qy, 0)) + min(max(qx, qy), 0) - rad
+
+
+def hub_paint(base, depth, jw, joint, gradient, soft):
+	"""One pixel of a hub stone: flat tone, a very light slope across the stone, a soft rim, then the joint. No grain, no shadow."""
+	color = tuple(c * (1 + gradient + (soft - 0.5) * 0.05 + 0.03 * (1 - smooth((depth - jw) / 7))) for c in base)
+	return mix(joint, color, smooth(depth / jw))
+
+
+def hub_courses(seed, rows, units, palette=HUB_STONE, joint=HUB_JOINT, radius=0.26, jw=3.4, sizes=(2, 2, 3, 1), wobble=5):
+	"""Round 9 part 13: rows of big stones with round corners, each row cut into its own lengths, tileable. Fewer, larger shapes than stones()."""
+	rng = random.Random(seed)
+	row_h = S / rows
+	unit = S / units
+	layout = []
+	for _ in range(rows):
+		cuts, left = [], units
+		while left > 0:
+			piece = min(rng.choice(sizes), left)
+			cuts.append(piece)
+			left -= piece
+		at, slabs_row = 0, []
+		for piece in cuts:
+			a = rng.uniform(0, math.tau)
+			slabs_row.append((at * unit, (at + piece) * unit, hexrgb(rng.choice(palette)), math.cos(a), math.sin(a), rng.uniform(0.975, 1.025)))
+			at += piece
+		layout.append((rng.uniform(0, S), slabs_row))
+	warp_x, warp_y = fbm(seed + 3, 5, 2), fbm(seed + 5, 5, 2)
+	soft = stretch(fbm(seed + 7, 3, 2))
+	joint_color = hexrgb(joint)
+	pixels = []
+	for y in range(S):
+		for x in range(S):
+			wy = (y + (warp_y[y][x] - 0.5) * wobble * 2) % S
+			r = int(wy // row_h) % rows
+			shift, slabs_row = layout[r]
+			wx = (x + (warp_x[y][x] - 0.5) * wobble * 2 + shift) % S
+			for a, b, base, gx, gy, tone in slabs_row:
+				if wx < b:
+					break
+			hx, hy = (b - a) / 2, row_h / 2
+			px, py = wx - (a + b) / 2, wy % row_h - hy
+			depth = -rounded_box(px, py, hx, hy, min(hx, hy) * radius * 2)
+			slope = (px * gx + py * gy) / max(hx, hy) * 0.035
+			color = hub_paint(tuple(c * tone for c in base), depth, jw, joint_color, slope, soft[y][x])
+			pixels.append(tuple(int(max(0, min(255, c))) for c in color))
+	im = Image.new("RGB", (S, S))
+	im.putdata(pixels)
+	return im
+
+
+def hub_diamonds(seed, n, palette=HUB_STONE, joint=HUB_JOINT, radius=0.24, jw=3.4):
+	"""Round 9 part 13: the same stones laid on the diagonal, for the inner floor: told apart by the pattern, not by another look."""
+	rng = random.Random(seed)
+	s = S / n
+	side = s / math.sqrt(2)
+	table = [[(hexrgb(rng.choice(palette)), rng.uniform(0, math.tau), rng.uniform(0.975, 1.025)) for _ in range(2 * n)] for _ in range(2 * n)]
+	warp_x, warp_y = fbm(seed + 3, 5, 2), fbm(seed + 5, 5, 2)
+	soft = stretch(fbm(seed + 7, 3, 2))
+	joint_color = hexrgb(joint)
+	pixels = []
+	for y in range(S):
+		for x in range(S):
+			wx, wy = x + (warp_x[y][x] - 0.5) * 8, y + (warp_y[y][x] - 0.5) * 8
+			u, v = (wx + wy) / s, (wx - wy) / s
+			i, j = math.floor(u), math.floor(v)
+			base, a, tone = table[(i + j) % (2 * n)][(i - j) % (2 * n)]
+			px, py = (u - i - 0.5) * side, (v - j - 0.5) * side
+			depth = -rounded_box(px, py, side / 2, side / 2, side * radius)
+			slope = (px * math.cos(a) + py * math.sin(a)) / (side / 2) * 0.035
+			color = hub_paint(tuple(c * tone for c in base), depth, jw, joint_color, slope, soft[y][x])
+			pixels.append(tuple(int(max(0, min(255, c))) for c in color))
+	im = Image.new("RGB", (S, S))
+	im.putdata(pixels)
+	return im
+
+
+def hub_rings(seed, courses, palette=HUB_STONE, joint=HUB_JOINT, jw=2.6):
+	"""Round 9 part 13: one disc, laid once on the end of a cylinder (tile = diameter): courses of curved stones around the centre. courses = (inner, outer, stones), radius 1 = the rim."""
+	rng = random.Random(seed)
+	rows = []
+	for inner, outer, count in courses:
+		rows.append((inner, outer, count, rng.uniform(0, 1), [(hexrgb(rng.choice(palette)), rng.uniform(0.975, 1.025), rng.uniform(-1, 1)) for _ in range(count)]))
+	soft = stretch(fbm(seed + 7, 3, 2))
+	joint_color = hexrgb(joint)
+	R = S / 2
+	pixels = []
+	for y in range(S):
+		for x in range(S):
+			dx, dy = x + 0.5 - R, y + 0.5 - R
+			rr = math.hypot(dx, dy) / R
+			row = next((c for c in rows if rr < c[1]), rows[-1])
+			inner, outer, count, turn, stones_row = row
+			f = ((math.atan2(dy, dx) / math.tau + 0.5) * count + turn) % count
+			i = int(f)
+			base, tone, slope = stones_row[i]
+			arc = math.tau * max(rr, 0.05) * R / count
+			px, py = (f - i - 0.5) * arc, (rr - (inner + outer) / 2) * R
+			hx, hy = arc / 2, (outer - inner) * R / 2
+			depth = -rounded_box(px, py, hx, hy, min(hx, hy) * 0.5)
+			color = hub_paint(tuple(c * tone for c in base), depth, jw, joint_color, slope * 0.03 * py / hy, soft[y][x])
+			pixels.append(tuple(int(max(0, min(255, c))) for c in color))
+	im = Image.new("RGB", (S, S))
+	im.putdata(pixels)
+	return im
+
+
+def hub_rim(seed, inner, count):
+	"""Round 9 part 13: a ring of curved stones with an empty middle, laid once on a Transparency 1 disc. A full dark disc 0.06 under the floor beats the floor at a distance (depth precision):
+	with nothing drawn in the middle there is nothing to lose to."""
+	im = hub_rings(seed, ((0, inner, 3), (inner, 1.5, count))).convert("RGBA")
+	R = S / 2
+	mask = Image.new("L", (S, S))
+	mask.putdata([int(255 * smooth((math.hypot(x + 0.5 - R, y + 0.5 - R) / R - inner + 0.012) / 0.012)) for y in range(S) for x in range(S)])
+	im.putalpha(mask)
+	return im
+
+
+def hub_wear(im, seed, cracks, moss, pebbles, joint=HUB_JOINT):
+	"""A few painted details: thin soft cracks, small moss in the joints, a few pebbles. Wrapped, so the tile stays seamless."""
+	rng = random.Random(seed)
+	lines = []
+	for _ in range(cracks):
+		x, y, a = rng.uniform(0, S), rng.uniform(0, S), rng.uniform(0, math.tau)
+		points = [(x, y)]
+		for _ in range(rng.randint(3, 5)):
+			a += rng.uniform(-0.8, 0.8)
+			x, y = x + math.cos(a) * rng.uniform(8, 15), y + math.sin(a) * rng.uniform(8, 15)
+			points.append((x, y))
+		lines.append(points)
+	joint_rgb = hexrgb(joint)
+	spots = [(x, y) for x in range(0, S, 2) for y in range(0, S, 2) if sum(abs(a - b) for a, b in zip(im.getpixel((x, y)), joint_rgb)) < 16]
+	rng.shuffle(spots)
+	tufts = []
+	for cx, cy in spots[:moss]:
+		for _ in range(5):
+			tufts.append((cx + rng.uniform(-6, 6), cy + rng.uniform(-6, 6), rng.uniform(1.6, 3.4), rng.choice(HUB_MOSS)))
+	stones_list = [(rng.uniform(0, S), rng.uniform(0, S), rng.uniform(1.4, 2.6), rng.choice(("c8b694", "bcaa88", "e8dcc4"))) for _ in range(pebbles)]
+	crack_layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+	moss_layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+
+	def paint_cracks(draw, ox, oy):
+		for points in lines:
+			draw.line([(x + ox, y + oy) for x, y in points], fill=hexrgb("a39070") + (105,), width=1)
+
+	def paint_moss(draw, ox, oy):
+		for x, y, r, color in tufts:
+			draw.ellipse((x + ox - r, y + oy - r * 0.8, x + ox + r, y + oy + r * 0.8), fill=hexrgb(color) + (150,))
+		for x, y, r, color in stones_list:
+			draw.ellipse((x + ox - r, y + oy - r * 0.8, x + ox + r, y + oy + r * 0.8), fill=hexrgb(color) + (235,))
+
+	wrap_draw(crack_layer, paint_cracks)
+	wrap_draw(moss_layer, paint_moss)
+	out = im.convert("RGBA")
+	out.alpha_composite(blur_wrap(crack_layer, 0.5))
+	out.alpha_composite(blur_wrap(moss_layer, 0.9))
+	return out.convert("RGB")
+
+
+def hub_lane_fade(seed, palette=HUB_STONE, joint=HUB_JOINT):
+	"""Round 9 part 13: a lane that wears out. 256 x 128 on a 20 x 10 stud part: packed round stones at the plaza end, thinning to nothing at the portal end, no hard end.
+	The first stud at the plaza end stays empty: the lane overlaps the plaza border there, at the same height."""
+	W, H, rows = S, S // 2, 3
+	row_h = H / rows
+	rng = random.Random(seed)
+	soft = stretch(fbm(seed + 7, 3, 2))
+	joint_color = hexrgb(joint)
+	layout = []
+	for r in range(rows):
+		x, row = rng.uniform(-30, 0), []
+		while x < W:
+			long = rng.choice((38, 46, 54))
+			t = (x + long / 2) / W
+			keep = 1.75 - 1.95 * t - (0.3 * t if r != 1 else 0)
+			if rng.random() < keep:
+				row.append((x, x + long, hexrgb(rng.choice(palette)), rng.uniform(0.975, 1.025), rng.uniform(-1, 1)))
+			x += long
+		layout.append(row)
+	pixels = []
+	for y in range(H):
+		for x in range(W):
+			t = x / W
+			side = 1 - abs(y + 0.5 - H / 2) / (H / 2)
+			# the bed between the stones: joint colour, gone by 80 % of the length and at the sides
+			bed = smooth(t / 0.1) * (1 - smooth((t - 0.38) / 0.42)) * smooth(side / (0.14 + 0.4 * t)) * 0.8
+			color, alpha = joint_color, bed
+			r = int(y // row_h)
+			for a, b, base, tone, slope in layout[r]:
+				if a <= x < b:
+					hx, hy = (b - a) / 2, row_h / 2
+					px, py = x - (a + b) / 2, y % row_h - hy
+					depth = -rounded_box(px, py, hx, hy, min(hx, hy) * 0.5)
+					if depth > 0:
+						stone = hub_paint(tuple(c * tone for c in base), depth, 2.6, joint_color, slope * 0.03 * px / hx, soft[y][x])
+						cover = smooth(depth / 2)
+						color = mix(color, stone, cover) if alpha > 0 else stone
+						alpha = max(alpha, cover)
+			alpha *= smooth((x - 14) / 6)
+			pixels.append(tuple(int(max(0, min(255, c))) for c in color) + (int(alpha * 255),))
+	out = Image.new("RGBA", (W, H))
+	out.putdata(pixels)
+	return out.transpose(Image.FLIP_LEFT_RIGHT) # a Decal on Top shows the image left at the +X end of the part: +X is the portal side
+
+
+def hub_set():
+	"""The Round 9 part 13 images: one family for the whole hub, 4 stone tones, soft low joints (docs/prop_texture_guide.md "Hub ground")."""
+	out = {}
+	out["hub_slab"] = hub_wear(hub_courses(301, 4, 8), 311, 3, 2, 5)
+	out["hub_diamond"] = hub_wear(hub_diamonds(302, 3), 312, 2, 2, 4)
+	out["hub_cobble"] = hub_wear(hub_courses(303, 6, 12, sizes=(2, 2, 3), jw=3.0), 313, 2, 3, 6)
+	out["hub_band"] = hub_courses(304, 4, 4, sizes=(2,), radius=0.3, jw=3.2, wobble=2)
+	out["hub_ring"] = hub_rings(305, ((0, 0.3, 9), (0.3, 0.5, 16), (0.5, 0.68, 22), (0.68, 0.84, 28), (0.84, 1.5, 34)))
+	out["hub_rim"] = hub_rim(310, 0.9, 40)
+	out["hub_moss_a"] = soft_patch(306, HUB_MOSS, 0.32, 9)
+	out["hub_moss_b"] = soft_patch(307, HUB_MOSS, 0.28, 13)
+	out["hub_worn"] = soft_patch(308, ("c8b693", "bfae8c", "d0bf9c"), 0.5, 8, 1.0, 0.8)
+	out["hub_lane_fade"] = hub_lane_fade(309)
+	return out
+
+
 JUNGLE_STONE = ["8a9678", "7e8a6e", "96a082", "76826a"]
 JUNGLE_JOINT = "62705a"
 JUNGLE_MOSS = ("5f8f3e", "4a7a38", "3f6e36")
@@ -735,9 +969,9 @@ def build():
 
 
 if __name__ == "__main__":
-	if len(sys.argv) > 1 and sys.argv[1] in ("--cave", "--jungle", "--tundra"):
+	if len(sys.argv) > 1 and sys.argv[1] in ("--cave", "--jungle", "--tundra", "--hub"):
 		os.makedirs(OUT, exist_ok=True)
-		for name, im in {"--cave": cave_set, "--jungle": jungle_set, "--tundra": tundra_set}[sys.argv[1]]().items():
+		for name, im in {"--cave": cave_set, "--jungle": jungle_set, "--tundra": tundra_set, "--hub": hub_set}[sys.argv[1]]().items():
 			im.save(os.path.join(OUT, name + ".png"), optimize=True)
 			print(name)
 	else:

@@ -75,6 +75,7 @@ instead of inventing a parallel convention.
 
 ### Ground (Round 8)
 Each biome has its ground and path texture, a soft fringe along path edges, low curbs and small details, all without collision: `docs/prop_texture_guide.md` "Ground".
+Round 9: a ground is never more realistic than the stylized assets around it: fewer, larger shapes, 3-5 tones, soft low joints, no outlines, no grain, no baked shadow. The Hub ground is one family of stones told apart by tint and pattern ("Hub ground"); a portal lane wears out on the road, so it never reads as a path to nothing, whether the portal is locked or open.
 
 ### UI theme (Round 8)
 All look values live in `Config/UITheme`; every screen is built from `UI/Kit` (Components is the door). To restyle, change UITheme and the images of `tools/make_ui_textures.py`, not a page.

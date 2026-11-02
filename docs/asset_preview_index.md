@@ -112,7 +112,7 @@ Spawn island: village, plaza, harbour, beach. Block `ByZone.00_Hub`, screenshot 
 | `clam_pearl` | prop | small | 8 | yes | improved | none (done) |
 | `flagpole` | prop | large | 18 | yes | improved | none (done) |
 | `hub_ground_curb` | prop | medium | 10 | yes | improved | none (done) |
-| `hub_ground_pebbles` | prop | small | 36 | yes | improved | none (done) |
+| `hub_ground_pebbles` | prop | small | 50 | yes | improved | none (done) |
 | `hub_prop_driftwood_a` | prop | small | 3 | yes | old | redesign (low-poly pass) |
 | `hub_prop_log_a` | prop | medium | 1 | yes | old | redesign (low-poly pass) |
 | `hub_prop_starfish_a` | prop | small | 3 | yes | old | redesign (low-poly pass) |

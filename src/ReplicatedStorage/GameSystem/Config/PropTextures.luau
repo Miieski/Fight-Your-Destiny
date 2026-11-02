@@ -77,6 +77,18 @@ local PropTextures = {
 		lake_slush = { Id = "rbxassetid://115216343129071", Tile = 30 },
 		lake_bubbles = { Id = "rbxassetid://85871143907717", Tile = 12 },
 		ramp_packed = { Id = "rbxassetid://100508224823369", Tile = 16 },
+		-- Round 9 part 13, one family for the Hub (docs/prop_texture_guide.md "Hub ground", tools/HubRound9.luau): hub_ring is laid once across a cylinder end, tile = its diameter;
+		-- hub_moss_*, hub_worn, hub_lane_fade = single Decals, not tiled. pavers above is no longer laid anywhere.
+		hub_slab = { Id = "rbxassetid://115073461647082", Tile = 32 },
+		hub_diamond = { Id = "rbxassetid://134705935196802", Tile = 30 },
+		hub_cobble = { Id = "rbxassetid://101926074677731", Tile = 26 },
+		hub_band = { Id = "rbxassetid://84404049824111", Tile = 9.6 },
+		hub_ring = { Id = "rbxassetid://96447684528232", Tile = 49 },
+		hub_rim = { Id = "rbxassetid://131702450008934", Tile = 54 },
+		hub_moss_a = { Id = "rbxassetid://85030505669248", Tile = 6 },
+		hub_moss_b = { Id = "rbxassetid://105340362132556", Tile = 6 },
+		hub_worn = { Id = "rbxassetid://87557404724435", Tile = 8 },
+		hub_lane_fade = { Id = "rbxassetid://138584630816338", Tile = 20 },
 		fringe_grass = { Id = "rbxassetid://103931416962184", Tile = 26 },
 		fringe_sand = { Id = "rbxassetid://132496380237105", Tile = 26 },
 		fringe_moss = { Id = "rbxassetid://100381723159476", Tile = 26 },

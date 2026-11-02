@@ -3745,7 +3745,7 @@ Layers, in order:
 
 | biome | ground (tile) | path (tile) | overlay | fringe (width) | details | palette |
 |---|---|---|---|---|---|---|
-| Hub | `grass` 34, alpha .3 | `pavers` 16, borders tile 9 tint #C6C0B8 | - | `fringe_grass` 7 | `hub_ground_curb`, `hub_ground_pebbles`, `plains_ground_tuft`, `plains_ground_flowers` | stone #C8BCA8 #BDB09C #D4C9B6, joint #7D6F60 |
+| Hub (round 9 part 13: see Hub ground) | `grass` 34, alpha .3 | `hub_slab`, `hub_diamond`, `hub_cobble`, `hub_band`, `hub_ring`, `hub_rim` | - | `fringe_grass` 7 | `hub_ground_curb`, `hub_ground_pebbles`, `plains_ground_tuft`, `plains_ground_flowers` | stone #DCCDAE #D3C3A2 #E3D6BA #CBB998, joint #B5A283 |
 | Plains | `grass` 34, alpha .3 | `dirt` 18 | - | `fringe_grass` 7, tint #E8E8E8 | `plains_ground_curb`, `_tuft`, `_flowers`, `_pebbles` | grass #4FA832 to #7CCC45, dirt #B08A58 to #D8B47C |
 | Beach (Plains_2) | `sand` 30, alpha .2 | `dirt` 18 | - | `fringe_sand` 7 | `plains_ground_curb`, `desert_ground_ripple`, `plains_ground_pebbles`, `_tuft` | sand #E4C278 to #F8E2A4 |
 | Desert | `sand` 30, alpha .2 | `slabs` 18 | `cracks` 44, alpha .5 | `fringe_sand` 8 | `desert_ground_curb`, `_ripple`, `_chips` | slabs #E2C288 #D8B67A #ECD096 #D0AC70, joint #A07C4C |
@@ -3764,7 +3764,7 @@ No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `
 
 | edge | texture (tile) | tint | stones | foot | used in |
 |---|---|---|---|---|---|
-| `hub_ground_curb` | `pavers` 16 | #E8DECC | #C8BCA8 #BDB09C #D4C9B6 #B0A490 | moss #6FA84A | Hub |
+| `hub_ground_curb` | `hub_cobble` 26 | #E0C6A0 | #D6C29E #C9B592 #DFCDAC #BDA986 | moss #6FA84A | Hub |
 | `plains_ground_curb` | `dirt` 18 | #E8D8C0 | #9C7C52 #B08A58 #8C6E48 #C09A68 | moss #4F8A34 | Plains_1, Plains_3 |
 | `beach_ground_curb` (variant) | `sand` 30 | white | #D8BC80 #E4CC94 #C8AA70 #F0DCAA | sand #E4C278 | Plains_2 |
 | `desert_ground_curb` | `slabs` 18 | white | #D8B67A #C8A468 #E4C690 #B89458 | sand #E0BC78 | Desert_1, Desert_2 |
@@ -3781,6 +3781,37 @@ No new image: the ground's own texture from `Config/PropTextures.Ground`, as a `
 | DaisStep, Step | `frost_slabs` 18 | own | | | Tundra boss room |
 | MiniDais, Plinth | `slabs` 18 | own | | | Desert boss room |
 | Hills Facet | `grass` 34 | own | | | Plains_1, Plains_3 (the grass banks, images 03 and 04) |
+
+## Hub ground (owner task round 9 part 13, 2026-11-02)
+
+The whole Hub, one family. `tools/make_floor_textures.py --hub`, laid by `tools/HubRound9.luau`, ids in `Config/PropTextures.Ground`. 10 images of 256 px, the same 4 stones and the same joint in each: told apart by tint and pattern, never by a different level of realism. No grain, no outline, no baked shadow: a flat tone, a very light slope across each stone, a soft rim, round corners.
+
+Palette: stone #DCCDAE #D3C3A2 #E3D6BA #CBB998, joint #B5A283 (2 steps off the stone, never dark), moss #6FA84A #5F8F3E #7DB858 (the plains greens).
+
+| use | image | tile | tint | pattern |
+|---|---|---:|---|---|
+| `PlazaFloor` | `hub_slab` | 32 | #E8DCC4 | 4 rows of 8-stud stones, each row cut in its own lengths, `macro_blotch` alpha .6 over |
+| `InnerFloor` | `hub_diamond` | 30 | #EEDDC0 | the same stones on the diagonal, `macro_blotch` |
+| `RingRoad`, `DockLane` | `hub_cobble` | 26 | #E0C6A0 | 6 rows of smaller stones, warmest tint, closest to the plains dirt, `macro_blotch` on the road |
+| `PlazaRay` x8 | `hub_band` | 9.6 | #B8A488 | long stones in rows of 2.4 studs, the width of a ray |
+| `AltarDais` | `hub_ring` | its diameter | #CDBB9C | 5 courses of curved stones, the image once across the end of the cylinder. Darker than `CenterRing`: the altar's pink light washes it out |
+| `CenterRing`, `FountainSquare` | `hub_ring` | diameter | #F0E4D0 | same |
+| `CenterRingDark`, `WellPad` | `hub_ring` | diameter | #B8A488 | same |
+| `CenterGem` | `hub_ring` | diameter | #8EA4E6 | was a flat blue disc |
+| `PlazaBorder`, `InnerRingDark`, `AltarDaisBorder`, `FountainSquareBorder` | `hub_rim` | diameter | #B8A488 | hollow, see below |
+| Curbs | `hub_cobble` | 26 | #E0C6A0 | EdgeTex alpha .3 on `hub_ground_curb` |
+| Moss patches x44 | `hub_moss_a`, `_b` | Decal | | rim of the road r 94-98 (4-8 wide), both sides of `PlazaBorder` (2.5-4), altar ring (1.6-2.6). Green grows in from the grass |
+| Worn patches x29 | `hub_worn` | Decal | alpha .25 | road, plaza, inner floor, 6-11 wide |
+| Pebbles x14 | `hub_ground_pebbles` | | | on the road, r 84-97 |
+
+Cracks, moss and pebbles are also painted, a few per tile, thin and soft (`hub_wear`), so a tile stays calm.
+
+HOLLOW DISCS, the rule to remember: `PlazaBorder`, `InnerRingDark`, `AltarDaisBorder`, `FountainSquareBorder` are full discs only 0.05-0.10 under the floor they border. From a distance the depth buffer cannot part the 2 tops and the darker disc wins: a dark disc over the floor. Max zoom is 128 studs, so a player can see it. It was there before this round (first shot of the part). These parts are colliders, so they do not move: they go Transparency 1, and `hub_rim` draws the ring only (alpha 0 inside radius .9). Nothing is drawn in the middle, so there is nothing to lose to. Do not put a full texture back on them. `CenterRingDark` (gap .09) stays a full disc: its ring is too wide for `hub_rim`, and it is small. `CenterGem` is 0.03 over `CenterRing`: past about 45 studs it does not show, harmless.
+
+PORTAL LANES: `PortalLane` x12 go Transparency 1 (same colliders) with one Decal, `hub_lane_fade`, 256 x 128, tint #EADFC8: packed stones at the plaza end, thinning out to nothing before the grass. The first stud at the plaza end is empty: the lane is coplanar with `PlazaBorder` there. Same for a locked and an open portal, so no per-player code. A Decal on Top shows the left of the image at the +X end of the part; 12 / 12 lanes have +X towards their portal.
+
+Heights: road 0.10, lane 0.20, border 0.20, plaza 0.30, inner ring 0.36, inner floor 0.42, ray 0.48. Patches 0.02 over their floor. Tints are for the warm Hub light, judged in Play: the Edit viewport showed a cooler light until Play had run once.
+After `F.hub`: `H.skin`, `H.lanes`, `H.details`. `pavers` is laid nowhere now, still in Config.
 
 ## Jungle ground (owner task round 9 part 9, 2026-11-01)
 
