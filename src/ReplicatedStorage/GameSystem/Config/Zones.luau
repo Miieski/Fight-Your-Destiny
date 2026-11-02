@@ -79,13 +79,9 @@ Zones.Descriptions = {
 	Void = "Floating obsidian islands and crystal forests at the heart of the Void Dragon's realm.",
 } :: { [string]: string }
 
--- Why a zone is locked (DESIGN.md section 4: key of the previous boss, Rebirths, previous zone
--- redone since the last Rebirth). short = true gives the compact form for list rows.
 -- No spoilers for locked zones (docs/enemies_npcs_pets_brief.txt 1A): what every UI and server message shows for a
 -- zone the player has not unlocked. Clients go through GameClient/UI/Kit/ZoneVisibility.
 Zones.HIDDEN_NAME = "???"
-Zones.HIDDEN_REQUIREMENT = "Defeat the boss of the previous zone and Rebirth, then buy it in the Zones menu"
-Zones.HIDDEN_SHORT = "Locked: previous boss, Rebirth, then buy it"
 
 -- Is the zone unlocked in this profile's Zones table (zone 1 always is)?
 function Zones.isUnlocked(zonesTable: { [string]: any }?, zoneId: string?): boolean
@@ -96,6 +92,9 @@ function Zones.isUnlocked(zonesTable: { [string]: any }?, zoneId: string?): bool
 	return zone ~= nil and (zone.Index == 1 or (zonesTable ~= nil and zonesTable[zoneId] == true))
 end
 
+-- Why a zone is locked, the rule of Config/RebirthZoneUnlock.status as it stands: the boss key of the previous zone, Index - 1
+-- Rebirths, Gold, then bought in the Zones menu (and the previous zone open, which a player with that key has). No names: no
+-- spoilers. short = true gives the compact form for list rows.
 function Zones.requirementText(zoneId: string, short: boolean?): string
 	local zone = Zones.ById[zoneId]
 	local previous = zone and Zones.List[zone.Index - 1]
@@ -105,9 +104,9 @@ function Zones.requirementText(zoneId: string, short: boolean?): string
 	local rebirths = zone.Index - 1
 	local plural = if rebirths == 1 then "" else "s"
 	if short then
-		return `Needs {previous.Boss} key + {rebirths} Rebirth{plural}`
+		return `Locked: boss key, {rebirths} Rebirth{plural}, Gold`
 	end
-	return `Needs the {previous.Boss} key, {rebirths} Rebirth{plural} and its Gold price`
+	return `Needs the boss key of the previous zone, {rebirths} Rebirth{plural} and Gold: buy it in the Zones menu`
 end
 
 -- Gold price to open sub-zone n of a zone (0 for sub-zone 1).

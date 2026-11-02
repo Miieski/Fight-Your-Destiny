@@ -169,7 +169,7 @@ local function buy(player: Player, kind: Kind, itemId: any): (boolean, any)
 		return false, "Unknown " .. kind.label
 	end
 	if not profile.Zones[item.ZoneId] then
-		return false, `This {kind.label}'s zone is locked. {Zones.HIDDEN_REQUIREMENT}`
+		return false, `This {kind.label}'s zone is locked. {Zones.requirementText(item.ZoneId)}`
 	end
 	if busy[player] or (openingUntil[player] or 0) > os.clock() then
 		return false, "Finish the current opening first"

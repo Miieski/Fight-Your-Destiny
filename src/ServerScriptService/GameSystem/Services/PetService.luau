@@ -218,7 +218,7 @@ local function buyPremiumEgg(player: Player, zoneValue: any): (boolean, any)
 		return false, "Unknown zone"
 	end
 	if not profile.Zones[zone.Id] then
-		return false, `This zone is locked. {Zones.HIDDEN_REQUIREMENT}`
+		return false, `This zone is locked. {Zones.requirementText(zone.Id)}`
 	end
 	if storageFull(profile) then
 		return false, FULL_TEXT

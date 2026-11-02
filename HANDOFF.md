@@ -22,6 +22,7 @@ Decisions and test numbers: top of docs/NIGHT_LOG.md. Rules so far:
   such as `species.Premium`, `BuyPremiumEgg`, `grantPremium` stay: they name the Robux pets and the Diamond eggs, not a Rebirth rule.
 - UI look: `Config/UITheme` + `tools/make_ui_textures.py` (ids in UITheme.Images, list in docs/ui_textures/IMPORT_LIST.md). New screens are built on `UI/Kit/Components`.
 - Doors: unlock state is personal; animation data in `Config/DoorAnimations`, `Config/PortalBuild`.
+- Portals (Round 9): locked = nothing on that client (`Controllers/PortalController`, modes hidden / ghost / ramp / shown, over portal, frame and swirl). Bricks: `Assets.PortalBricks.<MapPropId>`, rebuilt by `DevTools.PortalBricks.build()` after a change to the `portal_frame` recipe. Lock text: one source, `Zones.requirementText`. Do not keep needed state in a weak table keyed by an Instance: the Lua wrapper can be collected while the Instance lives.
 - Skill trees: `Config/WeaponSkillTrees` (the map, generated), `Config/WeaponSpecials` (5 moves per type, added to `Config/WeaponMoves` and `Config/Skills`),
   `Services/MasteryService`, `UI/Pages/SkillTreePage`. Client cooldowns are per skill id in `SkillController`. Profile version 3.
 - Floors: `tools/FloorsRound8.luau` (`F.zone(name)`, `F.hub()`, `F.clear(name)`, idempotent), `tools/make_floor_textures.py`, ids in `Config/PropTextures.Ground`.
@@ -491,7 +492,7 @@ Rebirth N opens zone N + 1), UI `UI/Pages/RebirthPage`, badge = unspent credits 
 changes, Parts A-F, final checks. NEXT STEP: the boss patterns (`docs/boss_patterns_document.txt`).**
 Log with every decision and test: `docs/NIGHT_LOG.md` ("Enemies, NPCs, pets task"). Screenshots
 `docs/screenshots/enemies_task/`.
-* **Rules:** locked zones are black "?" silhouettes everywhere (`UI/Kit/ZoneVisibility`, `PortalController`);
+* **Rules:** locked zones are black "?" silhouettes in every UI (`UI/Kit/ZoneVisibility`); Round 9: a locked portal is invisible (`PortalController`);
   damage never depends on the zone (`Config/Balance.ZoneBoostEnabled = false` gates every Zone Boost).
 * **Combat:** `Config/Combat` (shapes per category), `CombatService` (Attack / Roll / Block, `DamagePlayer`, starter
   weapon), client `CombatController` (aim, swings, shots, roll dash, block bubble, Auto-Attack HUD toggle).
@@ -514,7 +515,7 @@ Log with every decision and test: `docs/NIGHT_LOG.md` ("Enemies, NPCs, pets task
 Live log with every decision and test: `docs/NIGHT_LOG.md` ("Menu systems task"). Screenshots:
 `docs/screenshots/menu_systems/` (portal, Attributes), `pets/`, `armor/`, `menus/` (D1-D5), desktop / phone / tablet.
 * **Portal rule:** a hub portal teleports straight to sub-zone 1 (`PortalController` -> Net "UsePortal"); locked
-  portals are gray with a lock for that player. Zone Sign setting is off by default.
+  portals are invisible for that player (Round 9). Zone Sign setting is off by default.
 * **A - Attributes** (Stats button, window "Attributes"): `Config/Attributes`, `Util/Stats.compute` (every derived
   stat, shared by server and UI), `StatsService` (TrainAttributes, RespecAttributes, Max HP / walk speed on the
   Humanoid), `DevTools/StatsTests` (78 checks incl. pets and armor; admin runStatsTests).

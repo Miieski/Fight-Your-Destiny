@@ -327,6 +327,10 @@ precedence over any older text here about a zone being "redone".
   server still refuses teleports and sends back a player standing in a locked sub-zone.
 * Data only: `Config/DoorAnimations` (one row per door type, one line per gate; also the boss door veil) and
   `Config/PortalBuild` (the hub portal builds itself brick by brick when its zone opens).
+* Round 9: a portal whose zone is locked for a player does not exist for that player: nothing seen, no collision, no touch, no sound, on that client
+  only. The server keeps refusing the teleport; the Zones menu shows the zone as locked with what it takes. When the zone opens the portal assembles
+  from its real bricks (`Assets.PortalBricks`, made by `DevTools.PortalBricks`), bottom up, keystone last, then it lights up. Open at join: finished at
+  once. Locked again: gone at once. Opened while far away: it builds when the player comes near. A player on the spot keeps it without collision until they walk out.
 * Round 9: a door that has finished opening is hidden for that player, so a leaf can never show inside a wall; it comes back if a Rebirth closes
   the door. Sliding leaves travel their width + frame + 0.5 and go into the wall, or into a stone pocket (`gate_mine`, `heaven_gate_4`, `dead_gate_4`).
 
@@ -512,7 +516,7 @@ The hub is the central safe area (no combat). Players spawn here on join.
 * **Trophy Merchant:** sells head trophies.
 * **Rebirth Altar** and **Rebirth Shop.**
 * **Diamond Shop:** Robux packs, boosts, skins, game passes.
-* **Zone Portals:** one per zone, grayed out when locked (shows requirements). Walking into an
+* **Zone Portals:** one per zone, invisible until the zone is opened (Round 9; requirements in the Zones menu). Walking into an
   unlocked portal teleports the player **directly to sub-zone 1** of that zone (no sub-zone
   choice; the Zones menu in the HUD is where a sub-zone is chosen).
 * **AFK Zone**, **Team Board**, **Leaderboards**, **Codes** board and the **Tutorial guide** NPC.
@@ -738,7 +742,7 @@ Speed, Crit, GoldGain`. Weapon categories `Sword, Spear, Heavy, Dagger, Ranged, 
   The profile field `Stats` becomes `Attributes`.
 * Armor is equipped from the **Inventory -> Equipment** tab (character view with slots around it).
 * **No spoilers:** locked zones (not in `profile.Zones`) appear as black "?" silhouettes with the name `???`
-  in every UI and on the hub portals. Damage never depends on the player's current or highest zone;
+  in every UI; a locked hub portal is not shown at all (Round 9). Damage never depends on the player's current or highest zone;
   the Zone Boost is disabled by `Config.Balance.ZoneBoostEnabled = false` until the owner decides.
 * Models are stored in `Blender/<Category>/<NN_Zone>/` (NPC, Mobs, MiniBosses, Bosses, Pets).
 

@@ -4,14 +4,13 @@
 -- reads a zone's name, boss, sub-zones, description or icon colors from Config directly; they ask here:
 --   ZoneVisibility.isRevealed(zoneId)            "Hub" / nil = true
 --   ZoneVisibility.displayName(zoneId), bossName(zoneId), subZoneName(zoneId, n), description(zoneId)
---   ZoneVisibility.requirement(zoneId, short?)    the generic text of Config/Zones (never the real requirements)
+--   ZoneVisibility.requirement(zoneId, short?)    the lock text of Config/Zones (what it takes, no names)
 --   ZoneVisibility.displayIcon(zoneId)            the icon id to draw (silhouetted by icon / applySilhouette)
 --   ZoneVisibility.icon(iconId, zoneId, parent, props) -> Icons.create(...), already black with "?" when hidden
 --   ZoneVisibility.applySilhouette(holder), removeSilhouette(holder)   for icons, ImageLabels and ViewportFrames
 --   ZoneVisibility.changed(fn) -> disconnect      fn() when the unlocked zones change
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Format = require(ReplicatedStorage.GameSystem.Util.Format)
 local RebirthZoneUnlock = require(ReplicatedStorage.GameSystem.Config.RebirthZoneUnlock)
 local Zones = require(ReplicatedStorage.GameSystem.Config.Zones)
 local State = require(script.Parent.Parent.Parent.State)
@@ -54,21 +53,12 @@ function ZoneVisibility.description(zoneId: string?): string
 end
 
 function ZoneVisibility.requirement(zoneId: string?, short: boolean?): string
-	return if short then Zones.HIDDEN_SHORT else Zones.HIDDEN_REQUIREMENT
+	return if zoneId then Zones.requirementText(zoneId, short) else "Locked"
 end
 
 -- The buy rule of a zone for this player (Config/RebirthZoneUnlock).
 function ZoneVisibility.unlockStatus(zoneId: string): RebirthZoneUnlock.Status
 	return RebirthZoneUnlock.status({ Zones = State.get("Zones"), Keys = State.get("Keys"), Rebirths = State.get("Rebirths"), Gold = State.get("Gold") }, zoneId)
-end
-
--- "Boss key: owned  -  Gold: 4K" for the zone to buy now, nil for the others (the portal sign).
-function ZoneVisibility.unlockLine(zoneId: string): string?
-	local status = ZoneVisibility.unlockStatus(zoneId)
-	if not status.eligible then
-		return nil
-	end
-	return `Boss key: {if status.hasKey then "owned" else "missing"}  -  Gold: {Format.number(status.price)}`
 end
 
 -- The zone's own icon id (the diorama); "Zones" when there is no icon for it.

@@ -1,14 +1,15 @@
 --!strict
--- Hub portals (docs/menu_systems_brief.txt section 1). Touching workspace.Hub.Portals.Portal_<ZoneId> asks the
--- server to go straight to sub-zone 1 of that zone (Net "UsePortal"; the server checks everything). The
--- screen fades like the Zones menu. Each portal also shows THIS player's state (docs/enemies_npcs_pets_brief.txt 1A):
--- a locked zone's portal and its frame are under a BLACK FILTER (every color black / dark gray, a dark swirl, no
--- zone name or icon) with a "? ? ?" sign and the generic requirement. When the zone unlocks, a reveal plays: white
--- flash, the black filter dissolves into the zone colors, the name comes back. Before that reveal the portal builds
--- itself brick by brick (Config/PortalBuild): personal, once, at the moment of unlock (or when the player next comes near
--- the hub); until the last brick it cannot be used. At join a finished portal is shown at once.
+-- Hub portals (docs/menu_systems_brief.txt section 1). Touching workspace.Hub.Portals.Portal_<ZoneId> asks the server to go
+-- straight to sub-zone 1 of that zone (Net "UsePortal"; the server checks everything). The screen fades like the Zones menu.
+-- Round 9 part 12: a portal exists only for players who have opened its zone. For the others, on this client only, nothing of it is
+-- left: no part, sign, text, light, particle, sound, collision or touch (Hub.Portals.Portal_<Zone>, Hub.Decor.PortalFrames.PortalFrame_<Zone>,
+-- Hub.Decor.VFX.Portal_Swirl_<Zone>); the Zones menu shows what it takes. When the zone opens the portal assembles from its real
+-- bricks (Config/PortalBuild, Assets.PortalBricks), bottom up, keystone last, then it lights up. A zone open at join: finished at once.
+-- A zone locked again: gone at once. A part that streams back in returns with the server's look, so it is hidden again on arrival.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local Net = require(ReplicatedStorage.GameSystem.Net)
 local PortalBuild = require(ReplicatedStorage.GameSystem.Config.PortalBuild)
@@ -18,422 +19,442 @@ local State = require(script.Parent.Parent.State)
 local UI = script.Parent.Parent.UI
 local Notifier = require(UI.Notifier)
 local Fade = require(UI.Kit.Fade)
-local Icons = require(UI.Kit.Icons)
-local Theme = require(UI.Kit.Theme)
 local ZoneVisibility = require(UI.Kit.ZoneVisibility)
-local ZonesPage = require(UI.Pages.ZonesPage)
-local TweenService = game:GetService("TweenService")
 
 local PortalController = { Priority = 20 }
 
-local LOCKED_COLOR = Color3.fromRGB(105, 105, 112)
-local FILTER_DARK = Color3.fromRGB(16, 14, 20) -- the black filter: frame parts
-local FILTER_PORTAL = Color3.fromRGB(28, 20, 40) -- the portal surface: an almost black purple swirl
-local REVEAL_SECONDS = 1.2
-local HIDDEN_TEXT = "? ? ?"
-local REFRESH_SECONDS = 2 -- portals can stream in and out: their look is re-applied regularly
+local REFRESH_SECONDS = 1 -- safety net: DescendantAdded already re-hides what streams in
+local CLEAR_SECONDS = 0.2 -- how often a finished portal looks whether the player has left its spot
+local DUST_TEXTURE = "rbxasset://textures/particles/smoke_main.dds"
+local FX_CLASSES = { "ParticleEmitter", "Light", "Beam", "Trail", "Fire", "Smoke", "Sparkles", "LayerCollector", "ProximityPrompt", "Highlight" } -- all have Enabled
 
+-- hidden: nothing at all. ghost: seen, no collision and no touch (the player stands on the spot). ramp: ghost while it lights up. shown: the server's look.
+type Mode = "hidden" | "ghost" | "ramp" | "shown"
+type SavedPart = { collide: boolean, touch: boolean, query: boolean, shadow: boolean }
+type Brick = { root: BasePart, parts: { BasePart }, offsets: { CFrame }, target: CFrame, from: CFrame, at: number, flight: number, group: string }
+
+local player = Players.LocalPlayer
 local busy = false
 local lastTry: { [string]: number } = {} -- zone id -> os.clock() of the last refused try
-local original: { [BasePart]: Color3 } = {}
-local pending: { [string]: boolean } = {} -- zone id -> opened, its portal waits to build
-local building: { [string]: boolean } = {}
+local modes: { [string]: Mode } = {}
+local pending: { [string]: boolean } = {} -- zone id -> opened just now, waits to assemble
+local building: { [string]: number } = {} -- zone id -> token of the running assembly
+local tokens = 0
+-- strong keys on purpose: a weak table can lose an Instance that is alive (its Lua wrapper is collected), and a part saved again
+-- while hidden would stay hidden for good. About 40 instances per portal.
+local savedParts: { [BasePart]: SavedPart } = {}
+local savedFx: { [Instance]: boolean } = {}
+local hooked: { [BasePart]: boolean } = {}
+local watched: { [string]: boolean } = {}
 
-local function portals(): { BasePart }
-	local list = {}
-	local hub = workspace:FindFirstChild("Hub")
-	local folder = hub and hub:FindFirstChild("Portals")
-	for _, portal in ipairs(if folder then folder:GetChildren() else {}) do
-		if portal:IsA("BasePart") and typeof(portal:GetAttribute("ZoneId")) == "string" then
-			table.insert(list, portal)
-		end
+local function hubChild(...: string): Instance?
+	local item: Instance? = workspace:FindFirstChild("Hub")
+	for _, name in ipairs({ ... }) do
+		item = item and item:FindFirstChild(name)
 	end
-	return list
+	return item
+end
+
+local function portalOf(zoneId: string): BasePart?
+	local portal = hubChild("Portals", "Portal_" .. zoneId)
+	return if portal and portal:IsA("BasePart") then portal else nil
+end
+
+local function frameOf(zoneId: string): Instance?
+	return hubChild("Decor", "PortalFrames", "PortalFrame_" .. zoneId)
+end
+
+local function swirlOf(zoneId: string): Instance?
+	return hubChild("Decor", "VFX", "Portal_Swirl_" .. zoneId)
 end
 
 local function isOpen(zoneId: string): boolean
-	local zone = Zones.ById[zoneId]
-	return zone ~= nil and (zone.Index == 1 or (State.get("Zones") or {})[zoneId] == true)
+	return Zones.isUnlocked(State.get("Zones"), zoneId)
 end
 
--- The "Locked" / "Coming soon" sign in the portal (created once, shown or hidden).
-local function sign(portal: BasePart): BillboardGui
-	local existing = portal:FindFirstChild("PortalState")
-	if existing then
-		return existing :: BillboardGui
+local function applyPart(part: BasePart, mode: Mode)
+	local saved = savedParts[part]
+	if not saved then
+		saved = { collide = part.CanCollide, touch = part.CanTouch, query = part.CanQuery, shadow = part.CastShadow }
+		savedParts[part] = saved
 	end
-	local gui = Instance.new("BillboardGui")
-	gui.Name = "PortalState"
-	gui.Size = UDim2.fromScale(7, 2.6)
-	gui.StudsOffset = Vector3.new(0, -1, 0)
-	gui.LightInfluence = 0
-	gui.MaxDistance = 140
-	gui.Enabled = false
-	local row = Instance.new("Frame")
-	row.BackgroundColor3 = Theme.Colors.WoodInset
-	row.BackgroundTransparency = 0.15
-	row.Size = UDim2.fromScale(1, 0.55)
-	Theme.corner(row, 10)
-	Theme.stroke(row, Theme.Colors.GoldDark, 2)
-	row.Parent = gui
-	Icons.create("Lock", row, { Size = UDim2.new(0, 0, 0.8, 0), Position = UDim2.new(0.04, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5) }).Name = "Lock"
-	local label = Instance.new("TextLabel")
-	label.Name = "Text"
-	label.BackgroundTransparency = 1
-	label.Size = UDim2.fromScale(0.66, 0.8)
-	label.Position = UDim2.fromScale(0.3, 0.1)
-	label.FontFace = Theme.Fonts.Title
-	label.TextScaled = true
-	label.TextColor3 = Theme.Colors.Gold
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Theme.Colors.Ink
-	stroke.Thickness = 2
-	stroke.Parent = label
-	label.Parent = row
-	local hint = Instance.new("TextLabel")
-	hint.Name = "Hint"
-	hint.BackgroundTransparency = 1
-	hint.Size = UDim2.fromScale(1, 0.62)
-	hint.Position = UDim2.fromScale(0.5, 1.12)
-	hint.AnchorPoint = Vector2.new(0.5, 0)
-	hint.FontFace = Theme.Fonts.Body
-	hint.TextScaled = true
-	hint.TextWrapped = true
-	hint.TextColor3 = Theme.Colors.Text
-	local hintStroke = Instance.new("UIStroke")
-	hintStroke.Color = Theme.Colors.Ink
-	hintStroke.Thickness = 1.5
-	hintStroke.Parent = hint
-	hint.Parent = row
-	gui.Size = UDim2.fromScale(8, 4.4)
-	gui.Parent = portal
-	return gui
+	local hidden = mode == "hidden"
+	local solid = mode == "shown"
+	part.CanCollide = saved.collide and solid
+	part.CanTouch = saved.touch and solid
+	part.CanQuery = saved.query and solid
+	part.CastShadow = saved.shadow and not hidden
+	part.LocalTransparencyModifier = if hidden then 1 else 0
 end
 
--- usePartColor: a union's own UsePartColor (the props batch 2 frames are unions that keep the colours of their
--- pieces; the black filter needs UsePartColor on to paint them, and gives the union its own setting back)
-type Look = { color: Color3, material: Enum.Material, usePartColor: boolean? }
-local looks: { [BasePart]: Look } = {}
-local revealed: { [string]: boolean } = {}
-
-local function frameOf(zoneId: string): Instance?
-	local hub = workspace:FindFirstChild("Hub")
-	local decor = hub and hub:FindFirstChild("Decor")
-	local frames = decor and decor:FindFirstChild("PortalFrames")
-	return frames and frames:FindFirstChild("PortalFrame_" .. zoneId)
+local function applyFx(item: Instance, mode: Mode)
+	if item:IsA("Decal") then -- a Texture is a Decal; the part's modifier does not reach them
+		item.LocalTransparencyModifier = if mode == "hidden" then 1 else 0
+	elseif item:IsA("Sound") then
+		if savedFx[item] == nil then
+			savedFx[item] = item.Playing
+		end
+		item.Playing = mode ~= "hidden" and savedFx[item]
+	else
+		for _, class in ipairs(FX_CLASSES) do
+			if item:IsA(class) then
+				local fx = item :: any
+				if savedFx[item] == nil then
+					savedFx[item] = fx.Enabled
+				end
+				fx.Enabled = mode ~= "hidden" and savedFx[item]
+				if mode == "hidden" and item:IsA("ParticleEmitter") then
+					item:Clear()
+				end
+				return
+			end
+		end
+	end
 end
 
--- every part and every name text of a portal (the portal surface first)
-local function pieces(portal: BasePart): ({ BasePart }, { TextLabel })
-	local parts: { BasePart } = { portal }
-	local texts: { TextLabel } = {}
-	local frame = frameOf(portal:GetAttribute("ZoneId") :: string)
-	for _, root in ipairs({ portal :: Instance, frame } :: { Instance? }) do
+local function apply(zoneId: string, mode: Mode)
+	for _, root in ipairs({ portalOf(zoneId) :: Instance?, frameOf(zoneId), swirlOf(zoneId) } :: { Instance? }) do
 		if root then
+			local list = root:GetDescendants()
+			table.insert(list, root)
+			for _, item in ipairs(list) do
+				if item:IsA("BasePart") then
+					applyPart(item, mode)
+				else
+					applyFx(item, mode)
+				end
+			end
+		end
+	end
+end
+
+local function setMode(zoneId: string, mode: Mode)
+	modes[zoneId] = mode
+	apply(zoneId, mode)
+end
+
+local function rootPart(): BasePart?
+	local character = player.Character
+	return character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+end
+
+local function onSpot(portal: BasePart): boolean
+	local root = rootPart()
+	if not root then
+		return false
+	end
+	local rel = portal.CFrame:PointToObjectSpace(root.Position)
+	local clear = PortalBuild.Clearance
+	return math.abs(rel.X) < clear.X and math.abs(rel.Y) < clear.Y and math.abs(rel.Z) < clear.Z
+end
+
+local function slowdown(): number
+	return if RunService:IsStudio() then player:GetAttribute("PortalBuildSlow") or 1 else 1 -- for the filmstrip
+end
+
+-- The bricks, in the order they come, each at its start.
+local function layOut(holder: Instance, origin: CFrame, frame: Instance): { Brick }
+	local config = PortalBuild
+	local random = Random.new()
+	local realGem = frame:FindFirstChild("Gem") :: BasePart?
+	local realKey = frame:FindFirstChild("Keystone") :: BasePart?
+	local gemColor = if realGem then realGem.Color:Lerp(Color3.new(), config.GemDim) else nil
+	local rank: { [string]: number } = {}
+	for i, group in ipairs(config.Order) do
+		rank[group] = i
+	end
+	local bricks: { Brick } = {}
+	for _, root in ipairs(holder:GetChildren()) do
+		if root:IsA("BasePart") then
+			local group = root:GetAttribute("Group") :: string
+			local target = origin * root.CFrame
+			local parts: { BasePart }, offsets: { CFrame } = { root }, { CFrame.identity }
 			for _, item in ipairs(root:GetDescendants()) do
 				if item:IsA("BasePart") then
 					table.insert(parts, item)
-				elseif item:IsA("TextLabel") and item.Name == "NameLabel" then
-					table.insert(texts, item)
+					table.insert(offsets, root.CFrame:ToObjectSpace(item.CFrame))
+					if item:GetAttribute("Glow") and gemColor then
+						item.Color = gemColor
+					elseif item.Name == "NamePlate" then
+						local real = frame:FindFirstChild("NamePlate")
+						local gui = real and real:FindFirstChildWhichIsA("SurfaceGui")
+						if gui then
+							local copy = gui:Clone()
+							copy.Enabled = true
+							copy.Parent = item
+						end
+					end
 				end
 			end
-		end
-	end
-	return parts, texts
-end
-
-local function remember(part: BasePart)
-	if not looks[part] then
-		looks[part] = { color = part.Color, material = part.Material, usePartColor = if part:IsA("PartOperation") then part.UsePartColor else nil }
-		part:SetAttribute("RealName", nil)
-	end
-end
-
--- the zone-colored swirl effects of the portal (Hub.Decor.VFX.Portal_Swirl_<ZoneId>): off under the black filter
-local function zoneEffects(zoneId: string, on: boolean)
-	local hub = workspace:FindFirstChild("Hub")
-	local decor = hub and hub:FindFirstChild("Decor")
-	local vfx = decor and decor:FindFirstChild("VFX")
-	local fx = vfx and vfx:FindFirstChild("Portal_Swirl_" .. zoneId)
-	if not fx then
-		return
-	end
-	for _, item in ipairs(fx:GetDescendants()) do
-		if item:IsA("ParticleEmitter") or item:IsA("Light") or item:IsA("Beam") then
-			if item:GetAttribute("WasEnabled") == nil then
-				item:SetAttribute("WasEnabled", item.Enabled)
+			if group == "Keystone" and realKey then
+				root.Color = realKey.Color
 			end
-			item.Enabled = on and item:GetAttribute("WasEnabled") == true
-			if not on and item:IsA("ParticleEmitter") then
-				item:Clear()
+			local kind = config.Force[group]
+			if not kind then
+				local roll = random:NextNumber()
+				for _, name in ipairs({ "Ground", "Sides", "Above" }) do
+					kind = name
+					roll -= config.Offsets[name].Chance
+					if roll <= 0 then
+						break
+					end
+				end
 			end
+			local spec = config.Offsets[kind]
+			local far = random:NextNumber(spec.Min, spec.Max)
+			local side = if random:NextNumber() < 0.5 then -1 else 1
+			local shift = if kind == "Ground" then Vector3.new(0, -far, 0) elseif kind == "Above" then Vector3.new(0, far, 0) else Vector3.new(side * far, random:NextNumber(-1, 2), 0)
+			local scatter = Vector3.new(random:NextNumber(-1, 1), 0, random:NextNumber(-1, 1)) * config.Scatter
+			local start = (origin.Rotation * (shift + scatter)) + target.Position
+			local spin = config.Spin
+			local from = CFrame.new(start) * target.Rotation * CFrame.Angles(random:NextNumber(-spin, spin), random:NextNumber(-spin, spin), random:NextNumber(-spin, spin))
+			table.insert(bricks, { root = root, parts = parts, offsets = offsets, target = target, from = from, at = 0, flight = if group == "Keystone" then config.KeystoneFlight else config.Flight, group = group })
 		end
 	end
-end
-
-local function swirl(portal: BasePart, on: boolean)
-	local existing = portal:FindFirstChild("DarkSwirl")
-	if on and not existing then
-		local fx = Instance.new("ParticleEmitter")
-		fx.Name = "DarkSwirl"
-		fx.Color = ColorSequence.new(Color3.fromRGB(10, 8, 14), Color3.fromRGB(60, 40, 90))
-		fx.Texture = "rbxasset://textures/particles/smoke_main.dds"
-		fx.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 2), NumberSequenceKeypoint.new(1, 5) })
-		fx.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 1) })
-		fx.Lifetime = NumberRange.new(1.5, 2.5)
-		fx.Rate = 6
-		fx.Speed = NumberRange.new(0.5, 1.5)
-		fx.RotSpeed = NumberRange.new(-120, 120)
-		fx.Rotation = NumberRange.new(0, 360)
-		fx.SpreadAngle = Vector2.new(30, 30)
-		fx.Parent = portal
-	elseif not on and existing then
-		existing:Destroy()
-	end
-end
-
-local function realName(label: TextLabel): string
-	local saved = label:GetAttribute("RealName")
-	if typeof(saved) ~= "string" then
-		saved = label.Text
-		label:SetAttribute("RealName", saved)
-	end
-	return saved :: string
-end
-
--- Black filter on / off. animate = the reveal (white flash, colors dissolve back, name appears).
-local function filter(portal: BasePart, hidden: boolean, animate: boolean)
-	local parts, texts = pieces(portal)
-	for _, part in ipairs(parts) do
-		remember(part)
-	end
-	for _, label in ipairs(texts) do
-		realName(label)
-	end
-	swirl(portal, hidden)
-	zoneEffects(portal:GetAttribute("ZoneId") :: string, not hidden)
-	if hidden then
-		for i, part in ipairs(parts) do
-			if part:IsA("PartOperation") then
-				part.UsePartColor = true
-			end
-			part.Color = if i == 1 then FILTER_PORTAL else FILTER_DARK
+	table.sort(bricks, function(a, b)
+		if a.group ~= b.group then
+			return rank[a.group] < rank[b.group]
 		end
-		for _, label in ipairs(texts) do
-			label.Text = HIDDEN_TEXT
+		local ya, yb = a.target.Position.Y, b.target.Position.Y
+		if math.abs(ya - yb) > 0.01 then
+			return ya < yb
 		end
-		return
-	end
-	for _, label in ipairs(texts) do
-		label.Text = realName(label)
-	end
-	if not animate then
-		for _, part in ipairs(parts) do
-			part.Color = looks[part].color
-			local own = looks[part].usePartColor
-			if own ~= nil and part:IsA("PartOperation") then
-				part.UsePartColor = own
-			end
-		end
-		return
-	end
-	-- reveal: a white flash over the portal, then the colors come back
-	local flash = Instance.new("Part")
-	flash.Anchored = true
-	flash.CanCollide, flash.CanQuery, flash.CanTouch = false, false, false
-	flash.Material = Enum.Material.Neon
-	flash.Color = Color3.new(1, 1, 1)
-	flash.Shape = Enum.PartType.Ball
-	flash.Size = Vector3.one * 4
-	flash.CFrame = portal.CFrame
-	flash.Transparency = 0.05
-	flash.Parent = workspace
-	TweenService:Create(flash, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.one * 26, Transparency = 1 }):Play()
-	task.delay(0.7, function()
-		flash:Destroy()
+		return a.target.Position.X < b.target.Position.X
 	end)
-	for _, part in ipairs(parts) do
-		part.Color = Color3.new(1, 1, 1)
-		TweenService:Create(part, TweenInfo.new(REVEAL_SECONDS, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Color = looks[part].color }):Play()
-		local own = looks[part].usePartColor
-		if own ~= nil and part:IsA("PartOperation") then
-			task.delay(REVEAL_SECONDS, function()
-				if part.Parent then
-					part.UsePartColor = own
-				end
-			end)
+	local stones = #bricks - 1 -- the keystone has its own beat
+	local span = config.Seconds - config.Flight - config.KeystoneFlight - config.KeystonePause
+	for i, brick in ipairs(bricks) do
+		if i == #bricks then
+			brick.at = span + config.Flight + config.KeystonePause
+		else
+			brick.at = math.max(0, (i - 1) / math.max(1, stones - 1) * (span - config.Jitter) + random:NextNumber(0, config.Jitter))
 		end
 	end
-	Sfx.play("Unlock", portal.Position)
+	table.sort(bricks, function(a, b)
+		return a.at < b.at
+	end)
+	return bricks
 end
 
--- the portal rises from its steps: bricks fly up and stack from the bottom, then the real frame lights up (the reveal)
-local function build(portal: BasePart, zoneId: string)
-	building[zoneId] = true
-	pending[zoneId] = nil
-	local config = PortalBuild
-	local frame = frameOf(zoneId)
-	local hiddenParts: { BasePart } = { portal }
-	local brickColor = Color3.fromRGB(79, 84, 94)
-	for _, item in ipairs(if frame then frame:GetDescendants() else {}) do
-		if item:IsA("BasePart") and item.Name ~= "Steps" then
-			table.insert(hiddenParts, item)
-			if item.Name == "PillarL" and looks[item] then
-				brickColor = looks[item].color
-			end
-		end
-	end
-	for _, part in ipairs(hiddenParts) do
-		part.LocalTransparencyModifier = 1
-	end
-	sign(portal).Enabled = false
-	-- the base of the frame = the bottom of the portal surface
-	local base = portal.CFrame * CFrame.new(0, -portal.Size.Y / 2, 0)
-	local targets: { { cf: CFrame, size: Vector3 } } = {}
-	local w = config.PillarWidth / 2
-	for row = 0, config.Rows - 1 do
-		for _, side in ipairs({ -1, 1 }) do
-			for column = 0, 1 do
-				local x = side * (config.PillarX - w / 2 + column * w)
-				table.insert(targets, { cf = base * CFrame.new(x, (row + 0.5) * config.BrickHeight, 0), size = Vector3.new(w - 0.06, config.BrickHeight - 0.06, config.PillarDepth) })
-			end
-		end
-	end
-	local archW = config.ArchWidth / config.ArchBricks
-	for i = 0, config.ArchBricks - 1 do
-		local x = (i + 0.5 - config.ArchBricks / 2) * archW
-		table.insert(targets, { cf = base * CFrame.new(x, config.Rows * config.BrickHeight + config.ArchHeight / 2, 0), size = Vector3.new(archW - 0.06, config.ArchHeight - 0.06, config.ArchDepth) })
-	end
+local function dustSpot(color: Color3): (BasePart, ParticleEmitter)
+	local spot = Instance.new("Part")
+	spot.Name = "PortalBuildDust"
+	spot.Size = Vector3.one
+	spot.Transparency = 1
+	spot.Anchored = true
+	spot.CanCollide, spot.CanQuery, spot.CanTouch, spot.CastShadow = false, false, false, false
 	local fx = Instance.new("ParticleEmitter")
-	fx.Texture = "rbxasset://textures/particles/smoke_main.dds"
-	fx.Color = ColorSequence.new(config.DustColor)
+	fx.Texture = DUST_TEXTURE
+	fx.Color = ColorSequence.new(color)
 	fx.Rate = 0
 	fx.Lifetime = NumberRange.new(0.5, 1)
 	fx.Speed = NumberRange.new(1, 4)
 	fx.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 2.6) })
 	fx.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 1) })
-	local dustPart = Instance.new("Part")
-	dustPart.Name = "PortalBuildDust"
-	dustPart.Size = Vector3.new(1, 1, 1)
-	dustPart.Transparency = 1
-	dustPart.Anchored = true
-	dustPart.CanCollide, dustPart.CanQuery, dustPart.CanTouch = false, false, false
-	fx.Parent = dustPart
-	dustPart.Parent = workspace
-	local holder = Instance.new("Folder")
-	holder.Name = "PortalBuild_" .. zoneId
-	holder.Parent = workspace
-	local step = math.max(0.01, (config.Seconds - config.RiseSeconds) / #targets)
-	local random = Random.new()
-	local info = TweenInfo.new(config.RiseSeconds, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-	for i, target in ipairs(targets) do
-		local brick = Instance.new("Part")
-		brick.Name = "Brick"
-		brick.Size = target.size
-		brick.Color = brickColor:Lerp(Color3.new(1, 1, 1), random:NextNumber(0, 0.09))
-		brick.Material = Enum.Material.SmoothPlastic
-		brick.Anchored = true
-		brick.CanCollide, brick.CanQuery, brick.CanTouch = false, false, false
-		brick.CFrame = (target.cf + Vector3.new(random:NextNumber(-config.StartSpread, config.StartSpread), -target.cf.Position.Y + base.Position.Y - config.StartDepth, random:NextNumber(-config.StartSpread, config.StartSpread))) * CFrame.Angles(random:NextNumber(-1, 1), random:NextNumber(-1, 1), 0)
-		brick.Parent = holder
-		TweenService:Create(brick, info, { CFrame = target.cf }):Play()
-		if i % config.SoundEvery == 1 then
-			Sfx.play(config.Sound, target.cf.Position)
-			dustPart.Position = target.cf.Position
-			fx:Emit(config.DustBurst)
-		end
-		task.wait(step)
+	fx.Parent = spot
+	spot.Parent = workspace
+	return spot, fx
+end
+
+-- The field, the moss, the gems and the lights come up. The real pieces are the ones lit: the bricks are gone.
+local function activate(zoneId: string, token: number, portal: BasePart, spot: BasePart, fx: ParticleEmitter)
+	local config = PortalBuild
+	setMode(zoneId, "ghost")
+	modes[zoneId] = "ramp"
+	local frame = frameOf(zoneId)
+	local gem = frame and frame:FindFirstChild("Gem") :: BasePart?
+	local gemColor = gem and gem.Color
+	local fades: { BasePart } = { portal }
+	local moss = frame and frame:FindFirstChild("Moss") :: BasePart?
+	if moss then
+		table.insert(fades, moss)
 	end
-	task.wait(config.RiseSeconds)
-	-- the last brick is in: the real frame takes over and lights up
-	for _, part in ipairs(hiddenParts) do
+	local lights: { [Light]: number } = {}
+	local swirl = swirlOf(zoneId)
+	for _, item in ipairs(if swirl then swirl:GetDescendants() else {}) do
+		if item:IsA("Light") then
+			lights[item] = item.Brightness
+		end
+	end
+	Sfx.play(config.LightSound, portal.Position)
+	spot.Position = portal.Position
+	fx.Color = ColorSequence.new(portal.Color)
+	fx:Emit(config.PulseBurst)
+	local start = os.clock()
+	local seconds = config.RampSeconds * slowdown()
+	while building[zoneId] == token do
+		local a = math.clamp((os.clock() - start) / seconds, 0, 1)
+		local e = TweenService:GetValue(a, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+		for _, part in ipairs(fades) do
+			part.LocalTransparencyModifier = 1 - e
+		end
+		if gem and gemColor then
+			gem.Color = gemColor:Lerp(Color3.new(), config.GemDim * (1 - e))
+		end
+		for light, brightness in pairs(lights) do
+			light.Brightness = brightness * e
+		end
+		if a >= 1 then
+			break
+		end
+		RunService.Heartbeat:Wait()
+	end
+	if gem and gemColor then
+		gem.Color = gemColor
+	end
+	for light, brightness in pairs(lights) do
+		light.Brightness = brightness
+	end
+	for _, part in ipairs(fades) do
 		if part.Parent then
 			part.LocalTransparencyModifier = 0
 		end
 	end
-	holder:Destroy()
-	filter(portal, false, true)
-	dustPart.Position = portal.Position
-	fx:Emit(config.PulseBurst)
-	task.delay(1.5, function()
-		dustPart:Destroy()
-	end)
-	building[zoneId] = nil
 end
 
-local function paint(portal: BasePart)
-	local zoneId = portal:GetAttribute("ZoneId") :: string
-	if original[portal] == nil then
-		original[portal] = portal.Color
+local refresh: () -> ()
+
+local function assemble(zoneId: string, token: number, portal: BasePart, frame: Instance, set: Instance)
+	local config = PortalBuild
+	local alive = function()
+		return building[zoneId] == token
 	end
-	if building[zoneId] then
-		return
-	end
-	local notBuilt = Zones.NOT_BUILT[zoneId] == true
-	local hidden = not ZoneVisibility.isRevealed(zoneId)
-	local was = revealed[zoneId]
-	if was == false and not hidden then
-		-- it opened just now: the build plays when the player is near (the filter stays until then)
-		revealed[zoneId] = true
-		pending[zoneId] = true
-		sign(portal).Enabled = false
-		return
-	elseif pending[zoneId] then
-		local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
-		if root and (root.Position - portal.Position).Magnitude < PortalBuild.Range then
-			task.spawn(build, portal, zoneId)
+	local holder = set:Clone()
+	holder.Name = "PortalBuild_" .. zoneId
+	local origin = portal.CFrame * CFrame.new(0, set:GetAttribute("PivotY") :: number, 0)
+	local bricks = layOut(holder, origin, frame)
+	for _, brick in ipairs(bricks) do
+		for _, part in ipairs(brick.parts) do
+			part.LocalTransparencyModifier = 1
+			part.CastShadow = false
 		end
-		return
 	end
-	if was == nil or was == hidden then
-		-- first paint or a change: black filter on, or the finished portal at once
-		filter(portal, hidden, false)
-		revealed[zoneId] = not hidden
-	elseif hidden then
-		filter(portal, true, false) -- streamed-in parts get the filter too
+	local spot, fx = dustSpot(config.DustColor)
+	holder.Parent = workspace
+	local slow = slowdown()
+	local style = config.Ease
+	local start = os.clock()
+	local active: { Brick } = {}
+	local nextBrick, landed, sound = 1, 0, 0
+	local moved: { BasePart }, poses: { CFrame } = {}, {}
+	local worst, spent, frames = 0, 0, 0
+	while alive() do
+		local clock = os.clock()
+		local now = (clock - start) / slow
+		while bricks[nextBrick] and bricks[nextBrick].at <= now do
+			table.insert(active, bricks[nextBrick])
+			nextBrick += 1
+		end
+		table.clear(moved)
+		table.clear(poses)
+		for i = #active, 1, -1 do
+			local brick = active[i]
+			local a = math.clamp((now - brick.at) / brick.flight, 0, 1)
+			local pose = brick.from:Lerp(brick.target, TweenService:GetValue(a, style, Enum.EasingDirection.Out))
+			local fade = math.clamp(1 - a / config.FadeIn, 0, 1)
+			for k, part in ipairs(brick.parts) do
+				table.insert(moved, part)
+				table.insert(poses, pose * brick.offsets[k])
+				part.LocalTransparencyModifier = fade
+			end
+			if a >= 1 then
+				landed += 1
+				for _, part in ipairs(brick.parts) do
+					part.CastShadow = part:GetAttribute("Glow") == nil
+				end
+				if landed % config.DustEvery == 0 then
+					spot.Position = brick.target.Position
+					fx:Emit(config.DustBurst)
+				end
+				if brick.group == "Keystone" then
+					Sfx.play(config.KeystoneSound, brick.target.Position)
+				elseif landed % config.SoundEvery == 1 then
+					sound = sound % #config.Sound + 1
+					Sfx.play(config.Sound[sound], brick.target.Position)
+				end
+				active[i] = active[#active]
+				table.remove(active)
+			end
+		end
+		if #moved > 0 then
+			workspace:BulkMoveTo(moved, poses, Enum.BulkMoveMode.FireCFrameChanged)
+		end
+		local cost = (os.clock() - clock) * 1000
+		worst, spent, frames = math.max(worst, cost), spent + cost, frames + 1
+		if nextBrick > #bricks and #active == 0 then
+			break
+		end
+		RunService.Heartbeat:Wait()
 	end
-	local gui = sign(portal)
-	gui.Enabled = hidden or notBuilt
-	local label = gui:FindFirstChild("Text", true) :: TextLabel
-	label.Text = if notBuilt and not hidden then "Coming soon" else HIDDEN_TEXT
-	local hint = gui:FindFirstChild("Hint", true) :: TextLabel?
-	if hint then
-		hint.Text = if hidden then ZoneVisibility.unlockLine(zoneId) or ZoneVisibility.requirement(zoneId) else ""
-		hint.Visible = hidden
+	if RunService:IsStudio() then
+		player:SetAttribute("PortalBuildCost", string.format("%s: %d bricks, %d frames, %.3f ms mean, %.3f ms worst, %.2f s", zoneId, #bricks, frames, spent / math.max(frames, 1), worst, os.clock() - start))
 	end
-	local lock = gui:FindFirstChild("Lock", true)
-	if lock then
-		(lock :: GuiObject).Visible = hidden
+	holder:Destroy()
+	if alive() then
+		activate(zoneId, token, portal, spot, fx)
 	end
+	if alive() then
+		-- finished: the player may stand where it has just appeared; it stays without collision until they walk out
+		modes[zoneId] = "ghost"
+		while alive() and onSpot(portal) do
+			task.wait(CLEAR_SECONDS)
+		end
+	end
+	task.delay(1.5, function()
+		spot:Destroy()
+	end)
+	if alive() then
+		building[zoneId] = nil
+		setMode(zoneId, "shown")
+	end
+	refresh()
 end
 
-local function refresh()
-	for _, portal in ipairs(portals()) do
-		paint(portal)
+local function brickSet(frame: Instance): Instance?
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local sets = assets and assets:FindFirstChild("PortalBricks")
+	return sets and sets:FindFirstChild(tostring(frame:GetAttribute("MapPropId")))
+end
+
+-- A zone that opened: it assembles when its portal is streamed in and the player is near, at most MaxAtOnce at a time.
+local function tryAssemble(zoneId: string)
+	local portal, frame = portalOf(zoneId), frameOf(zoneId)
+	local root = rootPart()
+	if not (portal and frame and root and frame:FindFirstChild("Keystone") and frame:FindFirstChild("Gem")) then
+		return
 	end
+	if (root.Position - portal.Position).Magnitude >= PortalBuild.Range then
+		return
+	end
+	local running = 0
+	for _ in pairs(building) do
+		running += 1
+	end
+	if running >= PortalBuild.MaxAtOnce then
+		return
+	end
+	pending[zoneId] = nil
+	local set = brickSet(frame)
+	if not set then
+		warn(`PortalController: no bricks for {zoneId}, shown finished`)
+		return
+	end
+	tokens += 1
+	building[zoneId] = tokens
+	task.spawn(assemble, zoneId, tokens, portal, frame, set)
 end
 
 local function use(zoneId: string)
-	if busy or pending[zoneId] or building[zoneId] then
+	if busy or modes[zoneId] ~= "shown" or not isOpen(zoneId) then
 		return
 	end
 	local now = os.clock()
 	if now - (lastTry[zoneId] or -math.huge) < Zones.TELEPORT.PortalRetry then
 		return
 	end
-	local zone = Zones.ById[zoneId]
-	if not zone then
-		return
-	end
-	if ZoneVisibility.unlockStatus(zoneId).eligible then
-		-- the zone to buy: its key and price, with the Buy button
-		lastTry[zoneId] = now
-		ZonesPage.open(zoneId)
-		return
-	end
 	busy = true
-	-- a portal that cannot open (locked, coming soon) answers without the fade
-	local expectOk = isOpen(zoneId) and not Zones.NOT_BUILT[zoneId]
+	local zone = Zones.ById[zoneId]
+	local expectOk = zone ~= nil and not Zones.NOT_BUILT[zoneId]
 	if expectOk then
 		Fade.cover()
 	end
@@ -446,33 +467,96 @@ local function use(zoneId: string)
 		lastTry[zoneId] = os.clock()
 		Sfx.play("Denied")
 	end
-	Notifier.push({ Kind = if ok then "info" else "error", Text = tostring(if called then message or "Portal failed" else "Portal failed"), Icon = if ok and ZoneVisibility.isRevealed(zone.Id) then zone.Id else "Lock" })
+	Notifier.push({ Kind = if ok then "info" else "error", Text = tostring(if called then message or "Portal failed" else "Portal failed"), Icon = if ok and ZoneVisibility.isRevealed(zoneId) then zoneId else "Lock" })
 	if expectOk then
 		Fade.reveal(ok)
 	end
 	busy = false
 end
 
-function PortalController:Start()
-	local player = Players.LocalPlayer
-	local hooked: { [BasePart]: boolean } = {}
-	local function hook()
-		for _, portal in ipairs(portals()) do
-			if not hooked[portal] then
-				hooked[portal] = true
-				local zoneId = portal:GetAttribute("ZoneId") :: string
-				portal.Touched:Connect(function(hit)
-					local character = player.Character
-					if character and hit:IsDescendantOf(character) then
-						task.spawn(use, zoneId)
-					end
-				end)
+local function hook(zoneId: string, portal: BasePart)
+	if not hooked[portal] then
+		hooked[portal] = true
+		portal.Touched:Connect(function(hit)
+			local character = player.Character
+			if character and hit:IsDescendantOf(character) then
+				task.spawn(use, zoneId)
 			end
+		end)
+	end
+end
+
+refresh = function()
+	for _, zone in ipairs(Zones.List) do
+		local zoneId = zone.Id
+		local portal = portalOf(zoneId)
+		if portal then
+			hook(zoneId, portal)
+		end
+		if not isOpen(zoneId) then
+			pending[zoneId], building[zoneId] = nil, nil -- silently gone, an assembly under way stops
+			setMode(zoneId, "hidden")
+		elseif pending[zoneId] then
+			setMode(zoneId, "hidden")
+			tryAssemble(zoneId)
+		elseif building[zoneId] then
+			if modes[zoneId] ~= "ramp" then
+				apply(zoneId, modes[zoneId] or "hidden") -- what streamed in meanwhile
+			end
+		elseif modes[zoneId] ~= "shown" then
+			setMode(zoneId, "shown")
 		end
 	end
-	State.changed("Zones", refresh)
+end
+
+-- Parts that stream in come with the server's look: put right in the same frame.
+local function watch()
+	local queued = false
+	local function queue()
+		if not queued then
+			queued = true
+			task.defer(function()
+				queued = false
+				refresh()
+			end)
+		end
+	end
+	for name, folder in pairs({ Portals = hubChild("Portals"), PortalFrames = hubChild("Decor", "PortalFrames"), VFX = hubChild("Decor", "VFX") }) do
+		if folder and not watched[name] then
+			watched[name] = true
+			folder.DescendantAdded:Connect(function(item)
+				if name ~= "VFX" or string.find(item:GetFullName(), "Portal_Swirl_", 1, true) then
+					queue()
+				end
+			end)
+		end
+	end
+end
+
+function PortalController:Start()
+	State.changed("Zones", function(new: any, old: any)
+		-- old is nil at join: what is open then is simply there, no animation
+		if typeof(new) == "table" and typeof(old) == "table" then
+			for id, open in pairs(new) do
+				if open == true and old[id] ~= true and Zones.ById[id] then
+					pending[id] = true
+				end
+			end
+		end
+		refresh()
+	end)
+	if RunService:IsStudio() then
+		-- tests: a portal that cannot be locked (Plains) assembles too
+		player:GetAttributeChangedSignal("PortalBuildTest"):Connect(function()
+			local id = player:GetAttribute("PortalBuildTest")
+			if typeof(id) == "string" and Zones.ById[id] then
+				pending[id] = true
+				refresh()
+			end
+		end)
+	end
 	while true do
-		hook()
+		watch()
 		refresh()
 		task.wait(REFRESH_SECONDS)
 	end

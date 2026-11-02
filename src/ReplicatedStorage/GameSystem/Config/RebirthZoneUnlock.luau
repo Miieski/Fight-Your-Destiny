@@ -1,7 +1,7 @@
 --!strict
 -- After a Rebirth, the next zone is bought (Round 8 part 4): the BOSS KEY of the previous zone + GOLD. The player no longer walks
--- through the whole zone again. ZoneService handles Net "BuyZoneUnlock" with these rules; the Zones menu and the portal
--- signs show them. A zone bought this way gives its entry and first area; its other sub-zones keep their prices.
+-- through the whole zone again. ZoneService handles Net "BuyZoneUnlock" with these rules; the Zones menu shows them (a
+-- locked portal shows nothing, Round 9 part 12). A zone bought this way gives its entry and first area; its other sub-zones keep their prices.
 -- Price = (price of the LAST purchasable sub-zone of the previous zone + price of the 2nd sub-zone of this zone) / 2, floored
 -- to 2 significant digits. Review table: docs/rebirth_zone_unlock_prices.md.
 local Zones = require(script.Parent.Zones)
@@ -56,7 +56,7 @@ function RebirthZoneUnlock.status(data: { [string]: any }, zoneId: string): Stat
 	if result.open then
 		result.reason = "Already open"
 	elseif not result.eligible then
-		result.reason = Zones.HIDDEN_REQUIREMENT
+		result.reason = Zones.requirementText(zoneId)
 	elseif not result.hasKey then
 		result.reason = "You need the boss key of the previous zone"
 	elseif not result.enoughGold then

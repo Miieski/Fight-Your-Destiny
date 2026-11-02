@@ -234,6 +234,9 @@ end
 -- a one-colour union, UsePartColor true), material, transparency
 local function merge(model: Model, name: string, pieces: { BasePart }, opts: any?): BasePart
 	opts = opts or {}
+	if PropsBatch2.onMerge then
+		PropsBatch2.onMerge(name, pieces) -- DevTools.PortalBricks keeps the pieces of the portal frame
+	end
 	local hash = hashOf(pieces)
 	local result: BasePart
 	if #pieces == 1 then
